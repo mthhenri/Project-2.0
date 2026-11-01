@@ -16,64 +16,64 @@ const MAIOR_ESPERA_MS = 2_000_000_000;
  * quando a descrição é registrada ou os check-ins são suspensos ("Estou em reunião"). Com a IA fora do ar ela não trava a tela.
  */
 @Component({
-  selector: 'app-checkin-janelinha',
-  standalone: true,
-  imports: [CheckinPage],
-  templateUrl: './checkin-janelinha.component.html',
-  styleUrl: './checkin-janelinha.component.scss',
+    selector: 'app-checkin-janelinha',
+    standalone: true,
+    imports: [CheckinPage],
+    templateUrl: './checkin-janelinha.component.html',
+    styleUrl: './checkin-janelinha.component.scss',
 })
 export class CheckinJanelinhaComponent implements OnInit {
-  private readonly checkinService = inject(CheckinService);
-  private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
-  private readonly destroyRef = inject(DestroyRef);
+    private readonly checkinService = inject(CheckinService);
+    private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
+    private readonly destroyRef = inject(DestroyRef);
 
-  private readonly situacao = signal<CheckinSituacaoConsultadaDto | null>(null);
-  private temporizadorNoHorario: ReturnType<typeof setTimeout> | null = null;
+    private readonly situacao = signal<CheckinSituacaoConsultadaDto | null>(null);
+    private temporizadorNoHorario: ReturnType<typeof setTimeout> | null = null;
 
-  readonly visivel = computed(() => deveMostrarJanelinha(this.situacao(), this.iaDisponibilidade.estado()));
+    readonly visivel = computed(() => deveMostrarJanelinha(this.situacao(), this.iaDisponibilidade.estado()));
 
-  constructor() {
-    const intervalo = setInterval(() => this.conferir(), INTERVALO_DA_CONFERENCIA_MS);
-    const aoVoltar = () => {
-      if (document.visibilityState === 'visible') this.conferir();
-    };
-    document.addEventListener('visibilitychange', aoVoltar);
-    this.destroyRef.onDestroy(() => {
-      clearInterval(intervalo);
-      if (this.temporizadorNoHorario !== null) clearTimeout(this.temporizadorNoHorario);
-      document.removeEventListener('visibilitychange', aoVoltar);
-    });
-  }
+    constructor() {
+        const intervalo = setInterval(() => this.conferir(), INTERVALO_DA_CONFERENCIA_MS);
+        const aoVoltar = () => {
+            if (document.visibilityState === 'visible') this.conferir();
+        };
+        document.addEventListener('visibilitychange', aoVoltar);
+        this.destroyRef.onDestroy(() => {
+            clearInterval(intervalo);
+            if (this.temporizadorNoHorario !== null) clearTimeout(this.temporizadorNoHorario);
+            document.removeEventListener('visibilitychange', aoVoltar);
+        });
+    }
 
-  ngOnInit(): void {
-    this.iaDisponibilidade.carregar();
-    this.conferir();
-  }
+    ngOnInit(): void {
+        this.iaDisponibilidade.carregar();
+        this.conferir();
+    }
 
-  /** O diálogo avisou que acabou (registrado, suspenso ou sem execução): confere de novo para o próximo horário. */
-  aoEncerrar(): void {
-    this.situacao.update((atual) => (atual ? { ...atual, disparado: false } : atual));
-    this.conferir();
-  }
+    /** O diálogo avisou que acabou (registrado, suspenso ou sem execução): confere de novo para o próximo horário. */
+    aoEncerrar(): void {
+        this.situacao.update((atual) => (atual ? { ...atual, disparado: false } : atual));
+        this.conferir();
+    }
 
-  private conferir(): void {
+    private conferir(): void {
     // Com o diálogo aberto, quem confere é a própria tela do check-in.
-    if (this.visivel()) return;
-    this.checkinService.consultarSituacao().subscribe({
-      next: (resposta) => {
-        this.situacao.set(resposta.dados ?? null);
-        this.agendarNoHorario();
-      },
-      error: () => undefined,
-    });
-  }
+        if (this.visivel()) return;
+        this.checkinService.consultarSituacao().subscribe({
+            next: (resposta) => {
+                this.situacao.set(resposta.dados ?? null);
+                this.agendarNoHorario();
+            },
+            error: () => undefined,
+        });
+    }
 
-  /** Confere de novo no instante sorteado, para a janelinha aparecer na hora e não só na próxima conferência periódica. */
-  private agendarNoHorario(): void {
-    if (this.temporizadorNoHorario !== null) clearTimeout(this.temporizadorNoHorario);
-    this.temporizadorNoHorario = null;
-    const espera = esperaAteOCheckin(this.situacao(), Date.now());
-    if (espera === null) return;
-    this.temporizadorNoHorario = setTimeout(() => this.conferir(), Math.min(espera + 500, MAIOR_ESPERA_MS));
-  }
+    /** Confere de novo no instante sorteado, para a janelinha aparecer na hora e não só na próxima conferência periódica. */
+    private agendarNoHorario(): void {
+        if (this.temporizadorNoHorario !== null) clearTimeout(this.temporizadorNoHorario);
+        this.temporizadorNoHorario = null;
+        const espera = esperaAteOCheckin(this.situacao(), Date.now());
+        if (espera === null) return;
+        this.temporizadorNoHorario = setTimeout(() => this.conferir(), Math.min(espera + 500, MAIOR_ESPERA_MS));
+    }
 }

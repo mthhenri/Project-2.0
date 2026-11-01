@@ -16,39 +16,39 @@ export const LIMITE_CARACTERES_DA_SECAO = 8000;
  */
 @Injectable()
 export class ConsultarPadFerramenta extends FerramentaIa<PadConsultarDto> {
-  readonly nome = 'consultar_pad';
-  readonly descricao =
-    'Lê o pad do usuário (anotações em Markdown em cinco seções: EM_ANDAMENTO, FEITO, PENDENCIA, LEMBRETE e PESSOAL). Peça só as seções de que precisa. ' +
+    readonly nome = 'consultar_pad';
+    readonly descricao =
+        'Lê o pad do usuário (anotações em Markdown em cinco seções: EM_ANDAMENTO, FEITO, PENDENCIA, LEMBRETE e PESSOAL). Peça só as seções de que precisa. ' +
     'Em FEITO vem apenas o bloco do dia (hoje por padrão; use diaDoFeito no formato dd/MM para outro dia). Use no começo do dia para retomar o contexto ' +
     '("ontem você parou em…") e antes de propor trocar um trecho do pad, para copiar o trecho exatamente.';
-  readonly tipo = 'LEITURA' as const;
-  readonly permissao = 'QUALQUER' as const;
-  readonly classeDeEntrada = PadConsultarDto;
+    readonly tipo = 'LEITURA' as const;
+    readonly permissao = 'QUALQUER' as const;
+    readonly classeDeEntrada = PadConsultarDto;
 
-  constructor(
-    private readonly anotacaoService: AnotacaoService,
-    private readonly configService: ConfigService,
-  ) {
-    super();
-  }
+    constructor(
+        private readonly anotacaoService: AnotacaoService,
+        private readonly configService: ConfigService,
+    ) {
+        super();
+    }
 
-  async executar(entrada: PadConsultarDto, usuarioAtivo: JwtPayload): Promise<PadConsultadoDto> {
-    const fuso = this.configService.obter().aplicacao.fusoHorario;
-    const hoje = diaMesNoFuso(this.agora(), fuso);
-    const lidas = (await this.anotacaoService.listar({ usuarioId: usuarioAtivo.sub, tipos: entrada.secoes }, usuarioAtivo)).dados ?? [];
+    async executar(entrada: PadConsultarDto, usuarioAtivo: JwtPayload): Promise<PadConsultadoDto> {
+        const fuso = this.configService.obter().aplicacao.fusoHorario;
+        const hoje = diaMesNoFuso(this.agora(), fuso);
+        const lidas = (await this.anotacaoService.listar({ usuarioId: usuarioAtivo.sub, tipos: entrada.secoes }, usuarioAtivo)).dados ?? [];
 
-    return {
-      hoje,
-      secoes: lidas.map((secao) => {
-        const texto = secao.tipo === TipoAnotacaoEnum.FEITO ? blocoDoDiaNoFeito(secao.texto, entrada.diaDoFeito ?? hoje) : secao.texto;
-        const truncado = texto.length > LIMITE_CARACTERES_DA_SECAO;
-        return { tipo: secao.tipo, rotulo: ROTULO_SECAO_DO_PAD[secao.tipo], texto: truncado ? texto.slice(0, LIMITE_CARACTERES_DA_SECAO) : texto, truncado };
-      }),
-    };
-  }
+        return {
+            hoje,
+            secoes: lidas.map((secao) => {
+                const texto = secao.tipo === TipoAnotacaoEnum.FEITO ? blocoDoDiaNoFeito(secao.texto, entrada.diaDoFeito ?? hoje) : secao.texto;
+                const truncado = texto.length > LIMITE_CARACTERES_DA_SECAO;
+                return { tipo: secao.tipo, rotulo: ROTULO_SECAO_DO_PAD[secao.tipo], texto: truncado ? texto.slice(0, LIMITE_CARACTERES_DA_SECAO) : texto, truncado };
+            }),
+        };
+    }
 
-  /** Separado para os testes fixarem o instante. */
-  protected agora(): Date {
-    return new Date();
-  }
+    /** Separado para os testes fixarem o instante. */
+    protected agora(): Date {
+        return new Date();
+    }
 }

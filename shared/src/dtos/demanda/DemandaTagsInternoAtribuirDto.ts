@@ -1,4 +1,4 @@
 export class DemandaTagsInternoAtribuirDto {
-  demandaId: number;
-  tagIds: number[];
+    demandaId: number;
+    tagIds: number[];
 }

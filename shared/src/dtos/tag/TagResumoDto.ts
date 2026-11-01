@@ -1,5 +1,5 @@
 export class TagResumoDto {
-  id: number;
-  nome: string;
-  cor: string;
+    id: number;
+    nome: string;
+    cor: string;
 }

@@ -1,194 +1,194 @@
 .ponto-usuario-card {
-  display: flex;
-  flex-direction: row;
-  gap: 0.875rem;
-  padding: 0.875rem;
-  border: 1px solid var(--app-surface-200);
-  border-radius: 0.625rem;
-  background: var(--app-surface-0);
-
-  &__resumo {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    flex: 0 0 9rem;
-    width: 9rem;
-    padding-right: 0.875rem;
-    border-right: 1px solid var(--app-surface-200);
-  }
+    flex-direction: row;
+    gap: 0.875rem;
+    padding: 0.875rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.625rem;
+    background: var(--app-surface-0);
 
-  // Nome + avatar: botão que abre o mensal da pessoa.
-  &__nome {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-width: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    font-weight: 600;
-    font-size: 0.9375rem;
-    color: var(--p-text-color);
-    text-align: left;
-    cursor: pointer;
-
-    &:hover .ponto-usuario-card__nome-texto {
-      color: var(--p-primary-color);
-      text-decoration: underline;
-    }
-  }
-
-  &__nome-texto {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__avatar {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
-    color: var(--p-primary-color);
-    font-size: 0.6875rem;
-  }
-
-  &__estado {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    font-size: 0.75rem;
-    color: var(--p-text-muted-color);
-
-    &--trabalhando {
-      color: var(--p-green-600);
-      font-weight: 600;
+    &__resumo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        flex: 0 0 9rem;
+        width: 9rem;
+        padding-right: 0.875rem;
+        border-right: 1px solid var(--app-surface-200);
     }
 
-    &--pausado {
-      color: var(--p-orange-600);
-    }
-  }
+    // Nome + avatar: botão que abre o mensal da pessoa.
+    &__nome {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        font-weight: 600;
+        font-size: 0.9375rem;
+        color: var(--p-text-color);
+        text-align: left;
+        cursor: pointer;
 
-  &__ponto {
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background: currentColor;
-  }
-
-  &__estado--trabalhando &__ponto {
-    animation: ponto-estado-pulso 1.4s ease-in-out infinite;
-  }
-
-  &__total {
-    font-weight: 600;
-    font-size: 1.25rem;
-    color: var(--p-primary-600);
-  }
-
-  &__sub {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-    margin-top: 0.125rem;
-  }
-
-  &__saldo {
-    font-weight: 600;
-
-    &--positivo {
-      color: var(--p-green-600);
+        &:hover .ponto-usuario-card__nome-texto {
+            color: var(--p-primary-color);
+            text-decoration: underline;
+        }
     }
 
-    &--negativo {
-      color: var(--p-red-600);
+    &__nome-texto {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
-  }
 
-  &__badge {
-    padding: 0.0625rem 0.5rem;
-    border-radius: 0.75rem;
-    background: var(--app-surface-100);
-    color: var(--p-text-muted-color);
-    font-weight: 500;
-  }
+    &__avatar {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
+        color: var(--p-primary-color);
+        font-size: 0.6875rem;
+    }
 
-  &__intervalos {
-    color: var(--p-text-muted-color);
-  }
+    &__estado {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.75rem;
+        color: var(--p-text-muted-color);
 
-  &__execucoes-area {
-    flex: 1 1 auto;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-  }
+        &--trabalhando {
+            color: var(--p-green-600);
+            font-weight: 600;
+        }
 
-  // Duas colunas compartilhadas (horário e atividade): o cronômetro de uma execução em andamento é mais largo que "05:00 –06:40", e
-  // sem a grade o nome da atividade começava em x diferentes de uma linha para outra.
-  &__execucoes {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    gap: 0.25rem 0.75rem;
-    width: 100%;
-    max-height: 7.5rem;
-    overflow-y: auto;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
+        &--pausado {
+            color: var(--p-orange-600);
+        }
+    }
 
-  &__execucao {
-    display: grid;
-    grid-template-columns: subgrid;
-    grid-column: 1 / -1;
-    align-items: start;
-    font-size: 0.8125rem;
-  }
+    &__ponto {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: currentColor;
+    }
 
-  &__horario {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    color: var(--p-text-muted-color);
-    white-space: nowrap;
-  }
+    &__estado--trabalhando &__ponto {
+        animation: ponto-estado-pulso 1.4s ease-in-out infinite;
+    }
 
-  &__atividade {
-    min-width: 0;
-    // Até duas linhas: com três colunas o card fica estreito e um nome longo perdia quase tudo atrás das reticências.
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-    text-align: left;
-    color: var(--p-text-color);
-  }
+    &__total {
+        font-weight: 600;
+        font-size: 1.25rem;
+        color: var(--p-primary-600);
+    }
 
-  &__vazio {
-    font-size: 0.8125rem;
-    color: var(--p-text-muted-color);
-    margin: 0;
-  }
+    &__sub {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        margin-top: 0.125rem;
+    }
+
+    &__saldo {
+        font-weight: 600;
+
+        &--positivo {
+            color: var(--p-green-600);
+        }
+
+        &--negativo {
+            color: var(--p-red-600);
+        }
+    }
+
+    &__badge {
+        padding: 0.0625rem 0.5rem;
+        border-radius: 0.75rem;
+        background: var(--app-surface-100);
+        color: var(--p-text-muted-color);
+        font-weight: 500;
+    }
+
+    &__intervalos {
+        color: var(--p-text-muted-color);
+    }
+
+    &__execucoes-area {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    // Duas colunas compartilhadas (horário e atividade): o cronômetro de uma execução em andamento é mais largo que "05:00 –06:40", e
+    // sem a grade o nome da atividade começava em x diferentes de uma linha para outra.
+    &__execucoes {
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        gap: 0.25rem 0.75rem;
+        width: 100%;
+        max-height: 7.5rem;
+        overflow-y: auto;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__execucao {
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1 / -1;
+        align-items: start;
+        font-size: 0.8125rem;
+    }
+
+    &__horario {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: var(--p-text-muted-color);
+        white-space: nowrap;
+    }
+
+    &__atividade {
+        min-width: 0;
+        // Até duas linhas: com três colunas o card fica estreito e um nome longo perdia quase tudo atrás das reticências.
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
+        overflow-wrap: anywhere;
+        text-align: left;
+        color: var(--p-text-color);
+    }
+
+    &__vazio {
+        font-size: 0.8125rem;
+        color: var(--p-text-muted-color);
+        margin: 0;
+    }
 }
 
 @keyframes ponto-estado-pulso {
-  50% {
-    opacity: 0.35;
-  }
+    50% {
+        opacity: 0.35;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ponto-usuario-card__estado--trabalhando .ponto-usuario-card__ponto {
-    animation: none;
-  }
+    .ponto-usuario-card__estado--trabalhando .ponto-usuario-card__ponto {
+        animation: none;
+    }
 }

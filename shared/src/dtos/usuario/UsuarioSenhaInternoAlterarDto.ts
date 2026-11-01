@@ -1,4 +1,4 @@
 export class UsuarioSenhaInternoAlterarDto {
-  id: number;
-  senhaEncriptada: string;
+    id: number;
+    senhaEncriptada: string;
 }

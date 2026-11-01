@@ -11,19 +11,19 @@ export const CARACTERES_PROIBIDOS = `'"\`~^\\´`;
 export const REGEX_SEM_CARACTERES_PROIBIDOS = /^[^'"`~^\\´]*$/;
 
 export const MENSAGEM_CARACTERES_PROIBIDOS =
-  'Não são permitidos os caracteres: \' " ` ~ ^ \\ ´';
+    'Não são permitidos os caracteres: \' " ` ~ ^ \\ ´';
 
 /**
  * Dica (hint) persistente exibida abaixo dos campos que aplicam a regra — texto
  * amigável para o usuário, sem listar os caracteres um a um.
  */
 export const MENSAGEM_CARACTERES_PROIBIDOS_DICA =
-  'Não é permitida a utilização de caracteres especiais';
+    'Não é permitida a utilização de caracteres especiais';
 
 /**
  * Remove todos os caracteres proibidos de uma string. Usado para bloquear a
  * digitação/colagem no frontend (a classe literal mora só neste arquivo — fonte única).
  */
 export function removerCaracteresProibidos(texto: string): string {
-  return texto.replace(/['"`~^\\´]/g, '');
+    return texto.replace(/['"`~^\\´]/g, '');
 }

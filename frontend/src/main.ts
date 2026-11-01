@@ -6,5 +6,5 @@ import { ignorarErrosHttpJaTratados } from './app/core/config/rxjs-erros-http';
 ignorarErrosHttpJaTratados();
 
 bootstrapApplication(AppComponent, appConfig).catch((err) =>
-  console.error(err),
+    console.error(err),
 );

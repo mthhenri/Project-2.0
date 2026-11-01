@@ -2,23 +2,23 @@ import { IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength } from 'cla
 import { TipoAtividadePrioridadeEnum } from '../../enums/tipo-atividade-prioridade.enum';
 import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 import {
-  REGEX_SEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS,
+    REGEX_SEM_CARACTERES_PROIBIDOS,
+    MENSAGEM_CARACTERES_PROIBIDOS,
 } from '../../validators/caracteres-proibidos.validator';
 
 export class AtividadeAlterarDto {
-  @IsOptional()
-  @IsString()
-  @MinLength(3)
-  @MaxLength(255)
-  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
-  nome?: string;
+    @IsOptional()
+    @IsString()
+    @MinLength(3)
+    @MaxLength(255)
+    @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
+    nome?: string;
 
-  @IsOptional()
-  @IsEnum(TipoAtividadeStatusEnum)
-  status?: TipoAtividadeStatusEnum;
+    @IsOptional()
+    @IsEnum(TipoAtividadeStatusEnum)
+    status?: TipoAtividadeStatusEnum;
 
-  @IsOptional()
-  @IsEnum(TipoAtividadePrioridadeEnum)
-  prioridade?: TipoAtividadePrioridadeEnum;
+    @IsOptional()
+    @IsEnum(TipoAtividadePrioridadeEnum)
+    prioridade?: TipoAtividadePrioridadeEnum;
 }

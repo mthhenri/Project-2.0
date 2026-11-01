@@ -1,0 +1,13 @@
+<p-dialog
+    header="Configurar volume"
+    [(visible)]="mostrar"
+    [modal]="true"
+    [style]="{ width: '36rem' }"
+    [draggable]="false"
+>
+    @if (projetoId(); as identificador) {
+        @if (mostrar()) {
+            <app-projeto-volume-vigencias [projetoId]="identificador" />
+        }
+    }
+</p-dialog>

@@ -4,6 +4,6 @@
  * service não receba primitivos (§16 #21). O repositório usa apenas `conexaoId`.
  */
 export class DemandaConexaoExcluirDto {
-  demandaId: number;
-  conexaoId: number;
+    demandaId: number;
+    conexaoId: number;
 }

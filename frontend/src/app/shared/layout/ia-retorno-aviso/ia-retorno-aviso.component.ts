@@ -9,22 +9,22 @@ import { IaDisponibilidadeService } from '../../../core/services/ia-disponibilid
  * para a IA" na barra superior).
  */
 @Component({
-  selector: 'app-ia-retorno-aviso',
-  standalone: true,
-  imports: [ButtonModule],
-  templateUrl: './ia-retorno-aviso.component.html',
-  styleUrl: './ia-retorno-aviso.component.scss',
+    selector: 'app-ia-retorno-aviso',
+    standalone: true,
+    imports: [ButtonModule],
+    templateUrl: './ia-retorno-aviso.component.html',
+    styleUrl: './ia-retorno-aviso.component.scss',
 })
 export class IaRetornoAvisoComponent {
-  protected readonly disponibilidade = inject(IaDisponibilidadeService);
-  private readonly roteador = inject(Router);
+    protected readonly disponibilidade = inject(IaDisponibilidadeService);
+    private readonly roteador = inject(Router);
 
-  voltar(): void {
-    this.disponibilidade.voltarParaAIa();
-    void this.roteador.navigateByUrl('/chat');
-  }
+    voltar(): void {
+        this.disponibilidade.voltarParaAIa();
+        void this.roteador.navigateByUrl('/chat');
+    }
 
-  agoraNao(): void {
-    this.disponibilidade.agoraNao();
-  }
+    agoraNao(): void {
+        this.disponibilidade.agoraNao();
+    }
 }

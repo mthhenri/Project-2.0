@@ -1,3 +1,3 @@
 export class DemandaAcessoFiltrarDto {
-  usuarioId: number;
+    usuarioId: number;
 }

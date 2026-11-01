@@ -9,25 +9,25 @@ import { MensagemDiretaService } from './mensagem-direta.service';
  */
 @Injectable({ providedIn: 'root' })
 export class MensagemDiretaReferenciaService {
-  private readonly api = inject(MensagemDiretaService);
-  private cache = new Map<string, Promise<MensagemDiretaReferenciaRecuperadaDto | null>>();
+    private readonly api = inject(MensagemDiretaService);
+    private cache = new Map<string, Promise<MensagemDiretaReferenciaRecuperadaDto | null>>();
 
-  recuperar(tipo: ReferenciaMensagemDiretaEnum, id: number): Promise<MensagemDiretaReferenciaRecuperadaDto | null> {
-    const chave = `${tipo}:${id}`;
-    const guardada = this.cache.get(chave);
-    if (guardada) return guardada;
-    const consulta = firstValueFrom(this.api.recuperarReferencia(tipo, id))
-      .then((resposta) => resposta.dados ?? null)
-      .catch(() => {
-        this.cache.delete(chave);
-        return null;
-      });
-    this.cache.set(chave, consulta);
-    return consulta;
-  }
+    recuperar(tipo: ReferenciaMensagemDiretaEnum, id: number): Promise<MensagemDiretaReferenciaRecuperadaDto | null> {
+        const chave = `${tipo}:${id}`;
+        const guardada = this.cache.get(chave);
+        if (guardada) return guardada;
+        const consulta = firstValueFrom(this.api.recuperarReferencia(tipo, id))
+            .then((resposta) => resposta.dados ?? null)
+            .catch(() => {
+                this.cache.delete(chave);
+                return null;
+            });
+        this.cache.set(chave, consulta);
+        return consulta;
+    }
 
-  /** Esquece tudo (a sessão trocou: o acesso do próximo usuário é outro). */
-  limpar(): void {
-    this.cache = new Map();
-  }
+    /** Esquece tudo (a sessão trocou: o acesso do próximo usuário é outro). */
+    limpar(): void {
+        this.cache = new Map();
+    }
 }

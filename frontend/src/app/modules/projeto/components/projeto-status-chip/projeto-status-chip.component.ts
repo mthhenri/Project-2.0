@@ -7,17 +7,17 @@ import { TipoProjetoStatusEnum } from '@project20/shared';
 type Severidade = 'success' | 'warn' | 'info' | 'danger';
 
 const SEVERIDADE: Record<TipoProjetoStatusEnum, Severidade> = {
-  [TipoProjetoStatusEnum.ATIVO]:     'success',
-  [TipoProjetoStatusEnum.PAUSADO]:   'warn',
-  [TipoProjetoStatusEnum.CONCLUIDO]: 'info',
-  [TipoProjetoStatusEnum.CANCELADO]: 'danger',
+    [TipoProjetoStatusEnum.ATIVO]:     'success',
+    [TipoProjetoStatusEnum.PAUSADO]:   'warn',
+    [TipoProjetoStatusEnum.CONCLUIDO]: 'info',
+    [TipoProjetoStatusEnum.CANCELADO]: 'danger',
 };
 
 const ROTULO: Record<TipoProjetoStatusEnum, string> = {
-  [TipoProjetoStatusEnum.ATIVO]:     'Ativo',
-  [TipoProjetoStatusEnum.PAUSADO]:   'Pausado',
-  [TipoProjetoStatusEnum.CONCLUIDO]: 'Concluído',
-  [TipoProjetoStatusEnum.CANCELADO]: 'Cancelado',
+    [TipoProjetoStatusEnum.ATIVO]:     'Ativo',
+    [TipoProjetoStatusEnum.PAUSADO]:   'Pausado',
+    [TipoProjetoStatusEnum.CONCLUIDO]: 'Concluído',
+    [TipoProjetoStatusEnum.CANCELADO]: 'Cancelado',
 };
 
 /**
@@ -25,34 +25,34 @@ const ROTULO: Record<TipoProjetoStatusEnum, string> = {
  * (troca em 2 cliques); a persistência otimista é de quem hospeda. Mesmo desenho do chip de status da demanda.
  */
 @Component({
-  selector: 'app-projeto-status-chip',
-  standalone: true,
-  imports: [Tag, PopoverModule, TooltipModule],
-  templateUrl: './projeto-status-chip.component.html',
-  styleUrl: './projeto-status-chip.component.scss',
+    selector: 'app-projeto-status-chip',
+    standalone: true,
+    imports: [Tag, PopoverModule, TooltipModule],
+    templateUrl: './projeto-status-chip.component.html',
+    styleUrl: './projeto-status-chip.component.scss',
 })
 export class ProjetoStatusChipComponent {
-  readonly status = input.required<TipoProjetoStatusEnum>();
-  readonly editavel = input<boolean>(false);
-  readonly statusEscolhido = output<TipoProjetoStatusEnum>();
+    readonly status = input.required<TipoProjetoStatusEnum>();
+    readonly editavel = input<boolean>(false);
+    readonly statusEscolhido = output<TipoProjetoStatusEnum>();
 
-  readonly opcoes = Object.values(TipoProjetoStatusEnum).map((value) => ({ value, label: ROTULO[value] }));
+    readonly opcoes = Object.values(TipoProjetoStatusEnum).map((value) => ({ value, label: ROTULO[value] }));
 
-  severidade(status: TipoProjetoStatusEnum): Severidade {
-    return SEVERIDADE[status];
-  }
+    severidade(status: TipoProjetoStatusEnum): Severidade {
+        return SEVERIDADE[status];
+    }
 
-  rotulo(status: TipoProjetoStatusEnum): string {
-    return ROTULO[status];
-  }
+    rotulo(status: TipoProjetoStatusEnum): string {
+        return ROTULO[status];
+    }
 
-  abrir(evento: Event, popover: Popover): void {
-    evento.stopPropagation();
-    popover.toggle(evento);
-  }
+    abrir(evento: Event, popover: Popover): void {
+        evento.stopPropagation();
+        popover.toggle(evento);
+    }
 
-  escolher(novoStatus: TipoProjetoStatusEnum, popover: Popover): void {
-    popover.hide();
-    if (novoStatus !== this.status()) this.statusEscolhido.emit(novoStatus);
-  }
+    escolher(novoStatus: TipoProjetoStatusEnum, popover: Popover): void {
+        popover.hide();
+        if (novoStatus !== this.status()) this.statusEscolhido.emit(novoStatus);
+    }
 }

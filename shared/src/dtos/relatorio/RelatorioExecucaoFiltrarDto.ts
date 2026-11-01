@@ -3,7 +3,7 @@
  * Como o relatório é gestor-only, não há restrição por usuário: só projeto + intervalo.
  */
 export class RelatorioExecucaoFiltrarDto {
-  projetoId: number;
-  dataInicio: string; // YYYY-MM-DD
-  dataFim: string;    // YYYY-MM-DD
+    projetoId: number;
+    dataInicio: string; // YYYY-MM-DD
+    dataFim: string;    // YYYY-MM-DD
 }

@@ -6,10 +6,10 @@ import { EstadoIaEnum } from '@project20/shared';
  * voltar para a IA. Só vale com a IA de fato no ar; desligada ou fora do ar, o estado real já manda.
  */
 export function estadoEfetivoDaIa(real: EstadoIaEnum | null, modoConvencional: boolean): EstadoIaEnum | null {
-  return real === EstadoIaEnum.NO_AR && modoConvencional ? EstadoIaEnum.FORA_DO_AR : real;
+    return real === EstadoIaEnum.NO_AR && modoConvencional ? EstadoIaEnum.FORA_DO_AR : real;
 }
 
 /** A IA acabou de voltar: estava desligada ou fora do ar (estado conhecido) e agora está no ar. */
 export function iaVoltou(anterior: EstadoIaEnum | null, atual: EstadoIaEnum | null): boolean {
-  return anterior !== null && anterior !== EstadoIaEnum.NO_AR && atual === EstadoIaEnum.NO_AR;
+    return anterior !== null && anterior !== EstadoIaEnum.NO_AR && atual === EstadoIaEnum.NO_AR;
 }

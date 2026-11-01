@@ -8,17 +8,17 @@ import { IaCustoService } from '../services/ia-custo.service';
 /** A aba "Custos" das Configurações da IA: só o administrador. */
 @Controller('ia-custo')
 export class IaCustoController {
-  constructor(private readonly iaCustoService: IaCustoService) {}
+    constructor(private readonly iaCustoService: IaCustoService) {}
 
-  @AdministradorOnly()
-  @Get()
-  consultar(@Query() dto: IaCustoConsultarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
-    return this.iaCustoService.consultar(dto, usuarioAtivo);
-  }
+    @AdministradorOnly()
+    @Get()
+    consultar(@Query() dto: IaCustoConsultarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.iaCustoService.consultar(dto, usuarioAtivo);
+    }
 
-  @AdministradorOnly()
-  @Put('preco')
-  alterarPreco(@Body() dto: IaModeloPrecoAlterarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
-    return this.iaCustoService.alterarPreco(dto, usuarioAtivo);
-  }
+    @AdministradorOnly()
+    @Put('preco')
+    alterarPreco(@Body() dto: IaModeloPrecoAlterarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.iaCustoService.alterarPreco(dto, usuarioAtivo);
+    }
 }

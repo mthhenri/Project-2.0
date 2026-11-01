@@ -1,4 +1,4 @@
 export class DemandaMembroVerificarDto {
-  demandaId: number;
-  usuarioId: number;
+    demandaId: number;
+    usuarioId: number;
 }

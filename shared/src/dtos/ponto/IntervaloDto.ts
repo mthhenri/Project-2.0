@@ -1,5 +1,5 @@
 export class IntervaloDto {
-  inicioData: Date;
-  fimData: Date;
-  duracaoMinutos: number;
+    inicioData: Date;
+    fimData: Date;
+    duracaoMinutos: number;
 }

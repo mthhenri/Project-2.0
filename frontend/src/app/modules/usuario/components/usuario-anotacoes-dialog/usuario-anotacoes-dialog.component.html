@@ -1,62 +1,64 @@
 <p-drawer
-  [visible]="visivel()"
-  (visibleChange)="aoMudarVisibilidade($event)"
-  position="right"
-  [modal]="true"
-  [dismissible]="true"
-  [closeOnEscape]="true"
-  [showCloseIcon]="false"
-  [styleClass]="cheio() ? 'anotacoes-drawer anotacoes-drawer--cheio' : 'anotacoes-drawer'"
-  [style]="{ width: cheio() ? '100vw' : larguraEfetiva() + 'px' }"
+    [visible]="visivel()"
+    (visibleChange)="aoMudarVisibilidade($event)"
+    position="right"
+    [modal]="true"
+    [dismissible]="true"
+    [closeOnEscape]="true"
+    [showCloseIcon]="false"
+    [styleClass]="cheio() ? 'anotacoes-drawer anotacoes-drawer--cheio' : 'anotacoes-drawer'"
+    [style]="{ width: cheio() ? '100vw' : larguraEfetiva() + 'px' }"
 >
-  <ng-template #headless>
-    <div class="anotacoes-drawer__conteudo">
-      @if (!cheio()) {
-        <div
-          class="anotacoes-drawer__alca"
-          [class.anotacoes-drawer__alca--arrastando]="arrastando()"
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Largura do pad"
-          tabindex="0"
-          [attr.aria-valuenow]="larguraEfetiva()"
-          [attr.aria-valuemin]="largura.minima"
-          [attr.aria-valuemax]="larguraMaxima()"
-          (pointerdown)="iniciarArrasto($event)"
-          (pointermove)="aoArrastar($event)"
-          (pointerup)="finalizarArrasto()"
-          (pointercancel)="finalizarArrasto()"
-          (dblclick)="restaurarLargura()"
-          (keydown)="aoTeclarNaAlca($event)"
-        >
-          @if (arrastando()) {
-            <span class="anotacoes-drawer__etiqueta" role="status">{{ larguraEfetiva() }} px</span>
-          }
-        </div>
-      }
+    <ng-template #headless>
+        <div class="anotacoes-drawer__conteudo">
+            @if (!cheio()) {
+                <div
+                    class="anotacoes-drawer__alca"
+                    [class.anotacoes-drawer__alca--arrastando]="arrastando()"
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label="Largura do pad"
+                    tabindex="0"
+                    [attr.aria-valuenow]="larguraEfetiva()"
+                    [attr.aria-valuemin]="largura.minima"
+                    [attr.aria-valuemax]="larguraMaxima()"
+                    (pointerdown)="iniciarArrasto($event)"
+                    (pointermove)="aoArrastar($event)"
+                    (pointerup)="finalizarArrasto()"
+                    (pointercancel)="finalizarArrasto()"
+                    (dblclick)="restaurarLargura()"
+                    (keydown)="aoTeclarNaAlca($event)"
+                >
+                    @if (arrastando()) {
+                        <span class="anotacoes-drawer__etiqueta" role="status"
+                            >{{ larguraEfetiva() }} px</span
+                        >
+                    }
+                </div>
+            }
 
-      <app-pad-painel [editavel]="editavel()" [colunaCentral]="cheio()">
-        <p-button
-          padAcoes
-          [icon]="cheio() ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
-          [text]="true"
-          severity="secondary"
-          [ariaLabel]="cheio() ? 'Sair da tela cheia' : 'Tela cheia'"
-          [pTooltip]="cheio() ? 'Sair da tela cheia' : 'Tela cheia'"
-          tooltipPosition="bottom"
-          (onClick)="alternarTelaCheia()"
-        />
-        <p-button
-          padAcoes
-          icon="pi pi-times"
-          [text]="true"
-          severity="secondary"
-          ariaLabel="Fechar anotações"
-          pTooltip="Fechar (Esc) — salva sozinho"
-          tooltipPosition="left"
-          (onClick)="aoMudarVisibilidade(false)"
-        />
-      </app-pad-painel>
-    </div>
-  </ng-template>
+            <app-pad-painel [editavel]="editavel()" [colunaCentral]="cheio()">
+                <p-button
+                    padAcoes
+                    [icon]="cheio() ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
+                    [text]="true"
+                    severity="secondary"
+                    [ariaLabel]="cheio() ? 'Sair da tela cheia' : 'Tela cheia'"
+                    [pTooltip]="cheio() ? 'Sair da tela cheia' : 'Tela cheia'"
+                    tooltipPosition="bottom"
+                    (onClick)="alternarTelaCheia()"
+                />
+                <p-button
+                    padAcoes
+                    icon="pi pi-times"
+                    [text]="true"
+                    severity="secondary"
+                    ariaLabel="Fechar anotações"
+                    pTooltip="Fechar (Esc) — salva sozinho"
+                    tooltipPosition="left"
+                    (onClick)="aoMudarVisibilidade(false)"
+                />
+            </app-pad-painel>
+        </div>
+    </ng-template>
 </p-drawer>

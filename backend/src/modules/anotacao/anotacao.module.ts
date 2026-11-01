@@ -11,24 +11,24 @@ import { ConsultarPadFerramenta } from './ferramentas/consultar-pad.ferramenta';
 import { ProporAnotarPadFerramenta } from './ferramentas/propor-anotar-pad.ferramenta';
 
 @Module({
-  imports:     [FerramentaIaModule, PropostaIaModule],
-  controllers: [AnotacaoController],
-  providers:   [AnotacaoService, AnotacaoRepository, ConsultarPadFerramenta, ProporAnotarPadFerramenta, AnotarPadExecutor],
-  exports:     [AnotacaoService, AnotacaoRepository],
+    imports:     [FerramentaIaModule, PropostaIaModule],
+    controllers: [AnotacaoController],
+    providers:   [AnotacaoService, AnotacaoRepository, ConsultarPadFerramenta, ProporAnotarPadFerramenta, AnotarPadExecutor],
+    exports:     [AnotacaoService, AnotacaoRepository],
 })
 export class AnotacaoModule implements OnModuleInit {
-  constructor(
-    private readonly registroDeFerramentas: FerramentaIaRegistro,
-    private readonly consultarPad: ConsultarPadFerramenta,
-    private readonly proporAnotarPad: ProporAnotarPadFerramenta,
-    private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
-    private readonly anotarPadExecutor: AnotarPadExecutor,
-  ) {}
+    constructor(
+        private readonly registroDeFerramentas: FerramentaIaRegistro,
+        private readonly consultarPad: ConsultarPadFerramenta,
+        private readonly proporAnotarPad: ProporAnotarPadFerramenta,
+        private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
+        private readonly anotarPadExecutor: AnotarPadExecutor,
+    ) {}
 
-  /** As ferramentas de IA do pad se registram aqui (a IA só lê e propõe pelo `AnotacaoService`, sempre no pad do usuário do token). */
-  onModuleInit(): void {
-    this.registroDeFerramentas.registrar(this.consultarPad);
-    this.registroDeFerramentas.registrar(this.proporAnotarPad);
-    this.registroDeExecutores.registrar(this.anotarPadExecutor);
-  }
+    /** As ferramentas de IA do pad se registram aqui (a IA só lê e propõe pelo `AnotacaoService`, sempre no pad do usuário do token). */
+    onModuleInit(): void {
+        this.registroDeFerramentas.registrar(this.consultarPad);
+        this.registroDeFerramentas.registrar(this.proporAnotarPad);
+        this.registroDeExecutores.registrar(this.anotarPadExecutor);
+    }
 }

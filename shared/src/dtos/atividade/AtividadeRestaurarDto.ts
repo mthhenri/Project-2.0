@@ -1,3 +1,3 @@
 export class AtividadeRestaurarDto {
-  id: number;
+    id: number;
 }

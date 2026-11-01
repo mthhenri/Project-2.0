@@ -5,9 +5,9 @@ import { IsDateString } from 'class-validator';
  * (`createdDate`), e não o instante da leitura: uma mensagem que chega entre a busca e a marcação nunca é dada como lida sem ter sido vista.
  */
 export class MensagemDiretaLeituraAlterarDto {
-  /** A outra pessoa da conversa. Vem da rota e é preenchido pela controller; nunca pelo corpo. */
-  usuarioId: number;
+    /** A outra pessoa da conversa. Vem da rota e é preenchido pela controller; nunca pelo corpo. */
+    usuarioId: number;
 
-  @IsDateString()
-  lidaAteDate: string;
+    @IsDateString()
+    lidaAteDate: string;
 }

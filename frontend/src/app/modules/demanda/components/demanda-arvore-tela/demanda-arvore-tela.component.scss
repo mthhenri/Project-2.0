@@ -1,84 +1,84 @@
 :host {
-  display: block;
-  height: 100%;
-  min-height: 0;
-  container-type: inline-size;
+    display: block;
+    height: 100%;
+    min-height: 0;
+    container-type: inline-size;
 }
 
 // Três colunas lado a lado (pastas 20%, lista 28% e demanda aberta 52%), cada uma com a rolagem própria. Em largura curta (monitor vertical, barra lateral aberta) a demanda aberta desce.
 .demanda-arvore-tela {
-  display: grid;
-  grid-template-columns: minmax(0, 20fr) minmax(0, 28fr) minmax(0, 52fr);
-  height: 100%;
-  min-height: 0;
-  background: var(--app-surface-0);
-
-  &__pastas,
-  &__lista,
-  &__aberta {
-    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 20fr) minmax(0, 28fr) minmax(0, 52fr);
+    height: 100%;
     min-height: 0;
-    overflow: hidden;
-  }
-
-  &__aberta {
-    display: flex;
-    flex-direction: column;
     background: var(--app-surface-0);
-  }
 
-  &__vazio {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 2rem;
-    text-align: center;
-    color: var(--p-text-muted-color);
-
-    .pi {
-      font-size: 1.75rem;
-      opacity: 0.5;
+    &__pastas,
+    &__lista,
+    &__aberta {
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
     }
 
-    p {
-      margin: 0;
-      max-width: 22rem;
+    &__aberta {
+        display: flex;
+        flex-direction: column;
+        background: var(--app-surface-0);
     }
-  }
+
+    &__vazio {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 2rem;
+        text-align: center;
+        color: var(--p-text-muted-color);
+
+        .pi {
+            font-size: 1.75rem;
+            opacity: 0.5;
+        }
+
+        p {
+            margin: 0;
+            max-width: 22rem;
+        }
+    }
 }
 
 // No modo Dividido a lista ocupa a coluna estreita inteira, com a rolagem própria.
 .demanda-arvore-tela__lista-dividida {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-
-  app-demanda-pasta-lista {
+    display: flex;
     flex: 1;
+    flex-direction: column;
     min-height: 0;
-  }
+    overflow: hidden;
+
+    app-demanda-pasta-lista {
+        flex: 1;
+        min-height: 0;
+    }
 }
 
 // Em largura média (notebook com a barra lateral aberta) as pastas encolhem para a demanda aberta não perder as abas.
 @container (max-width: 1250px) {
-  .demanda-arvore-tela {
-    grid-template-columns: minmax(0, 20fr) minmax(0, 25fr) minmax(0, 55fr);
-  }
+    .demanda-arvore-tela {
+        grid-template-columns: minmax(0, 20fr) minmax(0, 25fr) minmax(0, 55fr);
+    }
 }
 
 @container (max-width: 1000px) {
-  .demanda-arvore-tela {
-    grid-template-columns: 11rem minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1.4fr);
+    .demanda-arvore-tela {
+        grid-template-columns: 11rem minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) minmax(0, 1.4fr);
 
-    &__aberta {
-      grid-column: 1 / -1;
-      border-top: 1px solid var(--app-surface-200);
+        &__aberta {
+            grid-column: 1 / -1;
+            border-top: 1px solid var(--app-surface-200);
+        }
     }
-  }
 }

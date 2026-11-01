@@ -8,21 +8,21 @@ import { ConexaoDeEventosDiretos } from '../domain/conexoes-de-eventos-diretos';
  * desenvolvimento, nginx) e sem limite de tempo da resposta.
  */
 export class FluxoDeEventosDiretos implements ConexaoDeEventosDiretos {
-  constructor(private readonly resposta: Response) {
-    resposta.status(200);
-    resposta.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
-    resposta.setHeader('Cache-Control', 'no-cache, no-transform');
-    resposta.setHeader('Connection', 'keep-alive');
-    resposta.setHeader('X-Accel-Buffering', 'no');
-    resposta.flushHeaders();
-  }
+    constructor(private readonly resposta: Response) {
+        resposta.status(200);
+        resposta.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+        resposta.setHeader('Cache-Control', 'no-cache, no-transform');
+        resposta.setHeader('Connection', 'keep-alive');
+        resposta.setHeader('X-Accel-Buffering', 'no');
+        resposta.flushHeaders();
+    }
 
-  enviar(evento: MensagemDiretaEventoDto): void {
-    if (this.resposta.writableEnded || this.resposta.destroyed) return;
-    this.resposta.write(`data: ${JSON.stringify(evento)}\n\n`);
-  }
+    enviar(evento: MensagemDiretaEventoDto): void {
+        if (this.resposta.writableEnded || this.resposta.destroyed) return;
+        this.resposta.write(`data: ${JSON.stringify(evento)}\n\n`);
+    }
 
-  encerrar(): void {
-    if (!this.resposta.writableEnded) this.resposta.end();
-  }
+    encerrar(): void {
+        if (!this.resposta.writableEnded) this.resposta.end();
+    }
 }

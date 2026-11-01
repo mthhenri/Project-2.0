@@ -4,27 +4,27 @@ import { PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { ProjectDesktopService } from '../../../core/services/project-desktop.service';
 import {
-  AvisoNaTela,
-  EntradaDaDecisaoDeAviso,
-  OpcaoDeSilencio,
-  PreferenciaNaTela,
-  decidirAviso,
-  normalizarPreferencia,
-  silenciarAte,
-  somarAviso,
+    AvisoNaTela,
+    EntradaDaDecisaoDeAviso,
+    OpcaoDeSilencio,
+    PreferenciaNaTela,
+    decidirAviso,
+    normalizarPreferencia,
+    silenciarAte,
+    somarAviso,
 } from '../utils/avisos.util';
 import { MensagemDiretaService } from './mensagem-direta.service';
 import { MensagemDiretaSomService } from './mensagem-direta-som.service';
 
 /** O que o estado sabe de uma mensagem nova e entrega para este serviço decidir se avisa. */
 export interface MensagemParaAvisar extends Omit<EntradaDaDecisaoDeAviso, 'preferencia' | 'agora'> {
-  conversaId: string;
-  usuarioId: number;
-  usuarioNome: string;
-  /** A prévia da mensagem, sem marcação (a notificação do sistema não renderiza Markdown). */
-  texto: string;
-  /** O Markdown da mensagem, que o cartão do Project renderiza. */
-  markdown?: string;
+    conversaId: string;
+    usuarioId: number;
+    usuarioNome: string;
+    /** A prévia da mensagem, sem marcação (a notificação do sistema não renderiza Markdown). */
+    texto: string;
+    /** O Markdown da mensagem, que o cartão do Project renderiza. */
+    markdown?: string;
 }
 
 /**
@@ -34,130 +34,130 @@ export interface MensagemParaAvisar extends Omit<EntradaDaDecisaoDeAviso, 'prefe
  */
 @Injectable({ providedIn: 'root' })
 export class MensagemDiretaAvisosService {
-  private readonly api = inject(MensagemDiretaService);
-  private readonly som = inject(MensagemDiretaSomService);
-  private readonly desktop = inject(ProjectDesktopService);
+    private readonly api = inject(MensagemDiretaService);
+    private readonly som = inject(MensagemDiretaSomService);
+    private readonly desktop = inject(ProjectDesktopService);
 
-  readonly preferencia = signal<PreferenciaNaTela>(normalizarPreferencia(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA));
-  /** A última gravação da preferência falhou (a tela voltou ao valor anterior). */
-  readonly erroNaPreferencia = signal(false);
-  readonly avisos = signal<AvisoNaTela[]>([]);
-  /** A janela de chat do Desktop (task 213) é o próprio chat: ela não avisa de mensagem nenhuma. */
-  readonly suprimido = signal(false);
+    readonly preferencia = signal<PreferenciaNaTela>(normalizarPreferencia(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA));
+    /** A última gravação da preferência falhou (a tela voltou ao valor anterior). */
+    readonly erroNaPreferencia = signal(false);
+    readonly avisos = signal<AvisoNaTela[]>([]);
+    /** A janela de chat do Desktop (task 213) é o próprio chat: ela não avisa de mensagem nenhuma. */
+    readonly suprimido = signal(false);
 
-  private geracaoDaSessao = 0;
-  private geracaoDaGravacao = 0;
-  /** O servidor já respondeu com a preferência gravada. Sem isso, gravar levaria o padrão por cima da escolha do usuário. */
-  private carregada = false;
-  /** O último valor que o servidor confirmou: é para ele que a tela volta quando uma gravação falha. */
-  private confirmada: PreferenciaNaTela = normalizarPreferencia(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA);
+    private geracaoDaSessao = 0;
+    private geracaoDaGravacao = 0;
+    /** O servidor já respondeu com a preferência gravada. Sem isso, gravar levaria o padrão por cima da escolha do usuário. */
+    private carregada = false;
+    /** O último valor que o servidor confirmou: é para ele que a tela volta quando uma gravação falha. */
+    private confirmada: PreferenciaNaTela = normalizarPreferencia(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA);
 
-  async carregarPreferencia(): Promise<void> {
-    const sessao = this.geracaoDaSessao;
-    const gravacoes = this.geracaoDaGravacao;
-    try {
-      const resposta = await firstValueFrom(this.api.recuperarPreferencia());
-      if (sessao !== this.geracaoDaSessao || !resposta.dados) return;
-      this.carregada = true;
-      this.confirmada = normalizarPreferencia(resposta.dados);
-      // Uma gravação feita enquanto a leitura voava é mais nova que ela: a tela fica com a gravação.
-      if (gravacoes === this.geracaoDaGravacao) this.preferencia.set(this.confirmada);
-    } catch {
-      // Sem a preferência gravada vale o padrão nos avisos (melhor avisar do que calar por engano); gravar espera uma nova leitura.
+    async carregarPreferencia(): Promise<void> {
+        const sessao = this.geracaoDaSessao;
+        const gravacoes = this.geracaoDaGravacao;
+        try {
+            const resposta = await firstValueFrom(this.api.recuperarPreferencia());
+            if (sessao !== this.geracaoDaSessao || !resposta.dados) return;
+            this.carregada = true;
+            this.confirmada = normalizarPreferencia(resposta.dados);
+            // Uma gravação feita enquanto a leitura voava é mais nova que ela: a tela fica com a gravação.
+            if (gravacoes === this.geracaoDaGravacao) this.preferencia.set(this.confirmada);
+        } catch {
+            // Sem a preferência gravada vale o padrão nos avisos (melhor avisar do que calar por engano); gravar espera uma nova leitura.
+        }
     }
-  }
 
-  /**
+    /**
    * Grava a mudança: a tela muda na hora e volta ao valor anterior se o servidor recusar. O pedido leva o conjunto inteiro (a rota troca tudo de uma
    * vez), então cada gravação parte da preferência que a tela mostra.
    */
-  async alterarPreferencia(alteracao: Partial<PreferenciaNaTela>): Promise<void> {
-    if (!this.carregada) await this.carregarPreferencia();
-    if (!this.carregada) {
-      this.erroNaPreferencia.set(true);
-      return;
+    async alterarPreferencia(alteracao: Partial<PreferenciaNaTela>): Promise<void> {
+        if (!this.carregada) await this.carregarPreferencia();
+        if (!this.carregada) {
+            this.erroNaPreferencia.set(true);
+            return;
+        }
+        const proxima: PreferenciaNaTela = { ...this.preferencia(), ...alteracao };
+        const geracao = ++this.geracaoDaGravacao;
+        const sessao = this.geracaoDaSessao;
+        this.preferencia.set(proxima);
+        this.erroNaPreferencia.set(false);
+        try {
+            const resposta = await firstValueFrom(
+                this.api.alterarPreferencia({
+                    avisosAtivos: proxima.avisosAtivos,
+                    avisoDesktopAtivo: proxima.avisoDesktopAtivo,
+                    somAtivo: proxima.somAtivo,
+                    silenciadoAteDate: proxima.silenciadoAteDate ? proxima.silenciadoAteDate.toISOString() : null,
+                    atalhoGlobal: proxima.atalhoGlobal,
+                    posicaoPopup: proxima.posicaoPopup,
+                }),
+            );
+            if (sessao !== this.geracaoDaSessao) return;
+            if (resposta.dados) this.confirmada = normalizarPreferencia(resposta.dados);
+            // Havendo uma gravação mais nova em voo, a tela é dela; esta só atualiza o que o servidor confirmou.
+            if (geracao === this.geracaoDaGravacao) this.preferencia.set(this.confirmada);
+        } catch {
+            if (sessao !== this.geracaoDaSessao || geracao !== this.geracaoDaGravacao) return;
+            this.preferencia.set(this.confirmada);
+            this.erroNaPreferencia.set(true);
+        }
     }
-    const proxima: PreferenciaNaTela = { ...this.preferencia(), ...alteracao };
-    const geracao = ++this.geracaoDaGravacao;
-    const sessao = this.geracaoDaSessao;
-    this.preferencia.set(proxima);
-    this.erroNaPreferencia.set(false);
-    try {
-      const resposta = await firstValueFrom(
-        this.api.alterarPreferencia({
-          avisosAtivos: proxima.avisosAtivos,
-          avisoDesktopAtivo: proxima.avisoDesktopAtivo,
-          somAtivo: proxima.somAtivo,
-          silenciadoAteDate: proxima.silenciadoAteDate ? proxima.silenciadoAteDate.toISOString() : null,
-          atalhoGlobal: proxima.atalhoGlobal,
-          posicaoPopup: proxima.posicaoPopup,
-        }),
-      );
-      if (sessao !== this.geracaoDaSessao) return;
-      if (resposta.dados) this.confirmada = normalizarPreferencia(resposta.dados);
-      // Havendo uma gravação mais nova em voo, a tela é dela; esta só atualiza o que o servidor confirmou.
-      if (geracao === this.geracaoDaGravacao) this.preferencia.set(this.confirmada);
-    } catch {
-      if (sessao !== this.geracaoDaSessao || geracao !== this.geracaoDaGravacao) return;
-      this.preferencia.set(this.confirmada);
-      this.erroNaPreferencia.set(true);
+
+    silenciarTudo(opcao: OpcaoDeSilencio): Promise<void> {
+        return this.alterarPreferencia({ silenciadoAteDate: silenciarAte(opcao, new Date(), ambiente.fusoHorario) });
     }
-  }
 
-  silenciarTudo(opcao: OpcaoDeSilencio): Promise<void> {
-    return this.alterarPreferencia({ silenciadoAteDate: silenciarAte(opcao, new Date(), ambiente.fusoHorario) });
-  }
+    reativarTudo(): Promise<void> {
+        return this.alterarPreferencia({ silenciadoAteDate: null });
+    }
 
-  reativarTudo(): Promise<void> {
-    return this.alterarPreferencia({ silenciadoAteDate: null });
-  }
-
-  /**
+    /**
    * Mostra o aviso (e toca o som, se ligado) quando a regra manda. Devolve se avisou. Com o Project oculto no Desktop (a página segue carregada, sem
    * janela), o aviso vira notificação do sistema, se o usuário não desligou o aviso do Desktop; o cartão e o tom ficam para a página à vista.
    */
-  avisar(mensagem: MensagemParaAvisar): boolean {
-    if (this.suprimido()) return false;
-    const agora = new Date();
-    const decisao = decidirAviso({ ...mensagem, preferencia: this.preferencia(), agora });
-    if (!decisao.avisar) return false;
-    if (this.desktop.disponivel && this.desktop.paginaOculta()) {
-      if (!this.preferencia().avisoDesktopAtivo) return false;
-      this.desktop.avisarMensagem({
-        usuarioId: mensagem.usuarioId,
-        usuarioNome: mensagem.usuarioNome,
-        texto: mensagem.texto,
-        mencionaVoce: mensagem.mencionaVoce,
-        som: this.preferencia().somAtivo,
-      });
-      return true;
+    avisar(mensagem: MensagemParaAvisar): boolean {
+        if (this.suprimido()) return false;
+        const agora = new Date();
+        const decisao = decidirAviso({ ...mensagem, preferencia: this.preferencia(), agora });
+        if (!decisao.avisar) return false;
+        if (this.desktop.disponivel && this.desktop.paginaOculta()) {
+            if (!this.preferencia().avisoDesktopAtivo) return false;
+            this.desktop.avisarMensagem({
+                usuarioId: mensagem.usuarioId,
+                usuarioNome: mensagem.usuarioNome,
+                texto: mensagem.texto,
+                mencionaVoce: mensagem.mencionaVoce,
+                som: this.preferencia().somAtivo,
+            });
+            return true;
+        }
+        this.avisos.update((atuais) =>
+            somarAviso(atuais, {
+                conversaId: mensagem.conversaId,
+                usuarioId: mensagem.usuarioId,
+                usuarioNome: mensagem.usuarioNome,
+                texto: mensagem.texto,
+                markdown: mensagem.markdown,
+                mencionaVoce: mensagem.mencionaVoce,
+                agora: agora.getTime(),
+            }),
+        );
+        if (this.preferencia().somAtivo) this.som.tocar();
+        return true;
     }
-    this.avisos.update((atuais) =>
-      somarAviso(atuais, {
-        conversaId: mensagem.conversaId,
-        usuarioId: mensagem.usuarioId,
-        usuarioNome: mensagem.usuarioNome,
-        texto: mensagem.texto,
-        markdown: mensagem.markdown,
-        mencionaVoce: mensagem.mencionaVoce,
-        agora: agora.getTime(),
-      }),
-    );
-    if (this.preferencia().somAtivo) this.som.tocar();
-    return true;
-  }
 
-  fechar(id: string): void {
-    this.avisos.update((atuais) => atuais.filter((aviso) => aviso.id !== id));
-  }
+    fechar(id: string): void {
+        this.avisos.update((atuais) => atuais.filter((aviso) => aviso.id !== id));
+    }
 
-  /** A sessão acabou: nada do usuário anterior fica (preferência, cartões e gravações em voo). */
-  limpar(): void {
-    this.geracaoDaSessao++;
-    this.avisos.set([]);
-    this.carregada = false;
-    this.confirmada = normalizarPreferencia(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA);
-    this.preferencia.set(this.confirmada);
-    this.erroNaPreferencia.set(false);
-  }
+    /** A sessão acabou: nada do usuário anterior fica (preferência, cartões e gravações em voo). */
+    limpar(): void {
+        this.geracaoDaSessao++;
+        this.avisos.set([]);
+        this.carregada = false;
+        this.confirmada = normalizarPreferencia(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA);
+        this.preferencia.set(this.confirmada);
+        this.erroNaPreferencia.set(false);
+    }
 }

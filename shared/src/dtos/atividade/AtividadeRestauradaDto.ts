@@ -1,5 +1,5 @@
 export class AtividadeRestauradaDto {
-  id: number;
-  demandaId: number;
-  nome: string;
+    id: number;
+    demandaId: number;
+    nome: string;
 }

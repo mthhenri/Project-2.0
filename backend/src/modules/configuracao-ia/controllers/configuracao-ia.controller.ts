@@ -9,20 +9,20 @@ import { ConfiguracaoIaService } from '../services/configuracao-ia.service';
 @AdministradorOnly()
 @Controller('configuracao-ia')
 export class ConfiguracaoIaController {
-  constructor(private readonly configuracaoIaService: ConfiguracaoIaService) {}
+    constructor(private readonly configuracaoIaService: ConfiguracaoIaService) {}
 
-  @Get()
-  recuperarAtiva(@ActiveUser() usuarioAtivo: JwtPayload) {
-    return this.configuracaoIaService.recuperarAtiva(usuarioAtivo);
-  }
+    @Get()
+    recuperarAtiva(@ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.configuracaoIaService.recuperarAtiva(usuarioAtivo);
+    }
 
-  @Get('versoes')
-  listar(@Query() dto: ConfiguracaoIaListarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
-    return this.configuracaoIaService.listar(dto, usuarioAtivo);
-  }
+    @Get('versoes')
+    listar(@Query() dto: ConfiguracaoIaListarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.configuracaoIaService.listar(dto, usuarioAtivo);
+    }
 
-  @Post()
-  criar(@Body() dto: ConfiguracaoIaCriarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
-    return this.configuracaoIaService.criar(dto, usuarioAtivo);
-  }
+    @Post()
+    criar(@Body() dto: ConfiguracaoIaCriarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.configuracaoIaService.criar(dto, usuarioAtivo);
+    }
 }

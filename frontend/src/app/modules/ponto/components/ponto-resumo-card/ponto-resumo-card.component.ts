@@ -4,27 +4,28 @@ import { Component, Input } from '@angular/core';
 export type PontoResumoCardCor = 'neutro' | 'positivo' | 'negativo' | 'primario';
 
 @Component({
-  selector: 'app-ponto-resumo-card',
-  standalone: true,
-  imports: [],
-  templateUrl: './ponto-resumo-card.component.html',
+    selector: 'app-ponto-resumo-card',
+    standalone: true,
+    imports: [],
+    templateUrl: './ponto-resumo-card.component.html',
+    styleUrl: './ponto-resumo-card.component.scss',
 })
 export class PontoResumoCardComponent {
-  @Input({ required: true }) rotulo!: string;
-  @Input({ required: true }) valor!: string;
-  @Input() icone = '';
-  @Input() cor: PontoResumoCardCor = 'neutro';
+    @Input({ required: true }) rotulo!: string;
+    @Input({ required: true }) valor!: string;
+    @Input() icone = '';
+    @Input() cor: PontoResumoCardCor = 'neutro';
 
-  classeValor(): string {
-    switch (this.cor) {
-      case 'positivo':
-        return 'text-green-600 dark:text-green-400';
-      case 'negativo':
-        return 'text-red-600 dark:text-red-400';
-      case 'primario':
-        return 'text-[var(--p-primary-color)]';
-      default:
-        return 'text-color';
+    classeValor(): string {
+        switch (this.cor) {
+            case 'positivo':
+                return 'text-green-600 dark:text-green-400';
+            case 'negativo':
+                return 'text-red-600 dark:text-red-400';
+            case 'primario':
+                return 'text-[var(--p-primary-color)]';
+            default:
+                return 'text-color';
+        }
     }
-  }
 }

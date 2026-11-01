@@ -12,24 +12,24 @@ import { GestorGuard } from './guards/gestor.guard';
 import { AdministradorGuard } from './guards/administrador.guard';
 
 @Module({
-  imports: [
-    PassportModule,
-    JwtModule.registerAsync({
-      useFactory: (configService: ConfigService) => ({
-        secret:       configService.obter().jwt.secreto,
-        signOptions:  { expiresIn: configService.obter().jwt.expiracao },
-      }),
-      inject: [ConfigService],
-    }),
-    UsuarioModule,
-  ],
-  controllers: [AutenticacaoController],
-  providers: [
-    AutenticacaoService,
-    JwtStrategy,
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
-    { provide: APP_GUARD, useClass: GestorGuard },
-    { provide: APP_GUARD, useClass: AdministradorGuard },
-  ],
+    imports: [
+        PassportModule,
+        JwtModule.registerAsync({
+            useFactory: (configService: ConfigService) => ({
+                secret:       configService.obter().jwt.secreto,
+                signOptions:  { expiresIn: configService.obter().jwt.expiracao },
+            }),
+            inject: [ConfigService],
+        }),
+        UsuarioModule,
+    ],
+    controllers: [AutenticacaoController],
+    providers: [
+        AutenticacaoService,
+        JwtStrategy,
+        { provide: APP_GUARD, useClass: JwtAuthGuard },
+        { provide: APP_GUARD, useClass: GestorGuard },
+        { provide: APP_GUARD, useClass: AdministradorGuard },
+    ],
 })
 export class AutenticacaoModule {}

@@ -1,4 +1,4 @@
 export class PlanoInternoArquivarDto {
-  id: number;
-  isArquivado: boolean;
+    id: number;
+    isArquivado: boolean;
 }

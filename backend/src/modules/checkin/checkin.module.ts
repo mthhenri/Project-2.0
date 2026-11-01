@@ -15,23 +15,23 @@ import { CheckinService } from './services/checkin.service';
 
 /** Check-in do desenvolvedor: a suspensão por reunião (task 148), a situação e a conversa do check-in (task 149). */
 @Module({
-  imports:     [FerramentaIaModule, PropostaIaModule, ConfiguracaoIaModule, ChatModule, ExecucaoModule],
-  controllers: [CheckinController],
-  providers:   [CheckinSuspensaoService, CheckinAgendaService, CheckinService, SuspenderCheckinExecutor, ProporSuspenderCheckinFerramenta, ProporRetomarCheckinFerramenta],
-  exports:     [CheckinSuspensaoService],
+    imports:     [FerramentaIaModule, PropostaIaModule, ConfiguracaoIaModule, ChatModule, ExecucaoModule],
+    controllers: [CheckinController],
+    providers:   [CheckinSuspensaoService, CheckinAgendaService, CheckinService, SuspenderCheckinExecutor, ProporSuspenderCheckinFerramenta, ProporRetomarCheckinFerramenta],
+    exports:     [CheckinSuspensaoService],
 })
 export class CheckinModule implements OnModuleInit {
-  constructor(
-    private readonly registroDeFerramentas: FerramentaIaRegistro,
-    private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
-    private readonly suspenderCheckinExecutor: SuspenderCheckinExecutor,
-    private readonly proporSuspender: ProporSuspenderCheckinFerramenta,
-    private readonly proporRetomar: ProporRetomarCheckinFerramenta,
-  ) {}
+    constructor(
+        private readonly registroDeFerramentas: FerramentaIaRegistro,
+        private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
+        private readonly suspenderCheckinExecutor: SuspenderCheckinExecutor,
+        private readonly proporSuspender: ProporSuspenderCheckinFerramenta,
+        private readonly proporRetomar: ProporRetomarCheckinFerramenta,
+    ) {}
 
-  onModuleInit(): void {
-    this.registroDeFerramentas.registrar(this.proporSuspender);
-    this.registroDeFerramentas.registrar(this.proporRetomar);
-    this.registroDeExecutores.registrar(this.suspenderCheckinExecutor);
-  }
+    onModuleInit(): void {
+        this.registroDeFerramentas.registrar(this.proporSuspender);
+        this.registroDeFerramentas.registrar(this.proporRetomar);
+        this.registroDeExecutores.registrar(this.suspenderCheckinExecutor);
+    }
 }

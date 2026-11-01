@@ -1,186 +1,219 @@
 <div class="demanda-projeto">
+    <!-- Topbar da página -->
+    <div class="demanda-projeto__header">
+        <div class="demanda-projeto__header-esquerda">
+            <p-select
+                #seletorProjeto
+                [options]="projetos()"
+                [formControl]="projetoControle"
+                optionLabel="nome"
+                optionValue="id"
+                placeholder="Selecionar projeto..."
+                [loading]="carregandoProjetos()"
+                [filter]="projetos().length > 8"
+                appendTo="body"
+                class="demanda-projeto__seletor-projeto"
+            />
 
-  <!-- Topbar da página -->
-  <div class="demanda-projeto__header">
-    <div class="demanda-projeto__header-esquerda">
-      <p-select
-        #seletorProjeto
-        [options]="projetos()"
-        [formControl]="projetoControle"
-        optionLabel="nome"
-        optionValue="id"
-        placeholder="Selecionar projeto..."
-        [loading]="carregandoProjetos()"
-        [filter]="projetos().length > 8"
-        appendTo="body"
-        class="demanda-projeto__seletor-projeto"
-      />
+            <p-button
+                icon="pi pi-external-link"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                ariaLabel="Abrir projeto"
+                pTooltip="Abrir projeto"
+                [disabled]="!projetoId()"
+                (onClick)="navegarParaProjeto()"
+            />
 
-      <p-button
-        icon="pi pi-external-link"
-        [text]="true"
-        severity="secondary"
-        size="small"
-        ariaLabel="Abrir projeto"
-        pTooltip="Abrir projeto"
-        [disabled]="!projetoId()"
-        (onClick)="navegarParaProjeto()"
-      />
-
-      @if (projetoId()) {
-        <p-selectbutton
-          [options]="opcoesModo()"
-          [ngModel]="modoVisualizacao()"
-          (ngModelChange)="alternarModo($event)"
-          optionLabel="rotulo"
-          optionValue="valor"
-          [allowEmpty]="false"
-          size="small"
-          class="demanda-projeto__modos"
-        >
-          <ng-template #item let-opcao>
-            <i [class]="opcao.icone"></i>
-            <span class="demanda-projeto__modo-rotulo">{{ opcao.rotulo }}</span>
-          </ng-template>
-        </p-selectbutton>
-      }
-    </div>
-
-    <div class="demanda-projeto__header-direita">
-      @if (sessao.eGestor() && projetoId()) {
-        <p-button
-          label="Nova Demanda"
-          icon="pi pi-plus"
-          pTooltip="Nova demanda (C)"
-          tooltipPosition="bottom"
-          (onClick)="mostrarDialogNovaDemanda.set(true)"
-        />
-      }
-    </div>
-  </div>
-
-  @if (projetoId() && !carregando() && projetoTemDemandas() && modoVisualizacao() !== 'controle-de-horas') {
-    <app-demanda-toolbar
-      #toolbar
-      [filtro]="filtro()"
-      [contagem]="contagemPorStatus()"
-      [tagsDisponiveis]="tagsDoProjeto()"
-      [mostrarExpansao]="modoVisualizacao() === 'arvore'"
-      [todosExpandidos]="todosExpandidos"
-      (filtroAlterado)="aoAlterarFiltro($event)"
-      (limpar)="limparFiltros()"
-      (expansaoAlternada)="alternarExpansaoGeral()"
-    />
-  }
-
-  <!-- Conteúdo principal -->
-  <div class="demanda-projeto__corpo">
-
-    <!-- Área do grafo / lista -->
-    <div class="demanda-projeto__visualizacao">
-
-      @if (!projetoId()) {
-        <div class="demanda-projeto__vazio">
-          <i class="pi pi-folder-open demanda-projeto__vazio-icone"></i>
-          <p class="demanda-projeto__vazio-texto">
-            {{ carregandoProjetos() ? 'Carregando projetos…' : 'Selecione um projeto para ver as demandas.' }}
-          </p>
-          @if (!carregandoProjetos()) {
-            <p-button label="Escolher projeto" icon="pi pi-chevron-down" iconPos="right" severity="secondary" [outlined]="true" (onClick)="abrirSeletorProjeto()" />
-          }
+            @if (projetoId()) {
+                <p-selectbutton
+                    [options]="opcoesModo()"
+                    [ngModel]="modoVisualizacao()"
+                    (ngModelChange)="alternarModo($event)"
+                    optionLabel="rotulo"
+                    optionValue="valor"
+                    [allowEmpty]="false"
+                    size="small"
+                    class="demanda-projeto__modos"
+                >
+                    <ng-template #item let-opcao>
+                        <i [class]="opcao.icone"></i>
+                        <span class="demanda-projeto__modo-rotulo">{{ opcao.rotulo }}</span>
+                    </ng-template>
+                </p-selectbutton>
+            }
         </div>
-      } @else {
-        @if (carregando()) {
-          <div class="demanda-projeto__carregando">
-            <app-skeleton-lista variante="linhas" [quantidade]="8" />
-          </div>
-        } @else {
-          @if (erroAoCarregarGrafo()) {
-            <div class="demanda-projeto__vazio demanda-projeto__vazio--lista" role="alert">
-              <i class="pi pi-exclamation-triangle demanda-projeto__vazio-icone"></i>
-              <p class="demanda-projeto__vazio-texto">Não foi possível carregar as demandas.</p>
-              <p-button label="Tentar de novo" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="carregarGrafo()" />
-            </div>
-          } @else if (!projetoTemDemandas() && modoVisualizacao() !== 'controle-de-horas') {
-            <div class="demanda-projeto__vazio demanda-projeto__vazio--lista">
-              <i class="pi pi-inbox demanda-projeto__vazio-icone"></i>
-              <p class="demanda-projeto__vazio-texto">Este projeto ainda não tem demandas.</p>
-              @if (sessao.eGestor()) {
-                <p-button label="Nova Demanda" icon="pi pi-plus" (onClick)="mostrarDialogNovaDemanda.set(true)" />
-              }
-            </div>
-          } @else if (modoVisualizacao() === 'grafo' && grafo()) {
-            <app-demanda-grafo
-              [grafo]="grafo()!"
-              [idsEmDestaque]="idsEmDestaqueNoGrafo()"
-              [statusVisiveis]="statusDoFiltro()"
-              (statusAlternado)="alternarStatusVisivel($event)"
-              (demandaSelecionada)="abrirNaArvore($event)"
-            />
-          }
 
-          @if (modoVisualizacao() === 'arvore' && projetoTemDemandas()) {
-            <app-demanda-arvore-tela
-              #arvoreTela
-              [nos]="grafo()!.nos"
-              [filtro]="filtro()"
-              [projetoId]="projetoId()"
-              [pastaId]="pastaId()"
-              [abrirDemanda]="pedidoAbrirDemanda()"
-              (pastaChange)="aoEscolherPasta($event)"
-              (alterado)="aoAlteradoPlanejamento()"
-              (statusAlterado)="aoStatusAlterado($event)"
-              (tagsAlteradas)="aoTagsAlteradas($event)"
-              (filtrosLimpos)="limparFiltros()"
-              (demandaEditarSolicitada)="painel.abrirEdicao($event)"
-              (demandaNovaFilhaSolicitada)="painel.abrirNovaFilha($event)"
-              (demandaTagsSolicitadas)="painel.abrirDialogTagsPorId($event)"
-              (demandaMembrosSolicitados)="painel.abrirDialogMembros($event)"
-            />
-          }
-
-          <!-- O painel da árvore antiga fica escondido: hospeda só os diálogos de editar, nova filha, tags, membros e descrição que o menu de
-               contexto e o Controle de horas abrem (a Árvore e o Controle de horas os herdam do painel antigo). -->
-          <div class="demanda-projeto__dialogos" hidden>
-            <app-demanda-arvore-painel
-              #painel
-              [raizes]="[]"
-              [projetoId]="projetoId()"
-              (alterado)="aoAlteradoPlanejamento()"
-              (tagsAlteradas)="aoTagsAlteradas($event)"
-              (statusAlterado)="aoStatusAlterado($event)"
-            />
-          </div>
-
-          @if (modoVisualizacao() === 'controle-de-horas' && !erroAoCarregarGrafo()) {
-            <app-demanda-controle-horas-painel
-              [nos]="grafo()?.nos ?? []"
-              [itens]="planejamento()"
-              [carregando]="carregandoPlanejamento()"
-              [pastaId]="pastaId()"
-              (demandaVisualizarSolicitada)="abrirNaArvore($event)"
-              (demandaEditarSolicitada)="painel.abrirEdicao($event)"
-              (demandaNovaFilhaSolicitada)="painel.abrirNovaFilha($event)"
-              (demandaTagsSolicitadas)="painel.abrirDialogTagsPorId($event)"
-              (demandaMembrosSolicitados)="painel.abrirDialogMembros($event)"
-              (demandaDescricaoSolicitada)="painel.abrirDialogDescricaoPorId($event.id, $event.campo)"
-              (statusAlterado)="aoStatusAlterado($event)"
-              (horasEstimadasAlteradas)="aoHorasEstimadasAlteradas($event)"
-            />
-          }
-        }
-      }
+        <div class="demanda-projeto__header-direita">
+            @if (sessao.eGestor() && projetoId()) {
+                <p-button
+                    label="Nova Demanda"
+                    icon="pi pi-plus"
+                    pTooltip="Nova demanda (C)"
+                    tooltipPosition="bottom"
+                    (onClick)="mostrarDialogNovaDemanda.set(true)"
+                />
+            }
+        </div>
     </div>
-  </div>
 
+    @if (
+        projetoId() &&
+        !carregando() &&
+        projetoTemDemandas() &&
+        modoVisualizacao() !== "controle-de-horas"
+    ) {
+        <app-demanda-toolbar
+            #toolbar
+            [filtro]="filtro()"
+            [contagem]="contagemPorStatus()"
+            [tagsDisponiveis]="tagsDoProjeto()"
+            [mostrarExpansao]="modoVisualizacao() === 'arvore'"
+            [todosExpandidos]="todosExpandidos"
+            (filtroAlterado)="aoAlterarFiltro($event)"
+            (limpar)="limparFiltros()"
+            (expansaoAlternada)="alternarExpansaoGeral()"
+        />
+    }
+
+    <!-- Conteúdo principal -->
+    <div class="demanda-projeto__corpo">
+        <!-- Área do grafo / lista -->
+        <div class="demanda-projeto__visualizacao">
+            @if (!projetoId()) {
+                <div class="demanda-projeto__vazio">
+                    <i class="pi pi-folder-open demanda-projeto__vazio-icone"></i>
+                    <p class="demanda-projeto__vazio-texto">
+                        {{
+                            carregandoProjetos()
+                                ? "Carregando projetos…"
+                                : "Selecione um projeto para ver as demandas."
+                        }}
+                    </p>
+                    @if (!carregandoProjetos()) {
+                        <p-button
+                            label="Escolher projeto"
+                            icon="pi pi-chevron-down"
+                            iconPos="right"
+                            severity="secondary"
+                            [outlined]="true"
+                            (onClick)="abrirSeletorProjeto()"
+                        />
+                    }
+                </div>
+            } @else {
+                @if (carregando()) {
+                    <div class="demanda-projeto__carregando">
+                        <app-skeleton-lista variante="linhas" [quantidade]="8" />
+                    </div>
+                } @else {
+                    @if (erroAoCarregarGrafo()) {
+                        <div
+                            class="demanda-projeto__vazio demanda-projeto__vazio--lista"
+                            role="alert"
+                        >
+                            <i class="pi pi-exclamation-triangle demanda-projeto__vazio-icone"></i>
+                            <p class="demanda-projeto__vazio-texto">
+                                Não foi possível carregar as demandas.
+                            </p>
+                            <p-button
+                                label="Tentar de novo"
+                                icon="pi pi-refresh"
+                                severity="secondary"
+                                [outlined]="true"
+                                (onClick)="carregarGrafo()"
+                            />
+                        </div>
+                    } @else if (
+                        !projetoTemDemandas() && modoVisualizacao() !== "controle-de-horas"
+                    ) {
+                        <div class="demanda-projeto__vazio demanda-projeto__vazio--lista">
+                            <i class="pi pi-inbox demanda-projeto__vazio-icone"></i>
+                            <p class="demanda-projeto__vazio-texto">
+                                Este projeto ainda não tem demandas.
+                            </p>
+                            @if (sessao.eGestor()) {
+                                <p-button
+                                    label="Nova Demanda"
+                                    icon="pi pi-plus"
+                                    (onClick)="mostrarDialogNovaDemanda.set(true)"
+                                />
+                            }
+                        </div>
+                    } @else if (modoVisualizacao() === "grafo" && grafo()) {
+                        <app-demanda-grafo
+                            [grafo]="grafo()!"
+                            [idsEmDestaque]="idsEmDestaqueNoGrafo()"
+                            [statusVisiveis]="statusDoFiltro()"
+                            (statusAlternado)="alternarStatusVisivel($event)"
+                            (demandaSelecionada)="abrirNaArvore($event)"
+                        />
+                    }
+
+                    @if (modoVisualizacao() === "arvore" && projetoTemDemandas()) {
+                        <app-demanda-arvore-tela
+                            #arvoreTela
+                            [nos]="grafo()!.nos"
+                            [filtro]="filtro()"
+                            [projetoId]="projetoId()"
+                            [pastaId]="pastaId()"
+                            [abrirDemanda]="pedidoAbrirDemanda()"
+                            (pastaChange)="aoEscolherPasta($event)"
+                            (alterado)="aoAlteradoPlanejamento()"
+                            (statusAlterado)="aoStatusAlterado($event)"
+                            (tagsAlteradas)="aoTagsAlteradas($event)"
+                            (filtrosLimpos)="limparFiltros()"
+                            (demandaEditarSolicitada)="painel.abrirEdicao($event)"
+                            (demandaNovaFilhaSolicitada)="painel.abrirNovaFilha($event)"
+                            (demandaTagsSolicitadas)="painel.abrirDialogTagsPorId($event)"
+                            (demandaMembrosSolicitados)="painel.abrirDialogMembros($event)"
+                        />
+                    }
+
+                    <!-- O painel da árvore antiga fica escondido: hospeda só os diálogos de editar, nova filha, tags, membros e descrição que o menu de
+               contexto e o Controle de horas abrem (a Árvore e o Controle de horas os herdam do painel antigo). -->
+                    <div class="demanda-projeto__dialogos" hidden>
+                        <app-demanda-arvore-painel
+                            #painel
+                            [raizes]="[]"
+                            [projetoId]="projetoId()"
+                            (alterado)="aoAlteradoPlanejamento()"
+                            (tagsAlteradas)="aoTagsAlteradas($event)"
+                            (statusAlterado)="aoStatusAlterado($event)"
+                        />
+                    </div>
+
+                    @if (modoVisualizacao() === "controle-de-horas" && !erroAoCarregarGrafo()) {
+                        <app-demanda-controle-horas-painel
+                            [nos]="grafo()?.nos ?? []"
+                            [itens]="planejamento()"
+                            [carregando]="carregandoPlanejamento()"
+                            [pastaId]="pastaId()"
+                            (demandaVisualizarSolicitada)="abrirNaArvore($event)"
+                            (demandaEditarSolicitada)="painel.abrirEdicao($event)"
+                            (demandaNovaFilhaSolicitada)="painel.abrirNovaFilha($event)"
+                            (demandaTagsSolicitadas)="painel.abrirDialogTagsPorId($event)"
+                            (demandaMembrosSolicitados)="painel.abrirDialogMembros($event)"
+                            (demandaDescricaoSolicitada)="
+                                painel.abrirDialogDescricaoPorId($event.id, $event.campo)
+                            "
+                            (statusAlterado)="aoStatusAlterado($event)"
+                            (horasEstimadasAlteradas)="aoHorasEstimadasAlteradas($event)"
+                        />
+                    }
+                }
+            }
+        </div>
+    </div>
 </div>
 
 <!-- Dialog de nova demanda (raiz) -->
 @if (projetoId()) {
-  <app-demanda-formulario-dialog
-    [projetoId]="projetoId()"
-    [visivel]="mostrarDialogNovaDemanda()"
-    (visivelChange)="mostrarDialogNovaDemanda.set($event)"
-    (demandaCriada)="recarregarGrafo()"
-  />
+    <app-demanda-formulario-dialog
+        [projetoId]="projetoId()"
+        [visivel]="mostrarDialogNovaDemanda()"
+        (visivelChange)="mostrarDialogNovaDemanda.set($event)"
+        (demandaCriada)="recarregarGrafo()"
+    />
 }

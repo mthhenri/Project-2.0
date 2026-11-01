@@ -10,37 +10,37 @@ export type AcaoDeMembro = (typeof ACOES_DE_MEMBRO)[number];
  * ele mesmo (sem `usuarioId`). Gestores não entram em `demanda_usuario` (o acesso deles é por tipo), então a ferramenta recusa atribuí-los.
  */
 export class ProporAtribuirMembroDto {
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  demandaId: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    demandaId: number;
 
-  /** Só o gestor informa; sem ele, é quem conversa (o desenvolvedor participando ou saindo). A ferramenta sempre o preenche na proposta. */
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  usuarioId?: number;
+    /** Só o gestor informa; sem ele, é quem conversa (o desenvolvedor participando ou saindo). A ferramenta sempre o preenche na proposta. */
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    usuarioId?: number;
 
-  @IsIn(ACOES_DE_MEMBRO)
-  acao: AcaoDeMembro;
+    @IsIn(ACOES_DE_MEMBRO)
+    acao: AcaoDeMembro;
 }
 
 /** Os dados guardados na proposta: a entrada mais os nomes, só para o cartão mostrar. */
 export class PropostaAtribuirMembroDadosDto extends ProporAtribuirMembroDto {
-  @IsOptional()
-  @IsString()
-  demandaNome?: string;
+    @IsOptional()
+    @IsString()
+    demandaNome?: string;
 
-  @IsOptional()
-  @IsString()
-  projetoNome?: string;
+    @IsOptional()
+    @IsString()
+    projetoNome?: string;
 
-  @IsOptional()
-  @IsString()
-  usuarioNome?: string;
+    @IsOptional()
+    @IsString()
+    usuarioNome?: string;
 
-  @IsOptional()
-  @IsString()
-  usuarioCargo?: string;
+    @IsOptional()
+    @IsString()
+    usuarioCargo?: string;
 }

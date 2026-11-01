@@ -1,11 +1,11 @@
 /** Só letras, dígitos e hífen: o nome vai no cabeçalho `Content-Disposition` e vira arquivo em qualquer sistema. */
 function paraNomeDeArquivo(texto: string): string {
-  return texto
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    return texto
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 }
 
 /**
@@ -13,9 +13,9 @@ function paraNomeDeArquivo(texto: string): string {
  * O mês é o do período; se o período atravessa meses, vira `<AAAA-MM do início>-a-<AAAA-MM do fim>`. Datas em `AAAA-MM-DD`.
  */
 export function nomeDoArquivoDoRelatorio(codigoProjeto: string, dataInicio: string, dataFim: string): string {
-  const codigo = paraNomeDeArquivo(codigoProjeto) || 'projeto';
-  const mesInicio = dataInicio.slice(0, 7);
-  const mesFim = dataFim.slice(0, 7);
-  const periodo = mesInicio === mesFim ? mesInicio : `${mesInicio}-a-${mesFim}`;
-  return `${codigo}-relatorio-${periodo}.csv`;
+    const codigo = paraNomeDeArquivo(codigoProjeto) || 'projeto';
+    const mesInicio = dataInicio.slice(0, 7);
+    const mesFim = dataFim.slice(0, 7);
+    const periodo = mesInicio === mesFim ? mesInicio : `${mesInicio}-a-${mesFim}`;
+    return `${codigo}-relatorio-${periodo}.csv`;
 }

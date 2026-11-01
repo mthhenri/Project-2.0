@@ -1,130 +1,206 @@
 <section class="plano-documento" aria-label="Documento do plano">
-  @if (carregando() && !plano()) {
-    <div class="plano-documento__esqueleto" aria-busy="true">
-      <p-skeleton height="1.75rem" width="55%" />
-      <p-skeleton height="1.25rem" width="35%" />
-      <p-skeleton height="12rem" />
-    </div>
-  } @else if (erro() || !plano()) {
-    <div class="plano-documento__erro" role="alert">
-      <i class="pi pi-exclamation-triangle"></i>
-      <span>Não foi possível abrir o plano.</span>
-      <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
-    </div>
-  } @else {
-    @let atual = plano()!;
-    <app-plano-cabecalho
-      [plano]="atual"
-      [ocupado]="ocupado()"
-      (tituloAlterado)="alterarTitulo($event)"
-      (soloAlterado)="alterarSolo($event)"
-      (arquivadoAlterado)="alterarArquivo($event)"
-      (projetoAtribuido)="atribuirProjeto($event)"
-      (demandaLigada)="ligarDemanda($event)"
-      (publicarSolicitado)="abrirPublicacao()"
-      (demandaNovaSolicitada)="abrirDemandaNova()"
-      (excluido)="excluir()"
-    />
+    @if (carregando() && !plano()) {
+        <div class="plano-documento__esqueleto" aria-busy="true">
+            <p-skeleton height="1.75rem" width="55%" />
+            <p-skeleton height="1.25rem" width="35%" />
+            <p-skeleton height="12rem" />
+        </div>
+    } @else if (erro() || !plano()) {
+        <div class="plano-documento__erro" role="alert">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>Não foi possível abrir o plano.</span>
+            <p-button
+                label="Tentar de novo"
+                icon="pi pi-refresh"
+                size="small"
+                [outlined]="true"
+                (onClick)="carregar()"
+            />
+        </div>
+    } @else {
+        @let atual = plano()!;
+        <app-plano-cabecalho
+            [plano]="atual"
+            [ocupado]="ocupado()"
+            (tituloAlterado)="alterarTitulo($event)"
+            (soloAlterado)="alterarSolo($event)"
+            (arquivadoAlterado)="alterarArquivo($event)"
+            (projetoAtribuido)="atribuirProjeto($event)"
+            (demandaLigada)="ligarDemanda($event)"
+            (publicarSolicitado)="abrirPublicacao()"
+            (demandaNovaSolicitada)="abrirDemandaNova()"
+            (excluido)="excluir()"
+        />
 
-    @if (aviso(); as textoDoAviso) {
-      <p class="plano-documento__aviso" role="alert">
-        <i class="pi pi-exclamation-triangle"></i>
-        <span>{{ textoDoAviso }}</span>
-        <p-button label="Recarregar" icon="pi pi-refresh" size="small" [text]="true" (onClick)="carregar()" />
-      </p>
+        @if (aviso(); as textoDoAviso) {
+            <p class="plano-documento__aviso" role="alert">
+                <i class="pi pi-exclamation-triangle"></i>
+                <span>{{ textoDoAviso }}</span>
+                <p-button
+                    label="Recarregar"
+                    icon="pi pi-refresh"
+                    size="small"
+                    [text]="true"
+                    (onClick)="carregar()"
+                />
+            </p>
+        }
+
+        <div class="plano-documento__miolo">
+            <aside
+                class="plano-documento__lateral"
+                [class.plano-documento__lateral--recolhida]="!pontosAbertos() && !fontesAbertas()"
+                aria-label="Pontos em aberto e fontes"
+            >
+                <app-plano-pontos [planoId]="atual.id" [(aberto)]="pontosAbertos" />
+                <app-plano-fontes [planoId]="atual.id" [(aberto)]="fontesAbertas" />
+            </aside>
+
+            <div class="plano-documento__texto">
+                <p-tabs
+                    class="plano-documento__abas"
+                    [value]="aba()"
+                    (valueChange)="escolherAba($any($event))"
+                    [scrollable]="false"
+                >
+                    <p-tablist>
+                        @for (opcao of abasVisiveis(); track opcao) {
+                            <p-tab [value]="opcao">
+                                <i [class]="iconeAba[opcao]" aria-hidden="true"></i>
+                                @if (opcao === Aba.DESCRICAO_CLIENTE && !podeEditarCliente()) {
+                                    <i class="pi pi-lock" aria-hidden="true"></i>
+                                }
+                                {{ rotuloAba[opcao] }}
+                                @if (
+                                    (opcao === Aba.DESCRICAO_TECNICA && alterados().tecnica) ||
+                                    (opcao === Aba.DESCRICAO_CLIENTE && alterados().cliente) ||
+                                    (opcao === Aba.DOCUMENTACAO && alterados().documentacao)
+                                ) {
+                                    <span
+                                        class="plano-documento__ponto"
+                                        aria-label="Alterações sem gravar"
+                                    ></span>
+                                }
+                            </p-tab>
+                        }
+                    </p-tablist>
+                </p-tabs>
+
+                <div class="plano-documento__editor">
+                    @switch (aba()) {
+                        @case (Aba.DESCRICAO_CLIENTE) {
+                            @if (podeEditarCliente()) {
+                                <app-markdown-editor
+                                    [formControl]="controleCliente"
+                                    [alturaMinima]="16"
+                                    rotulo="Descrição do cliente"
+                                    placeholder="Escreva a descrição do cliente…"
+                                    [emitirMenuContexto]="podePedirIa()"
+                                    (aoMenuContexto)="abrirPedidoDeAlteracao($event)"
+                                />
+                            } @else {
+                                <app-aviso-pedido-do-cliente />
+                                @if (controleCliente.value.trim() !== "") {
+                                    <app-markdown-visualizador [texto]="controleCliente.value" />
+                                } @else {
+                                    <p class="plano-documento__vazio">
+                                        Nada escrito nesta aba ainda.
+                                    </p>
+                                }
+                            }
+                        }
+                        @case (Aba.DOCUMENTACAO) {
+                            <app-markdown-editor
+                                [formControl]="controleDocumentacao"
+                                [alturaMinima]="16"
+                                rotulo="Documentação"
+                                placeholder="Escreva a documentação…"
+                                [emitirMenuContexto]="podePedirIa()"
+                                (aoMenuContexto)="abrirPedidoDeAlteracao($event)"
+                            />
+                        }
+                        @default {
+                            <app-markdown-editor
+                                [formControl]="controleTecnica"
+                                [alturaMinima]="16"
+                                rotulo="Descrição técnica"
+                                placeholder="Escreva a descrição técnica…"
+                                [emitirMenuContexto]="podePedirIa()"
+                                (aoMenuContexto)="abrirPedidoDeAlteracao($event)"
+                            />
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <footer class="plano-documento__rodape">
+            <span class="plano-documento__estado" role="status">
+                @if (salvando()) {
+                    Gravando…
+                } @else if (sujo()) {
+                    Alterações sem gravar
+                } @else {
+                    Tudo gravado
+                }
+            </span>
+            <p-button
+                label="Gravar"
+                icon="pi pi-save"
+                size="small"
+                [disabled]="!sujo() || salvando()"
+                [loading]="salvando()"
+                (onClick)="salvar()"
+            />
+        </footer>
+
+        <app-plano-publicar-dialog
+            [plano]="atual"
+            [(visivel)]="mostrarPublicacao"
+            (publicado)="aoPublicar()"
+            (desatualizado)="carregar()"
+        />
+        @if (atual.projetoId !== null) {
+            <app-demanda-formulario-dialog
+                [projetoId]="atual.projetoId"
+                [nomeInicial]="atual.titulo"
+                [(visivel)]="mostrarDemandaNova"
+                (demandaCriada)="aoDemandaCriada($event)"
+            />
+        }
     }
-
-    <div class="plano-documento__miolo">
-    <aside class="plano-documento__lateral" [class.plano-documento__lateral--recolhida]="!pontosAbertos() && !fontesAbertas()" aria-label="Pontos em aberto e fontes">
-      <app-plano-pontos [planoId]="atual.id" [(aberto)]="pontosAbertos" />
-      <app-plano-fontes [planoId]="atual.id" [(aberto)]="fontesAbertas" />
-    </aside>
-
-    <div class="plano-documento__texto">
-    <p-tabs class="plano-documento__abas" [value]="aba()" (valueChange)="escolherAba($any($event))" [scrollable]="false">
-      <p-tablist>
-        @for (opcao of abasVisiveis(); track opcao) {
-          <p-tab [value]="opcao">
-            <i [class]="iconeAba[opcao]" aria-hidden="true"></i>
-            @if (opcao === Aba.DESCRICAO_CLIENTE && !podeEditarCliente()) { <i class="pi pi-lock" aria-hidden="true"></i> }
-            {{ rotuloAba[opcao] }}
-            @if ((opcao === Aba.DESCRICAO_TECNICA && alterados().tecnica) || (opcao === Aba.DESCRICAO_CLIENTE && alterados().cliente) || (opcao === Aba.DOCUMENTACAO && alterados().documentacao)) {
-              <span class="plano-documento__ponto" aria-label="Alterações sem gravar"></span>
-            }
-          </p-tab>
-        }
-      </p-tablist>
-    </p-tabs>
-
-    <div class="plano-documento__editor">
-      @switch (aba()) {
-        @case (Aba.DESCRICAO_CLIENTE) {
-          @if (podeEditarCliente()) {
-            <app-markdown-editor [formControl]="controleCliente" [alturaMinima]="16" rotulo="Descrição do cliente" placeholder="Escreva a descrição do cliente…" [emitirMenuContexto]="podePedirIa()" (aoMenuContexto)="abrirPedidoDeAlteracao($event)" />
-          } @else {
-            <app-aviso-pedido-do-cliente />
-            @if (controleCliente.value.trim() !== '') {
-              <app-markdown-visualizador [texto]="controleCliente.value" />
-            } @else {
-              <p class="plano-documento__vazio">Nada escrito nesta aba ainda.</p>
-            }
-          }
-        }
-        @case (Aba.DOCUMENTACAO) {
-          <app-markdown-editor [formControl]="controleDocumentacao" [alturaMinima]="16" rotulo="Documentação" placeholder="Escreva a documentação…" [emitirMenuContexto]="podePedirIa()" (aoMenuContexto)="abrirPedidoDeAlteracao($event)" />
-        }
-        @default {
-          <app-markdown-editor [formControl]="controleTecnica" [alturaMinima]="16" rotulo="Descrição técnica" placeholder="Escreva a descrição técnica…" [emitirMenuContexto]="podePedirIa()" (aoMenuContexto)="abrirPedidoDeAlteracao($event)" />
-        }
-      }
-    </div>
-
-    </div>
-    </div>
-
-    <footer class="plano-documento__rodape">
-      <span class="plano-documento__estado" role="status">
-        @if (salvando()) {
-          Gravando…
-        } @else if (sujo()) {
-          Alterações sem gravar
-        } @else {
-          Tudo gravado
-        }
-      </span>
-      <p-button label="Gravar" icon="pi pi-save" size="small" [disabled]="!sujo() || salvando()" [loading]="salvando()" (onClick)="salvar()" />
-    </footer>
-
-    <app-plano-publicar-dialog [plano]="atual" [(visivel)]="mostrarPublicacao" (publicado)="aoPublicar()" (desatualizado)="carregar()" />
-    @if (atual.projetoId !== null) {
-      <app-demanda-formulario-dialog
-        [projetoId]="atual.projetoId"
-        [nomeInicial]="atual.titulo"
-        [(visivel)]="mostrarDemandaNova"
-        (demandaCriada)="aoDemandaCriada($event)"
-      />
-    }
-  }
 </section>
 
 <p-popover #popoverPedido>
-  <form class="plano-documento__pedido" (submit)="$event.preventDefault(); enviarPedidoDeAlteracao()">
-    <strong>Pedir à IA para alterar este trecho</strong>
-    @if (trechoSelecionado(); as selecionado) {
-      <blockquote class="plano-documento__trecho">{{ selecionado.selecao }}</blockquote>
-      @if (selecionado.selecao !== selecionado.bloco) {
-        <small>Só o trecho marcado é alterado. O parágrafo vai junto como contexto e não muda.</small>
-      }
-    }
-    <textarea
-      pTextarea
-      rows="3"
-      aria-label="O que mudar no trecho"
-      placeholder="O que mudar? Ex.: deixar mais direto, corrigir a regra, explicar o porquê…"
-      [formControl]="controlePedido"
-      (keydown.control.enter)="enviarPedidoDeAlteracao()"
-    ></textarea>
-    <small>Você vê a diferença na conversa e aceita ou rejeita.</small>
-    <p-button type="submit" label="Pedir à IA" icon="pi pi-sparkles" size="small" [disabled]="controlePedido.value.trim() === ''" />
-  </form>
+    <form
+        class="plano-documento__pedido"
+        (submit)="$event.preventDefault(); enviarPedidoDeAlteracao()"
+    >
+        <strong>Pedir à IA para alterar este trecho</strong>
+        @if (trechoSelecionado(); as selecionado) {
+            <blockquote class="plano-documento__trecho">{{ selecionado.selecao }}</blockquote>
+            @if (selecionado.selecao !== selecionado.bloco) {
+                <small
+                    >Só o trecho marcado é alterado. O parágrafo vai junto como contexto e não
+                    muda.</small
+                >
+            }
+        }
+        <textarea
+            pTextarea
+            rows="3"
+            aria-label="O que mudar no trecho"
+            placeholder="O que mudar? Ex.: deixar mais direto, corrigir a regra, explicar o porquê…"
+            [formControl]="controlePedido"
+            (keydown.control.enter)="enviarPedidoDeAlteracao()"
+        ></textarea>
+        <small>Você vê a diferença na conversa e aceita ou rejeita.</small>
+        <p-button
+            type="submit"
+            label="Pedir à IA"
+            icon="pi pi-sparkles"
+            size="small"
+            [disabled]="controlePedido.value.trim() === ''"
+        />
+    </form>
 </p-popover>

@@ -1,132 +1,140 @@
 :host {
-  display: block;
+    display: block;
 }
 
 .proposta-linha {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.5rem 0.25rem 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--p-primary-500) 35%, var(--app-surface-200));
-  border-radius: 10px;
-  background: var(--app-surface-0);
-  font-size: 0.875rem;
-  min-height: 2.5rem;
-
-  &--feita {
-    border-color: color-mix(in srgb, var(--p-green-500) 40%, var(--app-surface-200));
-    background: color-mix(in srgb, var(--p-green-500) 8%, var(--app-surface-0));
-  }
-
-  // O aviso da IA (ela executou sozinha, task 228) é azul, a cor primária do tema (clareia sozinha no escuro): não se confunde com o "feito" verde de quem confirmou no cartão.
-  &--ia {
-    --p-button-text-secondary-hover-background: color-mix(in srgb, var(--p-primary-color) 22%, var(--app-surface-0));
-    --p-button-text-secondary-active-background: color-mix(in srgb, var(--p-primary-color) 28%, var(--app-surface-0));
-    border-color: color-mix(in srgb, var(--p-primary-color) 45%, var(--app-surface-200));
-    background: color-mix(in srgb, var(--p-primary-color) 12%, var(--app-surface-0));
-  }
-
-  &--ia &__icone,
-  &--ia &__feito {
-    color: var(--p-primary-color);
-  }
-
-  &--encerrada {
-    border-color: var(--app-surface-200);
-    color: var(--p-text-muted-color);
-  }
-
-  // Operando esmaece e trava, como o cartão grande (task 196).
-  &--operando {
-    opacity: 0.6;
-    pointer-events: none;
-    transition: opacity 0.15s ease;
-  }
-
-  // O texto quebra dentro da própria coluna e os botões ficam sempre numa coluna fixa à direita.
-  &__corpo {
     display: flex;
-    flex: 1 1 0;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 0.25rem 0.5rem;
-    min-width: 0;
-  }
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--p-primary-500) 35%, var(--app-surface-200));
+    border-radius: 10px;
+    background: var(--app-surface-0);
+    font-size: 0.875rem;
+    min-height: 2.5rem;
 
-  &__icone {
-    color: var(--p-green-600);
-  }
-
-  &__feito {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--p-green-700);
-  }
-
-  &__acao {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--p-primary-600);
-    overflow-wrap: anywhere;
-  }
-
-  &--feita &__acao,
-  &--encerrada &__acao {
-    color: var(--p-text-muted-color);
-  }
-
-  &__nome {
-    font-weight: 600;
-    overflow-wrap: anywhere;
-  }
-
-  &__contexto {
-    color: var(--p-text-muted-color);
-    overflow-wrap: anywhere;
-  }
-
-  &__chip {
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.0625rem 0.5rem;
-    border-radius: 999px;
-    background: var(--app-surface-100);
-    font-size: 0.8125rem;
-    overflow-wrap: anywhere;
-
-    i {
-      font-size: 0.6875rem;
+    &--feita {
+        border-color: color-mix(in srgb, var(--p-green-500) 40%, var(--app-surface-200));
+        background: color-mix(in srgb, var(--p-green-500) 8%, var(--app-surface-0));
     }
 
-    &--selo {
-      padding-inline: 0.25rem;
+    // O aviso da IA (ela executou sozinha, task 228) é azul, a cor primária do tema (clareia sozinha no escuro): não se confunde com o "feito" verde de quem confirmou no cartão.
+    &--ia {
+        --p-button-text-secondary-hover-background: color-mix(
+            in srgb,
+            var(--p-primary-color) 22%,
+            var(--app-surface-0)
+        );
+        --p-button-text-secondary-active-background: color-mix(
+            in srgb,
+            var(--p-primary-color) 28%,
+            var(--app-surface-0)
+        );
+        border-color: color-mix(in srgb, var(--p-primary-color) 45%, var(--app-surface-200));
+        background: color-mix(in srgb, var(--p-primary-color) 12%, var(--app-surface-0));
     }
-  }
 
-  &__cor {
-    display: inline-block;
-    width: 0.625rem;
-    height: 0.625rem;
-    border-radius: 50%;
-  }
+    &--ia &__icone,
+    &--ia &__feito {
+        color: var(--p-primary-color);
+    }
 
-  &__citacao {
-    color: var(--p-text-muted-color);
-    font-style: italic;
-    overflow-wrap: anywhere;
-  }
+    &--encerrada {
+        border-color: var(--app-surface-200);
+        color: var(--p-text-muted-color);
+    }
 
-  &__acoes {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    gap: 0.125rem;
-    margin-left: auto;
-  }
+    // Operando esmaece e trava, como o cartão grande (task 196).
+    &--operando {
+        opacity: 0.6;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+    }
+
+    // O texto quebra dentro da própria coluna e os botões ficam sempre numa coluna fixa à direita.
+    &__corpo {
+        display: flex;
+        flex: 1 1 0;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem 0.5rem;
+        min-width: 0;
+    }
+
+    &__icone {
+        color: var(--p-green-600);
+    }
+
+    &__feito {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--p-green-700);
+    }
+
+    &__acao {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--p-primary-600);
+        overflow-wrap: anywhere;
+    }
+
+    &--feita &__acao,
+    &--encerrada &__acao {
+        color: var(--p-text-muted-color);
+    }
+
+    &__nome {
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    &__contexto {
+        color: var(--p-text-muted-color);
+        overflow-wrap: anywhere;
+    }
+
+    &__chip {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.0625rem 0.5rem;
+        border-radius: 999px;
+        background: var(--app-surface-100);
+        font-size: 0.8125rem;
+        overflow-wrap: anywhere;
+
+        i {
+            font-size: 0.6875rem;
+        }
+
+        &--selo {
+            padding-inline: 0.25rem;
+        }
+    }
+
+    &__cor {
+        display: inline-block;
+        width: 0.625rem;
+        height: 0.625rem;
+        border-radius: 50%;
+    }
+
+    &__citacao {
+        color: var(--p-text-muted-color);
+        font-style: italic;
+        overflow-wrap: anywhere;
+    }
+
+    &__acoes {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: 0.125rem;
+        margin-left: auto;
+    }
 }

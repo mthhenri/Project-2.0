@@ -1,168 +1,246 @@
 <div class="prompts-aba">
-  @if (erro()) {
-    <div class="prompts-aba__erro" role="alert">
-      <i class="pi pi-exclamation-triangle"></i>
-      <span>Não foi possível carregar os prompts.</span>
-      <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="recarregar()" />
-    </div>
-  } @else if (carregando() && tipos().length === 0) {
-    <div class="prompts-aba__grade" aria-busy="true">
-      <div class="prompts-aba__esqueleto">
-        <p-skeleton height="3rem" />
-        <p-skeleton height="3rem" />
-        <p-skeleton height="3rem" />
-        <p-skeleton height="3rem" />
-      </div>
-      <div class="prompts-aba__esqueleto">
-        <p-skeleton height="2.5rem" width="50%" />
-        <p-skeleton height="12rem" />
-      </div>
-    </div>
-  } @else {
-    <p class="prompts-aba__aviso" role="note">
-      <i class="pi pi-info-circle"></i>
-      <span>Um prompt ativado vale para <strong>todos os usuários</strong> na mesma hora. Edite no rascunho, salve e só então ative.</span>
-    </p>
-
-    <div class="prompts-aba__grade">
-      <nav class="prompts-aba__tipos" aria-label="Tipos de prompt">
-        @for (tipo of tipos(); track tipo.tipo) {
-          <button
-            type="button"
-            class="prompts-aba__tipo"
-            [class.prompts-aba__tipo--aberto]="tipoAberto() === tipo.tipo"
-            [attr.aria-current]="tipoAberto() === tipo.tipo ? 'true' : null"
-            (click)="escolherTipo(tipo.tipo)"
-          >
-            <span class="prompts-aba__tipo-nome">{{ tipo.descricao }}</span>
-            <span class="prompts-aba__tipo-meta">
-              <span>versão {{ tipo.ativa.versao }}</span>
-              @if (tipo.rascunho) {
-                <p-tag value="Rascunho" severity="warn" [rounded]="true" />
-              }
-            </span>
-          </button>
-        }
-      </nav>
-
-      @if (tipoAtual(); as tipo) {
-        <section class="prompts-aba__painel" [class.prompts-aba__painel--recarregando]="carregando() || operando()">
-          <div class="prompts-aba__colunas">
-            <div class="prompts-aba__cartao">
-              <header class="prompts-aba__cartao-cabecalho">
-                <h2 class="prompts-aba__cartao-titulo">{{ exibindoAtiva() ? 'Versão ativa' : 'Versão antiga' }}</h2>
-                @if (versaoExibida(); as exibida) {
-                  <div class="prompts-aba__navegador" role="group" aria-label="Navegar pelas versões">
-                    <p-button
-                      icon="pi pi-chevron-left"
-                      size="small"
-                      [text]="true"
-                      [rounded]="true"
-                      [disabled]="!temAntiga()"
-                      ariaLabel="Versão anterior"
-                      pTooltip="Versão anterior"
-                      tooltipPosition="top"
-                      (onClick)="navegar(1)"
-                    />
-                    <p-tag [value]="'Versão ' + exibida.versao" [severity]="exibindoAtiva() ? 'success' : 'secondary'" [rounded]="true" />
-                    <p-button
-                      icon="pi pi-chevron-right"
-                      size="small"
-                      [text]="true"
-                      [rounded]="true"
-                      [disabled]="!temNova()"
-                      ariaLabel="Versão seguinte"
-                      pTooltip="Versão seguinte"
-                      tooltipPosition="top"
-                      (onClick)="navegar(-1)"
-                    />
-                    <p-button
-                      icon="pi pi-history"
-                      size="small"
-                      [text]="true"
-                      [rounded]="true"
-                      [disabled]="versoesNavegaveis().length < 2"
-                      ariaLabel="Histórico de versões"
-                      pTooltip="Histórico de versões"
-                      tooltipPosition="top"
-                      (onClick)="abrirMenuHistorico($event)"
-                    />
-                    <p-menu #menuHistorico [model]="itensHistorico()" [popup]="true" appendTo="body" styleClass="prompts-aba__menu" />
-                  </div>
-                }
-              </header>
-              @if (versaoExibida(); as exibida) {
-                <p class="prompts-aba__meta">{{ exibida.usuarioNome }} · {{ exibida.createdDate | date: 'dd/MM/yyyy HH:mm' }}</p>
-                <div class="prompts-aba__texto">
-                  <app-markdown-visualizador [texto]="exibida.conteudo" />
-                </div>
-                <div class="prompts-aba__acoes">
-                  @if (!exibindoAtiva()) {
-                    <p-button label="Voltar à ativa" size="small" [text]="true" (onClick)="versaoVista.set(null)" />
-                    <p-button label="Usar como base" icon="pi pi-copy" size="small" [outlined]="true" (onClick)="usarComoBase(exibida)" />
-                  }
-                  <p-button
-                    label="Restaurar padrão"
-                    icon="pi pi-undo"
-                    severity="secondary"
-                    size="small"
-                    [text]="true"
-                    [disabled]="tipo.ativa.versao === 1 || operando()"
-                    (onClick)="restaurarPadrao()"
-                  />
-                </div>
-              }
+    @if (erro()) {
+        <div class="prompts-aba__erro" role="alert">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>Não foi possível carregar os prompts.</span>
+            <p-button
+                label="Tentar de novo"
+                icon="pi pi-refresh"
+                size="small"
+                [outlined]="true"
+                (onClick)="recarregar()"
+            />
+        </div>
+    } @else if (carregando() && tipos().length === 0) {
+        <div class="prompts-aba__grade" aria-busy="true">
+            <div class="prompts-aba__esqueleto">
+                <p-skeleton height="3rem" />
+                <p-skeleton height="3rem" />
+                <p-skeleton height="3rem" />
+                <p-skeleton height="3rem" />
             </div>
-
-            <div class="prompts-aba__cartao">
-              <header class="prompts-aba__cartao-cabecalho">
-                <h2 class="prompts-aba__cartao-titulo">Rascunho</h2>
-                @if (mudancaPendente()) {
-                  <p-tag value="Alterações não salvas" severity="warn" [rounded]="true" />
-                } @else if (tipo.rascunho) {
-                  <p-tag value="Salvo" severity="info" [rounded]="true" />
-                }
-              </header>
-              <app-markdown-editor [formControl]="controleRascunho" [alturaMinima]="16" rotulo="Rascunho do prompt" />
-
-              <div class="prompts-aba__acoes">
-                <span class="prompts-aba__dica">
-                  @if (mudancaPendente()) {
-                    Salve o rascunho para poder ativá-lo.
-                  } @else if (tipo.rascunho) {
-                    O rascunho está salvo e pronto para ativar.
-                  } @else {
-                    Sem rascunho: o editor parte da versão ativa.
-                  }
-                </span>
-                @if (mudancaPendente()) {
-                  <p-button label="Desfazer edição" severity="secondary" [text]="true" [disabled]="operando()" (onClick)="descartarAlteracoes()" />
-                }
-                @if (tipo.rascunho && !mudancaPendente()) {
-                  <p-button label="Descartar rascunho" icon="pi pi-trash" severity="danger" [text]="true" [disabled]="operando()" (onClick)="descartarRascunho()" />
-                }
-                <p-button
-                  label="Testar antes de salvar"
-                  icon="pi pi-play"
-                  severity="secondary"
-                  [outlined]="true"
-                  [disabled]="operando() || textoParaTeste().trim() === ''"
-                  (onClick)="testando.set(true)"
-                />
-                <p-button label="Salvar rascunho" icon="pi pi-save" [outlined]="true" [disabled]="!podeSalvar() || operando()" (onClick)="salvarRascunho()" />
-                <p-button label="Ativar rascunho" icon="pi pi-check" [disabled]="!podeAtivar() || operando()" (onClick)="ativarRascunho()" />
-              </div>
+            <div class="prompts-aba__esqueleto">
+                <p-skeleton height="2.5rem" width="50%" />
+                <p-skeleton height="12rem" />
             </div>
-          </div>
-        </section>
-      }
-    </div>
-  }
+        </div>
+    } @else {
+        <p class="prompts-aba__aviso" role="note">
+            <i class="pi pi-info-circle"></i>
+            <span
+                >Um prompt ativado vale para <strong>todos os usuários</strong> na mesma hora. Edite
+                no rascunho, salve e só então ative.</span
+            >
+        </p>
+
+        <div class="prompts-aba__grade">
+            <nav class="prompts-aba__tipos" aria-label="Tipos de prompt">
+                @for (tipo of tipos(); track tipo.tipo) {
+                    <button
+                        type="button"
+                        class="prompts-aba__tipo"
+                        [class.prompts-aba__tipo--aberto]="tipoAberto() === tipo.tipo"
+                        [attr.aria-current]="tipoAberto() === tipo.tipo ? 'true' : null"
+                        (click)="escolherTipo(tipo.tipo)"
+                    >
+                        <span class="prompts-aba__tipo-nome">{{ tipo.descricao }}</span>
+                        <span class="prompts-aba__tipo-meta">
+                            <span>versão {{ tipo.ativa.versao }}</span>
+                            @if (tipo.rascunho) {
+                                <p-tag value="Rascunho" severity="warn" [rounded]="true" />
+                            }
+                        </span>
+                    </button>
+                }
+            </nav>
+
+            @if (tipoAtual(); as tipo) {
+                <section
+                    class="prompts-aba__painel"
+                    [class.prompts-aba__painel--recarregando]="carregando() || operando()"
+                >
+                    <div class="prompts-aba__colunas">
+                        <div class="prompts-aba__cartao">
+                            <header class="prompts-aba__cartao-cabecalho">
+                                <h2 class="prompts-aba__cartao-titulo">
+                                    {{ exibindoAtiva() ? "Versão ativa" : "Versão antiga" }}
+                                </h2>
+                                @if (versaoExibida(); as exibida) {
+                                    <div
+                                        class="prompts-aba__navegador"
+                                        role="group"
+                                        aria-label="Navegar pelas versões"
+                                    >
+                                        <p-button
+                                            icon="pi pi-chevron-left"
+                                            size="small"
+                                            [text]="true"
+                                            [rounded]="true"
+                                            [disabled]="!temAntiga()"
+                                            ariaLabel="Versão anterior"
+                                            pTooltip="Versão anterior"
+                                            tooltipPosition="top"
+                                            (onClick)="navegar(1)"
+                                        />
+                                        <p-tag
+                                            [value]="'Versão ' + exibida.versao"
+                                            [severity]="exibindoAtiva() ? 'success' : 'secondary'"
+                                            [rounded]="true"
+                                        />
+                                        <p-button
+                                            icon="pi pi-chevron-right"
+                                            size="small"
+                                            [text]="true"
+                                            [rounded]="true"
+                                            [disabled]="!temNova()"
+                                            ariaLabel="Versão seguinte"
+                                            pTooltip="Versão seguinte"
+                                            tooltipPosition="top"
+                                            (onClick)="navegar(-1)"
+                                        />
+                                        <p-button
+                                            icon="pi pi-history"
+                                            size="small"
+                                            [text]="true"
+                                            [rounded]="true"
+                                            [disabled]="versoesNavegaveis().length < 2"
+                                            ariaLabel="Histórico de versões"
+                                            pTooltip="Histórico de versões"
+                                            tooltipPosition="top"
+                                            (onClick)="abrirMenuHistorico($event)"
+                                        />
+                                        <p-menu
+                                            #menuHistorico
+                                            [model]="itensHistorico()"
+                                            [popup]="true"
+                                            appendTo="body"
+                                            styleClass="prompts-aba__menu"
+                                        />
+                                    </div>
+                                }
+                            </header>
+                            @if (versaoExibida(); as exibida) {
+                                <p class="prompts-aba__meta">
+                                    {{ exibida.usuarioNome }} ·
+                                    {{ exibida.createdDate | date: "dd/MM/yyyy HH:mm" }}
+                                </p>
+                                <div class="prompts-aba__texto">
+                                    <app-markdown-visualizador [texto]="exibida.conteudo" />
+                                </div>
+                                <div class="prompts-aba__acoes">
+                                    @if (!exibindoAtiva()) {
+                                        <p-button
+                                            label="Voltar à ativa"
+                                            size="small"
+                                            [text]="true"
+                                            (onClick)="versaoVista.set(null)"
+                                        />
+                                        <p-button
+                                            label="Usar como base"
+                                            icon="pi pi-copy"
+                                            size="small"
+                                            [outlined]="true"
+                                            (onClick)="usarComoBase(exibida)"
+                                        />
+                                    }
+                                    <p-button
+                                        label="Restaurar padrão"
+                                        icon="pi pi-undo"
+                                        severity="secondary"
+                                        size="small"
+                                        [text]="true"
+                                        [disabled]="tipo.ativa.versao === 1 || operando()"
+                                        (onClick)="restaurarPadrao()"
+                                    />
+                                </div>
+                            }
+                        </div>
+
+                        <div class="prompts-aba__cartao">
+                            <header class="prompts-aba__cartao-cabecalho">
+                                <h2 class="prompts-aba__cartao-titulo">Rascunho</h2>
+                                @if (mudancaPendente()) {
+                                    <p-tag
+                                        value="Alterações não salvas"
+                                        severity="warn"
+                                        [rounded]="true"
+                                    />
+                                } @else if (tipo.rascunho) {
+                                    <p-tag value="Salvo" severity="info" [rounded]="true" />
+                                }
+                            </header>
+                            <app-markdown-editor
+                                [formControl]="controleRascunho"
+                                [alturaMinima]="16"
+                                rotulo="Rascunho do prompt"
+                            />
+
+                            <div class="prompts-aba__acoes">
+                                <span class="prompts-aba__dica">
+                                    @if (mudancaPendente()) {
+                                        Salve o rascunho para poder ativá-lo.
+                                    } @else if (tipo.rascunho) {
+                                        O rascunho está salvo e pronto para ativar.
+                                    } @else {
+                                        Sem rascunho: o editor parte da versão ativa.
+                                    }
+                                </span>
+                                @if (mudancaPendente()) {
+                                    <p-button
+                                        label="Desfazer edição"
+                                        severity="secondary"
+                                        [text]="true"
+                                        [disabled]="operando()"
+                                        (onClick)="descartarAlteracoes()"
+                                    />
+                                }
+                                @if (tipo.rascunho && !mudancaPendente()) {
+                                    <p-button
+                                        label="Descartar rascunho"
+                                        icon="pi pi-trash"
+                                        severity="danger"
+                                        [text]="true"
+                                        [disabled]="operando()"
+                                        (onClick)="descartarRascunho()"
+                                    />
+                                }
+                                <p-button
+                                    label="Testar antes de salvar"
+                                    icon="pi pi-play"
+                                    severity="secondary"
+                                    [outlined]="true"
+                                    [disabled]="operando() || textoParaTeste().trim() === ''"
+                                    (onClick)="testando.set(true)"
+                                />
+                                <p-button
+                                    label="Salvar rascunho"
+                                    icon="pi pi-save"
+                                    [outlined]="true"
+                                    [disabled]="!podeSalvar() || operando()"
+                                    (onClick)="salvarRascunho()"
+                                />
+                                <p-button
+                                    label="Ativar rascunho"
+                                    icon="pi pi-check"
+                                    [disabled]="!podeAtivar() || operando()"
+                                    (onClick)="ativarRascunho()"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            }
+        </div>
+    }
 </div>
 
 <p-confirmDialog key="prompts-pendente" />
 <p-confirmDialog key="prompts-acao" />
 
 @if (tipoAberto(); as tipoSelecionado) {
-  <app-prompt-teste-dialog [(visivel)]="testando" [tipo]="tipoSelecionado" [conteudo]="textoParaTeste()" />
+    <app-prompt-teste-dialog
+        [(visivel)]="testando"
+        [tipo]="tipoSelecionado"
+        [conteudo]="textoParaTeste()"
+    />
 }

@@ -12,14 +12,14 @@ import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import {
-  RelatorioExecucaoDto,
-  RelatorioInconsistenciaDto,
-  RelatorioRevisaoDto,
-  RelatorioPeriodoTipoEnum,
-  RelatorioFormatoEnum,
-  ProjetoResumoDto,
-  dataHoraNoFuso,
-  hojeNoFuso,
+    RelatorioExecucaoDto,
+    RelatorioInconsistenciaDto,
+    RelatorioRevisaoDto,
+    RelatorioPeriodoTipoEnum,
+    RelatorioFormatoEnum,
+    ProjetoResumoDto,
+    dataHoraNoFuso,
+    hojeNoFuso,
 } from '@project20/shared';
 import { ambiente } from '../../../../../environments/environment';
 import { RelatorioService, RelatorioParametros } from '../../services/relatorio.service';
@@ -28,14 +28,14 @@ import { corTextoSobre, siglaDoProjeto } from '../../../projeto/utils/projeto-id
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import {
-  DIVISAO_DO_RELATORIO,
-  RelatorioPeriodoAtalho,
-  atalhoDoPeriodo,
-  divisaoPeloPonteiro,
-  limitarDivisao,
-  normalizarSeveridade,
-  ordemSeveridade,
-  periodoDoAtalho,
+    DIVISAO_DO_RELATORIO,
+    RelatorioPeriodoAtalho,
+    atalhoDoPeriodo,
+    divisaoPeloPonteiro,
+    limitarDivisao,
+    normalizarSeveridade,
+    ordemSeveridade,
+    periodoDoAtalho,
 } from '../../utils/relatorio.util';
 
 const CHAVE_PROJETO_LEMBRADO = 'relatorio.projeto';
@@ -48,392 +48,392 @@ const ATRASO_MUDANCA_FILTRO_MS = 400;
  * enquanto o novo não chega e o CSV/IA só usam os parâmetros do que está na tela.
  */
 @Component({
-  selector: 'app-relatorio-execucao-page',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    FormsModule,
-    SelectButtonModule,
-    ButtonModule,
-    Select,
-    DatePickerModule,
-    TableModule,
-    Tag,
-    TooltipModule,
-    MinutosParaHorasPipe,
-    BarraRecargaComponent,
-  ],
-  templateUrl: './relatorio-execucao.page.html',
-  styleUrl: './relatorio-execucao.page.scss',
+    selector: 'app-relatorio-execucao-page',
+    standalone: true,
+    imports: [
+        ReactiveFormsModule,
+        FormsModule,
+        SelectButtonModule,
+        ButtonModule,
+        Select,
+        DatePickerModule,
+        TableModule,
+        Tag,
+        TooltipModule,
+        MinutosParaHorasPipe,
+        BarraRecargaComponent,
+    ],
+    templateUrl: './relatorio-execucao.page.html',
+    styleUrl: './relatorio-execucao.page.scss',
 })
 export class RelatorioExecucaoPage implements OnInit {
-  private readonly relatorioService = inject(RelatorioService);
-  private readonly projetoService = inject(ProjetoService);
-  private readonly formBuilder = inject(FormBuilder);
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly router = inject(Router);
-  private readonly rota = inject(ActivatedRoute);
+    private readonly relatorioService = inject(RelatorioService);
+    private readonly projetoService = inject(ProjetoService);
+    private readonly formBuilder = inject(FormBuilder);
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly router = inject(Router);
+    private readonly rota = inject(ActivatedRoute);
 
-  readonly projetos = signal<ProjetoResumoDto[]>([]);
-  /** Aberto pela rota do projeto (`/projeto/:id/relatorio`): o projeto vem definido e não se troca. */
-  readonly projetoFixo = signal<boolean>(false);
+    readonly projetos = signal<ProjetoResumoDto[]>([]);
+    /** Aberto pela rota do projeto (`/projeto/:id/relatorio`): o projeto vem definido e não se troca. */
+    readonly projetoFixo = signal<boolean>(false);
 
-  /** O projeto do relatório, para a identidade (selo, nome e código) no cabeçalho. */
-  private readonly projetoIdEscolhido = signal<number | null>(null);
-  readonly projetoEscolhido = computed(() => this.projetos().find((projeto) => projeto.id === this.projetoIdEscolhido()) ?? null);
-  readonly siglaDoSelo = computed(() => siglaDoProjeto(this.projetoEscolhido()?.nome ?? ''));
-  readonly corTextoSelo = computed(() => corTextoSobre(this.projetoEscolhido()?.cor ?? ''));
+    /** O projeto do relatório, para a identidade (selo, nome e código) no cabeçalho. */
+    private readonly projetoIdEscolhido = signal<number | null>(null);
+    readonly projetoEscolhido = computed(() => this.projetos().find((projeto) => projeto.id === this.projetoIdEscolhido()) ?? null);
+    readonly siglaDoSelo = computed(() => siglaDoProjeto(this.projetoEscolhido()?.nome ?? ''));
+    readonly corTextoSelo = computed(() => corTextoSobre(this.projetoEscolhido()?.cor ?? ''));
 
-  /** Painel da revisão por IA (task 272): ao lado da tabela, com divisor arrastável, ou recolhido numa barra de caixinhas. */
-  private readonly area = viewChild<ElementRef<HTMLElement>>('area');
-  readonly limites = DIVISAO_DO_RELATORIO;
-  readonly painelAberto = signal<boolean>(true);
-  readonly divisao = signal<number>(this.lerDivisao());
-  readonly arrastando = signal<boolean>(false);
+    /** Painel da revisão por IA (task 272): ao lado da tabela, com divisor arrastável, ou recolhido numa barra de caixinhas. */
+    private readonly area = viewChild<ElementRef<HTMLElement>>('area');
+    readonly limites = DIVISAO_DO_RELATORIO;
+    readonly painelAberto = signal<boolean>(true);
+    readonly divisao = signal<number>(this.lerDivisao());
+    readonly arrastando = signal<boolean>(false);
 
-  readonly carregandoPreview = signal<boolean>(false);
-  readonly carregandoRevisao = signal<boolean>(false);
-  readonly baixando = signal<boolean>(false);
-  readonly erroPreview = signal<boolean>(false);
+    readonly carregandoPreview = signal<boolean>(false);
+    readonly carregandoRevisao = signal<boolean>(false);
+    readonly baixando = signal<boolean>(false);
+    readonly erroPreview = signal<boolean>(false);
 
-  readonly relatorio = signal<RelatorioExecucaoDto | null>(null);
-  readonly revisao = signal<RelatorioRevisaoDto | null>(null);
-  /** Parâmetros do relatório que está na tela — o que o CSV e a IA realmente usam. */
-  private readonly parametrosExibidos = signal<RelatorioParametros | null>(null);
-  /** `false` entre a mudança de um filtro e a chegada do novo resultado. */
-  readonly sincronizado = signal<boolean>(false);
-  readonly esmaecido = computed(() => this.carregandoPreview() || (!this.sincronizado() && !!this.relatorio()));
-  readonly podeExportar = computed(
-    () => this.sincronizado() && !!this.relatorio() && (this.relatorio()?.totalExecucoes ?? 0) > 0,
-  );
-
-  readonly temPainel = computed(() => this.carregandoRevisao() || !!this.revisao());
-
-  private readonly pedidoPreview = new Subject<number>();
-
-  readonly TipoPeriodo = RelatorioPeriodoTipoEnum;
-  private readonly anoAtual = hojeNoFuso(ambiente.fusoHorario).getFullYear();
-
-  readonly formulario = this.formBuilder.group(
-    {
-      projetoId:   [null as number | null, [Validators.required]],
-      periodoTipo: [RelatorioPeriodoTipoEnum.MENSAL as RelatorioPeriodoTipoEnum, [Validators.required]],
-      ano:         [this.anoAtual as number, [Validators.required]],
-      mes:         [hojeNoFuso(ambiente.fusoHorario).getMonth() + 1 as number, [Validators.required]],
-      periodo:     [null as Date[] | null],
-    },
-    { validators: this.validarPeriodo },
-  );
-
-  readonly atalhos: { valor: RelatorioPeriodoAtalho; rotulo: string }[] = [
-    { valor: 'MES',     rotulo: 'Este mês' },
-    { valor: 'PASSADO', rotulo: 'Mês passado' },
-    { valor: 'ANO',     rotulo: 'Este ano' },
-    { valor: 'CUSTOM',  rotulo: 'Personalizado…' },
-  ];
-
-  readonly anoOpcoes = Array.from({ length: 6 }, (_, indice) => {
-    const ano = this.anoAtual - 5 + indice;
-    return { label: String(ano), value: ano };
-  });
-
-  readonly mesOpcoes = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-  ].map((label, indice) => ({ label, value: indice + 1 }));
-
-  /** Achados ordenados ALTA → MÉDIA → BAIXA. */
-  readonly achados = computed<RelatorioInconsistenciaDto[]>(() =>
-    [...(this.revisao()?.inconsistencias ?? [])].sort((a, b) => ordemSeveridade(a.severidade) - ordemSeveridade(b.severidade)),
-  );
-  readonly contadores = computed(() =>
-    (['ALTA', 'MEDIA', 'BAIXA'] as const)
-      .map((severidade) => ({
-        severidade,
-        rotulo: severidade === 'MEDIA' ? 'MÉDIA' : severidade,
-        total: this.achados().filter((item) => normalizarSeveridade(item.severidade) === severidade).length,
-      }))
-      .filter((contador) => contador.total > 0),
-  );
-
-  ngOnInit(): void {
-    this.formulario.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.projetoIdEscolhido.set(this.formulario.getRawValue().projetoId);
-      this.sincronizado.set(false);
-      this.revisao.set(null);
-      this.pedidoPreview.next(ATRASO_MUDANCA_FILTRO_MS);
-    });
-
-    this.pedidoPreview
-      .pipe(
-        switchMap((atraso) => timer(atraso)),
-        switchMap(() => this.buscarPreview()),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe();
-
-    this.iniciar(this.projetoIdDaRota() || undefined);
-  }
-
-  /** Volta para o projeto (rota do projeto) ou para Execuções (rota sem projeto). */
-  voltar(): void {
-    void this.router.navigate(this.projetoFixo() ? ['/projeto', this.projetoIdDaRota()] : ['/execucao']);
-  }
-
-  private projetoIdDaRota(): number {
-    return Number(this.rota.snapshot.paramMap.get('id'));
-  }
-
-  /** Carrega já: `projetoId` da rota do projeto, ou o último projeto escolhido nesta máquina. */
-  private iniciar(projetoId?: number): void {
-    this.projetoFixo.set(projetoId !== undefined);
-    const atalho = periodoDoAtalho('MES', this.hoje());
-    this.relatorio.set(null);
-    this.revisao.set(null);
-    this.erroPreview.set(false);
-    this.sincronizado.set(false);
-    this.formulario.controls.projetoId[projetoId !== undefined ? 'disable' : 'enable']({ emitEvent: false });
-    this.formulario.reset({
-      projetoId: projetoId ?? this.projetoLembrado(),
-      periodoTipo: atalho.periodoTipo,
-      ano: atalho.ano,
-      mes: atalho.mes,
-      periodo: null,
-    }, { emitEvent: false });
-    this.projetoIdEscolhido.set(this.formulario.getRawValue().projetoId);
-    this.carregarProjetos();
-    this.pedidoPreview.next(0);
-  }
-
-  /** Data e hora no fuso do sistema, como o CSV. */
-  dataHora(valor: Date | string): string {
-    return dataHoraNoFuso(new Date(valor), ambiente.fusoHorario);
-  }
-
-  private hoje(): Date {
-    return hojeNoFuso(ambiente.fusoHorario);
-  }
-
-  escolherAtalho(atalho: RelatorioPeriodoAtalho): void {
-    const periodo = periodoDoAtalho(atalho, this.hoje());
-    this.formulario.patchValue({ periodoTipo: periodo.periodoTipo, ano: periodo.ano, mes: periodo.mes });
-  }
-
-  atalhoAtivo(): RelatorioPeriodoAtalho | null {
-    const { periodoTipo, ano, mes } = this.formulario.getRawValue();
-    return atalhoDoPeriodo({ periodoTipo: periodoTipo!, ano: ano!, mes: mes! }, this.hoje());
-  }
-
-  get periodoIncompleto(): boolean {
-    return this.formulario.hasError('periodoIncompleto');
-  }
-
-  tentarNovamente(): void {
-    this.pedidoPreview.next(0);
-  }
-
-  baixarCsv(): void {
-    const params = this.parametrosExibidos();
-    if (!params || !this.podeExportar()) return;
-
-    this.baixando.set(true);
-    this.relatorioService
-      .baixarRelatorio(params, RelatorioFormatoEnum.CSV)
-      .pipe(finalize(() => this.baixando.set(false)))
-      .subscribe({
-        next: (resposta) => this.dispararDownload(resposta),
-        error: () => undefined, // o interceptor já avisou o motivo
-      });
-  }
-
-  revisarComIa(): void {
-    const params = this.parametrosExibidos();
-    if (!params || !this.podeExportar()) return;
-
-    this.painelAberto.set(true);
-    this.carregandoRevisao.set(true);
-    this.relatorioService
-      .revisarRelatorio(params)
-      .pipe(finalize(() => this.carregandoRevisao.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) this.revisao.set(resposta.dados);
-        },
-        error: () => undefined, // o interceptor já avisou o motivo
-      });
-  }
-
-  /** Severidade da caixinha do painel recolhido: o que não é ALTA nem MÉDIA vale como BAIXA. */
-  severidadeNormalizada(severidade: string): 'ALTA' | 'MEDIA' | 'BAIXA' {
-    const normalizada = normalizarSeveridade(severidade);
-    return normalizada === 'ALTA' || normalizada === 'MEDIA' ? normalizada : 'BAIXA';
-  }
-
-  iniciarArrasto(evento: PointerEvent): void {
-    evento.preventDefault();
-    (evento.currentTarget as HTMLElement).setPointerCapture?.(evento.pointerId);
-    this.arrastando.set(true);
-  }
-
-  aoArrastar(evento: PointerEvent): void {
-    if (!this.arrastando()) return;
-    const area = this.area()?.nativeElement.getBoundingClientRect();
-    if (area) this.divisao.set(divisaoPeloPonteiro(evento.clientX, area.left, area.width));
-  }
-
-  finalizarArrasto(): void {
-    if (!this.arrastando()) return;
-    this.arrastando.set(false);
-    this.guardarDivisao();
-  }
-
-  /** Setas ajustam o divisor pelo teclado: ← diminui a tabela, → aumenta. */
-  aoTeclarNoDivisor(evento: KeyboardEvent): void {
-    const passo = evento.key === 'ArrowRight' ? DIVISAO_DO_RELATORIO.passoDoTeclado : evento.key === 'ArrowLeft' ? -DIVISAO_DO_RELATORIO.passoDoTeclado : 0;
-    if (passo === 0) return;
-    evento.preventDefault();
-    this.divisao.update((atual) => limitarDivisao(atual + passo));
-    this.guardarDivisao();
-  }
-
-  /** Duplo clique no divisor: volta à divisão padrão. */
-  restaurarDivisao(): void {
-    this.divisao.set(DIVISAO_DO_RELATORIO.padrao);
-    this.guardarDivisao();
-  }
-
-  severidadeInconsistencia(severidade: string): 'danger' | 'warn' | 'secondary' {
-    const normalizada = normalizarSeveridade(severidade);
-    if (normalizada === 'ALTA') return 'danger';
-    if (normalizada === 'MEDIA') return 'warn';
-    return 'secondary';
-  }
-
-  private buscarPreview() {
-    const params = this.montarParametros();
-    if (!params) {
-      this.carregandoPreview.set(false);
-      return of(null);
-    }
-    this.lembrarProjeto(params.projetoId);
-    this.carregandoPreview.set(true);
-    this.erroPreview.set(false);
-    return this.relatorioService.gerarRelatorio(params).pipe(
-      map((resposta) => {
-        if (resposta.sucesso && resposta.dados) {
-          this.relatorio.set(resposta.dados);
-          this.parametrosExibidos.set(params);
-          this.sincronizado.set(true);
-        }
-        return null;
-      }),
-      catchError(() => {
-        this.erroPreview.set(true);
-        return of(null);
-      }),
-      finalize(() => this.carregandoPreview.set(false)),
+    readonly relatorio = signal<RelatorioExecucaoDto | null>(null);
+    readonly revisao = signal<RelatorioRevisaoDto | null>(null);
+    /** Parâmetros do relatório que está na tela — o que o CSV e a IA realmente usam. */
+    private readonly parametrosExibidos = signal<RelatorioParametros | null>(null);
+    /** `false` entre a mudança de um filtro e a chegada do novo resultado. */
+    readonly sincronizado = signal<boolean>(false);
+    readonly esmaecido = computed(() => this.carregandoPreview() || (!this.sincronizado() && !!this.relatorio()));
+    readonly podeExportar = computed(
+        () => this.sincronizado() && !!this.relatorio() && (this.relatorio()?.totalExecucoes ?? 0) > 0,
     );
-  }
 
-  /** Parâmetros dos filtros atuais, ou `null` enquanto faltar projeto ou o intervalo personalizado. */
-  private montarParametros(): RelatorioParametros | null {
-    if (this.formulario.invalid) return null;
+    readonly temPainel = computed(() => this.carregandoRevisao() || !!this.revisao());
 
-    const valor = this.formulario.getRawValue();
-    const periodoTipo = valor.periodoTipo!;
-    const params: RelatorioParametros = { projetoId: valor.projetoId!, periodoTipo };
+    private readonly pedidoPreview = new Subject<number>();
 
-    if (periodoTipo === RelatorioPeriodoTipoEnum.ANUAL) {
-      params.ano = valor.ano ?? undefined;
-    } else if (periodoTipo === RelatorioPeriodoTipoEnum.MENSAL) {
-      params.ano = valor.ano ?? undefined;
-      params.mes = valor.mes ?? undefined;
-    } else {
-      const periodo = valor.periodo as Date[] | null;
-      params.dataInicio = periodo?.[0] ? this.formatarData(periodo[0]) : undefined;
-      params.dataFim = periodo?.[1] ? this.formatarData(periodo[1]) : undefined;
-    }
+    readonly TipoPeriodo = RelatorioPeriodoTipoEnum;
+    private readonly anoAtual = hojeNoFuso(ambiente.fusoHorario).getFullYear();
 
-    return params;
-  }
+    readonly formulario = this.formBuilder.group(
+        {
+            projetoId:   [null as number | null, [Validators.required]],
+            periodoTipo: [RelatorioPeriodoTipoEnum.MENSAL as RelatorioPeriodoTipoEnum, [Validators.required]],
+            ano:         [this.anoAtual as number, [Validators.required]],
+            mes:         [hojeNoFuso(ambiente.fusoHorario).getMonth() + 1 as number, [Validators.required]],
+            periodo:     [null as Date[] | null],
+        },
+        { validators: this.validarPeriodo },
+    );
 
-  private carregarProjetos(): void {
-    if (this.projetos().length > 0) return;
-    this.projetoService.listar({ allRows: true }).subscribe({
-      next: (resposta) => {
-        if (resposta.sucesso && resposta.dados) this.projetos.set(resposta.dados.itens);
-      },
+    readonly atalhos: { valor: RelatorioPeriodoAtalho; rotulo: string }[] = [
+        { valor: 'MES',     rotulo: 'Este mês' },
+        { valor: 'PASSADO', rotulo: 'Mês passado' },
+        { valor: 'ANO',     rotulo: 'Este ano' },
+        { valor: 'CUSTOM',  rotulo: 'Personalizado…' },
+    ];
+
+    readonly anoOpcoes = Array.from({ length: 6 }, (_, indice) => {
+        const ano = this.anoAtual - 5 + indice;
+        return { label: String(ano), value: ano };
     });
-  }
 
-  private lerDivisao(): number {
-    try {
-      const salva = Number(localStorage.getItem(CHAVE_DIVISAO));
-      return salva > 0 ? limitarDivisao(salva) : DIVISAO_DO_RELATORIO.padrao;
-    } catch {
-      return DIVISAO_DO_RELATORIO.padrao;
+    readonly mesOpcoes = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+    ].map((label, indice) => ({ label, value: indice + 1 }));
+
+    /** Achados ordenados ALTA → MÉDIA → BAIXA. */
+    readonly achados = computed<RelatorioInconsistenciaDto[]>(() =>
+        [...(this.revisao()?.inconsistencias ?? [])].sort((relatorioInconsistenciaDto, segundo) => ordemSeveridade(relatorioInconsistenciaDto.severidade) - ordemSeveridade(segundo.severidade)),
+    );
+    readonly contadores = computed(() =>
+        (['ALTA', 'MEDIA', 'BAIXA'] as const)
+            .map((severidade) => ({
+                severidade,
+                rotulo: severidade === 'MEDIA' ? 'MÉDIA' : severidade,
+                total: this.achados().filter((item) => normalizarSeveridade(item.severidade) === severidade).length,
+            }))
+            .filter((contador) => contador.total > 0),
+    );
+
+    ngOnInit(): void {
+        this.formulario.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+            this.projetoIdEscolhido.set(this.formulario.getRawValue().projetoId);
+            this.sincronizado.set(false);
+            this.revisao.set(null);
+            this.pedidoPreview.next(ATRASO_MUDANCA_FILTRO_MS);
+        });
+
+        this.pedidoPreview
+            .pipe(
+                switchMap((atraso) => timer(atraso)),
+                switchMap(() => this.buscarPreview()),
+                takeUntilDestroyed(this.destroyRef),
+            )
+            .subscribe();
+
+        this.iniciar(this.projetoIdDaRota() || undefined);
     }
-  }
 
-  private guardarDivisao(): void {
-    try {
-      localStorage.setItem(CHAVE_DIVISAO, String(this.divisao()));
-    } catch {
-      /* armazenamento indisponível: só não lembra */
+    /** Volta para o projeto (rota do projeto) ou para Execuções (rota sem projeto). */
+    voltar(): void {
+        void this.router.navigate(this.projetoFixo() ? ['/projeto', this.projetoIdDaRota()] : ['/execucao']);
     }
-  }
 
-  private projetoLembrado(): number | null {
-    try {
-      const salvo = Number(localStorage.getItem(CHAVE_PROJETO_LEMBRADO));
-      return salvo > 0 ? salvo : null;
-    } catch {
-      return null;
+    private projetoIdDaRota(): number {
+        return Number(this.rota.snapshot.paramMap.get('id'));
     }
-  }
 
-  private lembrarProjeto(projetoId: number): void {
-    if (this.projetoFixo()) return;
-    try {
-      localStorage.setItem(CHAVE_PROJETO_LEMBRADO, String(projetoId));
-    } catch {
-      /* armazenamento indisponível: só não lembra */
+    /** Carrega já: `projetoId` da rota do projeto, ou o último projeto escolhido nesta máquina. */
+    private iniciar(projetoId?: number): void {
+        this.projetoFixo.set(projetoId !== undefined);
+        const atalho = periodoDoAtalho('MES', this.hoje());
+        this.relatorio.set(null);
+        this.revisao.set(null);
+        this.erroPreview.set(false);
+        this.sincronizado.set(false);
+        this.formulario.controls.projetoId[projetoId !== undefined ? 'disable' : 'enable']({ emitEvent: false });
+        this.formulario.reset({
+            projetoId: projetoId ?? this.projetoLembrado(),
+            periodoTipo: atalho.periodoTipo,
+            ano: atalho.ano,
+            mes: atalho.mes,
+            periodo: null,
+        }, { emitEvent: false });
+        this.projetoIdEscolhido.set(this.formulario.getRawValue().projetoId);
+        this.carregarProjetos();
+        this.pedidoPreview.next(0);
     }
-  }
 
-  private dispararDownload(resposta: HttpResponse<Blob>): void {
-    const blob = resposta.body;
-    if (!blob) return;
+    /** Data e hora no fuso do sistema, como o CSV. */
+    dataHora(valor: Date | string): string {
+        return dataHoraNoFuso(new Date(valor), ambiente.fusoHorario);
+    }
 
-    const nomeArquivo = this.extrairNomeArquivo(resposta) ?? 'relatorio-execucoes.csv';
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = nomeArquivo;
-    link.click();
-    URL.revokeObjectURL(url);
-  }
+    private hoje(): Date {
+        return hojeNoFuso(ambiente.fusoHorario);
+    }
 
-  private extrairNomeArquivo(resposta: HttpResponse<Blob>): string | null {
-    const cabecalho = resposta.headers.get('Content-Disposition');
-    if (!cabecalho) return null;
-    const correspondencia = /filename="?([^"]+)"?/.exec(cabecalho);
-    return correspondencia ? correspondencia[1] : null;
-  }
+    escolherAtalho(atalho: RelatorioPeriodoAtalho): void {
+        const periodo = periodoDoAtalho(atalho, this.hoje());
+        this.formulario.patchValue({ periodoTipo: periodo.periodoTipo, ano: periodo.ano, mes: periodo.mes });
+    }
 
-  private formatarData(data: Date): string {
-    const ano = data.getFullYear();
-    const mes = String(data.getMonth() + 1).padStart(2, '0');
-    const dia = String(data.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
-  }
+    atalhoAtivo(): RelatorioPeriodoAtalho | null {
+        const { periodoTipo, ano, mes } = this.formulario.getRawValue();
+        return atalhoDoPeriodo({ periodoTipo: periodoTipo!, ano: ano!, mes: mes! }, this.hoje());
+    }
 
-  private validarPeriodo(controle: AbstractControl): ValidationErrors | null {
-    const periodoTipo = controle.get('periodoTipo')?.value as RelatorioPeriodoTipoEnum;
-    if (periodoTipo !== RelatorioPeriodoTipoEnum.CUSTOM) return null;
+    get periodoIncompleto(): boolean {
+        return this.formulario.hasError('periodoIncompleto');
+    }
 
-    const periodo = controle.get('periodo')?.value as Date[] | null;
-    if (!periodo || !periodo[0] || !periodo[1]) return { periodoIncompleto: true };
-    return null;
-  }
+    tentarNovamente(): void {
+        this.pedidoPreview.next(0);
+    }
+
+    baixarCsv(): void {
+        const params = this.parametrosExibidos();
+        if (!params || !this.podeExportar()) return;
+
+        this.baixando.set(true);
+        this.relatorioService
+            .baixarRelatorio(params, RelatorioFormatoEnum.CSV)
+            .pipe(finalize(() => this.baixando.set(false)))
+            .subscribe({
+                next: (resposta) => this.dispararDownload(resposta),
+                error: () => undefined, // o interceptor já avisou o motivo
+            });
+    }
+
+    revisarComIa(): void {
+        const params = this.parametrosExibidos();
+        if (!params || !this.podeExportar()) return;
+
+        this.painelAberto.set(true);
+        this.carregandoRevisao.set(true);
+        this.relatorioService
+            .revisarRelatorio(params)
+            .pipe(finalize(() => this.carregandoRevisao.set(false)))
+            .subscribe({
+                next: (resposta) => {
+                    if (resposta.sucesso && resposta.dados) this.revisao.set(resposta.dados);
+                },
+                error: () => undefined, // o interceptor já avisou o motivo
+            });
+    }
+
+    /** Severidade da caixinha do painel recolhido: o que não é ALTA nem MÉDIA vale como BAIXA. */
+    severidadeNormalizada(severidade: string): 'ALTA' | 'MEDIA' | 'BAIXA' {
+        const normalizada = normalizarSeveridade(severidade);
+        return normalizada === 'ALTA' || normalizada === 'MEDIA' ? normalizada : 'BAIXA';
+    }
+
+    iniciarArrasto(evento: PointerEvent): void {
+        evento.preventDefault();
+        (evento.currentTarget as HTMLElement).setPointerCapture?.(evento.pointerId);
+        this.arrastando.set(true);
+    }
+
+    aoArrastar(evento: PointerEvent): void {
+        if (!this.arrastando()) return;
+        const area = this.area()?.nativeElement.getBoundingClientRect();
+        if (area) this.divisao.set(divisaoPeloPonteiro(evento.clientX, area.left, area.width));
+    }
+
+    finalizarArrasto(): void {
+        if (!this.arrastando()) return;
+        this.arrastando.set(false);
+        this.guardarDivisao();
+    }
+
+    /** Setas ajustam o divisor pelo teclado: ← diminui a tabela, → aumenta. */
+    aoTeclarNoDivisor(evento: KeyboardEvent): void {
+        const passo = evento.key === 'ArrowRight' ? DIVISAO_DO_RELATORIO.passoDoTeclado : evento.key === 'ArrowLeft' ? -DIVISAO_DO_RELATORIO.passoDoTeclado : 0;
+        if (passo === 0) return;
+        evento.preventDefault();
+        this.divisao.update((atual) => limitarDivisao(atual + passo));
+        this.guardarDivisao();
+    }
+
+    /** Duplo clique no divisor: volta à divisão padrão. */
+    restaurarDivisao(): void {
+        this.divisao.set(DIVISAO_DO_RELATORIO.padrao);
+        this.guardarDivisao();
+    }
+
+    severidadeInconsistencia(severidade: string): 'danger' | 'warn' | 'secondary' {
+        const normalizada = normalizarSeveridade(severidade);
+        if (normalizada === 'ALTA') return 'danger';
+        if (normalizada === 'MEDIA') return 'warn';
+        return 'secondary';
+    }
+
+    private buscarPreview() {
+        const params = this.montarParametros();
+        if (!params) {
+            this.carregandoPreview.set(false);
+            return of(null);
+        }
+        this.lembrarProjeto(params.projetoId);
+        this.carregandoPreview.set(true);
+        this.erroPreview.set(false);
+        return this.relatorioService.gerarRelatorio(params).pipe(
+            map((resposta) => {
+                if (resposta.sucesso && resposta.dados) {
+                    this.relatorio.set(resposta.dados);
+                    this.parametrosExibidos.set(params);
+                    this.sincronizado.set(true);
+                }
+                return null;
+            }),
+            catchError(() => {
+                this.erroPreview.set(true);
+                return of(null);
+            }),
+            finalize(() => this.carregandoPreview.set(false)),
+        );
+    }
+
+    /** Parâmetros dos filtros atuais, ou `null` enquanto faltar projeto ou o intervalo personalizado. */
+    private montarParametros(): RelatorioParametros | null {
+        if (this.formulario.invalid) return null;
+
+        const valor = this.formulario.getRawValue();
+        const periodoTipo = valor.periodoTipo!;
+        const params: RelatorioParametros = { projetoId: valor.projetoId!, periodoTipo };
+
+        if (periodoTipo === RelatorioPeriodoTipoEnum.ANUAL) {
+            params.ano = valor.ano ?? undefined;
+        } else if (periodoTipo === RelatorioPeriodoTipoEnum.MENSAL) {
+            params.ano = valor.ano ?? undefined;
+            params.mes = valor.mes ?? undefined;
+        } else {
+            const periodo = valor.periodo as Date[] | null;
+            params.dataInicio = periodo?.[0] ? this.formatarData(periodo[0]) : undefined;
+            params.dataFim = periodo?.[1] ? this.formatarData(periodo[1]) : undefined;
+        }
+
+        return params;
+    }
+
+    private carregarProjetos(): void {
+        if (this.projetos().length > 0) return;
+        this.projetoService.listar({ allRows: true }).subscribe({
+            next: (resposta) => {
+                if (resposta.sucesso && resposta.dados) this.projetos.set(resposta.dados.itens);
+            },
+        });
+    }
+
+    private lerDivisao(): number {
+        try {
+            const salva = Number(localStorage.getItem(CHAVE_DIVISAO));
+            return salva > 0 ? limitarDivisao(salva) : DIVISAO_DO_RELATORIO.padrao;
+        } catch {
+            return DIVISAO_DO_RELATORIO.padrao;
+        }
+    }
+
+    private guardarDivisao(): void {
+        try {
+            localStorage.setItem(CHAVE_DIVISAO, String(this.divisao()));
+        } catch {
+            /* armazenamento indisponível: só não lembra */
+        }
+    }
+
+    private projetoLembrado(): number | null {
+        try {
+            const salvo = Number(localStorage.getItem(CHAVE_PROJETO_LEMBRADO));
+            return salvo > 0 ? salvo : null;
+        } catch {
+            return null;
+        }
+    }
+
+    private lembrarProjeto(projetoId: number): void {
+        if (this.projetoFixo()) return;
+        try {
+            localStorage.setItem(CHAVE_PROJETO_LEMBRADO, String(projetoId));
+        } catch {
+            /* armazenamento indisponível: só não lembra */
+        }
+    }
+
+    private dispararDownload(resposta: HttpResponse<Blob>): void {
+        const blob = resposta.body;
+        if (!blob) return;
+
+        const nomeArquivo = this.extrairNomeArquivo(resposta) ?? 'relatorio-execucoes.csv';
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = nomeArquivo;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    private extrairNomeArquivo(resposta: HttpResponse<Blob>): string | null {
+        const cabecalho = resposta.headers.get('Content-Disposition');
+        if (!cabecalho) return null;
+        const correspondencia = /filename="?([^"]+)"?/.exec(cabecalho);
+        return correspondencia ? correspondencia[1] : null;
+    }
+
+    private formatarData(data: Date): string {
+        const ano = data.getFullYear();
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const dia = String(data.getDate()).padStart(2, '0');
+        return `${ano}-${mes}-${dia}`;
+    }
+
+    private validarPeriodo(controle: AbstractControl): ValidationErrors | null {
+        const periodoTipo = controle.get('periodoTipo')?.value as RelatorioPeriodoTipoEnum;
+        if (periodoTipo !== RelatorioPeriodoTipoEnum.CUSTOM) return null;
+
+        const periodo = controle.get('periodo')?.value as Date[] | null;
+        if (!periodo || !periodo[0] || !periodo[1]) return { periodoIncompleto: true };
+        return null;
+    }
 }

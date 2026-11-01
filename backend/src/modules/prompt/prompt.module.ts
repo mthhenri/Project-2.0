@@ -6,9 +6,9 @@ import { PromptTesteService } from './services/prompt-teste.service';
 import { PromptRepository } from './repositories/prompt.repository';
 
 @Module({
-  imports:     [IaModule],
-  controllers: [PromptController],
-  providers:   [PromptService, PromptTesteService, PromptRepository],
-  exports:     [PromptService],
+    imports:     [IaModule],
+    controllers: [PromptController],
+    providers:   [PromptService, PromptTesteService, PromptRepository],
+    exports:     [PromptService],
 })
 export class PromptModule {}

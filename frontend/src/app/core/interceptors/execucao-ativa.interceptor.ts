@@ -15,16 +15,16 @@ const PADRAO_PROPOSTA = /\/proposta-ia\/\d+\/(confirmar|desfazer)$/;
  * não dá para saber pela URL se a proposta mexeu em execução, então qualquer uma ressincroniza (uma leitura barata).
  */
 export const execucaoAtivaInterceptor: HttpInterceptorFn = (requisicao, proximo) => {
-  const alteraExecucao =
-    (requisicao.method === 'POST' && PADRAO_INICIAR.test(requisicao.url)) ||
+    const alteraExecucao =
+        (requisicao.method === 'POST' && PADRAO_INICIAR.test(requisicao.url)) ||
     (requisicao.method === 'PATCH' && PADRAO_ENCERRAR.test(requisicao.url)) ||
     (requisicao.method === 'POST' && PADRAO_PROPOSTA.test(requisicao.url));
-  if (!alteraExecucao) return proximo(requisicao);
+    if (!alteraExecucao) return proximo(requisicao);
 
-  const execucaoAtiva = inject(ExecucaoAtivaService);
-  return proximo(requisicao).pipe(
-    tap((evento) => {
-      if (evento.type === HttpEventType.Response) execucaoAtiva.carregar();
-    }),
-  );
+    const execucaoAtiva = inject(ExecucaoAtivaService);
+    return proximo(requisicao).pipe(
+        tap((evento) => {
+            if (evento.type === HttpEventType.Response) execucaoAtiva.carregar();
+        }),
+    );
 };

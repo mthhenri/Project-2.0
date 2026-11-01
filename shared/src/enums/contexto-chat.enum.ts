@@ -3,8 +3,8 @@
  * (task 260), que só serve à conta da aba Custos e nunca aparece numa conversa nem na busca.
  */
 export enum ContextoChatEnum {
-  CHAT         = 'CHAT',
-  CHECKIN      = 'CHECKIN',
-  PLANEJAMENTO = 'PLANEJAMENTO',
-  USO_DE_IA    = 'USO_DE_IA',
+    CHAT         = 'CHAT',
+    CHECKIN      = 'CHECKIN',
+    PLANEJAMENTO = 'PLANEJAMENTO',
+    USO_DE_IA    = 'USO_DE_IA',
 }

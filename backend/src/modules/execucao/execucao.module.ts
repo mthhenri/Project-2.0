@@ -28,66 +28,66 @@ import { ListarExecucoesDaEquipeFerramenta } from './ferramentas/listar-execucoe
 import { ListarMinhasExecucoesDoDiaFerramenta } from './ferramentas/listar-minhas-execucoes-do-dia.ferramenta';
 
 @Module({
-  imports:     [AtividadeModule, DemandaModule, FerramentaIaModule, PropostaIaModule, IaModule, PromptModule, ConfiguracaoIaModule],
-  controllers: [ExecucaoController],
-  providers:   [
-    ExecucaoService,
-    ExecucaoRepository,
-    ConsultarExecucaoAtivaFerramenta,
-    ListarMinhasExecucoesDoDiaFerramenta,
-    ConsultarMudancasDaQuedaFerramenta,
-    ListarExecucoesDaEquipeFerramenta,
-    ListarAtividadesParadasFerramenta,
-    ProporIniciarExecucaoFerramenta,
-    ProporPausarExecucaoFerramenta,
-    IniciarExecucaoExecutor,
-    PausarExecucaoExecutor,
-    ProporDescreverExecucaoFerramenta,
-    DescreverExecucaoExecutor,
-    ProporRegistrarExecucaoFerramenta,
-    RegistrarExecucaoExecutor,
-    ProporCorrigirExecucaoFerramenta,
-    CorrigirExecucaoExecutor,
-  ],
-  exports:     [ExecucaoService, ExecucaoRepository],
+    imports:     [AtividadeModule, DemandaModule, FerramentaIaModule, PropostaIaModule, IaModule, PromptModule, ConfiguracaoIaModule],
+    controllers: [ExecucaoController],
+    providers:   [
+        ExecucaoService,
+        ExecucaoRepository,
+        ConsultarExecucaoAtivaFerramenta,
+        ListarMinhasExecucoesDoDiaFerramenta,
+        ConsultarMudancasDaQuedaFerramenta,
+        ListarExecucoesDaEquipeFerramenta,
+        ListarAtividadesParadasFerramenta,
+        ProporIniciarExecucaoFerramenta,
+        ProporPausarExecucaoFerramenta,
+        IniciarExecucaoExecutor,
+        PausarExecucaoExecutor,
+        ProporDescreverExecucaoFerramenta,
+        DescreverExecucaoExecutor,
+        ProporRegistrarExecucaoFerramenta,
+        RegistrarExecucaoExecutor,
+        ProporCorrigirExecucaoFerramenta,
+        CorrigirExecucaoExecutor,
+    ],
+    exports:     [ExecucaoService, ExecucaoRepository],
 })
 export class ExecucaoModule implements OnModuleInit {
-  constructor(
-    private readonly registroDeFerramentas: FerramentaIaRegistro,
-    private readonly consultarExecucaoAtiva: ConsultarExecucaoAtivaFerramenta,
-    private readonly listarMinhasExecucoesDoDia: ListarMinhasExecucoesDoDiaFerramenta,
-    private readonly consultarMudancasDaQueda: ConsultarMudancasDaQuedaFerramenta,
-    private readonly listarExecucoesDaEquipe: ListarExecucoesDaEquipeFerramenta,
-    private readonly listarAtividadesParadas: ListarAtividadesParadasFerramenta,
-    private readonly proporIniciarExecucao: ProporIniciarExecucaoFerramenta,
-    private readonly proporPausarExecucao: ProporPausarExecucaoFerramenta,
-    private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
-    private readonly iniciarExecucaoExecutor: IniciarExecucaoExecutor,
-    private readonly pausarExecucaoExecutor: PausarExecucaoExecutor,
-    private readonly proporDescreverExecucao: ProporDescreverExecucaoFerramenta,
-    private readonly descreverExecucaoExecutor: DescreverExecucaoExecutor,
-    private readonly proporRegistrarExecucao: ProporRegistrarExecucaoFerramenta,
-    private readonly registrarExecucaoExecutor: RegistrarExecucaoExecutor,
-    private readonly proporCorrigirExecucao: ProporCorrigirExecucaoFerramenta,
-    private readonly corrigirExecucaoExecutor: CorrigirExecucaoExecutor,
-  ) {}
+    constructor(
+        private readonly registroDeFerramentas: FerramentaIaRegistro,
+        private readonly consultarExecucaoAtiva: ConsultarExecucaoAtivaFerramenta,
+        private readonly listarMinhasExecucoesDoDia: ListarMinhasExecucoesDoDiaFerramenta,
+        private readonly consultarMudancasDaQueda: ConsultarMudancasDaQuedaFerramenta,
+        private readonly listarExecucoesDaEquipe: ListarExecucoesDaEquipeFerramenta,
+        private readonly listarAtividadesParadas: ListarAtividadesParadasFerramenta,
+        private readonly proporIniciarExecucao: ProporIniciarExecucaoFerramenta,
+        private readonly proporPausarExecucao: ProporPausarExecucaoFerramenta,
+        private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
+        private readonly iniciarExecucaoExecutor: IniciarExecucaoExecutor,
+        private readonly pausarExecucaoExecutor: PausarExecucaoExecutor,
+        private readonly proporDescreverExecucao: ProporDescreverExecucaoFerramenta,
+        private readonly descreverExecucaoExecutor: DescreverExecucaoExecutor,
+        private readonly proporRegistrarExecucao: ProporRegistrarExecucaoFerramenta,
+        private readonly registrarExecucaoExecutor: RegistrarExecucaoExecutor,
+        private readonly proporCorrigirExecucao: ProporCorrigirExecucaoFerramenta,
+        private readonly corrigirExecucaoExecutor: CorrigirExecucaoExecutor,
+    ) {}
 
-  /** As ferramentas de IA do domínio de execução se registram aqui. */
-  onModuleInit(): void {
-    this.registroDeFerramentas.registrar(this.consultarExecucaoAtiva);
-    this.registroDeFerramentas.registrar(this.listarMinhasExecucoesDoDia);
-    this.registroDeFerramentas.registrar(this.consultarMudancasDaQueda);
-    this.registroDeFerramentas.registrar(this.listarExecucoesDaEquipe);
-    this.registroDeFerramentas.registrar(this.listarAtividadesParadas);
-    this.registroDeFerramentas.registrar(this.proporIniciarExecucao);
-    this.registroDeFerramentas.registrar(this.proporPausarExecucao);
-    this.registroDeExecutores.registrar(this.iniciarExecucaoExecutor);
-    this.registroDeExecutores.registrar(this.pausarExecucaoExecutor);
-    this.registroDeFerramentas.registrar(this.proporDescreverExecucao);
-    this.registroDeFerramentas.registrar(this.proporRegistrarExecucao);
-    this.registroDeExecutores.registrar(this.registrarExecucaoExecutor);
-    this.registroDeFerramentas.registrar(this.proporCorrigirExecucao);
-    this.registroDeExecutores.registrar(this.corrigirExecucaoExecutor);
-    this.registroDeExecutores.registrar(this.descreverExecucaoExecutor);
-  }
+    /** As ferramentas de IA do domínio de execução se registram aqui. */
+    onModuleInit(): void {
+        this.registroDeFerramentas.registrar(this.consultarExecucaoAtiva);
+        this.registroDeFerramentas.registrar(this.listarMinhasExecucoesDoDia);
+        this.registroDeFerramentas.registrar(this.consultarMudancasDaQueda);
+        this.registroDeFerramentas.registrar(this.listarExecucoesDaEquipe);
+        this.registroDeFerramentas.registrar(this.listarAtividadesParadas);
+        this.registroDeFerramentas.registrar(this.proporIniciarExecucao);
+        this.registroDeFerramentas.registrar(this.proporPausarExecucao);
+        this.registroDeExecutores.registrar(this.iniciarExecucaoExecutor);
+        this.registroDeExecutores.registrar(this.pausarExecucaoExecutor);
+        this.registroDeFerramentas.registrar(this.proporDescreverExecucao);
+        this.registroDeFerramentas.registrar(this.proporRegistrarExecucao);
+        this.registroDeExecutores.registrar(this.registrarExecucaoExecutor);
+        this.registroDeFerramentas.registrar(this.proporCorrigirExecucao);
+        this.registroDeExecutores.registrar(this.corrigirExecucaoExecutor);
+        this.registroDeExecutores.registrar(this.descreverExecucaoExecutor);
+    }
 }

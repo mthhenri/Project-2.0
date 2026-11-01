@@ -14,34 +14,34 @@ import { ExecucaoService } from '../services/execucao.service';
  */
 @Injectable()
 export class RegistrarExecucaoExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.REGISTRAR_EXECUCAO;
+    readonly tipo = TipoPropostaIaEnum.REGISTRAR_EXECUCAO;
 
-  constructor(private readonly execucaoService: ExecucaoService) {}
+    constructor(private readonly execucaoService: ExecucaoService) {}
 
-  validar(dados: Record<string, unknown>): void {
-    validarDadosDaProposta(PropostaRegistrarExecucaoDadosDto, dados);
-  }
+    validar(dados: Record<string, unknown>): void {
+        validarDadosDaProposta(PropostaRegistrarExecucaoDadosDto, dados);
+    }
 
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    this.exigirGestor(usuarioAtivo);
-    const entrada = validarDadosDaProposta(PropostaRegistrarExecucaoDadosDto, dados);
-    const registrada = (
-      await this.execucaoService.registrar(
-        { atividadeId: entrada.atividadeId, inicioData: entrada.inicioData, fimData: entrada.fimData, descricao: entrada.descricao },
-        usuarioAtivo,
-      )
-    ).dados;
-    return { execucaoId: registrada?.id, atividadeId: entrada.atividadeId };
-  }
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        this.exigirGestor(usuarioAtivo);
+        const entrada = validarDadosDaProposta(PropostaRegistrarExecucaoDadosDto, dados);
+        const registrada = (
+            await this.execucaoService.registrar(
+                { atividadeId: entrada.atividadeId, inicioData: entrada.inicioData, fimData: entrada.fimData, descricao: entrada.descricao },
+                usuarioAtivo,
+            )
+        ).dados;
+        return { execucaoId: registrada?.id, atividadeId: entrada.atividadeId };
+    }
 
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    this.exigirGestor(usuarioAtivo);
-    const execucaoId = Number(resultado['execucaoId']);
-    if (!Number.isInteger(execucaoId)) throw new BusinessException('Não há execução a desfazer nesta proposta');
-    await this.execucaoService.excluir({ id: execucaoId }, usuarioAtivo);
-  }
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        this.exigirGestor(usuarioAtivo);
+        const execucaoId = Number(resultado['execucaoId']);
+        if (!Number.isInteger(execucaoId)) throw new BusinessException('Não há execução a desfazer nesta proposta');
+        await this.execucaoService.excluir({ id: execucaoId }, usuarioAtivo);
+    }
 
-  private exigirGestor(usuarioAtivo: JwtPayload): void {
-    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Só o gestor registra execuções passadas');
-  }
+    private exigirGestor(usuarioAtivo: JwtPayload): void {
+        if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Só o gestor registra execuções passadas');
+    }
 }

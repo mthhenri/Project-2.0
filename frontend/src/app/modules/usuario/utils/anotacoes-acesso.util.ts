@@ -5,9 +5,9 @@ import { TipoUsuarioEnum, temPermissaoDeGestor } from '@project20/shared';
  * desenvolvedores, nunca o de outro gestor ou administrador; o desenvolvedor só o próprio.
  */
 export function podeAbrirAnotacoes(
-  ator: { id: number; tipo: TipoUsuarioEnum },
-  dono: { id: number; tipo: TipoUsuarioEnum },
+    ator: { id: number; tipo: TipoUsuarioEnum },
+    dono: { id: number; tipo: TipoUsuarioEnum },
 ): boolean {
-  if (ator.id === dono.id) return true;
-  return temPermissaoDeGestor(ator.tipo) && !temPermissaoDeGestor(dono.tipo);
+    if (ator.id === dono.id) return true;
+    return temPermissaoDeGestor(ator.tipo) && !temPermissaoDeGestor(dono.tipo);
 }

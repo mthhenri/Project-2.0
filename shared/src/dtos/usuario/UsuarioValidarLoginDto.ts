@@ -1,3 +1,3 @@
 export class UsuarioValidarLoginDto {
-  login: string;
+    login: string;
 }

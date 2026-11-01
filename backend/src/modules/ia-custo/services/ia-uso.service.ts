@@ -9,27 +9,27 @@ import { ARMAZENAMENTO_DE_CHAT, ArmazenamentoDeChat } from '../../chat/repositor
  */
 @Injectable()
 export class IaUsoService {
-  private readonly logger = new Logger(IaUsoService.name);
+    private readonly logger = new Logger(IaUsoService.name);
 
-  constructor(@Inject(ARMAZENAMENTO_DE_CHAT) private readonly armazenamentoDeChat: ArmazenamentoDeChat) {}
+    constructor(@Inject(ARMAZENAMENTO_DE_CHAT) private readonly armazenamentoDeChat: ArmazenamentoDeChat) {}
 
-  async registrar(dto: IaUsoRegistrarDto): Promise<void> {
-    try {
-      await this.armazenamentoDeChat.gravar({
-        conversaId: `uso-ia-${dto.usuarioId}`,
-        usuarioId: dto.usuarioId,
-        contexto: ContextoChatEnum.USO_DE_IA,
-        autor: AutorChatEnum.IA,
-        texto: dto.descricao,
-        nivel: dto.nivel,
-        modelo: dto.modelo,
-        tokensEntrada: dto.tokensEntrada,
-        tokensSaida: dto.tokensSaida,
-        tokensCache: dto.tokensCache,
-        demandaId: dto.demandaId ?? null,
-      });
-    } catch (erro) {
-      this.logger.warn(`Não foi possível registrar o uso da IA (${dto.descricao}): ${erro instanceof Error ? erro.message : String(erro)}`);
+    async registrar(dto: IaUsoRegistrarDto): Promise<void> {
+        try {
+            await this.armazenamentoDeChat.gravar({
+                conversaId: `uso-ia-${dto.usuarioId}`,
+                usuarioId: dto.usuarioId,
+                contexto: ContextoChatEnum.USO_DE_IA,
+                autor: AutorChatEnum.IA,
+                texto: dto.descricao,
+                nivel: dto.nivel,
+                modelo: dto.modelo,
+                tokensEntrada: dto.tokensEntrada,
+                tokensSaida: dto.tokensSaida,
+                tokensCache: dto.tokensCache,
+                demandaId: dto.demandaId ?? null,
+            });
+        } catch (erro) {
+            this.logger.warn(`Não foi possível registrar o uso da IA (${dto.descricao}): ${erro instanceof Error ? erro.message : String(erro)}`);
+        }
     }
-  }
 }

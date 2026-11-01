@@ -6,39 +6,39 @@ import { TipoDemandaStatusEnum } from '../../enums/tipo-demanda-status.enum';
  * execução da própria pessoa rodando nela e se a pessoa pode editá-la.
  */
 export class DemandaDocumentacaoResumoDto {
-  @ApiProperty({ example: 1 })
-  id: number;
+    @ApiProperty({ example: 1 })
+    id: number;
 
-  @ApiProperty({ example: 3 })
-  projetoId: number;
+    @ApiProperty({ example: 3 })
+    projetoId: number;
 
-  @ApiProperty({ example: 'Portal do Cliente' })
-  projetoNome: string;
+    @ApiProperty({ example: 'Portal do Cliente' })
+    projetoNome: string;
 
-  @ApiProperty({ example: null, nullable: true })
-  demandaPaiId: number | null;
+    @ApiProperty({ example: null, nullable: true })
+    demandaPaiId: number | null;
 
-  @ApiProperty({ example: 'Parser' })
-  nome: string;
+    @ApiProperty({ example: 'Parser' })
+    nome: string;
 
-  @ApiProperty({ example: 'IA › Integrador Gemini › Parser', description: 'Os nomes da raiz até a própria demanda.' })
-  caminho: string;
+    @ApiProperty({ example: 'IA › Integrador Gemini › Parser', description: 'Os nomes da raiz até a própria demanda.' })
+    caminho: string;
 
-  @ApiProperty({ enum: TipoDemandaStatusEnum, example: TipoDemandaStatusEnum.PLANEJADA })
-  status: TipoDemandaStatusEnum;
+    @ApiProperty({ enum: TipoDemandaStatusEnum, example: TipoDemandaStatusEnum.PLANEJADA })
+    status: TipoDemandaStatusEnum;
 
-  @ApiProperty({ example: true })
-  temDescricaoTecnica: boolean;
+    @ApiProperty({ example: true })
+    temDescricaoTecnica: boolean;
 
-  @ApiProperty({ example: false })
-  temDescricaoCliente: boolean;
+    @ApiProperty({ example: false })
+    temDescricaoCliente: boolean;
 
-  @ApiProperty({ example: false })
-  temDocumentacao: boolean;
+    @ApiProperty({ example: false })
+    temDocumentacao: boolean;
 
-  @ApiProperty({ example: false, description: 'A pessoa tem uma execução ativa (sem fim) numa atividade dela nesta demanda.' })
-  emExecucao: boolean;
+    @ApiProperty({ example: false, description: 'A pessoa tem uma execução ativa (sem fim) numa atividade dela nesta demanda.' })
+    emExecucao: boolean;
 
-  @ApiProperty({ example: true, description: 'Gestor sempre pode; desenvolvedor só quando é membro da demanda.' })
-  podeEditar: boolean;
+    @ApiProperty({ example: true, description: 'Gestor sempre pode; desenvolvedor só quando é membro da demanda.' })
+    podeEditar: boolean;
 }

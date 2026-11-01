@@ -8,55 +8,55 @@ import { MENSAGEM_CARACTERES_PROIBIDOS, REGEX_SEM_CARACTERES_PROIBIDOS } from '.
  * instantes e mostra o período no cartão antes de confirmar.
  */
 export class ProporRegistrarExecucaoDto {
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  atividadeId: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    atividadeId: number;
 
-  @Matches(/^\d{4}-\d{2}-\d{2}$/)
-  data: string;
+    @Matches(/^\d{4}-\d{2}-\d{2}$/)
+    data: string;
 
-  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
-  horaInicio: string;
+    @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+    horaInicio: string;
 
-  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
-  horaFim: string;
+    @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+    horaFim: string;
 
-  @IsString()
-  @MinLength(3)
-  @MaxLength(1000)
-  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
-  descricao: string;
+    @IsString()
+    @MinLength(3)
+    @MaxLength(1000)
+    @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
+    descricao: string;
 }
 
 /** Os dados guardados na proposta: a entrada, o período já em instantes (ISO) e os textos que o cartão mostra. */
 export class PropostaRegistrarExecucaoDadosDto extends ProporRegistrarExecucaoDto {
-  /** ISO 8601 do início e do fim, no fuso do sistema já resolvido. */
-  @IsString()
-  inicioData: string;
+    /** ISO 8601 do início e do fim, no fuso do sistema já resolvido. */
+    @IsString()
+    inicioData: string;
 
-  @IsString()
-  fimData: string;
+    @IsString()
+    fimData: string;
 
-  /** Ex.: `18/10/2026, 14:00 às 16:00` (no fuso do sistema). */
-  @IsOptional()
-  @IsString()
-  periodoTexto?: string;
+    /** Ex.: `18/10/2026, 14:00 às 16:00` (no fuso do sistema). */
+    @IsOptional()
+    @IsString()
+    periodoTexto?: string;
 
-  @IsOptional()
-  @IsNumber()
-  duracaoMinutos?: number;
+    @IsOptional()
+    @IsNumber()
+    duracaoMinutos?: number;
 
-  @IsOptional()
-  @IsString()
-  atividadeNome?: string;
+    @IsOptional()
+    @IsString()
+    atividadeNome?: string;
 
-  @IsOptional()
-  @IsString()
-  demandaNome?: string;
+    @IsOptional()
+    @IsString()
+    demandaNome?: string;
 
-  /** O dono da atividade (de quem é a execução). */
-  @IsOptional()
-  @IsString()
-  usuarioNome?: string;
+    /** O dono da atividade (de quem é a execução). */
+    @IsOptional()
+    @IsString()
+    usuarioNome?: string;
 }

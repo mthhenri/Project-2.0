@@ -11,39 +11,39 @@ import { ExecutorAtivoDto } from './ExecutorAtivoDto';
  * (sem rollup recursivo dos filhos).
  */
 export class DemandaPlanejamentoDto {
-  @ApiProperty({ example: 1 })
-  demandaId: number;
+    @ApiProperty({ example: 1 })
+    demandaId: number;
 
-  @ApiProperty({ example: 'IA › Integrador Gemini › Ajuste de prompt' })
-  caminho: string;
+    @ApiProperty({ example: 'IA › Integrador Gemini › Ajuste de prompt' })
+    caminho: string;
 
-  @ApiProperty({ example: false, description: 'Demanda estrutural (pode ter sub-demandas); também aparece no planejamento' })
-  isEstrutural: boolean;
+    @ApiProperty({ example: false, description: 'Demanda estrutural (pode ter sub-demandas); também aparece no planejamento' })
+    isEstrutural: boolean;
 
-  @ApiProperty({ enum: TipoDemandaStatusEnum, example: TipoDemandaStatusEnum.PLANEJADA })
-  status: TipoDemandaStatusEnum;
+    @ApiProperty({ enum: TipoDemandaStatusEnum, example: TipoDemandaStatusEnum.PLANEJADA })
+    status: TipoDemandaStatusEnum;
 
-  @ApiProperty({ example: 8 })
-  horasEstimadas: number;
+    @ApiProperty({ example: 8 })
+    horasEstimadas: number;
 
-  @ApiProperty({ example: 120, description: 'Soma das execuções das atividades diretas; inclui a execução aberta como se encerrasse agora' })
-  minutosExecutados: number;
+    @ApiProperty({ example: 120, description: 'Soma das execuções das atividades diretas; inclui a execução aberta como se encerrasse agora' })
+    minutosExecutados: number;
 
-  @ApiProperty({ example: true, description: 'Descrição técnica preenchida — realça o ícone no menu de contexto' })
-  temDescricaoTecnica: boolean;
+    @ApiProperty({ example: true, description: 'Descrição técnica preenchida — realça o ícone no menu de contexto' })
+    temDescricaoTecnica: boolean;
 
-  @ApiProperty({ example: false, description: 'Descrição para o cliente preenchida — realça o ícone no menu de contexto' })
-  temDescricaoCliente: boolean;
+    @ApiProperty({ example: false, description: 'Descrição para o cliente preenchida — realça o ícone no menu de contexto' })
+    temDescricaoCliente: boolean;
 
-  @ApiProperty({ example: false, description: 'Documentação preenchida — realça o ícone no menu de contexto' })
-  temDocumentacao: boolean;
+    @ApiProperty({ example: false, description: 'Documentação preenchida — realça o ícone no menu de contexto' })
+    temDocumentacao: boolean;
 
-  @ApiProperty({ example: '2026-10-20T18:00:00.000Z', nullable: true, description: 'Última execução das atividades diretas (fim_data, ou inicio_data se aberta); null se nunca executou' })
-  ultimaExecucaoData: Date | null;
+    @ApiProperty({ example: '2026-10-20T18:00:00.000Z', nullable: true, description: 'Última execução das atividades diretas (fim_data, ou inicio_data se aberta); null se nunca executou' })
+    ultimaExecucaoData: Date | null;
 
-  @ApiProperty({ example: '2026-10-01T12:00:00.000Z', description: 'Quando a demanda foi criada (created_date)' })
-  criadaData: Date;
+    @ApiProperty({ example: '2026-10-01T12:00:00.000Z', description: 'Quando a demanda foi criada (created_date)' })
+    criadaData: Date;
 
-  @ApiProperty({ type: [ExecutorAtivoDto] })
-  executoresAtivos: ExecutorAtivoDto[];
+    @ApiProperty({ type: [ExecutorAtivoDto] })
+    executoresAtivos: ExecutorAtivoDto[];
 }

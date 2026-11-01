@@ -12,23 +12,26 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 const fusoHorario = process.env.APP_TIMEZONE ?? 'America/Sao_Paulo';
 
 const configuracao: Knex.Config = {
-  client: 'pg',
-  connection: {
-    host:     process.env.DB_HOST,
-    port:     Number(process.env.DB_PORT),
-    database: process.env.DB_NOME,
-    user:     process.env.DB_USUARIO,
-    password: process.env.DB_SENHA,
-    ssl:      process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-  },
-  pool: {
-    afterCreate: (conexao: any, done: any) => {
-      conexao.query(`SET TIME ZONE '${fusoHorario}'`, (erro: unknown) => done(erro, conexao));
+    client: 'pg',
+    connection: {
+        host:     process.env.DB_HOST,
+        port:     Number(process.env.DB_PORT),
+        database: process.env.DB_NOME,
+        user:     process.env.DB_USUARIO,
+        password: process.env.DB_SENHA,
+        ssl:      process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
     },
-  },
-  migrations: {
-    migrationSource: new SqlMigrationSource(path.resolve(__dirname, './migrations')),
-  },
+    pool: {
+        afterCreate: (conexao: { query: (consulta: string, retorno: (erro: unknown) => void) => void }, done: (erro: unknown, conexao: unknown) => void) => {
+            conexao.query(`
+                SET
+                    TIME ZONE '${fusoHorario}'
+            `, (erro: unknown) => done(erro, conexao));
+        },
+    },
+    migrations: {
+        migrationSource: new SqlMigrationSource(path.resolve(__dirname, './migrations')),
+    },
 };
 
 export default configuracao;

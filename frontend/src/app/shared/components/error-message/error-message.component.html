@@ -1,6 +1,6 @@
 @if (mensagem) {
-  <p-message severity="error" [text]="mensagem" styleClass="w-full" />
+    <p-message severity="error" [text]="mensagem" styleClass="w-full" />
 }
 @for (erro of erros; track erro) {
-  <p-message severity="warn" [text]="erro" styleClass="w-full mt-1" />
+    <p-message severity="warn" [text]="erro" styleClass="w-full mt-1" />
 }

@@ -6,14 +6,14 @@ import { Component, input } from '@angular/core';
  * Ocupa a altura do contêiner e cada lado rola sozinho.
  */
 @Component({
-  selector: 'app-modo-dividido',
-  standalone: true,
-  templateUrl: './modo-dividido.component.html',
-  styleUrl: './modo-dividido.component.scss',
+    selector: 'app-modo-dividido',
+    standalone: true,
+    templateUrl: './modo-dividido.component.html',
+    styleUrl: './modo-dividido.component.scss',
 })
 export class ModoDivididoComponent {
-  /** O nome acessível da lista (leitor de tela), por exemplo "Demandas". */
-  readonly rotuloLista = input<string>('Lista');
-  /** O nome acessível do editor, por exemplo "Editor de descrição". */
-  readonly rotuloEditor = input<string>('Editor');
+    /** O nome acessível da lista (leitor de tela), por exemplo "Demandas". */
+    readonly rotuloLista = input<string>('Lista');
+    /** O nome acessível do editor, por exemplo "Editor de descrição". */
+    readonly rotuloEditor = input<string>('Editor');
 }

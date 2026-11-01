@@ -13,54 +13,55 @@ export type MensagemDoBarramento =
 export const LIMITE_DO_NOTIFY_EM_BYTES = 7_500;
 
 export function codificarMensagemDoBarramento(mensagem: MensagemDoBarramento): string {
-  return JSON.stringify(mensagem);
+    return JSON.stringify(mensagem);
 }
 
 function lerData(valor: unknown): Date | null {
-  if (typeof valor !== 'string' && typeof valor !== 'number') return null;
-  const data = new Date(valor);
-  return Number.isNaN(data.getTime()) ? null : data;
+    if (typeof valor !== 'string' && typeof valor !== 'number') return null;
+    const data = new Date(valor);
+    return Number.isNaN(data.getTime()) ? null : data;
 }
 
 function ehListaDeIds(valor: unknown): valor is number[] {
-  return Array.isArray(valor) && valor.every((item) => Number.isInteger(item));
+    return Array.isArray(valor) && valor.every((item) => Number.isInteger(item));
 }
 
 const TIPOS_SEM_DATA = new Set(['SINCRONIZAR', 'PRESENCA', 'BATIMENTO', 'ENCERRANDO', 'ABERTURA', 'DIGITANDO']);
 
 /** Lê o que `codificarMensagemDoBarramento` escreveu (as datas voltam a ser `Date`); texto estranho devolve `null` em vez de derrubar a escuta. */
 export function decodificarMensagemDoBarramento(texto: string): MensagemDoBarramento | null {
-  let bruto: any;
-  try {
-    bruto = JSON.parse(texto);
-  } catch {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON.parse sem forma conhecida; cada campo é validado logo abaixo
+    let bruto: any;
+    try {
+        bruto = JSON.parse(texto);
+    } catch {
+        return null;
+    }
+    if (!bruto || typeof bruto !== 'object') return null;
+
+    if (bruto.tipo === 'PRESENCA') {
+        if (typeof bruto.instanciaId !== 'string' || !ehListaDeIds(bruto.usuarioIds)) return null;
+        return { tipo: 'PRESENCA', instanciaId: bruto.instanciaId, usuarioIds: bruto.usuarioIds };
+    }
+
+    if (bruto.tipo === 'ENTREGA') {
+        if (!ehListaDeIds(bruto.usuarioIds) || !bruto.evento || typeof bruto.evento !== 'object') return null;
+        const evento = bruto.evento;
+        if (evento.tipo === 'MENSAGEM') {
+            const criadaEm = lerData(evento.mensagem?.createdDate);
+            if (!criadaEm) return null;
+            return { tipo: 'ENTREGA', usuarioIds: bruto.usuarioIds, evento: { tipo: 'MENSAGEM', mensagem: { ...evento.mensagem, createdDate: criadaEm } } };
+        }
+        if (evento.tipo === 'LEITURA') {
+            const lidaAte = lerData(evento.lidaAteDate);
+            if (!lidaAte) return null;
+            return { tipo: 'ENTREGA', usuarioIds: bruto.usuarioIds, evento: { ...evento, lidaAteDate: lidaAte } };
+        }
+        if (TIPOS_SEM_DATA.has(evento.tipo)) {
+            return { tipo: 'ENTREGA', usuarioIds: bruto.usuarioIds, evento };
+        }
+    }
     return null;
-  }
-  if (!bruto || typeof bruto !== 'object') return null;
-
-  if (bruto.tipo === 'PRESENCA') {
-    if (typeof bruto.instanciaId !== 'string' || !ehListaDeIds(bruto.usuarioIds)) return null;
-    return { tipo: 'PRESENCA', instanciaId: bruto.instanciaId, usuarioIds: bruto.usuarioIds };
-  }
-
-  if (bruto.tipo === 'ENTREGA') {
-    if (!ehListaDeIds(bruto.usuarioIds) || !bruto.evento || typeof bruto.evento !== 'object') return null;
-    const evento = bruto.evento;
-    if (evento.tipo === 'MENSAGEM') {
-      const criadaEm = lerData(evento.mensagem?.createdDate);
-      if (!criadaEm) return null;
-      return { tipo: 'ENTREGA', usuarioIds: bruto.usuarioIds, evento: { tipo: 'MENSAGEM', mensagem: { ...evento.mensagem, createdDate: criadaEm } } };
-    }
-    if (evento.tipo === 'LEITURA') {
-      const lidaAte = lerData(evento.lidaAteDate);
-      if (!lidaAte) return null;
-      return { tipo: 'ENTREGA', usuarioIds: bruto.usuarioIds, evento: { ...evento, lidaAteDate: lidaAte } };
-    }
-    if (TIPOS_SEM_DATA.has(evento.tipo)) {
-      return { tipo: 'ENTREGA', usuarioIds: bruto.usuarioIds, evento };
-    }
-  }
-  return null;
 }
 
 /**
@@ -69,16 +70,16 @@ export function decodificarMensagemDoBarramento(texto: string): MensagemDoBarram
  * se não couber, é erro de programação (centenas de usuários conectados numa instância).
  */
 export function prepararParaNotify(mensagem: MensagemDoBarramento): string {
-  const completa = codificarMensagemDoBarramento(mensagem);
-  if (Buffer.byteLength(completa, 'utf8') <= LIMITE_DO_NOTIFY_EM_BYTES) return completa;
+    const completa = codificarMensagemDoBarramento(mensagem);
+    if (Buffer.byteLength(completa, 'utf8') <= LIMITE_DO_NOTIFY_EM_BYTES) return completa;
 
-  if (mensagem.tipo === 'ENTREGA' && mensagem.evento.tipo === 'MENSAGEM') {
-    const resumida = codificarMensagemDoBarramento({
-      tipo: 'ENTREGA',
-      usuarioIds: mensagem.usuarioIds,
-      evento: { tipo: 'SINCRONIZAR', conversaId: mensagem.evento.mensagem.conversaId },
-    });
-    if (Buffer.byteLength(resumida, 'utf8') <= LIMITE_DO_NOTIFY_EM_BYTES) return resumida;
-  }
-  throw new Error('O evento do chat não cabe no barramento do PostgreSQL');
+    if (mensagem.tipo === 'ENTREGA' && mensagem.evento.tipo === 'MENSAGEM') {
+        const resumida = codificarMensagemDoBarramento({
+            tipo: 'ENTREGA',
+            usuarioIds: mensagem.usuarioIds,
+            evento: { tipo: 'SINCRONIZAR', conversaId: mensagem.evento.mensagem.conversaId },
+        });
+        if (Buffer.byteLength(resumida, 'utf8') <= LIMITE_DO_NOTIFY_EM_BYTES) return resumida;
+    }
+    throw new Error('O evento do chat não cabe no barramento do PostgreSQL');
 }

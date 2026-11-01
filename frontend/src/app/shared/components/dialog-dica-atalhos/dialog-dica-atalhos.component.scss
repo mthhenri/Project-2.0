@@ -1,0 +1,14 @@
+:host {
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+}
+.dialog-dica-atalhos {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+}
+@media (max-width: 640px) {
+    .dialog-dica-atalhos {
+        display: none;
+    }
+}

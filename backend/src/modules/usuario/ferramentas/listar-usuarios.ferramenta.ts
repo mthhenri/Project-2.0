@@ -13,27 +13,27 @@ export const LIMITE_USUARIOS_DA_FERRAMENTA = 50;
  */
 @Injectable()
 export class ListarUsuariosFerramenta extends FerramentaIa<UsuariosListarDto> {
-  readonly nome = 'listar_usuarios';
-  readonly descricao =
-    'Lista os usuários ativos da equipe, com id, nome, login, cargo e tipo; filtre por `tipo` ou por `busca` (parte do nome ou do login). ' +
+    readonly nome = 'listar_usuarios';
+    readonly descricao =
+        'Lista os usuários ativos da equipe, com id, nome, login, cargo e tipo; filtre por `tipo` ou por `busca` (parte do nome ou do login). ' +
     'Use para achar o usuarioId de alguém antes de consultar o ponto dele ou perguntar quem está na equipe.';
-  readonly tipo = 'LEITURA' as const;
-  readonly permissao = 'GESTOR' as const;
-  readonly classeDeEntrada = UsuariosListarDto;
+    readonly tipo = 'LEITURA' as const;
+    readonly permissao = 'GESTOR' as const;
+    readonly classeDeEntrada = UsuariosListarDto;
 
-  constructor(private readonly usuarioService: UsuarioService) {
-    super();
-  }
+    constructor(private readonly usuarioService: UsuarioService) {
+        super();
+    }
 
-  async executar(entrada: UsuariosListarDto, _usuarioAtivo: JwtPayload): Promise<UsuariosListadosDto> {
-    const itens =
-      (await this.usuarioService.listar({ tipo: entrada.tipo, busca: entrada.busca, status: TipoUsuarioStatusEnum.ATIVO, allRows: true })).dados?.itens ?? [];
-    return {
-      usuarios: itens
-        .slice(0, LIMITE_USUARIOS_DA_FERRAMENTA)
-        .map((usuario) => ({ id: usuario.id, nome: usuario.nomeCompleto, login: usuario.login, cargo: usuario.cargoTitulo, tipo: usuario.tipo })),
-      total: itens.length,
-      haMais: itens.length > LIMITE_USUARIOS_DA_FERRAMENTA,
-    };
-  }
+    async executar(entrada: UsuariosListarDto, _usuarioAtivo: JwtPayload): Promise<UsuariosListadosDto> {
+        const itens =
+            (await this.usuarioService.listar({ tipo: entrada.tipo, busca: entrada.busca, status: TipoUsuarioStatusEnum.ATIVO, allRows: true })).dados?.itens ?? [];
+        return {
+            usuarios: itens
+                .slice(0, LIMITE_USUARIOS_DA_FERRAMENTA)
+                .map((usuario) => ({ id: usuario.id, nome: usuario.nomeCompleto, login: usuario.login, cargo: usuario.cargoTitulo, tipo: usuario.tipo })),
+            total: itens.length,
+            haMais: itens.length > LIMITE_USUARIOS_DA_FERRAMENTA,
+        };
+    }
 }

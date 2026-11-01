@@ -1,0 +1,22 @@
+node_modules/
+**/dist/
+**/out-tsc/
+**/.angular/
+.artifacts/
+desktop/release/
+docs/
+.agents/
+.claude/
+**/*.ts
+**/*.tsx
+**/*.js
+**/*.mjs
+**/*.cjs
+**/*.json
+**/*.md
+**/*.yml
+**/*.yaml
+**/*.sql
+
+# SVG <text> é sensível a espaço: o Prettier quebra a interpolação em linhas e o texto ganha espaços (quebra o spec do diagrama).
+frontend/src/app/modules/modelagem/components/modelagem-diagrama/modelagem-diagrama.component.html

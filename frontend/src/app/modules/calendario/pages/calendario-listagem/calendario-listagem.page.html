@@ -1,315 +1,429 @@
 <div class="calendario-listagem">
-  <div class="calendario-listagem__cabecalho">
-    <h1 class="calendario-listagem__titulo">Dias Não Úteis</h1>
+    <div class="calendario-listagem__cabecalho">
+        <h1 class="calendario-listagem__titulo">Dias Não Úteis</h1>
 
-    @if (eGestor()) {
-      <p-button
-        label="Novo Dia Não Útil"
-        icon="pi pi-plus"
-        (onClick)="abrirDialogNovo()"
-      />
-    }
-  </div>
+        @if (eGestor()) {
+            <p-button label="Novo Dia Não Útil" icon="pi pi-plus" (onClick)="abrirDialogNovo()" />
+        }
+    </div>
 
-  <!-- Calendário (esquerda) + tabela do mês (direita) -->
-  <div class="calendario-listagem__principal">
-    <div class="calendario-listagem__calendario-bloco">
-      <div class="calendario-listagem__navegacao">
-        <p-button
-          label="Hoje"
-          size="small"
-          [severity]="noMesDeHoje() ? 'secondary' : 'primary'"
-          [outlined]="noMesDeHoje()"
-          [disabled]="noMesDeHoje()"
-          (onClick)="irParaHoje()"
-        />
-        <div class="calendario-listagem__ano" role="group" aria-label="Ano">
-          <p-button icon="pi pi-chevron-left" size="small" [text]="true" severity="secondary" ariaLabel="Ano anterior" (onClick)="mudarAno(-1)" />
-          <span class="calendario-listagem__ano-valor" [class.calendario-listagem__ano-valor--hoje]="mesExibido().ano === anoDeHoje">{{ mesExibido().ano }}</span>
-          <p-button icon="pi pi-chevron-right" size="small" [text]="true" severity="secondary" ariaLabel="Próximo ano" (onClick)="mudarAno(1)" />
-        </div>
-        <div class="calendario-listagem__meses" role="group" aria-label="Mês">
-          @for (rotulo of mesesCurtos; track $index) {
-            <button
-              type="button"
-              class="calendario-listagem__mes"
-              [class.calendario-listagem__mes--ativo]="mesExibido().mes === $index + 1"
-              [class.calendario-listagem__mes--hoje]="mesExibido().ano === anoDeHoje && mesDeHoje === $index + 1"
-              [attr.aria-current]="mesExibido().ano === anoDeHoje && mesDeHoje === $index + 1 ? 'date' : null"
-              (click)="irParaMes(mesExibido().ano, $index + 1)"
-            >{{ rotulo }}</button>
-          }
-        </div>
-      </div>
+    <!-- Calendário (esquerda) + tabela do mês (direita) -->
+    <div class="calendario-listagem__principal">
+        <div class="calendario-listagem__calendario-bloco">
+            <div class="calendario-listagem__navegacao">
+                <p-button
+                    label="Hoje"
+                    size="small"
+                    [severity]="noMesDeHoje() ? 'secondary' : 'primary'"
+                    [outlined]="noMesDeHoje()"
+                    [disabled]="noMesDeHoje()"
+                    (onClick)="irParaHoje()"
+                />
+                <div class="calendario-listagem__ano" role="group" aria-label="Ano">
+                    <p-button
+                        icon="pi pi-chevron-left"
+                        size="small"
+                        [text]="true"
+                        severity="secondary"
+                        ariaLabel="Ano anterior"
+                        (onClick)="mudarAno(-1)"
+                    />
+                    <span
+                        class="calendario-listagem__ano-valor"
+                        [class.calendario-listagem__ano-valor--hoje]="
+                            mesExibido().ano === anoDeHoje
+                        "
+                        >{{ mesExibido().ano }}</span
+                    >
+                    <p-button
+                        icon="pi pi-chevron-right"
+                        size="small"
+                        [text]="true"
+                        severity="secondary"
+                        ariaLabel="Próximo ano"
+                        (onClick)="mudarAno(1)"
+                    />
+                </div>
+                <div class="calendario-listagem__meses" role="group" aria-label="Mês">
+                    @for (rotulo of mesesCurtos; track $index) {
+                        <button
+                            type="button"
+                            class="calendario-listagem__mes"
+                            [class.calendario-listagem__mes--ativo]="
+                                mesExibido().mes === $index + 1
+                            "
+                            [class.calendario-listagem__mes--hoje]="
+                                mesExibido().ano === anoDeHoje && mesDeHoje === $index + 1
+                            "
+                            [attr.aria-current]="
+                                mesExibido().ano === anoDeHoje && mesDeHoje === $index + 1
+                                    ? 'date'
+                                    : null
+                            "
+                            (click)="irParaMes(mesExibido().ano, $index + 1)"
+                        >
+                            {{ rotulo }}
+                        </button>
+                    }
+                </div>
+            </div>
 
-      <div class="calendario-listagem__calendario">
-        <p-datepicker
-          [inline]="true"
-          [defaultDate]="dataDeReferencia()"
-          (onMonthChange)="onMudancaMes($event)"
-        >
-          <ng-template pTemplate="date" let-date>
-            @let marcado = diaMarcado(date.year, date.month + 1, date.day);
-            <span
-              class="calendario-listagem__dia-celula"
-              [class.calendario-listagem__dia-celula--vazia]="!marcado && eGestor()"
-              (click)="aoClicarDia($event, date)"
-            >
-              @if (marcado) {
-                <span
-                  class="calendario-listagem__dia-marcado"
-                  [class.calendario-listagem__dia-marcado--recesso]="marcado.tipo === TipoDiaNaoUtilEnum.RECESSO"
-                  [class.calendario-listagem__dia-marcado--facultativo]="marcado.tipo === TipoDiaNaoUtilEnum.PONTO_FACULTATIVO"
-                  [class.calendario-listagem__dia-marcado--meio-periodo]="marcado.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO"
-                  [pTooltip]="marcado.descricao + ' — ' + rotuloTipo(marcado.tipo)
-                    + (marcado.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO ? ' (meio período)' : '')"
+            <div class="calendario-listagem__calendario">
+                <p-datepicker
+                    [inline]="true"
+                    [defaultDate]="dataDeReferencia()"
+                    (onMonthChange)="onMudancaMes($event)"
                 >
-                  {{ date.day }}
-                </span>
-              } @else {
-                {{ date.day }}
-              }
-            </span>
-          </ng-template>
-        </p-datepicker>
-      </div>
+                    <ng-template pTemplate="date" let-date>
+                        @let marcado = diaMarcado(date.year, date.month + 1, date.day);
+                        <span
+                            class="calendario-listagem__dia-celula"
+                            [class.calendario-listagem__dia-celula--vazia]="!marcado && eGestor()"
+                            (click)="aoClicarDia($event, date)"
+                        >
+                            @if (marcado) {
+                                <span
+                                    class="calendario-listagem__dia-marcado"
+                                    [class.calendario-listagem__dia-marcado--recesso]="
+                                        marcado.tipo === TipoDiaNaoUtilEnum.RECESSO
+                                    "
+                                    [class.calendario-listagem__dia-marcado--facultativo]="
+                                        marcado.tipo === TipoDiaNaoUtilEnum.PONTO_FACULTATIVO
+                                    "
+                                    [class.calendario-listagem__dia-marcado--meio-periodo]="
+                                        marcado.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO
+                                    "
+                                    [pTooltip]="
+                                        marcado.descricao +
+                                        ' — ' +
+                                        rotuloTipo(marcado.tipo) +
+                                        (marcado.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO
+                                            ? ' (meio período)'
+                                            : '')
+                                    "
+                                >
+                                    {{ date.day }}
+                                </span>
+                            } @else {
+                                {{ date.day }}
+                            }
+                        </span>
+                    </ng-template>
+                </p-datepicker>
+            </div>
 
-      <ul class="calendario-listagem__legenda" aria-label="Legenda">
-        <li><span class="calendario-listagem__legenda-marca calendario-listagem__dia-marcado"></span>Feriado</li>
-        <li><span class="calendario-listagem__legenda-marca calendario-listagem__dia-marcado calendario-listagem__dia-marcado--recesso"></span>Recesso</li>
-        <li><span class="calendario-listagem__legenda-marca calendario-listagem__dia-marcado calendario-listagem__dia-marcado--facultativo"></span>Ponto facultativo</li>
-        <li><span class="calendario-listagem__legenda-marca calendario-listagem__dia-marcado calendario-listagem__dia-marcado--meio-periodo"></span>Anel = meio período</li>
-      </ul>
-    </div>
-
-    <div class="calendario-listagem__tabela-mes">
-      <h2 class="calendario-listagem__tabela-titulo">{{ rotuloMes() }}</h2>
-
-      @if (primeiraCarga()) {
-        <app-skeleton-lista variante="tabela" [quantidade]="3" [cabecalhos]="esqueleto.cabecalhos" [larguras]="esqueleto.larguras" alturaLinha="3.25rem" />
-      } @else {
-        <div class="lista-recarga" [class.conteudo-recarregando]="recarregando()">
-          <app-barra-recarga [ativa]="recarregando()" />
-        <p-table [value]="diasDoMes()" class="p-datatable-sm">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Data</th>
-              <th>Descrição</th>
-              <th>Tipo</th>
-              @if (eGestor()) {
-                <th class="calendario-listagem__col-acoes">Ações</th>
-              }
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="body" let-dia>
-            <tr
-              [attr.data-dia-id]="dia.id"
-              [class.calendario-listagem__linha--destacada]="dia.id === diaDestacadoId()"
-            >
-              <td class="calendario-listagem__col-data">{{ dataExibicao(dia) }}</td>
-              <td>{{ dia.descricao }}</td>
-              <td>
-                <span class="calendario-listagem__badges">
-                  <span [class]="classeTagTipo(dia.tipo)">
-                    <p-tag [value]="rotuloTipo(dia.tipo)" />
-                  </span>
-                  @if (dia.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
-                    <span class="calendario-listagem__badge" pTooltip="A meta diária do ponto cai pela metade">Meio período</span>
-                  }
-                  @if (dia.recorrente) {
-                    <span class="calendario-listagem__badge" pTooltip="Considerado todos os anos">↻ Todo ano</span>
-                  }
-                </span>
-              </td>
-              @if (eGestor()) {
-                <td class="calendario-listagem__col-acoes">
-                  <p-button
-                    icon="pi pi-pencil"
-                    [text]="true"
-                    size="small"
-                    pTooltip="Editar"
-                    tooltipPosition="left"
-                    (onClick)="abrirDialogEditar(dia)"
-                  />
-                  <p-button
-                    icon="pi pi-trash"
-                    [text]="true"
-                    severity="danger"
-                    size="small"
-                    pTooltip="Excluir"
-                    tooltipPosition="left"
-                    (onClick)="excluir(dia)"
-                  />
-                </td>
-              }
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td [attr.colspan]="eGestor() ? 4 : 3" class="calendario-listagem__vazio">
-                <i class="pi pi-calendar-times text-3xl text-muted-color"></i>
-                <p class="text-muted-color mt-2">Nenhum dia não útil em {{ rotuloMes() }}</p>
-                @if (eGestor()) {
-                  <p-button label="Cadastrar dia não útil" icon="pi pi-plus" size="small" (onClick)="abrirDialogNovo()" />
-                  <p class="text-muted-color calendario-listagem__vazio-dica">ou clique em um dia no calendário</p>
-                }
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
+            <ul class="calendario-listagem__legenda" aria-label="Legenda">
+                <li>
+                    <span
+                        class="calendario-listagem__legenda-marca calendario-listagem__dia-marcado"
+                    ></span
+                    >Feriado
+                </li>
+                <li>
+                    <span
+                        class="calendario-listagem__legenda-marca calendario-listagem__dia-marcado calendario-listagem__dia-marcado--recesso"
+                    ></span
+                    >Recesso
+                </li>
+                <li>
+                    <span
+                        class="calendario-listagem__legenda-marca calendario-listagem__dia-marcado calendario-listagem__dia-marcado--facultativo"
+                    ></span
+                    >Ponto facultativo
+                </li>
+                <li>
+                    <span
+                        class="calendario-listagem__legenda-marca calendario-listagem__dia-marcado calendario-listagem__dia-marcado--meio-periodo"
+                    ></span
+                    >Anel = meio período
+                </li>
+            </ul>
         </div>
-      }
+
+        <div class="calendario-listagem__tabela-mes">
+            <h2 class="calendario-listagem__tabela-titulo">{{ rotuloMes() }}</h2>
+
+            @if (primeiraCarga()) {
+                <app-skeleton-lista
+                    variante="tabela"
+                    [quantidade]="3"
+                    [cabecalhos]="esqueleto.cabecalhos"
+                    [larguras]="esqueleto.larguras"
+                    alturaLinha="3.25rem"
+                />
+            } @else {
+                <div class="lista-recarga" [class.conteudo-recarregando]="recarregando()">
+                    <app-barra-recarga [ativa]="recarregando()" />
+                    <p-table [value]="diasDoMes()" class="p-datatable-sm">
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Tipo</th>
+                                @if (eGestor()) {
+                                    <th class="calendario-listagem__col-acoes">Ações</th>
+                                }
+                            </tr>
+                        </ng-template>
+
+                        <ng-template pTemplate="body" let-dia>
+                            <tr
+                                [attr.data-dia-id]="dia.id"
+                                [class.calendario-listagem__linha--destacada]="
+                                    dia.id === diaDestacadoId()
+                                "
+                            >
+                                <td class="calendario-listagem__col-data">
+                                    {{ dataExibicao(dia) }}
+                                </td>
+                                <td>{{ dia.descricao }}</td>
+                                <td>
+                                    <span class="calendario-listagem__badges">
+                                        <span [class]="classeTagTipo(dia.tipo)">
+                                            <p-tag [value]="rotuloTipo(dia.tipo)" />
+                                        </span>
+                                        @if (
+                                            dia.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO
+                                        ) {
+                                            <span
+                                                class="calendario-listagem__badge"
+                                                pTooltip="A meta diária do ponto cai pela metade"
+                                                >Meio período</span
+                                            >
+                                        }
+                                        @if (dia.recorrente) {
+                                            <span
+                                                class="calendario-listagem__badge"
+                                                pTooltip="Considerado todos os anos"
+                                                >↻ Todo ano</span
+                                            >
+                                        }
+                                    </span>
+                                </td>
+                                @if (eGestor()) {
+                                    <td class="calendario-listagem__col-acoes">
+                                        <p-button
+                                            icon="pi pi-pencil"
+                                            [text]="true"
+                                            size="small"
+                                            pTooltip="Editar"
+                                            tooltipPosition="left"
+                                            (onClick)="abrirDialogEditar(dia)"
+                                        />
+                                        <p-button
+                                            icon="pi pi-trash"
+                                            [text]="true"
+                                            severity="danger"
+                                            size="small"
+                                            pTooltip="Excluir"
+                                            tooltipPosition="left"
+                                            (onClick)="excluir(dia)"
+                                        />
+                                    </td>
+                                }
+                            </tr>
+                        </ng-template>
+
+                        <ng-template pTemplate="emptymessage">
+                            <tr>
+                                <td
+                                    [attr.colspan]="eGestor() ? 4 : 3"
+                                    class="calendario-listagem__vazio"
+                                >
+                                    <i class="pi pi-calendar-times text-3xl text-muted-color"></i>
+                                    <p class="text-muted-color mt-2">
+                                        Nenhum dia não útil em {{ rotuloMes() }}
+                                    </p>
+                                    @if (eGestor()) {
+                                        <p-button
+                                            label="Cadastrar dia não útil"
+                                            icon="pi pi-plus"
+                                            size="small"
+                                            (onClick)="abrirDialogNovo()"
+                                        />
+                                        <p class="text-muted-color calendario-listagem__vazio-dica">
+                                            ou clique em um dia no calendário
+                                        </p>
+                                    }
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            }
+        </div>
     </div>
-  </div>
 </div>
 
 <!-- Popover do dia marcado -->
 <p-popover #popoverDia>
-  @if (diaDoPopover(); as dia) {
-    <div class="calendario-listagem__popover">
-      <strong class="calendario-listagem__popover-titulo">{{ dia.descricao }}</strong>
-      <span class="text-muted-color">{{ dataExibicao(dia) }}</span>
-      <span class="calendario-listagem__badges">
-        <span [class]="classeTagTipo(dia.tipo)"><p-tag [value]="rotuloTipo(dia.tipo)" /></span>
-        @if (dia.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
-          <span class="calendario-listagem__badge">Meio período</span>
-        }
-        @if (dia.recorrente) {
-          <span class="calendario-listagem__badge">↻ Todo ano</span>
-        }
-      </span>
-      @if (eGestor()) {
-        <div class="calendario-listagem__popover-acoes">
-          <p-button label="Editar" icon="pi pi-pencil" size="small" severity="secondary" [outlined]="true" (onClick)="editarDoPopover(dia)" />
-          <p-button label="Excluir" icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="excluirDoPopover(dia)" />
+    @if (diaDoPopover(); as dia) {
+        <div class="calendario-listagem__popover">
+            <strong class="calendario-listagem__popover-titulo">{{ dia.descricao }}</strong>
+            <span class="text-muted-color">{{ dataExibicao(dia) }}</span>
+            <span class="calendario-listagem__badges">
+                <span [class]="classeTagTipo(dia.tipo)"
+                    ><p-tag [value]="rotuloTipo(dia.tipo)"
+                /></span>
+                @if (dia.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
+                    <span class="calendario-listagem__badge">Meio período</span>
+                }
+                @if (dia.recorrente) {
+                    <span class="calendario-listagem__badge">↻ Todo ano</span>
+                }
+            </span>
+            @if (eGestor()) {
+                <div class="calendario-listagem__popover-acoes">
+                    <p-button
+                        label="Editar"
+                        icon="pi pi-pencil"
+                        size="small"
+                        severity="secondary"
+                        [outlined]="true"
+                        (onClick)="editarDoPopover(dia)"
+                    />
+                    <p-button
+                        label="Excluir"
+                        icon="pi pi-trash"
+                        size="small"
+                        severity="danger"
+                        [text]="true"
+                        (onClick)="excluirDoPopover(dia)"
+                    />
+                </div>
+            }
         </div>
-      }
-    </div>
-  }
+    }
 </p-popover>
 
 <!-- Dialog: criação / edição -->
 <p-dialog
-  [header]="tituloDialog()"
-  dialogFormulario
-  [dialogBloqueado]="carregandoSalvar()"
-  (dialogEnviar)="salvar()"
-  [(visible)]="mostrarDialog"
-  [modal]="true"
-  [style]="{ width: '34rem' }"
-  [draggable]="false"
+    [header]="tituloDialog()"
+    dialogFormulario
+    [dialogBloqueado]="carregandoSalvar()"
+    (dialogEnviar)="salvar()"
+    [(visible)]="mostrarDialog"
+    [modal]="true"
+    [style]="{ width: '34rem' }"
+    [draggable]="false"
 >
-  <form [formGroup]="formulario" class="calendario-listagem__dialog-form">
-    <div class="calendario-listagem__dialog-campo">
-      <label class="calendario-listagem__label">
-        Data <span class="calendario-listagem__obrigatorio">*</span>
-      </label>
-      <p-datepicker
-        formControlName="diaData"
-        dateFormat="dd/mm/yy"
-        appendTo="body"
-        [showIcon]="true"
-        [defaultDate]="mesDoDialog()"
-        placeholder="Selecione a data"
-      />
-      @if (diaEmEdicao(); as dia) {
-        <small class="text-muted-color">
-          A data não pode ser alterada.
-          <button type="button" class="calendario-listagem__link" (click)="excluirERecriar(dia)">Excluir e recriar</button>
-        </small>
-      }
-      @if (campoInvalido('diaData')) {
-        <small class="calendario-listagem__erro">Data é obrigatória</small>
-      }
-    </div>
+    <form [formGroup]="formulario" class="calendario-listagem__dialog-form">
+        <div class="calendario-listagem__dialog-campo">
+            <label class="calendario-listagem__label">
+                Data <span class="calendario-listagem__obrigatorio">*</span>
+            </label>
+            <p-datepicker
+                formControlName="diaData"
+                dateFormat="dd/mm/yy"
+                appendTo="body"
+                [showIcon]="true"
+                [defaultDate]="mesDoDialog()"
+                placeholder="Selecione a data"
+            />
+            @if (diaEmEdicao(); as dia) {
+                <small class="text-muted-color">
+                    A data não pode ser alterada.
+                    <button
+                        type="button"
+                        class="calendario-listagem__link"
+                        (click)="excluirERecriar(dia)"
+                    >
+                        Excluir e recriar
+                    </button>
+                </small>
+            }
+            @if (campoInvalido("diaData")) {
+                <small class="calendario-listagem__erro">Data é obrigatória</small>
+            }
+        </div>
 
-    <div class="calendario-listagem__dialog-campo">
-      <label class="calendario-listagem__label">
-        Descrição <span class="calendario-listagem__obrigatorio">*</span>
-      </label>
-      <input
-        pInputText
-        spellcheck="true"
-        formControlName="descricao"
-        placeholder="ex: Natal"
-        class="w-full"
-      />
-      @if (campoInvalido('descricao')) {
-        <small class="calendario-listagem__erro">Descrição é obrigatória</small>
-      }
-    </div>
+        <div class="calendario-listagem__dialog-campo">
+            <label class="calendario-listagem__label">
+                Descrição <span class="calendario-listagem__obrigatorio">*</span>
+            </label>
+            <input
+                pInputText
+                spellcheck="true"
+                formControlName="descricao"
+                placeholder="ex: Natal"
+                class="w-full"
+            />
+            @if (campoInvalido("descricao")) {
+                <small class="calendario-listagem__erro">Descrição é obrigatória</small>
+            }
+        </div>
 
-    <div class="calendario-listagem__dialog-linha">
-      <div class="calendario-listagem__dialog-campo">
-        <label class="calendario-listagem__label">
-          Tipo <span class="calendario-listagem__obrigatorio">*</span>
-        </label>
-        <p-select
-          formControlName="tipo"
-          [options]="tipoOpcoes"
-          optionLabel="label"
-          optionValue="value"
-          appendTo="body"
-          class="w-full"
+        <div class="calendario-listagem__dialog-linha">
+            <div class="calendario-listagem__dialog-campo">
+                <label class="calendario-listagem__label">
+                    Tipo <span class="calendario-listagem__obrigatorio">*</span>
+                </label>
+                <p-select
+                    formControlName="tipo"
+                    [options]="tipoOpcoes"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                    class="w-full"
+                />
+            </div>
+
+            <div class="calendario-listagem__dialog-campo">
+                <label class="calendario-listagem__label">
+                    Duração <span class="calendario-listagem__obrigatorio">*</span>
+                </label>
+                <p-select
+                    formControlName="duracao"
+                    [options]="duracaoOpcoes"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                    class="w-full"
+                />
+            </div>
+        </div>
+
+        @if (formulario.value.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
+            <small class="text-muted-color"
+                >A meta diária do ponto é reduzida à metade neste dia.</small
+            >
+        }
+
+        <div class="calendario-listagem__dialog-campo">
+            <div class="calendario-listagem__checkbox-linha">
+                <p-checkbox formControlName="recorrente" [binary]="true" inputId="recorrente" />
+                <label for="recorrente" class="calendario-listagem__label">Recorrente</label>
+            </div>
+            @if (formulario.value.recorrente) {
+                <p-message severity="info">
+                    Este feriado será considerado em todos os anos no mesmo dia/mês
+                </p-message>
+            }
+        </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <app-dialog-dica-atalhos />
+        <p-button
+            label="Cancelar"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="mostrarDialog.set(false)"
         />
-      </div>
-
-      <div class="calendario-listagem__dialog-campo">
-        <label class="calendario-listagem__label">
-          Duração <span class="calendario-listagem__obrigatorio">*</span>
-        </label>
-        <p-select
-          formControlName="duracao"
-          [options]="duracaoOpcoes"
-          optionLabel="label"
-          optionValue="value"
-          appendTo="body"
-          class="w-full"
+        @if (!diaEmEdicao()) {
+            <p-button
+                label="Salvar e adicionar outro"
+                styleClass="whitespace-nowrap"
+                severity="secondary"
+                [loading]="carregandoSalvar()"
+                (onClick)="salvar(true)"
+            />
+        }
+        <p-button
+            label="Salvar"
+            icon="pi pi-check"
+            [loading]="carregandoSalvar()"
+            (onClick)="salvar()"
         />
-      </div>
-    </div>
-
-    @if (formulario.value.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
-      <small class="text-muted-color">A meta diária do ponto é reduzida à metade neste dia.</small>
-    }
-
-    <div class="calendario-listagem__dialog-campo">
-      <div class="calendario-listagem__checkbox-linha">
-        <p-checkbox formControlName="recorrente" [binary]="true" inputId="recorrente" />
-        <label for="recorrente" class="calendario-listagem__label">Recorrente</label>
-      </div>
-      @if (formulario.value.recorrente) {
-        <p-message severity="info">
-          Este feriado será considerado em todos os anos no mesmo dia/mês
-        </p-message>
-      }
-    </div>
-  </form>
-
-  <ng-template pTemplate="footer">
-    <app-dialog-dica-atalhos />
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="mostrarDialog.set(false)"
-    />
-    @if (!diaEmEdicao()) {
-      <p-button
-        label="Salvar e adicionar outro"
-        styleClass="whitespace-nowrap"
-        severity="secondary"
-        [loading]="carregandoSalvar()"
-        (onClick)="salvar(true)"
-      />
-    }
-    <p-button
-      label="Salvar"
-      icon="pi pi-check"
-      [loading]="carregandoSalvar()"
-      (onClick)="salvar()"
-    />
-  </ng-template>
+    </ng-template>
 </p-dialog>

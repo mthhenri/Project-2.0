@@ -4,9 +4,9 @@ import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { ResponseFormatInterceptor } from './interceptors/response-format.interceptor';
 
 @Module({
-  providers: [
-    { provide: APP_FILTER,      useClass: GlobalExceptionFilter },
-    { provide: APP_INTERCEPTOR, useClass: ResponseFormatInterceptor },
-  ],
+    providers: [
+        { provide: APP_FILTER,      useClass: GlobalExceptionFilter },
+        { provide: APP_INTERCEPTOR, useClass: ResponseFormatInterceptor },
+    ],
 })
 export class CoreModule {}

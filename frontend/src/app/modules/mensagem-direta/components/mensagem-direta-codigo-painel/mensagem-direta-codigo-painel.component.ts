@@ -11,8 +11,8 @@ import { inserirBlocoDeCodigo } from '../../utils/compositor.util';
 
 /** O que o painel devolve ao confirmar: o código e o nome curto da cerca (`ts`), ou `null` sem linguagem. */
 export interface CodigoEscolhido {
-  codigo: string;
-  linguagem: string | null;
+    codigo: string;
+    linguagem: string | null;
 }
 
 /**
@@ -21,66 +21,66 @@ export interface CodigoEscolhido {
  * o que fazer com o código (o compositor o põe no campo como bloco cercado, já com a linguagem).
  */
 @Component({
-  selector: 'app-mensagem-direta-codigo-painel',
-  standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, Select, TooltipModule, EditorCodigoComponent],
-  templateUrl: './mensagem-direta-codigo-painel.component.html',
-  styleUrl: './mensagem-direta-codigo-painel.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-mensagem-direta-codigo-painel',
+    standalone: true,
+    imports: [ReactiveFormsModule, ButtonModule, Select, TooltipModule, EditorCodigoComponent],
+    templateUrl: './mensagem-direta-codigo-painel.component.html',
+    styleUrl: './mensagem-direta-codigo-painel.component.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MensagemDiretaCodigoPainelComponent implements OnInit {
-  /** O texto do campo da mensagem e o trecho que o bloco vai substituir: o contador mede a mensagem inteira, cerca incluída. */
-  readonly texto = input.required<string>();
-  readonly inicio = input.required<number>();
-  readonly fim = input.required<number>();
-  /** O código com que o editor abre (o trecho que estava selecionado no campo). */
-  readonly codigoInicial = input('');
-  readonly inserir = output<CodigoEscolhido>();
-  readonly cancelar = output<void>();
+    /** O texto do campo da mensagem e o trecho que o bloco vai substituir: o contador mede a mensagem inteira, cerca incluída. */
+    readonly texto = input.required<string>();
+    readonly inicio = input.required<number>();
+    readonly fim = input.required<number>();
+    /** O código com que o editor abre (o trecho que estava selecionado no campo). */
+    readonly codigoInicial = input('');
+    readonly inserir = output<CodigoEscolhido>();
+    readonly cancelar = output<void>();
 
-  private readonly editor = viewChild.required(EditorCodigoComponent);
-  private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
+    private readonly editor = viewChild.required(EditorCodigoComponent);
+    private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  protected readonly opcoes = LINGUAGENS_DO_EDITOR;
-  protected readonly controleLinguagem = new FormControl<string | null>(null);
-  protected readonly linguagem = toSignal(this.controleLinguagem.valueChanges, { initialValue: null });
-  protected readonly codigo = signal('');
-  protected readonly limite = LIMITE_TEXTO_MENSAGEM_DIRETA;
+    protected readonly opcoes = LINGUAGENS_DO_EDITOR;
+    protected readonly controleLinguagem = new FormControl<string | null>(null);
+    protected readonly linguagem = toSignal(this.controleLinguagem.valueChanges, { initialValue: null });
+    protected readonly codigo = signal('');
+    protected readonly limite = LIMITE_TEXTO_MENSAGEM_DIRETA;
 
-  /** O tamanho que a mensagem teria com o bloco já dentro dela. */
-  protected readonly tamanhoFinal = computed(() => inserirBlocoDeCodigo(this.texto(), this.inicio(), this.fim(), this.codigo(), this.linguagem()).texto.length);
-  protected readonly excedeu = computed(() => this.tamanhoFinal() > this.limite);
-  protected readonly podeInserir = computed(() => this.codigo().trim().length > 0 && !this.excedeu());
-  protected readonly contador = computed(() => `${this.tamanhoFinal().toLocaleString('pt-BR')} / ${this.limite.toLocaleString('pt-BR')}`);
+    /** O tamanho que a mensagem teria com o bloco já dentro dela. */
+    protected readonly tamanhoFinal = computed(() => inserirBlocoDeCodigo(this.texto(), this.inicio(), this.fim(), this.codigo(), this.linguagem()).texto.length);
+    protected readonly excedeu = computed(() => this.tamanhoFinal() > this.limite);
+    protected readonly podeInserir = computed(() => this.codigo().trim().length > 0 && !this.excedeu());
+    protected readonly contador = computed(() => `${this.tamanhoFinal().toLocaleString('pt-BR')} / ${this.limite.toLocaleString('pt-BR')}`);
 
-  constructor() {
-    afterNextRender(() => this.editor().focar());
-  }
-
-  ngOnInit(): void {
-    this.codigo.set(this.codigoInicial());
-  }
-
-  protected confirmar(): void {
-    if (this.podeInserir()) this.inserir.emit({ codigo: this.codigo(), linguagem: this.linguagem() });
-  }
-
-  protected aoTeclar(evento: KeyboardEvent): void {
-    if (evento.isComposing) return;
-    if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
-      evento.preventDefault();
-      this.confirmar();
-      return;
+    constructor() {
+        afterNextRender(() => this.editor().focar());
     }
-    // Com o painel aberto o Esc nunca chega ao do popup (que o oculta). O do seletor de linguagem fecha só a lista dele (o PrimeNG já tratou o
-    // evento antes de ele chegar aqui); em qualquer outro lugar do painel, o Esc cancela o painel.
-    if (evento.key === 'Escape' && this.elemento.nativeElement.contains(evento.target as Node)) {
-      evento.stopPropagation();
-      const noSeletor = evento.target instanceof Element && evento.target.closest('p-select') !== null;
-      if (!noSeletor) {
-        evento.preventDefault();
-        this.cancelar.emit();
-      }
+
+    ngOnInit(): void {
+        this.codigo.set(this.codigoInicial());
     }
-  }
+
+    protected confirmar(): void {
+        if (this.podeInserir()) this.inserir.emit({ codigo: this.codigo(), linguagem: this.linguagem() });
+    }
+
+    protected aoTeclar(evento: KeyboardEvent): void {
+        if (evento.isComposing) return;
+        if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
+            evento.preventDefault();
+            this.confirmar();
+            return;
+        }
+        // Com o painel aberto o Esc nunca chega ao do popup (que o oculta). O do seletor de linguagem fecha só a lista dele (o PrimeNG já tratou o
+        // evento antes de ele chegar aqui); em qualquer outro lugar do painel, o Esc cancela o painel.
+        if (evento.key === 'Escape' && this.elemento.nativeElement.contains(evento.target as Node)) {
+            evento.stopPropagation();
+            const noSeletor = evento.target instanceof Element && evento.target.closest('p-select') !== null;
+            if (!noSeletor) {
+                evento.preventDefault();
+                this.cancelar.emit();
+            }
+        }
+    }
 }

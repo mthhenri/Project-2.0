@@ -10,34 +10,34 @@ export type OperacaoDeAnotacaoDaIa = (typeof OPERACOES_DE_ANOTACAO_DA_IA)[number
  * seção (em Feito, debaixo do título de hoje); `TROCAR` troca `trechoAntigo` (que aparece uma única vez) por `trechoNovo`.
  */
 export class ProporAnotarPadDto {
-  @IsEnum(TipoAnotacaoEnum)
-  secao: TipoAnotacaoEnum;
+    @IsEnum(TipoAnotacaoEnum)
+    secao: TipoAnotacaoEnum;
 
-  @IsIn(OPERACOES_DE_ANOTACAO_DA_IA)
-  operacao: OperacaoDeAnotacaoDaIa;
+    @IsIn(OPERACOES_DE_ANOTACAO_DA_IA)
+    operacao: OperacaoDeAnotacaoDaIa;
 
-  /** Só em ANEXAR. */
-  @IsOptional()
-  @IsString()
-  @MaxLength(4000)
-  texto?: string;
+    /** Só em ANEXAR. */
+    @IsOptional()
+    @IsString()
+    @MaxLength(4000)
+    texto?: string;
 
-  /** Só em TROCAR: o trecho como está hoje na seção (copiado de `consultar_pad`). */
-  @IsOptional()
-  @IsString()
-  @MaxLength(4000)
-  trechoAntigo?: string;
+    /** Só em TROCAR: o trecho como está hoje na seção (copiado de `consultar_pad`). */
+    @IsOptional()
+    @IsString()
+    @MaxLength(4000)
+    trechoAntigo?: string;
 
-  /** Só em TROCAR. */
-  @IsOptional()
-  @IsString()
-  @MaxLength(4000)
-  trechoNovo?: string;
+    /** Só em TROCAR. */
+    @IsOptional()
+    @IsString()
+    @MaxLength(4000)
+    trechoNovo?: string;
 
-  /** Obrigatório (e verdadeiro) para escrever em Pessoal: a seção é do usuário e a IA só escreve ali quando ele pede. */
-  @IsOptional()
-  @IsBoolean()
-  pedidoExplicito?: boolean;
+    /** Obrigatório (e verdadeiro) para escrever em Pessoal: a seção é do usuário e a IA só escreve ali quando ele pede. */
+    @IsOptional()
+    @IsBoolean()
+    pedidoExplicito?: boolean;
 }
 
 /** Os dados guardados na proposta: os mesmos da entrada (o cartão lê a seção, o texto e os trechos direto deles). */

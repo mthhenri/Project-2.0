@@ -8,55 +8,55 @@ const OUTUBRO_2026 = new Date(2026, 9, 19);
 const JANEIRO_2026 = new Date(2026, 0, 10);
 
 test('periodoDoAtalho: "Este mês" é o mês corrente, "Este ano" o ano corrente e "Personalizado" mantém ano e mês', () => {
-  assert.deepEqual(periodoDoAtalho('MES', OUTUBRO_2026), { periodoTipo: RelatorioPeriodoTipoEnum.MENSAL, ano: 2026, mes: 10 });
-  assert.deepEqual(periodoDoAtalho('ANO', OUTUBRO_2026), { periodoTipo: RelatorioPeriodoTipoEnum.ANUAL, ano: 2026, mes: 10 });
-  assert.deepEqual(periodoDoAtalho('CUSTOM', OUTUBRO_2026), { periodoTipo: RelatorioPeriodoTipoEnum.CUSTOM, ano: 2026, mes: 10 });
+    assert.deepEqual(periodoDoAtalho('MES', OUTUBRO_2026), { periodoTipo: RelatorioPeriodoTipoEnum.MENSAL, ano: 2026, mes: 10 });
+    assert.deepEqual(periodoDoAtalho('ANO', OUTUBRO_2026), { periodoTipo: RelatorioPeriodoTipoEnum.ANUAL, ano: 2026, mes: 10 });
+    assert.deepEqual(periodoDoAtalho('CUSTOM', OUTUBRO_2026), { periodoTipo: RelatorioPeriodoTipoEnum.CUSTOM, ano: 2026, mes: 10 });
 });
 
 test('periodoDoAtalho: "Mês passado" volta um mês e, em janeiro, vira dezembro do ano anterior', () => {
-  assert.deepEqual(periodoDoAtalho('PASSADO', OUTUBRO_2026), { periodoTipo: RelatorioPeriodoTipoEnum.MENSAL, ano: 2026, mes: 9 });
-  assert.deepEqual(periodoDoAtalho('PASSADO', JANEIRO_2026), { periodoTipo: RelatorioPeriodoTipoEnum.MENSAL, ano: 2025, mes: 12 });
+    assert.deepEqual(periodoDoAtalho('PASSADO', OUTUBRO_2026), { periodoTipo: RelatorioPeriodoTipoEnum.MENSAL, ano: 2026, mes: 9 });
+    assert.deepEqual(periodoDoAtalho('PASSADO', JANEIRO_2026), { periodoTipo: RelatorioPeriodoTipoEnum.MENSAL, ano: 2025, mes: 12 });
 });
 
 test('atalhoDoPeriodo: reconhece cada atalho a partir da seleção', () => {
-  const mensal = (ano: number, mes: number) => ({ periodoTipo: RelatorioPeriodoTipoEnum.MENSAL, ano, mes });
-  assert.equal(atalhoDoPeriodo(mensal(2026, 10), OUTUBRO_2026), 'MES');
-  assert.equal(atalhoDoPeriodo(mensal(2026, 9), OUTUBRO_2026), 'PASSADO');
-  assert.equal(atalhoDoPeriodo(mensal(2025, 12), JANEIRO_2026), 'PASSADO');
-  assert.equal(atalhoDoPeriodo({ periodoTipo: RelatorioPeriodoTipoEnum.ANUAL, ano: 2026, mes: 3 }, OUTUBRO_2026), 'ANO');
-  assert.equal(atalhoDoPeriodo({ periodoTipo: RelatorioPeriodoTipoEnum.CUSTOM, ano: 2026, mes: 10 }, OUTUBRO_2026), 'CUSTOM');
+    const mensal = (ano: number, mes: number) => ({ periodoTipo: RelatorioPeriodoTipoEnum.MENSAL, ano, mes });
+    assert.equal(atalhoDoPeriodo(mensal(2026, 10), OUTUBRO_2026), 'MES');
+    assert.equal(atalhoDoPeriodo(mensal(2026, 9), OUTUBRO_2026), 'PASSADO');
+    assert.equal(atalhoDoPeriodo(mensal(2025, 12), JANEIRO_2026), 'PASSADO');
+    assert.equal(atalhoDoPeriodo({ periodoTipo: RelatorioPeriodoTipoEnum.ANUAL, ano: 2026, mes: 3 }, OUTUBRO_2026), 'ANO');
+    assert.equal(atalhoDoPeriodo({ periodoTipo: RelatorioPeriodoTipoEnum.CUSTOM, ano: 2026, mes: 10 }, OUTUBRO_2026), 'CUSTOM');
 });
 
 test('atalhoDoPeriodo: ajuste fino (outro mês ou outro ano) não corresponde a atalho', () => {
-  const mensal = (ano: number, mes: number) => ({ periodoTipo: RelatorioPeriodoTipoEnum.MENSAL, ano, mes });
-  assert.equal(atalhoDoPeriodo(mensal(2026, 3), OUTUBRO_2026), null);
-  assert.equal(atalhoDoPeriodo(mensal(2025, 10), OUTUBRO_2026), null);
-  assert.equal(atalhoDoPeriodo({ periodoTipo: RelatorioPeriodoTipoEnum.ANUAL, ano: 2024, mes: 10 }, OUTUBRO_2026), null);
+    const mensal = (ano: number, mes: number) => ({ periodoTipo: RelatorioPeriodoTipoEnum.MENSAL, ano, mes });
+    assert.equal(atalhoDoPeriodo(mensal(2026, 3), OUTUBRO_2026), null);
+    assert.equal(atalhoDoPeriodo(mensal(2025, 10), OUTUBRO_2026), null);
+    assert.equal(atalhoDoPeriodo({ periodoTipo: RelatorioPeriodoTipoEnum.ANUAL, ano: 2024, mes: 10 }, OUTUBRO_2026), null);
 });
 
 test('normalizarSeveridade: ignora acento, caixa e espaços; nulo vira vazio', () => {
-  assert.equal(normalizarSeveridade('Média'), 'MEDIA');
-  assert.equal(normalizarSeveridade(' média '), 'MEDIA');
-  assert.equal(normalizarSeveridade('alta'), 'ALTA');
-  assert.equal(normalizarSeveridade(null), '');
-  assert.equal(normalizarSeveridade(undefined), '');
+    assert.equal(normalizarSeveridade('Média'), 'MEDIA');
+    assert.equal(normalizarSeveridade(' média '), 'MEDIA');
+    assert.equal(normalizarSeveridade('alta'), 'ALTA');
+    assert.equal(normalizarSeveridade(null), '');
+    assert.equal(normalizarSeveridade(undefined), '');
 });
 
 test('ordemSeveridade: ALTA, MÉDIA, BAIXA e, no fim, o que a IA inventar', () => {
-  const ordenadas = ['baixa', 'Média', 'ALTA', 'crítica', null].sort((a, b) => ordemSeveridade(a) - ordemSeveridade(b));
-  assert.deepEqual(ordenadas.slice(0, 3), ['ALTA', 'Média', 'baixa']);
-  assert.equal(ordemSeveridade('crítica'), 3);
-  assert.equal(ordemSeveridade(null), 3);
+    const ordenadas = ['baixa', 'Média', 'ALTA', 'crítica', null].sort((item, segundo) => ordemSeveridade(item) - ordemSeveridade(segundo));
+    assert.deepEqual(ordenadas.slice(0, 3), ['ALTA', 'Média', 'baixa']);
+    assert.equal(ordemSeveridade('crítica'), 3);
+    assert.equal(ordemSeveridade(null), 3);
 });
 
 test('divisão do relatório: limita entre o mínimo e o máximo e arredonda', () => {
-  assert.equal(limitarDivisao(10), DIVISAO_DO_RELATORIO.minima);
-  assert.equal(limitarDivisao(99), DIVISAO_DO_RELATORIO.maxima);
-  assert.equal(limitarDivisao(61.6), 62);
+    assert.equal(limitarDivisao(10), DIVISAO_DO_RELATORIO.minima);
+    assert.equal(limitarDivisao(99), DIVISAO_DO_RELATORIO.maxima);
+    assert.equal(limitarDivisao(61.6), 62);
 });
 
 test('divisão do relatório: a do ponteiro é a posição relativa à área; área sem largura volta ao padrão', () => {
-  assert.equal(divisaoPeloPonteiro(600, 100, 1000), 50);
-  assert.equal(divisaoPeloPonteiro(5000, 100, 1000), DIVISAO_DO_RELATORIO.maxima);
-  assert.equal(divisaoPeloPonteiro(600, 100, 0), DIVISAO_DO_RELATORIO.padrao);
+    assert.equal(divisaoPeloPonteiro(600, 100, 1000), 50);
+    assert.equal(divisaoPeloPonteiro(5000, 100, 1000), DIVISAO_DO_RELATORIO.maxima);
+    assert.equal(divisaoPeloPonteiro(600, 100, 0), DIVISAO_DO_RELATORIO.padrao);
 });

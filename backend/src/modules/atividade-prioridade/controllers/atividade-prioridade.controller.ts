@@ -8,20 +8,20 @@ import { AtividadePrioridadeService } from '../services/atividade-prioridade.ser
 /** Prioridades da atividade: leitura para qualquer usuário autenticado; a cor só o administrador altera. */
 @Controller('atividade-prioridade')
 export class AtividadePrioridadeController {
-  constructor(private readonly atividadePrioridadeService: AtividadePrioridadeService) {}
+    constructor(private readonly atividadePrioridadeService: AtividadePrioridadeService) {}
 
-  @Get()
-  listar() {
-    return this.atividadePrioridadeService.listar();
-  }
+    @Get()
+    listar() {
+        return this.atividadePrioridadeService.listar();
+    }
 
-  @AdministradorOnly()
-  @Patch(':codigo')
-  alterarCor(
-    @Param('codigo', new ParseEnumPipe(TipoAtividadePrioridadeEnum)) codigo: TipoAtividadePrioridadeEnum,
-    @Body() dto: AtividadePrioridadeCorAlterarDto,
-    @ActiveUser() usuarioAtivo: JwtPayload,
-  ) {
-    return this.atividadePrioridadeService.alterarCor(codigo, dto, usuarioAtivo);
-  }
+    @AdministradorOnly()
+    @Patch(':codigo')
+    alterarCor(
+        @Param('codigo', new ParseEnumPipe(TipoAtividadePrioridadeEnum)) codigo: TipoAtividadePrioridadeEnum,
+        @Body() dto: AtividadePrioridadeCorAlterarDto,
+        @ActiveUser() usuarioAtivo: JwtPayload,
+    ) {
+        return this.atividadePrioridadeService.alterarCor(codigo, dto, usuarioAtivo);
+    }
 }

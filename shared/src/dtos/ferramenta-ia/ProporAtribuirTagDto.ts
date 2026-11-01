@@ -10,46 +10,46 @@ export type AlvoDeTag = (typeof ALVOS_DE_TAG)[number];
  * conjunto final a partir das tags de hoje; o que já está como pedido não conta como mudança.
  */
 export class ProporAtribuirTagDto {
-  @IsIn(ALVOS_DE_TAG)
-  alvo: AlvoDeTag;
+    @IsIn(ALVOS_DE_TAG)
+    alvo: AlvoDeTag;
 
-  /** Id da demanda ou da atividade, conforme `alvo`. */
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  alvoId: number;
+    /** Id da demanda ou da atividade, conforme `alvo`. */
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    alvoId: number;
 
-  @IsOptional()
-  @IsArray()
-  @IsInt({ each: true })
-  @Min(1, { each: true })
-  adicionarTagIds?: number[];
+    @IsOptional()
+    @IsArray()
+    @IsInt({ each: true })
+    @Min(1, { each: true })
+    adicionarTagIds?: number[];
 
-  @IsOptional()
-  @IsArray()
-  @IsInt({ each: true })
-  @Min(1, { each: true })
-  removerTagIds?: number[];
+    @IsOptional()
+    @IsArray()
+    @IsInt({ each: true })
+    @Min(1, { each: true })
+    removerTagIds?: number[];
 }
 
 /** Os dados guardados na proposta: a entrada mais os nomes e o conjunto de antes e de depois, para o cartão e para o desfazer. */
 export class PropostaAtribuirTagDadosDto extends ProporAtribuirTagDto {
-  @IsOptional()
-  @IsString()
-  alvoNome?: string;
+    @IsOptional()
+    @IsString()
+    alvoNome?: string;
 
-  /** Só para atividade: a demanda dela. */
-  @IsOptional()
-  @IsString()
-  demandaNome?: string;
+    /** Só para atividade: a demanda dela. */
+    @IsOptional()
+    @IsString()
+    demandaNome?: string;
 
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tagsAntesNomes?: string[];
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    tagsAntesNomes?: string[];
 
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tagsDepoisNomes?: string[];
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    tagsDepoisNomes?: string[];
 }

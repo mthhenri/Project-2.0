@@ -1,5 +1,5 @@
 export enum RelatorioPeriodoTipoEnum {
-  ANUAL  = 'ANUAL',
-  MENSAL = 'MENSAL',
-  CUSTOM = 'CUSTOM',
+    ANUAL  = 'ANUAL',
+    MENSAL = 'MENSAL',
+    CUSTOM = 'CUSTOM',
 }

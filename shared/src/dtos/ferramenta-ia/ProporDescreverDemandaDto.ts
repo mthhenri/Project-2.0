@@ -6,22 +6,22 @@ import { IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
  * dos dois relatos; o que não foi contado não vira descrição. O sistema redige as descrições em Markdown (nível analítico).
  */
 export class ProporDescreverDemandaDto {
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  demandaId: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    demandaId: number;
 
-  /** O que o cliente pediu, nas palavras do gestor. */
-  @IsOptional()
-  @IsString()
-  @MaxLength(4000)
-  relatoDoCliente?: string;
+    /** O que o cliente pediu, nas palavras do gestor. */
+    @IsOptional()
+    @IsString()
+    @MaxLength(4000)
+    relatoDoCliente?: string;
 
-  /** O que será feito (a solução técnica), nas palavras do gestor. */
-  @IsOptional()
-  @IsString()
-  @MaxLength(4000)
-  relatoTecnico?: string;
+    /** O que será feito (a solução técnica), nas palavras do gestor. */
+    @IsOptional()
+    @IsString()
+    @MaxLength(4000)
+    relatoTecnico?: string;
 }
 
 /**
@@ -29,35 +29,35 @@ export class ProporDescreverDemandaDto {
  * a situação anterior, para o cartão mostrar. Um campo ausente não é alterado.
  */
 export class PropostaDescreverDemandaDadosDto {
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  demandaId: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    demandaId: number;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(20000)
-  descricaoCliente?: string;
+    @IsOptional()
+    @IsString()
+    @MaxLength(20000)
+    descricaoCliente?: string;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(20000)
-  descricaoTecnica?: string;
+    @IsOptional()
+    @IsString()
+    @MaxLength(20000)
+    descricaoTecnica?: string;
 
-  @IsOptional()
-  @IsString()
-  demandaNome?: string;
+    @IsOptional()
+    @IsString()
+    demandaNome?: string;
 
-  @IsOptional()
-  @IsString()
-  projetoNome?: string;
+    @IsOptional()
+    @IsString()
+    projetoNome?: string;
 
-  /** As descrições de antes (só dos campos que a proposta traz; nulo se a demanda não tinha), para o cartão mostrar o diff por palavra. */
-  @IsOptional()
-  @IsString()
-  descricaoClienteAnterior?: string | null;
+    /** As descrições de antes (só dos campos que a proposta traz; nulo se a demanda não tinha), para o cartão mostrar o diff por palavra. */
+    @IsOptional()
+    @IsString()
+    descricaoClienteAnterior?: string | null;
 
-  @IsOptional()
-  @IsString()
-  descricaoTecnicaAnterior?: string | null;
+    @IsOptional()
+    @IsString()
+    descricaoTecnicaAnterior?: string | null;
 }

@@ -1,3 +1,3 @@
 export class TagRestaurarDto {
-  id: number;
+    id: number;
 }

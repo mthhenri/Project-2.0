@@ -14,8 +14,8 @@ import { OpcaoDeSilencio, atalhoDoTeclado, rotuloDoSilencio } from '../../utils/
 import { POSICOES_DO_POPUP } from '../../utils/posicao-popup.util';
 
 interface OpcaoDoMenu {
-  opcao: OpcaoDeSilencio;
-  rotulo: string;
+    opcao: OpcaoDeSilencio;
+    rotulo: string;
 }
 
 /** O maior atraso que o `setTimeout` aceita; um silêncio mais longo ("até reativar") nunca vence na prática. */
@@ -27,123 +27,123 @@ const LIMITE_DO_TEMPORIZADOR_MS = 2_147_483_647;
  * na hora; se o servidor recusar, a tela volta ao valor anterior e o menu avisa.
  */
 @Component({
-  selector: 'app-mensagem-direta-notificacoes',
-  standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, PopoverModule, ToggleSwitchModule, TooltipModule],
-  templateUrl: './mensagem-direta-notificacoes.component.html',
-  styleUrl: './mensagem-direta-notificacoes.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-mensagem-direta-notificacoes',
+    standalone: true,
+    imports: [ReactiveFormsModule, ButtonModule, PopoverModule, ToggleSwitchModule, TooltipModule],
+    templateUrl: './mensagem-direta-notificacoes.component.html',
+    styleUrl: './mensagem-direta-notificacoes.component.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MensagemDiretaNotificacoesComponent {
-  private readonly servico = inject(MensagemDiretaAvisosService);
-  private readonly zona = inject(NgZone);
-  private readonly desktop = inject(ProjectDesktopService);
-  private readonly posicao = inject(MensagemDiretaPosicaoService);
+    private readonly servico = inject(MensagemDiretaAvisosService);
+    private readonly zona = inject(NgZone);
+    private readonly desktop = inject(ProjectDesktopService);
+    private readonly posicao = inject(MensagemDiretaPosicaoService);
 
-  /** Dentro do Project Desktop o menu também mostra e grava o atalho global do chat (task 213). */
-  /** O atalho se muda no Project; a janela de chat do Desktop não tem esta seção (apertar teclas ali dispararia o atalho e fecharia a janela). */
-  protected readonly noDesktop = this.desktop.disponivel && !this.desktop.naJanelaDeChat;
-  protected readonly atalho = computed(() => this.preferencia().atalhoGlobal);
-  protected readonly gravandoAtalho = signal(false);
-  /** O que o Desktop disse do atalho: em uso por outro programa, ou ainda não aplicado (ele relê a preferência a cada minuto). */
-  protected readonly estadoDoAtalho = signal<'ok' | 'indisponivel' | 'pendente'>('ok');
-  private readonly campoDoAtalho = viewChild<ElementRef<HTMLInputElement>>('campoDoAtalho');
+    /** Dentro do Project Desktop o menu também mostra e grava o atalho global do chat (task 213). */
+    /** O atalho se muda no Project; a janela de chat do Desktop não tem esta seção (apertar teclas ali dispararia o atalho e fecharia a janela). */
+    protected readonly noDesktop = this.desktop.disponivel && !this.desktop.naJanelaDeChat;
+    protected readonly atalho = computed(() => this.preferencia().atalhoGlobal);
+    protected readonly gravandoAtalho = signal(false);
+    /** O que o Desktop disse do atalho: em uso por outro programa, ou ainda não aplicado (ele relê a preferência a cada minuto). */
+    protected readonly estadoDoAtalho = signal<'ok' | 'indisponivel' | 'pendente'>('ok');
+    private readonly campoDoAtalho = viewChild<ElementRef<HTMLInputElement>>('campoDoAtalho');
 
-  /** A posição do popup (task 221) não vale na janela de chat do Desktop, que é a própria janela: a seção some dali. */
-  protected readonly comPosicao = !this.desktop.naJanelaDeChat;
-  protected readonly posicoes = POSICOES_DO_POPUP;
-  protected readonly posicaoPreferida = computed(() => this.servico.preferencia().posicaoPopup);
-  protected readonly preferencia = this.servico.preferencia;
-  protected readonly erro = this.servico.erroNaPreferencia;
+    /** A posição do popup (task 221) não vale na janela de chat do Desktop, que é a própria janela: a seção some dali. */
+    protected readonly comPosicao = !this.desktop.naJanelaDeChat;
+    protected readonly posicoes = POSICOES_DO_POPUP;
+    protected readonly posicaoPreferida = computed(() => this.servico.preferencia().posicaoPopup);
+    protected readonly preferencia = this.servico.preferencia;
+    protected readonly erro = this.servico.erroNaPreferencia;
 
-  readonly controleAvisos = new FormControl(true, { nonNullable: true });
-  readonly controleDesktop = new FormControl(true, { nonNullable: true });
-  readonly controleSom = new FormControl(false, { nonNullable: true });
+    readonly controleAvisos = new FormControl(true, { nonNullable: true });
+    readonly controleDesktop = new FormControl(true, { nonNullable: true });
+    readonly controleSom = new FormControl(false, { nonNullable: true });
 
-  /** O relógio do menu: recalculado quando o menu abre e a cada mudança, para o "Silenciado até" não ficar velho. */
-  private readonly agora = signal(new Date());
-  protected readonly opcoes: OpcaoDoMenu[] = [
-    { opcao: 'UMA_HORA', rotulo: 'Por 1 hora (reunião)' },
-    { opcao: 'AMANHA_8H', rotulo: 'Até amanhã às 8h' },
-    { opcao: 'ATE_REATIVAR', rotulo: 'Até eu reativar' },
-  ];
+    /** O relógio do menu: recalculado quando o menu abre e a cada mudança, para o "Silenciado até" não ficar velho. */
+    private readonly agora = signal(new Date());
+    protected readonly opcoes: OpcaoDoMenu[] = [
+        { opcao: 'UMA_HORA', rotulo: 'Por 1 hora (reunião)' },
+        { opcao: 'AMANHA_8H', rotulo: 'Até amanhã às 8h' },
+        { opcao: 'ATE_REATIVAR', rotulo: 'Até eu reativar' },
+    ];
 
-  protected readonly silenciado = computed(() => estaSilenciado(this.preferencia().silenciadoAteDate, this.agora()));
-  protected readonly rotuloDoSilencio = computed(() => rotuloDoSilencio(this.preferencia().silenciadoAteDate, this.agora(), ambiente.fusoHorario));
+    protected readonly silenciado = computed(() => estaSilenciado(this.preferencia().silenciadoAteDate, this.agora()));
+    protected readonly rotuloDoSilencio = computed(() => rotuloDoSilencio(this.preferencia().silenciadoAteDate, this.agora(), ambiente.fusoHorario));
 
-  constructor() {
+    constructor() {
     // A tela segue a preferência (carga, gravação e volta atrás); os interruptores gravam o que o usuário muda.
-    effect(() => {
-      const preferencia = this.preferencia();
-      this.controleAvisos.setValue(preferencia.avisosAtivos, { emitEvent: false });
-      this.controleDesktop.setValue(preferencia.avisoDesktopAtivo, { emitEvent: false });
-      this.controleSom.setValue(preferencia.somAtivo, { emitEvent: false });
-    });
-    // Quando o silêncio vence com a tela aberta, o sino e o menu saem do estado "silenciado" sozinhos.
-    effect((aoLimpar) => {
-      const ate = this.preferencia().silenciadoAteDate;
-      const falta = ate ? ate.getTime() - Date.now() : 0;
-      if (falta <= 0 || falta > LIMITE_DO_TEMPORIZADOR_MS) return;
-      // Fora da zona: um prazo de horas não pode segurar a estabilidade da aplicação.
-      const manipulador = this.zona.runOutsideAngular(() => setTimeout(() => this.agora.set(new Date()), falta + 50));
-      aoLimpar(() => clearTimeout(manipulador));
-    });
-    this.controleAvisos.valueChanges.subscribe((valor) => void this.servico.alterarPreferencia({ avisosAtivos: valor }));
-    this.controleDesktop.valueChanges.subscribe((valor) => void this.servico.alterarPreferencia({ avisoDesktopAtivo: valor }));
-    this.controleSom.valueChanges.subscribe((valor) => void this.servico.alterarPreferencia({ somAtivo: valor }));
-  }
-
-  protected atualizarRelogio(): void {
-    this.agora.set(new Date());
-    void this.conferirAtalho();
-  }
-
-  private async conferirAtalho(): Promise<void> {
-    if (!this.noDesktop) return;
-    const situacao = await this.desktop.situacaoDoAtalho();
-    if (situacao === null) return;
-    if (situacao.atalho !== this.atalho()) this.estadoDoAtalho.set('pendente');
-    else this.estadoDoAtalho.set(situacao.registrado ? 'ok' : 'indisponivel');
-  }
-
-  protected comecarAGravarAtalho(): void {
-    this.gravandoAtalho.set(true);
-    setTimeout(() => this.campoDoAtalho()?.nativeElement.focus(), 0);
-  }
-
-  /** Grava o atalho tecla a tecla: Esc desiste, e só uma combinação válida (modificador + tecla) é gravada. */
-  protected aoTeclarAtalho(evento: KeyboardEvent): void {
-    evento.preventDefault();
-    evento.stopPropagation();
-    if (evento.key === 'Escape') {
-      this.gravandoAtalho.set(false);
-      return;
+        effect(() => {
+            const preferencia = this.preferencia();
+            this.controleAvisos.setValue(preferencia.avisosAtivos, { emitEvent: false });
+            this.controleDesktop.setValue(preferencia.avisoDesktopAtivo, { emitEvent: false });
+            this.controleSom.setValue(preferencia.somAtivo, { emitEvent: false });
+        });
+        // Quando o silêncio vence com a tela aberta, o sino e o menu saem do estado "silenciado" sozinhos.
+        effect((aoLimpar) => {
+            const ate = this.preferencia().silenciadoAteDate;
+            const falta = ate ? ate.getTime() - Date.now() : 0;
+            if (falta <= 0 || falta > LIMITE_DO_TEMPORIZADOR_MS) return;
+            // Fora da zona: um prazo de horas não pode segurar a estabilidade da aplicação.
+            const manipulador = this.zona.runOutsideAngular(() => setTimeout(() => this.agora.set(new Date()), falta + 50));
+            aoLimpar(() => clearTimeout(manipulador));
+        });
+        this.controleAvisos.valueChanges.subscribe((valor) => void this.servico.alterarPreferencia({ avisosAtivos: valor }));
+        this.controleDesktop.valueChanges.subscribe((valor) => void this.servico.alterarPreferencia({ avisoDesktopAtivo: valor }));
+        this.controleSom.valueChanges.subscribe((valor) => void this.servico.alterarPreferencia({ somAtivo: valor }));
     }
-    const atalho = atalhoDoTeclado(evento);
-    if (!atalho) return;
-    this.gravandoAtalho.set(false);
-    this.estadoDoAtalho.set(atalho === this.atalho() ? this.estadoDoAtalho() : 'pendente');
-    void this.servico.alterarPreferencia({ atalhoGlobal: atalho });
-  }
 
-  /** Escolher um canto leva o popup para lá: o que foi arrastado ou redimensionado é descartado. */
-  protected escolherPosicao(posicao: PosicaoPopupChatEnum): void {
-    this.posicao.restaurar();
-    void this.servico.alterarPreferencia({ posicaoPopup: posicao });
-  }
+    protected atualizarRelogio(): void {
+        this.agora.set(new Date());
+        void this.conferirAtalho();
+    }
 
-  /** Volta à posição preferida da conta, com o tamanho padrão. */
-  protected restaurarPosicao(): void {
-    this.posicao.restaurar();
-  }
+    private async conferirAtalho(): Promise<void> {
+        if (!this.noDesktop) return;
+        const situacao = await this.desktop.situacaoDoAtalho();
+        if (situacao === null) return;
+        if (situacao.atalho !== this.atalho()) this.estadoDoAtalho.set('pendente');
+        else this.estadoDoAtalho.set(situacao.registrado ? 'ok' : 'indisponivel');
+    }
 
-  protected async silenciar(opcao: OpcaoDeSilencio): Promise<void> {
-    await this.servico.silenciarTudo(opcao);
-    this.atualizarRelogio();
-  }
+    protected comecarAGravarAtalho(): void {
+        this.gravandoAtalho.set(true);
+        setTimeout(() => this.campoDoAtalho()?.nativeElement.focus(), 0);
+    }
 
-  protected async reativar(): Promise<void> {
-    await this.servico.reativarTudo();
-    this.atualizarRelogio();
-  }
+    /** Grava o atalho tecla a tecla: Esc desiste, e só uma combinação válida (modificador + tecla) é gravada. */
+    protected aoTeclarAtalho(evento: KeyboardEvent): void {
+        evento.preventDefault();
+        evento.stopPropagation();
+        if (evento.key === 'Escape') {
+            this.gravandoAtalho.set(false);
+            return;
+        }
+        const atalho = atalhoDoTeclado(evento);
+        if (!atalho) return;
+        this.gravandoAtalho.set(false);
+        this.estadoDoAtalho.set(atalho === this.atalho() ? this.estadoDoAtalho() : 'pendente');
+        void this.servico.alterarPreferencia({ atalhoGlobal: atalho });
+    }
+
+    /** Escolher um canto leva o popup para lá: o que foi arrastado ou redimensionado é descartado. */
+    protected escolherPosicao(posicao: PosicaoPopupChatEnum): void {
+        this.posicao.restaurar();
+        void this.servico.alterarPreferencia({ posicaoPopup: posicao });
+    }
+
+    /** Volta à posição preferida da conta, com o tamanho padrão. */
+    protected restaurarPosicao(): void {
+        this.posicao.restaurar();
+    }
+
+    protected async silenciar(opcao: OpcaoDeSilencio): Promise<void> {
+        await this.servico.silenciarTudo(opcao);
+        this.atualizarRelogio();
+    }
+
+    protected async reativar(): Promise<void> {
+        await this.servico.reativarTudo();
+        this.atualizarRelogio();
+    }
 }

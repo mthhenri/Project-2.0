@@ -2,11 +2,11 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import {
-  AtividadePrioridadeCorAlteradaDto,
-  AtividadePrioridadeCorAlterarDto,
-  AtividadePrioridadeResumoDto,
-  StandardResponse,
-  TipoAtividadePrioridadeEnum,
+    AtividadePrioridadeCorAlteradaDto,
+    AtividadePrioridadeCorAlterarDto,
+    AtividadePrioridadeResumoDto,
+    StandardResponse,
+    TipoAtividadePrioridadeEnum,
 } from '@project20/shared';
 import { ambiente } from '../../../environments/environment';
 import { comFeedbackProprio } from '../interceptors/loading.interceptor';
@@ -17,28 +17,28 @@ import { comFeedbackProprio } from '../interceptors/loading.interceptor';
  */
 @Injectable({ providedIn: 'root' })
 export class AtividadePrioridadeService {
-  private readonly httpClient = inject(HttpClient);
-  private readonly urlBase = `${ambiente.apiUrl}/atividade-prioridade`;
-  private carregada = false;
+    private readonly httpClient = inject(HttpClient);
+    private readonly urlBase = `${ambiente.apiUrl}/atividade-prioridade`;
+    private carregada = false;
 
-  readonly prioridades = signal<AtividadePrioridadeResumoDto[]>([]);
+    readonly prioridades = signal<AtividadePrioridadeResumoDto[]>([]);
 
-  /** Busca as prioridades na primeira chamada; `forcar` busca de novo (depois de um erro). */
-  carregar(forcar = false): void {
-    if (this.carregada && !forcar) return;
-    this.carregada = true;
-    this.httpClient.get<StandardResponse<AtividadePrioridadeResumoDto[]>>(this.urlBase, comFeedbackProprio()).subscribe({
-      next: (resposta) => this.prioridades.set(resposta.dados ?? []),
-      error: () => (this.carregada = false),
-    });
-  }
+    /** Busca as prioridades na primeira chamada; `forcar` busca de novo (depois de um erro). */
+    carregar(forcar = false): void {
+        if (this.carregada && !forcar) return;
+        this.carregada = true;
+        this.httpClient.get<StandardResponse<AtividadePrioridadeResumoDto[]>>(this.urlBase, comFeedbackProprio()).subscribe({
+            next: (resposta) => this.prioridades.set(resposta.dados ?? []),
+            error: () => (this.carregada = false),
+        });
+    }
 
-  alterarCor(codigo: TipoAtividadePrioridadeEnum, dto: AtividadePrioridadeCorAlterarDto): Observable<StandardResponse<AtividadePrioridadeCorAlteradaDto>> {
-    return this.httpClient.patch<StandardResponse<AtividadePrioridadeCorAlteradaDto>>(`${this.urlBase}/${codigo}`, dto).pipe(
-      tap((resposta) => {
-        const alterada = resposta.dados;
-        if (alterada) this.prioridades.update((lista) => lista.map((item) => (item.codigo === alterada.codigo ? alterada : item)));
-      }),
-    );
-  }
+    alterarCor(codigo: TipoAtividadePrioridadeEnum, dto: AtividadePrioridadeCorAlterarDto): Observable<StandardResponse<AtividadePrioridadeCorAlteradaDto>> {
+        return this.httpClient.patch<StandardResponse<AtividadePrioridadeCorAlteradaDto>>(`${this.urlBase}/${codigo}`, dto).pipe(
+            tap((resposta) => {
+                const alterada = resposta.dados;
+                if (alterada) this.prioridades.update((lista) => lista.map((item) => (item.codigo === alterada.codigo ? alterada : item)));
+            }),
+        );
+    }
 }

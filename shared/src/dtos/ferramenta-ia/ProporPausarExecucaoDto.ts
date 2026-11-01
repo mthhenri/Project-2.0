@@ -7,32 +7,32 @@ import { MENSAGEM_CARACTERES_PROIBIDOS, REGEX_SEM_CARACTERES_PROIBIDOS } from '.
  * em andamento do usuário; `descricao` (opcional) descreve o trabalho feito até ali, e sem ela vale a provisória.
  */
 export class ProporPausarExecucaoDto {
-  /** Só o gestor: pausa a execução em andamento de outra pessoa (`usuarioId` de `listar_usuarios`); sem ele, a do próprio usuário. */
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  usuarioId?: number;
+    /** Só o gestor: pausa a execução em andamento de outra pessoa (`usuarioId` de `listar_usuarios`); sem ele, a do próprio usuário. */
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    usuarioId?: number;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(1000)
-  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
-  descricao?: string;
+    @IsOptional()
+    @IsString()
+    @MaxLength(1000)
+    @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
+    descricao?: string;
 }
 
 /** Os dados guardados na proposta: a entrada mais nomes, só para o cartão mostrar. */
 export class PropostaPausarExecucaoDadosDto extends ProporPausarExecucaoDto {
-  @IsOptional()
-  @IsString()
-  atividadeNome?: string;
+    @IsOptional()
+    @IsString()
+    atividadeNome?: string;
 
-  @IsOptional()
-  @IsString()
-  demandaNome?: string;
+    @IsOptional()
+    @IsString()
+    demandaNome?: string;
 
-  /** A pessoa da execução, quando não é quem confirma. */
-  @IsOptional()
-  @IsString()
-  usuarioNome?: string;
+    /** A pessoa da execução, quando não é quem confirma. */
+    @IsOptional()
+    @IsString()
+    usuarioNome?: string;
 }

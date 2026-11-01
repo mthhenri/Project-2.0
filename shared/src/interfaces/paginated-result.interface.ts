@@ -1,7 +1,7 @@
 export class PaginatedResult<TItem> {
-  itens: TItem[];
-  totalItens: number;
-  paginaAtual: number;
-  itensPorPagina: number;
-  totalPaginas: number;
+    itens: TItem[];
+    totalItens: number;
+    paginaAtual: number;
+    itensPorPagina: number;
+    totalPaginas: number;
 }

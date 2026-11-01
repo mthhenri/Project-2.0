@@ -1,203 +1,203 @@
 // A página ocupa a altura da área de conteúdo (task 292): o cabeçalho e a barra de busca têm a altura que têm e a Árvore fica com o que sobra,
 // rolando por dentro. Sem isso a janela rolava um pouco para baixo.
 :host {
-  display: block;
-  height: 100%;
+    display: block;
+    height: 100%;
 }
 
 .projeto-detalhe {
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  height: 100%;
-  min-height: 0;
-  padding: 1.5rem;
-
-  // Mesmo cartão da listagem de projetos: a faixa de 8px no topo leva a cor do projeto.
-  &__cabecalho-cartao {
-    background: var(--app-surface-0);
-    border: 1px solid var(--app-surface-200);
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 1.5rem;
-  }
-
-  // O seletor Demandas / Volume fica no cabeçalho, abaixo dos botões (tasks 291 e 292).
-  &__visao {
-    display: block;
-  }
-
-  // As demandas ocupam o que sobra da altura; escondidas (visão Volume) saem do fluxo, mas continuam montadas.
-  &__demandas {
     display: flex;
-    flex: 1;
     flex-direction: column;
+    box-sizing: border-box;
+    height: 100%;
     min-height: 0;
+    padding: 1.5rem;
 
-    &--oculto {
-      display: none;
+    // Mesmo cartão da listagem de projetos: a faixa de 8px no topo leva a cor do projeto.
+    &__cabecalho-cartao {
+        background: var(--app-surface-0);
+        border: 1px solid var(--app-surface-200);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
     }
-  }
 
-  &__faixa {
-    height: 8px;
-  }
-
-  &__cabecalho {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 1.25rem;
-  }
-
-  &__cabecalho-esquerda {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  &__identidade {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  &__titulo {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--p-primary-600);
-    margin: 0;
-  }
-
-  &__codigo {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--p-text-muted-color);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    background: var(--app-surface-100);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-  }
-
-  // Selo com a sigla do nome; fundo e cor do texto vêm da cor do projeto.
-  &__selo {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    font-size: 0.9375rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    flex-shrink: 0;
-    user-select: none;
-  }
-
-  // Início e fim do projeto, ao lado do status (task 271): cada data se edita no lugar.
-  &__periodo {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-left: 1rem;
-  }
-
-  &__periodo-item {
-    display: inline-block;
-    padding: 0.125rem 0.375rem;
-    font-size: 0.875rem;
-    color: var(--p-text-muted-color);
-
-    strong {
-      color: var(--p-text-color);
-      font-weight: 500;
+    // O seletor Demandas / Volume fica no cabeçalho, abaixo dos botões (tasks 291 e 292).
+    &__visao {
+        display: block;
     }
-  }
 
-  &__cabecalho-acoes {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.5rem;
-    margin-left: auto;
-  }
+    // As demandas ocupam o que sobra da altura; escondidas (visão Volume) saem do fluxo, mas continuam montadas.
+    &__demandas {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-height: 0;
 
-  &__botoes {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.5rem;
-  }
-
-  &__demandas-vazio {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 3rem 0;
-  }
-
-  // A Árvore em três colunas pede altura própria: cada coluna rola por dentro.
-  &__demandas-arvore {
-    flex: 1;
-    min-height: 20rem;
-    border: 1px solid var(--app-surface-200);
-    border-radius: 0.625rem;
-    overflow: hidden;
-  }
-
-  &__demanda-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.875rem 1rem;
-    background: var(--app-surface-0);
-    border: 1px solid var(--app-surface-200);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.15s;
-
-    &:hover {
-      background: var(--app-surface-50);
+        &--oculto {
+            display: none;
+        }
     }
-  }
 
-  &__demanda-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
+    &__faixa {
+        height: 8px;
+    }
 
-  &__demanda-nome {
-    font-weight: 500;
-    color: var(--p-text-color);
-  }
+    &__cabecalho {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+    }
 
-  &__demanda-badges {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
+    &__cabecalho-esquerda {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
 
-  &__demanda-horas {
-    font-size: 0.8rem;
-    color: var(--p-text-muted-color);
-    white-space: nowrap;
-  }
+    &__identidade {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
 
-  &__visoes {
-    display: inline-flex;
-    gap: 0.375rem;
-  }
+    &__titulo {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--p-primary-600);
+        margin: 0;
+    }
 
-  &__toolbar {
-    display: block;
-    margin-bottom: 0.5rem;
-    border: 1px solid var(--app-surface-200);
-    border-radius: 0.625rem;
-    overflow: hidden;
-  }
+    &__codigo {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--p-text-muted-color);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        background: var(--app-surface-100);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+
+    // Selo com a sigla do nome; fundo e cor do texto vêm da cor do projeto.
+    &__selo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        font-size: 0.9375rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        flex-shrink: 0;
+        user-select: none;
+    }
+
+    // Início e fim do projeto, ao lado do status (task 271): cada data se edita no lugar.
+    &__periodo {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+
+    &__periodo-item {
+        display: inline-block;
+        padding: 0.125rem 0.375rem;
+        font-size: 0.875rem;
+        color: var(--p-text-muted-color);
+
+        strong {
+            color: var(--p-text-color);
+            font-weight: 500;
+        }
+    }
+
+    &__cabecalho-acoes {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.5rem;
+        margin-left: auto;
+    }
+
+    &__botoes {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    &__demandas-vazio {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 3rem 0;
+    }
+
+    // A Árvore em três colunas pede altura própria: cada coluna rola por dentro.
+    &__demandas-arvore {
+        flex: 1;
+        min-height: 20rem;
+        border: 1px solid var(--app-surface-200);
+        border-radius: 0.625rem;
+        overflow: hidden;
+    }
+
+    &__demanda-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.875rem 1rem;
+        background: var(--app-surface-0);
+        border: 1px solid var(--app-surface-200);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.15s;
+
+        &:hover {
+            background: var(--app-surface-50);
+        }
+    }
+
+    &__demanda-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    &__demanda-nome {
+        font-weight: 500;
+        color: var(--p-text-color);
+    }
+
+    &__demanda-badges {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    &__demanda-horas {
+        font-size: 0.8rem;
+        color: var(--p-text-muted-color);
+        white-space: nowrap;
+    }
+
+    &__visoes {
+        display: inline-flex;
+        gap: 0.375rem;
+    }
+
+    &__toolbar {
+        display: block;
+        margin-bottom: 0.5rem;
+        border: 1px solid var(--app-surface-200);
+        border-radius: 0.625rem;
+        overflow: hidden;
+    }
 }

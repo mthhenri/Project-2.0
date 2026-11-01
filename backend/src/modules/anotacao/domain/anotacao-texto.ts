@@ -9,31 +9,31 @@ export type ResultadoDeTrecho =
 
 /** Ocorrências do trecho no texto, sem sobreposição. Trecho vazio nunca ocorre. */
 export function contarOcorrencias(texto: string, trecho: string): number {
-  if (trecho.length === 0) return 0;
-  let total = 0;
-  let posicao = texto.indexOf(trecho);
-  while (posicao !== -1) {
-    total++;
-    posicao = texto.indexOf(trecho, posicao + trecho.length);
-  }
-  return total;
+    if (trecho.length === 0) return 0;
+    let total = 0;
+    let posicao = texto.indexOf(trecho);
+    while (posicao !== -1) {
+        total++;
+        posicao = texto.indexOf(trecho, posicao + trecho.length);
+    }
+    return total;
 }
 
 function localizarUnico(texto: string, trecho: string): { inicio: number } | { motivo: 'AUSENTE' | 'AMBIGUO' } {
-  const ocorrencias = contarOcorrencias(texto, trecho);
-  if (ocorrencias === 0) return { motivo: 'AUSENTE' };
-  if (ocorrencias > 1) return { motivo: 'AMBIGUO' };
-  return { inicio: texto.indexOf(trecho) };
+    const ocorrencias = contarOcorrencias(texto, trecho);
+    if (ocorrencias === 0) return { motivo: 'AUSENTE' };
+    if (ocorrencias > 1) return { motivo: 'AMBIGUO' };
+    return { inicio: texto.indexOf(trecho) };
 }
 
 /** Troca um trecho por outro, só quando ele aparece uma única vez. */
 export function substituirTrechoUnico(texto: string, trechoAntigo: string, trechoNovo: string): ResultadoDeTrecho {
-  const achado = localizarUnico(texto, trechoAntigo);
-  if ('motivo' in achado) return { ok: false, motivo: achado.motivo };
-  return {
-    ok: true,
-    texto: texto.slice(0, achado.inicio) + trechoNovo + texto.slice(achado.inicio + trechoAntigo.length),
-  };
+    const achado = localizarUnico(texto, trechoAntigo);
+    if ('motivo' in achado) return { ok: false, motivo: achado.motivo };
+    return {
+        ok: true,
+        texto: texto.slice(0, achado.inicio) + trechoNovo + texto.slice(achado.inicio + trechoAntigo.length),
+    };
 }
 
 /**
@@ -41,78 +41,78 @@ export function substituirTrechoUnico(texto: string, trechoAntigo: string, trech
  * linha vizinhas, para não deixar um buraco em branco no lugar.
  */
 export function removerTrechoUnico(texto: string, trecho: string): ResultadoDeTrecho {
-  const achado = localizarUnico(texto, trecho);
-  if ('motivo' in achado) return { ok: false, motivo: achado.motivo };
+    const achado = localizarUnico(texto, trecho);
+    if ('motivo' in achado) return { ok: false, motivo: achado.motivo };
 
-  let antes = texto.slice(0, achado.inicio);
-  let depois = texto.slice(achado.inicio + trecho.length);
-  const comecaLinha = antes === '' || antes.endsWith('\n');
-  const terminaLinha = depois === '' || depois.startsWith('\n');
-  if (comecaLinha && terminaLinha) {
-    if (depois.startsWith('\n')) depois = depois.slice(1);
-    else if (antes.endsWith('\n')) antes = antes.slice(0, -1);
-  }
-  return { ok: true, texto: antes + depois };
+    let antes = texto.slice(0, achado.inicio);
+    let depois = texto.slice(achado.inicio + trecho.length);
+    const comecaLinha = antes === '' || antes.endsWith('\n');
+    const terminaLinha = depois === '' || depois.startsWith('\n');
+    if (comecaLinha && terminaLinha) {
+        if (depois.startsWith('\n')) depois = depois.slice(1);
+        else if (antes.endsWith('\n')) antes = antes.slice(0, -1);
+    }
+    return { ok: true, texto: antes + depois };
 }
 
 function aparar(texto: string): string {
-  return texto.replace(/^(?:[ \t]*\n)+/, '').trimEnd();
+    return texto.replace(/^(?:[ \t]*\n)+/, '').trimEnd();
 }
 
 /** Anexa ao fim, com uma linha em branco antes quando a seção já tem conteúdo. */
 export function anexarAoFim(texto: string, anexo: string): string {
-  const novo = aparar(anexo);
-  if (novo === '') return texto;
-  return texto.trim() === '' ? novo : `${texto.trimEnd()}\n\n${novo}`;
+    const novo = aparar(anexo);
+    if (novo === '') return texto;
+    return texto.trim() === '' ? novo : `${texto.trimEnd()}\n\n${novo}`;
 }
 
 /** Escreve debaixo do título `## dd/MM` do dia, que é criado quando falta. Depende só do texto e do dia. */
 export function anexarAoFeitoDoDia(texto: string, diaMes: string, anexo: string): string {
-  const novo = aparar(anexo);
-  if (novo === '') return texto;
+    const novo = aparar(anexo);
+    if (novo === '') return texto;
 
-  const titulo = `## ${diaMes}`;
-  const linhas = texto.split('\n');
-  const indiceTitulo = linhas.findIndex((linha) => linha.trim() === titulo);
-  if (indiceTitulo === -1) return anexarAoFim(texto, `${titulo}\n${novo}`);
+    const titulo = `## ${diaMes}`;
+    const linhas = texto.split('\n');
+    const indiceTitulo = linhas.findIndex((linha) => linha.trim() === titulo);
+    if (indiceTitulo === -1) return anexarAoFim(texto, `${titulo}\n${novo}`);
 
-  let proximoTitulo = linhas.length;
-  for (let i = indiceTitulo + 1; i < linhas.length; i++) {
-    if (linhas[i].startsWith('## ')) {
-      proximoTitulo = i;
-      break;
+    let proximoTitulo = linhas.length;
+    for (let indiceAtual = indiceTitulo + 1; indiceAtual < linhas.length; indiceAtual++) {
+        if (linhas[indiceAtual].startsWith('## ')) {
+            proximoTitulo = indiceAtual;
+            break;
+        }
     }
-  }
 
-  const bloco = linhas.slice(indiceTitulo + 1, proximoTitulo);
-  while (bloco.length > 0 && bloco[bloco.length - 1].trim() === '') bloco.pop();
+    const bloco = linhas.slice(indiceTitulo + 1, proximoTitulo);
+    while (bloco.length > 0 && bloco[bloco.length - 1].trim() === '') bloco.pop();
 
-  const resultado = [
-    ...linhas.slice(0, indiceTitulo + 1),
-    ...bloco,
-    ...novo.split('\n'),
-    ...(proximoTitulo < linhas.length ? [''] : []),
-    ...linhas.slice(proximoTitulo),
-  ];
-  return resultado.join('\n');
+    const resultado = [
+        ...linhas.slice(0, indiceTitulo + 1),
+        ...bloco,
+        ...novo.split('\n'),
+        ...(proximoTitulo < linhas.length ? [''] : []),
+        ...linhas.slice(proximoTitulo),
+    ];
+    return resultado.join('\n');
 }
 
 /** O bloco de um dia na seção Feito: o título `## dd/MM` e o que vem debaixo dele, até o próximo título. Vazio se o dia não tem título. */
 export function blocoDoDiaNoFeito(texto: string, diaMes: string): string {
-  const linhas = texto.split('\n');
-  const indiceTitulo = linhas.findIndex((linha) => linha.trim() === `## ${diaMes}`);
-  if (indiceTitulo === -1) return '';
-  let proximoTitulo = linhas.length;
-  for (let i = indiceTitulo + 1; i < linhas.length; i++) {
-    if (linhas[i].startsWith('## ')) {
-      proximoTitulo = i;
-      break;
+    const linhas = texto.split('\n');
+    const indiceTitulo = linhas.findIndex((linha) => linha.trim() === `## ${diaMes}`);
+    if (indiceTitulo === -1) return '';
+    let proximoTitulo = linhas.length;
+    for (let indice = indiceTitulo + 1; indice < linhas.length; indice++) {
+        if (linhas[indice].startsWith('## ')) {
+            proximoTitulo = indice;
+            break;
+        }
     }
-  }
-  return linhas.slice(indiceTitulo, proximoTitulo).join('\n').trimEnd();
+    return linhas.slice(indiceTitulo, proximoTitulo).join('\n').trimEnd();
 }
 
 /** Duas leituras são a mesma versão quando as datas coincidem (as duas passam pelo mesmo driver, em milissegundos). */
 export function mesmaVersao(atual: Date, lida: Date): boolean {
-  return new Date(atual).getTime() === new Date(lida).getTime();
+    return new Date(atual).getTime() === new Date(lida).getTime();
 }

@@ -31,54 +31,54 @@ import { ProporAtribuirMembroFerramenta } from './ferramentas/propor-atribuir-me
 import { ProporAlterarDemandaFerramenta } from './ferramentas/propor-alterar-demanda.ferramenta';
 
 @Module({
-  imports:     [TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule, ProjetoModule, IaModule, PromptModule],
-  controllers: [DemandaController],
-  providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor, SugerirConexoesELugarFerramenta, ProporConectarDemandaFerramenta, ConectarDemandaExecutor, ProporAlterarDemandaFerramenta, AlterarDemandaExecutor, ProporAtribuirMembroFerramenta, AtribuirMembroExecutor, ProporConcluirDemandaFerramenta, ConcluirDemandaExecutor, ProporDesconectarDemandaFerramenta, DesconectarDemandaExecutor],
-  exports:     [DemandaService, DemandaRepository],
+    imports:     [TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule, ProjetoModule, IaModule, PromptModule],
+    controllers: [DemandaController],
+    providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor, SugerirConexoesELugarFerramenta, ProporConectarDemandaFerramenta, ConectarDemandaExecutor, ProporAlterarDemandaFerramenta, AlterarDemandaExecutor, ProporAtribuirMembroFerramenta, AtribuirMembroExecutor, ProporConcluirDemandaFerramenta, ConcluirDemandaExecutor, ProporDesconectarDemandaFerramenta, DesconectarDemandaExecutor],
+    exports:     [DemandaService, DemandaRepository],
 })
 export class DemandaModule implements OnModuleInit {
-  constructor(
-    private readonly registroDeFerramentas: FerramentaIaRegistro,
-    private readonly listarMinhasDemandas: ListarMinhasDemandasFerramenta,
-    private readonly listarDemandasDoProjeto: ListarDemandasDoProjetoFerramenta,
-    private readonly consultarGrafoDoProjeto: ConsultarGrafoDoProjetoFerramenta,
-    private readonly proporCriarDemanda: ProporCriarDemandaFerramenta,
-    private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
-    private readonly criarDemandaExecutor: CriarDemandaExecutor,
-    private readonly proporDescreverDemanda: ProporDescreverDemandaFerramenta,
-    private readonly descreverDemandaExecutor: DescreverDemandaExecutor,
-    private readonly sugerirConexoesELugar: SugerirConexoesELugarFerramenta,
-    private readonly proporConectarDemanda: ProporConectarDemandaFerramenta,
-    private readonly conectarDemandaExecutor: ConectarDemandaExecutor,
-    private readonly proporAlterarDemanda: ProporAlterarDemandaFerramenta,
-    private readonly alterarDemandaExecutor: AlterarDemandaExecutor,
-    private readonly proporAtribuirMembro: ProporAtribuirMembroFerramenta,
-    private readonly atribuirMembroExecutor: AtribuirMembroExecutor,
-    private readonly proporConcluirDemanda: ProporConcluirDemandaFerramenta,
-    private readonly concluirDemandaExecutor: ConcluirDemandaExecutor,
-    private readonly proporDesconectarDemanda: ProporDesconectarDemandaFerramenta,
-    private readonly desconectarDemandaExecutor: DesconectarDemandaExecutor,
-  ) {}
+    constructor(
+        private readonly registroDeFerramentas: FerramentaIaRegistro,
+        private readonly listarMinhasDemandas: ListarMinhasDemandasFerramenta,
+        private readonly listarDemandasDoProjeto: ListarDemandasDoProjetoFerramenta,
+        private readonly consultarGrafoDoProjeto: ConsultarGrafoDoProjetoFerramenta,
+        private readonly proporCriarDemanda: ProporCriarDemandaFerramenta,
+        private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
+        private readonly criarDemandaExecutor: CriarDemandaExecutor,
+        private readonly proporDescreverDemanda: ProporDescreverDemandaFerramenta,
+        private readonly descreverDemandaExecutor: DescreverDemandaExecutor,
+        private readonly sugerirConexoesELugar: SugerirConexoesELugarFerramenta,
+        private readonly proporConectarDemanda: ProporConectarDemandaFerramenta,
+        private readonly conectarDemandaExecutor: ConectarDemandaExecutor,
+        private readonly proporAlterarDemanda: ProporAlterarDemandaFerramenta,
+        private readonly alterarDemandaExecutor: AlterarDemandaExecutor,
+        private readonly proporAtribuirMembro: ProporAtribuirMembroFerramenta,
+        private readonly atribuirMembroExecutor: AtribuirMembroExecutor,
+        private readonly proporConcluirDemanda: ProporConcluirDemandaFerramenta,
+        private readonly concluirDemandaExecutor: ConcluirDemandaExecutor,
+        private readonly proporDesconectarDemanda: ProporDesconectarDemandaFerramenta,
+        private readonly desconectarDemandaExecutor: DesconectarDemandaExecutor,
+    ) {}
 
-  /** As ferramentas de IA do domínio de demanda se registram aqui. */
-  onModuleInit(): void {
-    this.registroDeFerramentas.registrar(this.listarMinhasDemandas);
-    this.registroDeFerramentas.registrar(this.listarDemandasDoProjeto);
-    this.registroDeFerramentas.registrar(this.consultarGrafoDoProjeto);
-    this.registroDeFerramentas.registrar(this.proporCriarDemanda);
-    this.registroDeExecutores.registrar(this.criarDemandaExecutor);
-    this.registroDeFerramentas.registrar(this.proporDescreverDemanda);
-    this.registroDeExecutores.registrar(this.descreverDemandaExecutor);
-    this.registroDeFerramentas.registrar(this.sugerirConexoesELugar);
-    this.registroDeFerramentas.registrar(this.proporConectarDemanda);
-    this.registroDeExecutores.registrar(this.conectarDemandaExecutor);
-    this.registroDeFerramentas.registrar(this.proporAlterarDemanda);
-    this.registroDeExecutores.registrar(this.alterarDemandaExecutor);
-    this.registroDeFerramentas.registrar(this.proporAtribuirMembro);
-    this.registroDeExecutores.registrar(this.atribuirMembroExecutor);
-    this.registroDeFerramentas.registrar(this.proporConcluirDemanda);
-    this.registroDeExecutores.registrar(this.concluirDemandaExecutor);
-    this.registroDeFerramentas.registrar(this.proporDesconectarDemanda);
-    this.registroDeExecutores.registrar(this.desconectarDemandaExecutor);
-  }
+    /** As ferramentas de IA do domínio de demanda se registram aqui. */
+    onModuleInit(): void {
+        this.registroDeFerramentas.registrar(this.listarMinhasDemandas);
+        this.registroDeFerramentas.registrar(this.listarDemandasDoProjeto);
+        this.registroDeFerramentas.registrar(this.consultarGrafoDoProjeto);
+        this.registroDeFerramentas.registrar(this.proporCriarDemanda);
+        this.registroDeExecutores.registrar(this.criarDemandaExecutor);
+        this.registroDeFerramentas.registrar(this.proporDescreverDemanda);
+        this.registroDeExecutores.registrar(this.descreverDemandaExecutor);
+        this.registroDeFerramentas.registrar(this.sugerirConexoesELugar);
+        this.registroDeFerramentas.registrar(this.proporConectarDemanda);
+        this.registroDeExecutores.registrar(this.conectarDemandaExecutor);
+        this.registroDeFerramentas.registrar(this.proporAlterarDemanda);
+        this.registroDeExecutores.registrar(this.alterarDemandaExecutor);
+        this.registroDeFerramentas.registrar(this.proporAtribuirMembro);
+        this.registroDeExecutores.registrar(this.atribuirMembroExecutor);
+        this.registroDeFerramentas.registrar(this.proporConcluirDemanda);
+        this.registroDeExecutores.registrar(this.concluirDemandaExecutor);
+        this.registroDeFerramentas.registrar(this.proporDesconectarDemanda);
+        this.registroDeExecutores.registrar(this.desconectarDemandaExecutor);
+    }
 }

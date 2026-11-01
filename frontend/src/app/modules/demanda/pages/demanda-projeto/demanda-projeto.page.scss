@@ -1,94 +1,93 @@
 .demanda-projeto {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  position: relative;
-  background-color: var(--app-fundo);
-
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background-color: var(--app-surface-0);
-    border-bottom: 1px solid var(--app-surface-200);
-    z-index: 10;
-    flex-shrink: 0;
-  }
-
-  &__header-esquerda {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  &__header-direita {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  &__seletor-projeto {
-    min-width: 220px;
-  }
-
-  &__toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    background-color: var(--app-surface-100);
-    border-radius: 0.5rem;
-    padding: 0.25rem;
-  }
-
-  &__corpo {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-  }
-
-  &__visualizacao {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-  }
-
-  &__carregando {
-    padding: 1rem 1.5rem;
-  }
-
-  &__vazio {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
     height: 100%;
+    position: relative;
+    background-color: var(--app-fundo);
 
-    &--lista {
-      background-color: var(--app-surface-50);
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background-color: var(--app-surface-0);
+        border-bottom: 1px solid var(--app-surface-200);
+        z-index: 10;
+        flex-shrink: 0;
     }
-  }
 
-  &__vazio-icone {
-    font-size: 3rem;
-    color: var(--app-realce-primario);
-    opacity: 0.4;
-  }
+    &__header-esquerda {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+    }
 
-  &__vazio-texto {
-    color: var(--p-text-muted-color);
-    margin-top: 1rem;
-  }
+    &__header-direita {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
 
+    &__seletor-projeto {
+        min-width: 220px;
+    }
+
+    &__toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        background-color: var(--app-surface-100);
+        border-radius: 0.5rem;
+        padding: 0.25rem;
+    }
+
+    &__corpo {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+    }
+
+    &__visualizacao {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+    }
+
+    &__carregando {
+        padding: 1rem 1.5rem;
+    }
+
+    &__vazio {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+
+        &--lista {
+            background-color: var(--app-surface-50);
+        }
+    }
+
+    &__vazio-icone {
+        font-size: 3rem;
+        color: var(--app-realce-primario);
+        opacity: 0.4;
+    }
+
+    &__vazio-texto {
+        color: var(--p-text-muted-color);
+        margin-top: 1rem;
+    }
 }
 
 // Telas estreitas: os modos viram só ícones (o nome acessível vem do aria-label do botão).
 @media (max-width: 480px) {
-  .demanda-projeto__modo-rotulo {
-    display: none;
-  }
+    .demanda-projeto__modo-rotulo {
+        display: none;
+    }
 }

@@ -1,5 +1,5 @@
 export class ExecucaoInternoEncerrarDto {
-  id: number;
-  fimData: Date;
-  descricao: string;
+    id: number;
+    fimData: Date;
+    descricao: string;
 }

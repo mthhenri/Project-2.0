@@ -2,6 +2,6 @@ import { ReferenciaMensagemDiretaEnum } from '../../enums/referencia-mensagem-di
 
 /** Qual referência resolver para o cartão. Vem da rota (`/referencia/:tipo/:id`) e é preenchido pela controller. */
 export class MensagemDiretaReferenciaRecuperarDto {
-  tipo: ReferenciaMensagemDiretaEnum;
-  id: number;
+    tipo: ReferenciaMensagemDiretaEnum;
+    id: number;
 }

@@ -1,88 +1,88 @@
 import {
-  IsString,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsEnum,
-  IsBoolean,
-  IsArray,
-  Min,
-  MaxLength,
-  IsDateString,
-  Matches,
+    IsString,
+    IsNotEmpty,
+    IsNumber,
+    IsOptional,
+    IsEnum,
+    IsBoolean,
+    IsArray,
+    Min,
+    MaxLength,
+    IsDateString,
+    Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoDemandaStatusEnum } from '../../enums/tipo-demanda-status.enum';
 import {
-  REGEX_SEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS,
+    REGEX_SEM_CARACTERES_PROIBIDOS,
+    MENSAGEM_CARACTERES_PROIBIDOS,
 } from '../../validators/caracteres-proibidos.validator';
 
 export class DemandaCriarDto {
-  @ApiProperty({ example: 1 })
-  @IsNumber()
-  @Min(1)
-  @Type(() => Number)
-  projetoId: number;
+    @ApiProperty({ example: 1 })
+    @IsNumber()
+    @Min(1)
+    @Type(() => Number)
+    projetoId: number;
 
-  @ApiPropertyOptional({ example: null })
-  @IsOptional()
-  @IsNumber()
-  @Min(1)
-  @Type(() => Number)
-  demandaPaiId?: number;
+    @ApiPropertyOptional({ example: null })
+    @IsOptional()
+    @IsNumber()
+    @Min(1)
+    @Type(() => Number)
+    demandaPaiId?: number;
 
-  @ApiProperty({ example: 'Implementar módulo de login' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
-  nome: string;
+    @ApiProperty({ example: 'Implementar módulo de login' })
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(255)
+    @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
+    nome: string;
 
-  @ApiPropertyOptional({ example: 'Implementar autenticação JWT com refresh token' })
-  @IsOptional()
-  @IsString()
-  descricaoTecnica?: string;
+    @ApiPropertyOptional({ example: 'Implementar autenticação JWT com refresh token' })
+    @IsOptional()
+    @IsString()
+    descricaoTecnica?: string;
 
-  @ApiPropertyOptional({ example: 'O usuário deve poder entrar no sistema com email e senha' })
-  @IsOptional()
-  @IsString()
-  descricaoCliente?: string;
+    @ApiPropertyOptional({ example: 'O usuário deve poder entrar no sistema com email e senha' })
+    @IsOptional()
+    @IsString()
+    descricaoCliente?: string;
 
-  @ApiPropertyOptional({ example: '# Documentação\n\nDescrição detalhada...' })
-  @IsOptional()
-  @IsString()
-  documentacao?: string;
+    @ApiPropertyOptional({ example: '# Documentação\n\nDescrição detalhada...' })
+    @IsOptional()
+    @IsString()
+    documentacao?: string;
 
-  @ApiProperty({ example: 8 })
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  horasEstimadas: number;
+    @ApiProperty({ example: 8 })
+    @IsNumber()
+    @Min(0)
+    @Type(() => Number)
+    horasEstimadas: number;
 
-  @ApiProperty({ enum: TipoDemandaStatusEnum, example: TipoDemandaStatusEnum.PLANEJADA })
-  @IsEnum(TipoDemandaStatusEnum)
-  status: TipoDemandaStatusEnum;
+    @ApiProperty({ enum: TipoDemandaStatusEnum, example: TipoDemandaStatusEnum.PLANEJADA })
+    @IsEnum(TipoDemandaStatusEnum)
+    status: TipoDemandaStatusEnum;
 
-  @ApiProperty({ example: false })
-  @IsBoolean()
-  isEstrutural: boolean;
+    @ApiProperty({ example: false })
+    @IsBoolean()
+    isEstrutural: boolean;
 
-  @ApiPropertyOptional({ example: '2026-12-31' })
-  @IsOptional()
-  @IsDateString()
-  previsaoFimData?: string;
+    @ApiPropertyOptional({ example: '2026-12-31' })
+    @IsOptional()
+    @IsDateString()
+    previsaoFimData?: string;
 
-  @ApiPropertyOptional({ example: [1, 2] })
-  @IsOptional()
-  @IsArray()
-  @IsNumber({}, { each: true })
-  tagIds?: number[];
+    @ApiPropertyOptional({ example: [1, 2] })
+    @IsOptional()
+    @IsArray()
+    @IsNumber({}, { each: true })
+    tagIds?: number[];
 
-  @ApiPropertyOptional({ example: [3, 4], description: 'Membros adicionais a atribuir na criação (gestor-only).' })
-  @IsOptional()
-  @IsArray()
-  @IsNumber({}, { each: true })
-  usuarioIds?: number[];
+    @ApiPropertyOptional({ example: [3, 4], description: 'Membros adicionais a atribuir na criação (gestor-only).' })
+    @IsOptional()
+    @IsArray()
+    @IsNumber({}, { each: true })
+    usuarioIds?: number[];
 }

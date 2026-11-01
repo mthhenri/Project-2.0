@@ -9,16 +9,16 @@ import { ChatConversaFonte, ChatMensagemIndiceRepository, ResultadoDaPesquisa } 
  * `body`) e o corpo da requisição é espalhado nos parâmetros (`document`, `settings`, `mappings`, `query`, `aggs`...).
  */
 export interface ClienteElasticsearchChat {
-  indices: {
-    exists(parametros: { index: string }): Promise<boolean>;
-    create(parametros: { index: string } & Record<string, unknown>): Promise<unknown>;
-    putMapping(parametros: { index: string } & Record<string, unknown>): Promise<unknown>;
-  };
-  index(parametros: { index: string; id: string; document: unknown; refresh: 'wait_for' }): Promise<unknown>;
-  search(parametros: { index: string } & Record<string, unknown>): Promise<{
-    hits: { hits: { _source?: ChatMensagemFonte & Partial<ChatConversaFonte> }[] };
-    aggregations?: { conversas?: { buckets: BaldeConversa[] }; periodos?: { buckets: BaldeTokensPorPeriodo[] } };
-  }>;
+    indices: {
+        exists(parametros: { index: string }): Promise<boolean>;
+        create(parametros: { index: string } & Record<string, unknown>): Promise<unknown>;
+        putMapping(parametros: { index: string } & Record<string, unknown>): Promise<unknown>;
+    };
+    index(parametros: { index: string; id: string; document: unknown; refresh: 'wait_for' }): Promise<unknown>;
+    search(parametros: { index: string } & Record<string, unknown>): Promise<{
+        hits: { hits: { _source?: ChatMensagemFonte & Partial<ChatConversaFonte> }[] };
+        aggregations?: { conversas?: { buckets: BaldeConversa[] }; periodos?: { buckets: BaldeTokensPorPeriodo[] } };
+    }>;
 }
 
 /**
@@ -26,8 +26,8 @@ export interface ClienteElasticsearchChat {
  * (Elastic Cloud) ou usuário e senha; sem nenhuma, conecta sem autenticar (só para um servidor de desenvolvimento com a segurança desligada).
  */
 export function criarClienteElasticsearchChat({ url, usuario, senha, apiKey }: ConfiguracaoElasticsearch): ClienteElasticsearchChat {
-  const autenticacao = apiKey ? { apiKey } : usuario && senha ? { username: usuario, password: senha } : undefined;
-  return new Client({ node: url, ...(autenticacao ? { auth: autenticacao } : {}) }) as unknown as ClienteElasticsearchChat;
+    const autenticacao = apiKey ? { apiKey } : usuario && senha ? { username: usuario, password: senha } : undefined;
+    return new Client({ node: url, ...(autenticacao ? { auth: autenticacao } : {}) }) as unknown as ClienteElasticsearchChat;
 }
 
 /**
@@ -35,34 +35,34 @@ export function criarClienteElasticsearchChat({ url, usuario, senha, apiKey }: C
  * em `ChatMensagemIndiceRepository`, igual à do OpenSearch; aqui só a fala com o cliente do Elasticsearch.
  */
 export class ChatMensagemElasticsearchRepository extends ChatMensagemIndiceRepository {
-  protected readonly servico = 'Elasticsearch';
+    protected readonly servico = 'Elasticsearch';
 
-  constructor(private readonly cliente: ClienteElasticsearchChat) {
-    super();
-  }
+    constructor(private readonly cliente: ClienteElasticsearchChat) {
+        super();
+    }
 
-  protected async existeIndice(indice: string): Promise<boolean> {
-    return this.cliente.indices.exists({ index: indice });
-  }
+    protected async existeIndice(indice: string): Promise<boolean> {
+        return this.cliente.indices.exists({ index: indice });
+    }
 
-  protected async criarIndice(indice: string, mapeamento: unknown): Promise<void> {
-    await this.cliente.indices.create({ index: indice, ...(mapeamento as Record<string, unknown>) });
-  }
+    protected async criarIndice(indice: string, mapeamento: unknown): Promise<void> {
+        await this.cliente.indices.create({ index: indice, ...(mapeamento as Record<string, unknown>) });
+    }
 
-  protected async acrescentarCampos(indice: string, propriedades: unknown): Promise<void> {
-    await this.cliente.indices.putMapping({ index: indice, properties: propriedades as Record<string, unknown> });
-  }
+    protected async acrescentarCampos(indice: string, propriedades: unknown): Promise<void> {
+        await this.cliente.indices.putMapping({ index: indice, properties: propriedades as Record<string, unknown> });
+    }
 
-  protected async gravarDocumento(indice: string, id: string, documento: unknown): Promise<void> {
-    await this.cliente.index({ index: indice, id, document: documento, refresh: 'wait_for' });
-  }
+    protected async gravarDocumento(indice: string, id: string, documento: unknown): Promise<void> {
+        await this.cliente.index({ index: indice, id, document: documento, refresh: 'wait_for' });
+    }
 
-  protected async pesquisar(indice: string, consulta: unknown): Promise<ResultadoDaPesquisa> {
-    const resposta = await this.cliente.search({ index: indice, ...(consulta as Record<string, unknown>) });
-    return {
-      fontes: resposta.hits.hits.flatMap((acerto) => (acerto._source ? [acerto._source] : [])),
-      baldes: resposta.aggregations?.conversas?.buckets ?? [],
-      periodosDeTokens: resposta.aggregations?.periodos?.buckets ?? [],
-    };
-  }
+    protected async pesquisar(indice: string, consulta: unknown): Promise<ResultadoDaPesquisa> {
+        const resposta = await this.cliente.search({ index: indice, ...(consulta as Record<string, unknown>) });
+        return {
+            fontes: resposta.hits.hits.flatMap((acerto) => (acerto._source ? [acerto._source] : [])),
+            baldes: resposta.aggregations?.conversas?.buckets ?? [],
+            periodosDeTokens: resposta.aggregations?.periodos?.buckets ?? [],
+        };
+    }
 }

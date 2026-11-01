@@ -7,14 +7,14 @@ import { TipoDemandaStatusEnum } from '../../enums/tipo-demanda-status.enum';
  * O complemento `Interno` precede o verbo `Alterar` (§5.1).
  */
 export class DemandaInternoAlterarDto {
-  id: number;
-  demandaPaiId?: number | null;
-  nome?: string;
-  descricaoTecnica?: string | null;
-  descricaoCliente?: string | null;
-  documentacao?: string | null;
-  horasEstimadas?: number;
-  status?: TipoDemandaStatusEnum;
-  isEstrutural?: boolean;
-  previsaoFimData?: string | null;
+    id: number;
+    demandaPaiId?: number | null;
+    nome?: string;
+    descricaoTecnica?: string | null;
+    descricaoCliente?: string | null;
+    documentacao?: string | null;
+    horasEstimadas?: number;
+    status?: TipoDemandaStatusEnum;
+    isEstrutural?: boolean;
+    previsaoFimData?: string | null;
 }

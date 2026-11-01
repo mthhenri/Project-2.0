@@ -15,49 +15,49 @@ import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-d
  */
 @Injectable()
 export class JustificarPontoExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.JUSTIFICAR_PONTO;
+    readonly tipo = TipoPropostaIaEnum.JUSTIFICAR_PONTO;
 
-  constructor(
-    private readonly pontoJustificativaService: PontoJustificativaService,
-    private readonly pontoJustificativaRepositorio: PontoJustificativaRepository,
-  ) {}
+    constructor(
+        private readonly pontoJustificativaService: PontoJustificativaService,
+        private readonly pontoJustificativaRepositorio: PontoJustificativaRepository,
+    ) {}
 
-  validar(dados: Record<string, unknown>): void {
-    validarDadosDaProposta(PropostaJustificarPontoDadosDto, dados);
-  }
-
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    this.exigirGestor(usuarioAtivo);
-    const entrada = validarDadosDaProposta(PropostaJustificarPontoDadosDto, dados);
-    if (entrada.usuarioId === usuarioAtivo.sub) throw new BusinessException('Só se justifica o ponto de outra pessoa, não o seu');
-    const criada = (
-      await this.pontoJustificativaService.criar(
-        { usuarioId: entrada.usuarioId, diaData: entrada.diaData, nome: entrada.nome, descricao: entrada.descricao, horasCobertas: entrada.horasCobertas },
-        usuarioAtivo,
-      )
-    ).dados;
-    return { justificativaId: criada?.id, usuarioId: entrada.usuarioId, diaData: entrada.diaData, nome: entrada.nome, descricao: entrada.descricao, horasCobertas: entrada.horasCobertas };
-  }
-
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    this.exigirGestor(usuarioAtivo);
-    const justificativaId = Number(resultado['justificativaId']);
-    if (!Number.isInteger(justificativaId)) throw new BusinessException('Não há justificativa a desfazer nesta proposta');
-    const atual = await this.pontoJustificativaRepositorio.recuperar({ id: justificativaId });
-    if (!atual) throw new BusinessException('A justificativa já foi excluída: não há o que desfazer');
-    if (atual.nome !== resultado['nome'] || atual.descricao !== resultado['descricao'] || Number(atual.horasCobertas) !== Number(resultado['horasCobertas'])) {
-      throw new BusinessException('A justificativa mudou depois: não dá para desfazer com segurança');
+    validar(dados: Record<string, unknown>): void {
+        validarDadosDaProposta(PropostaJustificarPontoDadosDto, dados);
     }
-    await this.pontoJustificativaService.excluir({ id: justificativaId });
-  }
 
-  /** Obsoleta quando o dia já tem justificativa dessa pessoa (alguém justificou à mão). */
-  async estaObsoleta(dados: Record<string, unknown>, _usuarioAtivo: JwtPayload): Promise<boolean> {
-    const entrada = validarDadosDaProposta(PropostaJustificarPontoDadosDto, dados);
-    return this.pontoJustificativaRepositorio.validarPorUsuarioEDia({ usuarioId: entrada.usuarioId, diaData: entrada.diaData });
-  }
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        this.exigirGestor(usuarioAtivo);
+        const entrada = validarDadosDaProposta(PropostaJustificarPontoDadosDto, dados);
+        if (entrada.usuarioId === usuarioAtivo.sub) throw new BusinessException('Só se justifica o ponto de outra pessoa, não o seu');
+        const criada = (
+            await this.pontoJustificativaService.criar(
+                { usuarioId: entrada.usuarioId, diaData: entrada.diaData, nome: entrada.nome, descricao: entrada.descricao, horasCobertas: entrada.horasCobertas },
+                usuarioAtivo,
+            )
+        ).dados;
+        return { justificativaId: criada?.id, usuarioId: entrada.usuarioId, diaData: entrada.diaData, nome: entrada.nome, descricao: entrada.descricao, horasCobertas: entrada.horasCobertas };
+    }
 
-  private exigirGestor(usuarioAtivo: JwtPayload): void {
-    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Só o gestor justifica o ponto');
-  }
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        this.exigirGestor(usuarioAtivo);
+        const justificativaId = Number(resultado['justificativaId']);
+        if (!Number.isInteger(justificativaId)) throw new BusinessException('Não há justificativa a desfazer nesta proposta');
+        const atual = await this.pontoJustificativaRepositorio.recuperar({ id: justificativaId });
+        if (!atual) throw new BusinessException('A justificativa já foi excluída: não há o que desfazer');
+        if (atual.nome !== resultado['nome'] || atual.descricao !== resultado['descricao'] || Number(atual.horasCobertas) !== Number(resultado['horasCobertas'])) {
+            throw new BusinessException('A justificativa mudou depois: não dá para desfazer com segurança');
+        }
+        await this.pontoJustificativaService.excluir({ id: justificativaId });
+    }
+
+    /** Obsoleta quando o dia já tem justificativa dessa pessoa (alguém justificou à mão). */
+    async estaObsoleta(dados: Record<string, unknown>, _usuarioAtivo: JwtPayload): Promise<boolean> {
+        const entrada = validarDadosDaProposta(PropostaJustificarPontoDadosDto, dados);
+        return this.pontoJustificativaRepositorio.validarPorUsuarioEDia({ usuarioId: entrada.usuarioId, diaData: entrada.diaData });
+    }
+
+    private exigirGestor(usuarioAtivo: JwtPayload): void {
+        if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Só o gestor justifica o ponto');
+    }
 }

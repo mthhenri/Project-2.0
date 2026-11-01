@@ -1,3 +1,3 @@
 export class ProjetoVolumeVigenciaListarDto {
-  projetoId: number;
+    projetoId: number;
 }

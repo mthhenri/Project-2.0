@@ -6,21 +6,13 @@ import { ExecucaoTimerComponent } from '../../../execucao/components/execucao-ti
  * da atividade pode usar no cabeçalho. O cronômetro só existe para a execução do usuário logado: das dos outros não se tem o início.
  */
 @Component({
-  selector: 'app-atividade-em-execucao',
-  standalone: true,
-  imports: [ExecucaoTimerComponent],
-  template: `
-    <span class="atividade-em-execucao" role="status">
-      <span class="atividade-em-execucao__ponto" aria-hidden="true"></span>
-      Em execução
-      @if (inicio(); as inicioData) {
-        <app-execucao-timer [inicioData]="inicioData" tamanho="compacto" />
-      }
-    </span>
-  `,
-  styleUrl: './atividade-em-execucao.component.scss',
+    selector: 'app-atividade-em-execucao',
+    standalone: true,
+    imports: [ExecucaoTimerComponent],
+    templateUrl: './atividade-em-execucao.component.html',
+    styleUrl: './atividade-em-execucao.component.scss',
 })
 export class AtividadeEmExecucaoComponent {
-  /** O instante em que a execução do usuário logado começou; sem ele, só o selo. */
-  readonly inicio = input<Date | null>(null);
+    /** O instante em que a execução do usuário logado começou; sem ele, só o selo. */
+    readonly inicio = input<Date | null>(null);
 }

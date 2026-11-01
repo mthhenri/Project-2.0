@@ -1,3 +1,3 @@
 export class DemandaTagsListarDto {
-  demandaId: number;
+    demandaId: number;
 }

@@ -14,28 +14,28 @@ export type MarkdownInlineNo =
   | { tipo: 'link'; url: string; filhos: MarkdownInlineNo[] };
 
 export interface MarkdownItemLista {
-  /** `null` quando o item não é de tarefa (`- [ ]` / `- [x]`). */
-  tarefa: 'marcada' | 'desmarcada' | null;
-  filhos: MarkdownInlineNo[];
-  sublistas: MarkdownListaNo[];
+    /** `null` quando o item não é de tarefa (`- [ ]` / `- [x]`). */
+    tarefa: 'marcada' | 'desmarcada' | null;
+    filhos: MarkdownInlineNo[];
+    sublistas: MarkdownListaNo[];
 }
 
 export interface MarkdownListaNo {
-  tipo: 'lista';
-  ordenada: boolean;
-  /** Número do primeiro item (só importa em lista ordenada). */
-  inicio: number;
-  itens: MarkdownItemLista[];
+    tipo: 'lista';
+    ordenada: boolean;
+    /** Número do primeiro item (só importa em lista ordenada). */
+    inicio: number;
+    itens: MarkdownItemLista[];
 }
 
 export type MarkdownAlinhamento = 'esquerda' | 'centro' | 'direita' | null;
 
 /** Tabela (só com `opcoes.tabelas`, P-039): `alinhamentos` e cada linha têm uma entrada por coluna do cabeçalho. */
 export interface MarkdownTabelaNo {
-  tipo: 'tabela';
-  alinhamentos: MarkdownAlinhamento[];
-  cabecalho: MarkdownInlineNo[][];
-  linhas: MarkdownInlineNo[][][];
+    tipo: 'tabela';
+    alinhamentos: MarkdownAlinhamento[];
+    cabecalho: MarkdownInlineNo[][];
+    linhas: MarkdownInlineNo[][][];
 }
 
 /** Blocos de nível superior: títulos, parágrafos, listas, citações, código, régua e (opcional) tabela. */

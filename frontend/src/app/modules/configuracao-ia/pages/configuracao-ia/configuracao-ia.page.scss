@@ -1,155 +1,155 @@
 .configuracao-ia {
-  padding: 1.5rem;
+    padding: 1.5rem;
 
-  &__cabecalho {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  &__titulo-grupo {
-    display: flex;
-    align-items: baseline;
-    gap: 0.75rem;
-  }
-
-  &__titulo {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--p-primary-600);
-    margin: 0;
-  }
-
-  &__contador {
-    font-size: 0.875rem;
-    color: var(--p-text-muted-color);
-  }
-
-  // O liga/desliga da IA fica no cabeçalho, fora das abas: o estado em tempo real, o interruptor e a explicação num tooltip.
-  &__liga {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  &__interruptor {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.625rem;
-    cursor: pointer;
-
-    // O interruptor não encolhe quando o texto ao lado é longo.
-    p-toggleswitch {
-      flex: none;
-    }
-  }
-
-  &__estado-ia {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    color: var(--p-text-muted-color);
-
-    &--ligada {
-      color: var(--p-green-600);
-    }
-  }
-
-  &__info {
-    color: var(--p-text-muted-color);
-    cursor: help;
-  }
-
-  &__aba-erro {
-    margin-left: 0.5rem;
-    color: var(--p-red-500);
-  }
-
-  &__erro {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    border: 1px solid var(--app-surface-200);
-    border-radius: 8px;
-    color: var(--p-red-500);
-  }
-
-  &__esqueleto {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem 0;
-  }
-
-  // Duas colunas: as abas com a barra de salvar e o histórico fixo à direita (cerca de um sexto da largura), visível em qualquer aba.
-  // Empilha em telas estreitas ou verticais.
-  &__grade {
-    display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(15rem, 1fr);
-    gap: 1.5rem;
-    align-items: start;
-
-    @media (max-width: 1100px) {
-      grid-template-columns: minmax(0, 1fr);
+    &__cabecalho {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
     }
 
-    &--recarregando {
-      opacity: 0.6;
-      pointer-events: none;
-      transition: opacity 0.15s;
+    &__titulo-grupo {
+        display: flex;
+        align-items: baseline;
+        gap: 0.75rem;
     }
-  }
 
-  &__principal {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    min-width: 0;
-  }
-
-  // O painel da aba traz um respiro embaixo que, junto da barra de salvar, empurra a tela além de 1366×768; a barra já separa o conteúdo.
-  &__principal ::ng-deep .p-tabpanels {
-    padding-bottom: 0;
-  }
-
-  // O histórico acompanha a rolagem e rola por dentro quando passa da altura da janela.
-  &__historico {
-    position: sticky;
-    top: 1rem;
-    display: flex;
-    flex-direction: column;
-    max-height: calc(100vh - 14rem);
-
-    @media (max-width: 1100px) {
-      position: static;
-      max-height: 28rem;
+    &__titulo {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--p-primary-600);
+        margin: 0;
     }
-  }
 
-  // A barra de salvar fica na base da janela enquanto a aba rola.
-  &__acoes {
-    position: sticky;
-    bottom: 0;
-    z-index: 1;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--app-surface-200);
-    border-radius: 8px;
-    background: var(--app-surface-0);
-  }
+    &__contador {
+        font-size: 0.875rem;
+        color: var(--p-text-muted-color);
+    }
 
-  &__dica {
-    margin-right: auto;
-    color: var(--p-text-muted-color);
-    font-size: 0.8125rem;
-  }
+    // O liga/desliga da IA fica no cabeçalho, fora das abas: o estado em tempo real, o interruptor e a explicação num tooltip.
+    &__liga {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    &__interruptor {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.625rem;
+        cursor: pointer;
+
+        // O interruptor não encolhe quando o texto ao lado é longo.
+        p-toggleswitch {
+            flex: none;
+        }
+    }
+
+    &__estado-ia {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--p-text-muted-color);
+
+        &--ligada {
+            color: var(--p-green-600);
+        }
+    }
+
+    &__info {
+        color: var(--p-text-muted-color);
+        cursor: help;
+    }
+
+    &__aba-erro {
+        margin-left: 0.5rem;
+        color: var(--p-red-500);
+    }
+
+    &__erro {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid var(--app-surface-200);
+        border-radius: 8px;
+        color: var(--p-red-500);
+    }
+
+    &__esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem 0;
+    }
+
+    // Duas colunas: as abas com a barra de salvar e o histórico fixo à direita (cerca de um sexto da largura), visível em qualquer aba.
+    // Empilha em telas estreitas ou verticais.
+    &__grade {
+        display: grid;
+        grid-template-columns: minmax(0, 5fr) minmax(15rem, 1fr);
+        gap: 1.5rem;
+        align-items: start;
+
+        @media (max-width: 1100px) {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        &--recarregando {
+            opacity: 0.6;
+            pointer-events: none;
+            transition: opacity 0.15s;
+        }
+    }
+
+    &__principal {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        min-width: 0;
+    }
+
+    // O painel da aba traz um respiro embaixo que, junto da barra de salvar, empurra a tela além de 1366×768; a barra já separa o conteúdo.
+    &__principal ::ng-deep .p-tabpanels {
+        padding-bottom: 0;
+    }
+
+    // O histórico acompanha a rolagem e rola por dentro quando passa da altura da janela.
+    &__historico {
+        position: sticky;
+        top: 1rem;
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 14rem);
+
+        @media (max-width: 1100px) {
+            position: static;
+            max-height: 28rem;
+        }
+    }
+
+    // A barra de salvar fica na base da janela enquanto a aba rola.
+    &__acoes {
+        position: sticky;
+        bottom: 0;
+        z-index: 1;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--app-surface-200);
+        border-radius: 8px;
+        background: var(--app-surface-0);
+    }
+
+    &__dica {
+        margin-right: auto;
+        color: var(--p-text-muted-color);
+        font-size: 0.8125rem;
+    }
 }

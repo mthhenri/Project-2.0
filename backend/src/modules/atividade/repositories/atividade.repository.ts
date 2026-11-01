@@ -5,160 +5,226 @@ import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 import { AtividadeNomeResumoDto, AtividadeNomeBuscarDto } from '@project20/shared';
 import { Atividade } from '../domain/models/atividade.model';
 import {
-  AtividadeCriadaDto,
-  AtividadeRecuperadaDto,
-  AtividadeAlteradaDto,
-  AtividadeResumoDto,
-  AtividadeListarDto,
-  TagResumoDto,
-  AtividadeRecuperarDto,
-  AtividadeExcluirDto,
-  AtividadeInternoAlterarDto,
-  AtividadeTagsListarDto,
-  AtividadeTagsAlterarDto,
-  DemandaAcessoVerificarDto,
+    AtividadeCriadaDto,
+    AtividadeRecuperadaDto,
+    AtividadeAlteradaDto,
+    AtividadeResumoDto,
+    AtividadeListarDto,
+    TagResumoDto,
+    AtividadeRecuperarDto,
+    AtividadeExcluirDto,
+    AtividadeInternoAlterarDto,
+    AtividadeTagsListarDto,
+    AtividadeTagsAlterarDto,
+    DemandaAcessoVerificarDto,
 } from '@project20/shared';
 import { AtividadeRestaurarDto, AtividadeRestauradaDto } from '@project20/shared';
 
 /** A prioridade da atividade como objeto (`codigo`, `descricao`, `ordem`, `cor`), sempre lida de `atividade.tipo_atividade_prioridade_id`. */
-const SELECIONAR_PRIORIDADE = `(SELECT JSON_BUILD_OBJECT(
-            'codigo',    tipo_atividade_prioridade.codigo,
-            'descricao', tipo_atividade_prioridade.descricao,
-            'ordem',     tipo_atividade_prioridade.ordem,
-            'cor',       tipo_atividade_prioridade.cor)
-          FROM tipo_atividade_prioridade
-         WHERE tipo_atividade_prioridade.id = atividade.tipo_atividade_prioridade_id) AS prioridade`;
+const SELECIONAR_PRIORIDADE = `
+    (
+        SELECT
+            JSON_BUILD_OBJECT(
+                'codigo',
+                tipo_atividade_prioridade.codigo,
+                'descricao',
+                tipo_atividade_prioridade.descricao,
+                'ordem',
+                tipo_atividade_prioridade.ordem,
+                'cor',
+                tipo_atividade_prioridade.cor
+            )
+        FROM
+            tipo_atividade_prioridade
+        WHERE
+            tipo_atividade_prioridade.id = atividade.tipo_atividade_prioridade_id
+    ) AS prioridade
+`;
 
 type AtividadeInserirDados = Omit<Atividade, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
 
 @Injectable()
 export class AtividadeRepository extends BaseRepository<Atividade> {
-  constructor(
-    @Inject(DATABASE_CONNECTION)
-    conexaoBancoDados: Knex,
-  ) {
-    super(conexaoBancoDados, 'atividade');
-  }
+    constructor(
+        @Inject(DATABASE_CONNECTION)
+        conexaoBancoDados: Knex,
+    ) {
+        super(conexaoBancoDados, 'atividade');
+    }
 
-  /**
+    /**
    * Insere nova atividade e retorna os dados criados.
    */
-  async inserir(dados: AtividadeInserirDados): Promise<AtividadeCriadaDto> {
-    const resultado = await this.executarConsulta<AtividadeCriadaDto>(
-      `INSERT INTO atividade (demanda_id, usuario_id, nome, tipo_atividade_status_id, tipo_atividade_prioridade_id, created_date, updated_date, is_deleted)
-       SELECT :demandaId, :usuarioId, :nome,
-         (SELECT tipo_atividade_status.id FROM tipo_atividade_status
-            WHERE tipo_atividade_status.codigo = :status AND tipo_atividade_status.is_deleted = false),
-         (SELECT tipo_atividade_prioridade.id FROM tipo_atividade_prioridade
-            WHERE tipo_atividade_prioridade.codigo = :prioridade AND tipo_atividade_prioridade.is_deleted = false),
-         NOW(), NOW(), false
-       RETURNING
-         id,
-         demanda_id      AS "demandaId",
-         usuario_id      AS "usuarioId",
-         nome,
-         (SELECT tipo_atividade_status.codigo FROM tipo_atividade_status
-            WHERE tipo_atividade_status.id = atividade.tipo_atividade_status_id) AS status,
-         ${SELECIONAR_PRIORIDADE},
-         created_date    AS "createdDate"`,
-      {
-        demandaId:     dados.demandaId,
-        usuarioId:     dados.usuarioId,
-        nome:          dados.nome,
-        status:        dados.status,
-        prioridade:    dados.prioridade,
-      },
-    );
-    return resultado[0];
-  }
+    async inserir(dados: AtividadeInserirDados): Promise<AtividadeCriadaDto> {
+        const resultado = await this.executarConsulta<AtividadeCriadaDto>(
+            `
+                INSERT INTO
+                    atividade (
+                        demanda_id,
+                        usuario_id,
+                        nome,
+                        tipo_atividade_status_id,
+                        tipo_atividade_prioridade_id,
+                        created_date,
+                        updated_date,
+                        is_deleted
+                    )
+                SELECT
+                    :demandaId,
+                    :usuarioId,
+                    :nome,
+                    (
+                        SELECT
+                            tipo_atividade_status.id
+                        FROM
+                            tipo_atividade_status
+                        WHERE
+                            tipo_atividade_status.codigo = :status
+                            AND tipo_atividade_status.is_deleted = false
+                    ),
+                    (
+                        SELECT
+                            tipo_atividade_prioridade.id
+                        FROM
+                            tipo_atividade_prioridade
+                        WHERE
+                            tipo_atividade_prioridade.codigo = :prioridade
+                            AND tipo_atividade_prioridade.is_deleted = false
+                    ),
+                    NOW(),
+                    NOW(),
+                    false
+                RETURNING
+                    id,
+                    demanda_id AS "demandaId",
+                    usuario_id AS "usuarioId",
+                    nome,
+                    (
+                        SELECT
+                            tipo_atividade_status.codigo
+                        FROM
+                            tipo_atividade_status
+                        WHERE
+                            tipo_atividade_status.id = atividade.tipo_atividade_status_id
+                    ) AS status,
+                    ${SELECIONAR_PRIORIDADE},
+                    created_date AS "createdDate"
+            `,
+            {
+                demandaId:     dados.demandaId,
+                usuarioId:     dados.usuarioId,
+                nome:          dados.nome,
+                status:        dados.status,
+                prioridade:    dados.prioridade,
+            },
+        );
+        return resultado[0];
+    }
 
-  /**
+    /**
    * Busca atividades pelo nome (contém, sem diferenciar maiúsculas), para a lista de sugestões do `#` do chat entre colaboradores. Com `usuarioId` só
    * entram as atividades de demandas em que a pessoa está atribuída (a regra de `validarAcessoDemanda`); `null` não restringe. Demanda excluída não entra.
    */
-  async buscarPorNome(dto: AtividadeNomeBuscarDto): Promise<AtividadeNomeResumoDto[]> {
-    return this.executarConsulta<AtividadeNomeResumoDto>(
-      `SELECT
-         atividade.id,
-         atividade.nome,
-         tipo_atividade_status.codigo AS status,
-         atividade.demanda_id         AS "demandaId",
-         demanda.nome                 AS "nomeDemanda",
-         demanda.projeto_id           AS "projetoId"
-       FROM atividade
-       INNER JOIN tipo_atividade_status
-         ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
-         AND tipo_atividade_status.is_deleted = false
-       INNER JOIN demanda
-         ON demanda.id = atividade.demanda_id
-         AND demanda.is_deleted = false
-       WHERE atividade.is_deleted = false
-         AND atividade.nome ILIKE :padrao
-         AND (
-           CAST(:usuarioId AS integer) IS NULL
-           OR EXISTS (
-             SELECT 1
-             FROM demanda_usuario
-             WHERE demanda_usuario.demanda_id = atividade.demanda_id
-               AND demanda_usuario.usuario_id = :usuarioId
-               AND demanda_usuario.is_deleted = false
-           )
-         )
-       ORDER BY atividade.nome ASC, atividade.id ASC
-       LIMIT :limite`,
-      { padrao: `%${dto.texto.replace(/[\\%_]/g, '\\$&')}%`, usuarioId: dto.usuarioId, limite: dto.limite },
-    );
-  }
+    async buscarPorNome(dto: AtividadeNomeBuscarDto): Promise<AtividadeNomeResumoDto[]> {
+        return this.executarConsulta<AtividadeNomeResumoDto>(
+            `
+                SELECT
+                    atividade.id,
+                    atividade.nome,
+                    tipo_atividade_status.codigo AS status,
+                    atividade.demanda_id AS "demandaId",
+                    demanda.nome AS "nomeDemanda",
+                    demanda.projeto_id AS "projetoId"
+                FROM
+                    atividade
+                    INNER JOIN tipo_atividade_status ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
+                    AND tipo_atividade_status.is_deleted = false
+                    INNER JOIN demanda ON demanda.id = atividade.demanda_id
+                    AND demanda.is_deleted = false
+                WHERE
+                    atividade.is_deleted = false
+                    AND atividade.nome ILIKE :padrao
+                    AND (
+                        CAST(:usuarioId AS integer) IS NULL
+                        OR EXISTS (
+                            SELECT
+                                1
+                            FROM
+                                demanda_usuario
+                            WHERE
+                                demanda_usuario.demanda_id = atividade.demanda_id
+                                AND demanda_usuario.usuario_id = :usuarioId
+                                AND demanda_usuario.is_deleted = false
+                        )
+                    )
+                ORDER BY
+                    atividade.nome ASC,
+                    atividade.id ASC
+                LIMIT
+                    :limite
+            `,
+            { padrao: `%${dto.texto.replace(/[\\%_]/g, '\\$&')}%`, usuarioId: dto.usuarioId, limite: dto.limite },
+        );
+    }
 
-  /**
+    /**
    * Recupera atividade por ID com JOIN ao usuário executor.
    * Retorna null se não encontrada ou deletada.
    */
-  async recuperar(dto: AtividadeRecuperarDto): Promise<AtividadeRecuperadaDto | null> {
-    const resultado = await this.executarConsulta<AtividadeRecuperadaDto>(
-      `SELECT
-         atividade.id,
-         atividade.demanda_id      AS "demandaId",
-         demanda.nome              AS "nomeDemanda",
-         projeto.id                AS "projetoId",
-         projeto.nome              AS "nomeProjeto",
-         atividade.usuario_id      AS "usuarioId",
-         usuario.nome_completo     AS "nomeUsuario",
-         tipo_usuario.codigo       AS "usuarioTipo",
-         atividade.nome,
-         tipo_atividade_status.codigo AS status,
-         ${SELECIONAR_PRIORIDADE},
-         (SELECT COUNT(*)::int
-            FROM atividade atividade_do_usuario
-           WHERE atividade_do_usuario.usuario_id = atividade.usuario_id
-             AND atividade_do_usuario.is_deleted = false
-             AND (atividade_do_usuario.created_date < atividade.created_date
-                  OR (atividade_do_usuario.created_date = atividade.created_date
-                      AND atividade_do_usuario.id <= atividade.id))) AS "posicaoAtividadeUsuario",
-         atividade.created_date    AS "createdDate"
-       FROM atividade
-       INNER JOIN usuario
-         ON usuario.id = atividade.usuario_id
-         AND usuario.is_deleted = false
-       INNER JOIN tipo_usuario
-         ON tipo_usuario.id = usuario.tipo_usuario_id
-         AND tipo_usuario.is_deleted = false
-       INNER JOIN tipo_atividade_status
-         ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
-         AND tipo_atividade_status.is_deleted = false
-       INNER JOIN demanda
-         ON demanda.id = atividade.demanda_id
-       INNER JOIN projeto
-         ON projeto.id = demanda.projeto_id
-       WHERE atividade.id = :id
-         AND atividade.is_deleted = false
-       LIMIT 1`,
-      { id: dto.id },
-    );
-    return resultado[0] ?? null;
-  }
+    async recuperar(dto: AtividadeRecuperarDto): Promise<AtividadeRecuperadaDto | null> {
+        const resultado = await this.executarConsulta<AtividadeRecuperadaDto>(
+            `
+                SELECT
+                    atividade.id,
+                    atividade.demanda_id AS "demandaId",
+                    demanda.nome AS "nomeDemanda",
+                    projeto.id AS "projetoId",
+                    projeto.nome AS "nomeProjeto",
+                    atividade.usuario_id AS "usuarioId",
+                    usuario.nome_completo AS "nomeUsuario",
+                    tipo_usuario.codigo AS "usuarioTipo",
+                    atividade.nome,
+                    tipo_atividade_status.codigo AS status,
+                    ${SELECIONAR_PRIORIDADE},
+                    (
+                        SELECT
+                            COUNT(*)::int
+                        FROM
+                            atividade atividade_do_usuario
+                        WHERE
+                            atividade_do_usuario.usuario_id = atividade.usuario_id
+                            AND atividade_do_usuario.is_deleted = false
+                            AND (
+                                atividade_do_usuario.created_date < atividade.created_date
+                                OR (
+                                    atividade_do_usuario.created_date = atividade.created_date
+                                    AND atividade_do_usuario.id <= atividade.id
+                                )
+                            )
+                    ) AS "posicaoAtividadeUsuario",
+                    atividade.created_date AS "createdDate"
+                FROM
+                    atividade
+                    INNER JOIN usuario ON usuario.id = atividade.usuario_id
+                    AND usuario.is_deleted = false
+                    INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
+                    AND tipo_usuario.is_deleted = false
+                    INNER JOIN tipo_atividade_status ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
+                    AND tipo_atividade_status.is_deleted = false
+                    INNER JOIN demanda ON demanda.id = atividade.demanda_id
+                    INNER JOIN projeto ON projeto.id = demanda.projeto_id
+                WHERE
+                    atividade.id = :id
+                    AND atividade.is_deleted = false
+                LIMIT
+                    1
+            `,
+            { id: dto.id },
+        );
+        return resultado[0] ?? null;
+    }
 
-  /**
+    /**
    * Lista atividades com paginação e filtros opcionais.
    * A listagem não é mais escopada a uma única demanda: cruza atividade →
    * demanda → projeto para permitir busca textual por nome de projeto, demanda
@@ -166,349 +232,487 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
    * data de criação. O controle de acesso (gestor x desenvolvedor) é resolvido
    * na service via o filtro usuarioId.
    */
-  async listar(
-    filtros: AtividadeListarDto,
-  ): Promise<{ itens: AtividadeResumoDto[]; total: number }> {
-    const pagina         = filtros.pagina ?? 1;
-    const itensPorPagina = filtros.itensPorPagina ?? 20;
-    const parametros: Record<string, unknown> = {};
-    const condicoes: string[] = [
-      'atividade.is_deleted = false',
-      'demanda.is_deleted = false',
-      'projeto.is_deleted = false',
-    ];
+    async listar(
+        filtros: AtividadeListarDto,
+    ): Promise<{ itens: AtividadeResumoDto[]; total: number }> {
+        const pagina         = filtros.pagina ?? 1;
+        const itensPorPagina = filtros.itensPorPagina ?? 20;
+        const parametros: Record<string, unknown> = {};
+        const condicoes: string[] = [
+            'atividade.is_deleted = false',
+            'demanda.is_deleted = false',
+            'projeto.is_deleted = false',
+        ];
 
-    if (filtros.demandaId !== undefined) {
-      condicoes.push('atividade.demanda_id = :demandaId');
-      parametros.demandaId = filtros.demandaId;
+        if (filtros.demandaId !== undefined) {
+            condicoes.push('atividade.demanda_id = :demandaId');
+            parametros.demandaId = filtros.demandaId;
+        }
+
+        if (filtros.usuarioId !== undefined) {
+            condicoes.push('atividade.usuario_id = :usuarioId');
+            parametros.usuarioId = filtros.usuarioId;
+        }
+
+        if (filtros.status !== undefined && filtros.status.length > 0) {
+            condicoes.push('tipo_atividade_status.codigo = ANY (:status)');
+            parametros.status = filtros.status;
+        }
+
+        if (filtros.busca !== undefined && filtros.busca.trim() !== '') {
+            condicoes.push(
+                `
+                    (
+                        atividade.nome ILIKE :busca
+                        OR demanda.nome ILIKE :busca
+                        OR projeto.nome ILIKE :busca
+                    )
+                `,
+            );
+            parametros.busca = `%${filtros.busca.trim()}%`;
+        }
+
+        if (filtros.dataInicio !== undefined) {
+            condicoes.push('atividade.created_date::date >= :dataInicio');
+            parametros.dataInicio = filtros.dataInicio;
+        }
+
+        if (filtros.dataFim !== undefined) {
+            condicoes.push('atividade.created_date::date <= :dataFim');
+            parametros.dataFim = filtros.dataFim;
+        }
+
+        const clausulaWhere = condicoes.join('\n         AND ');
+        const clausulasJoin = `
+            INNER JOIN usuario ON usuario.id = atividade.usuario_id
+            AND usuario.is_deleted = false
+            INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
+            AND tipo_usuario.is_deleted = false
+            INNER JOIN tipo_atividade_status ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
+            AND tipo_atividade_status.is_deleted = false
+            INNER JOIN tipo_atividade_prioridade ON tipo_atividade_prioridade.id = atividade.tipo_atividade_prioridade_id
+            AND tipo_atividade_prioridade.is_deleted = false
+            INNER JOIN demanda ON demanda.id = atividade.demanda_id
+            INNER JOIN projeto ON projeto.id = demanda.projeto_id
+        `;
+
+        const [{ total }] = await this.executarConsulta<{ total: number }>(
+            `
+                SELECT
+                    COUNT(atividade.id)::int AS total
+                FROM
+                    atividade ${clausulasJoin}
+                WHERE
+                    ${clausulaWhere}
+            `,
+            parametros,
+        );
+
+        const clausulaPaginacao = filtros.allRows
+            ? ''
+            : `
+                LIMIT
+                    ${itensPorPagina}
+                OFFSET
+                    ${(pagina - 1) * itensPorPagina}
+            `;
+        const itens = await this.executarConsulta<AtividadeResumoDto>(
+            `
+                SELECT
+                    atividade.id,
+                    atividade.nome,
+                    tipo_atividade_status.codigo AS status,
+                    ${SELECIONAR_PRIORIDADE},
+                    atividade.usuario_id AS "usuarioId",
+                    usuario.nome_completo AS "nomeUsuario",
+                    tipo_usuario.codigo AS "usuarioTipo",
+                    atividade.demanda_id AS "demandaId",
+                    demanda.nome AS "nomeDemanda",
+                    (
+                        COALESCE(TRIM(demanda.descricao_cliente), '') <> ''
+                    ) AS "demandaTemDescricaoCliente",
+                    (
+                        COALESCE(TRIM(demanda.descricao_tecnica), '') <> ''
+                    ) AS "demandaTemDescricaoTecnica",
+                    (COALESCE(TRIM(demanda.documentacao), '') <> '') AS "demandaTemDocumentacao",
+                    projeto.id AS "projetoId",
+                    projeto.nome AS "nomeProjeto",
+                    (
+                        SELECT
+                            COALESCE(
+                                SUM(
+                                    EXTRACT(
+                                        EPOCH
+                                        FROM
+                                            (execucao.fim_data - execucao.inicio_data)
+                                    ) / 60
+                                ),
+                                0
+                            )::int
+                        FROM
+                            execucao
+                        WHERE
+                            execucao.atividade_id = atividade.id
+                            AND execucao.is_deleted = false
+                            AND execucao.fim_data IS NOT NULL
+                    ) AS "totalMinutosExecutados",
+                    (
+                        SELECT
+                            COUNT(*)::int
+                        FROM
+                            execucao
+                        WHERE
+                            execucao.atividade_id = atividade.id
+                            AND execucao.is_deleted = false
+                    ) AS "totalExecucoes",
+                    execucao_ativa.id AS "execucaoAtivaId",
+                    execucao_ativa.descricao AS "execucaoAtivaDescricao",
+                    (
+                        SELECT
+                            COALESCE(
+                                JSON_AGG(
+                                    JSON_BUILD_OBJECT('id', tag.id, 'nome', tag.nome, 'cor', tag.cor)
+                                    ORDER BY
+                                        tag.nome
+                                ),
+                                '[]'::json
+                            )
+                        FROM
+                            atividade_tag
+                            INNER JOIN tag ON tag.id = atividade_tag.tag_id
+                            AND tag.is_deleted = false
+                        WHERE
+                            atividade_tag.atividade_id = atividade.id
+                            AND atividade_tag.is_deleted = false
+                    ) AS "tags",
+                    atividade.created_date AS "createdDate"
+                FROM
+                    atividade ${clausulasJoin}
+                    LEFT JOIN LATERAL (
+                        SELECT
+                            execucao.id,
+                            execucao.descricao
+                        FROM
+                            execucao
+                        WHERE
+                            execucao.atividade_id = atividade.id
+                            AND execucao.fim_data IS NULL
+                            AND execucao.is_deleted = false
+                        LIMIT
+                            1
+                    ) execucao_ativa ON true
+                WHERE
+                    ${clausulaWhere}
+                ORDER BY
+                    tipo_atividade_prioridade.ordem ASC,
+                    usuario.nome_completo ASC,
+                    atividade.created_date DESC,
+                    atividade.nome ASC ${clausulaPaginacao}
+            `,
+            parametros,
+        );
+
+        return { itens, total };
     }
 
-    if (filtros.usuarioId !== undefined) {
-      condicoes.push('atividade.usuario_id = :usuarioId');
-      parametros.usuarioId = filtros.usuarioId;
-    }
-
-    if (filtros.status !== undefined && filtros.status.length > 0) {
-      condicoes.push('tipo_atividade_status.codigo = ANY(:status)');
-      parametros.status = filtros.status;
-    }
-
-    if (filtros.busca !== undefined && filtros.busca.trim() !== '') {
-      condicoes.push(
-        '(atividade.nome ILIKE :busca OR demanda.nome ILIKE :busca OR projeto.nome ILIKE :busca)',
-      );
-      parametros.busca = `%${filtros.busca.trim()}%`;
-    }
-
-    if (filtros.dataInicio !== undefined) {
-      condicoes.push('atividade.created_date::date >= :dataInicio');
-      parametros.dataInicio = filtros.dataInicio;
-    }
-
-    if (filtros.dataFim !== undefined) {
-      condicoes.push('atividade.created_date::date <= :dataFim');
-      parametros.dataFim = filtros.dataFim;
-    }
-
-    const clausulaWhere = condicoes.join('\n         AND ');
-    const clausulasJoin = `
-       INNER JOIN usuario
-         ON usuario.id = atividade.usuario_id
-         AND usuario.is_deleted = false
-       INNER JOIN tipo_usuario
-         ON tipo_usuario.id = usuario.tipo_usuario_id
-         AND tipo_usuario.is_deleted = false
-       INNER JOIN tipo_atividade_status
-         ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
-         AND tipo_atividade_status.is_deleted = false
-       INNER JOIN tipo_atividade_prioridade
-         ON tipo_atividade_prioridade.id = atividade.tipo_atividade_prioridade_id
-         AND tipo_atividade_prioridade.is_deleted = false
-       INNER JOIN demanda
-         ON demanda.id = atividade.demanda_id
-       INNER JOIN projeto
-         ON projeto.id = demanda.projeto_id`;
-
-    const [{ total }] = await this.executarConsulta<{ total: number }>(
-      `SELECT COUNT(atividade.id)::int AS total
-       FROM atividade
-       ${clausulasJoin}
-       WHERE ${clausulaWhere}`,
-      parametros,
-    );
-
-    const clausulaPaginacao = filtros.allRows
-      ? ''
-      : `LIMIT ${itensPorPagina} OFFSET ${(pagina - 1) * itensPorPagina}`;
-    const itens = await this.executarConsulta<AtividadeResumoDto>(
-      `SELECT
-         atividade.id,
-         atividade.nome,
-         tipo_atividade_status.codigo AS status,
-         ${SELECIONAR_PRIORIDADE},
-         atividade.usuario_id      AS "usuarioId",
-         usuario.nome_completo     AS "nomeUsuario",
-         tipo_usuario.codigo       AS "usuarioTipo",
-         atividade.demanda_id      AS "demandaId",
-         demanda.nome              AS "nomeDemanda",
-         (COALESCE(TRIM(demanda.descricao_cliente), '') <> '') AS "demandaTemDescricaoCliente",
-         (COALESCE(TRIM(demanda.descricao_tecnica), '') <> '') AS "demandaTemDescricaoTecnica",
-         (COALESCE(TRIM(demanda.documentacao), '')      <> '') AS "demandaTemDocumentacao",
-         projeto.id                AS "projetoId",
-         projeto.nome              AS "nomeProjeto",
-         (SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (execucao.fim_data - execucao.inicio_data)) / 60), 0)::int
-            FROM execucao
-           WHERE execucao.atividade_id = atividade.id
-             AND execucao.is_deleted = false
-             AND execucao.fim_data IS NOT NULL) AS "totalMinutosExecutados",
-         (SELECT COUNT(*)::int
-            FROM execucao
-           WHERE execucao.atividade_id = atividade.id
-             AND execucao.is_deleted = false) AS "totalExecucoes",
-         execucao_ativa.id         AS "execucaoAtivaId",
-         execucao_ativa.descricao  AS "execucaoAtivaDescricao",
-         (SELECT COALESCE(
-                   JSON_AGG(
-                     JSON_BUILD_OBJECT('id', tag.id, 'nome', tag.nome, 'cor', tag.cor)
-                     ORDER BY tag.nome
-                   ),
-                   '[]'::json)
-            FROM atividade_tag
-            INNER JOIN tag
-              ON tag.id = atividade_tag.tag_id
-              AND tag.is_deleted = false
-           WHERE atividade_tag.atividade_id = atividade.id
-             AND atividade_tag.is_deleted = false) AS "tags",
-         atividade.created_date    AS "createdDate"
-       FROM atividade
-       ${clausulasJoin}
-       LEFT JOIN LATERAL (
-         SELECT execucao.id, execucao.descricao
-         FROM execucao
-         WHERE execucao.atividade_id = atividade.id
-           AND execucao.fim_data IS NULL
-           AND execucao.is_deleted = false
-         LIMIT 1
-       ) execucao_ativa ON true
-       WHERE ${clausulaWhere}
-       ORDER BY tipo_atividade_prioridade.ordem ASC, usuario.nome_completo ASC, atividade.created_date DESC, atividade.nome ASC
-       ${clausulaPaginacao}`,
-      parametros,
-    );
-
-    return { itens, total };
-  }
-
-  /**
+    /**
    * Altera campos da atividade e retorna o estado alterado.
    */
-  async alterar(dto: AtividadeInternoAlterarDto): Promise<AtividadeAlteradaDto> {
-    const setClauses: string[] = ['updated_date = NOW()'];
-    const parametros: Record<string, unknown> = { id: dto.id };
+    async alterar(dto: AtividadeInternoAlterarDto): Promise<AtividadeAlteradaDto> {
+        const setClauses: string[] = ['updated_date = NOW()'];
+        const parametros: Record<string, unknown> = { id: dto.id };
 
-    if (dto.nome !== undefined) {
-      setClauses.push('nome = :nome');
-      parametros.nome = dto.nome;
+        if (dto.nome !== undefined) {
+            setClauses.push('nome = :nome');
+            parametros.nome = dto.nome;
+        }
+        if (dto.status !== undefined) {
+            setClauses.push(
+                `
+                    tipo_atividade_status_id = (
+                        SELECT
+                            tipo_atividade_status.id
+                        FROM
+                            tipo_atividade_status
+                        WHERE
+                            tipo_atividade_status.codigo = :status
+                            AND tipo_atividade_status.is_deleted = false
+                    )
+                `,
+            );
+            parametros.status = dto.status;
+        }
+        if (dto.demandaId !== undefined) {
+            setClauses.push('demanda_id = :demandaId');
+            parametros.demandaId = dto.demandaId;
+        }
+        if (dto.prioridade !== undefined) {
+            setClauses.push(
+                `
+                    tipo_atividade_prioridade_id = (
+                        SELECT
+                            tipo_atividade_prioridade.id
+                        FROM
+                            tipo_atividade_prioridade
+                        WHERE
+                            tipo_atividade_prioridade.codigo = :prioridade
+                            AND tipo_atividade_prioridade.is_deleted = false
+                    )
+                `,
+            );
+            parametros.prioridade = dto.prioridade;
+        }
+
+        const resultado = await this.executarConsulta<AtividadeAlteradaDto>(
+            `
+                UPDATE atividade
+                SET
+                    ${setClauses.join(', ')}
+                WHERE
+                    atividade.id = :id
+                    AND atividade.is_deleted = false
+                RETURNING
+                    id,
+                    demanda_id AS "demandaId",
+                    usuario_id AS "usuarioId",
+                    nome,
+                    (
+                        SELECT
+                            tipo_atividade_status.codigo
+                        FROM
+                            tipo_atividade_status
+                        WHERE
+                            tipo_atividade_status.id = atividade.tipo_atividade_status_id
+                    ) AS status,
+                    ${SELECIONAR_PRIORIDADE},
+                    created_date AS "createdDate"
+            `,
+            parametros,
+        );
+
+        const atividadeAlterada = resultado[0];
+
+        const usuarioResultado = await this.executarConsulta<{ nomeCompleto: string }>(
+            `
+                SELECT
+                    nome_completo AS "nomeCompleto"
+                FROM
+                    usuario
+                WHERE
+                    id = :usuarioId
+                    AND is_deleted = false
+                LIMIT
+                    1
+            `,
+            { usuarioId: atividadeAlterada.usuarioId },
+        );
+
+        return {
+            ...atividadeAlterada,
+            nomeUsuario: usuarioResultado[0]?.nomeCompleto ?? '',
+        };
     }
-    if (dto.status !== undefined) {
-      setClauses.push(
-        'tipo_atividade_status_id = (SELECT tipo_atividade_status.id FROM tipo_atividade_status WHERE tipo_atividade_status.codigo = :status AND tipo_atividade_status.is_deleted = false)',
-      );
-      parametros.status = dto.status;
-    }
-    if (dto.demandaId !== undefined) {
-      setClauses.push('demanda_id = :demandaId');
-      parametros.demandaId = dto.demandaId;
-    }
-    if (dto.prioridade !== undefined) {
-      setClauses.push(
-        'tipo_atividade_prioridade_id = (SELECT tipo_atividade_prioridade.id FROM tipo_atividade_prioridade WHERE tipo_atividade_prioridade.codigo = :prioridade AND tipo_atividade_prioridade.is_deleted = false)',
-      );
-      parametros.prioridade = dto.prioridade;
+
+    /** Soft delete da atividade. */
+    async excluir(dto: AtividadeExcluirDto): Promise<void> {
+        await this.executarSoftDelete(dto.id);
     }
 
-    const resultado = await this.executarConsulta<AtividadeAlteradaDto>(
-      `UPDATE atividade
-       SET ${setClauses.join(', ')}
-       WHERE atividade.id = :id
-         AND atividade.is_deleted = false
-       RETURNING
-         id,
-         demanda_id      AS "demandaId",
-         usuario_id      AS "usuarioId",
-         nome,
-         (SELECT tipo_atividade_status.codigo FROM tipo_atividade_status
-            WHERE tipo_atividade_status.id = atividade.tipo_atividade_status_id) AS status,
-         ${SELECIONAR_PRIORIDADE},
-         created_date    AS "createdDate"`,
-      parametros,
-    );
-
-    const atividadeAlterada = resultado[0];
-
-    const usuarioResultado = await this.executarConsulta<{ nomeCompleto: string }>(
-      `SELECT nome_completo AS "nomeCompleto"
-       FROM usuario
-       WHERE id = :usuarioId
-         AND is_deleted = false
-       LIMIT 1`,
-      { usuarioId: atividadeAlterada.usuarioId },
-    );
-
-    return {
-      ...atividadeAlterada,
-      nomeUsuario: usuarioResultado[0]?.nomeCompleto ?? '',
-    };
-  }
-
-  /** Soft delete da atividade. */
-  async excluir(dto: AtividadeExcluirDto): Promise<void> {
-    await this.executarSoftDelete(dto.id);
-  }
-
-  /**
+    /**
    * Recupera a atividade **excluída**. É a única leitura que filtra `is_deleted = true`: a restauração
    * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
    */
-  async recuperarExcluida(dto: AtividadeRestaurarDto): Promise<(AtividadeRestauradaDto & { demandaAtiva: boolean; usuarioId: number }) | null> {
-    const resultado = await this.executarConsulta<AtividadeRestauradaDto & { demandaAtiva: boolean; usuarioId: number }>(
-      `SELECT
-         atividade.id,
-         atividade.demanda_id AS "demandaId",
-         atividade.nome,
-         atividade.usuario_id AS "usuarioId",
-         EXISTS(
-           SELECT 1 FROM demanda
-           WHERE demanda.id = atividade.demanda_id
-             AND demanda.is_deleted = false
-         ) AS "demandaAtiva"
-       FROM atividade
-       WHERE atividade.id = :id
-         AND atividade.is_deleted = true
-       LIMIT 1`,
-      { id: dto.id },
-    );
-    return resultado[0] ?? null;
-  }
+    async recuperarExcluida(dto: AtividadeRestaurarDto): Promise<(AtividadeRestauradaDto & { demandaAtiva: boolean; usuarioId: number }) | null> {
+        const resultado = await this.executarConsulta<AtividadeRestauradaDto & { demandaAtiva: boolean; usuarioId: number }>(
+            `
+                SELECT
+                    atividade.id,
+                    atividade.demanda_id AS "demandaId",
+                    atividade.nome,
+                    atividade.usuario_id AS "usuarioId",
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            demanda
+                        WHERE
+                            demanda.id = atividade.demanda_id
+                            AND demanda.is_deleted = false
+                    ) AS "demandaAtiva"
+                FROM
+                    atividade
+                WHERE
+                    atividade.id = :id
+                    AND atividade.is_deleted = true
+                LIMIT
+                    1
+            `,
+            { id: dto.id },
+        );
+        return resultado[0] ?? null;
+    }
 
-  /** Restaura a atividade: desfaz o soft delete (sem DELETE físico e sem cascata). */
-  async restaurar(dto: AtividadeRestaurarDto): Promise<AtividadeRestauradaDto> {
-    const resultado = await this.executarConsulta<AtividadeRestauradaDto>(
-      `UPDATE atividade
-       SET is_deleted = false,
-           deleted_date = NULL,
-           updated_date = NOW()
-       WHERE atividade.id = :id
-         AND atividade.is_deleted = true
-       RETURNING
-         id,
-         demanda_id AS "demandaId",
-         nome`,
-      { id: dto.id },
-    );
-    return resultado[0];
-  }
+    /** Restaura a atividade: desfaz o soft delete (sem DELETE físico e sem cascata). */
+    async restaurar(dto: AtividadeRestaurarDto): Promise<AtividadeRestauradaDto> {
+        const resultado = await this.executarConsulta<AtividadeRestauradaDto>(
+            `
+                UPDATE atividade
+                SET
+                    is_deleted = false,
+                    deleted_date = NULL,
+                    updated_date = NOW()
+                WHERE
+                    atividade.id = :id
+                    AND atividade.is_deleted = true
+                RETURNING
+                    id,
+                    demanda_id AS "demandaId",
+                    nome
+            `,
+            { id: dto.id },
+        );
+        return resultado[0];
+    }
 
-  /**
+    /**
    * Indica se a atividade possui execução em andamento (sem fim_data).
    * Usado para travar a troca de status enquanto há uma execução ativa.
    */
-  async possuiExecucaoAtiva(dto: AtividadeRecuperarDto): Promise<boolean> {
-    const resultado = await this.executarConsulta<{ existe: boolean }>(
-      `SELECT EXISTS(
-         SELECT 1
-         FROM execucao
-         WHERE execucao.atividade_id = :atividadeId
-           AND execucao.fim_data IS NULL
-           AND execucao.is_deleted = false
-       ) AS existe`,
-      { atividadeId: dto.id },
-    );
-    return resultado[0].existe;
-  }
+    async possuiExecucaoAtiva(dto: AtividadeRecuperarDto): Promise<boolean> {
+        const resultado = await this.executarConsulta<{ existe: boolean }>(
+            `
+                SELECT
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            execucao
+                        WHERE
+                            execucao.atividade_id = :atividadeId
+                            AND execucao.fim_data IS NULL
+                            AND execucao.is_deleted = false
+                    ) AS existe
+            `,
+            { atividadeId: dto.id },
+        );
+        return resultado[0].existe;
+    }
 
-  /** Indica se a atividade tem alguma execução (em andamento ou encerrada); desfazer a criação por proposta só vale sem nenhuma. */
-  async possuiExecucao(dto: AtividadeRecuperarDto): Promise<boolean> {
-    const resultado = await this.executarConsulta<{ existe: boolean }>(
-      `SELECT EXISTS(
-         SELECT 1
-         FROM execucao
-         WHERE execucao.atividade_id = :atividadeId
-           AND execucao.is_deleted = false
-       ) AS existe`,
-      { atividadeId: dto.id },
-    );
-    return resultado[0].existe;
-  }
+    /** Indica se a atividade tem alguma execução (em andamento ou encerrada); desfazer a criação por proposta só vale sem nenhuma. */
+    async possuiExecucao(dto: AtividadeRecuperarDto): Promise<boolean> {
+        const resultado = await this.executarConsulta<{ existe: boolean }>(
+            `
+                SELECT
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            execucao
+                        WHERE
+                            execucao.atividade_id = :atividadeId
+                            AND execucao.is_deleted = false
+                    ) AS existe
+            `,
+            { atividadeId: dto.id },
+        );
+        return resultado[0].existe;
+    }
 
-  /**
+    /**
    * Verifica se o usuário está atribuído à demanda via demanda_usuario.
    * Usado para controle de acesso na criação e atualização de atividades.
    */
-  async validarAcessoDemanda(dto: DemandaAcessoVerificarDto): Promise<boolean> {
-    const resultado = await this.executarConsulta<{ existe: boolean }>(
-      `SELECT EXISTS(
-         SELECT 1
-         FROM demanda_usuario
-         WHERE demanda_usuario.demanda_id = :demandaId
-           AND demanda_usuario.usuario_id = :usuarioId
-           AND demanda_usuario.is_deleted = false
-       ) AS existe`,
-      { demandaId: dto.demandaId, usuarioId: dto.usuarioId },
-    );
-    return resultado[0].existe;
-  }
+    async validarAcessoDemanda(dto: DemandaAcessoVerificarDto): Promise<boolean> {
+        const resultado = await this.executarConsulta<{ existe: boolean }>(
+            `
+                SELECT
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            demanda_usuario
+                        WHERE
+                            demanda_usuario.demanda_id = :demandaId
+                            AND demanda_usuario.usuario_id = :usuarioId
+                            AND demanda_usuario.is_deleted = false
+                    ) AS existe
+            `,
+            { demandaId: dto.demandaId, usuarioId: dto.usuarioId },
+        );
+        return resultado[0].existe;
+    }
 
-  /**
+    /**
    * Lista as tags ativas atribuídas a uma atividade.
    */
-  async listarTags(dto: AtividadeTagsListarDto): Promise<TagResumoDto[]> {
-    return this.executarConsulta<TagResumoDto>(
-      `SELECT
-         tag.id,
-         tag.nome,
-         tag.cor
-       FROM atividade_tag
-       INNER JOIN tag
-         ON tag.id = atividade_tag.tag_id
-         AND tag.is_deleted = false
-       WHERE atividade_tag.atividade_id = :atividadeId
-         AND atividade_tag.is_deleted = false`,
-      { atividadeId: dto.atividadeId },
-    );
-  }
+    async listarTags(dto: AtividadeTagsListarDto): Promise<TagResumoDto[]> {
+        return this.executarConsulta<TagResumoDto>(
+            `
+                SELECT
+                    tag.id,
+                    tag.nome,
+                    tag.cor
+                FROM
+                    atividade_tag
+                    INNER JOIN tag ON tag.id = atividade_tag.tag_id
+                    AND tag.is_deleted = false
+                WHERE
+                    atividade_tag.atividade_id = :atividadeId
+                    AND atividade_tag.is_deleted = false
+            `,
+            { atividadeId: dto.atividadeId },
+        );
+    }
 
-  /**
+    /**
    * Sincroniza as tags de uma atividade com a nova lista de IDs.
    * Faz soft delete das tags removidas e insere as novas.
    * Tags que já existem e permanecem na lista não são tocadas.
    */
-  async alterarTags(dto: AtividadeTagsAlterarDto): Promise<void> {
-    const tagsAtuais = await this.listarTags({ atividadeId: dto.atividadeId });
-    const idsAtuais  = tagsAtuais.map((tag) => tag.id);
+    async alterarTags(dto: AtividadeTagsAlterarDto): Promise<void> {
+        const tagsAtuais = await this.listarTags({ atividadeId: dto.atividadeId });
+        const idsAtuais  = tagsAtuais.map((tag) => tag.id);
 
-    const idsParaRemover = idsAtuais.filter((id) => !dto.tagIds.includes(id));
-    const idsParaInserir = dto.tagIds.filter((id) => !idsAtuais.includes(id));
+        const idsParaRemover = idsAtuais.filter((id) => !dto.tagIds.includes(id));
+        const idsParaInserir = dto.tagIds.filter((id) => !idsAtuais.includes(id));
 
-    for (const tagId of idsParaRemover) {
-      await this.executarComando(
-        `UPDATE atividade_tag
-         SET is_deleted   = true,
-             deleted_date = NOW(),
-             updated_date = NOW()
-         WHERE atividade_id = :atividadeId
-           AND tag_id       = :tagId
-           AND is_deleted   = false`,
-        { atividadeId: dto.atividadeId, tagId },
-      );
+        for (const tagId of idsParaRemover) {
+            await this.executarComando(
+                `
+                    UPDATE atividade_tag
+                    SET
+                        is_deleted = true,
+                        deleted_date = NOW(),
+                        updated_date = NOW()
+                    WHERE
+                        atividade_id = :atividadeId
+                        AND tag_id = :tagId
+                        AND is_deleted = false
+                `,
+                { atividadeId: dto.atividadeId, tagId },
+            );
+        }
+
+        for (const tagId of idsParaInserir) {
+            await this.executarComando(
+                `
+                    INSERT INTO
+                        atividade_tag (
+                            atividade_id,
+                            tag_id,
+                            created_date,
+                            updated_date,
+                            is_deleted
+                        )
+                    SELECT
+                        :atividadeId,
+                        :tagId,
+                        NOW(),
+                        NOW(),
+                        false
+                `,
+                { atividadeId: dto.atividadeId, tagId },
+            );
+        }
     }
-
-    for (const tagId of idsParaInserir) {
-      await this.executarComando(
-        `INSERT INTO atividade_tag (atividade_id, tag_id, created_date, updated_date, is_deleted)
-         SELECT :atividadeId, :tagId, NOW(), NOW(), false`,
-        { atividadeId: dto.atividadeId, tagId },
-      );
-    }
-  }
 }

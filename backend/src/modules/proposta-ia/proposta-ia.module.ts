@@ -6,9 +6,9 @@ import { PropostaIaRepository } from './repositories/proposta-ia.repository';
 import { ExecutorPropostaIaRegistro } from './domain/executor-proposta-ia';
 
 @Module({
-  imports:     [ConfiguracaoIaModule],
-  controllers: [PropostaIaController],
-  providers:   [PropostaIaService, PropostaIaRepository, ExecutorPropostaIaRegistro],
-  exports:     [PropostaIaService, PropostaIaRepository, ExecutorPropostaIaRegistro],
+    imports:     [ConfiguracaoIaModule],
+    controllers: [PropostaIaController],
+    providers:   [PropostaIaService, PropostaIaRepository, ExecutorPropostaIaRegistro],
+    exports:     [PropostaIaService, PropostaIaRepository, ExecutorPropostaIaRegistro],
 })
 export class PropostaIaModule {}

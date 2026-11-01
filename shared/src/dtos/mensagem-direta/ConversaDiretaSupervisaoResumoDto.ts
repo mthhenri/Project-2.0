@@ -3,9 +3,9 @@ import { MensagemDiretaSupervisaoParticipanteDto } from './MensagemDiretaSupervi
 
 /** Uma conversa entre desenvolvedores, para a lista da supervisão. */
 export interface ConversaDiretaSupervisaoResumoDto {
-  /** `<menorUsuarioId>-<maiorUsuarioId>`. */
-  conversaId: string;
-  participantes: MensagemDiretaSupervisaoParticipanteDto[];
-  totalMensagens: number;
-  ultimaMensagem: MensagemDiretaResumoDto;
+    /** `<menorUsuarioId>-<maiorUsuarioId>`. */
+    conversaId: string;
+    participantes: MensagemDiretaSupervisaoParticipanteDto[];
+    totalMensagens: number;
+    ultimaMensagem: MensagemDiretaResumoDto;
 }

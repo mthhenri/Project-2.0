@@ -1,4 +1,4 @@
 export class AtividadeTagsAlterarDto {
-  atividadeId: number;
-  tagIds: number[];
+    atividadeId: number;
+    tagIds: number[];
 }

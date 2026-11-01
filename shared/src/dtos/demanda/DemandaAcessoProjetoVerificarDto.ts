@@ -1,4 +1,4 @@
 export class DemandaAcessoProjetoVerificarDto {
-  projetoId: number;
-  usuarioId: number;
+    projetoId: number;
+    usuarioId: number;
 }

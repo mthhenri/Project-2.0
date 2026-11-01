@@ -29,6 +29,21 @@
 
 ## Ativos
 
+### P-066 — Regras de acessibilidade dos templates desligadas · `ABERTO` · frontend
+
+- **Sintoma:** o ESLint de templates roda com `angular-eslint` (recomendado + acessibilidade), mas quatro regras estão desligadas em `eslint.config.mjs`: `label-has-associated-control` (33 achados), `click-events-have-key-events` e `interactive-supports-focus` (16, linhas e cartões clicáveis sem teclado nem foco) e `no-inline-styles` (22, falso positivo: `[style]="{ width: '40rem' }"` num `p-dialog` é o input do PrimeNG, não o atributo HTML).
+- **Causa:** corrigir exige associar rótulos a controles PrimeNG (`for`/`inputId`), dar `tabindex`, `role` e tratamento de teclado a linhas clicáveis; isso muda foco e comportamento e não cabe numa limpeza de padrão.
+- **Contorno:** as três primeiras regras ficam desligadas com comentário no config; o atributo literal `style="..."` segue proibido por convenção (`CONVENTIONS.md` "Estilos") e conferido na revisão.
+- **Correção:** task própria de acessibilidade: tratar os 49 pontos, religar as três regras e trocar o `no-inline-styles` por uma checagem que só pegue o atributo `style` literal.
+- **Desde:** 2026-11-01 (task 297).
+
+### P-067 — `shared/src/utils/proposta-nivel.test.ts` não passa no `tsc` · `ABERTO` · shared
+
+- **Sintoma:** `npx tsc --noEmit -p shared/tsconfig.json` acusa TS2345 na linha 60 (`chave` é `string`, a função pede `ChaveDeNivelDaProposta`); o teste passa em execução porque o runner não confere tipos.
+- **Causa:** as listas `fazEAvisa` e `pergunta` são inferidas como `string[]`; já era assim antes da task 297 (o arquivo só mudou de indentação).
+- **Correção:** tipar as listas como `ChaveDeNivelDaProposta[]`.
+- **Desde:** 2026-11-01.
+
 ### P-064 — Chat IA sem feedback ao criar ou trocar conversas e planos · `ABERTO` · frontend/chat
 
 - **Sintoma:** o autor relata que criar outra conversa ou carregar conversa/plano não mostra carregamento; fica sem saber se o clique foi atendido. Inclui navegar para conversas antigas.
@@ -104,9 +119,10 @@
 - **Correção:** achar o temporizador que não termina (suspeita: transição do d3, no diagrama da Modelagem e no grafo, que roda dentro da zona) e tirá-lo da zona ou pará-lo; só então remover o teto. Observação: com a CPU três vezes sobrecarregada o arquivo passou (3 s viraram 11 s), então não é só lentidão.
 - **Desde:** 2026-10-30 (visto nos fechos dos P-035/P-038/P-041/P-055 e dos P-050/P-051/P-058; 10 rodadas completas, 4 falhas dele; depois mais 3 rodadas com falha e uma no CI do PR 27).
 
-### P-001 — Projeto sem lint · `CONTORNADO` · repositório
+### P-001 — Projeto sem lint · `EM CORREÇÃO` · repositório
 
-- **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.
+- **Situação (2026-11-01):** ESLint, Stylelint, Prettier (HTML/SCSS) e o formatador de SQL existem e estão no CI (`npm run lint:tudo`), com zero erros nos quatro workspaces. Falta fechar as specs 297–299 (revisão independente do diff e verificação visual nos dois temas); as regras de acessibilidade desligadas estão em P-066. Remover este item quando 297–299 forem para `done/`.
+- **Sintoma original:** não havia ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e a lacuna era só declarada no fecho de cada task.
   (A parte de **testes** deste item foi resolvida pelas tasks 171–187: ver `HISTORY.md`, bloco da 187, com a cobertura de partida e a final.)
 - **Causa:** o projeto foi construído verificando por build, testes e execução manual; nunca se escolheu nem configurou um linter.
 - **Contorno:** `npm test` na raiz, `npm run test:integracao`, build dos workspaces e verificação ao vivo (skill `verify`); revisão do diff pela skill `conventions-check`.

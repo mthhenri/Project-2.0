@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs';
 
 // Inputs de `p-datepicker` ficam de fora: focá-los abre o calendário ao abrir o dialog.
 const SELETOR_CAMPO_TEXTO =
-  'input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([disabled]):not([readonly]):not(.p-datepicker-input), textarea:not([disabled]):not([readonly])';
+    'input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([disabled]):not([readonly]):not(.p-datepicker-input), textarea:not([disabled]):not([readonly])';
 const SELETOR_CAMPO_QUALQUER = `${SELETOR_CAMPO_TEXTO}, [role=combobox]:not([aria-disabled=true])`;
 
 /**
@@ -21,85 +21,86 @@ const SELETOR_CAMPO_QUALQUER = `${SELETOR_CAMPO_TEXTO}, [role=combobox]:not([ari
  * a diretiva chama o mesmo método que o botão.
  */
 @Directive({
-  selector: 'p-dialog[dialogFormulario]',
-  standalone: true,
-  exportAs: 'dialogFormulario',
+    // eslint-disable-next-line @angular-eslint/directive-selector -- a diretiva só se aplica ao p-dialog
+    selector: 'p-dialog[dialogFormulario]',
+    standalone: true,
+    exportAs: 'dialogFormulario',
 })
 export class DialogFormularioDirective implements OnInit, OnDestroy {
-  private readonly dialog = inject(Dialog);
+    private readonly dialog = inject(Dialog);
 
-  @Input() dialogSemAutofocus = false;
-  @Input() dialogBloqueado = false;
-  @Output() readonly dialogEnviar = new EventEmitter<void>();
+    @Input() dialogSemAutofocus = false;
+    @Input() dialogBloqueado = false;
+    @Output() readonly dialogEnviar = new EventEmitter<void>();
 
-  private readonly assinaturas = new Subscription();
-  private containerOuvido: HTMLElement | null = null;
-  private readonly aoTeclar = (evento: KeyboardEvent): void => this.tratarTecla(evento);
+    private readonly assinaturas = new Subscription();
+    private containerOuvido: HTMLElement | null = null;
+    private readonly aoTeclar = (evento: KeyboardEvent): void => this.tratarTecla(evento);
 
-  constructor() {
-    this.assinaturas.add(this.dialog.onShow.subscribe(() => this.aoMostrar()));
-    this.assinaturas.add(this.dialog.onHide.subscribe(() => this.pararDeOuvir()));
-  }
+    constructor() {
+        this.assinaturas.add(this.dialog.onShow.subscribe(() => this.aoMostrar()));
+        this.assinaturas.add(this.dialog.onHide.subscribe(() => this.pararDeOuvir()));
+    }
 
-  /** O foco inicial do `p-dialog` vai ao primeiro focável (um datepicker abriria o calendário): quem foca é esta diretiva. */
-  ngOnInit(): void {
-    if (!this.dialogSemAutofocus) this.dialog.focusOnShow = false;
-  }
+    /** O foco inicial do `p-dialog` vai ao primeiro focável (um datepicker abriria o calendário): quem foca é esta diretiva. */
+    ngOnInit(): void {
+        if (!this.dialogSemAutofocus) this.dialog.focusOnShow = false;
+    }
 
-  ngOnDestroy(): void {
-    this.assinaturas.unsubscribe();
-    this.pararDeOuvir();
-  }
+    ngOnDestroy(): void {
+        this.assinaturas.unsubscribe();
+        this.pararDeOuvir();
+    }
 
-  /** Refoca o primeiro campo vazio — usado após "Criar e adicionar outra". */
-  focar(): void {
-    const container = this.dialog.container();
-    if (container) setTimeout(() => this.focarPrimeiroCampo(container));
-  }
+    /** Refoca o primeiro campo vazio — usado após "Criar e adicionar outra". */
+    focar(): void {
+        const container = this.dialog.container();
+        if (container) setTimeout(() => this.focarPrimeiroCampo(container));
+    }
 
-  private aoMostrar(): void {
-    const container = this.dialog.container();
-    if (!container) return;
-    this.pararDeOuvir();
-    container.addEventListener('keydown', this.aoTeclar);
-    this.containerOuvido = container;
-    if (!this.dialogSemAutofocus) setTimeout(() => this.focarQuandoHouverCampo(container));
-  }
+    private aoMostrar(): void {
+        const container = this.dialog.container();
+        if (!container) return;
+        this.pararDeOuvir();
+        container.addEventListener('keydown', this.aoTeclar);
+        this.containerOuvido = container;
+        if (!this.dialogSemAutofocus) setTimeout(() => this.focarQuandoHouverCampo(container));
+    }
 
-  /** Dialogs que carregam os dados ao abrir só renderizam o formulário depois: espera (até 3s). */
-  private focarQuandoHouverCampo(container: HTMLElement): void {
-    if (this.focarPrimeiroCampo(container)) return;
-    const observador = new MutationObserver(() => {
-      if (this.focarPrimeiroCampo(container)) observador.disconnect();
-    });
-    observador.observe(container, { childList: true, subtree: true });
-    setTimeout(() => observador.disconnect(), 3000);
-  }
+    /** Dialogs que carregam os dados ao abrir só renderizam o formulário depois: espera (até 3s). */
+    private focarQuandoHouverCampo(container: HTMLElement): void {
+        if (this.focarPrimeiroCampo(container)) return;
+        const observador = new MutationObserver(() => {
+            if (this.focarPrimeiroCampo(container)) observador.disconnect();
+        });
+        observador.observe(container, { childList: true, subtree: true });
+        setTimeout(() => observador.disconnect(), 3000);
+    }
 
-  private pararDeOuvir(): void {
-    this.containerOuvido?.removeEventListener('keydown', this.aoTeclar);
-    this.containerOuvido = null;
-  }
+    private pararDeOuvir(): void {
+        this.containerOuvido?.removeEventListener('keydown', this.aoTeclar);
+        this.containerOuvido = null;
+    }
 
-  private focarPrimeiroCampo(container: HTMLElement): boolean {
-    const campoVazio = Array.from(container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(SELETOR_CAMPO_TEXTO))
-      .find((campo) => campo.value === '' && campo.offsetParent !== null);
-    const alvo = campoVazio
+    private focarPrimeiroCampo(container: HTMLElement): boolean {
+        const campoVazio = Array.from(container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(SELETOR_CAMPO_TEXTO))
+            .find((campo) => campo.value === '' && campo.offsetParent !== null);
+        const alvo = campoVazio
       ?? Array.from(container.querySelectorAll<HTMLElement>(SELETOR_CAMPO_QUALQUER)).find((campo) => campo.offsetParent !== null);
-    alvo?.focus();
-    return !!alvo;
-  }
+        alvo?.focus();
+        return !!alvo;
+    }
 
-  private tratarTecla(evento: KeyboardEvent): void {
-    if (evento.key !== 'Enter' || evento.defaultPrevented || evento.isComposing || evento.shiftKey || evento.altKey) return;
-    const alvo = evento.target as HTMLElement | null;
-    if (!alvo) return;
-    const comControle = evento.ctrlKey || evento.metaKey;
-    const eTextarea = alvo.tagName === 'TEXTAREA' || alvo.isContentEditable; // inclui o editor formatado (task 134)
-    const eInput = alvo.tagName === 'INPUT' && !['button', 'submit', 'checkbox', 'radio'].includes((alvo as HTMLInputElement).type);
-    if (!(eInput || (eTextarea && comControle))) return;
-    evento.preventDefault();
-    if (this.dialogBloqueado) return;
-    this.dialogEnviar.emit();
-  }
+    private tratarTecla(evento: KeyboardEvent): void {
+        if (evento.key !== 'Enter' || evento.defaultPrevented || evento.isComposing || evento.shiftKey || evento.altKey) return;
+        const alvo = evento.target as HTMLElement | null;
+        if (!alvo) return;
+        const comControle = evento.ctrlKey || evento.metaKey;
+        const eTextarea = alvo.tagName === 'TEXTAREA' || alvo.isContentEditable; // inclui o editor formatado (task 134)
+        const eInput = alvo.tagName === 'INPUT' && !['button', 'submit', 'checkbox', 'radio'].includes((alvo as HTMLInputElement).type);
+        if (!(eInput || (eTextarea && comControle))) return;
+        evento.preventDefault();
+        if (this.dialogBloqueado) return;
+        this.dialogEnviar.emit();
+    }
 }

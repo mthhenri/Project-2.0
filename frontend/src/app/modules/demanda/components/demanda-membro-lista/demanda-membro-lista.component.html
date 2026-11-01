@@ -1,122 +1,123 @@
 <div class="demanda-membro-lista">
-  <div class="demanda-membro-lista__cabecalho">
-    <span class="demanda-membro-lista__titulo">
-      Membros
-      @if (membros().length > 0) {
-        <span class="demanda-membro-lista__contador">{{ membros().length }}</span>
-      }
-    </span>
-    @if (sessao.eGestor()) {
-      <p-button
-        icon="pi pi-users"
-        label="Gerenciar"
-        size="small"
-        [outlined]="true"
-        (onClick)="abrirDialog()"
-      />
-    } @else if (souMembro()) {
-      <p-button
-        icon="pi pi-sign-out"
-        label="Sair"
-        severity="danger"
-        size="small"
-        [outlined]="true"
-        (onClick)="sair()"
-      />
-    } @else {
-      <p-button
-        icon="pi pi-user-plus"
-        label="Participar"
-        size="small"
-        [outlined]="true"
-        (onClick)="participar()"
-      />
-    }
-  </div>
-
-  @if (carregando()) {
-    <div class="demanda-membro-lista__carregando">
-      <i class="pi pi-spin pi-spinner"></i>
-    </div>
-  }
-
-  @if (!carregando()) {
-    @if (membros().length === 0) {
-      <div class="demanda-membro-lista__vazio">
-        <i class="pi pi-users"></i>
-        <p>Nenhum membro atribuído</p>
-      </div>
-    }
-
-    <div class="demanda-membro-lista__lista">
-      @for (membro of membros(); track membro.usuarioId) {
-        <div class="demanda-membro-lista__item">
-          <div class="demanda-membro-lista__avatar">{{ iniciais(membro.nomeCompleto) }}</div>
-          <div class="demanda-membro-lista__info">
-            <span class="demanda-membro-lista__nome">{{ membro.nomeCompleto }}</span>
-            <span class="demanda-membro-lista__cargo">{{ membro.cargoTitulo }}</span>
-          </div>
-          <p-tag
-            [value]="rotuloTipo(membro.tipo)"
-            [severity]="severidadeTipo(membro.tipo)"
-          />
-          @if (sessao.eGestor()) {
+    <div class="demanda-membro-lista__cabecalho">
+        <span class="demanda-membro-lista__titulo">
+            Membros
+            @if (membros().length > 0) {
+                <span class="demanda-membro-lista__contador">{{ membros().length }}</span>
+            }
+        </span>
+        @if (sessao.eGestor()) {
             <p-button
-              icon="pi pi-times"
-              severity="danger"
-              [text]="true"
-              size="small"
-              (onClick)="removerMembro(membro)"
+                icon="pi pi-users"
+                label="Gerenciar"
+                size="small"
+                [outlined]="true"
+                (onClick)="abrirDialog()"
             />
-          }
-        </div>
-      }
+        } @else if (souMembro()) {
+            <p-button
+                icon="pi pi-sign-out"
+                label="Sair"
+                severity="danger"
+                size="small"
+                [outlined]="true"
+                (onClick)="sair()"
+            />
+        } @else {
+            <p-button
+                icon="pi pi-user-plus"
+                label="Participar"
+                size="small"
+                [outlined]="true"
+                (onClick)="participar()"
+            />
+        }
     </div>
-  }
+
+    @if (carregando()) {
+        <div class="demanda-membro-lista__carregando">
+            <i class="pi pi-spin pi-spinner"></i>
+        </div>
+    }
+
+    @if (!carregando()) {
+        @if (membros().length === 0) {
+            <div class="demanda-membro-lista__vazio">
+                <i class="pi pi-users"></i>
+                <p>Nenhum membro atribuído</p>
+            </div>
+        }
+
+        <div class="demanda-membro-lista__lista">
+            @for (membro of membros(); track membro.usuarioId) {
+                <div class="demanda-membro-lista__item">
+                    <div class="demanda-membro-lista__avatar">
+                        {{ iniciais(membro.nomeCompleto) }}
+                    </div>
+                    <div class="demanda-membro-lista__info">
+                        <span class="demanda-membro-lista__nome">{{ membro.nomeCompleto }}</span>
+                        <span class="demanda-membro-lista__cargo">{{ membro.cargoTitulo }}</span>
+                    </div>
+                    <p-tag
+                        [value]="rotuloTipo(membro.tipo)"
+                        [severity]="severidadeTipo(membro.tipo)"
+                    />
+                    @if (sessao.eGestor()) {
+                        <p-button
+                            icon="pi pi-times"
+                            severity="danger"
+                            [text]="true"
+                            size="small"
+                            (onClick)="removerMembro(membro)"
+                        />
+                    }
+                </div>
+            }
+        </div>
+    }
 </div>
 
 <!-- Dialog gerenciar membros -->
 <p-dialog
-  header="Gerenciar Membros"
-  dialogFormulario
-  [dialogBloqueado]="carregandoSalvar()"
-  (dialogEnviar)="salvarMembros()"
-  [(visible)]="mostrarDialog"
-  [modal]="true"
-  [style]="{ width: '90vw', maxWidth: '560px' }"
-  [draggable]="false"
+    header="Gerenciar Membros"
+    dialogFormulario
+    [dialogBloqueado]="carregandoSalvar()"
+    (dialogEnviar)="salvarMembros()"
+    [(visible)]="mostrarDialog"
+    [modal]="true"
+    [style]="{ width: '90vw', maxWidth: '560px' }"
+    [draggable]="false"
 >
-  <form [formGroup]="formularioMembro" class="demanda-membro-lista__form">
-    <div class="demanda-membro-lista__form-campo">
-      <label>Usuários</label>
-      <p-multiselect
-        formControlName="usuarioIds"
-        [options]="usuariosDisponiveis()"
-        optionLabel="nomeCompleto"
-        optionValue="id"
-        placeholder="Selecione os usuários..."
-        appendTo="body"
-        [filter]="true"
-        filterPlaceholder="Buscar..."
-        class="w-full"
-      />
-    </div>
-  </form>
+    <form [formGroup]="formularioMembro" class="demanda-membro-lista__form">
+        <div class="demanda-membro-lista__form-campo">
+            <label>Usuários</label>
+            <p-multiselect
+                formControlName="usuarioIds"
+                [options]="usuariosDisponiveis()"
+                optionLabel="nomeCompleto"
+                optionValue="id"
+                placeholder="Selecione os usuários..."
+                appendTo="body"
+                [filter]="true"
+                filterPlaceholder="Buscar..."
+                class="w-full"
+            />
+        </div>
+    </form>
 
-  <ng-template pTemplate="footer">
-    <app-dialog-dica-atalhos />
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="mostrarDialog.set(false)"
-    />
-    <p-button
-      label="Salvar"
-      icon="pi pi-check"
-      [loading]="carregandoSalvar()"
-      (onClick)="salvarMembros()"
-    />
-  </ng-template>
+    <ng-template pTemplate="footer">
+        <app-dialog-dica-atalhos />
+        <p-button
+            label="Cancelar"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="mostrarDialog.set(false)"
+        />
+        <p-button
+            label="Salvar"
+            icon="pi pi-check"
+            [loading]="carregandoSalvar()"
+            (onClick)="salvarMembros()"
+        />
+    </ng-template>
 </p-dialog>
-

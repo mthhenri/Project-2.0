@@ -8,55 +8,55 @@ import { MENSAGEM_CARACTERES_PROIBIDOS, REGEX_SEM_CARACTERES_PROIBIDOS } from '.
  * é a provisória (a formal vem no check-in). Se houver outra execução em andamento, ela é pausada antes.
  */
 export class ProporIniciarExecucaoDto {
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  atividadeId: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    atividadeId: number;
 
-  @IsString()
-  @MinLength(3)
-  @MaxLength(1000)
-  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
-  descricao: string;
+    @IsString()
+    @MinLength(3)
+    @MaxLength(1000)
+    @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
+    descricao: string;
 
-  /**
+    /**
    * Status em que a atividade passa a ficar ao iniciar, quando o usuário escolheu mudá-lo (ex.: de PENDENTE ou PLANEJADA para
    * DESENVOLVENDO). Sem ele, o status não muda: só vale para atividade já PLANEJADA ou DESENVOLVENDO.
    */
-  @IsOptional()
-  @IsIn([TipoAtividadeStatusEnum.PLANEJADA, TipoAtividadeStatusEnum.DESENVOLVENDO])
-  novoStatus?: TipoAtividadeStatusEnum;
+    @IsOptional()
+    @IsIn([TipoAtividadeStatusEnum.PLANEJADA, TipoAtividadeStatusEnum.DESENVOLVENDO])
+    novoStatus?: TipoAtividadeStatusEnum;
 }
 
 /** Os dados guardados na proposta: a entrada mais nomes, só para o cartão mostrar. */
 export class PropostaIniciarExecucaoDadosDto extends ProporIniciarExecucaoDto {
-  @IsOptional()
-  @IsString()
-  atividadeNome?: string;
+    @IsOptional()
+    @IsString()
+    atividadeNome?: string;
 
-  @IsOptional()
-  @IsString()
-  demandaNome?: string;
+    @IsOptional()
+    @IsString()
+    demandaNome?: string;
 
-  /** A atividade da execução que será pausada para iniciar esta (se houver). */
-  @IsOptional()
-  @IsString()
-  pausaraAtividadeNome?: string;
+    /** A atividade da execução que será pausada para iniciar esta (se houver). */
+    @IsOptional()
+    @IsString()
+    pausaraAtividadeNome?: string;
 
-  /** O dono da atividade, quando não é quem confirma (o gestor age por ele): a execução é dele e a que será pausada também. */
-  @IsOptional()
-  @IsString()
-  usuarioNome?: string;
+    /** O dono da atividade, quando não é quem confirma (o gestor age por ele): a execução é dele e a que será pausada também. */
+    @IsOptional()
+    @IsString()
+    usuarioNome?: string;
 
-  /** O dono da atividade, quando não é quem confirma: a regra de nível (task 228) vê aqui que é em nome de outra pessoa. */
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  usuarioId?: number;
+    /** O dono da atividade, quando não é quem confirma: a regra de nível (task 228) vê aqui que é em nome de outra pessoa. */
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    usuarioId?: number;
 
-  /** Status da atividade antes de a proposta mudá-lo (só presente quando muda); serve ao cartão e ao desfazer. */
-  @IsOptional()
-  @IsEnum(TipoAtividadeStatusEnum)
-  statusAnterior?: TipoAtividadeStatusEnum;
+    /** Status da atividade antes de a proposta mudá-lo (só presente quando muda); serve ao cartão e ao desfazer. */
+    @IsOptional()
+    @IsEnum(TipoAtividadeStatusEnum)
+    statusAnterior?: TipoAtividadeStatusEnum;
 }

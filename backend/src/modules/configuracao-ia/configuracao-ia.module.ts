@@ -4,8 +4,8 @@ import { ConfiguracaoIaService } from './services/configuracao-ia.service';
 import { ConfiguracaoIaRepository } from './repositories/configuracao-ia.repository';
 
 @Module({
-  controllers: [ConfiguracaoIaController],
-  providers:   [ConfiguracaoIaService, ConfiguracaoIaRepository],
-  exports:     [ConfiguracaoIaService],
+    controllers: [ConfiguracaoIaController],
+    providers:   [ConfiguracaoIaService, ConfiguracaoIaRepository],
+    exports:     [ConfiguracaoIaService],
 })
 export class ConfiguracaoIaModule {}

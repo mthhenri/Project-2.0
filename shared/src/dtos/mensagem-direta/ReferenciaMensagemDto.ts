@@ -3,10 +3,10 @@ import { ReferenciaMensagemDiretaEnum } from '../../enums/referencia-mensagem-di
 
 /** Uma referência `#` numa mensagem direta: a demanda ou a atividade que o cartão clicável abre. */
 export class ReferenciaMensagemDto {
-  @IsEnum(ReferenciaMensagemDiretaEnum)
-  tipo: ReferenciaMensagemDiretaEnum;
+    @IsEnum(ReferenciaMensagemDiretaEnum)
+    tipo: ReferenciaMensagemDiretaEnum;
 
-  @IsInt()
-  @Min(1)
-  id: number;
+    @IsInt()
+    @Min(1)
+    id: number;
 }

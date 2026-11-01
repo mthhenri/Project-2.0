@@ -1,177 +1,177 @@
 .proposta-cartao {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  padding: 0.875rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--p-primary-500) 35%, var(--app-surface-200));
-  border-radius: 12px;
-  background: var(--app-surface-0);
-
-  &--erro {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    color: var(--p-red-500);
-    border-color: var(--app-surface-200);
-  }
-
-  &__cabecalho {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  &__titulo {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--p-primary-600);
-  }
-
-  &__situacao {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  &__resumo {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.875rem;
-  }
+    gap: 0.625rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--p-primary-500) 35%, var(--app-surface-200));
+    border-radius: 12px;
+    background: var(--app-surface-0);
 
-  &__cor {
-    display: inline-block;
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  &__destaque {
-    font-size: 0.9375rem;
-    overflow-wrap: anywhere;
-  }
-
-  &__linha {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--p-text-muted-color);
-    overflow-wrap: anywhere;
-  }
-
-  &__aviso {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    color: var(--p-orange-600);
-    font-size: 0.8125rem;
-  }
-
-  &__trecho {
-    padding: 0.375rem 0.625rem;
-    border-radius: 8px;
-    border: 1px solid var(--app-surface-200);
-    font-size: 0.8125rem;
-
-    &--antes {
-      background: color-mix(in srgb, var(--p-red-500) 8%, var(--app-surface-0));
+    &--erro {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        color: var(--p-red-500);
+        border-color: var(--app-surface-200);
     }
 
-    &--depois {
-      background: color-mix(in srgb, var(--p-green-500) 8%, var(--app-surface-0));
-    }
-  }
-
-  // Escolha entre o que muda, o de antes e o de depois (Descrever demanda, task 224).
-  &__visoes {
-    display: inline-flex;
-    align-self: flex-start;
-    gap: 2px;
-    padding: 2px;
-    border-radius: 8px;
-    border: 1px solid var(--app-surface-200);
-    background: var(--app-surface-50);
-  }
-
-  &__visao {
-    padding: 0.125rem 0.625rem;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--p-text-muted-color);
-    font-size: 0.75rem;
-    cursor: pointer;
-
-    &--ativa {
-      background: var(--app-surface-0);
-      color: var(--p-text-color);
-      font-weight: 600;
-      box-shadow: 0 1px 2px color-mix(in srgb, var(--p-text-color) 15%, transparent);
-    }
-  }
-
-  &__ajuste {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-  }
-
-  &__rotulo {
-    margin-top: 0.25rem;
-    font-size: 0.8125rem;
-    font-weight: 600;
-  }
-
-  &__erro-campo {
-    color: var(--p-red-500);
-  }
-
-  &__dados {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    gap: 0.25rem 0.75rem;
-    margin: 0;
-    font-size: 0.8125rem;
-
-    dt {
-      color: var(--p-text-muted-color);
+    &__cabecalho {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
     }
 
-    dd {
-      margin: 0;
-      overflow-wrap: anywhere;
+    &__titulo {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--p-primary-600);
     }
-  }
 
-  &__acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-
-    // Desfazer no lado oposto ao de Confirmar (task 194).
-    &--desfazer {
-      justify-content: flex-end;
+    &__situacao {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
     }
-  }
 
-  // Carregando e operando discretos (task 196): sem bloco cinza nem spinner, só texto pequeno e o cartão esmaecido.
-  &__carregando {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--p-text-muted-color);
-    opacity: 0.8;
-  }
+    &__resumo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+    }
 
-  &--operando {
-    opacity: 0.6;
-    pointer-events: none;
-    transition: opacity 0.15s ease;
-  }
+    &__cor {
+        display: inline-block;
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    &__destaque {
+        font-size: 0.9375rem;
+        overflow-wrap: anywhere;
+    }
+
+    &__linha {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--p-text-muted-color);
+        overflow-wrap: anywhere;
+    }
+
+    &__aviso {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        color: var(--p-orange-600);
+        font-size: 0.8125rem;
+    }
+
+    &__trecho {
+        padding: 0.375rem 0.625rem;
+        border-radius: 8px;
+        border: 1px solid var(--app-surface-200);
+        font-size: 0.8125rem;
+
+        &--antes {
+            background: color-mix(in srgb, var(--p-red-500) 8%, var(--app-surface-0));
+        }
+
+        &--depois {
+            background: color-mix(in srgb, var(--p-green-500) 8%, var(--app-surface-0));
+        }
+    }
+
+    // Escolha entre o que muda, o de antes e o de depois (Descrever demanda, task 224).
+    &__visoes {
+        display: inline-flex;
+        align-self: flex-start;
+        gap: 2px;
+        padding: 2px;
+        border-radius: 8px;
+        border: 1px solid var(--app-surface-200);
+        background: var(--app-surface-50);
+    }
+
+    &__visao {
+        padding: 0.125rem 0.625rem;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--p-text-muted-color);
+        font-size: 0.75rem;
+        cursor: pointer;
+
+        &--ativa {
+            background: var(--app-surface-0);
+            color: var(--p-text-color);
+            font-weight: 600;
+            box-shadow: 0 1px 2px color-mix(in srgb, var(--p-text-color) 15%, transparent);
+        }
+    }
+
+    &__ajuste {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+    }
+
+    &__rotulo {
+        margin-top: 0.25rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+    }
+
+    &__erro-campo {
+        color: var(--p-red-500);
+    }
+
+    &__dados {
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        gap: 0.25rem 0.75rem;
+        margin: 0;
+        font-size: 0.8125rem;
+
+        dt {
+            color: var(--p-text-muted-color);
+        }
+
+        dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
+    }
+
+    &__acoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+
+        // Desfazer no lado oposto ao de Confirmar (task 194).
+        &--desfazer {
+            justify-content: flex-end;
+        }
+    }
+
+    // Carregando e operando discretos (task 196): sem bloco cinza nem spinner, só texto pequeno e o cartão esmaecido.
+    &__carregando {
+        margin: 0;
+        font-size: 0.75rem;
+        color: var(--p-text-muted-color);
+        opacity: 0.8;
+    }
+
+    &--operando {
+        opacity: 0.6;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+    }
 }

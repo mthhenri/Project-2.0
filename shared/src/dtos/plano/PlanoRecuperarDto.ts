@@ -1,3 +1,3 @@
 export class PlanoRecuperarDto {
-  id: number;
+    id: number;
 }

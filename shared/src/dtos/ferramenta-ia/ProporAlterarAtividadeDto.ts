@@ -9,51 +9,51 @@ import { MENSAGEM_CARACTERES_PROIBIDOS, REGEX_SEM_CARACTERES_PROIBIDOS } from '.
  * entre `status`, `prioridade` e `nome` deve mudar a atividade (a ferramenta confere); o que não muda fica de fora.
  */
 export class ProporAlterarAtividadeDto {
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  atividadeId: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    atividadeId: number;
 
-  @IsOptional()
-  @IsEnum(TipoAtividadeStatusEnum)
-  status?: TipoAtividadeStatusEnum;
+    @IsOptional()
+    @IsEnum(TipoAtividadeStatusEnum)
+    status?: TipoAtividadeStatusEnum;
 
-  @IsOptional()
-  @IsEnum(TipoAtividadePrioridadeEnum)
-  prioridade?: TipoAtividadePrioridadeEnum;
+    @IsOptional()
+    @IsEnum(TipoAtividadePrioridadeEnum)
+    prioridade?: TipoAtividadePrioridadeEnum;
 
-  @IsOptional()
-  @IsString()
-  @MinLength(3)
-  @MaxLength(255)
-  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
-  nome?: string;
+    @IsOptional()
+    @IsString()
+    @MinLength(3)
+    @MaxLength(255)
+    @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
+    nome?: string;
 }
 
 /** Os dados guardados na proposta: a entrada mais os nomes e os valores de antes, para o cartão mostrar o antes e o depois e para o desfazer. */
 export class PropostaAlterarAtividadeDadosDto extends ProporAlterarAtividadeDto {
-  /** O nome da atividade antes da proposta. */
-  @IsOptional()
-  @IsString()
-  atividadeNome?: string;
+    /** O nome da atividade antes da proposta. */
+    @IsOptional()
+    @IsString()
+    atividadeNome?: string;
 
-  @IsOptional()
-  @IsString()
-  demandaNome?: string;
+    @IsOptional()
+    @IsString()
+    demandaNome?: string;
 
-  /** O dono da atividade: a regra de nível (task 228) só deixa a IA marcar como desenvolvida a atividade do próprio usuário. */
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  atividadeUsuarioId?: number;
+    /** O dono da atividade: a regra de nível (task 228) só deixa a IA marcar como desenvolvida a atividade do próprio usuário. */
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    atividadeUsuarioId?: number;
 
-  /** Só presentes nos campos que a proposta muda. */
-  @IsOptional()
-  @IsEnum(TipoAtividadeStatusEnum)
-  statusAnterior?: TipoAtividadeStatusEnum;
+    /** Só presentes nos campos que a proposta muda. */
+    @IsOptional()
+    @IsEnum(TipoAtividadeStatusEnum)
+    statusAnterior?: TipoAtividadeStatusEnum;
 
-  @IsOptional()
-  @IsEnum(TipoAtividadePrioridadeEnum)
-  prioridadeAnterior?: TipoAtividadePrioridadeEnum;
+    @IsOptional()
+    @IsEnum(TipoAtividadePrioridadeEnum)
+    prioridadeAnterior?: TipoAtividadePrioridadeEnum;
 }

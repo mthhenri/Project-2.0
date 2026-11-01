@@ -7,9 +7,9 @@ import { TipoDiaNaoUtilEnum, TipoDiaNaoUtilDuracaoEnum } from '../../enums';
  * O complemento `Interno` precede o verbo `Alterar` (§5.1).
  */
 export class CalendarioInternoAlterarDto {
-  id: number;
-  descricao?: string;
-  tipo?: TipoDiaNaoUtilEnum;
-  duracao?: TipoDiaNaoUtilDuracaoEnum;
-  recorrente?: boolean;
+    id: number;
+    descricao?: string;
+    tipo?: TipoDiaNaoUtilEnum;
+    duracao?: TipoDiaNaoUtilDuracaoEnum;
+    recorrente?: boolean;
 }

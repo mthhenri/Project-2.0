@@ -6,19 +6,19 @@ import { UnauthorizedAccessException } from '../../../core/exceptions/unauthoriz
 
 @Injectable()
 export class GestorGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+    constructor(private readonly reflector: Reflector) {}
 
-  canActivate(contexto: ExecutionContext): boolean {
-    const gestorOnly = this.reflector.getAllAndOverride<boolean>('gestorOnly', [
-      contexto.getHandler(),
-      contexto.getClass(),
-    ]);
-    if (!gestorOnly) return true;
+    canActivate(contexto: ExecutionContext): boolean {
+        const gestorOnly = this.reflector.getAllAndOverride<boolean>('gestorOnly', [
+            contexto.getHandler(),
+            contexto.getClass(),
+        ]);
+        if (!gestorOnly) return true;
 
-    const usuarioAtivo: JwtPayload = contexto.switchToHttp().getRequest().user;
-    if (!usuarioAtivo || !temPermissaoDeGestor(usuarioAtivo.tipo)) {
-      throw new UnauthorizedAccessException('Acesso restrito a gestores');
+        const usuarioAtivo: JwtPayload = contexto.switchToHttp().getRequest().user;
+        if (!usuarioAtivo || !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+            throw new UnauthorizedAccessException('Acesso restrito a gestores');
+        }
+        return true;
     }
-    return true;
-  }
 }

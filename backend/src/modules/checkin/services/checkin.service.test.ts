@@ -17,115 +17,115 @@ const AGORA = new Date('2026-10-19T14:00:00Z');
 const CONFIGURACAO = { checkinMinimoMinutos: 30, checkinMaximoMinutos: 80, duracaoRecomendadaMinutos: 90, rigorProporcional: true };
 
 function montar(opcoes: { inicioDaExecucao?: string | null; rigor?: boolean } = {}) {
-  const inicio = opcoes.inicioDaExecucao === undefined ? '2026-10-19T11:20:00Z' : opcoes.inicioDaExecucao;
-  const execucaoService = {
-    recuperarAtiva: async () => ({ dados: inicio ? { id: 5, atividadeId: 9, descricao: 'Validar e-mail', inicioData: new Date(inicio) } : null }),
-    listar: async () => ({ dados: { itens: [{ id: 5, nomeAtividade: 'Ajustar login', nomeDemanda: 'Autenticação', nomeProjeto: 'Loja' }] } }),
-  };
-  const configuracaoIaService = { obterAtiva: async () => ({ ...CONFIGURACAO, rigorProporcional: opcoes.rigor ?? true }) };
-  const suspensao = new CheckinSuspensaoService(configService);
-  const agenda = new (class extends CheckinAgendaService {
-    protected sortear(): number {
-      return 0;
-    }
-  })();
-  const chamadasAoChat: { dto: ChatMensagemEnviarDto; opcoes: OpcoesDeConversa }[] = [];
-  const chatService = {
-    enviarMensagem: async (_usuario: unknown, dto: ChatMensagemEnviarDto, _emitir: (evento: ChatEventoDto) => void, opcoesDeConversa: OpcoesDeConversa) => {
-      chamadasAoChat.push({ dto, opcoes: opcoesDeConversa });
-    },
-  };
-  const servico = new (class extends CheckinService {
-    protected agora(): Date {
-      return AGORA;
-    }
-  })(
-    execucaoService as unknown as ExecucaoService,
-    configuracaoIaService as unknown as ConfiguracaoIaService,
-    suspensao,
-    chatService as unknown as ChatService,
-    configService,
-    agenda,
-  );
-  return { servico, suspensao, chamadasAoChat };
+    const inicio = opcoes.inicioDaExecucao === undefined ? '2026-10-19T11:20:00Z' : opcoes.inicioDaExecucao;
+    const execucaoService = {
+        recuperarAtiva: async () => ({ dados: inicio ? { id: 5, atividadeId: 9, descricao: 'Validar e-mail', inicioData: new Date(inicio) } : null }),
+        listar: async () => ({ dados: { itens: [{ id: 5, nomeAtividade: 'Ajustar login', nomeDemanda: 'Autenticação', nomeProjeto: 'Loja' }] } }),
+    };
+    const configuracaoIaService = { obterAtiva: async () => ({ ...CONFIGURACAO, rigorProporcional: opcoes.rigor ?? true }) };
+    const suspensao = new CheckinSuspensaoService(configService);
+    const agenda = new (class extends CheckinAgendaService {
+        protected sortear(): number {
+            return 0;
+        }
+    })();
+    const chamadasAoChat: { dto: ChatMensagemEnviarDto; opcoes: OpcoesDeConversa }[] = [];
+    const chatService = {
+        enviarMensagem: async (_usuario: unknown, dto: ChatMensagemEnviarDto, _emitir: (evento: ChatEventoDto) => void, opcoesDeConversa: OpcoesDeConversa) => {
+            chamadasAoChat.push({ dto, opcoes: opcoesDeConversa });
+        },
+    };
+    const servico = new (class extends CheckinService {
+        protected agora(): Date {
+            return AGORA;
+        }
+    })(
+        execucaoService as unknown as ExecucaoService,
+        configuracaoIaService as unknown as ConfiguracaoIaService,
+        suspensao,
+        chatService as unknown as ChatService,
+        configService,
+        agenda,
+    );
+    return { servico, suspensao, chamadasAoChat };
 }
 
 test('sem execução em andamento não há check-in, mas a configuração e a suspensão vêm', async () => {
-  const { servico, suspensao } = montar({ inicioDaExecucao: null });
-  suspensao.suspender(7, 'reunião');
-  const { dados } = await servico.consultarSituacao(USUARIO);
-  assert.equal(dados?.haCheckin, false);
-  assert.equal(dados?.execucao, null);
-  assert.equal(dados?.acimaDoRecomendado, false);
-  assert.equal(dados?.suspensao.suspenso, true);
-  assert.deepEqual([dados?.checkinMinimoMinutos, dados?.checkinMaximoMinutos, dados?.duracaoRecomendadaMinutos], [30, 80, 90]);
+    const { servico, suspensao } = montar({ inicioDaExecucao: null });
+    suspensao.suspender(7, 'reunião');
+    const { dados } = await servico.consultarSituacao(USUARIO);
+    assert.equal(dados?.haCheckin, false);
+    assert.equal(dados?.execucao, null);
+    assert.equal(dados?.acimaDoRecomendado, false);
+    assert.equal(dados?.suspensao.suspenso, true);
+    assert.deepEqual([dados?.checkinMinimoMinutos, dados?.checkinMaximoMinutos, dados?.duracaoRecomendadaMinutos], [30, 80, 90]);
 });
 
 test('com execução em andamento devolve atividade, demanda, tempo e o selo de rigor acima do recomendado', async () => {
-  const { servico } = montar(); // 11:20Z até 14:00Z = 2h40
-  const { dados } = await servico.consultarSituacao(USUARIO);
-  assert.equal(dados?.haCheckin, true);
-  assert.equal(dados?.execucao?.atividade, 'Ajustar login');
-  assert.equal(dados?.execucao?.demanda, 'Autenticação');
-  assert.equal(dados?.execucao?.minutos, 160);
-  assert.equal(dados?.acimaDoRecomendado, true);
-  assert.equal(dados?.suspensao.suspenso, false);
+    const { servico } = montar(); // 11:20Z até 14:00Z = 2h40
+    const { dados } = await servico.consultarSituacao(USUARIO);
+    assert.equal(dados?.haCheckin, true);
+    assert.equal(dados?.execucao?.atividade, 'Ajustar login');
+    assert.equal(dados?.execucao?.demanda, 'Autenticação');
+    assert.equal(dados?.execucao?.minutos, 160);
+    assert.equal(dados?.acimaDoRecomendado, true);
+    assert.equal(dados?.suspensao.suspenso, false);
 });
 
 test('dentro do recomendado, o selo de rigor não acende', async () => {
-  const { servico } = montar({ inicioDaExecucao: '2026-10-19T13:00:00Z' }); // 1h
-  assert.equal((await servico.consultarSituacao(USUARIO)).dados?.acimaDoRecomendado, false);
+    const { servico } = montar({ inicioDaExecucao: '2026-10-19T13:00:00Z' }); // 1h
+    assert.equal((await servico.consultarSituacao(USUARIO)).dados?.acimaDoRecomendado, false);
 });
 
 test('a mensagem do check-in vai ao chat com o contexto CHECKIN e o rigor calculado no backend', async () => {
-  const { servico, chamadasAoChat } = montar();
-  await servico.enviarMensagem(USUARIO, { texto: 'Mexi no e-mail duplicado' }, () => undefined);
-  assert.equal(chamadasAoChat.length, 1);
-  assert.equal(chamadasAoChat[0].opcoes.contexto, ContextoChatEnum.CHECKIN);
-  assert.match(String(chamadasAoChat[0].opcoes.instrucoesExtras), /há 2h40/);
-  assert.match(String(chamadasAoChat[0].opcoes.instrucoesExtras), /foram 2h40, teve mais alguma coisa\?/);
+    const { servico, chamadasAoChat } = montar();
+    await servico.enviarMensagem(USUARIO, { texto: 'Mexi no e-mail duplicado' }, () => undefined);
+    assert.equal(chamadasAoChat.length, 1);
+    assert.equal(chamadasAoChat[0].opcoes.contexto, ContextoChatEnum.CHECKIN);
+    assert.match(String(chamadasAoChat[0].opcoes.instrucoesExtras), /há 2h40/);
+    assert.match(String(chamadasAoChat[0].opcoes.instrucoesExtras), /foram 2h40, teve mais alguma coisa\?/);
 });
 
 test('com o rigor desligado, o contexto não pede mais detalhe', async () => {
-  const { servico, chamadasAoChat } = montar({ rigor: false });
-  await servico.enviarMensagem(USUARIO, { texto: 'Mexi no e-mail' }, () => undefined);
-  assert.doesNotMatch(String(chamadasAoChat[0].opcoes.instrucoesExtras), /teve mais alguma coisa/);
+    const { servico, chamadasAoChat } = montar({ rigor: false });
+    await servico.enviarMensagem(USUARIO, { texto: 'Mexi no e-mail' }, () => undefined);
+    assert.doesNotMatch(String(chamadasAoChat[0].opcoes.instrucoesExtras), /teve mais alguma coisa/);
 });
 
 test('sem execução em andamento a mensagem é recusada (409) e o chat nem é chamado', async () => {
-  const { servico, chamadasAoChat } = montar({ inicioDaExecucao: null });
-  await assert.rejects(servico.enviarMensagem(USUARIO, { texto: 'oi' }, () => undefined), ConflictException);
-  assert.equal(chamadasAoChat.length, 0);
+    const { servico, chamadasAoChat } = montar({ inicioDaExecucao: null });
+    await assert.rejects(servico.enviarMensagem(USUARIO, { texto: 'oi' }, () => undefined), ConflictException);
+    assert.equal(chamadasAoChat.length, 0);
 });
 
 test('a situação traz o horário sorteado e dispara quando ele já passou', async () => {
-  const { servico } = montar(); // início 11:20Z, sorteio 0 → 30 min depois (11:50Z); agora 14:00Z
-  const { dados } = await servico.consultarSituacao(USUARIO);
-  assert.equal(dados?.proximoCheckinData?.toISOString(), '2026-10-19T11:50:00.000Z');
-  assert.equal(dados?.disparado, true);
+    const { servico } = montar(); // início 11:20Z, sorteio 0 → 30 min depois (11:50Z); agora 14:00Z
+    const { dados } = await servico.consultarSituacao(USUARIO);
+    assert.equal(dados?.proximoCheckinData?.toISOString(), '2026-10-19T11:50:00.000Z');
+    assert.equal(dados?.disparado, true);
 });
 
 test('execução recém-iniciada ainda não dispara o check-in', async () => {
-  const { servico } = montar({ inicioDaExecucao: '2026-10-19T13:50:00Z' }); // 10 min antes de agora
-  const { dados } = await servico.consultarSituacao(USUARIO);
-  assert.equal(dados?.proximoCheckinData?.toISOString(), '2026-10-19T14:20:00.000Z');
-  assert.equal(dados?.disparado, false);
+    const { servico } = montar({ inicioDaExecucao: '2026-10-19T13:50:00Z' }); // 10 min antes de agora
+    const { dados } = await servico.consultarSituacao(USUARIO);
+    assert.equal(dados?.proximoCheckinData?.toISOString(), '2026-10-19T14:20:00.000Z');
+    assert.equal(dados?.disparado, false);
 });
 
 test('sem execução ou com check-ins suspensos não há horário nem disparo', async () => {
-  const semExecucao = montar({ inicioDaExecucao: null });
-  const a = (await semExecucao.servico.consultarSituacao(USUARIO)).dados;
-  assert.deepEqual([a?.proximoCheckinData, a?.disparado], [null, false]);
+    const semExecucao = montar({ inicioDaExecucao: null });
+    const item = (await semExecucao.servico.consultarSituacao(USUARIO)).dados;
+    assert.deepEqual([item?.proximoCheckinData, item?.disparado], [null, false]);
 
-  const suspenso = montar();
-  suspenso.suspensao.suspender(7, 'reunião');
-  const b = (await suspenso.servico.consultarSituacao(USUARIO)).dados;
-  assert.deepEqual([b?.proximoCheckinData, b?.disparado], [null, false]);
+    const suspenso = montar();
+    suspenso.suspensao.suspender(7, 'reunião');
+    const outro = (await suspenso.servico.consultarSituacao(USUARIO)).dados;
+    assert.deepEqual([outro?.proximoCheckinData, outro?.disparado], [null, false]);
 });
 
 test('o horário sorteado fica o mesmo nas consultas seguintes', async () => {
-  const { servico } = montar({ inicioDaExecucao: '2026-10-19T13:50:00Z' });
-  const primeira = (await servico.consultarSituacao(USUARIO)).dados?.proximoCheckinData;
-  const segunda = (await servico.consultarSituacao(USUARIO)).dados?.proximoCheckinData;
-  assert.equal(primeira?.getTime(), segunda?.getTime());
+    const { servico } = montar({ inicioDaExecucao: '2026-10-19T13:50:00Z' });
+    const primeira = (await servico.consultarSituacao(USUARIO)).dados?.proximoCheckinData;
+    const segunda = (await servico.consultarSituacao(USUARIO)).dados?.proximoCheckinData;
+    assert.equal(primeira?.getTime(), segunda?.getTime());
 });

@@ -5,9 +5,9 @@ import { PontoJustificativaRepository } from './repositories/ponto-justificativa
 import { UsuarioModule } from '../usuario/usuario.module';
 
 @Module({
-  imports:     [UsuarioModule],
-  controllers: [PontoJustificativaController],
-  providers:   [PontoJustificativaService, PontoJustificativaRepository],
-  exports:     [PontoJustificativaService, PontoJustificativaRepository],
+    imports:     [UsuarioModule],
+    controllers: [PontoJustificativaController],
+    providers:   [PontoJustificativaService, PontoJustificativaRepository],
+    exports:     [PontoJustificativaService, PontoJustificativaRepository],
 })
 export class PontoJustificativaModule {}

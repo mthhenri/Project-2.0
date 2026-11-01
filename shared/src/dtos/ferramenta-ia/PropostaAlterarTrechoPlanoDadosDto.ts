@@ -7,30 +7,30 @@ import { PlanoAbaEnum } from '../../enums/plano-aba.enum';
  * (para o cartão). A confirmação usa a versão **de agora**; a proposta expira quando o trecho antigo não está mais no texto.
  */
 export class PropostaAlterarTrechoPlanoDadosDto {
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  planoId: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    planoId: number;
 
-  @IsEnum(PlanoAbaEnum)
-  aba: PlanoAbaEnum;
+    @IsEnum(PlanoAbaEnum)
+    aba: PlanoAbaEnum;
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(20000)
-  trechoAntigo: string;
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(20000)
+    trechoAntigo: string;
 
-  @IsString()
-  @MaxLength(20000)
-  trechoNovo: string;
+    @IsString()
+    @MaxLength(20000)
+    trechoNovo: string;
 
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  versao: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    versao: number;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  planoTitulo?: string;
+    @IsOptional()
+    @IsString()
+    @MaxLength(255)
+    planoTitulo?: string;
 }

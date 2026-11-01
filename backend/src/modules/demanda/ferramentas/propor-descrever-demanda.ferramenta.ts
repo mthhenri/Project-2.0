@@ -20,63 +20,63 @@ export const MAXIMO_TOKENS_DA_REDACAO_DA_DEMANDA = 2500;
  */
 @Injectable()
 export class ProporDescreverDemandaFerramenta extends FerramentaPropostaIa<ProporDescreverDemandaDto> {
-  readonly nome = 'propor_descrever_demanda';
-  readonly descricao =
-    'Propõe a descrição do cliente e/ou a descrição técnica de uma demanda, a partir da ENTREVISTA com o gestor. Antes de chamar, converse: pergunte o que o cliente pediu e o que será feito, ' +
+    readonly nome = 'propor_descrever_demanda';
+    readonly descricao =
+        'Propõe a descrição do cliente e/ou a descrição técnica de uma demanda, a partir da ENTREVISTA com o gestor. Antes de chamar, converse: pergunte o que o cliente pediu e o que será feito, ' +
     'uma coisa de cada vez, e peça o que faltar; nunca invente o que o cliente pediu. Passe em relatoDoCliente e relatoTecnico o que o gestor contou, fiel e com as palavras dele ' +
     '(só o que ele disse; um dos dois pode faltar). O sistema redige as descrições em Markdown e o gestor confirma no cartão; nada é gravado antes. O demandaId vem de listar_demandas_do_projeto.';
-  readonly permissao = 'GESTOR' as const;
-  readonly classeDeEntrada = ProporDescreverDemandaDto;
-  readonly tipoProposta = TipoPropostaIaEnum.DESCREVER_DEMANDA;
+    readonly permissao = 'GESTOR' as const;
+    readonly classeDeEntrada = ProporDescreverDemandaDto;
+    readonly tipoProposta = TipoPropostaIaEnum.DESCREVER_DEMANDA;
 
-  constructor(
-    propostaIaService: PropostaIaService,
-    private readonly demandaService: DemandaService,
-    private readonly projetoService: ProjetoService,
-    private readonly iaService: IaService,
-    private readonly promptService: PromptService,
-  ) {
-    super(propostaIaService);
-  }
-
-  protected async montarDados(entrada: ProporDescreverDemandaDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const relatoDoCliente = entrada.relatoDoCliente?.trim() || undefined;
-    const relatoTecnico = entrada.relatoTecnico?.trim() || undefined;
-    if (!relatoDoCliente && !relatoTecnico) {
-      throw new BusinessException('Faça a entrevista antes: informe o que o cliente pediu (relatoDoCliente) e/ou o que será feito (relatoTecnico)');
+    constructor(
+        propostaIaService: PropostaIaService,
+        private readonly demandaService: DemandaService,
+        private readonly projetoService: ProjetoService,
+        private readonly iaService: IaService,
+        private readonly promptService: PromptService,
+    ) {
+        super(propostaIaService);
     }
-    // `recuperar` confere a existência e o acesso do usuário à demanda.
-    const demanda = (await this.demandaService.recuperar({ id: entrada.demandaId }, usuarioAtivo)).dados;
-    if (!demanda) throw new BusinessException('Demanda não encontrada');
-    const projeto = (await this.projetoService.recuperar({ id: demanda.projetoId }, usuarioAtivo)).dados;
 
-    const prompt = await this.promptService.obterAtivo(TipoPromptEnum.ENTREVISTA_DEMANDA);
-    const instrucoes = `${prompt.conteudo}\n\n${montarInstrucoesDeRedacaoDaDemanda({
-      demanda: demanda.nome,
-      projeto: projeto?.nome ?? '',
-      querCliente: relatoDoCliente !== undefined,
-      querTecnica: relatoTecnico !== undefined,
-      descricaoClienteAtual: relatoDoCliente ? demanda.descricaoCliente : null,
-      descricaoTecnicaAtual: relatoTecnico ? demanda.descricaoTecnica : null,
-    })}`;
-    const relato = [relatoDoCliente ? `Relato sobre o que o cliente pediu: ${relatoDoCliente}` : '', relatoTecnico ? `Relato sobre o que será feito: ${relatoTecnico}` : ''].filter((linha) => linha !== '').join('\n\n');
-    const redigida = await this.iaService.gerar({
-      nivel: NivelIaEnum.ANALITICO,
-      instrucoes,
-      mensagens: [{ papel: 'usuario', conteudo: relato }],
-      maximoTokens: MAXIMO_TOKENS_DA_REDACAO_DA_DEMANDA,
-    });
-    const descricoes = interpretarRedacaoDaDemanda(redigida.texto, { cliente: relatoDoCliente !== undefined, tecnica: relatoTecnico !== undefined });
-    if (!descricoes) throw new BusinessException('Não foi possível redigir as descrições a partir do relato; peça mais detalhe ao gestor.');
+    protected async montarDados(entrada: ProporDescreverDemandaDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const relatoDoCliente = entrada.relatoDoCliente?.trim() || undefined;
+        const relatoTecnico = entrada.relatoTecnico?.trim() || undefined;
+        if (!relatoDoCliente && !relatoTecnico) {
+            throw new BusinessException('Faça a entrevista antes: informe o que o cliente pediu (relatoDoCliente) e/ou o que será feito (relatoTecnico)');
+        }
+        // `recuperar` confere a existência e o acesso do usuário à demanda.
+        const demanda = (await this.demandaService.recuperar({ id: entrada.demandaId }, usuarioAtivo)).dados;
+        if (!demanda) throw new BusinessException('Demanda não encontrada');
+        const projeto = (await this.projetoService.recuperar({ id: demanda.projetoId }, usuarioAtivo)).dados;
 
-    const dados: PropostaDescreverDemandaDadosDto = {
-      demandaId: entrada.demandaId,
-      ...descricoes,
-      demandaNome: demanda.nome,
-      projetoNome: projeto?.nome,
-      ...(descricoes.descricaoCliente ? { descricaoClienteAnterior: demanda.descricaoCliente ?? null } : {}),
-      ...(descricoes.descricaoTecnica ? { descricaoTecnicaAnterior: demanda.descricaoTecnica ?? null } : {}),
-    };
-    return { ...dados };
-  }
+        const prompt = await this.promptService.obterAtivo(TipoPromptEnum.ENTREVISTA_DEMANDA);
+        const instrucoes = `${prompt.conteudo}\n\n${montarInstrucoesDeRedacaoDaDemanda({
+            demanda: demanda.nome,
+            projeto: projeto?.nome ?? '',
+            querCliente: relatoDoCliente !== undefined,
+            querTecnica: relatoTecnico !== undefined,
+            descricaoClienteAtual: relatoDoCliente ? demanda.descricaoCliente : null,
+            descricaoTecnicaAtual: relatoTecnico ? demanda.descricaoTecnica : null,
+        })}`;
+        const relato = [relatoDoCliente ? `Relato sobre o que o cliente pediu: ${relatoDoCliente}` : '', relatoTecnico ? `Relato sobre o que será feito: ${relatoTecnico}` : ''].filter((linha) => linha !== '').join('\n\n');
+        const redigida = await this.iaService.gerar({
+            nivel: NivelIaEnum.ANALITICO,
+            instrucoes,
+            mensagens: [{ papel: 'usuario', conteudo: relato }],
+            maximoTokens: MAXIMO_TOKENS_DA_REDACAO_DA_DEMANDA,
+        });
+        const descricoes = interpretarRedacaoDaDemanda(redigida.texto, { cliente: relatoDoCliente !== undefined, tecnica: relatoTecnico !== undefined });
+        if (!descricoes) throw new BusinessException('Não foi possível redigir as descrições a partir do relato; peça mais detalhe ao gestor.');
+
+        const dados: PropostaDescreverDemandaDadosDto = {
+            demandaId: entrada.demandaId,
+            ...descricoes,
+            demandaNome: demanda.nome,
+            projetoNome: projeto?.nome,
+            ...(descricoes.descricaoCliente ? { descricaoClienteAnterior: demanda.descricaoCliente ?? null } : {}),
+            ...(descricoes.descricaoTecnica ? { descricaoTecnicaAnterior: demanda.descricaoTecnica ?? null } : {}),
+        };
+        return { ...dados };
+    }
 }

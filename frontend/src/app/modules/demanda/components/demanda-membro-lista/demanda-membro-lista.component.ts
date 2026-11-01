@@ -16,156 +16,156 @@ import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 @Component({
-  selector: 'app-demanda-membro-lista',
-  standalone: true,
-  imports: [
-    DialogFormularioDirective,
-    DialogDicaAtalhosComponent,
-    ReactiveFormsModule,
-    ButtonModule,
-    DialogModule,
-    MultiSelect,
-    Tag,
-  ],
-  templateUrl: './demanda-membro-lista.component.html',
-  styleUrl: './demanda-membro-lista.component.scss',
+    selector: 'app-demanda-membro-lista',
+    standalone: true,
+    imports: [
+        DialogFormularioDirective,
+        DialogDicaAtalhosComponent,
+        ReactiveFormsModule,
+        ButtonModule,
+        DialogModule,
+        MultiSelect,
+        Tag,
+    ],
+    templateUrl: './demanda-membro-lista.component.html',
+    styleUrl: './demanda-membro-lista.component.scss',
 })
 export class DemandaMembroListaComponent implements OnInit {
-  @Input({ required: true }) demandaId!: number;
-  @Input() usuariosDisponiveis = signal<UsuarioResumoDto[]>([]);
+    @Input({ required: true }) demandaId!: number;
+    @Input() usuariosDisponiveis = signal<UsuarioResumoDto[]>([]);
 
-  private readonly demandaService = inject(DemandaService);
-  private readonly messageService = inject(MessageService);
-  private readonly desfazerService = inject(DesfazerService);
-  private readonly formBuilder = inject(FormBuilder);
-  readonly sessao = inject(UsuarioSessaoService);
+    private readonly demandaService = inject(DemandaService);
+    private readonly messageService = inject(MessageService);
+    private readonly desfazerService = inject(DesfazerService);
+    private readonly formBuilder = inject(FormBuilder);
+    readonly sessao = inject(UsuarioSessaoService);
 
-  readonly membros = signal<DemandaMembroDto[]>([]);
-  readonly carregando = signal<boolean>(false);
-  readonly mostrarDialog = signal<boolean>(false);
-  readonly carregandoSalvar = signal<boolean>(false);
-  readonly tipoEnum = TipoUsuarioEnum;
-  readonly severidadeTipo = severidadeTipoUsuario;
+    readonly membros = signal<DemandaMembroDto[]>([]);
+    readonly carregando = signal<boolean>(false);
+    readonly mostrarDialog = signal<boolean>(false);
+    readonly carregandoSalvar = signal<boolean>(false);
+    readonly tipoEnum = TipoUsuarioEnum;
+    readonly severidadeTipo = severidadeTipoUsuario;
 
-  /** Indica se o usuário logado já é membro desta demanda (auto-inclusão/saída do dev). */
-  readonly souMembro = computed(() =>
-    this.membros().some((membro) => membro.usuarioId === this.sessao.id()),
-  );
+    /** Indica se o usuário logado já é membro desta demanda (auto-inclusão/saída do dev). */
+    readonly souMembro = computed(() =>
+        this.membros().some((membro) => membro.usuarioId === this.sessao.id()),
+    );
 
-  readonly formularioMembro = this.formBuilder.group({
-    usuarioIds: [[] as number[], [Validators.required]],
-  });
+    readonly formularioMembro = this.formBuilder.group({
+        usuarioIds: [[] as number[], [Validators.required]],
+    });
 
-  ngOnInit(): void {
-    this.carregarMembros();
-  }
+    ngOnInit(): void {
+        this.carregarMembros();
+    }
 
-  abrirDialog(): void {
-    this.formularioMembro.reset({ usuarioIds: this.membros().map((membro) => membro.usuarioId) });
-    this.mostrarDialog.set(true);
-  }
+    abrirDialog(): void {
+        this.formularioMembro.reset({ usuarioIds: this.membros().map((membro) => membro.usuarioId) });
+        this.mostrarDialog.set(true);
+    }
 
-  /**
+    /**
    * Sincroniza os membros da demanda com a seleção do multiselect: atribui os
    * marcados que ainda não são membros e remove os membros desmarcados.
    */
-  salvarMembros(): void {
-    const selecionados = this.formularioMembro.value.usuarioIds ?? [];
-    const atuais = this.membros().map((membro) => membro.usuarioId);
+    salvarMembros(): void {
+        const selecionados = this.formularioMembro.value.usuarioIds ?? [];
+        const atuais = this.membros().map((membro) => membro.usuarioId);
 
-    const aAdicionar = selecionados.filter((usuarioId) => !atuais.includes(usuarioId));
-    const aRemover = atuais.filter((usuarioId) => !selecionados.includes(usuarioId));
+        const aAdicionar = selecionados.filter((usuarioId) => !atuais.includes(usuarioId));
+        const aRemover = atuais.filter((usuarioId) => !selecionados.includes(usuarioId));
 
-    if (aAdicionar.length === 0 && aRemover.length === 0) {
-      this.mostrarDialog.set(false);
-      return;
+        if (aAdicionar.length === 0 && aRemover.length === 0) {
+            this.mostrarDialog.set(false);
+            return;
+        }
+
+        const chamadas = [
+            ...aAdicionar.map((usuarioId) => {
+                const dto: DemandaUsuarioAtribuirDto = { usuarioId };
+                return this.demandaService.atribuirMembro(this.demandaId, dto);
+            }),
+            ...aRemover.map((usuarioId) => this.demandaService.removerMembro(this.demandaId, usuarioId)),
+        ];
+
+        this.carregandoSalvar.set(true);
+        forkJoin(chamadas)
+            .pipe(finalize(() => this.carregandoSalvar.set(false)))
+            .subscribe({
+                next: () => {
+                    this.mostrarDialog.set(false);
+                    this.carregarMembros();
+                    this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Membros atualizados' });
+                },
+            });
     }
 
-    const chamadas = [
-      ...aAdicionar.map((usuarioId) => {
+    /** Remoção imediata (task 99): o membro sai na hora e o toast oferece "Desfazer" (re-POST). */
+    removerMembro(membro: DemandaMembroDto): void {
+        this.retirarMembro(membro);
+    }
+
+    /** Desenvolvedor inclui a si mesmo como membro da demanda. */
+    participar(): void {
+        const usuarioId = this.sessao.id();
+        if (usuarioId === undefined) return;
+
         const dto: DemandaUsuarioAtribuirDto = { usuarioId };
-        return this.demandaService.atribuirMembro(this.demandaId, dto);
-      }),
-      ...aRemover.map((usuarioId) => this.demandaService.removerMembro(this.demandaId, usuarioId)),
-    ];
+        this.demandaService.atribuirMembro(this.demandaId, dto).subscribe({
+            next: () => {
+                this.carregarMembros();
+                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Você agora é membro desta demanda' });
+            },
+        });
+    }
 
-    this.carregandoSalvar.set(true);
-    forkJoin(chamadas)
-      .pipe(finalize(() => this.carregandoSalvar.set(false)))
-      .subscribe({
-        next: () => {
-          this.mostrarDialog.set(false);
-          this.carregarMembros();
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Membros atualizados' });
-        },
-      });
-  }
+    /** Desenvolvedor sai da demanda: imediato, com "Desfazer" no toast (task 99). */
+    sair(): void {
+        const usuarioId = this.sessao.id();
+        const membro = this.membros().find((item) => item.usuarioId === usuarioId);
+        if (membro) this.retirarMembro(membro);
+    }
 
-  /** Remoção imediata (task 99): o membro sai na hora e o toast oferece "Desfazer" (re-POST). */
-  removerMembro(membro: DemandaMembroDto): void {
-    this.retirarMembro(membro);
-  }
+    iniciais(nomeCompleto: string): string {
+        return nomeCompleto
+            .split(' ')
+            .slice(0, 2)
+            .map((parte) => parte[0])
+            .join('')
+            .toUpperCase();
+    }
 
-  /** Desenvolvedor inclui a si mesmo como membro da demanda. */
-  participar(): void {
-    const usuarioId = this.sessao.id();
-    if (usuarioId === undefined) return;
+    rotuloTipo(tipo: TipoUsuarioEnum): string {
+        return rotuloTipoUsuario(tipo, true);
+    }
 
-    const dto: DemandaUsuarioAtribuirDto = { usuarioId };
-    this.demandaService.atribuirMembro(this.demandaId, dto).subscribe({
-      next: () => {
-        this.carregarMembros();
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Você agora é membro desta demanda' });
-      },
-    });
-  }
+    private retirarMembro(membro: DemandaMembroDto): void {
+        const listaAnterior = this.membros();
+        this.membros.set(listaAnterior.filter((item) => item.usuarioId !== membro.usuarioId));
 
-  /** Desenvolvedor sai da demanda: imediato, com "Desfazer" no toast (task 99). */
-  sair(): void {
-    const usuarioId = this.sessao.id();
-    const membro = this.membros().find((item) => item.usuarioId === usuarioId);
-    if (membro) this.retirarMembro(membro);
-  }
+        this.demandaService.removerMembro(this.demandaId, membro.usuarioId).subscribe({
+            next: () =>
+                this.desfazerService.oferecer({
+                    mensagem: `${membro.nomeCompleto} removido da demanda`,
+                    desfazer: () => this.demandaService.atribuirMembro(this.demandaId, { usuarioId: membro.usuarioId }),
+                    aposDesfazer: () => this.carregarMembros(),
+                }),
+            error: () => this.membros.set(listaAnterior),
+        });
+    }
 
-  iniciais(nomeCompleto: string): string {
-    return nomeCompleto
-      .split(' ')
-      .slice(0, 2)
-      .map((parte) => parte[0])
-      .join('')
-      .toUpperCase();
-  }
-
-  rotuloTipo(tipo: TipoUsuarioEnum): string {
-    return rotuloTipoUsuario(tipo, true);
-  }
-
-  private retirarMembro(membro: DemandaMembroDto): void {
-    const listaAnterior = this.membros();
-    this.membros.set(listaAnterior.filter((item) => item.usuarioId !== membro.usuarioId));
-
-    this.demandaService.removerMembro(this.demandaId, membro.usuarioId).subscribe({
-      next: () =>
-        this.desfazerService.oferecer({
-          mensagem: `${membro.nomeCompleto} removido da demanda`,
-          desfazer: () => this.demandaService.atribuirMembro(this.demandaId, { usuarioId: membro.usuarioId }),
-          aposDesfazer: () => this.carregarMembros(),
-        }),
-      error: () => this.membros.set(listaAnterior),
-    });
-  }
-
-  private carregarMembros(): void {
-    this.carregando.set(true);
-    this.demandaService
-      .listarMembros(this.demandaId)
-      .pipe(finalize(() => this.carregando.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.membros.set(resposta.dados);
-          }
-        },
-      });
-  }
+    private carregarMembros(): void {
+        this.carregando.set(true);
+        this.demandaService
+            .listarMembros(this.demandaId)
+            .pipe(finalize(() => this.carregando.set(false)))
+            .subscribe({
+                next: (resposta) => {
+                    if (resposta.sucesso && resposta.dados) {
+                        this.membros.set(resposta.dados);
+                    }
+                },
+            });
+    }
 }

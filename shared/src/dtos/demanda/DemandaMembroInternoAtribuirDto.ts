@@ -1,4 +1,4 @@
 export class DemandaMembroInternoAtribuirDto {
-  demandaId: number;
-  usuarioId: number;
+    demandaId: number;
+    usuarioId: number;
 }

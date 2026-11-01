@@ -13,48 +13,48 @@ import { ExecucaoService } from '../services/execucao.service';
  */
 @Injectable()
 export class PausarExecucaoExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.PAUSAR_EXECUCAO;
+    readonly tipo = TipoPropostaIaEnum.PAUSAR_EXECUCAO;
 
-  constructor(private readonly execucaoService: ExecucaoService) {}
+    constructor(private readonly execucaoService: ExecucaoService) {}
 
-  validar(dados: Record<string, unknown>): void {
-    validarDadosDaProposta(PropostaPausarExecucaoDadosDto, dados);
-  }
-
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const entrada = validarDadosDaProposta(PropostaPausarExecucaoDadosDto, dados);
-    // De quem é a execução: o gestor pode pausar a de outra pessoa (a service recusa o desenvolvedor).
-    const alvoId = entrada.usuarioId ?? usuarioAtivo.sub;
-    const ativa = (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: alvoId }, usuarioAtivo)).dados;
-    if (!ativa) throw new BusinessException(alvoId === usuarioAtivo.sub ? 'Você não tem execução em andamento' : 'Essa pessoa não tem execução em andamento');
-
-    const descricaoAnterior = ativa.descricao;
-    const descricao = entrada.descricao?.trim() || descricaoAnterior.trim();
-    if (!descricao) throw new BusinessException('Informe a descrição do que foi feito para pausar a execução');
-
-    await this.execucaoService.encerrar({ id: ativa.id, descricao }, usuarioAtivo);
-    return { execucaoId: ativa.id, atividadeId: ativa.atividadeId, descricaoAnterior, usuarioId: alvoId };
-  }
-
-  /** Obsoleta quando já não há execução em andamento (o usuário a pausou à mão). */
-  async estaObsoleta(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
-    const entrada = validarDadosDaProposta(PropostaPausarExecucaoDadosDto, dados);
-    return (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: entrada.usuarioId ?? usuarioAtivo.sub }, usuarioAtivo)).dados === null;
-  }
-
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    const execucaoId = Number(resultado['execucaoId']);
-    if (!Number.isInteger(execucaoId)) throw new BusinessException('Não há execução a desfazer nesta proposta');
-    const alvoId = Number.isInteger(Number(resultado['usuarioId'])) ? Number(resultado['usuarioId']) : usuarioAtivo.sub;
-    if ((await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: alvoId }, usuarioAtivo)).dados) {
-      throw new BusinessException(alvoId === usuarioAtivo.sub ? 'Você já tem outra execução em andamento: a pausa não pôde ser desfeita' : 'Essa pessoa já tem outra execução em andamento: a pausa não pôde ser desfeita');
+    validar(dados: Record<string, unknown>): void {
+        validarDadosDaProposta(PropostaPausarExecucaoDadosDto, dados);
     }
-    const pausada = (await this.execucaoService.recuperar({ id: execucaoId }, usuarioAtivo)).dados;
-    if (!pausada?.fimData) throw new BusinessException('A execução já está em andamento');
-    // Reabrir vale até "o infinito": se o dono fez outra execução depois da pausa, reabrir esta se sobreporia a ela.
-    if (await this.execucaoService.existeSobreposicao({ usuarioId: alvoId, inicioData: new Date(pausada.inicioData), fimData: new Date(8.64e15), ignorarExecucaoId: execucaoId })) {
-      throw new BusinessException('O usuário já fez outra execução depois desta pausa: não dá para reabri-la sem sobrepor');
+
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const entrada = validarDadosDaProposta(PropostaPausarExecucaoDadosDto, dados);
+        // De quem é a execução: o gestor pode pausar a de outra pessoa (a service recusa o desenvolvedor).
+        const alvoId = entrada.usuarioId ?? usuarioAtivo.sub;
+        const ativa = (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: alvoId }, usuarioAtivo)).dados;
+        if (!ativa) throw new BusinessException(alvoId === usuarioAtivo.sub ? 'Você não tem execução em andamento' : 'Essa pessoa não tem execução em andamento');
+
+        const descricaoAnterior = ativa.descricao;
+        const descricao = entrada.descricao?.trim() || descricaoAnterior.trim();
+        if (!descricao) throw new BusinessException('Informe a descrição do que foi feito para pausar a execução');
+
+        await this.execucaoService.encerrar({ id: ativa.id, descricao }, usuarioAtivo);
+        return { execucaoId: ativa.id, atividadeId: ativa.atividadeId, descricaoAnterior, usuarioId: alvoId };
     }
-    await this.execucaoService.alterar({ id: execucaoId, descricao: String(resultado['descricaoAnterior'] ?? pausada.descricao), fimData: null }, usuarioAtivo);
-  }
+
+    /** Obsoleta quando já não há execução em andamento (o usuário a pausou à mão). */
+    async estaObsoleta(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const entrada = validarDadosDaProposta(PropostaPausarExecucaoDadosDto, dados);
+        return (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: entrada.usuarioId ?? usuarioAtivo.sub }, usuarioAtivo)).dados === null;
+    }
+
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        const execucaoId = Number(resultado['execucaoId']);
+        if (!Number.isInteger(execucaoId)) throw new BusinessException('Não há execução a desfazer nesta proposta');
+        const alvoId = Number.isInteger(Number(resultado['usuarioId'])) ? Number(resultado['usuarioId']) : usuarioAtivo.sub;
+        if ((await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: alvoId }, usuarioAtivo)).dados) {
+            throw new BusinessException(alvoId === usuarioAtivo.sub ? 'Você já tem outra execução em andamento: a pausa não pôde ser desfeita' : 'Essa pessoa já tem outra execução em andamento: a pausa não pôde ser desfeita');
+        }
+        const pausada = (await this.execucaoService.recuperar({ id: execucaoId }, usuarioAtivo)).dados;
+        if (!pausada?.fimData) throw new BusinessException('A execução já está em andamento');
+        // Reabrir vale até "o infinito": se o dono fez outra execução depois da pausa, reabrir esta se sobreporia a ela.
+        if (await this.execucaoService.existeSobreposicao({ usuarioId: alvoId, inicioData: new Date(pausada.inicioData), fimData: new Date(8.64e15), ignorarExecucaoId: execucaoId })) {
+            throw new BusinessException('O usuário já fez outra execução depois desta pausa: não dá para reabri-la sem sobrepor');
+        }
+        await this.execucaoService.alterar({ id: execucaoId, descricao: String(resultado['descricaoAnterior'] ?? pausada.descricao), fimData: null }, usuarioAtivo);
+    }
 }

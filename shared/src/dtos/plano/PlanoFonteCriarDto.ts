@@ -7,16 +7,16 @@ import { TipoPlanoFonteOrigemEnum } from '../../enums/tipo-plano-fonte-origem.en
  * guardado. Em `ARQUIVO`, o `titulo` é o nome do arquivo e a service confere a extensão; a service também recusa conteúdo que não é texto.
  */
 export class PlanoFonteCriarDto {
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(LIMITE_TITULO_DA_FONTE_DO_PLANO)
-  titulo: string;
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(LIMITE_TITULO_DA_FONTE_DO_PLANO)
+    titulo: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(LIMITE_CONTEUDO_DA_FONTE_DO_PLANO)
-  conteudo: string;
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(LIMITE_CONTEUDO_DA_FONTE_DO_PLANO)
+    conteudo: string;
 
-  @IsEnum(TipoPlanoFonteOrigemEnum)
-  origem: TipoPlanoFonteOrigemEnum;
+    @IsEnum(TipoPlanoFonteOrigemEnum)
+    origem: TipoPlanoFonteOrigemEnum;
 }

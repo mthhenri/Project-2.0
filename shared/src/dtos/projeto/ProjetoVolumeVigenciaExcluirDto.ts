@@ -1,4 +1,4 @@
 export class ProjetoVolumeVigenciaExcluirDto {
-  projetoId: number;
-  vigenciaId: number;
+    projetoId: number;
+    vigenciaId: number;
 }

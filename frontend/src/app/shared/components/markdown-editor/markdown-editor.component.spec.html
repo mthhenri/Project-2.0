@@ -1,0 +1,10 @@
+<app-markdown-editor
+    [formControl]="controle"
+    [somenteLeitura]="somenteLeitura"
+    [emitirMenuContexto]="true"
+    [maxlength]="500"
+    placeholder="Escreva aqui"
+    rotulo="Descrição"
+    (keydown.control.enter)="confirmado = controle.value"
+    (aoMenuContexto)="menus.push($event)"
+/>

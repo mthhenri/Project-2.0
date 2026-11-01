@@ -1,3 +1,3 @@
 export interface ModelagemGrupoRecuperarDto {
-  id: number;
+    id: number;
 }

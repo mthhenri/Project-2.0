@@ -4,22 +4,22 @@ import { TipoAnotacaoEnum } from '../../enums/tipo-anotacao.enum';
 
 /** Move um trecho de uma seção para o fim de outra, numa operação só. */
 export class AnotacaoTrechoMoverDto {
-  @IsEnum(TipoAnotacaoEnum)
-  tipoOrigem: TipoAnotacaoEnum;
+    @IsEnum(TipoAnotacaoEnum)
+    tipoOrigem: TipoAnotacaoEnum;
 
-  @IsEnum(TipoAnotacaoEnum)
-  tipoDestino: TipoAnotacaoEnum;
+    @IsEnum(TipoAnotacaoEnum)
+    tipoDestino: TipoAnotacaoEnum;
 
-  /** Texto exato a mover; precisa aparecer uma única vez na origem. */
-  @IsString()
-  @IsNotEmpty()
-  trecho: string;
+    /** Texto exato a mover; precisa aparecer uma única vez na origem. */
+    @IsString()
+    @IsNotEmpty()
+    trecho: string;
 
-  @Type(() => Date)
-  @IsDate()
-  updatedDateOrigemLido: Date;
+    @Type(() => Date)
+    @IsDate()
+    updatedDateOrigemLido: Date;
 
-  @Type(() => Date)
-  @IsDate()
-  updatedDateDestinoLido: Date;
+    @Type(() => Date)
+    @IsDate()
+    updatedDateDestinoLido: Date;
 }

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CalendarioRepository } from '../repositories/calendario.repository';
 import {
-  DiaNaoUtilCriarDto,
-  DiaNaoUtilCriadoDto,
-  DiaNaoUtilResumoDto,
-  DiaNaoUtilAlteradoDto,
-  TipoDiaNaoUtilDuracaoEnum,
-  CalendarioRecuperarDto,
-  CalendarioInternoAlterarDto,
+    DiaNaoUtilCriarDto,
+    DiaNaoUtilCriadoDto,
+    DiaNaoUtilResumoDto,
+    DiaNaoUtilAlteradoDto,
+    TipoDiaNaoUtilDuracaoEnum,
+    CalendarioRecuperarDto,
+    CalendarioInternoAlterarDto,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { CalendarioRestaurarDto, DiaNaoUtilRestauradoDto } from '@project20/shared';
@@ -15,146 +15,146 @@ import { ResourceNotFoundException } from '../../../core/exceptions/resource-not
 
 @Injectable()
 export class CalendarioService {
-  constructor(private readonly calendarioRepositorio: CalendarioRepository) {}
+    constructor(private readonly calendarioRepositorio: CalendarioRepository) {}
 
-  /** Cadastra novo dia não útil. Restrito a gestores. */
-  async criar(dto: DiaNaoUtilCriarDto): Promise<StandardResponse<DiaNaoUtilCriadoDto>> {
-    const diaNaoUtilCriado = await this.calendarioRepositorio.inserir({
-      diaData:    dto.diaData,
-      descricao:  dto.descricao,
-      tipo:       dto.tipo,
-      duracao:    dto.duracao,
-      recorrente: dto.recorrente,
-    });
+    /** Cadastra novo dia não útil. Restrito a gestores. */
+    async criar(dto: DiaNaoUtilCriarDto): Promise<StandardResponse<DiaNaoUtilCriadoDto>> {
+        const diaNaoUtilCriado = await this.calendarioRepositorio.inserir({
+            diaData:    dto.diaData,
+            descricao:  dto.descricao,
+            tipo:       dto.tipo,
+            duracao:    dto.duracao,
+            recorrente: dto.recorrente,
+        });
 
-    return {
-      sucesso:  true,
-      dados:    diaNaoUtilCriado,
-      mensagem: 'Dia não útil cadastrado com sucesso',
-    };
-  }
-
-  /** Lista todos os dias não úteis ativos. Disponível para todos os autenticados. */
-  async listar(): Promise<StandardResponse<DiaNaoUtilResumoDto[]>> {
-    const diasNaoUteis = await this.calendarioRepositorio.listar();
-
-    return {
-      sucesso:  true,
-      dados:    diasNaoUteis,
-      mensagem: 'Dias não úteis listados com sucesso',
-    };
-  }
-
-  /** Recupera dia não útil por ID. Lança exceção se não encontrado. */
-  async recuperar(dto: CalendarioRecuperarDto): Promise<StandardResponse<DiaNaoUtilCriadoDto>> {
-    const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id: dto.id });
-
-    if (!diaNaoUtilEncontrado) {
-      throw new ResourceNotFoundException('Dia não útil');
+        return {
+            sucesso:  true,
+            dados:    diaNaoUtilCriado,
+            mensagem: 'Dia não útil cadastrado com sucesso',
+        };
     }
 
-    return {
-      sucesso:  true,
-      dados:    diaNaoUtilEncontrado,
-      mensagem: 'Dia não útil recuperado com sucesso',
-    };
-  }
+    /** Lista todos os dias não úteis ativos. Disponível para todos os autenticados. */
+    async listar(): Promise<StandardResponse<DiaNaoUtilResumoDto[]>> {
+        const diasNaoUteis = await this.calendarioRepositorio.listar();
 
-  /** Altera campos do dia não útil. Restrito a gestores. */
-  async alterar(dto: CalendarioInternoAlterarDto): Promise<StandardResponse<DiaNaoUtilAlteradoDto>> {
-    const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id: dto.id });
-
-    if (!diaNaoUtilEncontrado) {
-      throw new ResourceNotFoundException('Dia não útil');
+        return {
+            sucesso:  true,
+            dados:    diasNaoUteis,
+            mensagem: 'Dias não úteis listados com sucesso',
+        };
     }
 
-    const diaNaoUtilAlterado = await this.calendarioRepositorio.alterar({
-      id:         dto.id,
-      descricao:  dto.descricao,
-      tipo:       dto.tipo,
-      duracao:    dto.duracao,
-      recorrente: dto.recorrente,
-    });
+    /** Recupera dia não útil por ID. Lança exceção se não encontrado. */
+    async recuperar(dto: CalendarioRecuperarDto): Promise<StandardResponse<DiaNaoUtilCriadoDto>> {
+        const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id: dto.id });
 
-    return {
-      sucesso:  true,
-      dados:    diaNaoUtilAlterado,
-      mensagem: 'Dia não útil alterado com sucesso',
-    };
-  }
+        if (!diaNaoUtilEncontrado) {
+            throw new ResourceNotFoundException('Dia não útil');
+        }
 
-  /** Realiza soft delete do dia não útil. Restrito a gestores. */
-  async excluir(dto: CalendarioRecuperarDto): Promise<StandardResponse<void>> {
-    const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id: dto.id });
-
-    if (!diaNaoUtilEncontrado) {
-      throw new ResourceNotFoundException('Dia não útil');
+        return {
+            sucesso:  true,
+            dados:    diaNaoUtilEncontrado,
+            mensagem: 'Dia não útil recuperado com sucesso',
+        };
     }
 
-    await this.calendarioRepositorio.excluir({ id: dto.id });
+    /** Altera campos do dia não útil. Restrito a gestores. */
+    async alterar(dto: CalendarioInternoAlterarDto): Promise<StandardResponse<DiaNaoUtilAlteradoDto>> {
+        const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id: dto.id });
 
-    return {
-      sucesso:  true,
-      dados:    null,
-      mensagem: 'Dia não útil excluído com sucesso',
-    };
-  }
+        if (!diaNaoUtilEncontrado) {
+            throw new ResourceNotFoundException('Dia não útil');
+        }
 
-  /** Restaura o dia não útil excluído (soft delete revertido, sem cascata). Restrito a gestores. */
-  async restaurar(dto: CalendarioRestaurarDto): Promise<StandardResponse<DiaNaoUtilRestauradoDto>> {
-    const diaNaoUtilExcluido = await this.calendarioRepositorio.recuperarExcluido({ id: dto.id });
-    if (!diaNaoUtilExcluido) {
-      throw new ResourceNotFoundException('Dia não útil');
+        const diaNaoUtilAlterado = await this.calendarioRepositorio.alterar({
+            id:         dto.id,
+            descricao:  dto.descricao,
+            tipo:       dto.tipo,
+            duracao:    dto.duracao,
+            recorrente: dto.recorrente,
+        });
+
+        return {
+            sucesso:  true,
+            dados:    diaNaoUtilAlterado,
+            mensagem: 'Dia não útil alterado com sucesso',
+        };
     }
 
-    const diaNaoUtilRestaurado = await this.calendarioRepositorio.restaurar({ id: dto.id });
+    /** Realiza soft delete do dia não útil. Restrito a gestores. */
+    async excluir(dto: CalendarioRecuperarDto): Promise<StandardResponse<void>> {
+        const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id: dto.id });
 
-    return {
-      sucesso:  true,
-      dados:    diaNaoUtilRestaurado,
-      mensagem: 'Dia não útil restaurado com sucesso',
-    };
-  }
+        if (!diaNaoUtilEncontrado) {
+            throw new ResourceNotFoundException('Dia não útil');
+        }
 
-  /**
+        await this.calendarioRepositorio.excluir({ id: dto.id });
+
+        return {
+            sucesso:  true,
+            dados:    null,
+            mensagem: 'Dia não útil excluído com sucesso',
+        };
+    }
+
+    /** Restaura o dia não útil excluído (soft delete revertido, sem cascata). Restrito a gestores. */
+    async restaurar(dto: CalendarioRestaurarDto): Promise<StandardResponse<DiaNaoUtilRestauradoDto>> {
+        const diaNaoUtilExcluido = await this.calendarioRepositorio.recuperarExcluido({ id: dto.id });
+        if (!diaNaoUtilExcluido) {
+            throw new ResourceNotFoundException('Dia não útil');
+        }
+
+        const diaNaoUtilRestaurado = await this.calendarioRepositorio.restaurar({ id: dto.id });
+
+        return {
+            sucesso:  true,
+            dados:    diaNaoUtilRestaurado,
+            mensagem: 'Dia não útil restaurado com sucesso',
+        };
+    }
+
+    /**
    * Retorna se uma data é considerada dia útil pelo sistema.
    * Dia útil = não é fim de semana E não está em dia_nao_util.
    */
-  async verificarDiaUtil(dataString: string): Promise<StandardResponse<{
-    data: string;
-    ehDiaUtil: boolean;
-    motivo: string | null;
-  }>> {
-    const dataObjeto = new Date(dataString);
-    const diaDaSemana = dataObjeto.getUTCDay();
-    const ehFimDeSemana = diaDaSemana === 0 || diaDaSemana === 6;
+    async verificarDiaUtil(dataString: string): Promise<StandardResponse<{
+        data: string;
+        ehDiaUtil: boolean;
+        motivo: string | null;
+    }>> {
+        const dataObjeto = new Date(dataString);
+        const diaDaSemana = dataObjeto.getUTCDay();
+        const ehFimDeSemana = diaDaSemana === 0 || diaDaSemana === 6;
 
-    if (ehFimDeSemana) {
-      return {
-        sucesso: true,
-        dados:   { data: dataString, ehDiaUtil: false, motivo: 'Fim de semana' },
-        mensagem: 'Verificação de dia útil realizada com sucesso',
-      };
+        if (ehFimDeSemana) {
+            return {
+                sucesso: true,
+                dados:   { data: dataString, ehDiaUtil: false, motivo: 'Fim de semana' },
+                mensagem: 'Verificação de dia útil realizada com sucesso',
+            };
+        }
+
+        const diaNaoUtil = await this.calendarioRepositorio.recuperarTipo({ data: dataObjeto });
+
+        if (diaNaoUtil !== null) {
+            const motivo = diaNaoUtil.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO
+                ? `${diaNaoUtil.tipo} (meio período)`
+                : diaNaoUtil.tipo;
+
+            return {
+                sucesso: true,
+                dados:   { data: dataString, ehDiaUtil: false, motivo },
+                mensagem: 'Verificação de dia útil realizada com sucesso',
+            };
+        }
+
+        return {
+            sucesso:  true,
+            dados:    { data: dataString, ehDiaUtil: true, motivo: null },
+            mensagem: 'Verificação de dia útil realizada com sucesso',
+        };
     }
-
-    const diaNaoUtil = await this.calendarioRepositorio.recuperarTipo({ data: dataObjeto });
-
-    if (diaNaoUtil !== null) {
-      const motivo = diaNaoUtil.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO
-        ? `${diaNaoUtil.tipo} (meio período)`
-        : diaNaoUtil.tipo;
-
-      return {
-        sucesso: true,
-        dados:   { data: dataString, ehDiaUtil: false, motivo },
-        mensagem: 'Verificação de dia útil realizada com sucesso',
-      };
-    }
-
-    return {
-      sucesso:  true,
-      dados:    { data: dataString, ehDiaUtil: true, motivo: null },
-      mensagem: 'Verificação de dia útil realizada com sucesso',
-    };
-  }
 }

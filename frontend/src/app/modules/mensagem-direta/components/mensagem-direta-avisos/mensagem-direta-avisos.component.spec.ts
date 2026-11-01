@@ -16,330 +16,330 @@ import { MensagemDiretaAvisosComponent } from './mensagem-direta-avisos.componen
 // o som e a contagem de 8 s com pausa. O usuário autenticado de teste tem id 1; as outras pessoas são a 9 (Camila) e a 15 (Rafael).
 
 class EventosFalso {
-  readonly conectado = signal(true);
-  iniciar(): void {}
-  parar(): void {}
+    readonly conectado = signal(true);
+    iniciar(): void {}
+    parar(): void {}
 }
 
 class SomFalso {
-  toques = 0;
-  tocar(): void {
-    this.toques++;
-  }
+    toques = 0;
+    tocar(): void {
+        this.toques++;
+    }
 }
 
 function mensagemDe(autorUsuarioId: number, texto: string, parcial: Record<string, unknown> = {}) {
-  const outro = autorUsuarioId === 1 ? 9 : autorUsuarioId;
-  return {
-    mensagemId: `m-${Math.random().toString(36).slice(2)}`,
-    conversaId: `${Math.min(1, outro)}-${Math.max(1, outro)}`,
-    autor: AutorMensagemDiretaEnum.USUARIO,
-    autorUsuarioId,
-    texto,
-    contemCodigo: false,
-    mencoes: [] as number[],
-    referencias: [],
-    createdDate: new Date().toISOString() as never,
-    ...parcial,
-  };
+    const outro = autorUsuarioId === 1 ? 9 : autorUsuarioId;
+    return {
+        mensagemId: `m-${Math.random().toString(36).slice(2)}`,
+        conversaId: `${Math.min(1, outro)}-${Math.max(1, outro)}`,
+        autor: AutorMensagemDiretaEnum.USUARIO,
+        autorUsuarioId,
+        texto,
+        contemCodigo: false,
+        mencoes: [] as number[],
+        referencias: [],
+        createdDate: new Date().toISOString() as never,
+        ...parcial,
+    };
 }
 
 function conversaDaLista(usuarioId: number, nome: string, silenciada = false) {
-  return normalizarConversa({ conversaId: `1-${usuarioId}`, usuarioId, usuarioNome: nome, ultimaMensagem: null, naoLidas: 0, silenciada, online: false });
+    return normalizarConversa({ conversaId: `1-${usuarioId}`, usuarioId, usuarioNome: nome, ultimaMensagem: null, naoLidas: 0, silenciada, online: false });
 }
 
 describe('MensagemDiretaAvisosComponent', () => {
-  let tela: ComponenteMontado<MensagemDiretaAvisosComponent>;
-  let estado: MensagemDiretaEstadoService;
-  let avisos: MensagemDiretaAvisosService;
-  let som: SomFalso;
+    let tela: ComponenteMontado<MensagemDiretaAvisosComponent>;
+    let estado: MensagemDiretaEstadoService;
+    let avisos: MensagemDiretaAvisosService;
+    let som: SomFalso;
 
-  beforeEach(async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
-    tela = await montarComponente(MensagemDiretaAvisosComponent, {
-      usuario: TipoUsuarioEnum.DESENVOLVEDOR,
-      provedores: [
-        { provide: MensagemDiretaEventosService, useClass: EventosFalso },
-        { provide: MensagemDiretaSomService, useClass: SomFalso },
-      ],
+    beforeEach(async () => {
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
+        tela = await montarComponente(MensagemDiretaAvisosComponent, {
+            usuario: TipoUsuarioEnum.DESENVOLVEDOR,
+            provedores: [
+                { provide: MensagemDiretaEventosService, useClass: EventosFalso },
+                { provide: MensagemDiretaSomService, useClass: SomFalso },
+            ],
+        });
+        estado = TestBed.inject(MensagemDiretaEstadoService);
+        avisos = TestBed.inject(MensagemDiretaAvisosService);
+        som = TestBed.inject(MensagemDiretaSomService) as unknown as SomFalso;
+        estado.conversas.set([conversaDaLista(9, 'Camila Duarte'), conversaDaLista(15, 'Rafael Lima')]);
     });
-    estado = TestBed.inject(MensagemDiretaEstadoService);
-    avisos = TestBed.inject(MensagemDiretaAvisosService);
-    som = TestBed.inject(MensagemDiretaSomService) as unknown as SomFalso;
-    estado.conversas.set([conversaDaLista(9, 'Camila Duarte'), conversaDaLista(15, 'Rafael Lima')]);
-  });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  const chegar = async (autorUsuarioId: number, texto: string, parcial: Record<string, unknown> = {}) => {
-    estado.aplicarEvento({ tipo: 'MENSAGEM', mensagem: mensagemDe(autorUsuarioId, texto, parcial) as never });
-    await vi.advanceTimersByTimeAsync(0);
-    await tela.atualizar();
-  };
-  const cartoes = () => Array.from(tela.elemento.querySelectorAll('.aviso-direto'));
-  const texto = () => tela.elemento.textContent ?? '';
-
-  it('mensagem de outra pessoa mostra o cartão com o nome e a prévia sem marcação', async () => {
-    await chegar(9, '**Oi**, dá uma olhada?');
-    expect(cartoes().length).toBe(1);
-    expect(texto()).toContain('Camila Duarte');
-    expect(texto()).toContain('Oi, dá uma olhada?');
-    // O cartão renderiza o Markdown (negrito vira elemento), em vez de mostrar a marcação ou só o texto cru.
-    expect(tela.elemento.querySelector('.aviso-direto__texto strong')?.textContent).toBe('Oi');
-    expect(tela.elemento.querySelector('.aviso-direto')?.getAttribute('aria-label')).toBe('Mensagem nova de Camila Duarte');
-  });
-
-  it('mensagens seguidas da mesma pessoa atualizam o MESMO cartão; outra pessoa abre outro', async () => {
-    await chegar(9, 'primeira');
-    await chegar(9, 'segunda');
-    await chegar(15, 'da outra pessoa');
-    expect(cartoes().length).toBe(2);
-    expect(texto()).toContain('2 mensagens novas');
-    expect(texto()).toContain('segunda');
-    expect(texto()).not.toContain('primeira');
-  });
-
-  it('a menção aparece destacada como "@você"', async () => {
-    await chegar(9, 'veja isso', { mencoes: [1] });
-    expect(tela.elemento.querySelector('.aviso-direto__mencao')?.textContent).toContain('@você');
-  });
-
-  it('não avisa mensagem minha (outra aba) nem a resposta do próprio envio', async () => {
-    await chegar(1, 'escrevi em outra aba', { conversaId: '1-9' });
-    expect(cartoes().length).toBe(0);
-  });
-
-  it('avisos desligados e silêncio geral calam tudo, inclusive a menção; vencido o prazo, voltam', async () => {
-    avisos.preferencia.update((p) => ({ ...p, avisosAtivos: false }));
-    await chegar(9, 'calada', { mencoes: [1] });
-    expect(cartoes().length).toBe(0);
-
-    avisos.preferencia.update((p) => ({ ...p, avisosAtivos: true, silenciadoAteDate: new Date(Date.now() + 3_600_000) }));
-    await chegar(9, 'calada de novo', { mencoes: [1] });
-    expect(cartoes().length).toBe(0);
-
-    await vi.advanceTimersByTimeAsync(3_600_001);
-    await chegar(9, 'agora avisa');
-    expect(cartoes().length).toBe(1);
-  });
-
-  it('conversa silenciada só avisa se a mensagem menciona o usuário', async () => {
-    estado.conversas.set([conversaDaLista(9, 'Camila Duarte', true)]);
-    await chegar(9, 'sem menção');
-    expect(cartoes().length).toBe(0);
-    await chegar(9, 'com menção', { mencoes: [1] });
-    expect(cartoes().length).toBe(1);
-  });
-
-  it('não avisa a conversa que o usuário está olhando (popup aberto nela e página visível)', async () => {
-    void estado.abrirConversa(9, 'Camila Duarte');
-    await vi.advanceTimersByTimeAsync(0);
-    responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversa/9'), { mensagens: [], proximoCursor: null, lidaAteDate: null });
-    await vi.advanceTimersByTimeAsync(0);
-
-    await chegar(9, 'estou vendo');
-    expect(cartoes().length).toBe(0);
-    // Outra pessoa, mesmo com o popup aberto: avisa.
-    await chegar(15, 'em outra conversa');
-    expect(cartoes().length).toBe(1);
-    responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/conversa/9/leitura'), { conversaId: '1-9', lidaAteDate: new Date().toISOString() });
-  });
-
-  it('o som só toca com a preferência ligada', async () => {
-    await chegar(9, 'sem som');
-    expect(som.toques).toBe(0);
-    avisos.preferencia.update((p) => ({ ...p, somAtivo: true }));
-    await chegar(15, 'com som');
-    expect(som.toques).toBe(1);
-  });
-
-  it('o cartão some sozinho em 8 s, o mouse em cima pausa a contagem e o fechar tira na hora', async () => {
-    await chegar(9, 'some sozinho');
-    await vi.advanceTimersByTimeAsync(7_000);
-    await tela.atualizar();
-    expect(cartoes().length).toBe(1);
-    await vi.advanceTimersByTimeAsync(1_001);
-    await tela.atualizar();
-    expect(cartoes().length).toBe(0);
-
-    await chegar(9, 'pausado');
-    const cartao = cartoes()[0];
-    await vi.advanceTimersByTimeAsync(3_000);
-    cartao.dispatchEvent(new MouseEvent('mouseenter'));
-    await vi.advanceTimersByTimeAsync(60_000);
-    await tela.atualizar();
-    expect(cartoes().length).toBe(1);
-
-    cartao.dispatchEvent(new MouseEvent('mouseleave'));
-    await vi.advanceTimersByTimeAsync(5_001);
-    await tela.atualizar();
-    expect(cartoes().length).toBe(0);
-
-    await chegar(9, 'fechado à mão');
-    tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Fechar aviso"]')!.click();
-    await tela.atualizar();
-    expect(cartoes().length).toBe(0);
-  });
-
-  it('uma mensagem nova reinicia a contagem do cartão', async () => {
-    await chegar(9, 'primeira');
-    await vi.advanceTimersByTimeAsync(7_000);
-    await chegar(9, 'segunda');
-    await vi.advanceTimersByTimeAsync(7_000);
-    await tela.atualizar();
-    expect(cartoes().length).toBe(1);
-    await vi.advanceTimersByTimeAsync(1_100);
-    await tela.atualizar();
-    expect(cartoes().length).toBe(0);
-  });
-
-  it('Responder abre a conversa com quem escreveu e tira o cartão', async () => {
-    await chegar(9, 'responda-me');
-    Array.from(tela.elemento.querySelectorAll<HTMLButtonElement>('button')).find((b) => b.textContent?.includes('Responder'))!.click();
-    await vi.advanceTimersByTimeAsync(0);
-    await tela.atualizar();
-
-    expect(estado.aberto()).toBe(true);
-    expect(estado.visao()).toBe('CONVERSA');
-    expect(estado.conversaAberta()?.usuarioId).toBe(9);
-    expect(cartoes().length).toBe(0);
-    esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversa/9');
-  });
-
-  it('conversa nova (fora da lista): o cartão espera a lista recarregar para ter o nome', async () => {
-    estado.conversas.set([]);
-    estado.aplicarEvento({ tipo: 'MENSAGEM', mensagem: mensagemDe(15, 'oi de quem eu não conhecia') as never });
-    await vi.advanceTimersByTimeAsync(0);
-    responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversas'), {
-      conversas: [{ conversaId: '1-15', usuarioId: 15, usuarioNome: 'Rafael Lima', ultimaMensagem: null, naoLidas: 1, silenciada: false, online: false }],
+    afterEach(() => {
+        vi.useRealTimers();
     });
-    await vi.advanceTimersByTimeAsync(0);
-    await tela.atualizar();
-    expect(texto()).toContain('Rafael Lima');
-  });
 
-  it('o mouse e o foco pausam de forma independente: sair de um com o outro ainda em cima mantém o cartão', async () => {
-    await chegar(9, 'foco e mouse');
-    const cartao = cartoes()[0];
-    cartao.dispatchEvent(new Event('focusin'));
-    cartao.dispatchEvent(new MouseEvent('mouseenter'));
-    cartao.dispatchEvent(new MouseEvent('mouseleave'));
-    await vi.advanceTimersByTimeAsync(60_000);
-    await tela.atualizar();
-    expect(cartoes().length).toBe(1);
+    const chegar = async (autorUsuarioId: number, texto: string, parcial: Record<string, unknown> = {}) => {
+        estado.aplicarEvento({ tipo: 'MENSAGEM', mensagem: mensagemDe(autorUsuarioId, texto, parcial) as never });
+        await vi.advanceTimersByTimeAsync(0);
+        await tela.atualizar();
+    };
+    const cartoes = () => Array.from(tela.elemento.querySelectorAll('.aviso-direto'));
+    const texto = () => tela.elemento.textContent ?? '';
 
-    cartao.dispatchEvent(new Event('focusout'));
-    await vi.advanceTimersByTimeAsync(8_001);
-    await tela.atualizar();
-    expect(cartoes().length).toBe(0);
-  });
+    it('mensagem de outra pessoa mostra o cartão com o nome e a prévia sem marcação', async () => {
+        await chegar(9, '**Oi**, dá uma olhada?');
+        expect(cartoes().length).toBe(1);
+        expect(texto()).toContain('Camila Duarte');
+        expect(texto()).toContain('Oi, dá uma olhada?');
+        // O cartão renderiza o Markdown (negrito vira elemento), em vez de mostrar a marcação ou só o texto cru.
+        expect(tela.elemento.querySelector('.aviso-direto__texto strong')?.textContent).toBe('Oi');
+        expect(tela.elemento.querySelector('.aviso-direto')?.getAttribute('aria-label')).toBe('Mensagem nova de Camila Duarte');
+    });
 
-  it('se a sessão acabar enquanto a lista recarrega, o aviso da mensagem da sessão anterior não aparece', async () => {
-    estado.conversas.set([]);
-    estado.aplicarEvento({ tipo: 'MENSAGEM', mensagem: mensagemDe(15, 'mensagem privada') as never });
-    await vi.advanceTimersByTimeAsync(0);
-    estado.parar();
-    responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversas'), { conversas: [] });
-    await vi.advanceTimersByTimeAsync(0);
-    await tela.atualizar();
-    expect(cartoes().length).toBe(0);
-    expect(avisos.avisos().length).toBe(0);
-  });
+    it('mensagens seguidas da mesma pessoa atualizam o MESMO cartão; outra pessoa abre outro', async () => {
+        await chegar(9, 'primeira');
+        await chegar(9, 'segunda');
+        await chegar(15, 'da outra pessoa');
+        expect(cartoes().length).toBe(2);
+        expect(texto()).toContain('2 mensagens novas');
+        expect(texto()).toContain('segunda');
+        expect(texto()).not.toContain('primeira');
+    });
+
+    it('a menção aparece destacada como "@você"', async () => {
+        await chegar(9, 'veja isso', { mencoes: [1] });
+        expect(tela.elemento.querySelector('.aviso-direto__mencao')?.textContent).toContain('@você');
+    });
+
+    it('não avisa mensagem minha (outra aba) nem a resposta do próprio envio', async () => {
+        await chegar(1, 'escrevi em outra aba', { conversaId: '1-9' });
+        expect(cartoes().length).toBe(0);
+    });
+
+    it('avisos desligados e silêncio geral calam tudo, inclusive a menção; vencido o prazo, voltam', async () => {
+        avisos.preferencia.update((preferenciaNaTelaLocal) => ({ ...preferenciaNaTelaLocal, avisosAtivos: false }));
+        await chegar(9, 'calada', { mencoes: [1] });
+        expect(cartoes().length).toBe(0);
+
+        avisos.preferencia.update((preferenciaNaTelaSelecionado) => ({ ...preferenciaNaTelaSelecionado, avisosAtivos: true, silenciadoAteDate: new Date(Date.now() + 3_600_000) }));
+        await chegar(9, 'calada de novo', { mencoes: [1] });
+        expect(cartoes().length).toBe(0);
+
+        await vi.advanceTimersByTimeAsync(3_600_001);
+        await chegar(9, 'agora avisa');
+        expect(cartoes().length).toBe(1);
+    });
+
+    it('conversa silenciada só avisa se a mensagem menciona o usuário', async () => {
+        estado.conversas.set([conversaDaLista(9, 'Camila Duarte', true)]);
+        await chegar(9, 'sem menção');
+        expect(cartoes().length).toBe(0);
+        await chegar(9, 'com menção', { mencoes: [1] });
+        expect(cartoes().length).toBe(1);
+    });
+
+    it('não avisa a conversa que o usuário está olhando (popup aberto nela e página visível)', async () => {
+        void estado.abrirConversa(9, 'Camila Duarte');
+        await vi.advanceTimersByTimeAsync(0);
+        responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversa/9'), { mensagens: [], proximoCursor: null, lidaAteDate: null });
+        await vi.advanceTimersByTimeAsync(0);
+
+        await chegar(9, 'estou vendo');
+        expect(cartoes().length).toBe(0);
+        // Outra pessoa, mesmo com o popup aberto: avisa.
+        await chegar(15, 'em outra conversa');
+        expect(cartoes().length).toBe(1);
+        responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/conversa/9/leitura'), { conversaId: '1-9', lidaAteDate: new Date().toISOString() });
+    });
+
+    it('o som só toca com a preferência ligada', async () => {
+        await chegar(9, 'sem som');
+        expect(som.toques).toBe(0);
+        avisos.preferencia.update((preferenciaNaTelaPrincipal) => ({ ...preferenciaNaTelaPrincipal, somAtivo: true }));
+        await chegar(15, 'com som');
+        expect(som.toques).toBe(1);
+    });
+
+    it('o cartão some sozinho em 8 s, o mouse em cima pausa a contagem e o fechar tira na hora', async () => {
+        await chegar(9, 'some sozinho');
+        await vi.advanceTimersByTimeAsync(7_000);
+        await tela.atualizar();
+        expect(cartoes().length).toBe(1);
+        await vi.advanceTimersByTimeAsync(1_001);
+        await tela.atualizar();
+        expect(cartoes().length).toBe(0);
+
+        await chegar(9, 'pausado');
+        const cartao = cartoes()[0];
+        await vi.advanceTimersByTimeAsync(3_000);
+        cartao.dispatchEvent(new MouseEvent('mouseenter'));
+        await vi.advanceTimersByTimeAsync(60_000);
+        await tela.atualizar();
+        expect(cartoes().length).toBe(1);
+
+        cartao.dispatchEvent(new MouseEvent('mouseleave'));
+        await vi.advanceTimersByTimeAsync(5_001);
+        await tela.atualizar();
+        expect(cartoes().length).toBe(0);
+
+        await chegar(9, 'fechado à mão');
+        tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Fechar aviso"]')!.click();
+        await tela.atualizar();
+        expect(cartoes().length).toBe(0);
+    });
+
+    it('uma mensagem nova reinicia a contagem do cartão', async () => {
+        await chegar(9, 'primeira');
+        await vi.advanceTimersByTimeAsync(7_000);
+        await chegar(9, 'segunda');
+        await vi.advanceTimersByTimeAsync(7_000);
+        await tela.atualizar();
+        expect(cartoes().length).toBe(1);
+        await vi.advanceTimersByTimeAsync(1_100);
+        await tela.atualizar();
+        expect(cartoes().length).toBe(0);
+    });
+
+    it('Responder abre a conversa com quem escreveu e tira o cartão', async () => {
+        await chegar(9, 'responda-me');
+        Array.from(tela.elemento.querySelectorAll<HTMLButtonElement>('button')).find((botaoDaTela) => botaoDaTela.textContent?.includes('Responder'))!.click();
+        await vi.advanceTimersByTimeAsync(0);
+        await tela.atualizar();
+
+        expect(estado.aberto()).toBe(true);
+        expect(estado.visao()).toBe('CONVERSA');
+        expect(estado.conversaAberta()?.usuarioId).toBe(9);
+        expect(cartoes().length).toBe(0);
+        esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversa/9');
+    });
+
+    it('conversa nova (fora da lista): o cartão espera a lista recarregar para ter o nome', async () => {
+        estado.conversas.set([]);
+        estado.aplicarEvento({ tipo: 'MENSAGEM', mensagem: mensagemDe(15, 'oi de quem eu não conhecia') as never });
+        await vi.advanceTimersByTimeAsync(0);
+        responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversas'), {
+            conversas: [{ conversaId: '1-15', usuarioId: 15, usuarioNome: 'Rafael Lima', ultimaMensagem: null, naoLidas: 1, silenciada: false, online: false }],
+        });
+        await vi.advanceTimersByTimeAsync(0);
+        await tela.atualizar();
+        expect(texto()).toContain('Rafael Lima');
+    });
+
+    it('o mouse e o foco pausam de forma independente: sair de um com o outro ainda em cima mantém o cartão', async () => {
+        await chegar(9, 'foco e mouse');
+        const cartao = cartoes()[0];
+        cartao.dispatchEvent(new Event('focusin'));
+        cartao.dispatchEvent(new MouseEvent('mouseenter'));
+        cartao.dispatchEvent(new MouseEvent('mouseleave'));
+        await vi.advanceTimersByTimeAsync(60_000);
+        await tela.atualizar();
+        expect(cartoes().length).toBe(1);
+
+        cartao.dispatchEvent(new Event('focusout'));
+        await vi.advanceTimersByTimeAsync(8_001);
+        await tela.atualizar();
+        expect(cartoes().length).toBe(0);
+    });
+
+    it('se a sessão acabar enquanto a lista recarrega, o aviso da mensagem da sessão anterior não aparece', async () => {
+        estado.conversas.set([]);
+        estado.aplicarEvento({ tipo: 'MENSAGEM', mensagem: mensagemDe(15, 'mensagem privada') as never });
+        await vi.advanceTimersByTimeAsync(0);
+        estado.parar();
+        responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversas'), { conversas: [] });
+        await vi.advanceTimersByTimeAsync(0);
+        await tela.atualizar();
+        expect(cartoes().length).toBe(0);
+        expect(avisos.avisos().length).toBe(0);
+    });
 });
 
 describe('MensagemDiretaAvisosComponent no Project Desktop (task 213)', () => {
-  const avisosDoDesktop: unknown[] = [];
-  const projetoOculto = signal(false);
-  const desktopFalso = {
-    disponivel: true,
-    oculto: projetoOculto,
-    paginaOculta: () => document.visibilityState === 'hidden' || projetoOculto(),
-    avisarMensagem: (aviso: unknown) => avisosDoDesktop.push(aviso),
-  };
-  let tela: ComponenteMontado<MensagemDiretaAvisosComponent>;
-  let estado: MensagemDiretaEstadoService;
-  let avisos: MensagemDiretaAvisosService;
-  let som: SomFalso;
+    const avisosDoDesktop: unknown[] = [];
+    const projetoOculto = signal(false);
+    const desktopFalso = {
+        disponivel: true,
+        oculto: projetoOculto,
+        paginaOculta: () => document.visibilityState === 'hidden' || projetoOculto(),
+        avisarMensagem: (aviso: unknown) => avisosDoDesktop.push(aviso),
+    };
+    let tela: ComponenteMontado<MensagemDiretaAvisosComponent>;
+    let estado: MensagemDiretaEstadoService;
+    let avisos: MensagemDiretaAvisosService;
+    let som: SomFalso;
 
-  function esconderAPagina(oculta: boolean) {
-    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(oculta ? 'hidden' : 'visible');
-  }
+    function esconderAPagina(oculta: boolean) {
+        vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(oculta ? 'hidden' : 'visible');
+    }
 
-  beforeEach(async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
-    avisosDoDesktop.length = 0;
-    projetoOculto.set(false);
-    tela = await montarComponente(MensagemDiretaAvisosComponent, {
-      usuario: TipoUsuarioEnum.DESENVOLVEDOR,
-      provedores: [
-        { provide: MensagemDiretaEventosService, useClass: EventosFalso },
-        { provide: MensagemDiretaSomService, useClass: SomFalso },
-        { provide: ProjectDesktopService, useValue: desktopFalso },
-      ],
+    beforeEach(async () => {
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
+        avisosDoDesktop.length = 0;
+        projetoOculto.set(false);
+        tela = await montarComponente(MensagemDiretaAvisosComponent, {
+            usuario: TipoUsuarioEnum.DESENVOLVEDOR,
+            provedores: [
+                { provide: MensagemDiretaEventosService, useClass: EventosFalso },
+                { provide: MensagemDiretaSomService, useClass: SomFalso },
+                { provide: ProjectDesktopService, useValue: desktopFalso },
+            ],
+        });
+        estado = TestBed.inject(MensagemDiretaEstadoService);
+        avisos = TestBed.inject(MensagemDiretaAvisosService);
+        som = TestBed.inject(MensagemDiretaSomService) as unknown as SomFalso;
+        estado.conversas.set([conversaDaLista(9, 'Camila Duarte')]);
     });
-    estado = TestBed.inject(MensagemDiretaEstadoService);
-    avisos = TestBed.inject(MensagemDiretaAvisosService);
-    som = TestBed.inject(MensagemDiretaSomService) as unknown as SomFalso;
-    estado.conversas.set([conversaDaLista(9, 'Camila Duarte')]);
-  });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-    vi.useRealTimers();
-  });
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.useRealTimers();
+    });
 
-  const chegar = async (texto: string, parcial: Record<string, unknown> = {}) => {
-    estado.aplicarEvento({ tipo: 'MENSAGEM', mensagem: mensagemDe(9, texto, parcial) as never });
-    await vi.advanceTimersByTimeAsync(0);
-    await tela.atualizar();
-  };
+    const chegar = async (texto: string, parcial: Record<string, unknown> = {}) => {
+        estado.aplicarEvento({ tipo: 'MENSAGEM', mensagem: mensagemDe(9, texto, parcial) as never });
+        await vi.advanceTimersByTimeAsync(0);
+        await tela.atualizar();
+    };
 
-  it('com o Project oculto, o aviso vai ao Desktop (notificação do sistema) e não vira cartão nem toca o tom da página', async () => {
-    esconderAPagina(true);
-    avisos.preferencia.update((p) => ({ ...p, somAtivo: true }));
-    await chegar('oi, oculto', { mencoes: [1] });
-    expect(avisosDoDesktop).toEqual([{ usuarioId: 9, usuarioNome: 'Camila Duarte', texto: 'oi, oculto', mencionaVoce: true, som: true }]);
-    expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
-    expect(som.toques).toBe(0);
-  });
+    it('com o Project oculto, o aviso vai ao Desktop (notificação do sistema) e não vira cartão nem toca o tom da página', async () => {
+        esconderAPagina(true);
+        avisos.preferencia.update((preferenciaNaTelaSeguinte) => ({ ...preferenciaNaTelaSeguinte, somAtivo: true }));
+        await chegar('oi, oculto', { mencoes: [1] });
+        expect(avisosDoDesktop).toEqual([{ usuarioId: 9, usuarioNome: 'Camila Duarte', texto: 'oi, oculto', mencionaVoce: true, som: true }]);
+        expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
+        expect(som.toques).toBe(0);
+    });
 
-  it('com a janela do Project oculta pelo Desktop (a página segue "visible"), o aviso também vai ao sistema', async () => {
-    esconderAPagina(false);
-    projetoOculto.set(true);
-    await chegar('oi, janela oculta');
-    expect(avisosDoDesktop.length).toBe(1);
-    expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
-  });
+    it('com a janela do Project oculta pelo Desktop (a página segue "visible"), o aviso também vai ao sistema', async () => {
+        esconderAPagina(false);
+        projetoOculto.set(true);
+        await chegar('oi, janela oculta');
+        expect(avisosDoDesktop.length).toBe(1);
+        expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
+    });
 
-  it('com o aviso do Desktop desligado, nada aparece nem no sistema nem na página', async () => {
-    esconderAPagina(true);
-    avisos.preferencia.update((p) => ({ ...p, avisoDesktopAtivo: false }));
-    await chegar('oi, calado');
-    expect(avisosDoDesktop).toEqual([]);
-    expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
-  });
+    it('com o aviso do Desktop desligado, nada aparece nem no sistema nem na página', async () => {
+        esconderAPagina(true);
+        avisos.preferencia.update((preferenciaNaTelaAtual) => ({ ...preferenciaNaTelaAtual, avisoDesktopAtivo: false }));
+        await chegar('oi, calado');
+        expect(avisosDoDesktop).toEqual([]);
+        expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
+    });
 
-  it('as regras de silêncio valem também para a notificação do sistema', async () => {
-    esconderAPagina(true);
-    avisos.preferencia.update((p) => ({ ...p, silenciadoAteDate: new Date(Date.now() + 3_600_000) }));
-    await chegar('oi, silêncio', { mencoes: [1] });
-    expect(avisosDoDesktop).toEqual([]);
-  });
+    it('as regras de silêncio valem também para a notificação do sistema', async () => {
+        esconderAPagina(true);
+        avisos.preferencia.update((preferenciaNaTela) => ({ ...preferenciaNaTela, silenciadoAteDate: new Date(Date.now() + 3_600_000) }));
+        await chegar('oi, silêncio', { mencoes: [1] });
+        expect(avisosDoDesktop).toEqual([]);
+    });
 
-  it('com o Project à vista o Desktop não é acionado: vale o cartão', async () => {
-    esconderAPagina(false);
-    await chegar('oi, à vista');
-    expect(avisosDoDesktop).toEqual([]);
-    expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(1);
-  });
+    it('com o Project à vista o Desktop não é acionado: vale o cartão', async () => {
+        esconderAPagina(false);
+        await chegar('oi, à vista');
+        expect(avisosDoDesktop).toEqual([]);
+        expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(1);
+    });
 
-  it('a janela de chat do Desktop (avisos suprimidos) não avisa de nada', async () => {
-    esconderAPagina(false);
-    avisos.suprimido.set(true);
-    await chegar('oi, suprimido');
-    expect(avisosDoDesktop).toEqual([]);
-    expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
-  });
+    it('a janela de chat do Desktop (avisos suprimidos) não avisa de nada', async () => {
+        esconderAPagina(false);
+        avisos.suprimido.set(true);
+        await chegar('oi, suprimido');
+        expect(avisosDoDesktop).toEqual([]);
+        expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
+    });
 });

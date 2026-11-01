@@ -1,4 +1,4 @@
 export class DemandaTagInternoRemoverDto {
-  demandaId: number;
-  tagId: number;
+    demandaId: number;
+    tagId: number;
 }

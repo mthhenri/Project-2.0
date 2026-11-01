@@ -13,44 +13,44 @@ import { AtividadeService } from '../services/atividade.service';
  */
 @Injectable()
 export class CriarAtividadeExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.CRIAR_ATIVIDADE;
+    readonly tipo = TipoPropostaIaEnum.CRIAR_ATIVIDADE;
 
-  constructor(
-    private readonly atividadeService: AtividadeService,
-    private readonly atividadeRepositorio: AtividadeRepository,
-  ) {}
+    constructor(
+        private readonly atividadeService: AtividadeService,
+        private readonly atividadeRepositorio: AtividadeRepository,
+    ) {}
 
-  validar(dados: Record<string, unknown>): void {
-    validarDadosDaProposta(PropostaCriarAtividadeDadosDto, dados);
-  }
-
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const entrada = validarDadosDaProposta(PropostaCriarAtividadeDadosDto, dados);
-    // A service já ignora `usuarioId` de quem não é gestor (e a atividade sairia no nome errado): recusar é melhor que criar para a pessoa errada.
-    if (entrada.usuarioId !== undefined && entrada.usuarioId !== usuarioAtivo.sub && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
-      throw new BusinessException('Só o gestor cria atividade para outra pessoa');
+    validar(dados: Record<string, unknown>): void {
+        validarDadosDaProposta(PropostaCriarAtividadeDadosDto, dados);
     }
-    const criada = await this.atividadeService.criar(
-      {
-        demandaId: entrada.demandaId,
-        usuarioId: entrada.usuarioId,
-        nome: entrada.nome,
-        status: TipoAtividadeStatusEnum.PLANEJADA,
-        prioridade: entrada.prioridade ?? TipoAtividadePrioridadeEnum.INDEFINIDA,
-      },
-      usuarioAtivo,
-    );
-    return { atividadeId: criada.dados?.id, nome: entrada.nome };
-  }
 
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    const atividadeId = Number(resultado['atividadeId']);
-    if (!Number.isInteger(atividadeId)) throw new BusinessException('Não há atividade a desfazer nesta proposta');
-    // `recuperar` confere a permissão do usuário sobre a atividade (e a existência).
-    await this.atividadeService.recuperar({ id: atividadeId }, usuarioAtivo);
-    if (await this.atividadeRepositorio.possuiExecucao({ id: atividadeId })) {
-      throw new BusinessException('A atividade já tem execuções: não dá para desfazer a criação');
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const entrada = validarDadosDaProposta(PropostaCriarAtividadeDadosDto, dados);
+        // A service já ignora `usuarioId` de quem não é gestor (e a atividade sairia no nome errado): recusar é melhor que criar para a pessoa errada.
+        if (entrada.usuarioId !== undefined && entrada.usuarioId !== usuarioAtivo.sub && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+            throw new BusinessException('Só o gestor cria atividade para outra pessoa');
+        }
+        const criada = await this.atividadeService.criar(
+            {
+                demandaId: entrada.demandaId,
+                usuarioId: entrada.usuarioId,
+                nome: entrada.nome,
+                status: TipoAtividadeStatusEnum.PLANEJADA,
+                prioridade: entrada.prioridade ?? TipoAtividadePrioridadeEnum.INDEFINIDA,
+            },
+            usuarioAtivo,
+        );
+        return { atividadeId: criada.dados?.id, nome: entrada.nome };
     }
-    await this.atividadeService.excluir({ id: atividadeId }, usuarioAtivo);
-  }
+
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        const atividadeId = Number(resultado['atividadeId']);
+        if (!Number.isInteger(atividadeId)) throw new BusinessException('Não há atividade a desfazer nesta proposta');
+        // `recuperar` confere a permissão do usuário sobre a atividade (e a existência).
+        await this.atividadeService.recuperar({ id: atividadeId }, usuarioAtivo);
+        if (await this.atividadeRepositorio.possuiExecucao({ id: atividadeId })) {
+            throw new BusinessException('A atividade já tem execuções: não dá para desfazer a criação');
+        }
+        await this.atividadeService.excluir({ id: atividadeId }, usuarioAtivo);
+    }
 }

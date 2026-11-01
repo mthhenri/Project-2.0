@@ -10,18 +10,18 @@ import { calcularBarraHoras } from '../../utils/demanda-horas.util';
  * Árvore (`app-demanda-barra-horas`, que trava em 100%): aquela cabe na linha da lista, esta conta o estouro.
  */
 @Component({
-  selector: 'app-demanda-barra-controle-horas',
-  standalone: true,
-  imports: [TooltipModule, TempoExibicaoPipe],
-  templateUrl: './demanda-barra-controle-horas.component.html',
-  styleUrl: './demanda-barra-controle-horas.component.scss',
+    selector: 'app-demanda-barra-controle-horas',
+    standalone: true,
+    imports: [TooltipModule, TempoExibicaoPipe],
+    templateUrl: './demanda-barra-controle-horas.component.html',
+    styleUrl: './demanda-barra-controle-horas.component.scss',
 })
 export class DemandaBarraControleHorasComponent {
-  readonly unidadeTempo = inject(VisualizacaoTempoService);
+    readonly unidadeTempo = inject(VisualizacaoTempoService);
 
-  readonly minutosExecutados = input.required<number>();
-  readonly horasEstimadas = input.required<number>();
+    readonly minutosExecutados = input.required<number>();
+    readonly horasEstimadas = input.required<number>();
 
-  readonly barra = computed(() => calcularBarraHoras(this.minutosExecutados(), this.horasEstimadas()));
-  readonly temEstimativa = computed(() => this.horasEstimadas() > 0);
+    readonly barra = computed(() => calcularBarraHoras(this.minutosExecutados(), this.horasEstimadas()));
+    readonly temEstimativa = computed(() => this.horasEstimadas() > 0);
 }

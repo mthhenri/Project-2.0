@@ -13,24 +13,24 @@ import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe'
  * executor e tempo, mais "Nova atividade" e "Ver todas". Só apresenta; quem hospeda carrega a lista e abre o que os botões pedem.
  */
 @Component({
-  selector: 'app-demanda-atividades-painel',
-  standalone: true,
-  imports: [ButtonModule, Tag, TooltipModule, PrioridadeSeloComponent, TempoExibicaoPipe],
-  templateUrl: './demanda-atividades-painel.component.html',
-  styleUrl: './demanda-atividades-painel.component.scss',
+    selector: 'app-demanda-atividades-painel',
+    standalone: true,
+    imports: [ButtonModule, Tag, TooltipModule, PrioridadeSeloComponent, TempoExibicaoPipe],
+    templateUrl: './demanda-atividades-painel.component.html',
+    styleUrl: './demanda-atividades-painel.component.scss',
 })
 export class DemandaAtividadesPainelComponent {
-  readonly unidadeTempo = inject(VisualizacaoTempoService);
+    readonly unidadeTempo = inject(VisualizacaoTempoService);
 
-  readonly atividades = input.required<AtividadeResumoDto[]>();
-  readonly carregando = input<boolean>(false);
-  readonly nova = output<void>();
-  readonly verTodas = output<void>();
+    readonly atividades = input.required<AtividadeResumoDto[]>();
+    readonly carregando = input<boolean>(false);
+    readonly nova = output<void>();
+    readonly verTodas = output<void>();
 
-  readonly severidadeStatusAtividade = severidadeStatusAtividade;
-  readonly rotuloStatusAtividade = rotuloStatusAtividade;
+    readonly severidadeStatusAtividade = severidadeStatusAtividade;
+    readonly rotuloStatusAtividade = rotuloStatusAtividade;
 
-  iniciaisUsuario(nome: string): string {
-    return (nome ?? '').split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
-  }
+    iniciaisUsuario(nome: string): string {
+        return (nome ?? '').split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
+    }
 }

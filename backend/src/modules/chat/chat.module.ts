@@ -17,31 +17,31 @@ import { ChatPlanoService } from './services/chat-plano.service';
 import { ChatService } from './services/chat.service';
 
 @Module({
-  imports:     [ConfiguracaoIaModule, IaModule, PromptModule, FerramentaIaModule, PropostaIaModule, UsuarioModule, PlanoModule],
-  controllers: [ChatController],
-  providers:   [
-    armazenamentoDeChatProvider,
-    ChatService,
-    ChatDesenvolvedorService,
-    ChatPlanoService,
-    ListarConversasDoDesenvolvedorFerramenta,
-    ConsultarConversaDoDesenvolvedorFerramenta,
-    BuscarNasConversasDoDesenvolvedorFerramenta,
-  ],
-  exports:     [ARMAZENAMENTO_DE_CHAT, ChatService],
+    imports:     [ConfiguracaoIaModule, IaModule, PromptModule, FerramentaIaModule, PropostaIaModule, UsuarioModule, PlanoModule],
+    controllers: [ChatController],
+    providers:   [
+        armazenamentoDeChatProvider,
+        ChatService,
+        ChatDesenvolvedorService,
+        ChatPlanoService,
+        ListarConversasDoDesenvolvedorFerramenta,
+        ConsultarConversaDoDesenvolvedorFerramenta,
+        BuscarNasConversasDoDesenvolvedorFerramenta,
+    ],
+    exports:     [ARMAZENAMENTO_DE_CHAT, ChatService],
 })
 export class ChatModule implements OnModuleInit {
-  constructor(
-    private readonly registroDeFerramentas: FerramentaIaRegistro,
-    private readonly listarConversasDoDesenvolvedor: ListarConversasDoDesenvolvedorFerramenta,
-    private readonly consultarConversaDoDesenvolvedor: ConsultarConversaDoDesenvolvedorFerramenta,
-    private readonly buscarNasConversasDoDesenvolvedor: BuscarNasConversasDoDesenvolvedorFerramenta,
-  ) {}
+    constructor(
+        private readonly registroDeFerramentas: FerramentaIaRegistro,
+        private readonly listarConversasDoDesenvolvedor: ListarConversasDoDesenvolvedorFerramenta,
+        private readonly consultarConversaDoDesenvolvedor: ConsultarConversaDoDesenvolvedorFerramenta,
+        private readonly buscarNasConversasDoDesenvolvedor: BuscarNasConversasDoDesenvolvedorFerramenta,
+    ) {}
 
-  /** As ferramentas do gestor sobre as conversas dos desenvolvedores se registram aqui. */
-  onModuleInit(): void {
-    this.registroDeFerramentas.registrar(this.listarConversasDoDesenvolvedor);
-    this.registroDeFerramentas.registrar(this.consultarConversaDoDesenvolvedor);
-    this.registroDeFerramentas.registrar(this.buscarNasConversasDoDesenvolvedor);
-  }
+    /** As ferramentas do gestor sobre as conversas dos desenvolvedores se registram aqui. */
+    onModuleInit(): void {
+        this.registroDeFerramentas.registrar(this.listarConversasDoDesenvolvedor);
+        this.registroDeFerramentas.registrar(this.consultarConversaDoDesenvolvedor);
+        this.registroDeFerramentas.registrar(this.buscarNasConversasDoDesenvolvedor);
+    }
 }

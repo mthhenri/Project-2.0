@@ -5,7 +5,7 @@
  * O complemento `Interno` precede o verbo `Alterar` (§5.1).
  */
 export class TagInternoAlterarDto {
-  id: number;
-  nome?: string;
-  cor?: string;
+    id: number;
+    nome?: string;
+    cor?: string;
 }

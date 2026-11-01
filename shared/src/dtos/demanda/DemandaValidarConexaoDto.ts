@@ -1,4 +1,4 @@
 export class DemandaValidarConexaoDto {
-  demandaOrigemId: number;
-  demandaDestinoId: number;
+    demandaOrigemId: number;
+    demandaDestinoId: number;
 }

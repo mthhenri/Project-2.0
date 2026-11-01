@@ -5,17 +5,17 @@ import { ConsultarDataEHoraFerramenta } from './ferramentas/consultar-data-e-hor
 
 /** Registro das ferramentas da IA. Os módulos de negócio (blocos 6 e 9) importam este módulo e registram as suas na subida. */
 @Module({
-  imports:   [PropostaIaModule],
-  providers: [FerramentaIaRegistro, ConsultarDataEHoraFerramenta],
-  exports:   [FerramentaIaRegistro],
+    imports:   [PropostaIaModule],
+    providers: [FerramentaIaRegistro, ConsultarDataEHoraFerramenta],
+    exports:   [FerramentaIaRegistro],
 })
 export class FerramentaIaModule implements OnModuleInit {
-  constructor(
-    private readonly registro: FerramentaIaRegistro,
-    private readonly consultarDataEHora: ConsultarDataEHoraFerramenta,
-  ) {}
+    constructor(
+        private readonly registro: FerramentaIaRegistro,
+        private readonly consultarDataEHora: ConsultarDataEHoraFerramenta,
+    ) {}
 
-  onModuleInit(): void {
-    this.registro.registrar(this.consultarDataEHora);
-  }
+    onModuleInit(): void {
+        this.registro.registrar(this.consultarDataEHora);
+    }
 }

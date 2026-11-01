@@ -16,56 +16,56 @@ import { AtividadeService } from '../services/atividade.service';
  */
 @Injectable()
 export class AtribuirTagExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.ATRIBUIR_TAG;
+    readonly tipo = TipoPropostaIaEnum.ATRIBUIR_TAG;
 
-  constructor(
-    private readonly demandaService: DemandaService,
-    private readonly atividadeService: AtividadeService,
-  ) {}
+    constructor(
+        private readonly demandaService: DemandaService,
+        private readonly atividadeService: AtividadeService,
+    ) {}
 
-  validar(dados: Record<string, unknown>): void {
-    const entrada = validarDadosDaProposta(PropostaAtribuirTagDadosDto, dados);
-    if ((entrada.adicionarTagIds ?? []).length === 0 && (entrada.removerTagIds ?? []).length === 0) throw new BusinessException('A proposta não altera nenhuma tag');
-  }
+    validar(dados: Record<string, unknown>): void {
+        const entrada = validarDadosDaProposta(PropostaAtribuirTagDadosDto, dados);
+        if ((entrada.adicionarTagIds ?? []).length === 0 && (entrada.removerTagIds ?? []).length === 0) throw new BusinessException('A proposta não altera nenhuma tag');
+    }
 
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const entrada = validarDadosDaProposta(PropostaAtribuirTagDadosDto, dados);
-    const antes = await this.lerTags(entrada.alvo, entrada.alvoId, usuarioAtivo);
-    const depois = calcularConjuntoDeTags(antes, entrada.adicionarTagIds, entrada.removerTagIds);
-    if (mesmoConjuntoDeTags(antes, depois)) throw new BusinessException('O alvo já está com essas tags: não há o que alterar');
-    await this.gravarTags(entrada.alvo, entrada.alvoId, depois, usuarioAtivo);
-    return { alvo: entrada.alvo, alvoId: entrada.alvoId, tagsAntesIds: antes, tagsDepoisIds: depois };
-  }
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const entrada = validarDadosDaProposta(PropostaAtribuirTagDadosDto, dados);
+        const antes = await this.lerTags(entrada.alvo, entrada.alvoId, usuarioAtivo);
+        const depois = calcularConjuntoDeTags(antes, entrada.adicionarTagIds, entrada.removerTagIds);
+        if (mesmoConjuntoDeTags(antes, depois)) throw new BusinessException('O alvo já está com essas tags: não há o que alterar');
+        await this.gravarTags(entrada.alvo, entrada.alvoId, depois, usuarioAtivo);
+        return { alvo: entrada.alvo, alvoId: entrada.alvoId, tagsAntesIds: antes, tagsDepoisIds: depois };
+    }
 
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    const alvo = resultado['alvo'] as 'DEMANDA' | 'ATIVIDADE';
-    const alvoId = Number(resultado['alvoId']);
-    const antes = resultado['tagsAntesIds'] as number[] | undefined;
-    const depois = resultado['tagsDepoisIds'] as number[] | undefined;
-    if ((alvo !== 'DEMANDA' && alvo !== 'ATIVIDADE') || !Number.isInteger(alvoId) || !antes || !depois) throw new BusinessException('Não há tags a desfazer nesta proposta');
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        const alvo = resultado['alvo'] as 'DEMANDA' | 'ATIVIDADE';
+        const alvoId = Number(resultado['alvoId']);
+        const antes = resultado['tagsAntesIds'] as number[] | undefined;
+        const depois = resultado['tagsDepoisIds'] as number[] | undefined;
+        if ((alvo !== 'DEMANDA' && alvo !== 'ATIVIDADE') || !Number.isInteger(alvoId) || !antes || !depois) throw new BusinessException('Não há tags a desfazer nesta proposta');
 
-    const atuais = await this.lerTags(alvo, alvoId, usuarioAtivo);
-    if (!mesmoConjuntoDeTags(atuais, depois)) throw new BusinessException('As tags mudaram depois desta alteração: não dá para desfazer com segurança');
-    await this.gravarTags(alvo, alvoId, antes, usuarioAtivo);
-  }
+        const atuais = await this.lerTags(alvo, alvoId, usuarioAtivo);
+        if (!mesmoConjuntoDeTags(atuais, depois)) throw new BusinessException('As tags mudaram depois desta alteração: não dá para desfazer com segurança');
+        await this.gravarTags(alvo, alvoId, antes, usuarioAtivo);
+    }
 
-  /** Obsoleta quando o alvo já está com o conjunto que a proposta produziria. */
-  async estaObsoleta(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
-    const entrada = validarDadosDaProposta(PropostaAtribuirTagDadosDto, dados);
-    const atuais = await this.lerTags(entrada.alvo, entrada.alvoId, usuarioAtivo);
-    return mesmoConjuntoDeTags(atuais, calcularConjuntoDeTags(atuais, entrada.adicionarTagIds, entrada.removerTagIds));
-  }
+    /** Obsoleta quando o alvo já está com o conjunto que a proposta produziria. */
+    async estaObsoleta(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const entrada = validarDadosDaProposta(PropostaAtribuirTagDadosDto, dados);
+        const atuais = await this.lerTags(entrada.alvo, entrada.alvoId, usuarioAtivo);
+        return mesmoConjuntoDeTags(atuais, calcularConjuntoDeTags(atuais, entrada.adicionarTagIds, entrada.removerTagIds));
+    }
 
-  private async lerTags(alvo: 'DEMANDA' | 'ATIVIDADE', alvoId: number, usuarioAtivo: JwtPayload): Promise<number[]> {
-    const tags =
-      alvo === 'DEMANDA'
-        ? (await this.demandaService.listarTagsDemanda({ id: alvoId }, usuarioAtivo)).dados
-        : (await this.atividadeService.listarTags({ id: alvoId }, usuarioAtivo)).dados;
-    return (tags ?? []).map((tag) => tag.id).sort((a, b) => a - b);
-  }
+    private async lerTags(alvo: 'DEMANDA' | 'ATIVIDADE', alvoId: number, usuarioAtivo: JwtPayload): Promise<number[]> {
+        const tags =
+            alvo === 'DEMANDA'
+                ? (await this.demandaService.listarTagsDemanda({ id: alvoId }, usuarioAtivo)).dados
+                : (await this.atividadeService.listarTags({ id: alvoId }, usuarioAtivo)).dados;
+        return (tags ?? []).map((tag) => tag.id).sort((item, segundo) => item - segundo);
+    }
 
-  private async gravarTags(alvo: 'DEMANDA' | 'ATIVIDADE', alvoId: number, tagIds: number[], usuarioAtivo: JwtPayload): Promise<void> {
-    if (alvo === 'DEMANDA') await this.demandaService.alterarTagsDemanda({ demandaId: alvoId, tagIds }, usuarioAtivo);
-    else await this.atividadeService.alterarTags({ id: alvoId, tagIds }, usuarioAtivo);
-  }
+    private async gravarTags(alvo: 'DEMANDA' | 'ATIVIDADE', alvoId: number, tagIds: number[], usuarioAtivo: JwtPayload): Promise<void> {
+        if (alvo === 'DEMANDA') await this.demandaService.alterarTagsDemanda({ demandaId: alvoId, tagIds }, usuarioAtivo);
+        else await this.atividadeService.alterarTags({ id: alvoId, tagIds }, usuarioAtivo);
+    }
 }

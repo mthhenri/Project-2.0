@@ -5,16 +5,16 @@ import { AtividadeResumoDto } from '@project20/shared';
 export type CampoDocumentoDaDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'documentacao';
 
 interface Documento {
-  campo: CampoDocumentoDaDemanda;
-  rotulo: string;
-  tipo: 'cliente' | 'tecnica' | 'doc';
-  icone: string;
+    campo: CampoDocumentoDaDemanda;
+    rotulo: string;
+    tipo: 'cliente' | 'tecnica' | 'doc';
+    icone: string;
 }
 
 const DOCUMENTOS: readonly Documento[] = [
-  { campo: 'descricaoCliente', rotulo: 'Descrição do cliente', tipo: 'cliente', icone: 'pi pi-user' },
-  { campo: 'descricaoTecnica', rotulo: 'Descrição técnica', tipo: 'tecnica', icone: 'icone-descricao icone-descricao--tecnica' },
-  { campo: 'documentacao', rotulo: 'Documentação', tipo: 'doc', icone: 'icone-descricao icone-descricao--doc' },
+    { campo: 'descricaoCliente', rotulo: 'Descrição do cliente', tipo: 'cliente', icone: 'pi pi-user' },
+    { campo: 'descricaoTecnica', rotulo: 'Descrição técnica', tipo: 'tecnica', icone: 'icone-descricao icone-descricao--tecnica' },
+    { campo: 'documentacao', rotulo: 'Documentação', tipo: 'doc', icone: 'icone-descricao icone-descricao--doc' },
 ];
 
 /**
@@ -22,24 +22,24 @@ const DOCUMENTOS: readonly Documento[] = [
  * Acesos (cor da família, negrito e brilho) quando a demanda tem o texto; apagados quando não tem. O clique abre o texto.
  */
 @Component({
-  selector: 'app-atividade-documentos-indicador',
-  standalone: true,
-  imports: [TooltipModule],
-  templateUrl: './atividade-documentos-indicador.component.html',
-  styleUrl: './atividade-documentos-indicador.component.scss',
+    selector: 'app-atividade-documentos-indicador',
+    standalone: true,
+    imports: [TooltipModule],
+    templateUrl: './atividade-documentos-indicador.component.html',
+    styleUrl: './atividade-documentos-indicador.component.scss',
 })
 export class AtividadeDocumentosIndicadorComponent {
-  readonly atividade = input.required<AtividadeResumoDto>();
-  readonly abrir = output<CampoDocumentoDaDemanda>();
-  /** O texto aberto no painel ao lado (task 288): o ícone dele fica marcado e, ao clicar de novo, quem hospeda fecha o painel. */
-  readonly campoAberto = input<CampoDocumentoDaDemanda | null>(null);
+    readonly atividade = input.required<AtividadeResumoDto>();
+    readonly abrir = output<CampoDocumentoDaDemanda>();
+    /** O texto aberto no painel ao lado (task 288): o ícone dele fica marcado e, ao clicar de novo, quem hospeda fecha o painel. */
+    readonly campoAberto = input<CampoDocumentoDaDemanda | null>(null);
 
-  readonly documentos = DOCUMENTOS;
+    readonly documentos = DOCUMENTOS;
 
-  temConteudo(campo: CampoDocumentoDaDemanda): boolean {
-    const atividade = this.atividade();
-    return campo === 'descricaoCliente' ? atividade.demandaTemDescricaoCliente
-      : campo === 'descricaoTecnica' ? atividade.demandaTemDescricaoTecnica
-      : atividade.demandaTemDocumentacao;
-  }
+    temConteudo(campo: CampoDocumentoDaDemanda): boolean {
+        const atividade = this.atividade();
+        return campo === 'descricaoCliente' ? atividade.demandaTemDescricaoCliente
+            : campo === 'descricaoTecnica' ? atividade.demandaTemDescricaoTecnica
+                : atividade.demandaTemDocumentacao;
+    }
 }

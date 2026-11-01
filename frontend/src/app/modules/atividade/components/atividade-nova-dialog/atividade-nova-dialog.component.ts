@@ -7,38 +7,39 @@ import { AtividadeFormularioComponent } from '../atividade-formulario/atividade-
 
 /** Dialog de nova atividade: é o único ponto de criação de atividades (não há página) e hospeda o formulário com os botões do rodapé. */
 @Component({
-  selector: 'app-atividade-nova-dialog',
-  standalone: true,
-  imports: [ButtonModule, DialogModule, DialogFormularioDirective, DialogDicaAtalhosComponent, AtividadeFormularioComponent],
-  templateUrl: './atividade-nova-dialog.component.html',
+    selector: 'app-atividade-nova-dialog',
+    standalone: true,
+    imports: [ButtonModule, DialogModule, DialogFormularioDirective, DialogDicaAtalhosComponent, AtividadeFormularioComponent],
+    templateUrl: './atividade-nova-dialog.component.html',
+    styleUrl: './atividade-nova-dialog.component.scss',
 })
 export class AtividadeNovaDialogComponent {
-  /** Emite após cada atividade criada, para o chamador recarregar o que exibe. */
-  readonly aoCriar = output<void>();
+    /** Emite após cada atividade criada, para o chamador recarregar o que exibe. */
+    readonly aoCriar = output<void>();
 
-  readonly visivel = signal<boolean>(false);
-  /** A demanda já escolhida ao abrir; o formulário é recriado a cada abertura (estado limpo, defaults de sempre). */
-  readonly demandaIdInicial = signal<number | null>(null);
+    readonly visivel = signal<boolean>(false);
+    /** A demanda já escolhida ao abrir; o formulário é recriado a cada abertura (estado limpo, defaults de sempre). */
+    readonly demandaIdInicial = signal<number | null>(null);
 
-  private readonly formulario = viewChild(AtividadeFormularioComponent);
+    private readonly formulario = viewChild(AtividadeFormularioComponent);
 
-  /** `demandaId`: demanda já selecionada ao abrir (opcional). */
-  abrir(demandaId: number | null = null): void {
-    this.demandaIdInicial.set(demandaId);
-    this.visivel.set(true);
-  }
+    /** `demandaId`: demanda já selecionada ao abrir (opcional). */
+    abrir(demandaId: number | null = null): void {
+        this.demandaIdInicial.set(demandaId);
+        this.visivel.set(true);
+    }
 
-  salvando(): boolean {
-    return this.formulario()?.salvando() ?? false;
-  }
+    salvando(): boolean {
+        return this.formulario()?.salvando() ?? false;
+    }
 
-  /** `criarOutra`: mantém o dialog aberto (demanda, responsável, status e tags preservados) para cadastro em série. */
-  salvar(criarOutra = false): void {
-    this.formulario()?.salvar(criarOutra);
-  }
+    /** `criarOutra`: mantém o dialog aberto (demanda, responsável, status e tags preservados) para cadastro em série. */
+    salvar(criarOutra = false): void {
+        this.formulario()?.salvar(criarOutra);
+    }
 
-  aoCriarAtividade(criarOutra: boolean): void {
-    if (!criarOutra) this.visivel.set(false);
-    this.aoCriar.emit();
-  }
+    aoCriarAtividade(criarOutra: boolean): void {
+        if (!criarOutra) this.visivel.set(false);
+        this.aoCriar.emit();
+    }
 }

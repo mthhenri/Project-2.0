@@ -19,107 +19,107 @@ const dia = (data: string | Date | null | undefined): string | null => dataDoBan
  */
 @Injectable()
 export class AlterarDemandaExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.ALTERAR_DEMANDA;
+    readonly tipo = TipoPropostaIaEnum.ALTERAR_DEMANDA;
 
-  constructor(
-    private readonly demandaService: DemandaService,
-    private readonly demandaRepositorio: DemandaRepository,
-  ) {}
+    constructor(
+        private readonly demandaService: DemandaService,
+        private readonly demandaRepositorio: DemandaRepository,
+    ) {}
 
-  validar(dados: Record<string, unknown>): void {
-    const entrada = validarDadosDaProposta(PropostaAlterarDemandaDadosDto, dados);
-    if (!this.algoParaAlterar(entrada)) {
-      throw new BusinessException('A proposta não altera nada na demanda');
-    }
-  }
-
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const entrada = validarDadosDaProposta(PropostaAlterarDemandaDadosDto, dados);
-    const atual = (await this.demandaService.recuperar({ id: entrada.demandaId }, usuarioAtivo)).dados;
-    if (!atual) throw new BusinessException('Demanda não encontrada');
-
-    const acrescimo = entrada.acrescentarDocumentacao?.trim();
-    const documentacaoNova = acrescimo ? (atual.documentacao?.trim() ? `${atual.documentacao.trimEnd()}\n\n${acrescimo}` : acrescimo) : undefined;
-    if (entrada.demandaPaiId !== undefined) {
-      const novoPai = (await this.demandaService.recuperar({ id: entrada.demandaPaiId }, usuarioAtivo)).dados;
-      if (!novoPai) throw new BusinessException('Demanda pai não encontrada');
-      const subarvore = (await this.demandaRepositorio.listarDescendentes({ demandaId: atual.id })).map((item) => item.id);
-      validarNovoPaiDaDemanda({ demandaId: atual.id, demandaProjetoId: atual.projetoId, novoPai, idsDaSubarvore: subarvore });
+    validar(dados: Record<string, unknown>): void {
+        const entrada = validarDadosDaProposta(PropostaAlterarDemandaDadosDto, dados);
+        if (!this.algoParaAlterar(entrada)) {
+            throw new BusinessException('A proposta não altera nada na demanda');
+        }
     }
 
-    await this.demandaService.alterar(
-      {
-        id: entrada.demandaId, nome: entrada.nome, status: entrada.status, horasEstimadas: entrada.horasEstimadas, previsaoFimData: entrada.previsaoFimData,
-        ...(documentacaoNova !== undefined ? { documentacao: documentacaoNova } : {}),
-        ...(entrada.demandaPaiId !== undefined ? { demandaPaiId: entrada.demandaPaiId } : {}),
-      },
-      usuarioAtivo,
-    );
-    return {
-      demandaId: entrada.demandaId,
-      ...(entrada.nome !== undefined ? { nome: entrada.nome, nomeAnterior: atual.nome } : {}),
-      ...(entrada.status !== undefined ? { status: entrada.status, statusAnterior: atual.status } : {}),
-      ...(entrada.horasEstimadas !== undefined ? { horasEstimadas: entrada.horasEstimadas, horasAnteriores: atual.horasEstimadas } : {}),
-      ...(entrada.previsaoFimData !== undefined ? { previsaoFimData: entrada.previsaoFimData, previsaoAnteriorData: dia(atual.previsaoFimData) } : {}),
-      ...(documentacaoNova !== undefined ? { documentacaoNova, documentacaoAnterior: atual.documentacao ?? null } : {}),
-      ...(entrada.demandaPaiId !== undefined ? { demandaPaiId: entrada.demandaPaiId, paiAnteriorId: atual.demandaPaiId ?? null } : {}),
-    };
-  }
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const entrada = validarDadosDaProposta(PropostaAlterarDemandaDadosDto, dados);
+        const atual = (await this.demandaService.recuperar({ id: entrada.demandaId }, usuarioAtivo)).dados;
+        if (!atual) throw new BusinessException('Demanda não encontrada');
 
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    const demandaId = Number(resultado['demandaId']);
-    if (!Number.isInteger(demandaId)) throw new BusinessException('Não há demanda a desfazer nesta proposta');
-    const atual = (await this.demandaService.recuperar({ id: demandaId }, usuarioAtivo)).dados;
-    if (!atual) throw new BusinessException('Demanda não encontrada');
+        const acrescimo = entrada.acrescentarDocumentacao?.trim();
+        const documentacaoNova = acrescimo ? (atual.documentacao?.trim() ? `${atual.documentacao.trimEnd()}\n\n${acrescimo}` : acrescimo) : undefined;
+        if (entrada.demandaPaiId !== undefined) {
+            const novoPai = (await this.demandaService.recuperar({ id: entrada.demandaPaiId }, usuarioAtivo)).dados;
+            if (!novoPai) throw new BusinessException('Demanda pai não encontrada');
+            const subarvore = (await this.demandaRepositorio.listarDescendentes({ demandaId: atual.id })).map((item) => item.id);
+            validarNovoPaiDaDemanda({ demandaId: atual.id, demandaProjetoId: atual.projetoId, novoPai, idsDaSubarvore: subarvore });
+        }
 
-    // Voltar ao topo da árvore (`demandaPaiId` nulo) a `DemandaService.alterar` não sabe fazer: trataria o nulo como um id. Recusa com clareza em vez de falhar no meio.
-    if (resultado['paiAnteriorId'] === null) {
-      throw new BusinessException('Esta demanda estava no topo da árvore e a IA não a devolve para lá: desfaça pela tela de Demandas.');
+        await this.demandaService.alterar(
+            {
+                id: entrada.demandaId, nome: entrada.nome, status: entrada.status, horasEstimadas: entrada.horasEstimadas, previsaoFimData: entrada.previsaoFimData,
+                ...(documentacaoNova !== undefined ? { documentacao: documentacaoNova } : {}),
+                ...(entrada.demandaPaiId !== undefined ? { demandaPaiId: entrada.demandaPaiId } : {}),
+            },
+            usuarioAtivo,
+        );
+        return {
+            demandaId: entrada.demandaId,
+            ...(entrada.nome !== undefined ? { nome: entrada.nome, nomeAnterior: atual.nome } : {}),
+            ...(entrada.status !== undefined ? { status: entrada.status, statusAnterior: atual.status } : {}),
+            ...(entrada.horasEstimadas !== undefined ? { horasEstimadas: entrada.horasEstimadas, horasAnteriores: atual.horasEstimadas } : {}),
+            ...(entrada.previsaoFimData !== undefined ? { previsaoFimData: entrada.previsaoFimData, previsaoAnteriorData: dia(atual.previsaoFimData) } : {}),
+            ...(documentacaoNova !== undefined ? { documentacaoNova, documentacaoAnterior: atual.documentacao ?? null } : {}),
+            ...(entrada.demandaPaiId !== undefined ? { demandaPaiId: entrada.demandaPaiId, paiAnteriorId: atual.demandaPaiId ?? null } : {}),
+        };
     }
-    const mudouDepois =
-      (resultado['nome'] !== undefined && atual.nome !== resultado['nome']) ||
+
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        const demandaId = Number(resultado['demandaId']);
+        if (!Number.isInteger(demandaId)) throw new BusinessException('Não há demanda a desfazer nesta proposta');
+        const atual = (await this.demandaService.recuperar({ id: demandaId }, usuarioAtivo)).dados;
+        if (!atual) throw new BusinessException('Demanda não encontrada');
+
+        // Voltar ao topo da árvore (`demandaPaiId` nulo) a `DemandaService.alterar` não sabe fazer: trataria o nulo como um id. Recusa com clareza em vez de falhar no meio.
+        if (resultado['paiAnteriorId'] === null) {
+            throw new BusinessException('Esta demanda estava no topo da árvore e a IA não a devolve para lá: desfaça pela tela de Demandas.');
+        }
+        const mudouDepois =
+            (resultado['nome'] !== undefined && atual.nome !== resultado['nome']) ||
       (resultado['status'] !== undefined && atual.status !== resultado['status']) ||
       (resultado['horasEstimadas'] !== undefined && atual.horasEstimadas !== resultado['horasEstimadas']) ||
       (resultado['previsaoFimData'] !== undefined && dia(atual.previsaoFimData) !== resultado['previsaoFimData']) ||
       (resultado['documentacaoNova'] !== undefined && (atual.documentacao ?? null) !== resultado['documentacaoNova']) ||
       (resultado['demandaPaiId'] !== undefined && (atual.demandaPaiId ?? null) !== resultado['demandaPaiId']);
-    if (mudouDepois) throw new BusinessException('A demanda mudou depois desta alteração: não dá para desfazer com segurança');
+        if (mudouDepois) throw new BusinessException('A demanda mudou depois desta alteração: não dá para desfazer com segurança');
 
-    await this.demandaService.alterar(
-      {
-        id: demandaId,
-        ...(resultado['nomeAnterior'] !== undefined ? { nome: resultado['nomeAnterior'] as string } : {}),
-        ...(resultado['statusAnterior'] !== undefined ? { status: resultado['statusAnterior'] as never } : {}),
-        ...(resultado['horasAnteriores'] !== undefined ? { horasEstimadas: resultado['horasAnteriores'] as number } : {}),
-        // `null` limpa a previsão (a service e o repository aceitam); `undefined` deixaria como está.
-        ...(resultado['previsaoAnteriorData'] !== undefined ? { previsaoFimData: resultado['previsaoAnteriorData'] as string | null } : {}),
-        // `null` limpa a documentação (o repository aceita; `undefined` deixaria como está).
-        ...(resultado['documentacaoAnterior'] !== undefined ? { documentacao: resultado['documentacaoAnterior'] as string | null } : {}),
-        ...(resultado['paiAnteriorId'] !== undefined ? { demandaPaiId: resultado['paiAnteriorId'] as number } : {}),
-      },
-      usuarioAtivo,
-    );
-  }
+        await this.demandaService.alterar(
+            {
+                id: demandaId,
+                ...(resultado['nomeAnterior'] !== undefined ? { nome: resultado['nomeAnterior'] as string } : {}),
+                ...(resultado['statusAnterior'] !== undefined ? { status: resultado['statusAnterior'] as never } : {}),
+                ...(resultado['horasAnteriores'] !== undefined ? { horasEstimadas: resultado['horasAnteriores'] as number } : {}),
+                // `null` limpa a previsão (a service e o repository aceitam); `undefined` deixaria como está.
+                ...(resultado['previsaoAnteriorData'] !== undefined ? { previsaoFimData: resultado['previsaoAnteriorData'] as string | null } : {}),
+                // `null` limpa a documentação (o repository aceita; `undefined` deixaria como está).
+                ...(resultado['documentacaoAnterior'] !== undefined ? { documentacao: resultado['documentacaoAnterior'] as string | null } : {}),
+                ...(resultado['paiAnteriorId'] !== undefined ? { demandaPaiId: resultado['paiAnteriorId'] as number } : {}),
+            },
+            usuarioAtivo,
+        );
+    }
 
-  /** Obsoleta quando a demanda já está como a proposta pede (o gestor alterou à mão). */
-  async estaObsoleta(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
-    const entrada = validarDadosDaProposta(PropostaAlterarDemandaDadosDto, dados);
-    const atual = (await this.demandaService.recuperar({ id: entrada.demandaId }, usuarioAtivo)).dados;
-    if (!atual) return false;
-    return (
-      (entrada.nome === undefined || atual.nome === entrada.nome) &&
+    /** Obsoleta quando a demanda já está como a proposta pede (o gestor alterou à mão). */
+    async estaObsoleta(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const entrada = validarDadosDaProposta(PropostaAlterarDemandaDadosDto, dados);
+        const atual = (await this.demandaService.recuperar({ id: entrada.demandaId }, usuarioAtivo)).dados;
+        if (!atual) return false;
+        return (
+            (entrada.nome === undefined || atual.nome === entrada.nome) &&
       (entrada.status === undefined || atual.status === entrada.status) &&
       (entrada.horasEstimadas === undefined || atual.horasEstimadas === entrada.horasEstimadas) &&
       (entrada.previsaoFimData === undefined || dia(atual.previsaoFimData) === entrada.previsaoFimData) &&
       !entrada.acrescentarDocumentacao?.trim() &&
       (entrada.demandaPaiId === undefined || (atual.demandaPaiId ?? null) === entrada.demandaPaiId)
-    );
-  }
+        );
+    }
 
-  private algoParaAlterar(entrada: PropostaAlterarDemandaDadosDto): boolean {
-    return (
-      entrada.nome !== undefined || entrada.status !== undefined || entrada.horasEstimadas !== undefined || entrada.previsaoFimData !== undefined ||
+    private algoParaAlterar(entrada: PropostaAlterarDemandaDadosDto): boolean {
+        return (
+            entrada.nome !== undefined || entrada.status !== undefined || entrada.horasEstimadas !== undefined || entrada.previsaoFimData !== undefined ||
       !!entrada.acrescentarDocumentacao?.trim() || entrada.demandaPaiId !== undefined
-    );
-  }
+        );
+    }
 }

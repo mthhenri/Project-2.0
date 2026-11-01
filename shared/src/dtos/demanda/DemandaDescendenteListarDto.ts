@@ -1,3 +1,3 @@
 export class DemandaDescendenteListarDto {
-  demandaId: number;
+    demandaId: number;
 }

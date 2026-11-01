@@ -2,17 +2,17 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
-  PaginatedResult,
-  PromptPadraoRestauradoDto,
-  PromptRascunhoAtivadoDto,
-  PromptRascunhoSalvarDto,
-  PromptRascunhoSalvoDto,
-  PromptResumoDto,
-  PromptTestadoDto,
-  PromptTestarDto,
-  PromptTipoResumoDto,
-  StandardResponse,
-  TipoPromptEnum,
+    PaginatedResult,
+    PromptPadraoRestauradoDto,
+    PromptRascunhoAtivadoDto,
+    PromptRascunhoSalvarDto,
+    PromptRascunhoSalvoDto,
+    PromptResumoDto,
+    PromptTestadoDto,
+    PromptTestarDto,
+    PromptTipoResumoDto,
+    StandardResponse,
+    TipoPromptEnum,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
@@ -20,39 +20,39 @@ import { comFeedbackProprio } from '../../../core/interceptors/loading.intercept
 /** Prompts da IA (rotas exclusivas de administrador). */
 @Injectable({ providedIn: 'root' })
 export class PromptService {
-  private readonly httpClient = inject(HttpClient);
-  private readonly urlBase = `${ambiente.apiUrl}/prompt`;
+    private readonly httpClient = inject(HttpClient);
+    private readonly urlBase = `${ambiente.apiUrl}/prompt`;
 
-  listarTipos(): Observable<StandardResponse<PromptTipoResumoDto[]>> {
-    return this.httpClient.get<StandardResponse<PromptTipoResumoDto[]>>(this.urlBase, comFeedbackProprio());
-  }
+    listarTipos(): Observable<StandardResponse<PromptTipoResumoDto[]>> {
+        return this.httpClient.get<StandardResponse<PromptTipoResumoDto[]>>(this.urlBase, comFeedbackProprio());
+    }
 
-  listarVersoes(tipo: TipoPromptEnum, itensPorPagina = 50): Observable<StandardResponse<PaginatedResult<PromptResumoDto>>> {
-    const params = new HttpParams().set('itensPorPagina', String(itensPorPagina));
-    return this.httpClient.get<StandardResponse<PaginatedResult<PromptResumoDto>>>(`${this.urlBase}/${tipo}/versoes`, {
-      params,
-      ...comFeedbackProprio(),
-    });
-  }
+    listarVersoes(tipo: TipoPromptEnum, itensPorPagina = 50): Observable<StandardResponse<PaginatedResult<PromptResumoDto>>> {
+        const params = new HttpParams().set('itensPorPagina', String(itensPorPagina));
+        return this.httpClient.get<StandardResponse<PaginatedResult<PromptResumoDto>>>(`${this.urlBase}/${tipo}/versoes`, {
+            params,
+            ...comFeedbackProprio(),
+        });
+    }
 
-  salvarRascunho(tipo: TipoPromptEnum, dto: PromptRascunhoSalvarDto): Observable<StandardResponse<PromptRascunhoSalvoDto>> {
-    return this.httpClient.post<StandardResponse<PromptRascunhoSalvoDto>>(`${this.urlBase}/${tipo}/rascunho`, dto);
-  }
+    salvarRascunho(tipo: TipoPromptEnum, dto: PromptRascunhoSalvarDto): Observable<StandardResponse<PromptRascunhoSalvoDto>> {
+        return this.httpClient.post<StandardResponse<PromptRascunhoSalvoDto>>(`${this.urlBase}/${tipo}/rascunho`, dto);
+    }
 
-  ativarRascunho(tipo: TipoPromptEnum): Observable<StandardResponse<PromptRascunhoAtivadoDto>> {
-    return this.httpClient.post<StandardResponse<PromptRascunhoAtivadoDto>>(`${this.urlBase}/${tipo}/rascunho/ativar`, {});
-  }
+    ativarRascunho(tipo: TipoPromptEnum): Observable<StandardResponse<PromptRascunhoAtivadoDto>> {
+        return this.httpClient.post<StandardResponse<PromptRascunhoAtivadoDto>>(`${this.urlBase}/${tipo}/rascunho/ativar`, {});
+    }
 
-  restaurarPadrao(tipo: TipoPromptEnum): Observable<StandardResponse<PromptPadraoRestauradoDto>> {
-    return this.httpClient.post<StandardResponse<PromptPadraoRestauradoDto>>(`${this.urlBase}/${tipo}/restaurar-padrao`, {});
-  }
+    restaurarPadrao(tipo: TipoPromptEnum): Observable<StandardResponse<PromptPadraoRestauradoDto>> {
+        return this.httpClient.post<StandardResponse<PromptPadraoRestauradoDto>>(`${this.urlBase}/${tipo}/restaurar-padrao`, {});
+    }
 
-  /** Testa um texto candidato contra narrativas, ao lado do prompt ativo (não grava nada; pode levar dezenas de segundos). */
-  testar(tipo: TipoPromptEnum, dto: PromptTestarDto): Observable<StandardResponse<PromptTestadoDto>> {
-    return this.httpClient.post<StandardResponse<PromptTestadoDto>>(`${this.urlBase}/${tipo}/testar`, dto, comFeedbackProprio());
-  }
+    /** Testa um texto candidato contra narrativas, ao lado do prompt ativo (não grava nada; pode levar dezenas de segundos). */
+    testar(tipo: TipoPromptEnum, dto: PromptTestarDto): Observable<StandardResponse<PromptTestadoDto>> {
+        return this.httpClient.post<StandardResponse<PromptTestadoDto>>(`${this.urlBase}/${tipo}/testar`, dto, comFeedbackProprio());
+    }
 
-  descartarRascunho(tipo: TipoPromptEnum): Observable<StandardResponse<void>> {
-    return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${tipo}/rascunho`);
-  }
+    descartarRascunho(tipo: TipoPromptEnum): Observable<StandardResponse<void>> {
+        return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${tipo}/rascunho`);
+    }
 }

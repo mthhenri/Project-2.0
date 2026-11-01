@@ -6,14 +6,14 @@ export type RespostaDaSaida = 'sair' | 'continuar';
 
 /** Traduz a navegação da página do aviso na resposta do usuário; qualquer outra navegação é ignorada. */
 export function respostaDaNavegacao(endereco: string): RespostaDaSaida | null {
-  if (endereco === ENDERECO_DE_SAIR) return 'sair';
-  if (endereco === ENDERECO_DE_CONTINUAR) return 'continuar';
-  return null;
+    if (endereco === ENDERECO_DE_SAIR) return 'sair';
+    if (endereco === ENDERECO_DE_CONTINUAR) return 'continuar';
+    return null;
 }
 
 /** A página do aviso "Fechar completamente": segue o tema claro ou escuro do sistema, como o resto do Project. */
 export function montarPaginaDoDialogoDeSaida(nomeDoApp: string): string {
-  return `<!doctype html>
+    return `<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">

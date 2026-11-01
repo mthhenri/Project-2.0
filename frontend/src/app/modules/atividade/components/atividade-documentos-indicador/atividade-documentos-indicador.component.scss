@@ -1,68 +1,68 @@
 .atividade-documentos {
-  display: flex;
-  flex-shrink: 0;
-  gap: 0.125rem;
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.125rem;
 
-  &__icone {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--p-text-muted-color);
-    cursor: pointer;
-    transition: background-color 0.15s ease;
+    &__icone {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--p-text-muted-color);
+        cursor: pointer;
+        transition: background-color 0.15s ease;
 
-    &:hover {
-      background: var(--app-surface-100);
+        &:hover {
+            background: var(--app-surface-100);
+        }
+
+        .pi,
+        .icone-descricao {
+            font-size: 0.875rem;
+        }
+
+        // Aceso: a demanda tem o texto. O brilho herda a cor (currentColor).
+        &--ativo .pi {
+            font-weight: 700;
+            text-shadow: 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
+        }
+
+        &--ativo .icone-descricao {
+            filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 55%, transparent));
+        }
+
+        // Aberto no painel ao lado: o ícone fica na cor do tipo, com fundo da mesma cor diluído.
+        &[aria-pressed="true"] {
+            background: color-mix(in srgb, currentColor 16%, transparent);
+        }
+
+        &--cliente[aria-pressed="true"] {
+            color: var(--app-icone-cliente);
+        }
+
+        &--tecnica[aria-pressed="true"] {
+            color: var(--app-icone-tecnica);
+        }
+
+        &--doc[aria-pressed="true"] {
+            color: var(--app-icone-doc);
+        }
+
+        &--cliente.atividade-documentos__icone--ativo {
+            color: var(--app-icone-cliente);
+        }
+
+        &--tecnica.atividade-documentos__icone--ativo {
+            color: var(--app-icone-tecnica);
+        }
+
+        &--doc.atividade-documentos__icone--ativo {
+            color: var(--app-icone-doc);
+        }
     }
-
-    .pi,
-    .icone-descricao {
-      font-size: 0.875rem;
-    }
-
-    // Aceso: a demanda tem o texto. O brilho herda a cor (currentColor).
-    &--ativo .pi {
-      font-weight: 700;
-      text-shadow: 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
-    }
-
-    &--ativo .icone-descricao {
-      filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 55%, transparent));
-    }
-
-    // Aberto no painel ao lado: o ícone fica na cor do tipo, com fundo da mesma cor diluído.
-    &[aria-pressed='true'] {
-      background: color-mix(in srgb, currentColor 16%, transparent);
-    }
-
-    &--cliente[aria-pressed='true'] {
-      color: var(--app-icone-cliente);
-    }
-
-    &--tecnica[aria-pressed='true'] {
-      color: var(--app-icone-tecnica);
-    }
-
-    &--doc[aria-pressed='true'] {
-      color: var(--app-icone-doc);
-    }
-
-    &--cliente.atividade-documentos__icone--ativo {
-      color: var(--app-icone-cliente);
-    }
-
-    &--tecnica.atividade-documentos__icone--ativo {
-      color: var(--app-icone-tecnica);
-    }
-
-    &--doc.atividade-documentos__icone--ativo {
-      color: var(--app-icone-doc);
-    }
-  }
 }

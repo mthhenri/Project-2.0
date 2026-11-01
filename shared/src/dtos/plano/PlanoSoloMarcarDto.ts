@@ -1,6 +1,6 @@
 import { IsBoolean } from 'class-validator';
 
 export class PlanoSoloMarcarDto {
-  @IsBoolean()
-  isSolo: boolean;
+    @IsBoolean()
+    isSolo: boolean;
 }

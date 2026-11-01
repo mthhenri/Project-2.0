@@ -27,12 +27,12 @@ export type MudancaDoPlano = 'titulo' | 'projeto' | 'demanda' | 'solo' | 'arquiv
 
 /** O pedido para a IA alterar só o que a pessoa selecionou numa aba (tasks 234 e 255): o bloco vai como contexto, a seleção é o único alvo. */
 export interface PedidoDeAlteracaoDoTrecho {
-  aba: PlanoAbaEnum;
-  /** O bloco da seleção em Markdown exato. */
-  trecho: string;
-  /** O que foi selecionado; igual ao bloco no Markdown cru. */
-  selecao: string;
-  pedido: string;
+    aba: PlanoAbaEnum;
+    /** O bloco da seleção em Markdown exato. */
+    trecho: string;
+    /** O que foi selecionado; igual ao bloco no Markdown cru. */
+    selecao: string;
+    pedido: string;
 }
 
 const AVISO_DE_VERSAO_MAIS_NOVA = 'Outra pessoa gravou uma versão mais nova deste plano. O que você escreveu continua na tela, mas não foi gravado.';
@@ -44,314 +44,314 @@ const AVISO_DE_ALTERACAO_DA_IA = 'A IA alterou o documento. O que você escreveu
  * gestor e administrador a alteram (`podeEditarAbaDoPlano`, do `shared`): para o desenvolvedor ela é o visualizador, com o aviso. Análogo visual: o painel de edição da demanda.
  */
 @Component({
-  selector: 'app-plano-documento',
-  standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, PopoverModule, SkeletonModule, TabsModule, TextareaModule, MarkdownEditorComponent, MarkdownVisualizadorComponent, AvisoPedidoDoClienteComponent, PlanoCabecalhoComponent, PlanoPontosComponent, PlanoFontesComponent, PlanoPublicarDialogComponent, DemandaFormularioDialogComponent],
-  templateUrl: './plano-documento.component.html',
-  styleUrl: './plano-documento.component.scss',
+    selector: 'app-plano-documento',
+    standalone: true,
+    imports: [ReactiveFormsModule, ButtonModule, PopoverModule, SkeletonModule, TabsModule, TextareaModule, MarkdownEditorComponent, MarkdownVisualizadorComponent, AvisoPedidoDoClienteComponent, PlanoCabecalhoComponent, PlanoPontosComponent, PlanoFontesComponent, PlanoPublicarDialogComponent, DemandaFormularioDialogComponent],
+    templateUrl: './plano-documento.component.html',
+    styleUrl: './plano-documento.component.scss',
 })
 export class PlanoDocumentoComponent {
-  readonly planoId = input.required<number>();
-  /** A conversa com a IA está disponível: a seleção de um trecho com o botão direito abre o pedido de alteração (task 234). */
-  readonly podePedirIa = input(false);
+    readonly planoId = input.required<number>();
+    /** A conversa com a IA está disponível: a seleção de um trecho com o botão direito abre o pedido de alteração (task 234). */
+    readonly podePedirIa = input(false);
 
-  /** O plano foi lido ou renomeado: quem o abriu mostra o título dele. */
-  readonly identificado = output<{ id: number; titulo: string }>();
-  readonly mudou = output<MudancaDoPlano>();
-  readonly excluido = output<void>();
-  readonly pedirAlteracao = output<PedidoDeAlteracaoDoTrecho>();
+    /** O plano foi lido ou renomeado: quem o abriu mostra o título dele. */
+    readonly identificado = output<{ id: number; titulo: string }>();
+    readonly mudou = output<MudancaDoPlano>();
+    readonly excluido = output<void>();
+    readonly pedirAlteracao = output<PedidoDeAlteracaoDoTrecho>();
 
-  private readonly planoService = inject(PlanoService);
-  private readonly messageService = inject(MessageService);
-  private readonly sessao = inject(UsuarioSessaoService);
+    private readonly planoService = inject(PlanoService);
+    private readonly messageService = inject(MessageService);
+    private readonly sessao = inject(UsuarioSessaoService);
 
-  readonly Aba = PlanoAbaEnum;
-  readonly rotuloAba = ROTULO_ABA_DO_PLANO;
-  readonly iconeAba: Record<PlanoAbaEnum, string> = {
-    [PlanoAbaEnum.DESCRICAO_TECNICA]: 'icone-descricao icone-descricao--tecnica',
-    [PlanoAbaEnum.DESCRICAO_CLIENTE]: 'pi pi-user',
-    [PlanoAbaEnum.DOCUMENTACAO]: 'icone-descricao icone-descricao--doc',
-  };
-  /** O diálogo de publicação na demanda (task 237) e o formulário de uma demanda nova a partir do plano. */
-  readonly mostrarPublicacao = signal(false);
-  readonly mostrarDemandaNova = signal(false);
-  /** O painel dos pontos em aberto está aberto (`false`: recolhido num trilho, e o texto ganha a largura). */
-  readonly pontosAbertos = signal(true);
-  /** O painel das fontes (task 236): recolhido de saída, porque é consulta e não trabalho de todo dia; abre ao colar ou anexar. */
-  readonly fontesAbertas = signal(false);
-
-  readonly plano = signal<PlanoRecuperadoDto | null>(null);
-  readonly carregando = signal(true);
-  readonly erro = signal(false);
-  readonly salvando = signal(false);
-  /** Uma ação do cabeçalho (solo, arquivo, projeto, demanda, título) está em andamento. */
-  readonly ocupado = signal(false);
-  /** Aviso com "Recarregar": outra pessoa gravou antes (a gravação foi recusada) ou a IA alterou o documento; o que foi escrito continua nos campos. */
-  readonly aviso = signal<string | null>(null);
-  /** O bloco e a seleção, e o pedido que a pessoa está escrevendo à IA (tasks 234 e 255). */
-  readonly trechoSelecionado = signal<{ aba: PlanoAbaEnum; bloco: string; selecao: string } | null>(null);
-  readonly controlePedido = new FormControl<string>('', { nonNullable: true });
-  private readonly popoverDoPedido = viewChild<Popover>('popoverPedido');
-  private readonly painelDePontos = viewChild(PlanoPontosComponent);
-  readonly aba = signal<PlanoAbaEnum>(PlanoAbaEnum.DESCRICAO_TECNICA);
-
-  readonly controleTecnica = new FormControl<string>('', { nonNullable: true });
-  readonly controleCliente = new FormControl<string>('', { nonNullable: true });
-  readonly controleDocumentacao = new FormControl<string>('', { nonNullable: true });
-  private readonly textosEditados = signal({ tecnica: '', cliente: '', documentacao: '' });
-
-  readonly abasVisiveis = computed(() => {
-    const tipo = this.sessao.usuarioAtual()?.tipo;
-    return (Object.values(PlanoAbaEnum) as PlanoAbaEnum[]).filter((aba) => !!tipo && podeVerAbaDoPlano(aba, tipo));
-  });
-  /** Quem altera a descrição do cliente; os demais a leem no visualizador. */
-  readonly podeEditarCliente = computed(() => {
-    const tipo = this.sessao.usuarioAtual()?.tipo;
-    return !!tipo && podeEditarAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, tipo);
-  });
-  readonly controleDaAba = computed(() => {
-    switch (this.aba()) {
-      case PlanoAbaEnum.DESCRICAO_CLIENTE:
-        return this.controleCliente;
-      case PlanoAbaEnum.DOCUMENTACAO:
-        return this.controleDocumentacao;
-      default:
-        return this.controleTecnica;
-    }
-  });
-  /** Os textos como foram gravados por último, para saber o que a pessoa mexeu. */
-  private readonly textosGravados = signal({ tecnica: '', cliente: '', documentacao: '' });
-  readonly alterados = computed(() => {
-    const editados = this.textosEditados();
-    const gravados = this.textosGravados();
-    return {
-      tecnica: editados.tecnica !== gravados.tecnica,
-      cliente: editados.cliente !== gravados.cliente && this.podeEditarCliente(),
-      documentacao: editados.documentacao !== gravados.documentacao,
+    readonly Aba = PlanoAbaEnum;
+    readonly rotuloAba = ROTULO_ABA_DO_PLANO;
+    readonly iconeAba: Record<PlanoAbaEnum, string> = {
+        [PlanoAbaEnum.DESCRICAO_TECNICA]: 'icone-descricao icone-descricao--tecnica',
+        [PlanoAbaEnum.DESCRICAO_CLIENTE]: 'pi pi-user',
+        [PlanoAbaEnum.DOCUMENTACAO]: 'icone-descricao icone-descricao--doc',
     };
-  });
-  readonly sujo = computed(() => Object.values(this.alterados()).some(Boolean));
+    /** O diálogo de publicação na demanda (task 237) e o formulário de uma demanda nova a partir do plano. */
+    readonly mostrarPublicacao = signal(false);
+    readonly mostrarDemandaNova = signal(false);
+    /** O painel dos pontos em aberto está aberto (`false`: recolhido num trilho, e o texto ganha a largura). */
+    readonly pontosAbertos = signal(true);
+    /** O painel das fontes (task 236): recolhido de saída, porque é consulta e não trabalho de todo dia; abre ao colar ou anexar. */
+    readonly fontesAbertas = signal(false);
 
-  constructor() {
-    for (const [campo, controle] of [
-      ['tecnica', this.controleTecnica],
-      ['cliente', this.controleCliente],
-      ['documentacao', this.controleDocumentacao],
-    ] as const) {
-      controle.valueChanges.pipe(takeUntilDestroyed()).subscribe((valor) => this.textosEditados.update((atual) => ({ ...atual, [campo]: valor })));
-    }
-    effect(() => {
-      const id = this.planoId();
-      untracked(() => this.carregar(id));
+    readonly plano = signal<PlanoRecuperadoDto | null>(null);
+    readonly carregando = signal(true);
+    readonly erro = signal(false);
+    readonly salvando = signal(false);
+    /** Uma ação do cabeçalho (solo, arquivo, projeto, demanda, título) está em andamento. */
+    readonly ocupado = signal(false);
+    /** Aviso com "Recarregar": outra pessoa gravou antes (a gravação foi recusada) ou a IA alterou o documento; o que foi escrito continua nos campos. */
+    readonly aviso = signal<string | null>(null);
+    /** O bloco e a seleção, e o pedido que a pessoa está escrevendo à IA (tasks 234 e 255). */
+    readonly trechoSelecionado = signal<{ aba: PlanoAbaEnum; bloco: string; selecao: string } | null>(null);
+    readonly controlePedido = new FormControl<string>('', { nonNullable: true });
+    private readonly popoverDoPedido = viewChild<Popover>('popoverPedido');
+    private readonly painelDePontos = viewChild(PlanoPontosComponent);
+    readonly aba = signal<PlanoAbaEnum>(PlanoAbaEnum.DESCRICAO_TECNICA);
+
+    readonly controleTecnica = new FormControl<string>('', { nonNullable: true });
+    readonly controleCliente = new FormControl<string>('', { nonNullable: true });
+    readonly controleDocumentacao = new FormControl<string>('', { nonNullable: true });
+    private readonly textosEditados = signal({ tecnica: '', cliente: '', documentacao: '' });
+
+    readonly abasVisiveis = computed(() => {
+        const tipo = this.sessao.usuarioAtual()?.tipo;
+        return (Object.values(PlanoAbaEnum) as PlanoAbaEnum[]).filter((aba) => !!tipo && podeVerAbaDoPlano(aba, tipo));
     });
-  }
-
-  carregar(id: number = this.planoId()): void {
-    this.carregando.set(true);
-    this.erro.set(false);
-    this.aviso.set(null);
-    this.planoService.recuperar(id).subscribe({
-      next: (resposta) => {
-        if (!resposta.dados) {
-          this.erro.set(true);
-          this.carregando.set(false);
-          return;
+    /** Quem altera a descrição do cliente; os demais a leem no visualizador. */
+    readonly podeEditarCliente = computed(() => {
+        const tipo = this.sessao.usuarioAtual()?.tipo;
+        return !!tipo && podeEditarAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, tipo);
+    });
+    readonly controleDaAba = computed(() => {
+        switch (this.aba()) {
+            case PlanoAbaEnum.DESCRICAO_CLIENTE:
+                return this.controleCliente;
+            case PlanoAbaEnum.DOCUMENTACAO:
+                return this.controleDocumentacao;
+            default:
+                return this.controleTecnica;
         }
-        this.aplicar(resposta.dados);
-        this.identificado.emit({ id: resposta.dados.id, titulo: resposta.dados.titulo });
-        if (!this.abasVisiveis().includes(this.aba())) this.aba.set(PlanoAbaEnum.DESCRICAO_TECNICA);
-        this.carregando.set(false);
-      },
-      error: () => {
-        this.erro.set(true);
-        this.carregando.set(false);
-      },
     });
-  }
+    /** Os textos como foram gravados por último, para saber o que a pessoa mexeu. */
+    private readonly textosGravados = signal({ tecnica: '', cliente: '', documentacao: '' });
+    readonly alterados = computed(() => {
+        const editados = this.textosEditados();
+        const gravados = this.textosGravados();
+        return {
+            tecnica: editados.tecnica !== gravados.tecnica,
+            cliente: editados.cliente !== gravados.cliente && this.podeEditarCliente(),
+            documentacao: editados.documentacao !== gravados.documentacao,
+        };
+    });
+    readonly sujo = computed(() => Object.values(this.alterados()).some(Boolean));
 
-  /**
+    constructor() {
+        for (const [campo, controle] of [
+            ['tecnica', this.controleTecnica],
+            ['cliente', this.controleCliente],
+            ['documentacao', this.controleDocumentacao],
+        ] as const) {
+            controle.valueChanges.pipe(takeUntilDestroyed()).subscribe((valor) => this.textosEditados.update((atual) => ({ ...atual, [campo]: valor })));
+        }
+        effect(() => {
+            const id = this.planoId();
+            untracked(() => this.carregar(id));
+        });
+    }
+
+    carregar(id: number = this.planoId()): void {
+        this.carregando.set(true);
+        this.erro.set(false);
+        this.aviso.set(null);
+        this.planoService.recuperar(id).subscribe({
+            next: (resposta) => {
+                if (!resposta.dados) {
+                    this.erro.set(true);
+                    this.carregando.set(false);
+                    return;
+                }
+                this.aplicar(resposta.dados);
+                this.identificado.emit({ id: resposta.dados.id, titulo: resposta.dados.titulo });
+                if (!this.abasVisiveis().includes(this.aba())) this.aba.set(PlanoAbaEnum.DESCRICAO_TECNICA);
+                this.carregando.set(false);
+            },
+            error: () => {
+                this.erro.set(true);
+                this.carregando.set(false);
+            },
+        });
+    }
+
+    /**
    * A IA escreveu no plano (ou a pessoa aceitou uma alteração de trecho): relê o documento. Com texto da pessoa ainda sem gravar, não o sobrescreve:
    * avisa e deixa ela escolher recarregar.
    */
-  recarregarDepoisDaIa(): void {
-    if (this.sujo()) this.aviso.set(AVISO_DE_ALTERACAO_DA_IA);
-    else this.carregar();
-  }
-
-  /** A IA anotou ou fechou um ponto (task 235): o painel se relê. */
-  recarregarPontos(): void {
-    this.painelDePontos()?.recarregar();
-  }
-
-  /** Botão direito sobre um trecho selecionado: abre o pedido de alteração à IA (task 234). */
-  abrirPedidoDeAlteracao(evento: MenuContextoEditorEvento): void {
-    const bloco = evento.texto.trim();
-    if (bloco === '') return;
-    this.trechoSelecionado.set({ aba: this.aba(), bloco, selecao: evento.selecao.trim() || bloco });
-    this.controlePedido.setValue('');
-    this.popoverDoPedido()?.show(evento.evento, evento.evento.target as HTMLElement);
-  }
-
-  enviarPedidoDeAlteracao(): void {
-    const trecho = this.trechoSelecionado();
-    const pedido = this.controlePedido.value.trim();
-    if (!trecho || pedido === '') return;
-    this.popoverDoPedido()?.hide();
-    this.pedirAlteracao.emit({ aba: trecho.aba, trecho: trecho.bloco, selecao: trecho.selecao, pedido });
-    this.trechoSelecionado.set(null);
-  }
-
-  escolherAba(aba: PlanoAbaEnum): void {
-    this.aba.set(aba);
-  }
-
-  /** Grava o que mudou nos textos, com a versão lida. */
-  salvar(): void {
-    const plano = this.plano();
-    if (!plano || !this.sujo() || this.salvando()) return;
-    const editados = this.textosEditados();
-    const mudou = this.alterados();
-    const dto: PlanoAlterarDto = {
-      versao: plano.versao,
-      ...(mudou.tecnica && { descricaoTecnica: editados.tecnica }),
-      ...(mudou.cliente && { descricaoCliente: editados.cliente }),
-      ...(mudou.documentacao && { documentacao: editados.documentacao }),
-    };
-    this.salvando.set(true);
-    this.planoService.alterar(plano.id, dto).subscribe({
-      next: (resposta) => {
-        this.salvando.set(false);
-        this.aviso.set(null);
-        this.plano.update((atual) => atual && { ...atual, versao: resposta.dados?.versao ?? atual.versao });
-        this.textosGravados.update((atual) => ({
-          tecnica: mudou.tecnica ? editados.tecnica : atual.tecnica,
-          cliente: mudou.cliente ? editados.cliente : atual.cliente,
-          documentacao: mudou.documentacao ? editados.documentacao : atual.documentacao,
-        }));
-        this.mudou.emit('texto');
-      },
-      error: (falha: HttpErrorResponse) => {
-        this.salvando.set(false);
-        this.tratarFalha(falha, 'Não foi possível gravar o plano');
-      },
-    });
-  }
-
-  alterarTitulo(titulo: string): void {
-    const plano = this.plano();
-    if (!plano) return;
-    this.executar(
-      this.planoService.alterar(plano.id, { versao: plano.versao, titulo }),
-      (resposta) => {
-        this.plano.update((atual) => atual && { ...atual, titulo, versao: resposta.dados?.versao ?? atual.versao });
-        this.identificado.emit({ id: plano.id, titulo });
-      },
-      'titulo',
-      'Não foi possível renomear o plano',
-    );
-  }
-
-  alterarSolo(isSolo: boolean): void {
-    const plano = this.plano();
-    if (!plano) return;
-    this.executar(this.planoService.marcarSolo(plano.id, isSolo), () => this.plano.update((atual) => atual && { ...atual, isSolo }), 'solo', 'Não foi possível alterar o plano');
-  }
-
-  alterarArquivo(isArquivado: boolean): void {
-    const plano = this.plano();
-    if (!plano) return;
-    this.executar(
-      this.planoService.arquivar(plano.id, isArquivado),
-      () => this.plano.update((atual) => atual && { ...atual, isArquivado }),
-      'arquivo',
-      'Não foi possível arquivar o plano',
-    );
-  }
-
-  atribuirProjeto(projetoId: number): void {
-    const plano = this.plano();
-    if (!plano || this.recusarComAlteracoesSemGravar('atribuir o projeto')) return;
-    this.executar(this.planoService.atribuirProjeto(plano.id, projetoId), () => this.carregar(plano.id), 'projeto', 'Não foi possível atribuir o projeto');
-  }
-
-  /** Ligar a demanda pode preencher as abas vazias com o texto dela e subir a versão, então exige o documento gravado e relê o plano. */
-  ligarDemanda(demandaId: number): void {
-    const plano = this.plano();
-    if (!plano || this.recusarComAlteracoesSemGravar('ligar a demanda')) return;
-    this.executar(this.planoService.ligarDemanda(plano.id, demandaId), () => this.carregar(plano.id), 'demanda', 'Não foi possível ligar a demanda');
-  }
-
-  /** O diff da publicação é do texto gravado, então o documento precisa estar gravado. */
-  abrirPublicacao(): void {
-    if (this.recusarComAlteracoesSemGravar('publicar')) return;
-    this.mostrarPublicacao.set(true);
-  }
-
-  /** Depois de publicar, o plano relê a data da publicação; o diff seguinte compara de novo com o texto atual da demanda. */
-  aoPublicar(): void {
-    this.carregar(this.planoId());
-  }
-
-  abrirDemandaNova(): void {
-    if (this.recusarComAlteracoesSemGravar('criar a demanda')) return;
-    this.mostrarDemandaNova.set(true);
-  }
-
-  /** A demanda nasceu pelo fluxo de criação de sempre; o plano a liga (as abas vazias começam com o texto dela, que ainda não tem). */
-  aoDemandaCriada(demanda: DemandaCriadaDto): void {
-    this.mostrarDemandaNova.set(false);
-    this.ligarDemanda(demanda.id);
-  }
-
-  excluir(): void {
-    const plano = this.plano();
-    if (!plano) return;
-    this.executar(this.planoService.excluir(plano.id), () => this.excluido.emit(), null, 'Não foi possível excluir o plano');
-  }
-
-  /** Ações que relêem o plano não podem passar por cima do que ainda não foi gravado. */
-  private recusarComAlteracoesSemGravar(acao: string): boolean {
-    if (!this.sujo()) return false;
-    this.messageService.add({ severity: 'info', summary: 'Plano', detail: `Grave as alterações antes de ${acao}.` });
-    return true;
-  }
-
-  private executar<TResposta>(
-    chamada: Observable<TResposta>,
-    aoConcluir: (resposta: TResposta) => void,
-    mudanca: MudancaDoPlano | null,
-    mensagemDeFalha: string,
-  ): void {
-    this.ocupado.set(true);
-    chamada.subscribe({
-      next: (resposta) => {
-        this.ocupado.set(false);
-        aoConcluir(resposta);
-        if (mudanca) this.mudou.emit(mudanca);
-      },
-      error: (falha: HttpErrorResponse) => {
-        this.ocupado.set(false);
-        this.tratarFalha(falha, mensagemDeFalha);
-      },
-    });
-  }
-
-  /** 409 = outra pessoa gravou antes (mostra o aviso com "Recarregar"); os demais erros viram um aviso com a mensagem da API. */
-  private tratarFalha(falha: HttpErrorResponse, mensagemPadrao: string): void {
-    if (falha.status === 409) {
-      this.aviso.set(AVISO_DE_VERSAO_MAIS_NOVA);
-      return;
+    recarregarDepoisDaIa(): void {
+        if (this.sujo()) this.aviso.set(AVISO_DE_ALTERACAO_DA_IA);
+        else this.carregar();
     }
-    this.messageService.add({ severity: 'warn', summary: 'Plano', detail: falha.error?.mensagem ?? mensagemPadrao });
-  }
 
-  private aplicar(plano: PlanoRecuperadoDto): void {
-    const textos = { tecnica: plano.descricaoTecnica ?? '', cliente: plano.descricaoCliente ?? '', documentacao: plano.documentacao ?? '' };
-    this.plano.set(plano);
-    this.textosGravados.set(textos);
-    this.textosEditados.set(textos);
-    this.controleTecnica.setValue(textos.tecnica, { emitEvent: false });
-    this.controleCliente.setValue(textos.cliente, { emitEvent: false });
-    this.controleDocumentacao.setValue(textos.documentacao, { emitEvent: false });
-  }
+    /** A IA anotou ou fechou um ponto (task 235): o painel se relê. */
+    recarregarPontos(): void {
+        this.painelDePontos()?.recarregar();
+    }
+
+    /** Botão direito sobre um trecho selecionado: abre o pedido de alteração à IA (task 234). */
+    abrirPedidoDeAlteracao(evento: MenuContextoEditorEvento): void {
+        const bloco = evento.texto.trim();
+        if (bloco === '') return;
+        this.trechoSelecionado.set({ aba: this.aba(), bloco, selecao: evento.selecao.trim() || bloco });
+        this.controlePedido.setValue('');
+        this.popoverDoPedido()?.show(evento.evento, evento.evento.target as HTMLElement);
+    }
+
+    enviarPedidoDeAlteracao(): void {
+        const trecho = this.trechoSelecionado();
+        const pedido = this.controlePedido.value.trim();
+        if (!trecho || pedido === '') return;
+        this.popoverDoPedido()?.hide();
+        this.pedirAlteracao.emit({ aba: trecho.aba, trecho: trecho.bloco, selecao: trecho.selecao, pedido });
+        this.trechoSelecionado.set(null);
+    }
+
+    escolherAba(aba: PlanoAbaEnum): void {
+        this.aba.set(aba);
+    }
+
+    /** Grava o que mudou nos textos, com a versão lida. */
+    salvar(): void {
+        const plano = this.plano();
+        if (!plano || !this.sujo() || this.salvando()) return;
+        const editados = this.textosEditados();
+        const mudou = this.alterados();
+        const dto: PlanoAlterarDto = {
+            versao: plano.versao,
+            ...(mudou.tecnica && { descricaoTecnica: editados.tecnica }),
+            ...(mudou.cliente && { descricaoCliente: editados.cliente }),
+            ...(mudou.documentacao && { documentacao: editados.documentacao }),
+        };
+        this.salvando.set(true);
+        this.planoService.alterar(plano.id, dto).subscribe({
+            next: (resposta) => {
+                this.salvando.set(false);
+                this.aviso.set(null);
+                this.plano.update((atual) => atual && { ...atual, versao: resposta.dados?.versao ?? atual.versao });
+                this.textosGravados.update((atual) => ({
+                    tecnica: mudou.tecnica ? editados.tecnica : atual.tecnica,
+                    cliente: mudou.cliente ? editados.cliente : atual.cliente,
+                    documentacao: mudou.documentacao ? editados.documentacao : atual.documentacao,
+                }));
+                this.mudou.emit('texto');
+            },
+            error: (falha: HttpErrorResponse) => {
+                this.salvando.set(false);
+                this.tratarFalha(falha, 'Não foi possível gravar o plano');
+            },
+        });
+    }
+
+    alterarTitulo(titulo: string): void {
+        const plano = this.plano();
+        if (!plano) return;
+        this.executar(
+            this.planoService.alterar(plano.id, { versao: plano.versao, titulo }),
+            (resposta) => {
+                this.plano.update((atual) => atual && { ...atual, titulo, versao: resposta.dados?.versao ?? atual.versao });
+                this.identificado.emit({ id: plano.id, titulo });
+            },
+            'titulo',
+            'Não foi possível renomear o plano',
+        );
+    }
+
+    alterarSolo(isSolo: boolean): void {
+        const plano = this.plano();
+        if (!plano) return;
+        this.executar(this.planoService.marcarSolo(plano.id, isSolo), () => this.plano.update((atual) => atual && { ...atual, isSolo }), 'solo', 'Não foi possível alterar o plano');
+    }
+
+    alterarArquivo(isArquivado: boolean): void {
+        const plano = this.plano();
+        if (!plano) return;
+        this.executar(
+            this.planoService.arquivar(plano.id, isArquivado),
+            () => this.plano.update((atual) => atual && { ...atual, isArquivado }),
+            'arquivo',
+            'Não foi possível arquivar o plano',
+        );
+    }
+
+    atribuirProjeto(projetoId: number): void {
+        const plano = this.plano();
+        if (!plano || this.recusarComAlteracoesSemGravar('atribuir o projeto')) return;
+        this.executar(this.planoService.atribuirProjeto(plano.id, projetoId), () => this.carregar(plano.id), 'projeto', 'Não foi possível atribuir o projeto');
+    }
+
+    /** Ligar a demanda pode preencher as abas vazias com o texto dela e subir a versão, então exige o documento gravado e relê o plano. */
+    ligarDemanda(demandaId: number): void {
+        const plano = this.plano();
+        if (!plano || this.recusarComAlteracoesSemGravar('ligar a demanda')) return;
+        this.executar(this.planoService.ligarDemanda(plano.id, demandaId), () => this.carregar(plano.id), 'demanda', 'Não foi possível ligar a demanda');
+    }
+
+    /** O diff da publicação é do texto gravado, então o documento precisa estar gravado. */
+    abrirPublicacao(): void {
+        if (this.recusarComAlteracoesSemGravar('publicar')) return;
+        this.mostrarPublicacao.set(true);
+    }
+
+    /** Depois de publicar, o plano relê a data da publicação; o diff seguinte compara de novo com o texto atual da demanda. */
+    aoPublicar(): void {
+        this.carregar(this.planoId());
+    }
+
+    abrirDemandaNova(): void {
+        if (this.recusarComAlteracoesSemGravar('criar a demanda')) return;
+        this.mostrarDemandaNova.set(true);
+    }
+
+    /** A demanda nasceu pelo fluxo de criação de sempre; o plano a liga (as abas vazias começam com o texto dela, que ainda não tem). */
+    aoDemandaCriada(demanda: DemandaCriadaDto): void {
+        this.mostrarDemandaNova.set(false);
+        this.ligarDemanda(demanda.id);
+    }
+
+    excluir(): void {
+        const plano = this.plano();
+        if (!plano) return;
+        this.executar(this.planoService.excluir(plano.id), () => this.excluido.emit(), null, 'Não foi possível excluir o plano');
+    }
+
+    /** Ações que relêem o plano não podem passar por cima do que ainda não foi gravado. */
+    private recusarComAlteracoesSemGravar(acao: string): boolean {
+        if (!this.sujo()) return false;
+        this.messageService.add({ severity: 'info', summary: 'Plano', detail: `Grave as alterações antes de ${acao}.` });
+        return true;
+    }
+
+    private executar<TResposta>(
+        chamada: Observable<TResposta>,
+        aoConcluir: (resposta: TResposta) => void,
+        mudanca: MudancaDoPlano | null,
+        mensagemDeFalha: string,
+    ): void {
+        this.ocupado.set(true);
+        chamada.subscribe({
+            next: (resposta) => {
+                this.ocupado.set(false);
+                aoConcluir(resposta);
+                if (mudanca) this.mudou.emit(mudanca);
+            },
+            error: (falha: HttpErrorResponse) => {
+                this.ocupado.set(false);
+                this.tratarFalha(falha, mensagemDeFalha);
+            },
+        });
+    }
+
+    /** 409 = outra pessoa gravou antes (mostra o aviso com "Recarregar"); os demais erros viram um aviso com a mensagem da API. */
+    private tratarFalha(falha: HttpErrorResponse, mensagemPadrao: string): void {
+        if (falha.status === 409) {
+            this.aviso.set(AVISO_DE_VERSAO_MAIS_NOVA);
+            return;
+        }
+        this.messageService.add({ severity: 'warn', summary: 'Plano', detail: falha.error?.mensagem ?? mensagemPadrao });
+    }
+
+    private aplicar(plano: PlanoRecuperadoDto): void {
+        const textos = { tecnica: plano.descricaoTecnica ?? '', cliente: plano.descricaoCliente ?? '', documentacao: plano.documentacao ?? '' };
+        this.plano.set(plano);
+        this.textosGravados.set(textos);
+        this.textosEditados.set(textos);
+        this.controleTecnica.setValue(textos.tecnica, { emitEvent: false });
+        this.controleCliente.setValue(textos.cliente, { emitEvent: false });
+        this.controleDocumentacao.setValue(textos.documentacao, { emitEvent: false });
+    }
 }

@@ -13,12 +13,12 @@ export type IaMotivoFalha =
 
 /** Falha da IA já traduzida: nunca o erro cru do SDK. Quem chama decide a mensagem ao usuário. */
 export class IaException extends HttpException {
-  constructor(
-    readonly motivo: IaMotivoFalha,
-    readonly mensagem: string,
-  ) {
-    super({ sucesso: false, mensagem, dados: null, erros: [] }, HttpStatus.SERVICE_UNAVAILABLE);
-  }
+    constructor(
+        readonly motivo: IaMotivoFalha,
+        readonly mensagem: string,
+    ) {
+        super({ sucesso: false, mensagem, dados: null, erros: [] }, HttpStatus.SERVICE_UNAVAILABLE);
+    }
 }
 
 /**
@@ -26,6 +26,6 @@ export class IaException extends HttpException {
  * mensagem do motivo (desligada, sem chave, limite...) ou a genérica para qualquer erro desconhecido.
  */
 export function traduzirFalhaDeIa(erro: unknown): BusinessException {
-  if (erro instanceof IaException) return new BusinessException(erro.mensagem);
-  return new BusinessException('Serviço de IA temporariamente indisponível');
+    if (erro instanceof IaException) return new BusinessException(erro.mensagem);
+    return new BusinessException('Serviço de IA temporariamente indisponível');
 }

@@ -13,143 +13,177 @@ const repositorioDe = (conexao: ConexaoTeste) => criarRepositorio(ConfiguracaoIa
 
 /** A criação com outro modelo padrão do provedor Anthropic (o repositório não confere o prefixo: isso é da service). */
 const comModeloPadrao = (modeloPadrao: string): ConfiguracaoIaCriarDto => ({
-  ...NOVA,
-  modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { ...NOVA.modelosProvedor.ANTHROPIC!, modeloPadrao } },
+    ...NOVA,
+    modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { ...NOVA.modelosProvedor.ANTHROPIC!, modeloPadrao } },
 });
 
 const NOVA: ConfiguracaoIaCriarDto = {
-  provedor: TipoProvedorIaEnum.ANTHROPIC, fallbacks: [],
-  modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'modelo-rapido', modeloPadrao: 'modelo-padrao', modeloAnalitico: 'modelo-analitico' } },
-  esforcoAnalitico: EsforcoIaEnum.ALTO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 60, duracaoRecomendadaMinutos: 45,
-  checkinInteligente: false, rigorProporcional: false, deteccaoAutomatica: false,
-  duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO, iaDesligada: true,
+    provedor: TipoProvedorIaEnum.ANTHROPIC, fallbacks: [],
+    modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'modelo-rapido', modeloPadrao: 'modelo-padrao', modeloAnalitico: 'modelo-analitico' } },
+    esforcoAnalitico: EsforcoIaEnum.ALTO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 60, duracaoRecomendadaMinutos: 45,
+    checkinInteligente: false, rigorProporcional: false, deteccaoAutomatica: false,
+    duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO, iaDesligada: true,
 };
 
 testarComBanco('recuperarAtiva: a versão de maior número, com provedor e nome de quem gravou', async (conexao) => {
-  const administrador = await criarAdministrador(conexao, { nomeCompleto: 'Admin Teste' });
-  const anterior = await repositorioDe(conexao).recuperarAtiva();
-  const gravada = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+    const administrador = await criarAdministrador(conexao, { nomeCompleto: 'Admin Teste' });
+    const anterior = await repositorioDe(conexao).recuperarAtiva();
+    const gravada = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
 
-  const ativa = await repositorioDe(conexao).recuperarAtiva();
-  assert.equal(ativa?.id, gravada.id);
-  assert.equal(ativa?.versao, (anterior?.versao ?? 0) + 1);
-  assert.equal(ativa?.provedor, TipoProvedorIaEnum.ANTHROPIC);
-  assert.equal(ativa?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'modelo-padrao');
-  assert.equal(ativa?.esforcoAnalitico, EsforcoIaEnum.ALTO);
-  assert.equal(ativa?.duvidasCodigo, true);
-  assert.equal(ativa?.modoContextoChat, ModoContextoChatEnum.SEPARADO);
-  assert.equal(ativa?.iaDesligada, true);
-  assert.equal(ativa?.usuarioId, administrador.id);
-  assert.equal(ativa?.usuarioNome, 'Admin Teste');
+    const ativa = await repositorioDe(conexao).recuperarAtiva();
+    assert.equal(ativa?.id, gravada.id);
+    assert.equal(ativa?.versao, (anterior?.versao ?? 0) + 1);
+    assert.equal(ativa?.provedor, TipoProvedorIaEnum.ANTHROPIC);
+    assert.equal(ativa?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'modelo-padrao');
+    assert.equal(ativa?.esforcoAnalitico, EsforcoIaEnum.ALTO);
+    assert.equal(ativa?.duvidasCodigo, true);
+    assert.equal(ativa?.modoContextoChat, ModoContextoChatEnum.SEPARADO);
+    assert.equal(ativa?.iaDesligada, true);
+    assert.equal(ativa?.usuarioId, administrador.id);
+    assert.equal(ativa?.usuarioNome, 'Admin Teste');
 });
 
 testarComBanco('migration 0044: as versões que já existiam ficam "só Project" e com contexto misturado', async (conexao) => {
-  const administrador = await criarAdministrador(conexao);
-  await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
-  const { itens } = await repositorioDe(conexao).listar({ itensPorPagina: 100 });
-  const primeira = itens.find((item) => item.versao === 1)!;
-  assert.equal(primeira.duvidasCodigo, false);
-  assert.equal(primeira.modoContextoChat, ModoContextoChatEnum.MISTURADO);
+    const administrador = await criarAdministrador(conexao);
+    await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+    const { itens } = await repositorioDe(conexao).listar({ itensPorPagina: 100 });
+    const primeira = itens.find((item) => item.versao === 1)!;
+    assert.equal(primeira.duvidasCodigo, false);
+    assert.equal(primeira.modoContextoChat, ModoContextoChatEnum.MISTURADO);
 });
 
 testarComBanco('inserirNovaVersao: a anterior continua intacta e o histórico lista as duas, da mais nova para a mais antiga', async (conexao) => {
-  const administrador = await criarAdministrador(conexao);
-  const anterior = (await repositorioDe(conexao).recuperarAtiva())!;
-  const nova = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+    const administrador = await criarAdministrador(conexao);
+    const anterior = (await repositorioDe(conexao).recuperarAtiva())!;
+    const nova = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
 
-  const { itens, total } = await repositorioDe(conexao).listar({});
-  assert.equal(total >= 2, true);
-  assert.deepEqual(itens.slice(0, 2).map((item) => item.id), [nova.id, anterior.id]);
-  const anteriorDepois = itens.find((item) => item.id === anterior.id)!;
-  assert.equal(anteriorDepois.modelosProvedor.ANTHROPIC?.modeloPadrao, anterior.modelosProvedor.ANTHROPIC?.modeloPadrao);
-  assert.equal(anteriorDepois.versao, anterior.versao);
+    const { itens, total } = await repositorioDe(conexao).listar({});
+    assert.equal(total >= 2, true);
+    assert.deepEqual(itens.slice(0, 2).map((item) => item.id), [nova.id, anterior.id]);
+    const anteriorDepois = itens.find((item) => item.id === anterior.id)!;
+    assert.equal(anteriorDepois.modelosProvedor.ANTHROPIC?.modeloPadrao, anterior.modelosProvedor.ANTHROPIC?.modeloPadrao);
+    assert.equal(anteriorDepois.versao, anterior.versao);
 });
 
 testarComBanco('inserirNovaVersao: duas gravações em sequência geram versões consecutivas', async (conexao) => {
-  const administrador = await criarAdministrador(conexao);
-  const primeira = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
-  const segunda = await repositorioDe(conexao).inserirNovaVersao(comModeloPadrao('outro'), administrador.id);
-  assert.equal(segunda.versao, primeira.versao + 1);
-  assert.equal((await repositorioDe(conexao).recuperarAtiva())?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'outro');
+    const administrador = await criarAdministrador(conexao);
+    const primeira = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+    const segunda = await repositorioDe(conexao).inserirNovaVersao(comModeloPadrao('outro'), administrador.id);
+    assert.equal(segunda.versao, primeira.versao + 1);
+    assert.equal((await repositorioDe(conexao).recuperarAtiva())?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'outro');
 });
 
 testarComBanco('inserirNovaVersao: provedor inexistente falha e não grava versão', async (conexao) => {
-  const administrador = await criarAdministrador(conexao);
-  const antes = (await repositorioDe(conexao).listar({})).total;
-  await assert.rejects(
-    () => repositorioDe(conexao).inserirNovaVersao({ ...NOVA, provedor: 'INEXISTENTE' as TipoProvedorIaEnum }, administrador.id),
-    /Provedor de IA inexistente/,
-  );
-  assert.equal((await repositorioDe(conexao).listar({})).total, antes);
+    const administrador = await criarAdministrador(conexao);
+    const antes = (await repositorioDe(conexao).listar({})).total;
+    await assert.rejects(
+        () => repositorioDe(conexao).inserirNovaVersao({ ...NOVA, provedor: 'INEXISTENTE' as TipoProvedorIaEnum }, administrador.id),
+        /Provedor de IA inexistente/,
+    );
+    assert.equal((await repositorioDe(conexao).listar({})).total, antes);
 });
 
 testarComBanco('versão excluída (soft delete) não é a ativa nem aparece no histórico', async (conexao) => {
-  const administrador = await criarAdministrador(conexao);
-  const anterior = (await repositorioDe(conexao).recuperarAtiva())!;
-  const nova = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
-  await conexao.raw('UPDATE configuracao_ia SET is_deleted = true, deleted_date = NOW() WHERE id = :id', { id: nova.id });
+    const administrador = await criarAdministrador(conexao);
+    const anterior = (await repositorioDe(conexao).recuperarAtiva())!;
+    const nova = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+    await conexao.raw(`
+        UPDATE configuracao_ia
+        SET
+            is_deleted = true,
+            deleted_date = NOW()
+        WHERE
+            id = :id
+    `, { id: nova.id });
 
-  assert.equal((await repositorioDe(conexao).recuperarAtiva())?.id, anterior.id);
-  assert.equal((await repositorioDe(conexao).listar({})).itens.some((item) => item.id === nova.id), false);
+    assert.equal((await repositorioDe(conexao).recuperarAtiva())?.id, anterior.id);
+    assert.equal((await repositorioDe(conexao).listar({})).itens.some((item) => item.id === nova.id), false);
 });
 
 testarComBanco('listar: pagina o histórico e o total conta todas as versões', async (conexao) => {
-  const administrador = await criarAdministrador(conexao);
-  await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
-  await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
-  const { total } = await repositorioDe(conexao).listar({});
-  const primeiraPagina = await repositorioDe(conexao).listar({ pagina: 1, itensPorPagina: 1 });
-  const segundaPagina = await repositorioDe(conexao).listar({ pagina: 2, itensPorPagina: 1 });
-  assert.equal(primeiraPagina.itens.length, 1);
-  assert.equal(segundaPagina.itens.length, 1);
-  assert.equal(primeiraPagina.total, total);
-  assert.equal(primeiraPagina.itens[0].versao, segundaPagina.itens[0].versao + 1);
+    const administrador = await criarAdministrador(conexao);
+    await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+    await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+    const { total } = await repositorioDe(conexao).listar({});
+    const primeiraPagina = await repositorioDe(conexao).listar({ pagina: 1, itensPorPagina: 1 });
+    const segundaPagina = await repositorioDe(conexao).listar({ pagina: 2, itensPorPagina: 1 });
+    assert.equal(primeiraPagina.itens.length, 1);
+    assert.equal(segundaPagina.itens.length, 1);
+    assert.equal(primeiraPagina.total, total);
+    assert.equal(primeiraPagina.itens[0].versao, segundaPagina.itens[0].versao + 1);
 });
 
 // Corrida real: duas conexões do pool, cada uma com a sua transação, sem o rollback do teste. O lock consultivo serializa.
 test('inserirNovaVersao: duas gravações concorrentes geram versões consecutivas, sem repetir número', async () => {
-  const banco = obterConexaoBancoTeste();
-  const usuario = await banco.raw(`SELECT usuario.id FROM usuario WHERE usuario.login = 'gestor.inicial' AND usuario.is_deleted = false`);
-  const usuarioId = usuario.rows[0].id as number;
-  const repositorio = new ConfiguracaoIaRepository(banco);
-  const gravadas: number[] = [];
-  try {
-    const resultados = await Promise.all([
-      repositorio.inserirNovaVersao(comModeloPadrao('concorrente-a'), usuarioId),
-      repositorio.inserirNovaVersao(comModeloPadrao('concorrente-b'), usuarioId),
-    ]);
-    gravadas.push(...resultados.map((resultado) => resultado.id));
-    const versoes = resultados.map((resultado) => resultado.versao).sort((a, b) => a - b);
-    assert.equal(versoes[1], versoes[0] + 1);
-    assert.equal((await repositorio.recuperarAtiva())?.versao, versoes[1]);
-  } finally {
-    if (gravadas.length > 0) await banco.raw('DELETE FROM configuracao_ia WHERE id = ANY(:ids)', { ids: gravadas });
-  }
+    const banco = obterConexaoBancoTeste();
+    const usuario = await banco.raw(`
+        SELECT
+            usuario.id
+        FROM
+            usuario
+        WHERE
+            usuario.login = 'gestor.inicial'
+            AND usuario.is_deleted = false
+    `);
+    const usuarioId = usuario.rows[0].id as number;
+    const repositorio = new ConfiguracaoIaRepository(banco);
+    const gravadas: number[] = [];
+    try {
+        const resultados = await Promise.all([
+            repositorio.inserirNovaVersao(comModeloPadrao('concorrente-a'), usuarioId),
+            repositorio.inserirNovaVersao(comModeloPadrao('concorrente-b'), usuarioId),
+        ]);
+        gravadas.push(...resultados.map((resultado) => resultado.id));
+        const versoes = resultados.map((resultado) => resultado.versao).sort((itemAtual, segundo) => itemAtual - segundo);
+        assert.equal(versoes[1], versoes[0] + 1);
+        assert.equal((await repositorio.recuperarAtiva())?.versao, versoes[1]);
+    } finally {
+        if (gravadas.length > 0) await banco.raw(`
+            DELETE FROM configuracao_ia
+            WHERE
+                id = ANY (:ids)
+        `, { ids: gravadas });
+    }
 });
 
 const esperar = (milissegundos: number) => new Promise((resolver) => setTimeout(resolver, milissegundos));
 
 // Determinístico: uma transação segura o lock consultivo; a gravação em outra conexão tem de esperar por ele.
 test('inserirNovaVersao espera o lock consultivo e só grava depois que a outra transação termina', async () => {
-  const banco = obterConexaoBancoTeste();
-  const usuario = await banco.raw(`SELECT usuario.id FROM usuario WHERE usuario.login = 'gestor.inicial' AND usuario.is_deleted = false`);
-  const usuarioId = usuario.rows[0].id as number;
-  const repositorio = new ConfiguracaoIaRepository(banco);
-  let terminou = false;
-  let pendente: Promise<{ id: number }> | undefined;
-  try {
-    await banco.transaction(async (segurando) => {
-      await segurando.raw(`SELECT pg_advisory_xact_lock(hashtext('configuracao_ia'))`);
-      pendente = repositorio.inserirNovaVersao(comModeloPadrao('esperou'), usuarioId).then((gravada) => { terminou = true; return gravada; });
-      await esperar(300);
-      assert.equal(terminou, false, 'a gravação não deveria passar enquanto outra transação segura o lock');
-    });
-    const gravada = await pendente;
-    assert.equal(terminou, true);
-    await banco.raw('DELETE FROM configuracao_ia WHERE id = :id', { id: gravada!.id });
-  } finally {
-    await pendente?.catch(() => undefined);
-  }
+    const banco = obterConexaoBancoTeste();
+    const usuario = await banco.raw(`
+        SELECT
+            usuario.id
+        FROM
+            usuario
+        WHERE
+            usuario.login = 'gestor.inicial'
+            AND usuario.is_deleted = false
+    `);
+    const usuarioId = usuario.rows[0].id as number;
+    const repositorio = new ConfiguracaoIaRepository(banco);
+    let terminou = false;
+    let pendente: Promise<{ id: number }> | undefined;
+    try {
+        await banco.transaction(async (segurando) => {
+            await segurando.raw(`
+                SELECT
+                    pg_advisory_xact_lock(hashtext ('configuracao_ia'))
+            `);
+            pendente = repositorio.inserirNovaVersao(comModeloPadrao('esperou'), usuarioId).then((gravada) => { terminou = true; return gravada; });
+            await esperar(300);
+            assert.equal(terminou, false, 'a gravação não deveria passar enquanto outra transação segura o lock');
+        });
+        const gravada = await pendente;
+        assert.equal(terminou, true);
+        await banco.raw(`
+            DELETE FROM configuracao_ia
+            WHERE
+                id = :id
+        `, { id: gravada!.id });
+    } finally {
+        await pendente?.catch(() => undefined);
+    }
 });
 
 // Preços por modelo no JSONB `precos_modelo` (task 202, migration 0048): vivem na versão ativa e são copiados para a versão seguinte.
@@ -158,36 +192,43 @@ const PRECO_A = { modelo: 'modelo-preco-a', precoEntradaMilhao: 3, precoSaidaMil
 const doModelo = (precos: IaModeloPrecoDto[], modelo: string) => precos.find((preco) => preco.modelo === modelo);
 
 testarComBanco('alterarPrecoDaVersaoAtiva cria o preço do modelo, troca na segunda vez e não cria versão', async (conexao) => {
-  const repositorio = repositorioDe(conexao);
-  const versaoAntes = (await repositorio.recuperarAtiva())!;
+    const repositorio = repositorioDe(conexao);
+    const versaoAntes = (await repositorio.recuperarAtiva())!;
 
-  assert.deepEqual(await repositorio.alterarPrecoDaVersaoAtiva(PRECO_A), PRECO_A);
-  assert.deepEqual(doModelo(await repositorio.listarPrecos(), 'modelo-preco-a'), PRECO_A);
+    assert.deepEqual(await repositorio.alterarPrecoDaVersaoAtiva(PRECO_A), PRECO_A);
+    assert.deepEqual(doModelo(await repositorio.listarPrecos(), 'modelo-preco-a'), PRECO_A);
 
-  await repositorio.alterarPrecoDaVersaoAtiva({ ...PRECO_A, precoEntradaMilhao: 4.5, precoCacheMilhao: 0.45 });
-  const trocado = (await repositorio.listarPrecos()).filter((preco) => preco.modelo === 'modelo-preco-a');
-  assert.deepEqual(trocado, [{ modelo: 'modelo-preco-a', precoEntradaMilhao: 4.5, precoSaidaMilhao: 15, precoCacheMilhao: 0.45 }]);
+    await repositorio.alterarPrecoDaVersaoAtiva({ ...PRECO_A, precoEntradaMilhao: 4.5, precoCacheMilhao: 0.45 });
+    const trocado = (await repositorio.listarPrecos()).filter((preco) => preco.modelo === 'modelo-preco-a');
+    assert.deepEqual(trocado, [{ modelo: 'modelo-preco-a', precoEntradaMilhao: 4.5, precoSaidaMilhao: 15, precoCacheMilhao: 0.45 }]);
 
-  const versaoDepois = (await repositorio.recuperarAtiva())!;
-  assert.equal(versaoDepois.id, versaoAntes.id);
-  assert.equal(versaoDepois.versao, versaoAntes.versao);
+    const versaoDepois = (await repositorio.recuperarAtiva())!;
+    assert.equal(versaoDepois.id, versaoAntes.id);
+    assert.equal(versaoDepois.versao, versaoAntes.versao);
 });
 
 testarComBanco('inserirNovaVersao copia os preços da versão anterior; a anterior continua com os dela', async (conexao) => {
-  const administrador = await criarAdministrador(conexao);
-  const repositorio = repositorioDe(conexao);
-  await repositorio.alterarPrecoDaVersaoAtiva(PRECO_A);
-  const anterior = (await repositorio.recuperarAtiva())!;
+    const administrador = await criarAdministrador(conexao);
+    const repositorio = repositorioDe(conexao);
+    await repositorio.alterarPrecoDaVersaoAtiva(PRECO_A);
+    const anterior = (await repositorio.recuperarAtiva())!;
 
-  const nova = await repositorio.inserirNovaVersao(NOVA, administrador.id);
-  assert.notEqual(nova.id, anterior.id);
-  assert.deepEqual(doModelo(await repositorio.listarPrecos(), 'modelo-preco-a'), PRECO_A);
+    const nova = await repositorio.inserirNovaVersao(NOVA, administrador.id);
+    assert.notEqual(nova.id, anterior.id);
+    assert.deepEqual(doModelo(await repositorio.listarPrecos(), 'modelo-preco-a'), PRECO_A);
 
-  // Trocar o preço agora altera só a versão ativa (a nova).
-  await repositorio.alterarPrecoDaVersaoAtiva({ ...PRECO_A, precoSaidaMilhao: 20 });
-  const { rows } = await conexao.raw('SELECT precos_modelo -> \'modelo-preco-a\' ->> \'precoSaidaMilhao\' AS saida FROM configuracao_ia WHERE id = :id', { id: anterior.id });
-  assert.equal(Number(rows[0].saida), 15);
-  assert.equal(doModelo(await repositorio.listarPrecos(), 'modelo-preco-a')?.precoSaidaMilhao, 20);
+    // Trocar o preço agora altera só a versão ativa (a nova).
+    await repositorio.alterarPrecoDaVersaoAtiva({ ...PRECO_A, precoSaidaMilhao: 20 });
+    const { rows } = await conexao.raw(`
+        SELECT
+            precos_modelo -> 'modelo-preco-a' ->> 'precoSaidaMilhao' AS saida
+        FROM
+            configuracao_ia
+        WHERE
+            id = :id
+    `, { id: anterior.id });
+    assert.equal(Number(rows[0].saida), 15);
+    assert.equal(doModelo(await repositorio.listarPrecos(), 'modelo-preco-a')?.precoSaidaMilhao, 20);
 });
 
 const GEMINI = { modeloRapido: 'gemini-flash', modeloPadrao: 'gemini-pro', modeloAnalitico: 'gemini-pro-max' };
@@ -195,64 +236,64 @@ const OPENAI = { modeloRapido: 'gpt-mini', modeloPadrao: 'gpt-5', modeloAnalitic
 const MODELOS = { ...NOVA.modelosProvedor, [TipoProvedorIaEnum.GOOGLE]: GEMINI, [TipoProvedorIaEnum.OPENAI]: OPENAI };
 
 testarComBanco('migration 0049: a cadeia e o mapa de modelos voltam como foram gravados, na criada, na ativa e na listagem', async (conexao) => {
-  const administrador = await criarAdministrador(conexao);
-  const fallbacks = [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI];
-  const criada = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, fallbacks, modelosProvedor: MODELOS }, administrador.id);
-  assert.deepEqual(criada.fallbacks, fallbacks);
-  assert.deepEqual(criada.modelosProvedor, MODELOS);
+    const administrador = await criarAdministrador(conexao);
+    const fallbacks = [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI];
+    const criada = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, fallbacks, modelosProvedor: MODELOS }, administrador.id);
+    assert.deepEqual(criada.fallbacks, fallbacks);
+    assert.deepEqual(criada.modelosProvedor, MODELOS);
 
-  const ativa = await repositorioDe(conexao).recuperarAtiva();
-  assert.deepEqual(ativa?.fallbacks, fallbacks);
-  assert.deepEqual(ativa?.modelosProvedor, MODELOS);
+    const ativa = await repositorioDe(conexao).recuperarAtiva();
+    assert.deepEqual(ativa?.fallbacks, fallbacks);
+    assert.deepEqual(ativa?.modelosProvedor, MODELOS);
 
-  const { itens } = await repositorioDe(conexao).listar({});
-  assert.deepEqual(itens[0].fallbacks, fallbacks);
+    const { itens } = await repositorioDe(conexao).listar({});
+    assert.deepEqual(itens[0].fallbacks, fallbacks);
 });
 
 testarComBanco('trocar o padrão para o Google e voltar: o trio da Anthropic fica no mapa de cada versão e a ordem do fallback é a gravada', async (conexao) => {
-  const administrador = await criarAdministrador(conexao);
-  const noGoogle = await repositorioDe(conexao).inserirNovaVersao(
-    { ...NOVA, provedor: TipoProvedorIaEnum.GOOGLE, fallbacks: [TipoProvedorIaEnum.OPENAI, TipoProvedorIaEnum.ANTHROPIC], modelosProvedor: MODELOS },
-    administrador.id,
-  );
-  assert.equal(noGoogle.provedor, TipoProvedorIaEnum.GOOGLE);
-  assert.deepEqual(noGoogle.fallbacks, [TipoProvedorIaEnum.OPENAI, TipoProvedorIaEnum.ANTHROPIC]);
+    const administrador = await criarAdministrador(conexao);
+    const noGoogle = await repositorioDe(conexao).inserirNovaVersao(
+        { ...NOVA, provedor: TipoProvedorIaEnum.GOOGLE, fallbacks: [TipoProvedorIaEnum.OPENAI, TipoProvedorIaEnum.ANTHROPIC], modelosProvedor: MODELOS },
+        administrador.id,
+    );
+    assert.equal(noGoogle.provedor, TipoProvedorIaEnum.GOOGLE);
+    assert.deepEqual(noGoogle.fallbacks, [TipoProvedorIaEnum.OPENAI, TipoProvedorIaEnum.ANTHROPIC]);
 
-  const deVolta = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, modelosProvedor: noGoogle.modelosProvedor }, administrador.id);
-  assert.equal(deVolta.provedor, TipoProvedorIaEnum.ANTHROPIC);
-  assert.deepEqual(deVolta.modelosProvedor.ANTHROPIC, NOVA.modelosProvedor.ANTHROPIC);
-  assert.deepEqual(deVolta.fallbacks, []);
+    const deVolta = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, modelosProvedor: noGoogle.modelosProvedor }, administrador.id);
+    assert.equal(deVolta.provedor, TipoProvedorIaEnum.ANTHROPIC);
+    assert.deepEqual(deVolta.modelosProvedor.ANTHROPIC, NOVA.modelosProvedor.ANTHROPIC);
+    assert.deepEqual(deVolta.fallbacks, []);
 });
 
 testarComBanco('migration 0049: a versão 1 do seed ganhou o mapa com o trio da Anthropic e nenhum fallback', async (conexao) => {
-  const { itens } = await repositorioDe(conexao).listar({});
-  const versaoUm = itens.find((item) => item.versao === 1);
-  assert.deepEqual(versaoUm?.fallbacks, []);
-  assert.deepEqual(Object.keys(versaoUm?.modelosProvedor ?? {}), [TipoProvedorIaEnum.ANTHROPIC]);
-  assert.equal(versaoUm?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'claude-sonnet-5-5');
+    const { itens } = await repositorioDe(conexao).listar({});
+    const versaoUm = itens.find((item) => item.versao === 1);
+    assert.deepEqual(versaoUm?.fallbacks, []);
+    assert.deepEqual(Object.keys(versaoUm?.modelosProvedor ?? {}), [TipoProvedorIaEnum.ANTHROPIC]);
+    assert.equal(versaoUm?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'claude-sonnet-5-5');
 });
 
 testarComBanco('migration 0055: as versões que já existiam ficam sem o mapa de níveis (nulo = padrão do shared)', async (conexao) => {
-  const { itens } = await repositorioDe(conexao).listar({});
-  const versaoUm = itens.find((item) => item.versao === 1);
-  assert.equal(versaoUm?.niveisProposta, null);
+    const { itens } = await repositorioDe(conexao).listar({});
+    const versaoUm = itens.find((item) => item.versao === 1);
+    assert.equal(versaoUm?.niveisProposta, null);
 });
 
 testarComBanco('inserirNovaVersao grava o mapa de níveis e uma versão sem mapa copia o da anterior (task 228)', async (conexao) => {
-  const administrador = await criarAdministrador(conexao);
-  const niveis = { [TipoPropostaIaEnum.ANOTAR_PAD]: PropostaIaNivelEnum.PERGUNTA, [TipoPropostaIaEnum.CRIAR_ATIVIDADE]: PropostaIaNivelEnum.FAZ_E_AVISA };
-  const comMapa = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, niveisProposta: niveis }, administrador.id);
-  assert.deepEqual(comMapa.niveisProposta, niveis);
+    const administrador = await criarAdministrador(conexao);
+    const niveis = { [TipoPropostaIaEnum.ANOTAR_PAD]: PropostaIaNivelEnum.PERGUNTA, [TipoPropostaIaEnum.CRIAR_ATIVIDADE]: PropostaIaNivelEnum.FAZ_E_AVISA };
+    const comMapa = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, niveisProposta: niveis }, administrador.id);
+    assert.deepEqual(comMapa.niveisProposta, niveis);
 
-  const semMapa = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
-  assert.deepEqual(semMapa.niveisProposta, niveis, 'a versão nova sem o mapa herda o da anterior');
-  assert.deepEqual((await repositorioDe(conexao).recuperarAtiva())?.niveisProposta, niveis);
-  const { itens } = await repositorioDe(conexao).listar({ itensPorPagina: 100 });
-  assert.deepEqual(itens.find((item) => item.id === comMapa.id)?.niveisProposta, niveis, 'a versão anterior continua com o mapa dela');
+    const semMapa = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+    assert.deepEqual(semMapa.niveisProposta, niveis, 'a versão nova sem o mapa herda o da anterior');
+    assert.deepEqual((await repositorioDe(conexao).recuperarAtiva())?.niveisProposta, niveis);
+    const { itens } = await repositorioDe(conexao).listar({ itensPorPagina: 100 });
+    assert.deepEqual(itens.find((item) => item.id === comMapa.id)?.niveisProposta, niveis, 'a versão anterior continua com o mapa dela');
 });
 
 testarComBanco('inserirNovaVersao sem mapa depois de uma versão antiga (nula) segue nula', async (conexao) => {
-  const administrador = await criarAdministrador(conexao);
-  const nova = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
-  assert.equal(nova.niveisProposta, null);
+    const administrador = await criarAdministrador(conexao);
+    const nova = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+    assert.equal(nova.niveisProposta, null);
 });

@@ -1,70 +1,70 @@
 .grafico-barras {
-  position: relative;
-  width: 100%;
+    position: relative;
+    width: 100%;
 
-  &__svg {
-    display: block;
-    max-width: 100%;
-    font-family: inherit;
-  }
-
-  &__grade {
-    stroke: var(--app-surface-200);
-    stroke-width: 1;
-  }
-
-  &__marca,
-  &__rotulo {
-    fill: var(--p-text-muted-color);
-    font-size: 11px;
-  }
-
-  &__rotulo {
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  &__valor {
-    fill: var(--p-text-color);
-    font-size: 11px;
-    font-weight: 600;
-
-    &--destaque {
-      fill: var(--p-red-500);
-    }
-  }
-
-  &__barra {
-    &--destaque {
-      stroke: var(--p-red-900);
-      stroke-width: 2;
+    &__svg {
+        display: block;
+        max-width: 100%;
+        font-family: inherit;
     }
 
-    /* Um fio da cor da superfície separa os segmentos empilhados. */
-    &--empilhada {
-      stroke: var(--p-content-background);
-      stroke-width: 1;
+    &__grade {
+        stroke: var(--app-surface-200);
+        stroke-width: 1;
     }
-  }
 
-  &__referencia {
-    stroke: var(--p-text-muted-color);
-    stroke-width: 1.5;
-    stroke-dasharray: 5 4;
-  }
-
-  &__rotulo-referencia {
-    fill: var(--p-text-muted-color);
-    font-size: 11px;
-  }
-
-  // Áreas HTML sobre as barras e os rótulos do eixo: hospedam o tooltip (ver o template). A barra ganha um realce ao apontar.
-  &__alvo {
-    position: absolute;
-    border-radius: 2px;
-
-    &:hover {
-      background: color-mix(in srgb, var(--p-text-color) 12%, transparent);
+    &__marca,
+    &__rotulo {
+        fill: var(--p-text-muted-color);
+        font-size: 11px;
     }
-  }
+
+    &__rotulo {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    &__valor {
+        fill: var(--p-text-color);
+        font-size: 11px;
+        font-weight: 600;
+
+        &--destaque {
+            fill: var(--p-red-500);
+        }
+    }
+
+    &__barra {
+        &--destaque {
+            stroke: var(--p-red-900);
+            stroke-width: 2;
+        }
+
+        /* Um fio da cor da superfície separa os segmentos empilhados. */
+        &--empilhada {
+            stroke: var(--p-content-background);
+            stroke-width: 1;
+        }
+    }
+
+    &__referencia {
+        stroke: var(--p-text-muted-color);
+        stroke-width: 1.5;
+        stroke-dasharray: 5 4;
+    }
+
+    &__rotulo-referencia {
+        fill: var(--p-text-muted-color);
+        font-size: 11px;
+    }
+
+    // Áreas HTML sobre as barras e os rótulos do eixo: hospedam o tooltip (ver o template). A barra ganha um realce ao apontar.
+    &__alvo {
+        position: absolute;
+        border-radius: 2px;
+
+        &:hover {
+            background: color-mix(in srgb, var(--p-text-color) 12%, transparent);
+        }
+    }
 }

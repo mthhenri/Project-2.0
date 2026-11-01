@@ -14,35 +14,35 @@ import { AtividadeService } from '../services/atividade.service';
  */
 @Injectable()
 export class ExcluirAtividadeExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.EXCLUIR_ATIVIDADE;
+    readonly tipo = TipoPropostaIaEnum.EXCLUIR_ATIVIDADE;
 
-  constructor(
-    private readonly atividadeService: AtividadeService,
-    private readonly atividadeRepositorio: AtividadeRepository,
-  ) {}
+    constructor(
+        private readonly atividadeService: AtividadeService,
+        private readonly atividadeRepositorio: AtividadeRepository,
+    ) {}
 
-  validar(dados: Record<string, unknown>): void {
-    validarDadosDaProposta(PropostaExcluirAtividadeDadosDto, dados);
-  }
-
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const entrada = validarDadosDaProposta(PropostaExcluirAtividadeDadosDto, dados);
-    // `recuperar` confere a existência e o acesso do usuário à atividade.
-    await this.atividadeService.recuperar({ id: entrada.atividadeId }, usuarioAtivo);
-    if (await this.atividadeRepositorio.possuiExecucao({ id: entrada.atividadeId })) {
-      throw new BusinessException('A atividade já tem execuções: a IA não a exclui. A exclusão, nesse caso, é feita pela tela de Atividades');
+    validar(dados: Record<string, unknown>): void {
+        validarDadosDaProposta(PropostaExcluirAtividadeDadosDto, dados);
     }
-    await this.atividadeService.excluir({ id: entrada.atividadeId }, usuarioAtivo);
-    return { atividadeId: entrada.atividadeId };
-  }
 
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    const atividadeId = Number(resultado['atividadeId']);
-    if (!Number.isInteger(atividadeId)) throw new BusinessException('Não há atividade a desfazer nesta proposta');
-    if (await this.atividadeRepositorio.possuiExecucao({ id: atividadeId })) {
-      throw new BusinessException('A atividade tem execução nova: não dá para desfazer com segurança');
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const entrada = validarDadosDaProposta(PropostaExcluirAtividadeDadosDto, dados);
+        // `recuperar` confere a existência e o acesso do usuário à atividade.
+        await this.atividadeService.recuperar({ id: entrada.atividadeId }, usuarioAtivo);
+        if (await this.atividadeRepositorio.possuiExecucao({ id: entrada.atividadeId })) {
+            throw new BusinessException('A atividade já tem execuções: a IA não a exclui. A exclusão, nesse caso, é feita pela tela de Atividades');
+        }
+        await this.atividadeService.excluir({ id: entrada.atividadeId }, usuarioAtivo);
+        return { atividadeId: entrada.atividadeId };
     }
-    // `restaurar` só acha a atividade se ela continua excluída, e confere dono ou gestor e que a demanda continua ativa.
-    await this.atividadeService.restaurar({ id: atividadeId }, usuarioAtivo);
-  }
+
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        const atividadeId = Number(resultado['atividadeId']);
+        if (!Number.isInteger(atividadeId)) throw new BusinessException('Não há atividade a desfazer nesta proposta');
+        if (await this.atividadeRepositorio.possuiExecucao({ id: atividadeId })) {
+            throw new BusinessException('A atividade tem execução nova: não dá para desfazer com segurança');
+        }
+        // `restaurar` só acha a atividade se ela continua excluída, e confere dono ou gestor e que a demanda continua ativa.
+        await this.atividadeService.restaurar({ id: atividadeId }, usuarioAtivo);
+    }
 }

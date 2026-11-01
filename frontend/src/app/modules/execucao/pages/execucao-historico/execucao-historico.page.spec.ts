@@ -44,10 +44,10 @@ async function montarPagina({ usuario = TipoUsuarioEnum.GESTOR, consulta = {} }:
 
 /** Atende as leituras de apoio (usuários do filtro e dos dialogs filhos) e a primeira busca de execuções. */
 async function carregar(montado: Montado, itens: ExecucaoItemDto[] = [], totalMinutosDia = 0): Promise<void> {
-    for (const requisicao of montado.http.match((r) => r.method === 'GET' && r.url.endsWith('/usuario'))) {
+    for (const requisicao of montado.http.match((resultadoAtual) => resultadoAtual.method === 'GET' && resultadoAtual.url.endsWith('/usuario'))) {
         responderSucesso(requisicao, { itens: [{ id: 1, nomeCompleto: 'Maria Souza' }, { id: 3, nomeCompleto: 'João Lima' }], totalItens: 2 });
     }
-    for (const requisicao of montado.http.match((r) => r.method === 'GET' && (r.url.endsWith('/demanda/atribuidas') || r.url.endsWith('/tag')))) {
+    for (const requisicao of montado.http.match((resultado) => resultado.method === 'GET' && (resultado.url.endsWith('/demanda/atribuidas') || resultado.url.endsWith('/tag')))) {
         responderSucesso(requisicao, []);
     }
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/execucao'), pagina(itens, totalMinutosDia));
@@ -290,7 +290,7 @@ describe('ExecucaoHistoricoPage: filtros', () => {
         montado.componente.aoVoltarParaAba();
         const recarga = esperarRequisicao(montado.http, 'GET', '/execucao');
         montado.componente.aoVoltarParaAba();
-        montado.http.expectNone((r) => r.method === 'GET' && r.url.endsWith('/execucao'));
+        montado.http.expectNone((registroParcial) => registroParcial.method === 'GET' && registroParcial.url.endsWith('/execucao'));
         responderSucesso(recarga, pagina([]));
     });
 });
@@ -310,7 +310,7 @@ describe('ExecucaoHistoricoPage: gestor x desenvolvedor', () => {
 
     it('desenvolvedor não vê filtro de usuário, Minhas, Relatório, colunas de usuário e ações, e não carrega usuários', async () => {
         const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
-        montado.http.expectNone((r) => r.url.endsWith('/usuario'));
+        montado.http.expectNone((registroLocal) => registroLocal.url.endsWith('/usuario'));
         await carregar(montado, [criarExecucao(1)], 90);
         expect(texto(montado)).not.toContain('Relatório');
         expect(botaoPorTexto(montado, 'Minhas')).toBeUndefined();
@@ -382,7 +382,7 @@ describe('ExecucaoHistoricoPage: edição inline (gestor)', () => {
         montado.componente.aoSairDaEdicao();
         expect(montado.componente.edicao()).toBeNull();
         expect(montado.componente.confirmandoEdicao()).toBe(false);
-        montado.http.expectNone((r) => r.method === 'PUT');
+        montado.http.expectNone((registroSelecionado) => registroSelecionado.method === 'PUT');
     });
 
     it('sair com alteração pergunta "Salvar alteração?" e "Não" descarta o rascunho', async () => {
@@ -398,7 +398,7 @@ describe('ExecucaoHistoricoPage: edição inline (gestor)', () => {
         await montado.atualizar();
         expect(montado.componente.edicao()).toBeNull();
         expect(execucaoUm(montado).descricao).toBe('Descrição 1');
-        montado.http.expectNone((r) => r.method === 'PUT');
+        montado.http.expectNone((registroPrincipal) => registroPrincipal.method === 'PUT');
     });
 
     it('"Sim" envia PUT /execucao/:id com a descrição aparada e os demais valores intactos, e atualiza a linha', async () => {
@@ -479,7 +479,7 @@ describe('ExecucaoHistoricoPage: edição inline (gestor)', () => {
         montado.componente.rascunhoData.setValue(new Date(montado.componente.rascunhoData.value!.getTime() - 3 * 3_600_000));
         montado.componente.aoSairDaEdicao();
         montado.componente.confirmarEdicao();
-        montado.http.expectNone((r) => r.method === 'PUT');
+        montado.http.expectNone((registroSeguinte) => registroSeguinte.method === 'PUT');
         expect(montado.componente.edicao()).not.toBeNull();
         expect(montado.componente.confirmandoEdicao()).toBe(false);
     });
@@ -491,7 +491,7 @@ describe('ExecucaoHistoricoPage: edição inline (gestor)', () => {
             montado.componente.rascunhoDescricao.setValue(valor);
             montado.componente.aoSairDaEdicao();
             montado.componente.confirmarEdicao();
-            montado.http.expectNone((r) => r.method === 'PUT');
+            montado.http.expectNone((registroAtual) => registroAtual.method === 'PUT');
             expect(montado.componente.edicao()).not.toBeNull();
             expect(montado.componente.confirmandoEdicao()).toBe(false);
         }
@@ -536,7 +536,7 @@ describe('ExecucaoHistoricoPage: exclusão (gestor)', () => {
         const confirmar = vi.spyOn(confirmacao, 'confirm');
         botaoPorRotulo(montado, 'Excluir execução')[0].click();
         expect(confirmar).toHaveBeenCalledTimes(1);
-        montado.http.expectNone((r) => r.method === 'DELETE');
+        montado.http.expectNone((registro) => registro.method === 'DELETE');
 
         confirmar.mock.calls[0][0].accept!();
         responderSucesso(esperarRequisicao(montado.http, 'DELETE', '/execucao/1'), null);

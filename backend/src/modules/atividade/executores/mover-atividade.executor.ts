@@ -13,40 +13,40 @@ import { AtividadeService } from '../services/atividade.service';
  */
 @Injectable()
 export class MoverAtividadeExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.MOVER_ATIVIDADE;
+    readonly tipo = TipoPropostaIaEnum.MOVER_ATIVIDADE;
 
-  constructor(private readonly atividadeService: AtividadeService) {}
+    constructor(private readonly atividadeService: AtividadeService) {}
 
-  validar(dados: Record<string, unknown>): void {
-    const entrada = validarDadosDaProposta(PropostaMoverAtividadeDadosDto, dados);
-    if (entrada.demandaDestinoId === entrada.demandaOrigemId) throw new BusinessException('A atividade já está nessa demanda');
-  }
-
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const entrada = validarDadosDaProposta(PropostaMoverAtividadeDadosDto, dados);
-    const atual = (await this.atividadeService.recuperar({ id: entrada.atividadeId }, usuarioAtivo)).dados;
-    if (!atual) throw new BusinessException('Atividade não encontrada');
-    if (atual.demandaId !== entrada.demandaOrigemId) throw new BusinessException('A atividade já não está na demanda de origem da proposta');
-    await this.atividadeService.alterar({ id: entrada.atividadeId, demandaId: entrada.demandaDestinoId }, usuarioAtivo);
-    return { atividadeId: entrada.atividadeId, demandaOrigemId: entrada.demandaOrigemId, demandaDestinoId: entrada.demandaDestinoId };
-  }
-
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    const atividadeId = Number(resultado['atividadeId']);
-    const origemId = Number(resultado['demandaOrigemId']);
-    if (!Number.isInteger(atividadeId) || !Number.isInteger(origemId)) throw new BusinessException('Não há atividade a desfazer nesta proposta');
-    const atual = (await this.atividadeService.recuperar({ id: atividadeId }, usuarioAtivo)).dados;
-    if (!atual) throw new BusinessException('Atividade não encontrada');
-    if (atual.demandaId !== Number(resultado['demandaDestinoId'])) {
-      throw new BusinessException('A atividade mudou de demanda depois: não dá para desfazer com segurança');
+    validar(dados: Record<string, unknown>): void {
+        const entrada = validarDadosDaProposta(PropostaMoverAtividadeDadosDto, dados);
+        if (entrada.demandaDestinoId === entrada.demandaOrigemId) throw new BusinessException('A atividade já está nessa demanda');
     }
-    await this.atividadeService.alterar({ id: atividadeId, demandaId: origemId }, usuarioAtivo);
-  }
 
-  /** Obsoleta quando a atividade já está na demanda de destino (o usuário moveu à mão). */
-  async estaObsoleta(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
-    const entrada = validarDadosDaProposta(PropostaMoverAtividadeDadosDto, dados);
-    const atual = (await this.atividadeService.recuperar({ id: entrada.atividadeId }, usuarioAtivo)).dados;
-    return !!atual && atual.demandaId === entrada.demandaDestinoId;
-  }
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const entrada = validarDadosDaProposta(PropostaMoverAtividadeDadosDto, dados);
+        const atual = (await this.atividadeService.recuperar({ id: entrada.atividadeId }, usuarioAtivo)).dados;
+        if (!atual) throw new BusinessException('Atividade não encontrada');
+        if (atual.demandaId !== entrada.demandaOrigemId) throw new BusinessException('A atividade já não está na demanda de origem da proposta');
+        await this.atividadeService.alterar({ id: entrada.atividadeId, demandaId: entrada.demandaDestinoId }, usuarioAtivo);
+        return { atividadeId: entrada.atividadeId, demandaOrigemId: entrada.demandaOrigemId, demandaDestinoId: entrada.demandaDestinoId };
+    }
+
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        const atividadeId = Number(resultado['atividadeId']);
+        const origemId = Number(resultado['demandaOrigemId']);
+        if (!Number.isInteger(atividadeId) || !Number.isInteger(origemId)) throw new BusinessException('Não há atividade a desfazer nesta proposta');
+        const atual = (await this.atividadeService.recuperar({ id: atividadeId }, usuarioAtivo)).dados;
+        if (!atual) throw new BusinessException('Atividade não encontrada');
+        if (atual.demandaId !== Number(resultado['demandaDestinoId'])) {
+            throw new BusinessException('A atividade mudou de demanda depois: não dá para desfazer com segurança');
+        }
+        await this.atividadeService.alterar({ id: atividadeId, demandaId: origemId }, usuarioAtivo);
+    }
+
+    /** Obsoleta quando a atividade já está na demanda de destino (o usuário moveu à mão). */
+    async estaObsoleta(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const entrada = validarDadosDaProposta(PropostaMoverAtividadeDadosDto, dados);
+        const atual = (await this.atividadeService.recuperar({ id: entrada.atividadeId }, usuarioAtivo)).dados;
+        return !!atual && atual.demandaId === entrada.demandaDestinoId;
+    }
 }

@@ -10,33 +10,33 @@ import { FerramentaIa, OrigemDaFerramentaIa } from '../domain/ferramenta-ia';
  * no backend, não pela ferramenta nem pelo modelo. Por construção, nenhuma ferramenta de proposta tem acesso a uma service de domínio.
  */
 export abstract class FerramentaPropostaIa<TEntrada extends object = object> extends FerramentaIa<TEntrada> {
-  readonly tipo = 'PROPOSTA' as const;
-  abstract readonly tipoProposta: TipoPropostaIaEnum;
+    readonly tipo = 'PROPOSTA' as const;
+    abstract readonly tipoProposta: TipoPropostaIaEnum;
 
-  constructor(private readonly propostaIaService: PropostaIaService) {
-    super();
-  }
+    constructor(private readonly propostaIaService: PropostaIaService) {
+        super();
+    }
 
-  /** Os dados guardados na proposta; por padrão, a própria entrada validada. */
-  protected montarDados(entrada: TEntrada, _usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> | Record<string, unknown> {
-    return { ...entrada } as Record<string, unknown>;
-  }
+    /** Os dados guardados na proposta; por padrão, a própria entrada validada. */
+    protected montarDados(entrada: TEntrada, _usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> | Record<string, unknown> {
+        return { ...entrada } as Record<string, unknown>;
+    }
 
-  async executar(entrada: TEntrada, usuarioAtivo: JwtPayload, origem?: OrigemDaFerramentaIa): Promise<unknown> {
-    const proposta = await this.propostaIaService.criarComAutonomia(
-      { usuarioId: usuarioAtivo.sub, tipo: this.tipoProposta, dados: await this.montarDados(entrada, usuarioAtivo) },
-      usuarioAtivo,
-      { noCheckin: origem?.contexto === ContextoChatEnum.CHECKIN },
-    );
-    const feita = proposta.status === StatusPropostaIaEnum.CONFIRMADA;
-    return {
-      propostaId: proposta.id,
-      situacao: proposta.status,
-      // Ids do que foi feito (ex.: `atividadeId` da atividade criada), para a IA encadear o passo seguinte sem listar tudo de novo.
-      ...(feita && proposta.resultado ? { resultado: proposta.resultado } : {}),
-      mensagem: feita
-        ? 'Feito: a ação já foi executada em nome do usuário. Ele vê uma linha de aviso na conversa, com Desfazer por 30 minutos. Não peça confirmação; diga em uma frase o que foi feito.'
-        : 'Proposta criada. Nada foi feito ainda: o usuário precisa confirmar no cartão da conversa.',
-    };
-  }
+    async executar(entrada: TEntrada, usuarioAtivo: JwtPayload, origem?: OrigemDaFerramentaIa): Promise<unknown> {
+        const proposta = await this.propostaIaService.criarComAutonomia(
+            { usuarioId: usuarioAtivo.sub, tipo: this.tipoProposta, dados: await this.montarDados(entrada, usuarioAtivo) },
+            usuarioAtivo,
+            { noCheckin: origem?.contexto === ContextoChatEnum.CHECKIN },
+        );
+        const feita = proposta.status === StatusPropostaIaEnum.CONFIRMADA;
+        return {
+            propostaId: proposta.id,
+            situacao: proposta.status,
+            // Ids do que foi feito (ex.: `atividadeId` da atividade criada), para a IA encadear o passo seguinte sem listar tudo de novo.
+            ...(feita && proposta.resultado ? { resultado: proposta.resultado } : {}),
+            mensagem: feita
+                ? 'Feito: a ação já foi executada em nome do usuário. Ele vê uma linha de aviso na conversa, com Desfazer por 30 minutos. Não peça confirmação; diga em uma frase o que foi feito.'
+                : 'Proposta criada. Nada foi feito ainda: o usuário precisa confirmar no cartão da conversa.',
+        };
+    }
 }

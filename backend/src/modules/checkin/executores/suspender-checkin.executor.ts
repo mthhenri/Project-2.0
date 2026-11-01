@@ -12,34 +12,34 @@ import { CheckinSuspensaoService } from '../services/checkin-suspensao.service';
  */
 @Injectable()
 export class SuspenderCheckinExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.SUSPENDER_CHECKIN;
+    readonly tipo = TipoPropostaIaEnum.SUSPENDER_CHECKIN;
 
-  constructor(private readonly checkinSuspensaoService: CheckinSuspensaoService) {}
+    constructor(private readonly checkinSuspensaoService: CheckinSuspensaoService) {}
 
-  validar(dados: Record<string, unknown>): void {
-    validarDadosDaProposta(PropostaSuspenderCheckinDadosDto, dados);
-  }
-
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const entrada = validarDadosDaProposta(PropostaSuspenderCheckinDadosDto, dados);
-    if (entrada.acao === 'SUSPENDER') {
-      this.checkinSuspensaoService.suspender(usuarioAtivo.sub, entrada.motivo ?? null);
-      return { acao: 'SUSPENDER' };
+    validar(dados: Record<string, unknown>): void {
+        validarDadosDaProposta(PropostaSuspenderCheckinDadosDto, dados);
     }
-    const anterior = this.checkinSuspensaoService.retomar(usuarioAtivo.sub);
-    if (!anterior) throw new BusinessException('Os check-ins não estavam suspensos');
-    return { acao: 'RETOMAR', motivoAnterior: anterior.motivo };
-  }
 
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    if (resultado['acao'] === 'SUSPENDER') {
-      this.checkinSuspensaoService.retomar(usuarioAtivo.sub);
-      return;
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const entrada = validarDadosDaProposta(PropostaSuspenderCheckinDadosDto, dados);
+        if (entrada.acao === 'SUSPENDER') {
+            this.checkinSuspensaoService.suspender(usuarioAtivo.sub, entrada.motivo ?? null);
+            return { acao: 'SUSPENDER' };
+        }
+        const anterior = this.checkinSuspensaoService.retomar(usuarioAtivo.sub);
+        if (!anterior) throw new BusinessException('Os check-ins não estavam suspensos');
+        return { acao: 'RETOMAR', motivoAnterior: anterior.motivo };
     }
-    if (resultado['acao'] === 'RETOMAR') {
-      this.checkinSuspensaoService.suspender(usuarioAtivo.sub, typeof resultado['motivoAnterior'] === 'string' ? resultado['motivoAnterior'] : null);
-      return;
+
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        if (resultado['acao'] === 'SUSPENDER') {
+            this.checkinSuspensaoService.retomar(usuarioAtivo.sub);
+            return;
+        }
+        if (resultado['acao'] === 'RETOMAR') {
+            this.checkinSuspensaoService.suspender(usuarioAtivo.sub, typeof resultado['motivoAnterior'] === 'string' ? resultado['motivoAnterior'] : null);
+            return;
+        }
+        throw new BusinessException('Não há suspensão a desfazer nesta proposta');
     }
-    throw new BusinessException('Não há suspensão a desfazer nesta proposta');
-  }
 }

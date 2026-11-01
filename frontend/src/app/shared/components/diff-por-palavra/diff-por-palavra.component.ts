@@ -7,20 +7,20 @@ import { compararPorPalavra, diffTemMudanca, TrechoDiff, TrechoDiffTipoEnum } fr
  * texto longo rola dentro do próprio diff (`--diff-por-palavra-altura-maxima` ajusta o teto).
  */
 @Component({
-  selector: 'app-diff-por-palavra',
-  standalone: true,
-  templateUrl: './diff-por-palavra.component.html',
-  styleUrl: './diff-por-palavra.component.scss',
+    selector: 'app-diff-por-palavra',
+    standalone: true,
+    templateUrl: './diff-por-palavra.component.html',
+    styleUrl: './diff-por-palavra.component.scss',
 })
 export class DiffPorPalavraComponent {
-  readonly antes = input<string | null | undefined>('');
-  readonly depois = input<string | null | undefined>('');
-  /** Texto de código: fonte monoespaçada, indentação e quebras de linha mantidas. */
-  readonly codigo = input(false);
-  /** Dentro de uma linha de texto (a proposta compacta): corre junto das palavras em volta, sem caixa nem rolagem própria. */
-  readonly emLinha = input(false);
+    readonly antes = input<string | null | undefined>('');
+    readonly depois = input<string | null | undefined>('');
+    /** Texto de código: fonte monoespaçada, indentação e quebras de linha mantidas. */
+    readonly codigo = input(false);
+    /** Dentro de uma linha de texto (a proposta compacta): corre junto das palavras em volta, sem caixa nem rolagem própria. */
+    readonly emLinha = input(false);
 
-  readonly Tipo = TrechoDiffTipoEnum;
-  readonly trechos = computed<TrechoDiff[]>(() => compararPorPalavra(this.antes() ?? '', this.depois() ?? ''));
-  readonly semMudanca = computed(() => !diffTemMudanca(this.trechos()));
+    readonly Tipo = TrechoDiffTipoEnum;
+    readonly trechos = computed<TrechoDiff[]>(() => compararPorPalavra(this.antes() ?? '', this.depois() ?? ''));
+    readonly semMudanca = computed(() => !diffTemMudanca(this.trechos()));
 }

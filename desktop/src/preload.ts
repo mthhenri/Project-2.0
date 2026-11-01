@@ -2,9 +2,9 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 /** Registra um ouvinte de um canal do desktop e devolve a função que o remove. */
 function ouvir<T>(canal: string, ouvinte: (dados: T) => void): () => void {
-  const encaminhar = (_evento: unknown, dados: T) => ouvinte(dados);
-  ipcRenderer.on(canal, encaminhar);
-  return () => ipcRenderer.removeListener(canal, encaminhar);
+    const encaminhar = (_evento: unknown, dados: T) => ouvinte(dados);
+    ipcRenderer.on(canal, encaminhar);
+    return () => ipcRenderer.removeListener(canal, encaminhar);
 }
 
 /**
@@ -18,15 +18,15 @@ function ouvir<T>(canal: string, ouvinte: (dados: T) => void): () => void {
  *   `situacaoDoAtalho` (para o menu de notificações mostrar se o atalho foi registrado).
  */
 contextBridge.exposeInMainWorld('projectDesktop', {
-  encerrarCheckin: () => ipcRenderer.send('checkin:encerrar'),
-  aoPedirChat: (ouvinte: (pedido: { areaDeTransferencia: string | null }) => void) => ouvir('chat:atalho', ouvinte),
-  aoPedirNavegacao: (ouvinte: (pedido: { caminho: string }) => void) => ouvir('chat:navegar', ouvinte),
-  aoPedirConversa: (ouvinte: (pedido: { usuarioId: number; usuarioNome: string }) => void) => ouvir('chat:abrir-conversa', ouvinte),
-  aoMudarVisibilidade: (ouvinte: (estado: { oculta: boolean }) => void) => ouvir('janela:visibilidade', ouvinte),
-  informarConversa: (usuarioId: number | null) => ipcRenderer.send('chat:conversa', usuarioId),
-  avisarMensagem: (aviso: { usuarioId: number; usuarioNome: string; texto: string; mencionaVoce: boolean; som: boolean }) => ipcRenderer.send('chat:avisar', aviso),
-  pegarRascunho: (): Promise<string | null> => ipcRenderer.invoke('chat:pegar-rascunho'),
-  fecharChat: () => ipcRenderer.send('chat:fechar'),
-  abrirNoProject: (caminho: string) => ipcRenderer.send('chat:abrir-no-project', caminho),
-  situacaoDoAtalho: (): Promise<{ atalho: string | null; registrado: boolean }> => ipcRenderer.invoke('chat:situacao-do-atalho'),
+    encerrarCheckin: () => ipcRenderer.send('checkin:encerrar'),
+    aoPedirChat: (ouvinte: (pedido: { areaDeTransferencia: string | null }) => void) => ouvir('chat:atalho', ouvinte),
+    aoPedirNavegacao: (ouvinte: (pedido: { caminho: string }) => void) => ouvir('chat:navegar', ouvinte),
+    aoPedirConversa: (ouvinte: (pedido: { usuarioId: number; usuarioNome: string }) => void) => ouvir('chat:abrir-conversa', ouvinte),
+    aoMudarVisibilidade: (ouvinte: (estado: { oculta: boolean }) => void) => ouvir('janela:visibilidade', ouvinte),
+    informarConversa: (usuarioId: number | null) => ipcRenderer.send('chat:conversa', usuarioId),
+    avisarMensagem: (aviso: { usuarioId: number; usuarioNome: string; texto: string; mencionaVoce: boolean; som: boolean }) => ipcRenderer.send('chat:avisar', aviso),
+    pegarRascunho: (): Promise<string | null> => ipcRenderer.invoke('chat:pegar-rascunho'),
+    fecharChat: () => ipcRenderer.send('chat:fechar'),
+    abrirNoProject: (caminho: string) => ipcRenderer.send('chat:abrir-no-project', caminho),
+    situacaoDoAtalho: (): Promise<{ atalho: string | null; registrado: boolean }> => ipcRenderer.invoke('chat:situacao-do-atalho'),
 });

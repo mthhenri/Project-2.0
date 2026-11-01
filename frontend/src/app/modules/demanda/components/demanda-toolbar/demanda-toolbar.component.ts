@@ -14,57 +14,57 @@ import { DemandaFiltro, alternarStatusVisivel, filtroAtivo, statusVisiveis } fro
  * Só apresenta e emite o filtro; quem aplica (Lista e Grafo) é a página. A busca é focada por `/`.
  */
 @Component({
-  selector: 'app-demanda-toolbar',
-  standalone: true,
-  imports: [FormsModule, ButtonModule, InputTextModule, MultiSelectModule, TooltipModule, DemandaStatusMarcaComponent],
-  templateUrl: './demanda-toolbar.component.html',
-  styleUrl: './demanda-toolbar.component.scss',
+    selector: 'app-demanda-toolbar',
+    standalone: true,
+    imports: [FormsModule, ButtonModule, InputTextModule, MultiSelectModule, TooltipModule, DemandaStatusMarcaComponent],
+    templateUrl: './demanda-toolbar.component.html',
+    styleUrl: './demanda-toolbar.component.scss',
 })
 export class DemandaToolbarComponent {
-  readonly filtro = input.required<DemandaFiltro>();
-  readonly contagem = input.required<Record<TipoDemandaStatusEnum, number>>();
-  readonly tagsDisponiveis = input<TagResumoDto[]>([]);
-  /** Só a Lista tem árvore para expandir/recolher. */
-  readonly mostrarExpansao = input<boolean>(false);
-  readonly todosExpandidos = input<boolean>(false);
+    readonly filtro = input.required<DemandaFiltro>();
+    readonly contagem = input.required<Record<TipoDemandaStatusEnum, number>>();
+    readonly tagsDisponiveis = input<TagResumoDto[]>([]);
+    /** Só a Lista tem árvore para expandir/recolher. */
+    readonly mostrarExpansao = input<boolean>(false);
+    readonly todosExpandidos = input<boolean>(false);
 
-  readonly filtroAlterado = output<DemandaFiltro>();
-  readonly limpar = output<void>();
-  readonly expansaoAlternada = output<void>();
+    readonly filtroAlterado = output<DemandaFiltro>();
+    readonly limpar = output<void>();
+    readonly expansaoAlternada = output<void>();
 
-  private readonly campoBusca = viewChild<ElementRef<HTMLInputElement>>('campoBusca');
+    private readonly campoBusca = viewChild<ElementRef<HTMLInputElement>>('campoBusca');
 
-  readonly ativo = computed(() => filtroAtivo(this.filtro()));
+    readonly ativo = computed(() => filtroAtivo(this.filtro()));
 
-  readonly chips = OPCOES_STATUS_DEMANDA;
+    readonly chips = OPCOES_STATUS_DEMANDA;
 
-  focarBusca(): void {
-    const campo = this.campoBusca()?.nativeElement;
-    campo?.focus();
-    campo?.select();
-  }
+    focarBusca(): void {
+        const campo = this.campoBusca()?.nativeElement;
+        campo?.focus();
+        campo?.select();
+    }
 
-  aoDigitar(termo: string): void {
-    this.filtroAlterado.emit({ ...this.filtro(), termo });
-  }
+    aoDigitar(termo: string): void {
+        this.filtroAlterado.emit({ ...this.filtro(), termo });
+    }
 
-  /** Chip ligado = status visível; 1 clique esconde (ou volta a mostrar) aquele status. */
-  alternarStatus(status: TipoDemandaStatusEnum): void {
-    this.filtroAlterado.emit({ ...this.filtro(), status: alternarStatusVisivel(this.filtro(), status) });
-  }
+    /** Chip ligado = status visível; 1 clique esconde (ou volta a mostrar) aquele status. */
+    alternarStatus(status: TipoDemandaStatusEnum): void {
+        this.filtroAlterado.emit({ ...this.filtro(), status: alternarStatusVisivel(this.filtro(), status) });
+    }
 
-  aoMudarTags(tagIds: number[]): void {
-    this.filtroAlterado.emit({ ...this.filtro(), tagIds: tagIds ?? [] });
-  }
+    aoMudarTags(tagIds: number[]): void {
+        this.filtroAlterado.emit({ ...this.filtro(), tagIds: tagIds ?? [] });
+    }
 
-  statusAtivo(status: TipoDemandaStatusEnum): boolean {
-    return statusVisiveis(this.filtro()).includes(status);
-  }
+    statusAtivo(status: TipoDemandaStatusEnum): boolean {
+        return statusVisiveis(this.filtro()).includes(status);
+    }
 
-  /** Esc limpa a busca; com a busca já vazia, devolve o foco à página. */
-  aoTeclarBusca(evento: KeyboardEvent): void {
-    if (evento.key !== 'Escape') return;
-    if (this.filtro().termo) this.aoDigitar('');
-    else (evento.target as HTMLElement).blur();
-  }
+    /** Esc limpa a busca; com a busca já vazia, devolve o foco à página. */
+    aoTeclarBusca(evento: KeyboardEvent): void {
+        if (evento.key !== 'Escape') return;
+        if (this.filtro().termo) this.aoDigitar('');
+        else (evento.target as HTMLElement).blur();
+    }
 }

@@ -3,9 +3,9 @@ export const CORES_DOS_PROJETOS = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '
 
 /** Escolhe uma cor da paleta de modo estável pelo nome (o mesmo nome sempre dá a mesma cor, sem sorteio). */
 export function escolherCorDoProjeto(nome: string): string {
-  let soma = 0;
-  for (const caractere of nome) soma += caractere.charCodeAt(0);
-  return CORES_DOS_PROJETOS[soma % CORES_DOS_PROJETOS.length];
+    let soma = 0;
+    for (const caractere of nome) soma += caractere.charCodeAt(0);
+    return CORES_DOS_PROJETOS[soma % CORES_DOS_PROJETOS.length];
 }
 
 /**
@@ -13,14 +13,14 @@ export function escolherCorDoProjeto(nome: string): string {
  * letras de um nome de uma palavra só). "Sistema de Gestão" → "SG"; "Loja" → "LOJA".
  */
 export function derivarCodigoDoProjeto(nome: string): string {
-  const limpo = nome
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^A-Za-z0-9 ]/g, ' ')
-    .trim();
-  const palavras = limpo.split(/\s+/).filter((palavra) => palavra.length > 0);
-  const significativas = palavras.filter((palavra) => palavra.length >= 3);
-  const base = significativas.length >= 2 ? significativas.map((palavra) => palavra[0]).join('') : (significativas[0] ?? palavras[0] ?? 'PRJ').slice(0, 4);
-  const codigo = base.toUpperCase().slice(0, 10);
-  return codigo.length >= 2 ? codigo : `${codigo}PJ`;
+    const limpo = nome
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^A-Za-z0-9 ]/g, ' ')
+        .trim();
+    const palavras = limpo.split(/\s+/).filter((palavra) => palavra.length > 0);
+    const significativas = palavras.filter((palavra) => palavra.length >= 3);
+    const base = significativas.length >= 2 ? significativas.map((palavra) => palavra[0]).join('') : (significativas[0] ?? palavras[0] ?? 'PRJ').slice(0, 4);
+    const codigo = base.toUpperCase().slice(0, 10);
+    return codigo.length >= 2 ? codigo : `${codigo}PJ`;
 }

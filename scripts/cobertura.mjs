@@ -15,23 +15,23 @@ const linhasDoResumo = [];
 let falhou = false;
 
 for (const workspace of workspaces) {
-  console.log(`\n=== cobertura: ${workspace} ===`);
-  const execucao = spawnSync('npm', ['run', 'test:cobertura', `--workspace=${workspace}`], {
-    cwd: raiz,
-    encoding: 'utf8',
-    shell: true,
-  });
-  const saida = `${execucao.stdout ?? ''}${execucao.stderr ?? ''}`;
-  writeFileSync(resolve(destino, `${workspace}.txt`), saida);
-  if (execucao.status !== 0) {
-    falhou = true;
-    console.error(saida);
-    linhasDoResumo.push(`${workspace}: FALHOU (veja ${workspace}.txt)`);
-    continue;
-  }
-  const resumo = extrairResumo(workspace, saida);
-  linhasDoResumo.push(`${workspace}: ${resumo}`);
-  console.log(resumo);
+    console.log(`\n=== cobertura: ${workspace} ===`);
+    const execucao = spawnSync('npm', ['run', 'test:cobertura', `--workspace=${workspace}`], {
+        cwd: raiz,
+        encoding: 'utf8',
+        shell: true,
+    });
+    const saida = `${execucao.stdout ?? ''}${execucao.stderr ?? ''}`;
+    writeFileSync(resolve(destino, `${workspace}.txt`), saida);
+    if (execucao.status !== 0) {
+        falhou = true;
+        console.error(saida);
+        linhasDoResumo.push(`${workspace}: FALHOU (veja ${workspace}.txt)`);
+        continue;
+    }
+    const resumo = extrairResumo(workspace, saida);
+    linhasDoResumo.push(`${workspace}: ${resumo}`);
+    console.log(resumo);
 }
 
 writeFileSync(resolve(destino, 'resumo.txt'), `${linhasDoResumo.join('\n')}\n`);
@@ -40,12 +40,12 @@ process.exit(falhou ? 1 : 0);
 
 /** Frontend (Vitest) imprime "Statements : x%"; os demais (Node) imprimem a linha "all files | linhas | ramos | funções". */
 function extrairResumo(workspace, saida) {
-  if (workspace === 'frontend') {
-    const campo = (nome) => saida.match(new RegExp(`${nome}\\s*:\\s*([\\d.]+)%`))?.[1] ?? '?';
-    return `statements ${campo('Statements')}% · branches ${campo('Branches')}% · functions ${campo('Functions')}% · lines ${campo('Lines')}%`;
-  }
-  const linha = saida.split('\n').find((texto) => /all files\s*\|/i.test(texto));
-  if (!linha) return 'resumo não encontrado (veja o .txt)';
-  const [, linhas, ramos, funcoes] = linha.split('|').map((parte) => parte.trim());
-  return `lines ${linhas}% · branches ${ramos}% · functions ${funcoes}%`;
+    if (workspace === 'frontend') {
+        const campo = (nome) => saida.match(new RegExp(`${nome}\\s*:\\s*([\\d.]+)%`))?.[1] ?? '?';
+        return `statements ${campo('Statements')}% · branches ${campo('Branches')}% · functions ${campo('Functions')}% · lines ${campo('Lines')}%`;
+    }
+    const linha = saida.split('\n').find((texto) => /all files\s*\|/i.test(texto));
+    if (!linha) return 'resumo não encontrado (veja o .txt)';
+    const [, linhas, ramos, funcoes] = linha.split('|').map((parte) => parte.trim());
+    return `lines ${linhas}% · branches ${ramos}% · functions ${funcoes}%`;
 }

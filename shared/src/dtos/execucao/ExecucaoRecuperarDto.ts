@@ -1,3 +1,3 @@
 export class ExecucaoRecuperarDto {
-  id: number;
+    id: number;
 }

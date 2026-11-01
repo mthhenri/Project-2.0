@@ -3,9 +3,9 @@
  * precede o verbo (CONVENTIONS "Quando o complemento tem mais de uma palavra").
  */
 export class DemandaTextosInternoAlterarDto {
-  id: number;
-  descricaoTecnica?: string;
-  descricaoCliente?: string;
-  documentacao?: string;
-  versao: number;
+    id: number;
+    descricaoTecnica?: string;
+    descricaoCliente?: string;
+    documentacao?: string;
+    versao: number;
 }

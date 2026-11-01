@@ -7,41 +7,41 @@ import { LIMITE_MAXIMO_DA_SUPERVISAO_DIRETA } from '../../utils/mensagem-direta'
  * mensagem mais recente para a mais antiga.
  */
 export class MensagemDiretaSupervisaoListarDto {
-  @IsOptional()
-  @IsString()
-  @MaxLength(200)
-  texto?: string;
+    @IsOptional()
+    @IsString()
+    @MaxLength(200)
+    texto?: string;
 
-  @IsOptional()
-  @IsDateString()
-  inicio?: string;
+    @IsOptional()
+    @IsDateString()
+    inicio?: string;
 
-  @IsOptional()
-  @IsDateString()
-  fim?: string;
+    @IsOptional()
+    @IsDateString()
+    fim?: string;
 
-  /** Só as conversas com mensagem de bloco de código (o filtro "Com código"). */
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => {
-    if (value === 'true') return true;
-    if (value === 'false') return false;
-    return value;
-  })
-  somenteCodigo?: boolean;
+    /** Só as conversas com mensagem de bloco de código (o filtro "Com código"). */
+    @IsOptional()
+    @IsBoolean()
+    @Transform(({ value }) => {
+        if (value === 'true') return true;
+        if (value === 'false') return false;
+        return value;
+    })
+    somenteCodigo?: boolean;
 
-  /** Começa em 1; omitido vale 1. */
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  pagina?: number;
+    /** Começa em 1; omitido vale 1. */
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    pagina?: number;
 
-  /** Omitido vale `LIMITE_PADRAO_DA_SUPERVISAO_DIRETA`. */
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(LIMITE_MAXIMO_DA_SUPERVISAO_DIRETA)
-  porPagina?: number;
+    /** Omitido vale `LIMITE_PADRAO_DA_SUPERVISAO_DIRETA`. */
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    @Max(LIMITE_MAXIMO_DA_SUPERVISAO_DIRETA)
+    porPagina?: number;
 }

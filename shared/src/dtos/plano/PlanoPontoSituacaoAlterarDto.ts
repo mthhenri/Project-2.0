@@ -6,11 +6,11 @@ import { TipoPlanoPontoSituacaoEnum } from '../../enums/tipo-plano-ponto-situaca
  * (volta a `ABERTO` e apaga a resolução). A service confere o texto obrigatório de `RESOLVIDO` e `DECISAO`.
  */
 export class PlanoPontoSituacaoAlterarDto {
-  @IsEnum(TipoPlanoPontoSituacaoEnum)
-  situacao: TipoPlanoPontoSituacaoEnum;
+    @IsEnum(TipoPlanoPontoSituacaoEnum)
+    situacao: TipoPlanoPontoSituacaoEnum;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(4000)
-  resolucaoTexto?: string;
+    @IsOptional()
+    @IsString()
+    @MaxLength(4000)
+    resolucaoTexto?: string;
 }

@@ -2,12 +2,12 @@ import { AtividadePrioridadeResumoDto } from '../atividade-prioridade/AtividadeP
 import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 
 export class AtividadeAlteradaDto {
-  id: number;
-  demandaId: number;
-  usuarioId: number;
-  nomeUsuario: string;
-  nome: string;
-  status: TipoAtividadeStatusEnum;
-  prioridade: AtividadePrioridadeResumoDto;
-  createdDate: Date;
+    id: number;
+    demandaId: number;
+    usuarioId: number;
+    nomeUsuario: string;
+    nome: string;
+    status: TipoAtividadeStatusEnum;
+    prioridade: AtividadePrioridadeResumoDto;
+    createdDate: Date;
 }

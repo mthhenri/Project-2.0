@@ -29,173 +29,173 @@ import { ChipExecucaoAtivaComponent } from './chip-execucao-ativa/chip-execucao-
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 
 @Component({
-  selector: 'app-topbar',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    FormsModule,
-    ToggleSwitchModule,
-    ButtonModule,
-    PopoverModule,
-    TooltipModule,
-    DividerModule,
-    ColorPickerModule,
-    UsuarioAnotacoesDialogComponent,
-    ChipExecucaoAtivaComponent,
-  ],
-  templateUrl: './topbar.component.html',
-  styleUrl: './topbar.component.scss',
+    selector: 'app-topbar',
+    standalone: true,
+    imports: [
+        ReactiveFormsModule,
+        FormsModule,
+        ToggleSwitchModule,
+        ButtonModule,
+        PopoverModule,
+        TooltipModule,
+        DividerModule,
+        ColorPickerModule,
+        UsuarioAnotacoesDialogComponent,
+        ChipExecucaoAtivaComponent,
+    ],
+    templateUrl: './topbar.component.html',
+    styleUrl: './topbar.component.scss',
 })
 export class TopbarComponent {
-  private readonly autenticacaoService = inject(AutenticacaoService);
-  readonly sessao = inject(UsuarioSessaoService);
-  readonly mensagemDireta = inject(MensagemDiretaEstadoService);
-  readonly tema = inject(TemaService);
-  readonly temaPersonalizado = inject(TemaPersonalizadoService);
-  readonly unidadeTempo = inject(VisualizacaoTempoService);
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly execucaoAtiva = inject(ExecucaoAtivaService);
-  private readonly roteador = inject(Router);
-  private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
-  readonly desktopDownload = inject(DesktopDownloadService);
-  readonly formatarTamanho = formatarTamanhoDoArquivo;
-  /** Depois do "Agora não" com a IA no ar: o botão para voltar para ela fica à vista. */
-  readonly podeVoltarParaAIa = computed(() => this.iaDisponibilidade.modoConvencional() && this.iaDisponibilidade.estadoReal() === EstadoIaEnum.NO_AR);
-  @ViewChild('anotacoesDialog') private anotacoesDialog?: UsuarioAnotacoesDialogComponent;
-  readonly rotuloTipo = rotuloTipoUsuario;
-  readonly horaAtual = signal<string>('');
-  readonly dataAtual = signal<string>('');
+    private readonly autenticacaoService = inject(AutenticacaoService);
+    readonly sessao = inject(UsuarioSessaoService);
+    readonly mensagemDireta = inject(MensagemDiretaEstadoService);
+    readonly tema = inject(TemaService);
+    readonly temaPersonalizado = inject(TemaPersonalizadoService);
+    readonly unidadeTempo = inject(VisualizacaoTempoService);
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly execucaoAtiva = inject(ExecucaoAtivaService);
+    private readonly roteador = inject(Router);
+    private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
+    readonly desktopDownload = inject(DesktopDownloadService);
+    readonly formatarTamanho = formatarTamanhoDoArquivo;
+    /** Depois do "Agora não" com a IA no ar: o botão para voltar para ela fica à vista. */
+    readonly podeVoltarParaAIa = computed(() => this.iaDisponibilidade.modoConvencional() && this.iaDisponibilidade.estadoReal() === EstadoIaEnum.NO_AR);
+    @ViewChild('anotacoesDialog') private anotacoesDialog?: UsuarioAnotacoesDialogComponent;
+    readonly rotuloTipo = rotuloTipoUsuario;
+    readonly horaAtual = signal<string>('');
+    readonly dataAtual = signal<string>('');
 
-  voltarParaAIa(): void {
-    this.iaDisponibilidade.voltarParaAIa();
-    void this.roteador.navigateByUrl('/chat');
-  }
-
-  readonly coresSugeridas = CORES_SUGERIDAS;
-
-  /** Revela o atalho "???" ao clicar com o botão direito na troca de tema. */
-  readonly mostrarEnigma = signal<boolean>(false);
-
-  /** Valor do color picker (hex sem '#', formato do p-colorpicker). */
-  readonly corControl = new FormControl<string>(
-    (this.temaPersonalizado.corCustomizada() ?? COR_PRIMARIA_PADRAO_HEX).replace('#', ''),
-    { nonNullable: true },
-  );
-
-  readonly iniciais = computed(() =>
-    (this.sessao.nomeCompleto() ?? '')
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((parte) => parte[0])
-      .join('')
-      .toUpperCase(),
-  );
-  readonly primeiroNome = computed(() => (this.sessao.nomeCompleto() ?? '').split(' ')[0]);
-
-  // --- Atalho global: `n` abre as anotações (task 96); `g` + letra vive na barra lateral ---
-  @HostListener('document:keydown', ['$event'])
-  aoTeclarGlobal(evento: KeyboardEvent): void {
-    if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return;
-    if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
-
-    if (evento.key.toLowerCase() === 'n' && this.sessao.usuarioAtual()) {
-      evento.preventDefault();
-      this.abrirMinhasAnotacoes();
+    voltarParaAIa(): void {
+        this.iaDisponibilidade.voltarParaAIa();
+        void this.roteador.navigateByUrl('/chat');
     }
-  }
 
-  protected abrirMinhasAnotacoes(): void {
-    this.anotacoesDialog?.abrir(this.sessao.id()!, this.sessao.nomeCompleto()!);
-  }
+    readonly coresSugeridas = CORES_SUGERIDAS;
 
-  constructor() {
-    this.execucaoAtiva.carregar();
-    this.desktopDownload.carregar();
-    this.atualizarHora();
-    this.agendarProximaAtualizacao();
+    /** Revela o atalho "???" ao clicar com o botão direito na troca de tema. */
+    readonly mostrarEnigma = signal<boolean>(false);
 
-    // Deep-link `/ponto?anotacoes=:id` (task 114): o drawer das próprias anotações vive aqui. Na
-    // listagem de Usuários quem abre é a própria página.
-    this.roteador.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((evento) => {
-      if (!(evento instanceof NavigationEnd)) return;
-      const arvore = this.roteador.parseUrl(evento.urlAfterRedirects);
-      // Deep-link `?baixar-desktop=1` (task 198): o aviso de versão nova no app do desktop abre o Project no navegador e o download começa aqui.
-      if (arvore.queryParams['baixar-desktop']) {
-        this.desktopDownload.baixar();
-        this.roteador.navigate([], { queryParams: { 'baixar-desktop': null }, queryParamsHandling: 'merge', replaceUrl: true });
-        return;
-      }
-      const usuarioId = Number(arvore.queryParams['anotacoes']);
-      if (!usuarioId || arvore.root.children['primary']?.segments[0]?.path === 'usuario') return;
-      this.anotacoesDialog?.abrir(usuarioId, usuarioId === this.sessao.id() ? this.sessao.nomeCompleto()! : '');
-      this.roteador.navigate([], { queryParams: { anotacoes: null }, queryParamsHandling: 'merge', replaceUrl: true });
-    });
-  }
+    /** Valor do color picker (hex sem '#', formato do p-colorpicker). */
+    readonly corControl = new FormControl<string>(
+        (this.temaPersonalizado.corCustomizada() ?? COR_PRIMARIA_PADRAO_HEX).replace('#', ''),
+        { nonNullable: true },
+    );
 
-  /** Volta para a aba/janela: o backend pode ter encerrado a execução (cron das 23:59:59). */
-  @HostListener('document:visibilitychange')
-  @HostListener('window:focus')
-  ressincronizarExecucao(): void {
-    if (document.visibilityState === 'visible') this.execucaoAtiva.carregar();
-  }
+    readonly iniciais = computed(() =>
+        (this.sessao.nomeCompleto() ?? '')
+            .split(' ')
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((parte) => parte[0])
+            .join('')
+            .toUpperCase(),
+    );
+    readonly primeiroNome = computed(() => (this.sessao.nomeCompleto() ?? '').split(' ')[0]);
 
-  private agendarProximaAtualizacao(): void {
-    const agora = new Date();
-    const msAteProximoMinuto = (60 - agora.getSeconds()) * 1000 - agora.getMilliseconds();
-    timer(msAteProximoMinuto)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
+    // --- Atalho global: `n` abre as anotações (task 96); `g` + letra vive na barra lateral ---
+    @HostListener('document:keydown', ['$event'])
+    aoTeclarGlobal(evento: KeyboardEvent): void {
+        if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return;
+        if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
+
+        if (evento.key.toLowerCase() === 'n' && this.sessao.usuarioAtual()) {
+            evento.preventDefault();
+            this.abrirMinhasAnotacoes();
+        }
+    }
+
+    protected abrirMinhasAnotacoes(): void {
+        this.anotacoesDialog?.abrir(this.sessao.id()!, this.sessao.nomeCompleto()!);
+    }
+
+    constructor() {
+        this.execucaoAtiva.carregar();
+        this.desktopDownload.carregar();
         this.atualizarHora();
         this.agendarProximaAtualizacao();
-      });
-  }
 
-  private atualizarHora(): void {
-    const [data, hora] = dataHoraNoFuso(new Date(), ambiente.fusoHorario).split(' ');
-    this.horaAtual.set(hora);
-    this.dataAtual.set(data);
-  }
-
-  sair(): void {
-    this.autenticacaoService.logout();
-  }
-
-  /** Botão direito na troca de tema: suprime o menu do navegador e revela o "???". */
-  revelarEnigma(evento: MouseEvent): void {
-    evento.preventDefault();
-    if (!this.temaPersonalizado.desbloqueado()) {
-      this.mostrarEnigma.set(true);
+        // Deep-link `/ponto?anotacoes=:id` (task 114): o drawer das próprias anotações vive aqui. Na
+        // listagem de Usuários quem abre é a própria página.
+        this.roteador.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((evento) => {
+            if (!(evento instanceof NavigationEnd)) return;
+            const arvore = this.roteador.parseUrl(evento.urlAfterRedirects);
+            // Deep-link `?baixar-desktop=1` (task 198): o aviso de versão nova no app do desktop abre o Project no navegador e o download começa aqui.
+            if (arvore.queryParams['baixar-desktop']) {
+                this.desktopDownload.baixar();
+                this.roteador.navigate([], { queryParams: { 'baixar-desktop': null }, queryParamsHandling: 'merge', replaceUrl: true });
+                return;
+            }
+            const usuarioId = Number(arvore.queryParams['anotacoes']);
+            if (!usuarioId || arvore.root.children['primary']?.segments[0]?.path === 'usuario') return;
+            this.anotacoesDialog?.abrir(usuarioId, usuarioId === this.sessao.id() ? this.sessao.nomeCompleto()! : '');
+            this.roteador.navigate([], { queryParams: { anotacoes: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        });
     }
-  }
 
-  /** Clique no "???": habilita o tema personalizado e esconde o atalho. */
-  desbloquearTema(): void {
-    this.temaPersonalizado.desbloquear();
-    this.mostrarEnigma.set(false);
-  }
-
-  /** Aplica um atalho de cor pronto e sincroniza o color picker. */
-  aplicarCorSugerida(hex: string): void {
-    this.corControl.setValue(hex.replace('#', ''));
-    this.temaPersonalizado.definirCor(hex);
-  }
-
-  /** Aplica a cor escolhida no color picker (p-colorpicker emite hex sem '#'). */
-  aplicarCorEscolhida(valor: string | object): void {
-    if (typeof valor === 'string') {
-      this.temaPersonalizado.definirCor(valor);
+    /** Volta para a aba/janela: o backend pode ter encerrado a execução (cron das 23:59:59). */
+    @HostListener('document:visibilitychange')
+    @HostListener('window:focus')
+    ressincronizarExecucao(): void {
+        if (document.visibilityState === 'visible') this.execucaoAtiva.carregar();
     }
-  }
 
-  /** Volta ao azul padrão mantendo o tema personalizado desbloqueado. */
-  voltarAoPadrao(): void {
-    this.corControl.setValue(COR_PRIMARIA_PADRAO_HEX.replace('#', ''));
-    this.temaPersonalizado.resetarCor();
-  }
+    private agendarProximaAtualizacao(): void {
+        const agora = new Date();
+        const msAteProximoMinuto = (60 - agora.getSeconds()) * 1000 - agora.getMilliseconds();
+        timer(msAteProximoMinuto)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => {
+                this.atualizarHora();
+                this.agendarProximaAtualizacao();
+            });
+    }
 
-  /** Esquece o tema personalizado por completo, voltando ao estado inicial. */
-  esquecerTema(): void {
-    this.temaPersonalizado.retrancar();
-  }
+    private atualizarHora(): void {
+        const [data, hora] = dataHoraNoFuso(new Date(), ambiente.fusoHorario).split(' ');
+        this.horaAtual.set(hora);
+        this.dataAtual.set(data);
+    }
+
+    sair(): void {
+        this.autenticacaoService.logout();
+    }
+
+    /** Botão direito na troca de tema: suprime o menu do navegador e revela o "???". */
+    revelarEnigma(evento: MouseEvent): void {
+        evento.preventDefault();
+        if (!this.temaPersonalizado.desbloqueado()) {
+            this.mostrarEnigma.set(true);
+        }
+    }
+
+    /** Clique no "???": habilita o tema personalizado e esconde o atalho. */
+    desbloquearTema(): void {
+        this.temaPersonalizado.desbloquear();
+        this.mostrarEnigma.set(false);
+    }
+
+    /** Aplica um atalho de cor pronto e sincroniza o color picker. */
+    aplicarCorSugerida(hex: string): void {
+        this.corControl.setValue(hex.replace('#', ''));
+        this.temaPersonalizado.definirCor(hex);
+    }
+
+    /** Aplica a cor escolhida no color picker (p-colorpicker emite hex sem '#'). */
+    aplicarCorEscolhida(valor: string | object): void {
+        if (typeof valor === 'string') {
+            this.temaPersonalizado.definirCor(valor);
+        }
+    }
+
+    /** Volta ao azul padrão mantendo o tema personalizado desbloqueado. */
+    voltarAoPadrao(): void {
+        this.corControl.setValue(COR_PRIMARIA_PADRAO_HEX.replace('#', ''));
+        this.temaPersonalizado.resetarCor();
+    }
+
+    /** Esquece o tema personalizado por completo, voltando ao estado inicial. */
+    esquecerTema(): void {
+        this.temaPersonalizado.retrancar();
+    }
 }

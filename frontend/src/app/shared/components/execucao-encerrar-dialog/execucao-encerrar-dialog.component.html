@@ -11,10 +11,14 @@
     [dismissableMask]="true"
 >
     @if (execucaoAtual(); as execucao) {
-        <p class="execucao-encerrar__atividade">{{ execucao.nomeProjeto }} · {{ execucao.nomeAtividade }}</p>
+        <p class="execucao-encerrar__atividade">
+            {{ execucao.nomeProjeto }} · {{ execucao.nomeAtividade }}
+        </p>
         @if (sessao.eGestor()) {
             <div class="execucao-encerrar__executor">
-                <span class="execucao-encerrar__avatar" aria-hidden="true">{{ iniciais(execucao.nomeUsuario) }}</span>
+                <span class="execucao-encerrar__avatar" aria-hidden="true">{{
+                    iniciais(execucao.nomeUsuario)
+                }}</span>
                 <span class="text-color">{{ execucao.nomeUsuario }}</span>
             </div>
         }
@@ -23,7 +27,9 @@
     <form [formGroup]="formulario" class="execucao-encerrar__form">
         <div class="execucao-encerrar__campo">
             <label for="execucao-encerrar-descricao" class="execucao-encerrar__rotulo">
-                Revise a descrição da execução{{ execucaoAberta()?.descricaoOpcional ? " (opcional)" : " *" }}
+                Revise a descrição da execução{{
+                    execucaoAberta()?.descricaoOpcional ? " (opcional)" : " *"
+                }}
             </label>
             <textarea
                 id="execucao-encerrar-descricao"
@@ -68,7 +74,9 @@
                                     · <span class="text-primary-500">em andamento</span>
                                 }
                             </span>
-                            <span class="execucao-encerrar__descricao">{{ anterior.descricao }}</span>
+                            <span class="execucao-encerrar__descricao">{{
+                                anterior.descricao
+                            }}</span>
                         </div>
                     }
                 </div>

@@ -27,7 +27,6 @@ import {
     ExecucaoListarDto,
     ExecucaoItemDto,
     ExecucaoAlterarDto,
-    ExecucaoEncerrarDto,
     EstadoIaEnum,
     UsuarioResumoDto,
     TipoUsuarioStatusEnum,

@@ -7,11 +7,11 @@ import { BusinessException } from '../../../core/exceptions/business.exception';
  * convertida. Campo desconhecido é recusado: o cartão "Ajustar" não grava nada que o executor não conheça. Lança `BusinessException`.
  */
 export function validarDadosDaProposta<T extends object>(classe: new () => T, dados: Record<string, unknown>): T {
-  const instancia = plainToInstance(classe, dados);
-  const problemas = validateSync(instancia, { whitelist: true, forbidNonWhitelisted: true, forbidUnknownValues: false });
-  if (problemas.length > 0) {
-    const detalhes = problemas.flatMap((problema) => Object.values(problema.constraints ?? {})).join('; ');
-    throw new BusinessException(`Dados da proposta inválidos: ${detalhes}`);
-  }
-  return instancia;
+    const instancia = plainToInstance(classe, dados);
+    const problemas = validateSync(instancia, { whitelist: true, forbidNonWhitelisted: true, forbidUnknownValues: false });
+    if (problemas.length > 0) {
+        const detalhes = problemas.flatMap((problema) => Object.values(problema.constraints ?? {})).join('; ');
+        throw new BusinessException(`Dados da proposta inválidos: ${detalhes}`);
+    }
+    return instancia;
 }

@@ -24,44 +24,44 @@ import { ConsultarDemandaFerramenta } from './ferramentas/consultar-demanda.ferr
 import { ListarMinhasAtividadesFerramenta } from './ferramentas/listar-minhas-atividades.ferramenta';
 
 @Module({
-  imports:     [DemandaModule, TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule],
-  controllers: [AtividadeController],
-  providers:   [AtividadeService, AtividadeRepository, ListarMinhasAtividadesFerramenta, ConsultarDemandaFerramenta, ConsultarChecklistDaDemandaFerramenta, ProporCriarAtividadeFerramenta, CriarAtividadeExecutor, ProporAlterarAtividadeFerramenta, AlterarAtividadeExecutor, ProporAtribuirTagFerramenta, AtribuirTagExecutor, ProporMoverAtividadeFerramenta, MoverAtividadeExecutor, ProporExcluirAtividadeFerramenta, ExcluirAtividadeExecutor],
-  exports:     [AtividadeService, AtividadeRepository],
+    imports:     [DemandaModule, TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule],
+    controllers: [AtividadeController],
+    providers:   [AtividadeService, AtividadeRepository, ListarMinhasAtividadesFerramenta, ConsultarDemandaFerramenta, ConsultarChecklistDaDemandaFerramenta, ProporCriarAtividadeFerramenta, CriarAtividadeExecutor, ProporAlterarAtividadeFerramenta, AlterarAtividadeExecutor, ProporAtribuirTagFerramenta, AtribuirTagExecutor, ProporMoverAtividadeFerramenta, MoverAtividadeExecutor, ProporExcluirAtividadeFerramenta, ExcluirAtividadeExecutor],
+    exports:     [AtividadeService, AtividadeRepository],
 })
 export class AtividadeModule implements OnModuleInit {
-  constructor(
-    private readonly registroDeFerramentas: FerramentaIaRegistro,
-    private readonly listarMinhasAtividades: ListarMinhasAtividadesFerramenta,
-    private readonly consultarDemanda: ConsultarDemandaFerramenta,
-    private readonly consultarChecklistDaDemanda: ConsultarChecklistDaDemandaFerramenta,
-    private readonly proporCriarAtividade: ProporCriarAtividadeFerramenta,
-    private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
-    private readonly criarAtividadeExecutor: CriarAtividadeExecutor,
-    private readonly proporAlterarAtividade: ProporAlterarAtividadeFerramenta,
-    private readonly alterarAtividadeExecutor: AlterarAtividadeExecutor,
-    private readonly proporAtribuirTag: ProporAtribuirTagFerramenta,
-    private readonly atribuirTagExecutor: AtribuirTagExecutor,
-    private readonly proporMoverAtividade: ProporMoverAtividadeFerramenta,
-    private readonly moverAtividadeExecutor: MoverAtividadeExecutor,
-    private readonly proporExcluirAtividade: ProporExcluirAtividadeFerramenta,
-    private readonly excluirAtividadeExecutor: ExcluirAtividadeExecutor,
-  ) {}
+    constructor(
+        private readonly registroDeFerramentas: FerramentaIaRegistro,
+        private readonly listarMinhasAtividades: ListarMinhasAtividadesFerramenta,
+        private readonly consultarDemanda: ConsultarDemandaFerramenta,
+        private readonly consultarChecklistDaDemanda: ConsultarChecklistDaDemandaFerramenta,
+        private readonly proporCriarAtividade: ProporCriarAtividadeFerramenta,
+        private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
+        private readonly criarAtividadeExecutor: CriarAtividadeExecutor,
+        private readonly proporAlterarAtividade: ProporAlterarAtividadeFerramenta,
+        private readonly alterarAtividadeExecutor: AlterarAtividadeExecutor,
+        private readonly proporAtribuirTag: ProporAtribuirTagFerramenta,
+        private readonly atribuirTagExecutor: AtribuirTagExecutor,
+        private readonly proporMoverAtividade: ProporMoverAtividadeFerramenta,
+        private readonly moverAtividadeExecutor: MoverAtividadeExecutor,
+        private readonly proporExcluirAtividade: ProporExcluirAtividadeFerramenta,
+        private readonly excluirAtividadeExecutor: ExcluirAtividadeExecutor,
+    ) {}
 
-  /** As ferramentas de IA do domínio de atividade se registram aqui (a IA só lê o que a service entrega ao usuário). */
-  onModuleInit(): void {
-    this.registroDeFerramentas.registrar(this.listarMinhasAtividades);
-    this.registroDeFerramentas.registrar(this.consultarDemanda);
-    this.registroDeFerramentas.registrar(this.consultarChecklistDaDemanda);
-    this.registroDeFerramentas.registrar(this.proporCriarAtividade);
-    this.registroDeExecutores.registrar(this.criarAtividadeExecutor);
-    this.registroDeFerramentas.registrar(this.proporAlterarAtividade);
-    this.registroDeExecutores.registrar(this.alterarAtividadeExecutor);
-    this.registroDeFerramentas.registrar(this.proporAtribuirTag);
-    this.registroDeExecutores.registrar(this.atribuirTagExecutor);
-    this.registroDeFerramentas.registrar(this.proporMoverAtividade);
-    this.registroDeExecutores.registrar(this.moverAtividadeExecutor);
-    this.registroDeFerramentas.registrar(this.proporExcluirAtividade);
-    this.registroDeExecutores.registrar(this.excluirAtividadeExecutor);
-  }
+    /** As ferramentas de IA do domínio de atividade se registram aqui (a IA só lê o que a service entrega ao usuário). */
+    onModuleInit(): void {
+        this.registroDeFerramentas.registrar(this.listarMinhasAtividades);
+        this.registroDeFerramentas.registrar(this.consultarDemanda);
+        this.registroDeFerramentas.registrar(this.consultarChecklistDaDemanda);
+        this.registroDeFerramentas.registrar(this.proporCriarAtividade);
+        this.registroDeExecutores.registrar(this.criarAtividadeExecutor);
+        this.registroDeFerramentas.registrar(this.proporAlterarAtividade);
+        this.registroDeExecutores.registrar(this.alterarAtividadeExecutor);
+        this.registroDeFerramentas.registrar(this.proporAtribuirTag);
+        this.registroDeExecutores.registrar(this.atribuirTagExecutor);
+        this.registroDeFerramentas.registrar(this.proporMoverAtividade);
+        this.registroDeExecutores.registrar(this.moverAtividadeExecutor);
+        this.registroDeFerramentas.registrar(this.proporExcluirAtividade);
+        this.registroDeExecutores.registrar(this.excluirAtividadeExecutor);
+    }
 }

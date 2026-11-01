@@ -1,34 +1,44 @@
-@use '../../../../shared/styles/form' as *;
+@use "../../../../shared/styles/form" as *;
 
 .usuario-formulario-dialog {
-  &__form {
-    @include form-dialog-form(1.25rem);
-    padding: 0.5rem 0;
-  }
+    &__form {
+        @include form-dialog-form(1.25rem);
+        padding: 0.5rem 0;
+    }
 
-  &__linha { @include form-dialog-linha; }
+    &__linha {
+        @include form-dialog-linha;
+    }
 
-  &__campo       { @include form-campo; }
-  &__label       { @include form-label; }
-  &__obrigatorio { @include form-obrigatorio; }
-  &__erro        { @include form-erro; }
+    &__campo {
+        @include form-campo;
+    }
+    &__label {
+        @include form-label;
+    }
+    &__obrigatorio {
+        @include form-obrigatorio;
+    }
+    &__erro {
+        @include form-erro;
+    }
 }
 
 .usuario-formulario-dialog {
-  &__senha {
-    display: flex;
-    align-items: center;
-    gap: 0.125rem;
-  }
+    &__senha {
+        display: flex;
+        align-items: center;
+        gap: 0.125rem;
+    }
 
-  &__senha-campo {
-    flex: 1;
-    min-width: 0;
-    font-family: var(--font-mono, monospace);
-  }
+    &__senha-campo {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-mono, monospace);
+    }
 
-  &__dica {
-    font-size: 0.75rem;
-    color: var(--p-text-muted-color);
-  }
+    &__dica {
+        font-size: 0.75rem;
+        color: var(--p-text-muted-color);
+    }
 }

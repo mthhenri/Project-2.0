@@ -1,4 +1,4 @@
 export class PlanoFonteRecuperarDto {
-  planoId: number;
-  id: number;
+    planoId: number;
+    id: number;
 }

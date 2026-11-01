@@ -1,4 +1,4 @@
 export enum RelatorioFormatoEnum {
-  CSV  = 'CSV',
-  XLSX = 'XLSX',
+    CSV  = 'CSV',
+    XLSX = 'XLSX',
 }

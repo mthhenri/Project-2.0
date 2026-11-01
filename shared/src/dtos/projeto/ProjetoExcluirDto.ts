@@ -1,3 +1,3 @@
 export class ProjetoExcluirDto {
-  id: number;
+    id: number;
 }

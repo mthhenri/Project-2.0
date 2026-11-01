@@ -12,57 +12,58 @@ import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-esta
  * No navegador comum a rota também funciona, só que sem o Desktop por trás.
  */
 @Component({
-  selector: 'app-chat-popup-page',
-  standalone: true,
-  imports: [MensagemDiretaPopupComponent],
-  template: '<app-mensagem-direta-popup [emJanela]="true" />',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-chat-popup-page',
+    standalone: true,
+    imports: [MensagemDiretaPopupComponent],
+    templateUrl: './chat-popup.page.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    styleUrl: './chat-popup.page.scss',
 })
 export class ChatPopupPage implements OnInit {
-  private readonly estado = inject(MensagemDiretaEstadoService);
-  private readonly avisos = inject(MensagemDiretaAvisosService);
-  private readonly desktop = inject(ProjectDesktopService);
-  private readonly rota = inject(ActivatedRoute);
-  private readonly destroyRef = inject(DestroyRef);
+    private readonly estado = inject(MensagemDiretaEstadoService);
+    private readonly avisos = inject(MensagemDiretaAvisosService);
+    private readonly desktop = inject(ProjectDesktopService);
+    private readonly rota = inject(ActivatedRoute);
+    private readonly destroyRef = inject(DestroyRef);
 
-  constructor() {
+    constructor() {
     // O Desktop só notifica o que o usuário não está lendo aqui.
-    effect(() => this.desktop.informarConversa(this.estado.aberto() ? (this.estado.conversaAberta()?.usuarioId ?? null) : null));
-  }
-
-  ngOnInit(): void {
-    // Esta janela é o chat: ela não avisa de mensagem nova (o aviso é do Project ou do Desktop).
-    this.avisos.suprimido.set(true);
-    this.destroyRef.onDestroy(() => this.avisos.suprimido.set(false));
-
-    const parametros = this.rota.snapshot.queryParamMap;
-    const usuarioId = Number(parametros.get('usuarioId'));
-    const nome = parametros.get('nome');
-    this.estado.abrir();
-    if (Number.isInteger(usuarioId) && usuarioId > 0 && nome) {
-      void this.estado.abrirConversa(usuarioId, nome);
-    } else {
-      void this.desktop.pegarRascunho().then((texto) => this.estado.abrirPeloDesktop(texto));
+        effect(() => this.desktop.informarConversa(this.estado.aberto() ? (this.estado.conversaAberta()?.usuarioId ?? null) : null));
     }
 
-    const soltarConversa = this.desktop.aoPedirConversa((id, nomeDaPessoa) => {
-      this.estado.rascunhoDoDesktop.set(null);
-      void this.estado.abrirConversa(id, nomeDaPessoa);
-    });
-    document.addEventListener('click', this.enviarLinkAoProject, true);
-    this.destroyRef.onDestroy(() => {
-      soltarConversa();
-      document.removeEventListener('click', this.enviarLinkAoProject, true);
-    });
-  }
+    ngOnInit(): void {
+    // Esta janela é o chat: ela não avisa de mensagem nova (o aviso é do Project ou do Desktop).
+        this.avisos.suprimido.set(true);
+        this.destroyRef.onDestroy(() => this.avisos.suprimido.set(false));
 
-  /** Um link interno (cartão de demanda ou atividade) abre no Project: a navegação da janelinha ficaria sem menu e sem voltar. */
-  private readonly enviarLinkAoProject = (evento: MouseEvent): void => {
-    const link = (evento.target as Element | null)?.closest?.('a[href]');
-    const destino = link?.getAttribute('href') ?? '';
-    if (!destino.startsWith('/') || destino.startsWith('//')) return;
-    evento.preventDefault();
-    evento.stopPropagation();
-    this.desktop.abrirNoProject(destino);
-  };
+        const parametros = this.rota.snapshot.queryParamMap;
+        const usuarioId = Number(parametros.get('usuarioId'));
+        const nome = parametros.get('nome');
+        this.estado.abrir();
+        if (Number.isInteger(usuarioId) && usuarioId > 0 && nome) {
+            void this.estado.abrirConversa(usuarioId, nome);
+        } else {
+            void this.desktop.pegarRascunho().then((texto) => this.estado.abrirPeloDesktop(texto));
+        }
+
+        const soltarConversa = this.desktop.aoPedirConversa((id, nomeDaPessoa) => {
+            this.estado.rascunhoDoDesktop.set(null);
+            void this.estado.abrirConversa(id, nomeDaPessoa);
+        });
+        document.addEventListener('click', this.enviarLinkAoProject, true);
+        this.destroyRef.onDestroy(() => {
+            soltarConversa();
+            document.removeEventListener('click', this.enviarLinkAoProject, true);
+        });
+    }
+
+    /** Um link interno (cartão de demanda ou atividade) abre no Project: a navegação da janelinha ficaria sem menu e sem voltar. */
+    private readonly enviarLinkAoProject = (evento: MouseEvent): void => {
+        const link = (evento.target as Element | null)?.closest?.('a[href]');
+        const destino = link?.getAttribute('href') ?? '';
+        if (!destino.startsWith('/') || destino.startsWith('//')) return;
+        evento.preventDefault();
+        evento.stopPropagation();
+        this.desktop.abrirNoProject(destino);
+    };
 }

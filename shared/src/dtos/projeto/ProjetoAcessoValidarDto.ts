@@ -1,4 +1,4 @@
 export class ProjetoAcessoValidarDto {
-  usuarioId: number;
-  projetoId: number;
+    usuarioId: number;
+    projetoId: number;
 }

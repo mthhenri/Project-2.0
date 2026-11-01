@@ -9,7 +9,7 @@ export class ProporJustificarPontoDto extends PontoJustificativaCriarDto {}
 
 /** Os dados guardados na proposta: a entrada mais o nome da pessoa e a jornada dela, só para o cartão mostrar. */
 export class PropostaJustificarPontoDadosDto extends ProporJustificarPontoDto {
-  @IsOptional()
-  @IsString()
-  usuarioNome?: string;
+    @IsOptional()
+    @IsString()
+    usuarioNome?: string;
 }

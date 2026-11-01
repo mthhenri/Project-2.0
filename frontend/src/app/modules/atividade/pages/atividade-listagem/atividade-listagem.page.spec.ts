@@ -47,10 +47,10 @@ async function montarPagina({ usuario = TipoUsuarioEnum.GESTOR, consulta = {} }:
 
 /** Atende as leituras do boot (prioridades e usuários) e a primeira busca de atividades. */
 async function carregar(montado: Montado, itens: AtividadeResumoDto[] = [], total = itens.length): Promise<void> {
-    for (const requisicao of montado.http.match((r) => r.method === 'GET' && r.url.endsWith('/atividade-prioridade'))) responderSucesso(requisicao, [PRIORIDADE]);
-    for (const requisicao of montado.http.match((r) => r.method === 'GET' && r.url.endsWith('/usuario'))) responderSucesso(requisicao, pagina([], 0));
+    for (const requisicao of montado.http.match((linhaPrincipal) => linhaPrincipal.method === 'GET' && linhaPrincipal.url.endsWith('/atividade-prioridade'))) responderSucesso(requisicao, [PRIORIDADE]);
+    for (const requisicao of montado.http.match((linhaSeguinte) => linhaSeguinte.method === 'GET' && linhaSeguinte.url.endsWith('/usuario'))) responderSucesso(requisicao, pagina([], 0));
     // Leituras de apoio dos dialogs filhos (demandas atribuídas, tags): nada que estes testes avaliem.
-    for (const requisicao of montado.http.match((r) => r.method === 'GET' && (r.url.endsWith('/demanda/atribuidas') || r.url.endsWith('/tag')))) responderSucesso(requisicao, []);
+    for (const requisicao of montado.http.match((linhaAtual) => linhaAtual.method === 'GET' && (linhaAtual.url.endsWith('/demanda/atribuidas') || linhaAtual.url.endsWith('/tag')))) responderSucesso(requisicao, []);
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade'), pagina(itens, total));
     await montado.atualizar();
 }
@@ -88,7 +88,7 @@ describe('AtividadeListagemPage: busca e filtros na URL', () => {
     it('desenvolvedor não filtra por usuário: o parâmetro da URL é ignorado', async () => {
         const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR, consulta: { usuarioId: '3' } });
         expect(esperarRequisicao(montado.http, 'GET', '/atividade').request.params.has('usuarioId')).toBe(false);
-        montado.http.expectNone((r) => r.url.endsWith('/usuario'));
+        montado.http.expectNone((resultadoParcial) => resultadoParcial.url.endsWith('/usuario'));
     });
 
     it('mudar um filtro vai para a URL sem empilhar histórico; a busca em si é feita pela mudança da URL', async () => {
@@ -97,7 +97,7 @@ describe('AtividadeListagemPage: busca e filtros na URL', () => {
         montado.componente.formularioFiltros.patchValue({ busca: 'login' }, { emitEvent: false });
         montado.componente.aoMudarFiltro();
         expect(irPara).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { busca: 'login' }, replaceUrl: true }));
-        montado.http.expectNone((r) => r.url.endsWith('/atividade'));
+        montado.http.expectNone((resultadoLocal) => resultadoLocal.url.endsWith('/atividade'));
 
         parametros.next(convertToParamMap({ busca: 'login' }));
         expect(esperarRequisicao(montado.http, 'GET', '/atividade').request.params.get('busca')).toBe('login');
@@ -154,7 +154,7 @@ describe('AtividadeListagemPage: busca e filtros na URL', () => {
         const { montado } = await montarPagina();
         await carregar(montado, [criarAtividade(1)], 40);
         montado.componente.aoCarregarTabela({ first: 0, rows: 10 });
-        montado.http.expectNone((r) => r.url.endsWith('/atividade'));
+        montado.http.expectNone((resultadoSelecionado) => resultadoSelecionado.url.endsWith('/atividade'));
         montado.componente.aoCarregarTabela({ first: 20, rows: 10 });
         const requisicao = esperarRequisicao(montado.http, 'GET', '/atividade');
         expect(requisicao.request.params.get('pagina')).toBe('3');
@@ -175,7 +175,7 @@ describe('AtividadeListagemPage: estados da tabela', () => {
         await montado.atualizar();
         expect(montado.componente.recarregando()).toBe(true);
         expect(montado.componente.primeiraCarga()).toBe(false);
-        montado.http.expectOne((r) => r.url.endsWith('/atividade'));
+        montado.http.expectOne((resultadoPrincipal) => resultadoPrincipal.url.endsWith('/atividade'));
     });
 
     it('vazio sem filtros convida a criar a primeira atividade', async () => {
@@ -228,7 +228,7 @@ describe('AtividadeListagemPage: estados da tabela', () => {
 
     it('erro ao listar: o carregamento termina e a tela diz que falhou, sem afirmar que não há atividades (P-058)', async () => {
         const { montado } = await montarPagina();
-        for (const requisicao of montado.http.match((r) => r.url.endsWith('/atividade-prioridade') || r.url.endsWith('/usuario'))) responderSucesso(requisicao, []);
+        for (const requisicao of montado.http.match((resultadoSeguinte) => resultadoSeguinte.url.endsWith('/atividade-prioridade') || resultadoSeguinte.url.endsWith('/usuario'))) responderSucesso(requisicao, []);
         responderErro(esperarRequisicao(montado.http, 'GET', '/atividade'), 500, 'falhou');
         await montado.atualizar();
         expect(montado.componente.carregando()).toBe(false);
@@ -301,7 +301,7 @@ describe('AtividadeListagemPage: seleção e barra em massa', () => {
         montado.componente.mudarStatusEmMassa(TipoAtividadeStatusEnum.DESENVOLVENDO);
         const requisicao = esperarRequisicao(montado.http, 'PUT', '/atividade/1');
         expect(requisicao.request.body).toEqual({ status: 'DESENVOLVENDO' });
-        montado.http.expectNone((r) => r.method === 'PUT' && r.url.endsWith('/atividade/2'));
+        montado.http.expectNone((resultadoAtual) => resultadoAtual.method === 'PUT' && resultadoAtual.url.endsWith('/atividade/2'));
         responderSucesso(requisicao, {});
         await montado.atualizar();
         esperarRequisicao(montado.http, 'GET', '/atividade');
@@ -317,7 +317,7 @@ describe('AtividadeListagemPage: seleção e barra em massa', () => {
         montado.componente.aoSelecionar(itens);
         montado.componente.mudarStatusEmMassa(TipoAtividadeStatusEnum.PLANEJADA);
         expect(avisos).toEqual(['As selecionadas já estão com esse status']);
-        montado.http.expectNone((r) => r.method === 'PUT');
+        montado.http.expectNone((resultado) => resultado.method === 'PUT');
     });
 
     it('acrescentar tags em massa envia a união com as tags que cada atividade já tem', async () => {
@@ -340,7 +340,7 @@ describe('AtividadeListagemPage: seleção e barra em massa', () => {
         montado.componente.aoSelecionar(itens);
         montado.componente.acrescentarTagsEmMassa([1]);
         expect(avisos).toEqual(['As selecionadas já têm essas tags']);
-        montado.http.expectNone((r) => r.method === 'PUT');
+        montado.http.expectNone((registroParcial) => registroParcial.method === 'PUT');
     });
 
     it('uma falha em massa não derruba as demais: o resumo conta quantas deram certo e quantas foram recusadas', async () => {
@@ -374,7 +374,7 @@ describe('AtividadeListagemPage: seleção e barra em massa', () => {
         const { montado } = await montarPagina();
         await carregar(montado, [criarAtividade(1)]);
         montado.componente.excluirEmMassa();
-        montado.http.expectNone((r) => r.method === 'DELETE');
+        montado.http.expectNone((registroLocal) => registroLocal.method === 'DELETE');
     });
 });
 
@@ -447,7 +447,7 @@ describe('AtividadeListagemPage: menu ⋮ e permissões da linha', () => {
         await carregar(montado, [alheia]);
         montado.componente.abrirTagsDaLinha(new Event('click'), alheia, document.createElement('div'));
         expect(montado.componente.atividadeTags()).toBeNull();
-        montado.http.expectNone((r) => r.url.endsWith('/tag'));
+        montado.http.expectNone((registroSelecionado) => registroSelecionado.url.endsWith('/tag'));
     });
 
     it('abrir as tags da própria linha carrega as tags uma vez e salvar troca o conjunto da atividade', async () => {
@@ -513,7 +513,7 @@ describe('AtividadeListagemPage: menu ⋮ e permissões da linha', () => {
         const popover = { hide: vi.fn(), toggle: vi.fn() } as never;
         montado.componente.abrirSeletorPrioridade(new Event('click'), itens[0], popover);
         montado.componente.alterarPrioridade(PRIORIDADE, popover);
-        montado.http.expectNone((r) => r.method === 'PUT');
+        montado.http.expectNone((registroPrincipal) => registroPrincipal.method === 'PUT');
 
         const alta = { ...PRIORIDADE, codigo: TipoAtividadePrioridadeEnum.ALTA, descricao: 'Alta', ordem: 2 };
         montado.componente.alterarPrioridade(alta, popover);
@@ -557,7 +557,7 @@ describe('AtividadeListagemPage: play e pausa pela linha', () => {
         await carregar(montado, [criarAtividade(1)]);
         montado.componente.alternarExecucao(montado.componente.atividades()[0]);
         montado.componente.confirmarExecucao();
-        montado.http.expectNone((r) => r.method === 'POST' && r.url.endsWith('/execucao'));
+        montado.http.expectNone((registroSeguinte) => registroSeguinte.method === 'POST' && registroSeguinte.url.endsWith('/execucao'));
         expect(montado.componente.campoInvalidoExecucao('descricao')).toBe(true);
     });
 
@@ -746,7 +746,7 @@ describe('AtividadeListagemPage: alterar prioridades (task 204)', () => {
 
         botao!.click();
         await montado.atualizar();
-        for (const requisicao of montado.http.match((r) => r.method === 'GET' && r.url.endsWith('/atividade-prioridade'))) responderSucesso(requisicao, [PRIORIDADE]);
+        for (const requisicao of montado.http.match((registroAtual) => registroAtual.method === 'GET' && registroAtual.url.endsWith('/atividade-prioridade'))) responderSucesso(requisicao, [PRIORIDADE]);
         await montado.atualizar();
         expect(document.body.querySelector('.p-dialog')?.textContent).toContain('Alterar prioridades');
         expect(document.body.querySelector('[aria-label="Código da cor da prioridade Média"]')).not.toBeNull();

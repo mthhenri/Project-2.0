@@ -1,3 +1,3 @@
 export class ExecucaoExcluirDto {
-  id: number;
+    id: number;
 }

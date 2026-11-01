@@ -2,9 +2,9 @@ import { TipoProvedorIaEnum } from '../../enums/tipo-provedor-ia.enum';
 
 /** Os três modelos de um provedor (um por nível). O nome de um modelo não vale em outro provedor. */
 export interface ConfiguracaoIaModelosDto {
-  modeloRapido: string;
-  modeloPadrao: string;
-  modeloAnalitico: string;
+    modeloRapido: string;
+    modeloPadrao: string;
+    modeloAnalitico: string;
 }
 
 /**

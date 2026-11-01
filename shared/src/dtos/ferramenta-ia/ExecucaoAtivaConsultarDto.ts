@@ -6,9 +6,9 @@ import { IsInt, IsOptional, Min } from 'class-validator';
  * `usuarioId` (de `listar_usuarios`) para ver a de outra pessoa.
  */
 export class ExecucaoAtivaConsultarDto {
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  usuarioId?: number;
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    usuarioId?: number;
 }

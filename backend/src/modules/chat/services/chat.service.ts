@@ -1,23 +1,23 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
-  AssuntoChatEnum,
-  AutorChatEnum,
-  ChatBuscadoDto,
-  ChatBuscarDto,
-  ChatConversaRecuperarDto,
-  ChatConversaTituloAlteradoDto,
-  ChatConversaTituloAlterarDto,
-  ChatConversasListadasDto,
-  ChatEventoDto,
-  ChatHojeRecuperadoDto,
-  ChatMensagemEnviarDto,
-  ConfiguracaoIaResumoDto,
-  ContextoChatEnum,
-  diaMesNoFuso,
-  EstadoIaEnum,
-  NivelIaEnum,
-  StandardResponse,
-  TipoPromptEnum,
+    AssuntoChatEnum,
+    AutorChatEnum,
+    ChatBuscadoDto,
+    ChatBuscarDto,
+    ChatConversaRecuperarDto,
+    ChatConversaTituloAlteradoDto,
+    ChatConversaTituloAlterarDto,
+    ChatConversasListadasDto,
+    ChatEventoDto,
+    ChatHojeRecuperadoDto,
+    ChatMensagemEnviarDto,
+    ConfiguracaoIaResumoDto,
+    ContextoChatEnum,
+    diaMesNoFuso,
+    EstadoIaEnum,
+    NivelIaEnum,
+    StandardResponse,
+    TipoPromptEnum,
 } from '@project20/shared';
 import { ConfigService } from '../../../config/config.service';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
@@ -33,13 +33,13 @@ import { IaService } from '../../ia/services/ia.service';
 import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import {
-  assuntoDaUltimaMarcada,
-  filtrarHistoricoPorModo,
-  INSTRUCOES_DE_ASSUNTO,
-  interpretarAssunto,
-  MAXIMO_TOKENS_DA_CLASSIFICACAO,
-  montarInstrucoesDaConversa,
-  montarPedidoDeAssunto,
+    assuntoDaUltimaMarcada,
+    filtrarHistoricoPorModo,
+    INSTRUCOES_DE_ASSUNTO,
+    interpretarAssunto,
+    MAXIMO_TOKENS_DA_CLASSIFICACAO,
+    montarInstrucoesDaConversa,
+    montarPedidoDeAssunto,
 } from '../domain/assunto-do-chat';
 import { limparTitulo } from '../domain/chat-consultas';
 import { montarAberturaDoDia } from '../domain/abertura-do-dia';
@@ -60,7 +60,7 @@ export const MAXIMO_TOKENS_DO_CHAT = 4096;
 
 /** Instrução interna (não editável) para dar nome à conversa: só o nome, curto, sem enfeite. */
 export const INSTRUCOES_TITULO =
-  'Dê um nome curto (de 3 a 6 palavras, em português, sem aspas nem ponto final) ao assunto atual da conversa a seguir, que vem depois de "Nome atual". ' +
+    'Dê um nome curto (de 3 a 6 palavras, em português, sem aspas nem ponto final) ao assunto atual da conversa a seguir, que vem depois de "Nome atual". ' +
   'Olhe principalmente para as últimas mensagens. Se o nome atual ainda descreve bem o assunto delas, devolva-o exatamente igual, letra por letra. ' +
   'Se o assunto das últimas mensagens mudou, dê um nome novo para o novo assunto. Se o nome atual é só um "Chat do dia ...", dê um nome novo. ' +
   'Responda só com o nome.';
@@ -75,28 +75,28 @@ const MENSAGEM_GENERICA = 'Serviço de IA temporariamente indisponível';
  * cada um só lê as mensagens do próprio contexto; `instrucoesExtras` entra depois do prompt do tipo (o contexto do check-in).
  */
 export interface OpcoesDeConversa {
-  contexto: ContextoChatEnum;
-  /** A instrução de abertura do dia (o bom dia): vai ao modelo como a primeira mensagem do usuário, sem ser gravada. */
-  abertura?: string;
-  /** A instrução de retomada depois de uma queda da IA (task 158): vai ao modelo como a última mensagem do usuário, sem ser gravada. */
-  retomada?: string;
-  instrucoesExtras?: string;
-  /**
+    contexto: ContextoChatEnum;
+    /** A instrução de abertura do dia (o bom dia): vai ao modelo como a primeira mensagem do usuário, sem ser gravada. */
+    abertura?: string;
+    /** A instrução de retomada depois de uma queda da IA (task 158): vai ao modelo como a última mensagem do usuário, sem ser gravada. */
+    retomada?: string;
+    instrucoesExtras?: string;
+    /**
    * A conversa de um plano (task 234): o id próprio (`plano-<id>`), lida sem filtro de dono (é de todos que têm acesso ao plano; quem autoriza é
    * quem chama), com instruções montadas a cada turno (o documento muda), nível, teto de tokens e conjunto de ferramentas próprios.
    */
-  conversaId?: string;
-  montarInstrucoes?: () => Promise<string>;
-  nivel?: NivelIaEnum;
-  maximoTokens?: number;
-  escopoDeFerramentas?: EscopoDaFerramentaIa;
-  /** O texto de uma mensagem do usuário como o modelo a lê (na conversa do plano, com o nome de quem falou). */
-  rotularMensagemDoUsuario?: (mensagem: ChatMensagemLida) => string;
+    conversaId?: string;
+    montarInstrucoes?: () => Promise<string>;
+    nivel?: NivelIaEnum;
+    maximoTokens?: number;
+    escopoDeFerramentas?: EscopoDaFerramentaIa;
+    /** O texto de uma mensagem do usuário como o modelo a lê (na conversa do plano, com o nome de quem falou). */
+    rotularMensagemDoUsuario?: (mensagem: ChatMensagemLida) => string;
 }
 
 /** O que fica guardado em `conteudo_bruto` da mensagem da IA: as trocas do turno, para remontar a conversa depois. */
 interface ConteudoBrutoDoTurno {
-  mensagens: IaMensagem[];
+    mensagens: IaMensagem[];
 }
 
 /**
@@ -106,516 +106,516 @@ interface ConteudoBrutoDoTurno {
  */
 @Injectable()
 export class ChatService {
-  private readonly logger = new Logger(ChatService.name);
-  /** Conversas com uma mensagem em andamento: um segundo envio na mesma conversa recebe 409. */
-  private readonly emAndamento = new Set<string>();
+    private readonly logger = new Logger(ChatService.name);
+    /** Conversas com uma mensagem em andamento: um segundo envio na mesma conversa recebe 409. */
+    private readonly emAndamento = new Set<string>();
 
-  constructor(
-    @Inject(ARMAZENAMENTO_DE_CHAT) private readonly chatMensagemRepositorio: ArmazenamentoDeChat,
-    private readonly iaService: IaService,
-    private readonly promptService: PromptService,
-    private readonly ferramentaIaRegistro: FerramentaIaRegistro,
-    private readonly propostaIaService: PropostaIaService,
-    private readonly configService: ConfigService,
-    private readonly configuracaoIaService: ConfiguracaoIaService,
-  ) {}
+    constructor(
+        @Inject(ARMAZENAMENTO_DE_CHAT) private readonly chatMensagemRepositorio: ArmazenamentoDeChat,
+        private readonly iaService: IaService,
+        private readonly promptService: PromptService,
+        private readonly ferramentaIaRegistro: FerramentaIaRegistro,
+        private readonly propostaIaService: PropostaIaService,
+        private readonly configService: ConfigService,
+        private readonly configuracaoIaService: ConfiguracaoIaService,
+    ) {}
 
-  async recuperarHoje(usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
-    const conversaId = this.conversaDeHoje(usuarioAtivo);
-    const mensagens = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
-    const { titulo } = await this.nomeDaConversa(conversaId, usuarioAtivo.sub);
-    return { sucesso: true, dados: { conversaId, titulo, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
-  }
+    async recuperarHoje(usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
+        const conversaId = this.conversaDeHoje(usuarioAtivo);
+        const mensagens = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
+        const { titulo } = await this.nomeDaConversa(conversaId, usuarioAtivo.sub);
+        return { sucesso: true, dados: { conversaId, titulo, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
+    }
 
-  /** A lista do histórico: uma entrada por dia com conversa, da mais recente à mais antiga. */
-  async listarConversas(usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatConversasListadasDto>> {
-    const baldes = await this.chatMensagemRepositorio.listarConversas({ usuarioId: usuarioAtivo.sub });
-    const titulos = await this.chatMensagemRepositorio.listarTitulos({
-      usuarioId: usuarioAtivo.sub,
-      conversaIds: baldes.map((balde) => balde.key),
-    });
-    const conversas = baldes.map((balde) => ({
-      conversaId: balde.key,
-      data: balde.key.slice(-10),
-      titulo: titulos[balde.key]?.titulo || nomePadraoDaConversa(balde.key),
-      tituloEditado: titulos[balde.key]?.editado ?? false,
-      primeiraMensagem: balde.primeira.hits.hits[0]?._source.texto ?? '',
-      quantidadeDeMensagens: balde.doc_count,
-      ultimaMensagemDate: new Date(balde.ultima.value),
-    }));
-    return { sucesso: true, dados: { conversas }, mensagem: 'Conversas listadas com sucesso' };
-  }
+    /** A lista do histórico: uma entrada por dia com conversa, da mais recente à mais antiga. */
+    async listarConversas(usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatConversasListadasDto>> {
+        const baldes = await this.chatMensagemRepositorio.listarConversas({ usuarioId: usuarioAtivo.sub });
+        const titulos = await this.chatMensagemRepositorio.listarTitulos({
+            usuarioId: usuarioAtivo.sub,
+            conversaIds: baldes.map((balde) => balde.key),
+        });
+        const conversas = baldes.map((balde) => ({
+            conversaId: balde.key,
+            data: balde.key.slice(-10),
+            titulo: titulos[balde.key]?.titulo || nomePadraoDaConversa(balde.key),
+            tituloEditado: titulos[balde.key]?.editado ?? false,
+            primeiraMensagem: balde.primeira.hits.hits[0]?._source.texto ?? '',
+            quantidadeDeMensagens: balde.doc_count,
+            ultimaMensagemDate: new Date(balde.ultima.value),
+        }));
+        return { sucesso: true, dados: { conversas }, mensagem: 'Conversas listadas com sucesso' };
+    }
 
-  /** A conversa de um dia do próprio usuário; o dono vem do token, então um dia sem mensagens devolve a lista vazia. */
-  async recuperarConversa(dto: ChatConversaRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
-    const conversaId = `${usuarioAtivo.sub}-${dto.data}`;
-    const mensagens = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
-    const { titulo } = await this.nomeDaConversa(conversaId, usuarioAtivo.sub);
-    return { sucesso: true, dados: { conversaId, titulo, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
-  }
+    /** A conversa de um dia do próprio usuário; o dono vem do token, então um dia sem mensagens devolve a lista vazia. */
+    async recuperarConversa(dto: ChatConversaRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
+        const conversaId = `${usuarioAtivo.sub}-${dto.data}`;
+        const mensagens = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
+        const { titulo } = await this.nomeDaConversa(conversaId, usuarioAtivo.sub);
+        return { sucesso: true, dados: { conversaId, titulo, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
+    }
 
-  /**
+    /**
    * O usuário renomeia a conversa de um dia dele. O nome dele vale mais que o da IA (a renomeação automática não o troca mais); em
    * branco, depois de aparar, a conversa volta ao nome padrão e à renomeação automática. Conversa sem mensagens ou de outra pessoa: 404.
    */
-  async alterarTituloConversa(
-    dto: ChatConversaTituloAlterarDto & ChatConversaRecuperarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<ChatConversaTituloAlteradoDto>> {
-    const conversaId = `${usuarioAtivo.sub}-${dto.data}`;
-    if ((await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT)).length === 0) throw new ResourceNotFoundException('Conversa');
+    async alterarTituloConversa(
+        dto: ChatConversaTituloAlterarDto & ChatConversaRecuperarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<ChatConversaTituloAlteradoDto>> {
+        const conversaId = `${usuarioAtivo.sub}-${dto.data}`;
+        if ((await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT)).length === 0) throw new ResourceNotFoundException('Conversa');
 
-    const titulo = dto.titulo.replace(/\s+/g, ' ').trim();
-    const editado = titulo.length > 0;
-    await this.chatMensagemRepositorio.gravarTitulo({ conversaId, usuarioId: usuarioAtivo.sub, titulo, editado });
-    return {
-      sucesso: true,
-      dados: { conversaId, titulo: editado ? titulo : nomePadraoDaConversa(conversaId), tituloEditado: editado },
-      mensagem: editado ? 'Nome da conversa alterado com sucesso' : 'Nome da conversa restaurado para o padrão',
-    };
-  }
+        const titulo = dto.titulo.replace(/\s+/g, ' ').trim();
+        const editado = titulo.length > 0;
+        await this.chatMensagemRepositorio.gravarTitulo({ conversaId, usuarioId: usuarioAtivo.sub, titulo, editado });
+        return {
+            sucesso: true,
+            dados: { conversaId, titulo: editado ? titulo : nomePadraoDaConversa(conversaId), tituloEditado: editado },
+            mensagem: editado ? 'Nome da conversa alterado com sucesso' : 'Nome da conversa restaurado para o padrão',
+        };
+    }
 
-  async buscar(dto: ChatBuscarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatBuscadoDto>> {
-    const encontradas = await this.chatMensagemRepositorio.buscar({
-      usuarioId: usuarioAtivo.sub,
-      texto: dto.texto,
-      inicio: dto.inicio ? new Date(dto.inicio) : undefined,
-      fim: dto.fim ? new Date(dto.fim) : undefined,
-    });
-    return { sucesso: true, dados: { mensagens: encontradas.map(paraResumo) }, mensagem: 'Busca realizada com sucesso' };
-  }
+    async buscar(dto: ChatBuscarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatBuscadoDto>> {
+        const encontradas = await this.chatMensagemRepositorio.buscar({
+            usuarioId: usuarioAtivo.sub,
+            texto: dto.texto,
+            inicio: dto.inicio ? new Date(dto.inicio) : undefined,
+            fim: dto.fim ? new Date(dto.fim) : undefined,
+        });
+        return { sucesso: true, dados: { mensagens: encontradas.map(paraResumo) }, mensagem: 'Busca realizada com sucesso' };
+    }
 
-  /**
+    /**
    * Envia a mensagem e emite os eventos da resposta. Lança (antes de qualquer evento) se a IA está desligada ou se já há uma mensagem
    * em andamento; depois disso, toda falha vira o evento `erro`, e o método termina sem lançar.
    */
-  async enviarMensagem(
-    usuarioAtivo: JwtPayload,
-    dto: ChatMensagemEnviarDto,
-    emitir: (evento: ChatEventoDto) => void,
-    opcoes: OpcoesDeConversa = { contexto: ContextoChatEnum.CHAT },
-  ): Promise<void> {
-    if ((await this.iaService.obterEstado()) === EstadoIaEnum.DESLIGADA) throw new ConflictException('A IA está desligada');
+    async enviarMensagem(
+        usuarioAtivo: JwtPayload,
+        dto: ChatMensagemEnviarDto,
+        emitir: (evento: ChatEventoDto) => void,
+        opcoes: OpcoesDeConversa = { contexto: ContextoChatEnum.CHAT },
+    ): Promise<void> {
+        if ((await this.iaService.obterEstado()) === EstadoIaEnum.DESLIGADA) throw new ConflictException('A IA está desligada');
 
-    const conversaId = opcoes.conversaId ?? this.conversaDeHoje(usuarioAtivo);
-    if (this.emAndamento.has(conversaId)) throw new ConflictException('A IA ainda está respondendo à mensagem anterior');
-    this.emAndamento.add(conversaId);
+        const conversaId = opcoes.conversaId ?? this.conversaDeHoje(usuarioAtivo);
+        if (this.emAndamento.has(conversaId)) throw new ConflictException('A IA ainda está respondendo à mensagem anterior');
+        this.emAndamento.add(conversaId);
 
-    const propostasDoTurno: number[] = [];
-    try {
-      // As mensagens nunca são reescritas: o assunto é decidido antes de gravar a pergunta e vale para ela e para a resposta do turno.
-      const assunto = opcoes.contexto === ContextoChatEnum.CHAT ? await this.classificarAssunto(usuarioAtivo, conversaId, dto.texto) : null;
-      await this.chatMensagemRepositorio.gravar({
-        conversaId,
-        usuarioId: usuarioAtivo.sub,
-        contexto: opcoes.contexto,
-        autor: AutorChatEnum.USUARIO,
-        assunto,
-        texto: dto.texto,
-      });
-      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, opcoes, assunto);
-      // O nome da conversa e as sugestões não dependem um do outro: saem juntos, para o campo voltar logo.
-      if (opcoes.contexto === ContextoChatEnum.CHAT) await Promise.all([this.nomearConversa(usuarioAtivo, conversaId), this.sugerirProximasMensagens(usuarioAtivo, conversaId, emitir)]);
-    } catch (erro) {
-      await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, true, opcoes.contexto);
-    } finally {
-      this.emAndamento.delete(conversaId);
+        const propostasDoTurno: number[] = [];
+        try {
+            // As mensagens nunca são reescritas: o assunto é decidido antes de gravar a pergunta e vale para ela e para a resposta do turno.
+            const assunto = opcoes.contexto === ContextoChatEnum.CHAT ? await this.classificarAssunto(usuarioAtivo, conversaId, dto.texto) : null;
+            await this.chatMensagemRepositorio.gravar({
+                conversaId,
+                usuarioId: usuarioAtivo.sub,
+                contexto: opcoes.contexto,
+                autor: AutorChatEnum.USUARIO,
+                assunto,
+                texto: dto.texto,
+            });
+            await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, opcoes, assunto);
+            // O nome da conversa e as sugestões não dependem um do outro: saem juntos, para o campo voltar logo.
+            if (opcoes.contexto === ContextoChatEnum.CHAT) await Promise.all([this.nomearConversa(usuarioAtivo, conversaId), this.sugerirProximasMensagens(usuarioAtivo, conversaId, emitir)]);
+        } catch (erro) {
+            await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, true, opcoes.contexto);
+        } finally {
+            this.emAndamento.delete(conversaId);
+        }
     }
-  }
 
-  /**
+    /**
    * O "bom dia" proativo: ao abrir o chat do dia **sem nenhuma mensagem da IA ainda**, a IA lê o pad, as atividades e a execução e
    * cumprimenta com o plano do dia. Só grava a mensagem da IA (a instrução de abertura não vira mensagem do chat). Lança 409 se a IA
    * está desligada ou se o bom dia de hoje já foi dado; uma chamada concorrente não duplica. Falha no meio **não** grava mensagem do
    * sistema (senão cada F5 com a IA fora do ar empilharia erros): o usuário só vê o aviso do momento.
    */
-  async iniciarBomDia(usuarioAtivo: JwtPayload, emitir: (evento: ChatEventoDto) => void): Promise<void> {
-    if ((await this.iaService.obterEstado()) === EstadoIaEnum.DESLIGADA) throw new ConflictException('A IA está desligada');
+    async iniciarBomDia(usuarioAtivo: JwtPayload, emitir: (evento: ChatEventoDto) => void): Promise<void> {
+        if ((await this.iaService.obterEstado()) === EstadoIaEnum.DESLIGADA) throw new ConflictException('A IA está desligada');
 
-    const conversaId = this.conversaDeHoje(usuarioAtivo);
-    const jaDeuBomDia = async (): Promise<boolean> =>
-      (await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT)).some((mensagem) => mensagem.autor === AutorChatEnum.IA);
-    if (await jaDeuBomDia()) throw new ConflictException('O bom dia de hoje já foi dado');
-    if (this.emAndamento.has(conversaId)) throw new ConflictException('A IA ainda está respondendo à mensagem anterior');
-    this.emAndamento.add(conversaId);
+        const conversaId = this.conversaDeHoje(usuarioAtivo);
+        const jaDeuBomDia = async (): Promise<boolean> =>
+            (await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT)).some((mensagem) => mensagem.autor === AutorChatEnum.IA);
+        if (await jaDeuBomDia()) throw new ConflictException('O bom dia de hoje já foi dado');
+        if (this.emAndamento.has(conversaId)) throw new ConflictException('A IA ainda está respondendo à mensagem anterior');
+        this.emAndamento.add(conversaId);
 
-    const propostasDoTurno: number[] = [];
-    try {
-      if (await jaDeuBomDia()) return;
-      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, { contexto: ContextoChatEnum.CHAT, abertura: this.abertura() }, AssuntoChatEnum.SISTEMA);
-      await this.sugerirProximasMensagens(usuarioAtivo, conversaId, emitir);
-    } catch (erro) {
-      await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, false);
-    } finally {
-      this.emAndamento.delete(conversaId);
+        const propostasDoTurno: number[] = [];
+        try {
+            if (await jaDeuBomDia()) return;
+            await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, { contexto: ContextoChatEnum.CHAT, abertura: this.abertura() }, AssuntoChatEnum.SISTEMA);
+            await this.sugerirProximasMensagens(usuarioAtivo, conversaId, emitir);
+        } catch (erro) {
+            await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, false);
+        } finally {
+            this.emAndamento.delete(conversaId);
+        }
     }
-  }
 
-  /**
+    /**
    * Retomada depois de uma queda da IA (task 158): descarta as propostas pendentes que ficaram obsoletas e a IA lê o que o usuário
    * mudou à mão desde a última mensagem, resume e continua dali. A instrução não vira mensagem do chat; a conversa do dia segue a mesma.
    * 409 com a IA desligada, sem conversa hoje para retomar ou com a IA ainda respondendo; falha no meio não grava mensagem do sistema.
    */
-  async retomarAposQueda(usuarioAtivo: JwtPayload, emitir: (evento: ChatEventoDto) => void): Promise<void> {
-    if ((await this.iaService.obterEstado()) === EstadoIaEnum.DESLIGADA) throw new ConflictException('A IA está desligada');
+    async retomarAposQueda(usuarioAtivo: JwtPayload, emitir: (evento: ChatEventoDto) => void): Promise<void> {
+        if ((await this.iaService.obterEstado()) === EstadoIaEnum.DESLIGADA) throw new ConflictException('A IA está desligada');
 
-    const conversaId = this.conversaDeHoje(usuarioAtivo);
-    const historico = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
-    if (historico.length === 0) throw new ConflictException('Não há conversa de hoje para retomar');
-    if (this.emAndamento.has(conversaId)) throw new ConflictException('A IA ainda está respondendo à mensagem anterior');
-    this.emAndamento.add(conversaId);
+        const conversaId = this.conversaDeHoje(usuarioAtivo);
+        const historico = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
+        if (historico.length === 0) throw new ConflictException('Não há conversa de hoje para retomar');
+        if (this.emAndamento.has(conversaId)) throw new ConflictException('A IA ainda está respondendo à mensagem anterior');
+        this.emAndamento.add(conversaId);
 
-    const propostasDoTurno: number[] = [];
-    try {
-      const ultima = new Date(historico[historico.length - 1].createdDate);
-      const propostasDescartadas = await this.propostaIaService.expirarObsoletas(usuarioAtivo);
-      const fusoHorario = this.configService.obter().aplicacao.fusoHorario;
-      const horaNoFuso = (instante: Date) => new Intl.DateTimeFormat('pt-BR', { timeZone: fusoHorario, hour: '2-digit', minute: '2-digit', hour12: false }).format(instante);
-      const retomada = montarRetomadaAposQueda({
-        hora: horaNoFuso(this.agora()),
-        horaDaUltimaMensagem: horaNoFuso(ultima),
-        desde: ultima.toISOString(),
-        propostasDescartadas,
-      });
-      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, { contexto: ContextoChatEnum.CHAT, retomada });
-      await this.sugerirProximasMensagens(usuarioAtivo, conversaId, emitir);
-    } catch (erro) {
-      await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, false);
-    } finally {
-      this.emAndamento.delete(conversaId);
+        const propostasDoTurno: number[] = [];
+        try {
+            const ultima = new Date(historico[historico.length - 1].createdDate);
+            const propostasDescartadas = await this.propostaIaService.expirarObsoletas(usuarioAtivo);
+            const fusoHorario = this.configService.obter().aplicacao.fusoHorario;
+            const horaNoFuso = (instante: Date) => new Intl.DateTimeFormat('pt-BR', { timeZone: fusoHorario, hour: '2-digit', minute: '2-digit', hour12: false }).format(instante);
+            const retomada = montarRetomadaAposQueda({
+                hora: horaNoFuso(this.agora()),
+                horaDaUltimaMensagem: horaNoFuso(ultima),
+                desde: ultima.toISOString(),
+                propostasDescartadas,
+            });
+            await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, { contexto: ContextoChatEnum.CHAT, retomada });
+            await this.sugerirProximasMensagens(usuarioAtivo, conversaId, emitir);
+        } catch (erro) {
+            await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, false);
+        } finally {
+            this.emAndamento.delete(conversaId);
+        }
     }
-  }
 
-  private abertura(): string {
-    const fusoHorario = this.configService.obter().aplicacao.fusoHorario;
-    const agora = this.agora();
-    return montarAberturaDoDia({
-      hora: new Intl.DateTimeFormat('pt-BR', { timeZone: fusoHorario, hour: '2-digit', minute: '2-digit', hour12: false }).format(agora),
-      diaDaSemana: new Intl.DateTimeFormat('pt-BR', { timeZone: fusoHorario, weekday: 'long' }).format(agora),
-      hoje: diaMesNoFuso(agora, fusoHorario),
-      diaUtilAnterior: diaMesNoFuso(instanteDoDiaUtilAnterior(agora, fusoHorario), fusoHorario),
-    });
-  }
+    private abertura(): string {
+        const fusoHorario = this.configService.obter().aplicacao.fusoHorario;
+        const agora = this.agora();
+        return montarAberturaDoDia({
+            hora: new Intl.DateTimeFormat('pt-BR', { timeZone: fusoHorario, hour: '2-digit', minute: '2-digit', hour12: false }).format(agora),
+            diaDaSemana: new Intl.DateTimeFormat('pt-BR', { timeZone: fusoHorario, weekday: 'long' }).format(agora),
+            hoje: diaMesNoFuso(agora, fusoHorario),
+            diaUtilAnterior: diaMesNoFuso(instanteDoDiaUtilAnterior(agora, fusoHorario), fusoHorario),
+        });
+    }
 
-  /** Separado para os testes fixarem o instante. */
-  protected agora(): Date {
-    return new Date();
-  }
+    /** Separado para os testes fixarem o instante. */
+    protected agora(): Date {
+        return new Date();
+    }
 
-  private async responder(
-    usuarioAtivo: JwtPayload,
-    conversaId: string,
-    propostasDoTurno: number[],
-    emitir: (evento: ChatEventoDto) => void,
-    opcoes: OpcoesDeConversa,
-    assunto?: AssuntoChatEnum | null,
-  ): Promise<void> {
+    private async responder(
+        usuarioAtivo: JwtPayload,
+        conversaId: string,
+        propostasDoTurno: number[],
+        emitir: (evento: ChatEventoDto) => void,
+        opcoes: OpcoesDeConversa,
+        assunto?: AssuntoChatEnum | null,
+    ): Promise<void> {
     // O turno junta o que as chamadas desta resposta gastaram, as da conversa e as das ferramentas (task 188): o selo é o maior nível.
-    const turno = new TurnoIa();
-    await executarNoTurno(turno, () => this.responderNoTurno(usuarioAtivo, conversaId, propostasDoTurno, emitir, opcoes, turno, assunto));
-  }
-
-  private async responderNoTurno(
-    usuarioAtivo: JwtPayload,
-    conversaId: string,
-    propostasDoTurno: number[],
-    emitir: (evento: ChatEventoDto) => void,
-    opcoes: OpcoesDeConversa,
-    turno: TurnoIa,
-    assuntoInformado?: AssuntoChatEnum | null,
-  ): Promise<void> {
-    const { abertura, retomada, contexto } = opcoes;
-    const doChat = contexto === ContextoChatEnum.CHAT;
-    const doPlano = contexto === ContextoChatEnum.PLANEJAMENTO;
-    const configuracao = await this.configuracaoIaService.obterAtiva();
-    // A conversa de um plano é de todos que a escreveram: sem filtro de dono (quem chama já checou o acesso ao plano).
-    const historicoLido = await this.listarDoContexto(conversaId, doPlano ? undefined : usuarioAtivo.sub, contexto);
-    const historicoDoContexto = opcoes.rotularMensagemDoUsuario
-      ? historicoLido.map((mensagem) => (mensagem.autor === AutorChatEnum.USUARIO ? { ...mensagem, texto: opcoes.rotularMensagemDoUsuario!(mensagem) } : mensagem))
-      : historicoLido;
-    // Só o chat tem assunto (o check-in tem o próprio prompt e não é marcado). A retomada continua no assunto da última mensagem marcada.
-    const assunto: AssuntoChatEnum | null = !doChat ? null : assuntoInformado ?? assuntoDaUltimaMarcada(historicoDoContexto);
-    const historico = assunto ? filtrarHistoricoPorModo(historicoDoContexto, configuracao.modoContextoChat, assunto) : historicoDoContexto;
-    let base: string;
-    if (opcoes.montarInstrucoes) {
-      // A conversa de um plano monta as próprias instruções a cada resposta (o documento muda entre uma e outra).
-      base = await opcoes.montarInstrucoes();
-    } else {
-      const prompt = await this.promptService.obterAtivo(contexto === ContextoChatEnum.CHECKIN ? TipoPromptEnum.CHECKIN : TipoPromptEnum.CONVERSA);
-      const promptDuvidaCodigo = doChat && configuracao.duvidasCodigo ? (await this.promptService.obterAtivo(TipoPromptEnum.DUVIDA_CODIGO)).conteudo : null;
-      base = doChat ? montarInstrucoesDaConversa(prompt.conteudo, configuracao.duvidasCodigo, promptDuvidaCodigo) : prompt.conteudo;
-    }
-    const instrucoes = opcoes.instrucoesExtras ? `${base}\n\n${opcoes.instrucoesExtras}` : base;
-    const ferramentas = opcoes.escopoDeFerramentas
-      ? this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo, opcoes.escopoDeFerramentas)
-      : this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo);
-
-    // Na abertura do dia não há mensagem do usuário: a instrução entra como a primeira mensagem e fica no conteúdo bruto da resposta.
-    const mensagemDeAbertura: IaMensagem | null = abertura ? { papel: 'usuario', conteudo: abertura } : null;
-    // Na retomada a conversa do dia continua: o histórico vai ao modelo e a instrução entra no fim, também sem virar mensagem do chat.
-    const mensagemDeRetomada: IaMensagem | null = retomada ? { papel: 'usuario', conteudo: retomada } : null;
-    const contextoDoHistorico = mensagemDeAbertura ? [] : await this.montarContextoAtualizado(historico, usuarioAtivo);
-    const mensagens = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [...contextoDoHistorico, mensagemDeRetomada] : contextoDoHistorico;
-    const trocasDoTurno: IaMensagem[] = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [mensagemDeRetomada] : [];
-    let texto = '';
-
-    for (let volta = 1; volta <= MAXIMO_DE_VOLTAS; volta++) {
-      // O texto de uma volta nova vem separado do anterior por um parágrafo em branco, tanto no que chega ao vivo quanto no gravado.
-      const separador = separadorEntreVoltas(texto);
-      let separadorEmitido = separador === '';
-      const resposta = await this.iaService.transmitir(
-        {
-          nivel: opcoes.nivel ?? NivelIaEnum.RAPIDO,
-          instrucoes,
-          mensagens,
-          ferramentas,
-          maximoTokens: opcoes.maximoTokens ?? MAXIMO_TOKENS_DO_CHAT,
-          // A dúvida de código (ligada pelo administrador) pode precisar de documentação atual: o provedor pesquisa por conta própria quando o modelo achar útil.
-          pesquisaWeb: doChat && configuracao.duvidasCodigo,
-        },
-        (trecho) => {
-          if (trecho === '') return;
-          if (!separadorEmitido) {
-            emitir({ tipo: 'trecho', texto: separador });
-            separadorEmitido = true;
-          }
-          emitir({ tipo: 'trecho', texto: trecho });
-        },
-      );
-      if (resposta.texto !== '') texto += separador + resposta.texto;
-
-      const mensagemDaIa: IaMensagem = { papel: 'ia', conteudo: resposta.blocos };
-      mensagens.push(mensagemDaIa);
-      trocasDoTurno.push(mensagemDaIa);
-      if (resposta.motivoParada !== 'uso_ferramenta') break;
-
-      const resultados = await this.executarFerramentas(resposta.blocos, usuarioAtivo, propostasDoTurno, emitir, { contexto });
-      const mensagemDeResultados: IaMensagem = { papel: 'usuario', conteudo: resultados };
-      mensagens.push(mensagemDeResultados);
-      trocasDoTurno.push(mensagemDeResultados);
-
-      if (volta === MAXIMO_DE_VOLTAS) throw new Error(`A IA passou de ${MAXIMO_DE_VOLTAS} voltas de ferramenta na mesma mensagem`);
+        const turno = new TurnoIa();
+        await executarNoTurno(turno, () => this.responderNoTurno(usuarioAtivo, conversaId, propostasDoTurno, emitir, opcoes, turno, assunto));
     }
 
-    const conteudoBruto: ConteudoBrutoDoTurno = { mensagens: trocasDoTurno };
-    const tokens = turno.tokens;
-    const gravada = await this.chatMensagemRepositorio.gravar({
-      conversaId,
-      usuarioId: usuarioAtivo.sub,
-      contexto,
-      autor: AutorChatEnum.IA,
-      assunto,
-      texto,
-      nivel: turno.nivel,
-      modelo: turno.modelo,
-      tokensEntrada: tokens.entrada,
-      tokensSaida: tokens.saida,
-      tokensCache: tokens.cache,
-      propostaIds: propostasDoTurno,
-      conteudoBruto,
-    });
-    emitir({ tipo: 'fim', mensagem: paraResumo(gravada) });
-  }
+    private async responderNoTurno(
+        usuarioAtivo: JwtPayload,
+        conversaId: string,
+        propostasDoTurno: number[],
+        emitir: (evento: ChatEventoDto) => void,
+        opcoes: OpcoesDeConversa,
+        turno: TurnoIa,
+        assuntoInformado?: AssuntoChatEnum | null,
+    ): Promise<void> {
+        const { abertura, retomada, contexto } = opcoes;
+        const doChat = contexto === ContextoChatEnum.CHAT;
+        const doPlano = contexto === ContextoChatEnum.PLANEJAMENTO;
+        const configuracao = await this.configuracaoIaService.obterAtiva();
+        // A conversa de um plano é de todos que a escreveram: sem filtro de dono (quem chama já checou o acesso ao plano).
+        const historicoLido = await this.listarDoContexto(conversaId, doPlano ? undefined : usuarioAtivo.sub, contexto);
+        const historicoDoContexto = opcoes.rotularMensagemDoUsuario
+            ? historicoLido.map((mensagem) => (mensagem.autor === AutorChatEnum.USUARIO ? { ...mensagem, texto: opcoes.rotularMensagemDoUsuario!(mensagem) } : mensagem))
+            : historicoLido;
+        // Só o chat tem assunto (o check-in tem o próprio prompt e não é marcado). A retomada continua no assunto da última mensagem marcada.
+        const assunto: AssuntoChatEnum | null = !doChat ? null : assuntoInformado ?? assuntoDaUltimaMarcada(historicoDoContexto);
+        const historico = assunto ? filtrarHistoricoPorModo(historicoDoContexto, configuracao.modoContextoChat, assunto) : historicoDoContexto;
+        let base: string;
+        if (opcoes.montarInstrucoes) {
+            // A conversa de um plano monta as próprias instruções a cada resposta (o documento muda entre uma e outra).
+            base = await opcoes.montarInstrucoes();
+        } else {
+            const prompt = await this.promptService.obterAtivo(contexto === ContextoChatEnum.CHECKIN ? TipoPromptEnum.CHECKIN : TipoPromptEnum.CONVERSA);
+            const promptDuvidaCodigo = doChat && configuracao.duvidasCodigo ? (await this.promptService.obterAtivo(TipoPromptEnum.DUVIDA_CODIGO)).conteudo : null;
+            base = doChat ? montarInstrucoesDaConversa(prompt.conteudo, configuracao.duvidasCodigo, promptDuvidaCodigo) : prompt.conteudo;
+        }
+        const instrucoes = opcoes.instrucoesExtras ? `${base}\n\n${opcoes.instrucoesExtras}` : base;
+        const ferramentas = opcoes.escopoDeFerramentas
+            ? this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo, opcoes.escopoDeFerramentas)
+            : this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo);
 
-  /**
+        // Na abertura do dia não há mensagem do usuário: a instrução entra como a primeira mensagem e fica no conteúdo bruto da resposta.
+        const mensagemDeAbertura: IaMensagem | null = abertura ? { papel: 'usuario', conteudo: abertura } : null;
+        // Na retomada a conversa do dia continua: o histórico vai ao modelo e a instrução entra no fim, também sem virar mensagem do chat.
+        const mensagemDeRetomada: IaMensagem | null = retomada ? { papel: 'usuario', conteudo: retomada } : null;
+        const contextoDoHistorico = mensagemDeAbertura ? [] : await this.montarContextoAtualizado(historico, usuarioAtivo);
+        const mensagens = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [...contextoDoHistorico, mensagemDeRetomada] : contextoDoHistorico;
+        const trocasDoTurno: IaMensagem[] = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [mensagemDeRetomada] : [];
+        let texto = '';
+
+        for (let volta = 1; volta <= MAXIMO_DE_VOLTAS; volta++) {
+            // O texto de uma volta nova vem separado do anterior por um parágrafo em branco, tanto no que chega ao vivo quanto no gravado.
+            const separador = separadorEntreVoltas(texto);
+            let separadorEmitido = separador === '';
+            const resposta = await this.iaService.transmitir(
+                {
+                    nivel: opcoes.nivel ?? NivelIaEnum.RAPIDO,
+                    instrucoes,
+                    mensagens,
+                    ferramentas,
+                    maximoTokens: opcoes.maximoTokens ?? MAXIMO_TOKENS_DO_CHAT,
+                    // A dúvida de código (ligada pelo administrador) pode precisar de documentação atual: o provedor pesquisa por conta própria quando o modelo achar útil.
+                    pesquisaWeb: doChat && configuracao.duvidasCodigo,
+                },
+                (trecho) => {
+                    if (trecho === '') return;
+                    if (!separadorEmitido) {
+                        emitir({ tipo: 'trecho', texto: separador });
+                        separadorEmitido = true;
+                    }
+                    emitir({ tipo: 'trecho', texto: trecho });
+                },
+            );
+            if (resposta.texto !== '') texto += separador + resposta.texto;
+
+            const mensagemDaIa: IaMensagem = { papel: 'ia', conteudo: resposta.blocos };
+            mensagens.push(mensagemDaIa);
+            trocasDoTurno.push(mensagemDaIa);
+            if (resposta.motivoParada !== 'uso_ferramenta') break;
+
+            const resultados = await this.executarFerramentas(resposta.blocos, usuarioAtivo, propostasDoTurno, emitir, { contexto });
+            const mensagemDeResultados: IaMensagem = { papel: 'usuario', conteudo: resultados };
+            mensagens.push(mensagemDeResultados);
+            trocasDoTurno.push(mensagemDeResultados);
+
+            if (volta === MAXIMO_DE_VOLTAS) throw new Error(`A IA passou de ${MAXIMO_DE_VOLTAS} voltas de ferramenta na mesma mensagem`);
+        }
+
+        const conteudoBruto: ConteudoBrutoDoTurno = { mensagens: trocasDoTurno };
+        const tokens = turno.tokens;
+        const gravada = await this.chatMensagemRepositorio.gravar({
+            conversaId,
+            usuarioId: usuarioAtivo.sub,
+            contexto,
+            autor: AutorChatEnum.IA,
+            assunto,
+            texto,
+            nivel: turno.nivel,
+            modelo: turno.modelo,
+            tokensEntrada: tokens.entrada,
+            tokensSaida: tokens.saida,
+            tokensCache: tokens.cache,
+            propostaIds: propostasDoTurno,
+            conteudoBruto,
+        });
+        emitir({ tipo: 'fim', mensagem: paraResumo(gravada) });
+    }
+
+    /**
    * O assunto da pergunta do chat (task 191). Com as dúvidas de código desligadas não há chamada: tudo é `SISTEMA`. Ligadas, uma chamada
    * curta no nível rápido, sem ferramentas e com teto pequeno, olhando também as últimas mensagens. Falhar aqui nunca derruba o chat: vale
    * o assunto da última mensagem marcada do dia (ou `SISTEMA`).
    */
-  private async classificarAssunto(usuarioAtivo: JwtPayload, conversaId: string, pergunta: string): Promise<AssuntoChatEnum> {
-    let configuracao: ConfiguracaoIaResumoDto;
-    try {
-      configuracao = await this.configuracaoIaService.obterAtiva();
-    } catch {
-      return AssuntoChatEnum.SISTEMA;
-    }
-    if (!configuracao.duvidasCodigo) return AssuntoChatEnum.SISTEMA;
+    private async classificarAssunto(usuarioAtivo: JwtPayload, conversaId: string, pergunta: string): Promise<AssuntoChatEnum> {
+        let configuracao: ConfiguracaoIaResumoDto;
+        try {
+            configuracao = await this.configuracaoIaService.obterAtiva();
+        } catch {
+            return AssuntoChatEnum.SISTEMA;
+        }
+        if (!configuracao.duvidasCodigo) return AssuntoChatEnum.SISTEMA;
 
-    let historico: ChatMensagemLida[] = [];
-    try {
-      historico = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
-      const resposta = await this.iaService.gerar({
-        nivel: NivelIaEnum.RAPIDO,
-        instrucoes: INSTRUCOES_DE_ASSUNTO,
-        mensagens: [{ papel: 'usuario', conteudo: montarPedidoDeAssunto(historico, pergunta) }],
-        maximoTokens: MAXIMO_TOKENS_DA_CLASSIFICACAO,
-      });
-      const assunto = interpretarAssunto(resposta.texto);
-      if (assunto) return assunto;
-      this.logger.warn(`A classificação do assunto não respondeu SISTEMA nem CODIGO: "${resposta.texto.slice(0, 40)}"`);
-    } catch (erro) {
-      this.logger.warn(`Não foi possível classificar o assunto: ${erro instanceof Error ? erro.message : String(erro)}`);
+        let historico: ChatMensagemLida[] = [];
+        try {
+            historico = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
+            const resposta = await this.iaService.gerar({
+                nivel: NivelIaEnum.RAPIDO,
+                instrucoes: INSTRUCOES_DE_ASSUNTO,
+                mensagens: [{ papel: 'usuario', conteudo: montarPedidoDeAssunto(historico, pergunta) }],
+                maximoTokens: MAXIMO_TOKENS_DA_CLASSIFICACAO,
+            });
+            const assunto = interpretarAssunto(resposta.texto);
+            if (assunto) return assunto;
+            this.logger.warn(`A classificação do assunto não respondeu SISTEMA nem CODIGO: "${resposta.texto.slice(0, 40)}"`);
+        } catch (erro) {
+            this.logger.warn(`Não foi possível classificar o assunto: ${erro instanceof Error ? erro.message : String(erro)}`);
+        }
+        return assuntoDaUltimaMarcada(historico);
     }
-    return assuntoDaUltimaMarcada(historico);
-  }
 
-  /**
+    /**
    * Depois de cada resposta do chat, sugere de 2 a 4 mensagens curtas que o usuário pode mandar (uma chamada rápida, sem ferramentas) e as
    * emite no evento `sugestoes`. Não é gravado e falhar aqui nunca atrapalha o chat: sem o evento, a tela mostra as sugestões iniciais.
    */
-  private async sugerirProximasMensagens(usuarioAtivo: JwtPayload, conversaId: string, emitir: (evento: ChatEventoDto) => void): Promise<void> {
-    try {
-      const conversa = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
-      const ultimaDaIa = [...conversa].reverse().find((mensagem) => mensagem.autor === AutorChatEnum.IA);
-      if (!ultimaDaIa) return;
-      const ultimaDoUsuario = [...conversa].reverse().find((mensagem) => mensagem.autor === AutorChatEnum.USUARIO);
-      const resposta = await this.iaService.gerar({
-        nivel: NivelIaEnum.RAPIDO,
-        // Só as ferramentas que este tipo de usuário pode usar: a IA sugere o que ele de fato consegue fazer.
-        instrucoes: montarInstrucoesDeSugestoes(this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo).map((ferramenta) => ferramenta.nome)),
-        mensagens: [
-          {
-            papel: 'usuario',
-            conteudo: `${ultimaDoUsuario ? `Última mensagem do usuário: ${ultimaDoUsuario.texto}\n\n` : ''}Resposta da IA: ${ultimaDaIa.texto.slice(0, 2000)}`,
-          },
-        ],
-        maximoTokens: 150,
-      });
-      const itens = interpretarSugestoes(resposta.texto);
-      if (itens.length > 0) emitir({ tipo: 'sugestoes', itens });
-    } catch (erro) {
-      this.logger.warn(`Não foi possível sugerir as próximas mensagens: ${erro instanceof Error ? erro.message : String(erro)}`);
+    private async sugerirProximasMensagens(usuarioAtivo: JwtPayload, conversaId: string, emitir: (evento: ChatEventoDto) => void): Promise<void> {
+        try {
+            const conversa = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
+            const ultimaDaIa = [...conversa].reverse().find((mensagem) => mensagem.autor === AutorChatEnum.IA);
+            if (!ultimaDaIa) return;
+            const ultimaDoUsuario = [...conversa].reverse().find((mensagem) => mensagem.autor === AutorChatEnum.USUARIO);
+            const resposta = await this.iaService.gerar({
+                nivel: NivelIaEnum.RAPIDO,
+                // Só as ferramentas que este tipo de usuário pode usar: a IA sugere o que ele de fato consegue fazer.
+                instrucoes: montarInstrucoesDeSugestoes(this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo).map((ferramenta) => ferramenta.nome)),
+                mensagens: [
+                    {
+                        papel: 'usuario',
+                        conteudo: `${ultimaDoUsuario ? `Última mensagem do usuário: ${ultimaDoUsuario.texto}\n\n` : ''}Resposta da IA: ${ultimaDaIa.texto.slice(0, 2000)}`,
+                    },
+                ],
+                maximoTokens: 150,
+            });
+            const itens = interpretarSugestoes(resposta.texto);
+            if (itens.length > 0) emitir({ tipo: 'sugestoes', itens });
+        } catch (erro) {
+            this.logger.warn(`Não foi possível sugerir as próximas mensagens: ${erro instanceof Error ? erro.message : String(erro)}`);
+        }
     }
-  }
 
-  /** O nome vigente da conversa (o gravado ou, se não há, o padrão) e se foi o usuário que o deu. */
-  private async nomeDaConversa(conversaId: string, usuarioId: number): Promise<{ titulo: string; editado: boolean }> {
-    const gravado = (await this.chatMensagemRepositorio.listarTitulos({ usuarioId, conversaIds: [conversaId] }))[conversaId];
-    return { titulo: gravado?.titulo || nomePadraoDaConversa(conversaId), editado: gravado?.editado ?? false };
-  }
+    /** O nome vigente da conversa (o gravado ou, se não há, o padrão) e se foi o usuário que o deu. */
+    private async nomeDaConversa(conversaId: string, usuarioId: number): Promise<{ titulo: string; editado: boolean }> {
+        const gravado = (await this.chatMensagemRepositorio.listarTitulos({ usuarioId, conversaIds: [conversaId] }))[conversaId];
+        return { titulo: gravado?.titulo || nomePadraoDaConversa(conversaId), editado: gravado?.editado ?? false };
+    }
 
-  /**
+    /**
    * Reavalia o nome da conversa do dia a cada mensagem do usuário (uma chamada curta no nível rápido, só com as últimas mensagens,
    * cortadas): a IA devolve o nome atual se ele ainda serve, e só uma mudança é gravada. Nome dado pelo usuário nunca é trocado, e nem
    * chega a chamar a IA. Falhar aqui nunca atrapalha o chat: o nome fica como estava.
    */
-  private async nomearConversa(usuarioAtivo: JwtPayload, conversaId: string): Promise<void> {
-    try {
-      const atual = await this.nomeDaConversa(conversaId, usuarioAtivo.sub);
-      if (atual.editado) return;
-      const conversa = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
-      if (!conversa.some((mensagem) => mensagem.autor === AutorChatEnum.USUARIO) || !conversa.some((mensagem) => mensagem.autor === AutorChatEnum.IA)) return;
-      const recentes = conversa
-        .slice(-MENSAGENS_PARA_NOMEAR)
-        .map((mensagem) => `${mensagem.autor === AutorChatEnum.USUARIO ? 'Usuário' : 'IA'}: ${mensagem.texto.slice(0, CARACTERES_POR_MENSAGEM_PARA_NOMEAR)}`)
-        .join('\n\n');
-      const resposta = await this.iaService.gerar({
-        nivel: NivelIaEnum.RAPIDO,
-        instrucoes: INSTRUCOES_TITULO,
-        mensagens: [{ papel: 'usuario', conteudo: `Nome atual: ${atual.titulo}\n\n${recentes}` }],
-        maximoTokens: 40,
-      });
-      const titulo = limparTitulo(resposta.texto);
-      if (!titulo || titulo === atual.titulo) return;
-      // O usuário pode ter renomeado enquanto a IA pensava: o nome dele vence.
-      if ((await this.nomeDaConversa(conversaId, usuarioAtivo.sub)).editado) return;
-      await this.chatMensagemRepositorio.gravarTitulo({ conversaId, usuarioId: usuarioAtivo.sub, titulo, editado: false });
-    } catch (erro) {
-      this.logger.warn(`Não foi possível nomear a conversa ${conversaId}: ${erro instanceof Error ? erro.message : String(erro)}`);
+    private async nomearConversa(usuarioAtivo: JwtPayload, conversaId: string): Promise<void> {
+        try {
+            const atual = await this.nomeDaConversa(conversaId, usuarioAtivo.sub);
+            if (atual.editado) return;
+            const conversa = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
+            if (!conversa.some((mensagem) => mensagem.autor === AutorChatEnum.USUARIO) || !conversa.some((mensagem) => mensagem.autor === AutorChatEnum.IA)) return;
+            const recentes = conversa
+                .slice(-MENSAGENS_PARA_NOMEAR)
+                .map((mensagem) => `${mensagem.autor === AutorChatEnum.USUARIO ? 'Usuário' : 'IA'}: ${mensagem.texto.slice(0, CARACTERES_POR_MENSAGEM_PARA_NOMEAR)}`)
+                .join('\n\n');
+            const resposta = await this.iaService.gerar({
+                nivel: NivelIaEnum.RAPIDO,
+                instrucoes: INSTRUCOES_TITULO,
+                mensagens: [{ papel: 'usuario', conteudo: `Nome atual: ${atual.titulo}\n\n${recentes}` }],
+                maximoTokens: 40,
+            });
+            const titulo = limparTitulo(resposta.texto);
+            if (!titulo || titulo === atual.titulo) return;
+            // O usuário pode ter renomeado enquanto a IA pensava: o nome dele vence.
+            if ((await this.nomeDaConversa(conversaId, usuarioAtivo.sub)).editado) return;
+            await this.chatMensagemRepositorio.gravarTitulo({ conversaId, usuarioId: usuarioAtivo.sub, titulo, editado: false });
+        } catch (erro) {
+            this.logger.warn(`Não foi possível nomear a conversa ${conversaId}: ${erro instanceof Error ? erro.message : String(erro)}`);
+        }
     }
-  }
 
-  /** Executa os pedidos de ferramenta de uma volta, em ordem, e devolve os resultados no formato do contrato do provedor. */
-  private async executarFerramentas(
-    blocos: IaBloco[],
-    usuarioAtivo: JwtPayload,
-    propostasDoTurno: number[],
-    emitir: (evento: ChatEventoDto) => void,
-    origem: OrigemDaFerramentaIa,
-  ): Promise<IaBloco[]> {
-    const resultados: IaBloco[] = [];
-    for (const bloco of blocos) {
-      if (bloco.tipo !== 'uso_ferramenta') continue;
-      emitir({ tipo: 'ferramenta', nome: bloco.nome, situacao: 'EXECUTANDO' });
-      const resultado = await this.ferramentaIaRegistro.executar(bloco.nome, bloco.entrada, usuarioAtivo, origem);
-      emitir({ tipo: 'ferramenta', nome: bloco.nome, situacao: resultado.erro ? 'ERRO' : 'CONCLUIDA' });
-      if (resultado.propostaId !== undefined) {
-        propostasDoTurno.push(resultado.propostaId);
-        emitir({ tipo: 'proposta', propostaId: resultado.propostaId });
-      }
-      resultados.push({ tipo: 'resultado_ferramenta', usoId: bloco.id, conteudo: resultado.conteudo, erro: resultado.erro });
+    /** Executa os pedidos de ferramenta de uma volta, em ordem, e devolve os resultados no formato do contrato do provedor. */
+    private async executarFerramentas(
+        blocos: IaBloco[],
+        usuarioAtivo: JwtPayload,
+        propostasDoTurno: number[],
+        emitir: (evento: ChatEventoDto) => void,
+        origem: OrigemDaFerramentaIa,
+    ): Promise<IaBloco[]> {
+        const resultados: IaBloco[] = [];
+        for (const bloco of blocos) {
+            if (bloco.tipo !== 'uso_ferramenta') continue;
+            emitir({ tipo: 'ferramenta', nome: bloco.nome, situacao: 'EXECUTANDO' });
+            const resultado = await this.ferramentaIaRegistro.executar(bloco.nome, bloco.entrada, usuarioAtivo, origem);
+            emitir({ tipo: 'ferramenta', nome: bloco.nome, situacao: resultado.erro ? 'ERRO' : 'CONCLUIDA' });
+            if (resultado.propostaId !== undefined) {
+                propostasDoTurno.push(resultado.propostaId);
+                emitir({ tipo: 'proposta', propostaId: resultado.propostaId });
+            }
+            resultados.push({ tipo: 'resultado_ferramenta', usoId: bloco.id, conteudo: resultado.conteudo, erro: resultado.erro });
+        }
+        return resultados;
     }
-    return resultados;
-  }
 
-  /**
+    /**
    * Falha no meio: o usuário vê o motivo (evento `erro` e uma mensagem do sistema na conversa) e nenhuma proposta criada neste turno
    * fica pendente sem a resposta que a explicava.
    */
-  private async registrarFalha(
-    usuarioAtivo: JwtPayload,
-    conversaId: string,
-    propostasDoTurno: number[],
-    erro: unknown,
-    emitir: (evento: ChatEventoDto) => void,
-    gravarMensagemDoSistema = true,
-    contexto: ContextoChatEnum = ContextoChatEnum.CHAT,
-  ): Promise<void> {
-    const mensagem = erro instanceof IaException ? erro.mensagem : MENSAGEM_GENERICA;
-    if (!(erro instanceof IaException)) {
-      this.logger.error(`Falha no chat: ${erro instanceof Error ? erro.message : String(erro)}`);
+    private async registrarFalha(
+        usuarioAtivo: JwtPayload,
+        conversaId: string,
+        propostasDoTurno: number[],
+        erro: unknown,
+        emitir: (evento: ChatEventoDto) => void,
+        gravarMensagemDoSistema = true,
+        contexto: ContextoChatEnum = ContextoChatEnum.CHAT,
+    ): Promise<void> {
+        const mensagem = erro instanceof IaException ? erro.mensagem : MENSAGEM_GENERICA;
+        if (!(erro instanceof IaException)) {
+            this.logger.error(`Falha no chat: ${erro instanceof Error ? erro.message : String(erro)}`);
+        }
+        for (const propostaId of propostasDoTurno) {
+            await this.propostaIaService.recusar(propostaId, usuarioAtivo).catch(() => undefined);
+        }
+        if (gravarMensagemDoSistema) {
+            await this.chatMensagemRepositorio
+                .gravar({ conversaId, usuarioId: usuarioAtivo.sub, contexto, autor: AutorChatEnum.SISTEMA, texto: mensagem })
+                .catch(() => undefined);
+        }
+        emitir({ tipo: 'erro', mensagem });
     }
-    for (const propostaId of propostasDoTurno) {
-      await this.propostaIaService.recusar(propostaId, usuarioAtivo).catch(() => undefined);
-    }
-    if (gravarMensagemDoSistema) {
-      await this.chatMensagemRepositorio
-        .gravar({ conversaId, usuarioId: usuarioAtivo.sub, contexto, autor: AutorChatEnum.SISTEMA, texto: mensagem })
-        .catch(() => undefined);
-    }
-    emitir({ tipo: 'erro', mensagem });
-  }
 
-  /**
+    /**
    * Remonta o contexto das últimas `JANELA_DE_MENSAGENS` mensagens do dia. Mensagem do usuário é texto; mensagem da IA traz as trocas do
    * turno (inclusive chamadas de ferramenta) em `conteudo_bruto`, ou só o texto se não houver. Mensagem do sistema não vai ao modelo.
    * O contexto sempre começa por um texto do usuário.
    */
-  montarMensagens(historico: ChatMensagemLida[]): IaMensagem[] {
-    const mensagens: IaMensagem[] = [];
-    for (const mensagem of historico.slice(-JANELA_DE_MENSAGENS)) {
-      if (mensagem.autor === AutorChatEnum.USUARIO) {
-        mensagens.push({ papel: 'usuario', conteudo: mensagem.texto });
-      } else if (mensagem.autor === AutorChatEnum.IA) {
-        const trocas = (mensagem.conteudoBruto as ConteudoBrutoDoTurno | null)?.mensagens;
-        if (Array.isArray(trocas) && trocas.length > 0) mensagens.push(...trocas);
-        else if (mensagem.texto) mensagens.push({ papel: 'ia', conteudo: mensagem.texto });
-      }
+    montarMensagens(historico: ChatMensagemLida[]): IaMensagem[] {
+        const mensagens: IaMensagem[] = [];
+        for (const mensagem of historico.slice(-JANELA_DE_MENSAGENS)) {
+            if (mensagem.autor === AutorChatEnum.USUARIO) {
+                mensagens.push({ papel: 'usuario', conteudo: mensagem.texto });
+            } else if (mensagem.autor === AutorChatEnum.IA) {
+                const trocas = (mensagem.conteudoBruto as ConteudoBrutoDoTurno | null)?.mensagens;
+                if (Array.isArray(trocas) && trocas.length > 0) mensagens.push(...trocas);
+                else if (mensagem.texto) mensagens.push({ papel: 'ia', conteudo: mensagem.texto });
+            }
+        }
+        // Um resultado de ferramenta sem a chamada que o originou seria recusado pelo provedor: começa pela primeira mensagem de texto do usuário.
+        while (mensagens.length > 0 && !(mensagens[0].papel === 'usuario' && typeof mensagens[0].conteudo === 'string')) mensagens.shift();
+        return mensagens;
     }
-    // Um resultado de ferramenta sem a chamada que o originou seria recusado pelo provedor: começa pela primeira mensagem de texto do usuário.
-    while (mensagens.length > 0 && !(mensagens[0].papel === 'usuario' && typeof mensagens[0].conteudo === 'string')) mensagens.shift();
-    return mensagens;
-  }
 
-  /**
+    /**
    * O histórico remontado, com a situação **de agora** de cada proposta que a IA fez (P-022): o resultado gravado diz "nada foi feito ainda",
    * e o usuário pode ter confirmado, recusado ou desfeito no cartão depois. Falha ao ler uma proposta deixa o resultado como estava.
    */
-  private async montarContextoAtualizado(historico: ChatMensagemLida[], usuarioAtivo: JwtPayload): Promise<IaMensagem[]> {
-    const mensagens = this.montarMensagens(historico);
-    const ids = idsDePropostasNoContexto(mensagens);
-    if (ids.length === 0) return mensagens;
-    const situacoes = new Map<number, SituacaoDaProposta>();
-    await Promise.all(
-      ids.map(async (propostaId) => {
-        try {
-          const proposta = (await this.propostaIaService.recuperarPorId(propostaId, usuarioAtivo)).dados;
-          if (proposta) situacoes.set(propostaId, { status: proposta.status, resultado: proposta.resultado, aplicadaPelaIa: proposta.aplicadaPelaIa });
-        } catch {
-          // proposta ilegível: a IA segue com o resultado gravado no turno
-        }
-      }),
-    );
-    return atualizarPropostasNoContexto(mensagens, situacoes);
-  }
+    private async montarContextoAtualizado(historico: ChatMensagemLida[], usuarioAtivo: JwtPayload): Promise<IaMensagem[]> {
+        const mensagens = this.montarMensagens(historico);
+        const ids = idsDePropostasNoContexto(mensagens);
+        if (ids.length === 0) return mensagens;
+        const situacoes = new Map<number, SituacaoDaProposta>();
+        await Promise.all(
+            ids.map(async (propostaId) => {
+                try {
+                    const proposta = (await this.propostaIaService.recuperarPorId(propostaId, usuarioAtivo)).dados;
+                    if (proposta) situacoes.set(propostaId, { status: proposta.status, resultado: proposta.resultado, aplicadaPelaIa: proposta.aplicadaPelaIa });
+                } catch {
+                    // proposta ilegível: a IA segue com o resultado gravado no turno
+                }
+            }),
+        );
+        return atualizarPropostasNoContexto(mensagens, situacoes);
+    }
 
-  /** As mensagens da conversa do dia que são de um contexto (o chat e o check-in não se leem). */
-  private async listarDoContexto(conversaId: string, usuarioId: number | undefined, contexto: ContextoChatEnum): Promise<ChatMensagemLida[]> {
-    const todas = await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId });
-    return todas.filter((mensagem) => mensagem.contexto === contexto);
-  }
+    /** As mensagens da conversa do dia que são de um contexto (o chat e o check-in não se leem). */
+    private async listarDoContexto(conversaId: string, usuarioId: number | undefined, contexto: ContextoChatEnum): Promise<ChatMensagemLida[]> {
+        const todas = await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId });
+        return todas.filter((mensagem) => mensagem.contexto === contexto);
+    }
 
-  private conversaDeHoje(usuarioAtivo: JwtPayload): string {
-    return montarConversaId(usuarioAtivo.sub, new Date(), this.configService.obter().aplicacao.fusoHorario);
-  }
+    private conversaDeHoje(usuarioAtivo: JwtPayload): string {
+        return montarConversaId(usuarioAtivo.sub, new Date(), this.configService.obter().aplicacao.fusoHorario);
+    }
 }

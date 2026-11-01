@@ -1,3 +1,3 @@
 export class AtividadeTagsListarDto {
-  atividadeId: number;
+    atividadeId: number;
 }

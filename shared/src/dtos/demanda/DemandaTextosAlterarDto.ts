@@ -7,24 +7,24 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
  * recusa a gravação (409). O complemento `Textos` precede o verbo.
  */
 export class DemandaTextosAlterarDto {
-  @ApiPropertyOptional({ example: 'Implementar autenticação JWT com refresh token' })
-  @IsOptional()
-  @IsString()
-  descricaoTecnica?: string;
+    @ApiPropertyOptional({ example: 'Implementar autenticação JWT com refresh token' })
+    @IsOptional()
+    @IsString()
+    descricaoTecnica?: string;
 
-  @ApiPropertyOptional({ example: 'O usuário deve poder entrar no sistema com email e senha' })
-  @IsOptional()
-  @IsString()
-  descricaoCliente?: string;
+    @ApiPropertyOptional({ example: 'O usuário deve poder entrar no sistema com email e senha' })
+    @IsOptional()
+    @IsString()
+    descricaoCliente?: string;
 
-  @ApiPropertyOptional({ example: '# Documentação\n\nDescrição detalhada...' })
-  @IsOptional()
-  @IsString()
-  documentacao?: string;
+    @ApiPropertyOptional({ example: '# Documentação\n\nDescrição detalhada...' })
+    @IsOptional()
+    @IsString()
+    documentacao?: string;
 
-  @ApiProperty({ example: 1, description: 'A versão dos textos que a pessoa leu (`DemandaRecuperadaDto.versao`).' })
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  versao: number;
+    @ApiProperty({ example: 1, description: 'A versão dos textos que a pessoa leu (`DemandaRecuperadaDto.versao`).' })
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    versao: number;
 }

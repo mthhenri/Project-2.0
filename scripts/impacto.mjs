@@ -104,17 +104,17 @@ function usuariosDoSeletor(alvoTs, arquivos, ler) {
     const seletor = ler(alvoTs).match(/selector:\s*["'`]([^"'`]+)["'`]/)?.[1];
     if (!seletor) return { seletor: null, consumidores: [] };
     const padroes = [];
-    for (const parte of seletor.split(",").map((p) => p.trim())) {
+    for (const parte of seletor.split(",").map((trecho) => trecho.trim())) {
         const elemento = parte.match(/^([a-z][\w-]*)/)?.[1];
         const atributos = [...parte.matchAll(/\[([\w-]+)/g)].map((m) => m[1]);
-        if (atributos.length) atributos.forEach((a) => padroes.push(new RegExp(`[\\s<]${escapar(a)}(?=[\\s=>/])`)));
+        if (atributos.length) atributos.forEach((atributo) => padroes.push(new RegExp(`[\\s<]${escapar(atributo)}(?=[\\s=>/])`)));
         else if (elemento) padroes.push(new RegExp(`<${escapar(elemento)}(?=[\\s>/])`));
     }
     const proprio = alvoTs.replace(CODIGO, "");
     const consumidores = [];
     for (const arquivo of arquivos) {
         if (arquivo.startsWith(proprio) || ESTILO.test(arquivo)) continue;
-        const linhas = linhasQue(ler(arquivo), (l) => padroes.some((p) => p.test(l)));
+        const linhas = linhasQue(ler(arquivo), (l) => padroes.some((padrao) => padrao.test(l)));
         if (linhas.length) consumidores.push({ arquivo, motivo: `seletor ${seletor}`, linhas });
     }
     return { seletor, consumidores };
@@ -178,7 +178,7 @@ export function consumidoresDoIcone(nome, { raiz = RAIZ_PADRAO, arquivos = lista
     const direto = new RegExp(`\\b${atributo}=["']${escapar(nome)}["']`);
     const literal = new RegExp(`["']${escapar(nome)}["']`);
     const consumidores = [];
-    for (const arquivo of arquivos.filter((a) => a.startsWith(prefixo) && !a.startsWith(pasta) && !ESTILO.test(a))) {
+    for (const arquivo of arquivos.filter((candidato) => candidato.startsWith(prefixo) && !candidato.startsWith(pasta) && !ESTILO.test(candidato))) {
         const conteudo = lerArquivo(arquivo);
         const diretas = linhasQue(conteudo, (l) => direto.test(l));
         const literais = linhasQue(conteudo, (l) => !direto.test(l) && literal.test(l));
@@ -213,7 +213,7 @@ function imprimir({ alvo, notas, consumidores, testes }) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
     const argumentos = process.argv.slice(2);
     const json = argumentos.includes("--json");
-    const resto = argumentos.filter((a) => a !== "--json");
+    const resto = argumentos.filter((argumento) => argumento !== "--json");
     let resultado;
     if (resto[0] === "--icone" && resto[1]) resultado = consumidoresDoIcone(resto[1]);
     else if (resto[0] === "--simbolo" && resto[1]) resultado = consumidoresDoSimbolo(resto[1]);

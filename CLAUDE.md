@@ -157,8 +157,9 @@ Sem app executável, a tarefa visual permanece **aberta**.
    nem atalhos que contornem a fonte de verdade.
 2. Rode os testes e o build dos workspaces afetados e a verificação ao vivo proporcional ao risco.
    Todos os workspaces têm testes (`shared`, `backend` e `desktop` no Node test runner; `frontend`
-   no Vitest via `ng test`, com teste de componente) e o projeto **não tem lint**
-   (`docs/context/PROBLEMS.md` P-001): declare essa lacuna no fecho. Regra pura ou helper de service
+   no Vitest via `ng test`, com teste de componente). Rode também `npm run lint:tudo` (ESLint, Stylelint,
+   Prettier em HTML/SCSS e formatação do SQL; `docs/CONVENTIONS.md` "Lint e padrão do código"): o resultado
+   precisa ser zero erros, sem desligar regra para passar. Regra pura ou helper de service
    que mudou ganha teste no mesmo commit; repository novo ou alterado ganha teste de integração
    (`npm run test:integracao`). Relate comandos, resultados e falhas preexistentes **separadamente**.
 3. Para UI, cumpra o processo visual acima; os testes de componente somam-se a ele, não o substituem.
@@ -274,14 +275,17 @@ npm run build --workspace=frontend         # compilação do frontend (usada com
 npm run test --workspace=desktop           # funções puras do Project Desktop
 npm run pack --workspace=desktop           # executável portátil do Project Desktop (Windows)
 npm run repo:verificar                     # organização de specs/artefatos e espelhos
-npm run repo:test                          # testes dos scripts de verificação e impacto
+npm run repo:test                          # testes dos scripts de verificação, impacto, formatador de SQL e regras de lint
+npm run lint:tudo                          # ESLint + Stylelint + Prettier (HTML/SCSS) + formatação do SQL: precisa sair limpo
+npm run lint                               # só o ESLint (TS, JS e templates); `lint:estilos`, `lint:templates` e `lint:sql` isolam o resto
+npm run formatar                           # aplica Prettier (HTML/SCSS) e o formatador de SQL; TypeScript nunca passa por formatador automático
 npm run impacto -- <arquivo>               # consumidores antes de alterar algo compartilhado
 ```
 
 Testes ficam ao lado do código, em `*.test.ts`, com `node:test` e `node:assert/strict` (sem Jest) em
 `shared`, `backend` e `desktop`; o `frontend` usa Vitest pelo `ng test` (`*.test.ts` para lógica pura,
-`*.spec.ts` para componente; `docs/CONVENTIONS.md` "Testes de componente"). Não há lint em nenhum
-workspace (`PROBLEMS.md` P-001). `npm run test:cobertura` mede a cobertura (sem gate). Variáveis de ambiente:
+`*.spec.ts` para componente; `docs/CONVENTIONS.md` "Testes de componente"). O lint é da raiz e cobre os
+quatro workspaces (`npm run lint:tudo`; lacunas conhecidas em `PROBLEMS.md` P-066). `npm run test:cobertura` mede a cobertura (sem gate). Variáveis de ambiente:
 `.env.example` e `README.md`. Para verificação manual da aplicação real, consulte
 `.agents/skills/verify/SKILL.md`; build não a substitui quando a tarefa exige observar o app.
 

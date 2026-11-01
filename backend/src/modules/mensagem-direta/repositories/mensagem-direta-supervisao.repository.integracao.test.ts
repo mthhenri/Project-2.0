@@ -10,47 +10,47 @@ import { MensagemDiretaSupervisaoRepository } from './mensagem-direta-supervisao
 const supervisao = (conexao: ConexaoTeste) => criarRepositorio(MensagemDiretaSupervisaoRepository, conexao);
 
 async function criarCenario(conexao: ConexaoTeste) {
-  const gestor = await criarGestor(conexao);
-  const [pessoaA, pessoaB] = [await criarDesenvolvedor(conexao), await criarDesenvolvedor(conexao)];
-  const [menor, maior] = pessoaA.id < pessoaB.id ? [pessoaA, pessoaB] : [pessoaB, pessoaA];
-  return { gestor, dto: { leitorUsuarioId: gestor.id, conversaId: `${menor.id}-${maior.id}`, usuarioMenorId: menor.id, usuarioMaiorId: maior.id } };
+    const gestor = await criarGestor(conexao);
+    const [pessoaA, pessoaB] = [await criarDesenvolvedor(conexao), await criarDesenvolvedor(conexao)];
+    const [menor, maior] = pessoaA.id < pessoaB.id ? [pessoaA, pessoaB] : [pessoaB, pessoaA];
+    return { gestor, dto: { leitorUsuarioId: gestor.id, conversaId: `${menor.id}-${maior.id}`, usuarioMenorId: menor.id, usuarioMaiorId: maior.id } };
 }
 
 testarComBanco('registrarLeitura: grava uma linha por abertura, ainda sem aviso', async (conexao) => {
-  const { dto } = await criarCenario(conexao);
+    const { dto } = await criarCenario(conexao);
 
-  const primeira = await supervisao(conexao).registrarLeitura(dto);
-  const segunda = await supervisao(conexao).registrarLeitura(dto);
+    const primeira = await supervisao(conexao).registrarLeitura(dto);
+    const segunda = await supervisao(conexao).registrarLeitura(dto);
 
-  assert.notEqual(primeira.id, segunda.id, 'cada abertura é uma linha de auditoria');
-  assert.equal(primeira.participantesAvisados, false);
-  assert.equal(primeira.leitorUsuarioId, dto.leitorUsuarioId);
-  assert.equal(primeira.conversaId, dto.conversaId);
+    assert.notEqual(primeira.id, segunda.id, 'cada abertura é uma linha de auditoria');
+    assert.equal(primeira.participantesAvisados, false);
+    assert.equal(primeira.leitorUsuarioId, dto.leitorUsuarioId);
+    assert.equal(primeira.conversaId, dto.conversaId);
 });
 
 testarComBanco('existeAvisoDoDia: a abertura sem aviso dado não conta; depois de marcada, conta só para o mesmo leitor e a mesma conversa', async (conexao) => {
-  const { dto, gestor } = await criarCenario(conexao);
-  const outroGestor = await criarGestor(conexao);
-  const agora = new Date();
-  const abertura = await supervisao(conexao).registrarLeitura(dto);
+    const { dto, gestor } = await criarCenario(conexao);
+    const outroGestor = await criarGestor(conexao);
+    const agora = new Date();
+    const abertura = await supervisao(conexao).registrarLeitura(dto);
 
-  assert.equal(await supervisao(conexao).existeAvisoDoDia({ leitorUsuarioId: gestor.id, conversaId: dto.conversaId, agora }), false, 'o aviso ainda não foi dado');
+    assert.equal(await supervisao(conexao).existeAvisoDoDia({ leitorUsuarioId: gestor.id, conversaId: dto.conversaId, agora }), false, 'o aviso ainda não foi dado');
 
-  await supervisao(conexao).marcarAvisoDado({ supervisaoId: abertura.id });
+    await supervisao(conexao).marcarAvisoDado({ supervisaoId: abertura.id });
 
-  assert.equal(await supervisao(conexao).existeAvisoDoDia({ leitorUsuarioId: gestor.id, conversaId: dto.conversaId, agora }), true);
-  assert.equal(await supervisao(conexao).existeAvisoDoDia({ leitorUsuarioId: outroGestor.id, conversaId: dto.conversaId, agora }), false, 'outro leitor avisa de novo');
-  assert.equal(await supervisao(conexao).existeAvisoDoDia({ leitorUsuarioId: gestor.id, conversaId: '999998-999999', agora }), false, 'outra conversa');
+    assert.equal(await supervisao(conexao).existeAvisoDoDia({ leitorUsuarioId: gestor.id, conversaId: dto.conversaId, agora }), true);
+    assert.equal(await supervisao(conexao).existeAvisoDoDia({ leitorUsuarioId: outroGestor.id, conversaId: dto.conversaId, agora }), false, 'outro leitor avisa de novo');
+    assert.equal(await supervisao(conexao).existeAvisoDoDia({ leitorUsuarioId: gestor.id, conversaId: '999998-999999', agora }), false, 'outra conversa');
 });
 
 testarComBanco('existeAvisoDoDia: o aviso de hoje não vale para o dia seguinte nem para o anterior', async (conexao) => {
-  const { dto, gestor } = await criarCenario(conexao);
-  const abertura = await supervisao(conexao).registrarLeitura(dto);
-  await supervisao(conexao).marcarAvisoDado({ supervisaoId: abertura.id });
-  const umDia = 24 * 60 * 60 * 1000;
-  const pergunta = (agora: Date) => supervisao(conexao).existeAvisoDoDia({ leitorUsuarioId: gestor.id, conversaId: dto.conversaId, agora });
+    const { dto, gestor } = await criarCenario(conexao);
+    const abertura = await supervisao(conexao).registrarLeitura(dto);
+    await supervisao(conexao).marcarAvisoDado({ supervisaoId: abertura.id });
+    const umDia = 24 * 60 * 60 * 1000;
+    const pergunta = (agora: Date) => supervisao(conexao).existeAvisoDoDia({ leitorUsuarioId: gestor.id, conversaId: dto.conversaId, agora });
 
-  assert.equal(await pergunta(new Date()), true);
-  assert.equal(await pergunta(new Date(Date.now() + umDia)), false, 'amanhã avisa de novo');
-  assert.equal(await pergunta(new Date(Date.now() - umDia)), false, 'ontem não tinha aviso');
+    assert.equal(await pergunta(new Date()), true);
+    assert.equal(await pergunta(new Date(Date.now() + umDia)), false, 'amanhã avisa de novo');
+    assert.equal(await pergunta(new Date(Date.now() - umDia)), false, 'ontem não tinha aviso');
 });

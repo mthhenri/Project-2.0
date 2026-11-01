@@ -1,160 +1,160 @@
-@use '../markdown-editor/conteudo-formatado' as conteudo;
+@use "../markdown-editor/conteudo-formatado" as conteudo;
 
 // A raiz é a referência de posição da barra flutuante, que fica FORA da caixa com rolagem (senão a caixa a cortaria).
 :host {
-  position: relative;
-  display: block;
-  min-width: 0;
+    position: relative;
+    display: block;
+    min-width: 0;
 }
 
 // A caixa tem a aparência do campo de texto do PrimeNG (borda, raio, fundo e realce de foco); cresce com o texto até um máximo e depois rola.
 .editor-mensagem {
-  position: relative;
-  min-height: 2.25rem;
-  max-height: 9rem;
-  padding: 0.4375rem 0.75rem;
-  overflow-y: auto;
-  overflow-wrap: anywhere;
-  border: 1px solid var(--p-inputtext-border-color, var(--app-surface-300));
-  border-radius: var(--p-inputtext-border-radius, 6px);
-  background: var(--p-inputtext-background, var(--app-surface-0));
-  color: var(--p-text-color);
-  font-size: 0.875rem;
-  line-height: 1.45;
-  transition: border-color 0.15s;
-
-  &:focus-within {
-    border-color: var(--p-inputtext-focus-border-color, var(--p-primary-color));
-  }
-
-  // Dentro da barra do compositor: quem tem a borda, o fundo e o realce de foco é a barra.
-  &--embutido {
-    min-height: 2rem;
-    padding: 0.3125rem 0.5rem;
-    border-color: transparent;
-    border-radius: 8px;
-    background: transparent;
+    position: relative;
+    min-height: 2.25rem;
+    max-height: 9rem;
+    padding: 0.4375rem 0.75rem;
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    border: 1px solid var(--p-inputtext-border-color, var(--app-surface-300));
+    border-radius: var(--p-inputtext-border-radius, 6px);
+    background: var(--p-inputtext-background, var(--app-surface-0));
+    color: var(--p-text-color);
+    font-size: 0.875rem;
+    line-height: 1.45;
+    transition: border-color 0.15s;
 
     &:focus-within {
-      border-color: transparent;
+        border-color: var(--p-inputtext-focus-border-color, var(--p-primary-color));
     }
 
-    &.editor-mensagem--vazio::before {
-      top: 0.3125rem;
-      left: 0.5rem;
-      max-width: calc(100% - 1rem);
-    }
-  }
+    // Dentro da barra do compositor: quem tem a borda, o fundo e o realce de foco é a barra.
+    &--embutido {
+        min-height: 2rem;
+        padding: 0.3125rem 0.5rem;
+        border-color: transparent;
+        border-radius: 8px;
+        background: transparent;
 
-  &--desabilitado {
-    opacity: 0.6;
-    cursor: not-allowed;
+        &:focus-within {
+            border-color: transparent;
+        }
 
-    ::ng-deep .ProseMirror {
-      cursor: not-allowed;
-    }
-  }
-
-  &--vazio::before {
-    content: attr(data-placeholder);
-    position: absolute;
-    top: 0.4375rem;
-    left: 0.75rem;
-    max-width: calc(100% - 1.5rem);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--p-text-muted-color);
-    pointer-events: none;
-  }
-
-  ::ng-deep .milkdown,
-  ::ng-deep .ProseMirror {
-    outline: 0;
-  }
-
-  @include conteudo.conteudo-formatado;
-
-  // No chat os parágrafos ficam mais juntos que no editor de documentos.
-  ::ng-deep .ProseMirror p {
-    margin-bottom: 0.25rem;
-  }
-
-  &__barra {
-    position: absolute;
-    z-index: 3;
-    display: flex;
-    gap: 0.125rem;
-    padding: 0.25rem;
-    border: 1px solid var(--app-surface-200);
-    border-radius: 8px;
-    background: var(--app-surface-0);
-    box-shadow: 0 6px 18px rgb(15 23 42 / 0.2);
-    transform: translate(-50%, -100%);
-  }
-
-  &__botao {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.75rem;
-    height: 1.75rem;
-    padding: 0 0.25rem;
-    border-radius: 5px;
-    color: var(--p-text-color);
-    font-size: 0.8125rem;
-    line-height: 1;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background-color 0.15s;
-
-    &:hover {
-      background: var(--p-content-hover-background);
+        &.editor-mensagem--vazio::before {
+            top: 0.3125rem;
+            left: 0.5rem;
+            max-width: calc(100% - 1rem);
+        }
     }
 
-    &:focus-visible {
-      outline: 2px solid var(--p-primary-color);
-      outline-offset: 1px;
+    &--desabilitado {
+        opacity: 0.6;
+        cursor: not-allowed;
+
+        ::ng-deep .ProseMirror {
+            cursor: not-allowed;
+        }
     }
 
-    // Separador entre os grupos (texto, lista); a margem separa o botão do traço.
-    &--grupo {
-      margin-left: 0.3125rem;
-      position: relative;
-
-      &::before {
-        content: '';
+    &--vazio::before {
+        content: attr(data-placeholder);
         position: absolute;
-        left: -0.25rem;
-        top: 0.25rem;
-        bottom: 0.25rem;
-        width: 1px;
-        background: var(--app-surface-200);
-      }
+        top: 0.4375rem;
+        left: 0.75rem;
+        max-width: calc(100% - 1.5rem);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--p-text-muted-color);
+        pointer-events: none;
     }
 
-    &--ativo {
-      background: var(--p-highlight-background);
-      color: var(--app-realce-primario);
-    }
-  }
-
-  &__glifo {
-    &--negrito {
-      font-weight: 700;
+    ::ng-deep .milkdown,
+    ::ng-deep .ProseMirror {
+        outline: 0;
     }
 
-    &--italico {
-      font-style: italic;
+    @include conteudo.conteudo-formatado;
+
+    // No chat os parágrafos ficam mais juntos que no editor de documentos.
+    ::ng-deep .ProseMirror p {
+        margin-bottom: 0.25rem;
     }
 
-    &--tachado {
-      text-decoration: line-through;
+    &__barra {
+        position: absolute;
+        z-index: 3;
+        display: flex;
+        gap: 0.125rem;
+        padding: 0.25rem;
+        border: 1px solid var(--app-surface-200);
+        border-radius: 8px;
+        background: var(--app-surface-0);
+        box-shadow: 0 6px 18px rgb(15 23 42 / 0.2);
+        transform: translate(-50%, -100%);
     }
 
-    &--codigo {
-      font-family: var(--font-mono, monospace);
-      font-size: 0.75rem;
+    &__botao {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.75rem;
+        height: 1.75rem;
+        padding: 0 0.25rem;
+        border-radius: 5px;
+        color: var(--p-text-color);
+        font-size: 0.8125rem;
+        line-height: 1;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background-color 0.15s;
+
+        &:hover {
+            background: var(--p-content-hover-background);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--p-primary-color);
+            outline-offset: 1px;
+        }
+
+        // Separador entre os grupos (texto, lista); a margem separa o botão do traço.
+        &--grupo {
+            margin-left: 0.3125rem;
+            position: relative;
+
+            &::before {
+                content: "";
+                position: absolute;
+                left: -0.25rem;
+                top: 0.25rem;
+                bottom: 0.25rem;
+                width: 1px;
+                background: var(--app-surface-200);
+            }
+        }
+
+        &--ativo {
+            background: var(--p-highlight-background);
+            color: var(--app-realce-primario);
+        }
     }
-  }
+
+    &__glifo {
+        &--negrito {
+            font-weight: 700;
+        }
+
+        &--italico {
+            font-style: italic;
+        }
+
+        &--tachado {
+            text-decoration: line-through;
+        }
+
+        &--codigo {
+            font-family: var(--font-mono, monospace);
+            font-size: 0.75rem;
+        }
+    }
 }

@@ -1,0 +1,17 @@
+{
+    "printWidth": 100,
+    "tabWidth": 4,
+    "useTabs": false,
+    "endOfLine": "auto",
+    "htmlWhitespaceSensitivity": "css",
+    "overrides": [
+        {
+            "files": "**/*.html",
+            "options": { "parser": "angular" }
+        },
+        {
+            "files": ["**/*.ts", "**/*.tsx"],
+            "options": { "requirePragma": true }
+        }
+    ]
+}

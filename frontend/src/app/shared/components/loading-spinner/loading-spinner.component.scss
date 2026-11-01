@@ -3,40 +3,40 @@
 // aparece por baixo dela. Mantém-se abaixo das camadas do PrimeNG para não
 // cobrir dialogs/toasts.
 .loading-spinner {
-  position: fixed;
-  inset: 0;
-  z-index: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  // Scrim sutil baseado na superfície (claro = véu claro, escuro = véu escuro),
-  // bem mais discreto que um preto sólido.
-  &__overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
-    background-color: color-mix(in srgb, var(--app-surface-0) 55%, transparent);
-    backdrop-filter: blur(1px);
-  }
+    z-index: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-  &__conteudo {
-    position: relative;
-  }
+    // Scrim sutil baseado na superfície (claro = véu claro, escuro = véu escuro),
+    // bem mais discreto que um preto sólido.
+    &__overlay {
+        position: absolute;
+        inset: 0;
+        background-color: color-mix(in srgb, var(--app-surface-0) 55%, transparent);
+        backdrop-filter: blur(1px);
+    }
 
-  // Anel minimalista monocromático: trilha neutra translúcida + um arco na cor
-  // primária girando. Sem a animação multicolor padrão do PrimeNG.
-  &__circulo {
-    width: 2.5rem;
-    height: 2.5rem;
-    border: 3px solid color-mix(in srgb, var(--p-text-color) 15%, transparent);
-    border-top-color: var(--p-primary-color);
-    border-radius: 50%;
-    animation: loading-spinner-girar 0.7s linear infinite;
-  }
+    &__conteudo {
+        position: relative;
+    }
+
+    // Anel minimalista monocromático: trilha neutra translúcida + um arco na cor
+    // primária girando. Sem a animação multicolor padrão do PrimeNG.
+    &__circulo {
+        width: 2.5rem;
+        height: 2.5rem;
+        border: 3px solid color-mix(in srgb, var(--p-text-color) 15%, transparent);
+        border-top-color: var(--p-primary-color);
+        border-radius: 50%;
+        animation: loading-spinner-girar 0.7s linear infinite;
+    }
 }
 
 @keyframes loading-spinner-girar {
-  to {
-    transform: rotate(360deg);
-  }
+    to {
+        transform: rotate(360deg);
+    }
 }

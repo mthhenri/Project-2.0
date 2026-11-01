@@ -4,8 +4,8 @@ import { AtividadePrioridadeService } from './services/atividade-prioridade.serv
 import { AtividadePrioridadeRepository } from './repositories/atividade-prioridade.repository';
 
 @Module({
-  controllers: [AtividadePrioridadeController],
-  providers:   [AtividadePrioridadeService, AtividadePrioridadeRepository],
-  exports:     [AtividadePrioridadeService],
+    controllers: [AtividadePrioridadeController],
+    providers:   [AtividadePrioridadeService, AtividadePrioridadeRepository],
+    exports:     [AtividadePrioridadeService],
 })
 export class AtividadePrioridadeModule {}

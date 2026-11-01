@@ -24,109 +24,109 @@ const QUANTIDADE_DE_DEMANDAS = 20;
  * desenho dos itens e a Árvore de demandas (task 239) para a barra de horas e a bolinha de status.
  */
 @Component({
-  selector: 'app-chat-minhas-demandas',
-  standalone: true,
-  imports: [ButtonModule, ContextMenu, SkeletonModule, TooltipModule, DemandaBarraHorasComponent, DemandaStatusMarcaComponent],
-  templateUrl: './minhas-demandas.component.html',
-  styleUrl: './minhas-demandas.component.scss',
+    selector: 'app-chat-minhas-demandas',
+    standalone: true,
+    imports: [ButtonModule, ContextMenu, SkeletonModule, TooltipModule, DemandaBarraHorasComponent, DemandaStatusMarcaComponent],
+    templateUrl: './minhas-demandas.component.html',
+    styleUrl: './minhas-demandas.component.scss',
 })
 export class MinhasDemandasComponent implements OnInit {
-  private readonly documento = inject(DOCUMENT);
-  private readonly demandaService = inject(DemandaService);
-  private readonly messageService = inject(MessageService);
-  private readonly desfazerService = inject(DesfazerService);
-  private readonly sessao = inject(UsuarioSessaoService);
+    private readonly documento = inject(DOCUMENT);
+    private readonly demandaService = inject(DemandaService);
+    private readonly messageService = inject(MessageService);
+    private readonly desfazerService = inject(DesfazerService);
+    private readonly sessao = inject(UsuarioSessaoService);
 
-  readonly escolhida = output<number>();
-  /** Depois da primeira carga: a demanda em que há execução rodando, para a página abri-la por padrão. */
-  readonly emExecucaoEncontrada = output<number>();
+    readonly escolhida = output<number>();
+    /** Depois da primeira carga: a demanda em que há execução rodando, para a página abri-la por padrão. */
+    readonly emExecucaoEncontrada = output<number>();
 
-  readonly itens = signal<DemandaExecutadaResumoDto[]>([]);
-  readonly carregando = signal(true);
-  readonly erro = signal(false);
+    readonly itens = signal<DemandaExecutadaResumoDto[]>([]);
+    readonly carregando = signal(true);
+    readonly erro = signal(false);
 
-  private avisouExecucao = false;
+    private avisouExecucao = false;
 
-  /** O menu do botão direito da demanda sob o cursor. */
-  readonly itensMenu = signal<MenuItem[]>([]);
-  readonly menuParaCima = signal(false);
+    /** O menu do botão direito da demanda sob o cursor. */
+    readonly itensMenu = signal<MenuItem[]>([]);
+    readonly menuParaCima = signal(false);
 
-  readonly rotuloDesenvolvidas = rotuloDesenvolvidas;
-  readonly percentualDesenvolvidas = percentualDesenvolvidas;
+    readonly rotuloDesenvolvidas = rotuloDesenvolvidas;
+    readonly percentualDesenvolvidas = percentualDesenvolvidas;
 
-  ngOnInit(): void {
-    this.carregar();
-  }
-
-  carregar(): void {
-    this.carregando.set(true);
-    this.erro.set(false);
-    this.demandaService.listarExecutadas(QUANTIDADE_DE_DEMANDAS).subscribe({
-      next: (resposta) => {
-        const itens = resposta.dados ?? [];
-        this.itens.set(itens);
-        this.carregando.set(false);
-        const rodando = itens.find((item) => item.executando);
-        if (rodando && !this.avisouExecucao) {
-          this.avisouExecucao = true;
-          this.emExecucaoEncontrada.emit(rodando.demandaId);
-        }
-      },
-      error: () => {
-        this.erro.set(true);
-        this.carregando.set(false);
-      },
-    });
-  }
-
-  /** Abre o menu da demanda: trocar o status e, para o desenvolvedor (gestor não é membro), sair dela. */
-  abrirMenu(evento: MouseEvent, menu: ContextMenu, demanda: DemandaExecutadaResumoDto): void {
-    evento.preventDefault();
-    this.menuParaCima.set(evento.clientY > (this.documento.defaultView?.innerHeight ?? 0) / 2);
-    const itens: MenuItem[] = [
-      {
-        label: 'Alterar status',
-        icon: 'pi pi-circle',
-        items: OPCOES_STATUS_DEMANDA.map((opcao) => ({
-          label: opcao.rotulo,
-          data: opcao.status,
-          disabled: opcao.status === demanda.status,
-          command: () => this.alterarStatus(demanda, opcao.status),
-        })),
-      },
-    ];
-    if (!this.sessao.eGestor()) {
-      itens.push({ separator: true }, { label: 'Sair da demanda', icon: 'pi pi-sign-out', command: () => this.sair(demanda) });
+    ngOnInit(): void {
+        this.carregar();
     }
-    this.itensMenu.set(itens);
-    menu.show(evento);
-  }
 
-  /** Troca o status (otimista, com rollback); concluída ou cancelada sai da lista, que só traz as em aberto. */
-  alterarStatus(demanda: DemandaExecutadaResumoDto, status: TipoDemandaStatusEnum): void {
-    const anteriores = this.itens();
-    const encerrada = status === TipoDemandaStatusEnum.CONCLUIDA || status === TipoDemandaStatusEnum.CANCELADA;
-    this.itens.set(encerrada ? anteriores.filter((item) => item.demandaId !== demanda.demandaId) : anteriores.map((item) => (item.demandaId === demanda.demandaId ? { ...item, status } : item)));
-    this.demandaService.alterar(demanda.demandaId, { status }).subscribe({
-      next: () => this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' }),
-      error: () => this.itens.set(anteriores),
-    });
-  }
+    carregar(): void {
+        this.carregando.set(true);
+        this.erro.set(false);
+        this.demandaService.listarExecutadas(QUANTIDADE_DE_DEMANDAS).subscribe({
+            next: (resposta) => {
+                const itens = resposta.dados ?? [];
+                this.itens.set(itens);
+                this.carregando.set(false);
+                const rodando = itens.find((item) => item.executando);
+                if (rodando && !this.avisouExecucao) {
+                    this.avisouExecucao = true;
+                    this.emExecucaoEncontrada.emit(rodando.demandaId);
+                }
+            },
+            error: () => {
+                this.erro.set(true);
+                this.carregando.set(false);
+            },
+        });
+    }
 
-  /** Sai da demanda (o desenvolvedor remove a si mesmo): some da lista na hora, com "Desfazer" no toast. */
-  sair(demanda: DemandaExecutadaResumoDto): void {
-    const usuarioId = this.sessao.id();
-    if (usuarioId === undefined) return;
-    const anteriores = this.itens();
-    this.itens.set(anteriores.filter((item) => item.demandaId !== demanda.demandaId));
-    this.demandaService.removerMembro(demanda.demandaId, usuarioId).subscribe({
-      next: () =>
-        this.desfazerService.oferecer({
-          mensagem: `Você saiu de "${demanda.nome}"`,
-          desfazer: () => this.demandaService.atribuirMembro(demanda.demandaId, { usuarioId }),
-          aposDesfazer: () => this.carregar(),
-        }),
-      error: () => this.itens.set(anteriores),
-    });
-  }
+    /** Abre o menu da demanda: trocar o status e, para o desenvolvedor (gestor não é membro), sair dela. */
+    abrirMenu(evento: MouseEvent, menu: ContextMenu, demanda: DemandaExecutadaResumoDto): void {
+        evento.preventDefault();
+        this.menuParaCima.set(evento.clientY > (this.documento.defaultView?.innerHeight ?? 0) / 2);
+        const itens: MenuItem[] = [
+            {
+                label: 'Alterar status',
+                icon: 'pi pi-circle',
+                items: OPCOES_STATUS_DEMANDA.map((opcao) => ({
+                    label: opcao.rotulo,
+                    data: opcao.status,
+                    disabled: opcao.status === demanda.status,
+                    command: () => this.alterarStatus(demanda, opcao.status),
+                })),
+            },
+        ];
+        if (!this.sessao.eGestor()) {
+            itens.push({ separator: true }, { label: 'Sair da demanda', icon: 'pi pi-sign-out', command: () => this.sair(demanda) });
+        }
+        this.itensMenu.set(itens);
+        menu.show(evento);
+    }
+
+    /** Troca o status (otimista, com rollback); concluída ou cancelada sai da lista, que só traz as em aberto. */
+    alterarStatus(demanda: DemandaExecutadaResumoDto, status: TipoDemandaStatusEnum): void {
+        const anteriores = this.itens();
+        const encerrada = status === TipoDemandaStatusEnum.CONCLUIDA || status === TipoDemandaStatusEnum.CANCELADA;
+        this.itens.set(encerrada ? anteriores.filter((item) => item.demandaId !== demanda.demandaId) : anteriores.map((item) => (item.demandaId === demanda.demandaId ? { ...item, status } : item)));
+        this.demandaService.alterar(demanda.demandaId, { status }).subscribe({
+            next: () => this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' }),
+            error: () => this.itens.set(anteriores),
+        });
+    }
+
+    /** Sai da demanda (o desenvolvedor remove a si mesmo): some da lista na hora, com "Desfazer" no toast. */
+    sair(demanda: DemandaExecutadaResumoDto): void {
+        const usuarioId = this.sessao.id();
+        if (usuarioId === undefined) return;
+        const anteriores = this.itens();
+        this.itens.set(anteriores.filter((item) => item.demandaId !== demanda.demandaId));
+        this.demandaService.removerMembro(demanda.demandaId, usuarioId).subscribe({
+            next: () =>
+                this.desfazerService.oferecer({
+                    mensagem: `Você saiu de "${demanda.nome}"`,
+                    desfazer: () => this.demandaService.atribuirMembro(demanda.demandaId, { usuarioId }),
+                    aposDesfazer: () => this.carregar(),
+                }),
+            error: () => this.itens.set(anteriores),
+        });
+    }
 }

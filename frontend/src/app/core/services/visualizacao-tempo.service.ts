@@ -8,24 +8,24 @@ import { VISUALIZACAO_TEMPO_CHAVE_LOCAL_STORAGE } from '../models/visualizacao-t
  */
 @Injectable({ providedIn: 'root' })
 export class VisualizacaoTempoService {
-  private readonly emDiasSelecionado = signal<boolean>(this.lerSalvo());
+    private readonly emDiasSelecionado = signal<boolean>(this.lerSalvo());
 
-  /** Verdadeiro quando os tempos de demanda devem aparecer em dias. */
-  readonly emDias = computed<boolean>(() => this.emDiasSelecionado());
+    /** Verdadeiro quando os tempos de demanda devem aparecer em dias. */
+    readonly emDias = computed<boolean>(() => this.emDiasSelecionado());
 
-  /** Define a preferência e persiste no `localStorage`. */
-  definir(emDias: boolean): void {
-    this.emDiasSelecionado.set(emDias);
-    localStorage.setItem(VISUALIZACAO_TEMPO_CHAVE_LOCAL_STORAGE, String(emDias));
-  }
+    /** Define a preferência e persiste no `localStorage`. */
+    definir(emDias: boolean): void {
+        this.emDiasSelecionado.set(emDias);
+        localStorage.setItem(VISUALIZACAO_TEMPO_CHAVE_LOCAL_STORAGE, String(emDias));
+    }
 
-  /** Alterna entre horas e dias reaproveitando `definir`. */
-  alternar(): void {
-    this.definir(!this.emDiasSelecionado());
-  }
+    /** Alterna entre horas e dias reaproveitando `definir`. */
+    alternar(): void {
+        this.definir(!this.emDiasSelecionado());
+    }
 
-  /** Lê a preferência salva; ausente ou inválida = horas (false). */
-  private lerSalvo(): boolean {
-    return localStorage.getItem(VISUALIZACAO_TEMPO_CHAVE_LOCAL_STORAGE) === 'true';
-  }
+    /** Lê a preferência salva; ausente ou inválida = horas (false). */
+    private lerSalvo(): boolean {
+        return localStorage.getItem(VISUALIZACAO_TEMPO_CHAVE_LOCAL_STORAGE) === 'true';
+    }
 }

@@ -1,4 +1,4 @@
 export class DemandaConexaoVerificarDto {
-  conexaoId: number;
-  demandaId: number;
+    conexaoId: number;
+    demandaId: number;
 }

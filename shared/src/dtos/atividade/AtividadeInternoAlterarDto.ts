@@ -8,10 +8,10 @@ import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum'
  * O complemento `Interno` precede o verbo `Alterar` (§5.1).
  */
 export class AtividadeInternoAlterarDto {
-  id: number;
-  nome?: string;
-  status?: TipoAtividadeStatusEnum;
-  prioridade?: TipoAtividadePrioridadeEnum;
-  /** Muda a atividade de demanda (task 229); as execuções vão junto, pois pertencem à atividade. */
-  demandaId?: number;
+    id: number;
+    nome?: string;
+    status?: TipoAtividadeStatusEnum;
+    prioridade?: TipoAtividadePrioridadeEnum;
+    /** Muda a atividade de demanda (task 229); as execuções vão junto, pois pertencem à atividade. */
+    demandaId?: number;
 }

@@ -1,3 +1,3 @@
 export class PontoJustificativaRecuperarDto {
-  id: number;
+    id: number;
 }

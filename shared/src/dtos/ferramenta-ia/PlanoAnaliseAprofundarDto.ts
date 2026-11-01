@@ -6,13 +6,13 @@ import { IsInt, IsNotEmpty, IsString, MaxLength, Min } from 'class-validator';
  * analisar ou redigir. O complemento `Analise` precede o verbo.
  */
 export class PlanoAnaliseAprofundarDto {
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  planoId: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    planoId: number;
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(4000)
-  pedido: string;
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(4000)
+    pedido: string;
 }

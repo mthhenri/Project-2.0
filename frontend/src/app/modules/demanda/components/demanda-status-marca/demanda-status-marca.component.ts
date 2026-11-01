@@ -8,16 +8,16 @@ import { COR_NO_BORDA } from '../../constants/demanda-cores.constants';
  * ação: quem a usa (`app-demanda-status`, a legenda e os chips de filtro) dá o nome e o clique. O grafo reaproveita a mesma marca no nó (task 241).
  */
 @Component({
-  selector: 'app-demanda-status-marca',
-  standalone: true,
-  templateUrl: './demanda-status-marca.component.html',
-  styleUrl: './demanda-status-marca.component.scss',
+    selector: 'app-demanda-status-marca',
+    standalone: true,
+    templateUrl: './demanda-status-marca.component.html',
+    styleUrl: './demanda-status-marca.component.scss',
 })
 export class DemandaStatusMarcaComponent {
-  readonly status = input.required<TipoDemandaStatusEnum>();
-  /** Lado do desenho, em px. */
-  readonly tamanho = input<number>(18);
+    readonly status = input.required<TipoDemandaStatusEnum>();
+    /** Lado do desenho, em px. */
+    readonly tamanho = input<number>(18);
 
-  readonly Status = TipoDemandaStatusEnum;
-  readonly cor = computed(() => COR_NO_BORDA[this.status()]);
+    readonly Status = TipoDemandaStatusEnum;
+    readonly cor = computed(() => COR_NO_BORDA[this.status()]);
 }

@@ -1,127 +1,161 @@
 <main class="login-pagina">
-  <div class="login-pagina__tema">
-    <p-button
-      [icon]="tema.eEscuro() ? 'pi pi-sun' : 'pi pi-moon'"
-      [text]="true"
-      [rounded]="true"
-      severity="secondary"
-      [attr.aria-label]="tema.eEscuro() ? 'Usar tema claro' : 'Usar tema escuro'"
-      (onClick)="tema.alternarTema()"
-    />
-  </div>
-
-  <div class="login-pagina__container">
-    <p-card>
-      <div class="login-pagina__titulo">
-        <span class="login-pagina__logo" aria-hidden="true">P</span>
-        <h1 class="login-pagina__titulo-nome">Project 2.0</h1>
-        <p class="login-pagina__titulo-descricao">
-          {{ modoLembrado() ? 'Bem-vindo de volta' : 'Entre para continuar' }}
-        </p>
-      </div>
-
-      <form [formGroup]="formulario" (ngSubmit)="entrar()">
-        @if (modoLembrado()) {
-          <div class="login-pagina__identidade">
-            <span class="login-pagina__avatar" aria-hidden="true">{{ iniciais() }}</span>
-            <div class="login-pagina__identidade-texto">
-              <strong class="login-pagina__identidade-nome">{{ usuarioLembrado()!.nomeCompleto }}</strong>
-              <span class="login-pagina__identidade-login">&#64;{{ usuarioLembrado()!.login }}</span>
-            </div>
-          </div>
-        } @else {
-          <div class="login-pagina__campo">
-            <label for="login-input" class="login-pagina__label">Usuário</label>
-            <input
-              id="login-input"
-              name="login"
-              pInputText
-              formControlName="login"
-              placeholder="nome.sobrenome"
-              autocomplete="username"
-              class="w-full"
-              [attr.aria-invalid]="loginComErro() ? 'true' : null"
-              [attr.aria-describedby]="loginComErro() ? 'login-erro' : null"
-              (blur)="normalizarLogin()"
-            />
-            @if (formulario.controls['login'].touched && formulario.controls['login'].hasError('required')) {
-              <small id="login-erro" class="login-pagina__erro-campo">Informe seu usuário</small>
-            }
-            @if (formulario.controls['login'].touched && formulario.controls['login'].hasError('minlength')) {
-              <small id="login-erro" class="login-pagina__erro-campo">Use pelo menos 4 caracteres</small>
-            }
-          </div>
-        }
-
-        <div class="login-pagina__campo">
-          <label for="senha-input" class="login-pagina__label">Senha</label>
-          <div class="login-pagina__senha">
-            <input
-              id="senha-input"
-              name="senha"
-              pInputText
-              formControlName="senha"
-              [type]="senhaVisivel() ? 'text' : 'password'"
-              placeholder="••••••••"
-              autocomplete="current-password"
-              class="w-full login-pagina__senha-entrada"
-              [attr.aria-invalid]="senhaComErro() ? 'true' : null"
-              [attr.aria-describedby]="senhaComErro() ? 'senha-erro' : null"
-              (keydown)="atualizarCapsLock($event)"
-              (keyup)="atualizarCapsLock($event)"
-            />
-            <button
-              type="button"
-              class="login-pagina__olho"
-              aria-label="Mostrar senha"
-              [attr.aria-pressed]="senhaVisivel()"
-              (click)="alternarSenha()"
-            >
-              <i class="pi" [class.pi-eye]="!senhaVisivel()" [class.pi-eye-slash]="senhaVisivel()" aria-hidden="true"></i>
-            </button>
-          </div>
-          @if (capsLockAtivo()) {
-            <small class="login-pagina__aviso-caps"><i class="pi pi-exclamation-triangle"></i> Caps Lock ligado</small>
-          }
-          @if (formulario.controls['senha'].touched && formulario.controls['senha'].hasError('required')) {
-            <small id="senha-erro" class="login-pagina__erro-campo">Informe sua senha</small>
-          }
-          <!-- Aparece sob a senha, sem reservar altura: o card só cresce quando há erro. -->
-          <div aria-live="polite">
-            @if (erroLogin()) {
-              <small id="senha-erro" class="login-pagina__erro-campo login-pagina__erro-login">
-                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i> {{ erroLogin() }}
-              </small>
-            }
-          </div>
-        </div>
-
+    <div class="login-pagina__tema">
         <p-button
-          type="submit"
-          label="Entrar"
-          icon="pi pi-sign-in"
-          [loading]="carregando()"
-          class="login-pagina__entrar"
-          styleClass="w-full"
+            [icon]="tema.eEscuro() ? 'pi pi-sun' : 'pi pi-moon'"
+            [text]="true"
+            [rounded]="true"
+            severity="secondary"
+            [attr.aria-label]="tema.eEscuro() ? 'Usar tema claro' : 'Usar tema escuro'"
+            (onClick)="tema.alternarTema()"
         />
+    </div>
 
-        <p class="login-pagina__sessao">Você continua conectado por 7 dias neste computador.</p>
+    <div class="login-pagina__container">
+        <p-card>
+            <div class="login-pagina__titulo">
+                <span class="login-pagina__logo" aria-hidden="true">P</span>
+                <h1 class="login-pagina__titulo-nome">Project 2.0</h1>
+                <p class="login-pagina__titulo-descricao">
+                    {{ modoLembrado() ? "Bem-vindo de volta" : "Entre para continuar" }}
+                </p>
+            </div>
 
-        @if (modoLembrado()) {
-          <div class="login-pagina__outro">
-            <p-button
-              label="Não é você? Entrar com outro usuário"
-              severity="secondary"
-              [text]="true"
-              size="small"
-              type="button"
-              (onClick)="entrarComOutroUsuario()"
-            />
-          </div>
-        }
-      </form>
+            <form [formGroup]="formulario" (ngSubmit)="entrar()">
+                @if (modoLembrado()) {
+                    <div class="login-pagina__identidade">
+                        <span class="login-pagina__avatar" aria-hidden="true">{{
+                            iniciais()
+                        }}</span>
+                        <div class="login-pagina__identidade-texto">
+                            <strong class="login-pagina__identidade-nome">{{
+                                usuarioLembrado()!.nomeCompleto
+                            }}</strong>
+                            <span class="login-pagina__identidade-login"
+                                >&#64;{{ usuarioLembrado()!.login }}</span
+                            >
+                        </div>
+                    </div>
+                } @else {
+                    <div class="login-pagina__campo">
+                        <label for="login-input" class="login-pagina__label">Usuário</label>
+                        <input
+                            id="login-input"
+                            name="login"
+                            pInputText
+                            formControlName="login"
+                            placeholder="nome.sobrenome"
+                            autocomplete="username"
+                            class="w-full"
+                            [attr.aria-invalid]="loginComErro() ? 'true' : null"
+                            [attr.aria-describedby]="loginComErro() ? 'login-erro' : null"
+                            (blur)="normalizarLogin()"
+                        />
+                        @if (
+                            formulario.controls["login"].touched &&
+                            formulario.controls["login"].hasError("required")
+                        ) {
+                            <small id="login-erro" class="login-pagina__erro-campo"
+                                >Informe seu usuário</small
+                            >
+                        }
+                        @if (
+                            formulario.controls["login"].touched &&
+                            formulario.controls["login"].hasError("minlength")
+                        ) {
+                            <small id="login-erro" class="login-pagina__erro-campo"
+                                >Use pelo menos 4 caracteres</small
+                            >
+                        }
+                    </div>
+                }
 
-      <p class="login-pagina__ajuda">Esqueceu a senha? Peça a redefinição a um gestor.</p>
-    </p-card>
-  </div>
+                <div class="login-pagina__campo">
+                    <label for="senha-input" class="login-pagina__label">Senha</label>
+                    <div class="login-pagina__senha">
+                        <input
+                            id="senha-input"
+                            name="senha"
+                            pInputText
+                            formControlName="senha"
+                            [type]="senhaVisivel() ? 'text' : 'password'"
+                            placeholder="••••••••"
+                            autocomplete="current-password"
+                            class="w-full login-pagina__senha-entrada"
+                            [attr.aria-invalid]="senhaComErro() ? 'true' : null"
+                            [attr.aria-describedby]="senhaComErro() ? 'senha-erro' : null"
+                            (keydown)="atualizarCapsLock($event)"
+                            (keyup)="atualizarCapsLock($event)"
+                        />
+                        <button
+                            type="button"
+                            class="login-pagina__olho"
+                            aria-label="Mostrar senha"
+                            [attr.aria-pressed]="senhaVisivel()"
+                            (click)="alternarSenha()"
+                        >
+                            <i
+                                class="pi"
+                                [class.pi-eye]="!senhaVisivel()"
+                                [class.pi-eye-slash]="senhaVisivel()"
+                                aria-hidden="true"
+                            ></i>
+                        </button>
+                    </div>
+                    @if (capsLockAtivo()) {
+                        <small class="login-pagina__aviso-caps"
+                            ><i class="pi pi-exclamation-triangle"></i> Caps Lock ligado</small
+                        >
+                    }
+                    @if (
+                        formulario.controls["senha"].touched &&
+                        formulario.controls["senha"].hasError("required")
+                    ) {
+                        <small id="senha-erro" class="login-pagina__erro-campo"
+                            >Informe sua senha</small
+                        >
+                    }
+                    <!-- Aparece sob a senha, sem reservar altura: o card só cresce quando há erro. -->
+                    <div aria-live="polite">
+                        @if (erroLogin()) {
+                            <small
+                                id="senha-erro"
+                                class="login-pagina__erro-campo login-pagina__erro-login"
+                            >
+                                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+                                {{ erroLogin() }}
+                            </small>
+                        }
+                    </div>
+                </div>
+
+                <p-button
+                    type="submit"
+                    label="Entrar"
+                    icon="pi pi-sign-in"
+                    [loading]="carregando()"
+                    class="login-pagina__entrar"
+                    styleClass="w-full"
+                />
+
+                <p class="login-pagina__sessao">
+                    Você continua conectado por 7 dias neste computador.
+                </p>
+
+                @if (modoLembrado()) {
+                    <div class="login-pagina__outro">
+                        <p-button
+                            label="Não é você? Entrar com outro usuário"
+                            severity="secondary"
+                            [text]="true"
+                            size="small"
+                            type="button"
+                            (onClick)="entrarComOutroUsuario()"
+                        />
+                    </div>
+                }
+            </form>
+
+            <p class="login-pagina__ajuda">Esqueceu a senha? Peça a redefinição a um gestor.</p>
+        </p-card>
+    </div>
 </main>

@@ -1,4 +1,4 @@
 export interface PlanoArquivadoDto {
-  id: number;
-  isArquivado: boolean;
+    id: number;
+    isArquivado: boolean;
 }

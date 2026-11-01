@@ -10,24 +10,24 @@ export type ModoDeEscritaNoPlano = (typeof MODOS_DE_ESCRITA_NO_PLANO)[number];
  * da aba inteiro; `ACRESCENTAR` põe o texto no fim. `versao` é a que a IA leu: se alguém gravou depois, a escrita é recusada e ela relê.
  */
 export class PlanoEscreverDto {
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  planoId: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    planoId: number;
 
-  @IsEnum(PlanoAbaEnum)
-  aba: PlanoAbaEnum;
+    @IsEnum(PlanoAbaEnum)
+    aba: PlanoAbaEnum;
 
-  @IsIn(MODOS_DE_ESCRITA_NO_PLANO)
-  modo: ModoDeEscritaNoPlano;
+    @IsIn(MODOS_DE_ESCRITA_NO_PLANO)
+    modo: ModoDeEscritaNoPlano;
 
-  /** O texto em Markdown. */
-  @IsString()
-  @MaxLength(30000)
-  texto: string;
+    /** O texto em Markdown. */
+    @IsString()
+    @MaxLength(30000)
+    texto: string;
 
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  versao: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    versao: number;
 }

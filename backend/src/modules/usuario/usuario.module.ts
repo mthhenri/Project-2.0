@@ -7,19 +7,19 @@ import { FerramentaIaRegistro } from '../ferramenta-ia/services/ferramenta-ia.re
 import { ListarUsuariosFerramenta } from './ferramentas/listar-usuarios.ferramenta';
 
 @Module({
-  imports:     [FerramentaIaModule],
-  controllers: [UsuarioController],
-  providers:   [UsuarioService, UsuarioRepository, ListarUsuariosFerramenta],
-  exports:     [UsuarioService, UsuarioRepository],
+    imports:     [FerramentaIaModule],
+    controllers: [UsuarioController],
+    providers:   [UsuarioService, UsuarioRepository, ListarUsuariosFerramenta],
+    exports:     [UsuarioService, UsuarioRepository],
 })
 export class UsuarioModule implements OnModuleInit {
-  constructor(
-    private readonly registroDeFerramentas: FerramentaIaRegistro,
-    private readonly listarUsuarios: ListarUsuariosFerramenta,
-  ) {}
+    constructor(
+        private readonly registroDeFerramentas: FerramentaIaRegistro,
+        private readonly listarUsuarios: ListarUsuariosFerramenta,
+    ) {}
 
-  /** A ferramenta de IA dos usuários se registra aqui (só o gestor a vê). */
-  onModuleInit(): void {
-    this.registroDeFerramentas.registrar(this.listarUsuarios);
-  }
+    /** A ferramenta de IA dos usuários se registra aqui (só o gestor a vê). */
+    onModuleInit(): void {
+        this.registroDeFerramentas.registrar(this.listarUsuarios);
+    }
 }

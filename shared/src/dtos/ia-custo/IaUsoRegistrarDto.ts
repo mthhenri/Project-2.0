@@ -6,13 +6,13 @@ import { NivelIaEnum } from '../../enums/nivel-ia.enum';
  * modelo e os tokens e nunca aparece numa conversa.
  */
 export class IaUsoRegistrarDto {
-  usuarioId: number;
-  /** Do que foi a chamada, em poucas palavras (fica no texto da mensagem de uso). */
-  descricao: string;
-  nivel: NivelIaEnum;
-  modelo: string;
-  tokensEntrada: number;
-  tokensSaida: number;
-  tokensCache: number;
-  demandaId?: number;
+    usuarioId: number;
+    /** Do que foi a chamada, em poucas palavras (fica no texto da mensagem de uso). */
+    descricao: string;
+    nivel: NivelIaEnum;
+    modelo: string;
+    tokensEntrada: number;
+    tokensSaida: number;
+    tokensCache: number;
+    demandaId?: number;
 }

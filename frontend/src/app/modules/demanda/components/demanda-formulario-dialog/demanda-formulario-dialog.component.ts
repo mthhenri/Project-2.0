@@ -13,17 +13,17 @@ import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import {
-  DemandaAlterarDto,
-  DemandaCriarDto,
-  DemandaCriadaDto,
-  DemandaResumoDto,
-  TipoDemandaStatusEnum,
-  TagResumoDto,
-  UsuarioResumoDto,
-  temPermissaoDeGestor,
-  REGEX_SEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS,
-  hojeNoFuso,
+    DemandaAlterarDto,
+    DemandaCriarDto,
+    DemandaCriadaDto,
+    DemandaResumoDto,
+    TipoDemandaStatusEnum,
+    TagResumoDto,
+    UsuarioResumoDto,
+    temPermissaoDeGestor,
+    REGEX_SEM_CARACTERES_PROIBIDOS,
+    MENSAGEM_CARACTERES_PROIBIDOS,
+    hojeNoFuso,
 } from '@project20/shared';
 import { ambiente } from '../../../../../environments/environment';
 import { DemandaService } from '../../services/demanda.service';
@@ -39,7 +39,7 @@ import { AtalhoPrevisao, dataDoAtalho, formatarDataIso, lerDataIso } from '../..
 
 /** Overlays que tratam o próprio Esc antes de o formulário pedir confirmação para fechar. */
 const SELETOR_OVERLAY_ABERTO =
-  '.p-select-overlay, .p-multiselect-overlay, .p-datepicker-panel, .p-popover, .p-contextmenu, .p-confirmdialog';
+    '.p-select-overlay, .p-multiselect-overlay, .p-datepicker-panel, .p-popover, .p-contextmenu, .p-confirmdialog';
 
 /**
  * Formulário único de criar e editar demanda (task 109). Com `demandaId` vira edição, com os mesmos campos
@@ -48,368 +48,368 @@ const SELETOR_OVERLAY_ABERTO =
  * (a demanda estrutural agrega os filhos).
  */
 @Component({
-  selector: 'app-demanda-formulario-dialog',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    ButtonModule,
-    InputTextModule,
-    InputNumberModule,
-    Select,
-    MultiSelect,
-    CheckboxModule,
-    DatePickerModule,
-    DialogModule,
-    ConfirmDialogModule,
-    BloquearCaracteresProibidosDirective,
-    DialogFormularioDirective,
-    DialogDicaAtalhosComponent,
-  ],
-  providers: [ConfirmationService],
-  templateUrl: './demanda-formulario-dialog.component.html',
-  styleUrl: './demanda-formulario-dialog.component.scss',
+    selector: 'app-demanda-formulario-dialog',
+    standalone: true,
+    imports: [
+        ReactiveFormsModule,
+        ButtonModule,
+        InputTextModule,
+        InputNumberModule,
+        Select,
+        MultiSelect,
+        CheckboxModule,
+        DatePickerModule,
+        DialogModule,
+        ConfirmDialogModule,
+        BloquearCaracteresProibidosDirective,
+        DialogFormularioDirective,
+        DialogDicaAtalhosComponent,
+    ],
+    providers: [ConfirmationService],
+    templateUrl: './demanda-formulario-dialog.component.html',
+    styleUrl: './demanda-formulario-dialog.component.scss',
 })
 export class DemandaFormularioDialogComponent implements OnChanges {
-  /** Projeto da nova demanda; na edição vem da própria demanda. */
-  @Input() projetoId = 0;
-  @Input() visivel = false;
-  @Input() demandaPaiIdInicial: number | null = null;
-  /** Nome já preenchido na criação (a demanda que nasce de um plano começa com o título dele). */
-  @Input() nomeInicial: string | null = null;
-  /** Presente = modo edição. */
-  @Input() demandaId: number | null = null;
-  @Output() visivelChange = new EventEmitter<boolean>();
-  @Output() demandaCriada = new EventEmitter<DemandaCriadaDto>();
-  @Output() demandaAlterada = new EventEmitter<void>();
+    /** Projeto da nova demanda; na edição vem da própria demanda. */
+    @Input() projetoId = 0;
+    @Input() visivel = false;
+    @Input() demandaPaiIdInicial: number | null = null;
+    /** Nome já preenchido na criação (a demanda que nasce de um plano começa com o título dele). */
+    @Input() nomeInicial: string | null = null;
+    /** Presente = modo edição. */
+    @Input() demandaId: number | null = null;
+    @Output() visivelChange = new EventEmitter<boolean>();
+    @Output() demandaCriada = new EventEmitter<DemandaCriadaDto>();
+    @Output() demandaAlterada = new EventEmitter<void>();
 
-  private readonly demandaService = inject(DemandaService);
-  private readonly tagService = inject(TagService);
-  private readonly usuarioService = inject(UsuarioService);
-  private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly formBuilder = inject(FormBuilder);
-  readonly sessao = inject(UsuarioSessaoService);
-  readonly unidadeTempo = inject(VisualizacaoTempoService);
+    private readonly demandaService = inject(DemandaService);
+    private readonly tagService = inject(TagService);
+    private readonly usuarioService = inject(UsuarioService);
+    private readonly messageService = inject(MessageService);
+    private readonly confirmationService = inject(ConfirmationService);
+    private readonly formBuilder = inject(FormBuilder);
+    readonly sessao = inject(UsuarioSessaoService);
+    readonly unidadeTempo = inject(VisualizacaoTempoService);
 
-  @ViewChild('campoNome') private campoNome?: ElementRef<HTMLInputElement>;
+    @ViewChild('campoNome') private campoNome?: ElementRef<HTMLInputElement>;
 
-  readonly demandasPaiOpcoes = signal<DemandaResumoDto[]>([]);
-  readonly carregando = signal<boolean>(false);
-  readonly carregandoDados = signal<boolean>(false);
-  readonly todasAsTags = signal<TagResumoDto[]>([]);
-  readonly carregandoTags = signal<boolean>(false);
-  readonly usuariosDisponiveis = signal<UsuarioResumoDto[]>([]);
-  readonly maisOpcoesAbertas = signal<boolean>(false);
-  readonly eEdicao = computed(() => this.demandaId !== null);
+    readonly demandasPaiOpcoes = signal<DemandaResumoDto[]>([]);
+    readonly carregando = signal<boolean>(false);
+    readonly carregandoDados = signal<boolean>(false);
+    readonly todasAsTags = signal<TagResumoDto[]>([]);
+    readonly carregandoTags = signal<boolean>(false);
+    readonly usuariosDisponiveis = signal<UsuarioResumoDto[]>([]);
+    readonly maisOpcoesAbertas = signal<boolean>(false);
+    readonly eEdicao = computed(() => this.demandaId !== null);
 
-  /** Tags e membros como estavam ao abrir a edição: base do diff a gravar. */
-  private tagIdsOriginais: number[] = [];
-  private usuarioIdsOriginais: number[] = [];
+    /** Tags e membros como estavam ao abrir a edição: base do diff a gravar. */
+    private tagIdsOriginais: number[] = [];
+    private usuarioIdsOriginais: number[] = [];
 
-  readonly formulario = this.formBuilder.group({
-    nome:            ['', [Validators.required, Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
-    demandaPaiId:    [null as number | null],
-    status:          [TipoDemandaStatusEnum.PLANEJADA as TipoDemandaStatusEnum, [Validators.required]],
-    isEstrutural:    [false],
-    horasEstimadas:  [0, [Validators.required, Validators.min(0)]],
-    previsaoFimData: [null as Date | null],
-    tagIds:          [[] as number[]],
-    usuarioIds:      [[] as number[]],
-  });
-
-  readonly statusOpcoes = [
-    { label: 'Pendente',  value: TipoDemandaStatusEnum.PENDENTE },
-    { label: 'Planejada', value: TipoDemandaStatusEnum.PLANEJADA },
-    { label: 'Concluída', value: TipoDemandaStatusEnum.CONCLUIDA },
-    { label: 'Cancelada', value: TipoDemandaStatusEnum.CANCELADA },
-  ];
-
-  readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-
-  ngOnChanges(mudancas: SimpleChanges): void {
-    if (mudancas['visivel']?.currentValue !== true) return;
-
-    this.maisOpcoesAbertas.set(false);
-    this.formulario.reset({
-      nome:           this.nomeInicial ?? '',
-      demandaPaiId:   this.demandaPaiIdInicial ?? null,
-      status:         TipoDemandaStatusEnum.PLANEJADA,
-      isEstrutural:   false,
-      horasEstimadas: 0,
-      tagIds:         [],
-      usuarioIds:     [],
+    readonly formulario = this.formBuilder.group({
+        nome:            ['', [Validators.required, Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
+        demandaPaiId:    [null as number | null],
+        status:          [TipoDemandaStatusEnum.PLANEJADA as TipoDemandaStatusEnum, [Validators.required]],
+        isEstrutural:    [false],
+        horasEstimadas:  [0, [Validators.required, Validators.min(0)]],
+        previsaoFimData: [null as Date | null],
+        tagIds:          [[] as number[]],
+        usuarioIds:      [[] as number[]],
     });
-    if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
-    if (this.sessao.eGestor() && this.usuariosDisponiveis().length === 0) this.carregarUsuarios();
-    if (this.demandaId !== null) this.carregarDemanda(this.demandaId);
-    else this.carregarDemandasPai();
-  }
 
-  /** Esc fecha com guarda quando há o que perder; overlays abertos (select, calendário…) tratam o Esc antes. */
-  @HostListener('document:keydown.escape', ['$event'])
-  aoTeclarEscape(evento: Event): void {
-    if (!this.visivel || document.querySelector(SELETOR_OVERLAY_ABERTO)) return;
-    evento.stopPropagation();
-    this.fechar();
-  }
+    readonly statusOpcoes = [
+        { label: 'Pendente',  value: TipoDemandaStatusEnum.PENDENTE },
+        { label: 'Planejada', value: TipoDemandaStatusEnum.PLANEJADA },
+        { label: 'Concluída', value: TipoDemandaStatusEnum.CONCLUIDA },
+        { label: 'Cancelada', value: TipoDemandaStatusEnum.CANCELADA },
+    ];
 
-  /** Fecha pedindo confirmação se houver texto/alteração ainda não salvos. */
-  fechar(): void {
-    if (this.temAlteracoesNaoSalvas()) {
-      this.confirmationService.confirm({
-        key: 'demanda-formulario-fechar',
-        header: 'Descartar alterações?',
-        message: this.eEdicao() ? 'Você alterou esta demanda e ainda não salvou.' : 'Você começou a preencher esta demanda e ainda não a criou.',
-        icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Descartar',
-        rejectLabel: 'Continuar editando',
-        acceptButtonStyleClass: 'p-button-danger',
-        accept: () => this.fecharDeVez(),
-      });
-      return;
+    readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+
+    ngOnChanges(mudancas: SimpleChanges): void {
+        if (mudancas['visivel']?.currentValue !== true) return;
+
+        this.maisOpcoesAbertas.set(false);
+        this.formulario.reset({
+            nome:           this.nomeInicial ?? '',
+            demandaPaiId:   this.demandaPaiIdInicial ?? null,
+            status:         TipoDemandaStatusEnum.PLANEJADA,
+            isEstrutural:   false,
+            horasEstimadas: 0,
+            tagIds:         [],
+            usuarioIds:     [],
+        });
+        if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
+        if (this.sessao.eGestor() && this.usuariosDisponiveis().length === 0) this.carregarUsuarios();
+        if (this.demandaId !== null) this.carregarDemanda(this.demandaId);
+        else this.carregarDemandasPai();
     }
-    this.fecharDeVez();
-  }
 
-  private fecharDeVez(): void {
-    this.visivelChange.emit(false);
-  }
-
-  private temAlteracoesNaoSalvas(): boolean {
-    if (this.eEdicao()) return this.formulario.dirty;
-    return (this.formulario.value.nome ?? '').trim() !== '';
-  }
-
-  alternarMaisOpcoes(): void {
-    this.maisOpcoesAbertas.update((aberta) => !aberta);
-  }
-
-  /** Demandas estruturais agregam os filhos: sem Estimativa nem Previsão próprias. */
-  get ocultaEstimativa(): boolean {
-    return !!this.formulario.value.isEstrutural;
-  }
-
-  aplicarAtalhoPrevisao(atalho: AtalhoPrevisao): void {
-    this.formulario.controls.previsaoFimData.setValue(dataDoAtalho(atalho, hojeNoFuso(ambiente.fusoHorario)));
-    this.formulario.controls.previsaoFimData.markAsDirty();
-  }
-
-  /** `criarOutra`: mantém o dialog aberto (pai e contexto preservados) para cadastro em série. */
-  salvar(criarOutra = false): void {
-    if (this.formulario.invalid) {
-      this.formulario.markAllAsTouched();
-      return;
+    /** Esc fecha com guarda quando há o que perder; overlays abertos (select, calendário…) tratam o Esc antes. */
+    @HostListener('document:keydown.escape', ['$event'])
+    aoTeclarEscape(evento: Event): void {
+        if (!this.visivel || document.querySelector(SELETOR_OVERLAY_ABERTO)) return;
+        evento.stopPropagation();
+        this.fechar();
     }
-    if (this.carregando() || this.carregandoDados()) return;
-    if (this.eEdicao()) this.salvarEdicao();
-    else this.salvarCriacao(criarOutra);
-  }
 
-  private salvarCriacao(criarOutra: boolean): void {
-    this.carregando.set(true);
-    const valor = this.formulario.value;
-    const estrutural = valor.isEstrutural ?? false;
-
-    const dto: DemandaCriarDto = {
-      projetoId:       this.projetoId,
-      nome:            valor.nome!.trim(),
-      demandaPaiId:    valor.demandaPaiId ?? undefined,
-      status:          valor.status!,
-      isEstrutural:    estrutural,
-      horasEstimadas:  estrutural ? 0 : this.paraHorasEstimadas(valor.horasEstimadas),
-      previsaoFimData: !estrutural && valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined,
-    };
-    if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
-    if (this.sessao.eGestor() && valor.usuarioIds?.length) dto.usuarioIds = valor.usuarioIds;
-
-    this.demandaService
-      .criar(dto)
-      .pipe(finalize(() => this.carregando.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (!resposta.sucesso || !resposta.dados) return;
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Demanda criada com sucesso' });
-          this.demandaCriada.emit(resposta.dados);
-          if (criarOutra) {
-            this.formulario.reset({
-              nome:           '',
-              demandaPaiId:   valor.demandaPaiId ?? null,
-              status:         valor.status,
-              isEstrutural:   false,
-              horasEstimadas: 0,
-              tagIds:         valor.tagIds,
-              usuarioIds:     valor.usuarioIds,
+    /** Fecha pedindo confirmação se houver texto/alteração ainda não salvos. */
+    fechar(): void {
+        if (this.temAlteracoesNaoSalvas()) {
+            this.confirmationService.confirm({
+                key: 'demanda-formulario-fechar',
+                header: 'Descartar alterações?',
+                message: this.eEdicao() ? 'Você alterou esta demanda e ainda não salvou.' : 'Você começou a preencher esta demanda e ainda não a criou.',
+                icon: 'pi pi-exclamation-triangle',
+                acceptLabel: 'Descartar',
+                rejectLabel: 'Continuar editando',
+                acceptButtonStyleClass: 'p-button-danger',
+                accept: () => this.fecharDeVez(),
             });
-            this.campoNome?.nativeElement.focus();
-          } else {
-            this.fecharDeVez();
-          }
-        },
-      });
-  }
-
-  private salvarEdicao(): void {
-    const idEditando = this.demandaId!;
-    const valor = this.formulario.value;
-    const estrutural = valor.isEstrutural ?? false;
-
-    // Estrutural não tem estimativa/previsão próprias: os valores existentes ficam como estão.
-    const dto: DemandaAlterarDto = {
-      nome:         valor.nome!.trim(),
-      demandaPaiId: valor.demandaPaiId ?? undefined,
-      status:       valor.status ?? undefined,
-      isEstrutural: estrutural,
-    };
-    if (!estrutural) {
-      dto.horasEstimadas = valor.horasEstimadas == null ? undefined : this.paraHorasEstimadas(valor.horasEstimadas);
-      dto.previsaoFimData = valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined;
+            return;
+        }
+        this.fecharDeVez();
     }
 
-    this.carregando.set(true);
-    this.demandaService
-      .alterar(idEditando, dto)
-      .pipe(finalize(() => this.carregando.set(false)))
-      .subscribe({
-        next: () => {
-          const complementares = this.gravarTagsEMembros(idEditando);
-          complementares.subscribe({
-            next: () => this.concluirEdicao(),
-            error: () => this.concluirEdicao(),
-          });
-        },
-      });
-  }
-
-  private concluirEdicao(): void {
-    this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Demanda alterada com sucesso' });
-    this.demandaAlterada.emit();
-    this.fecharDeVez();
-  }
-
-  /** Grava só o que mudou em tags (PUT) e, para o gestor, em membros (POST/DELETE individuais). */
-  private gravarTagsEMembros(demandaId: number): Observable<unknown> {
-    const valor = this.formulario.value;
-    const chamadas: Observable<unknown>[] = [];
-
-    const tagIds = valor.tagIds ?? [];
-    if (!this.mesmosIds(tagIds, this.tagIdsOriginais)) {
-      chamadas.push(this.demandaService.alterarTags(demandaId, { tagIds }));
+    private fecharDeVez(): void {
+        this.visivelChange.emit(false);
     }
 
-    if (!this.sessao.eGestor()) return chamadas.length ? forkJoin(chamadas) : of(null);
-
-    const usuarioIds = valor.usuarioIds ?? [];
-    for (const usuarioId of usuarioIds.filter((id) => !this.usuarioIdsOriginais.includes(id))) {
-      chamadas.push(this.demandaService.atribuirMembro(demandaId, { usuarioId }));
+    private temAlteracoesNaoSalvas(): boolean {
+        if (this.eEdicao()) return this.formulario.dirty;
+        return (this.formulario.value.nome ?? '').trim() !== '';
     }
-    for (const usuarioId of this.usuarioIdsOriginais.filter((id) => !usuarioIds.includes(id))) {
-      chamadas.push(this.demandaService.removerMembro(demandaId, usuarioId));
+
+    alternarMaisOpcoes(): void {
+        this.maisOpcoesAbertas.update((aberta) => !aberta);
     }
-    return chamadas.length ? forkJoin(chamadas) : of(null);
-  }
 
-  private mesmosIds(a: number[], b: number[]): boolean {
-    return a.length === b.length && a.every((id) => b.includes(id));
-  }
+    /** Demandas estruturais agregam os filhos: sem Estimativa nem Previsão próprias. */
+    get ocultaEstimativa(): boolean {
+        return !!this.formulario.value.isEstrutural;
+    }
 
-  campoInvalido(nomeCampo: string): boolean {
-    const controle = this.formulario.get(nomeCampo);
-    return !!(controle?.invalid && controle?.touched);
-  }
+    aplicarAtalhoPrevisao(atalho: AtalhoPrevisao): void {
+        this.formulario.controls.previsaoFimData.setValue(dataDoAtalho(atalho, hojeNoFuso(ambiente.fusoHorario)));
+        this.formulario.controls.previsaoFimData.markAsDirty();
+    }
 
-  /** Alterna a seleção de uma tag no controle informado (seletor de chips). */
-  alternarTagSelecao(controle: AbstractControl, tagId: number): void {
-    const selecionadas = (controle.value as number[] | null) ?? [];
-    const novas = selecionadas.includes(tagId)
-      ? selecionadas.filter((id) => id !== tagId)
-      : [...selecionadas, tagId];
-    controle.setValue(novas);
-    controle.markAsDirty();
-  }
+    /** `criarOutra`: mantém o dialog aberto (pai e contexto preservados) para cadastro em série. */
+    salvar(criarOutra = false): void {
+        if (this.formulario.invalid) {
+            this.formulario.markAllAsTouched();
+            return;
+        }
+        if (this.carregando() || this.carregandoDados()) return;
+        if (this.eEdicao()) this.salvarEdicao();
+        else this.salvarCriacao(criarOutra);
+    }
 
-  tagEstaSelecionada(controle: AbstractControl, tagId: number): boolean {
-    return ((controle.value as number[] | null) ?? []).includes(tagId);
-  }
+    private salvarCriacao(criarOutra: boolean): void {
+        this.carregando.set(true);
+        const valor = this.formulario.value;
+        const estrutural = valor.isEstrutural ?? false;
 
-  private carregarDemanda(identificador: number): void {
-    this.carregandoDados.set(true);
-    forkJoin({
-      demanda: this.demandaService.recuperar(identificador),
-      tags:    this.demandaService.listarTags(identificador),
-      membros: this.sessao.eGestor() ? this.demandaService.listarMembros(identificador) : of(null),
-    })
-      .pipe(finalize(() => this.carregandoDados.set(false)))
-      .subscribe({
-        next: ({ demanda, tags, membros }) => {
-          if (!demanda.sucesso || !demanda.dados) return;
-          const dados = demanda.dados;
-          this.projetoId = dados.projetoId;
-          this.tagIdsOriginais = tags?.dados?.map((tag) => tag.id) ?? [];
-          this.usuarioIdsOriginais = membros?.dados?.map((membro) => membro.usuarioId) ?? [];
+        const dto: DemandaCriarDto = {
+            projetoId:       this.projetoId,
+            nome:            valor.nome!.trim(),
+            demandaPaiId:    valor.demandaPaiId ?? undefined,
+            status:          valor.status!,
+            isEstrutural:    estrutural,
+            horasEstimadas:  estrutural ? 0 : this.paraHorasEstimadas(valor.horasEstimadas),
+            previsaoFimData: !estrutural && valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined,
+        };
+        if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
+        if (this.sessao.eGestor() && valor.usuarioIds?.length) dto.usuarioIds = valor.usuarioIds;
 
-          this.formulario.reset({
-            nome:            dados.nome,
-            demandaPaiId:    dados.demandaPaiId ?? null,
-            status:          dados.status,
-            isEstrutural:    dados.isEstrutural,
-            horasEstimadas:  this.unidadeTempo.emDias() ? dados.horasEstimadas / HORAS_POR_DIA : dados.horasEstimadas,
-            previsaoFimData: dados.previsaoFimData ? lerDataIso(dados.previsaoFimData) : null,
-            tagIds:          this.tagIdsOriginais,
-            usuarioIds:      this.usuarioIdsOriginais,
-          });
-          this.carregarDemandasPai();
-        },
-      });
-  }
+        this.demandaService
+            .criar(dto)
+            .pipe(finalize(() => this.carregando.set(false)))
+            .subscribe({
+                next: (resposta) => {
+                    if (!resposta.sucesso || !resposta.dados) return;
+                    this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Demanda criada com sucesso' });
+                    this.demandaCriada.emit(resposta.dados);
+                    if (criarOutra) {
+                        this.formulario.reset({
+                            nome:           '',
+                            demandaPaiId:   valor.demandaPaiId ?? null,
+                            status:         valor.status,
+                            isEstrutural:   false,
+                            horasEstimadas: 0,
+                            tagIds:         valor.tagIds,
+                            usuarioIds:     valor.usuarioIds,
+                        });
+                        this.campoNome?.nativeElement.focus();
+                    } else {
+                        this.fecharDeVez();
+                    }
+                },
+            });
+    }
 
-  private carregarTodasAsTags(): void {
-    this.carregandoTags.set(true);
-    this.tagService
-      .listar()
-      .pipe(finalize(() => this.carregandoTags.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) this.todasAsTags.set(resposta.dados);
-        },
-      });
-  }
+    private salvarEdicao(): void {
+        const idEditando = this.demandaId!;
+        const valor = this.formulario.value;
+        const estrutural = valor.isEstrutural ?? false;
 
-  /**
+        // Estrutural não tem estimativa/previsão próprias: os valores existentes ficam como estão.
+        const dto: DemandaAlterarDto = {
+            nome:         valor.nome!.trim(),
+            demandaPaiId: valor.demandaPaiId ?? undefined,
+            status:       valor.status ?? undefined,
+            isEstrutural: estrutural,
+        };
+        if (!estrutural) {
+            dto.horasEstimadas = valor.horasEstimadas == null ? undefined : this.paraHorasEstimadas(valor.horasEstimadas);
+            dto.previsaoFimData = valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined;
+        }
+
+        this.carregando.set(true);
+        this.demandaService
+            .alterar(idEditando, dto)
+            .pipe(finalize(() => this.carregando.set(false)))
+            .subscribe({
+                next: () => {
+                    const complementares = this.gravarTagsEMembros(idEditando);
+                    complementares.subscribe({
+                        next: () => this.concluirEdicao(),
+                        error: () => this.concluirEdicao(),
+                    });
+                },
+            });
+    }
+
+    private concluirEdicao(): void {
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Demanda alterada com sucesso' });
+        this.demandaAlterada.emit();
+        this.fecharDeVez();
+    }
+
+    /** Grava só o que mudou em tags (PUT) e, para o gestor, em membros (POST/DELETE individuais). */
+    private gravarTagsEMembros(demandaId: number): Observable<unknown> {
+        const valor = this.formulario.value;
+        const chamadas: Observable<unknown>[] = [];
+
+        const tagIds = valor.tagIds ?? [];
+        if (!this.mesmosIds(tagIds, this.tagIdsOriginais)) {
+            chamadas.push(this.demandaService.alterarTags(demandaId, { tagIds }));
+        }
+
+        if (!this.sessao.eGestor()) return chamadas.length ? forkJoin(chamadas) : of(null);
+
+        const usuarioIds = valor.usuarioIds ?? [];
+        for (const usuarioId of usuarioIds.filter((id) => !this.usuarioIdsOriginais.includes(id))) {
+            chamadas.push(this.demandaService.atribuirMembro(demandaId, { usuarioId }));
+        }
+        for (const usuarioId of this.usuarioIdsOriginais.filter((id) => !usuarioIds.includes(id))) {
+            chamadas.push(this.demandaService.removerMembro(demandaId, usuarioId));
+        }
+        return chamadas.length ? forkJoin(chamadas) : of(null);
+    }
+
+    private mesmosIds(item: number[], segundo: number[]): boolean {
+        return item.length === segundo.length && item.every((id) => segundo.includes(id));
+    }
+
+    campoInvalido(nomeCampo: string): boolean {
+        const controle = this.formulario.get(nomeCampo);
+        return !!(controle?.invalid && controle?.touched);
+    }
+
+    /** Alterna a seleção de uma tag no controle informado (seletor de chips). */
+    alternarTagSelecao(controle: AbstractControl, tagId: number): void {
+        const selecionadas = (controle.value as number[] | null) ?? [];
+        const novas = selecionadas.includes(tagId)
+            ? selecionadas.filter((id) => id !== tagId)
+            : [...selecionadas, tagId];
+        controle.setValue(novas);
+        controle.markAsDirty();
+    }
+
+    tagEstaSelecionada(controle: AbstractControl, tagId: number): boolean {
+        return ((controle.value as number[] | null) ?? []).includes(tagId);
+    }
+
+    private carregarDemanda(identificador: number): void {
+        this.carregandoDados.set(true);
+        forkJoin({
+            demanda: this.demandaService.recuperar(identificador),
+            tags:    this.demandaService.listarTags(identificador),
+            membros: this.sessao.eGestor() ? this.demandaService.listarMembros(identificador) : of(null),
+        })
+            .pipe(finalize(() => this.carregandoDados.set(false)))
+            .subscribe({
+                next: ({ demanda, tags, membros }) => {
+                    if (!demanda.sucesso || !demanda.dados) return;
+                    const dados = demanda.dados;
+                    this.projetoId = dados.projetoId;
+                    this.tagIdsOriginais = tags?.dados?.map((tag) => tag.id) ?? [];
+                    this.usuarioIdsOriginais = membros?.dados?.map((membro) => membro.usuarioId) ?? [];
+
+                    this.formulario.reset({
+                        nome:            dados.nome,
+                        demandaPaiId:    dados.demandaPaiId ?? null,
+                        status:          dados.status,
+                        isEstrutural:    dados.isEstrutural,
+                        horasEstimadas:  this.unidadeTempo.emDias() ? dados.horasEstimadas / HORAS_POR_DIA : dados.horasEstimadas,
+                        previsaoFimData: dados.previsaoFimData ? lerDataIso(dados.previsaoFimData) : null,
+                        tagIds:          this.tagIdsOriginais,
+                        usuarioIds:      this.usuarioIdsOriginais,
+                    });
+                    this.carregarDemandasPai();
+                },
+            });
+    }
+
+    private carregarTodasAsTags(): void {
+        this.carregandoTags.set(true);
+        this.tagService
+            .listar()
+            .pipe(finalize(() => this.carregandoTags.set(false)))
+            .subscribe({
+                next: (resposta) => {
+                    if (resposta.sucesso && resposta.dados) this.todasAsTags.set(resposta.dados);
+                },
+            });
+    }
+
+    /**
    * Lista completa de usuários (GET /usuario) é gestor-only — alimenta o multiselect de membros.
    * Gestores são excluídos: têm acesso total a qualquer demanda por serem gestores, sem
    * necessidade de atribuição em demanda_usuario (task 71).
    */
-  private carregarUsuarios(): void {
-    this.usuarioService.listar({ itensPorPagina: 100 }).subscribe({
-      next: (resposta) => {
-        if (resposta.sucesso && resposta.dados) {
-          this.usuariosDisponiveis.set(
-            resposta.dados.itens.filter((usuario) => !temPermissaoDeGestor(usuario.tipo)),
-          );
-        }
-      },
-    });
-  }
+    private carregarUsuarios(): void {
+        this.usuarioService.listar({ itensPorPagina: 100 }).subscribe({
+            next: (resposta) => {
+                if (resposta.sucesso && resposta.dados) {
+                    this.usuariosDisponiveis.set(
+                        resposta.dados.itens.filter((usuario) => !temPermissaoDeGestor(usuario.tipo)),
+                    );
+                }
+            },
+        });
+    }
 
-  /** Candidatas a pai: as estruturais do projeto (na edição, sem a própria demanda). */
-  private carregarDemandasPai(): void {
-    this.demandaService
-      .listar({ projetoId: this.projetoId, isEstrutural: true, itensPorPagina: 200 })
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.demandasPaiOpcoes.set(resposta.dados.itens.filter((demanda) => demanda.id !== this.demandaId));
-          }
-        },
-      });
-  }
+    /** Candidatas a pai: as estruturais do projeto (na edição, sem a própria demanda). */
+    private carregarDemandasPai(): void {
+        this.demandaService
+            .listar({ projetoId: this.projetoId, isEstrutural: true, itensPorPagina: 200 })
+            .subscribe({
+                next: (resposta) => {
+                    if (resposta.sucesso && resposta.dados) {
+                        this.demandasPaiOpcoes.set(resposta.dados.itens.filter((demanda) => demanda.id !== this.demandaId));
+                    }
+                },
+            });
+    }
 
-  /**
+    /**
    * Converte o valor do campo (em dias, quando a preferência está em dias) para horas
    * antes de enviar ao backend, que sempre armazena horas. Em horas, passa direto.
    */
-  private paraHorasEstimadas(valor: number | null | undefined): number {
-    const numero = valor ?? 0;
-    return this.unidadeTempo.emDias() ? Math.round(numero * HORAS_POR_DIA) : numero;
-  }
+    private paraHorasEstimadas(valor: number | null | undefined): number {
+        const numero = valor ?? 0;
+        return this.unidadeTempo.emDias() ? Math.round(numero * HORAS_POR_DIA) : numero;
+    }
 }

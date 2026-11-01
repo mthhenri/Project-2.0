@@ -53,8 +53,8 @@
   permissão e de execução só é verificada ao vivo.
 - **Custo aparente:** configuração por workspace e um passo de CI; services estendem
   `BaseRepository` com injeção do Knex, então os falsos precisam de um ponto de injeção.
-- **Situação (2026-10-18):** a parte de **testes** foi entregue nas tasks 171–187
-  (`docs/specs/done/testes-automatizados.spec.md`, concluída em 2026-10-19); o **lint** continua ideia aberta.
+- **Situação (2026-11-01):** a parte de **testes** foi entregue nas tasks 171–187
+  (`docs/specs/done/testes-automatizados.spec.md`, concluída em 2026-10-19); o **lint** virou as specs 297–299 (padronização e lint) e já roda no CI, faltando só o fecho.
 
 ### I-005 — IA lê o código dos projetos · chat IA/backend
 
@@ -150,6 +150,11 @@
   - Demais tabelas `tipo_*_status` (`tipo_projeto_status`, `tipo_demanda_status`, `tipo_atividade_status`, `tipo_proposta_ia_status`): ver quantos valores cada uma tem e se alguma também é só booleana ou um enum fixo, que poderia ser coluna.
   - Booleanos com prefixo `is_`: `is_estrutural` (`demanda`, `demanda_filho`, `caminho_demanda`, `arvore_demanda` e a DTO `isEstrutural`), e `is_solo` e `is_arquivado` em `plano` (migração 0059). Decidir o padrão de nome de booleanos antes de renomear qualquer um, e checar `docs/CONVENTIONS.md`.
   - `is_deleted` fica como está (genérico, em `BaseEntity`).
+- **Avaliação de 2026-10-31 (com o autor):**
+  - Só `tipo_usuario_status` (`ATIVO`/`INATIVO`) é um booleano disfarçado; não há estado previsto como afastado ou férias. Vira `usuario.ativo`.
+  - Ficam como tabela de referência: `tipo_projeto_status` (4), `tipo_demanda_status` (4), `tipo_atividade_status` (4), `tipo_proposta_ia_status` (5) e `tipo_plano_ponto_situacao` (4), todas ciclos de vida reais. `tipo_dia_nao_util_duracao` (`INTEGRAL`/`MEIO_PERIODO`) e `tipo_plano_fonte_origem` (`COLADO`/`ARQUIVO`) também ficam, por serem enums que podem crescer.
+  - Nomes: convivem `is_` (`is_estrutural`, `is_solo`, `is_arquivado`), `eh_` (`eh_bidirecional`) e sem prefixo (`ativo`, `rascunho`, `recorrente`, `silenciada` e outros, a maioria). Proposta: sem prefixo, `estrutural`, `solo`, `arquivado`, `bidirecional`; `is_deleted` fica (genérico, `BaseEntity`).
+  - **Ordem:** esperar a task 299 (SQL padronizado, em `active/`) fechar, porque ela reformata os mesmos repositories (`usuario`, `demanda`, `plano`). Depois escrever a spec (próximo número livre: 300).
 - **Custo aparente:** migrations de renomear e converter (sem editar migration já aplicada, ver `sql-migrations`); ajustar DTOs no `shared` (`isEstrutural` e `status` de usuário), repositories e a UI; e atualizar `docs/SCHEMA.md`. A troca de `status` de usuário mexe em filtros de tela e em alguns testes de integração. Rodar `gerenciamento-de-impacto` nos DTOs e enums antes de mexer.
 
 ### I-037 — Visão do cliente sobre as demandas do próprio projeto · cliente/permissões

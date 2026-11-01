@@ -3,9 +3,9 @@ import { DemandaGrafoNoDto } from './DemandaGrafoNoDto';
 import { DemandaGrafoArestaDto } from './DemandaGrafoArestaDto';
 
 export class DemandaGrafoDto {
-  @ApiProperty({ type: [DemandaGrafoNoDto] })
-  nos: DemandaGrafoNoDto[];
+    @ApiProperty({ type: [DemandaGrafoNoDto] })
+    nos: DemandaGrafoNoDto[];
 
-  @ApiProperty({ type: [DemandaGrafoArestaDto] })
-  arestas: DemandaGrafoArestaDto[];
+    @ApiProperty({ type: [DemandaGrafoArestaDto] })
+    arestas: DemandaGrafoArestaDto[];
 }

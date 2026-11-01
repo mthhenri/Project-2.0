@@ -1,3 +1,3 @@
 export class TagRecuperarDto {
-  id: number;
+    id: number;
 }

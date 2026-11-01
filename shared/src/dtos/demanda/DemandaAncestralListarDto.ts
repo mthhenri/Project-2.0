@@ -1,3 +1,3 @@
 export class DemandaAncestralListarDto {
-  demandaId: number;
+    demandaId: number;
 }

@@ -1,59 +1,59 @@
 :host {
-  display: inline-flex;
+    display: inline-flex;
 }
 
 .demanda-status {
-  display: inline-flex;
-
-  &__gatilho {
-    background: none;
-    border: none;
-    padding: 0.125rem;
-    cursor: pointer;
     display: inline-flex;
-    border-radius: 50%;
-    transition: background-color 0.15s ease;
 
-    &:hover {
-      background: var(--app-surface-100);
-    }
-  }
+    &__gatilho {
+        background: none;
+        border: none;
+        padding: 0.125rem;
+        cursor: pointer;
+        display: inline-flex;
+        border-radius: 50%;
+        transition: background-color 0.15s ease;
 
-  &__opcoes {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    min-width: 11rem;
-  }
-
-  &__opcao {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    padding: 0.375rem 0.5rem;
-    border: none;
-    border-radius: 0.5rem;
-    background: transparent;
-    color: var(--p-text-color);
-    cursor: pointer;
-    text-align: left;
-    transition: background-color 0.15s ease;
-
-    &:hover {
-      background: var(--app-surface-100);
+        &:hover {
+            background: var(--app-surface-100);
+        }
     }
 
-    &--ativo {
-      background: var(--app-realce-sutil);
+    &__opcoes {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 11rem;
     }
-  }
 
-  &__opcao-nome {
-    flex: 1;
-  }
+    &__opcao {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.375rem 0.5rem;
+        border: none;
+        border-radius: 0.5rem;
+        background: transparent;
+        color: var(--p-text-color);
+        cursor: pointer;
+        text-align: left;
+        transition: background-color 0.15s ease;
 
-  &__opcao-check {
-    font-size: 0.75rem;
-    color: var(--p-primary-600);
-  }
+        &:hover {
+            background: var(--app-surface-100);
+        }
+
+        &--ativo {
+            background: var(--app-realce-sutil);
+        }
+    }
+
+    &__opcao-nome {
+        flex: 1;
+    }
+
+    &__opcao-check {
+        font-size: 0.75rem;
+        color: var(--p-primary-600);
+    }
 }

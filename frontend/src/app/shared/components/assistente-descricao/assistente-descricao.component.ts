@@ -22,72 +22,73 @@ const DURACAO_DESFAZER_MS = 5000;
  * oferece "Desfazer" (devolve o texto de antes pelo mesmo evento `textoAuxiliadoAceito`, então quem consome não muda nada).
  */
 @Component({
-  selector: 'app-assistente-descricao',
-  standalone: true,
-  imports: [ButtonModule, PanelModule, ProgressSpinnerModule, TextareaModule, TooltipModule],
-  templateUrl: './assistente-descricao.component.html',
+    selector: 'app-assistente-descricao',
+    standalone: true,
+    imports: [ButtonModule, PanelModule, ProgressSpinnerModule, TextareaModule, TooltipModule],
+    templateUrl: './assistente-descricao.component.html',
+    styleUrl: './assistente-descricao.component.scss',
 })
 export class AssistenteDescricaoComponent {
-  @Input() textoAtual: string = '';
-  @Input() tipoEntidade: 'execucao' | 'demanda' = 'execucao';
-  @Input() contextoEntidade: string = '';
+    @Input() textoAtual: string = '';
+    @Input() tipoEntidade: 'execucao' | 'demanda' = 'execucao';
+    @Input() contextoEntidade: string = '';
 
-  @Output() textoAuxiliadoAceito = new EventEmitter<string>();
+    @Output() textoAuxiliadoAceito = new EventEmitter<string>();
 
-  private readonly http = inject(HttpClient);
-  private readonly desfazerService = inject(DesfazerService);
+    private readonly http = inject(HttpClient);
+    private readonly desfazerService = inject(DesfazerService);
 
-  readonly minimoCaracteres = MINIMO_CARACTERES_ASSISTENTE;
+    readonly minimoCaracteres = MINIMO_CARACTERES_ASSISTENTE;
 
-  textoAuxiliado = signal<string>('');
-  carregandoAuxilio = signal<boolean>(false);
-  mostrarComparacao = signal<boolean>(false);
+    textoAuxiliado = signal<string>('');
+    carregandoAuxilio = signal<boolean>(false);
+    mostrarComparacao = signal<boolean>(false);
 
-  /** Só habilita com texto suficiente para o backend aceitar (evita o 400 silencioso). */
-  podeAuxiliar(): boolean {
-    return this.textoAtual.trim().length >= MINIMO_CARACTERES_ASSISTENTE && !this.carregandoAuxilio();
-  }
+    /** Só habilita com texto suficiente para o backend aceitar (evita o 400 silencioso). */
+    podeAuxiliar(): boolean {
+        return this.textoAtual.trim().length >= MINIMO_CARACTERES_ASSISTENTE && !this.carregandoAuxilio();
+    }
 
-  auxiliar(): void {
-    if (!this.podeAuxiliar()) return;
-    this.carregandoAuxilio.set(true);
-    this.http
-      .post<StandardResponse<AssistenteDescricaoAuxiliadaDto>>(
-        `${ambiente.apiUrl}/assistente/auxiliar-descricao`,
-        {
-          textoOriginal: this.textoAtual,
-          tipoEntidade: this.tipoEntidade,
-          contextoEntidade: this.contextoEntidade,
-        },
-      )
-      .pipe(finalize(() => this.carregandoAuxilio.set(false)))
-      .subscribe((resposta) => {
-        if (resposta.sucesso && resposta.dados) {
-          this.textoAuxiliado.set(resposta.dados.textoAuxiliado);
-          this.mostrarComparacao.set(true);
-        }
-      });
-  }
+    auxiliar(): void {
+        if (!this.podeAuxiliar()) return;
+        this.carregandoAuxilio.set(true);
+        this.http
+            .post<StandardResponse<AssistenteDescricaoAuxiliadaDto>>(
+                `${ambiente.apiUrl}/assistente/auxiliar-descricao`,
+                {
+                    textoOriginal: this.textoAtual,
+                    tipoEntidade: this.tipoEntidade,
+                    contextoEntidade: this.contextoEntidade,
+                },
+            )
+            .pipe(finalize(() => this.carregandoAuxilio.set(false)))
+            .subscribe((resposta) => {
+                if (resposta.sucesso && resposta.dados) {
+                    this.textoAuxiliado.set(resposta.dados.textoAuxiliado);
+                    this.mostrarComparacao.set(true);
+                }
+            });
+    }
 
-  editarSugestao(evento: Event): void {
-    this.textoAuxiliado.set((evento.target as HTMLTextAreaElement).value);
-  }
+    editarSugestao(evento: Event): void {
+        this.textoAuxiliado.set((evento.target as HTMLTextAreaElement).value);
+    }
 
-  aceitar(): void {
-    const textoAnterior = this.textoAtual;
-    this.textoAuxiliadoAceito.emit(this.textoAuxiliado());
-    this.mostrarComparacao.set(false);
-    this.desfazerService.oferecer({
-      mensagem: 'Texto substituído pela sugestão da IA',
-      desfazer: () => of(null),
-      aposDesfazer: () => this.textoAuxiliadoAceito.emit(textoAnterior),
-      duracaoMs: DURACAO_DESFAZER_MS,
-      mensagemAposDesfazer: 'Texto anterior restaurado',
-    });
-  }
+    aceitar(): void {
+        const textoAnterior = this.textoAtual;
+        this.textoAuxiliadoAceito.emit(this.textoAuxiliado());
+        this.mostrarComparacao.set(false);
+        this.desfazerService.oferecer({
+            mensagem: 'Texto substituído pela sugestão da IA',
+            desfazer: () => of(null),
+            aposDesfazer: () => this.textoAuxiliadoAceito.emit(textoAnterior),
+            duracaoMs: DURACAO_DESFAZER_MS,
+            mensagemAposDesfazer: 'Texto anterior restaurado',
+        });
+    }
 
-  descartar(): void {
-    this.textoAuxiliado.set('');
-    this.mostrarComparacao.set(false);
-  }
+    descartar(): void {
+        this.textoAuxiliado.set('');
+        this.mostrarComparacao.set(false);
+    }
 }

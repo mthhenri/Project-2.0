@@ -9,67 +9,67 @@ import { MENSAGEM_CARACTERES_PROIBIDOS, REGEX_SEM_CARACTERES_PROIBIDOS } from '.
  * nasce PLANEJADA, com as mesmas regras de permissão da tela.
  */
 export class ProporCriarDemandaDto {
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  projetoId?: number;
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    projetoId?: number;
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  projetoPropostaId?: number;
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    projetoPropostaId?: number;
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  demandaPaiId?: number;
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    demandaPaiId?: number;
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  demandaPaiPropostaId?: number;
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    demandaPaiPropostaId?: number;
 
-  @IsString()
-  @MinLength(3)
-  @MaxLength(255)
-  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
-  nome: string;
+    @IsString()
+    @MinLength(3)
+    @MaxLength(255)
+    @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
+    nome: string;
 
-  /** Demanda de estrutura: agrupa outras demandas e não recebe atividades. Sem o campo, é uma demanda de trabalho. */
-  @IsOptional()
-  @IsBoolean()
-  isEstrutural?: boolean;
+    /** Demanda de estrutura: agrupa outras demandas e não recebe atividades. Sem o campo, é uma demanda de trabalho. */
+    @IsOptional()
+    @IsBoolean()
+    isEstrutural?: boolean;
 
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  horasEstimadas?: number;
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    @Type(() => Number)
+    horasEstimadas?: number;
 
-  @IsOptional()
-  @IsString()
-  descricaoTecnica?: string;
+    @IsOptional()
+    @IsString()
+    descricaoTecnica?: string;
 
-  @IsOptional()
-  @IsString()
-  descricaoCliente?: string;
+    @IsOptional()
+    @IsString()
+    descricaoCliente?: string;
 
-  @IsOptional()
-  @IsDateString()
-  previsaoFimData?: string;
+    @IsOptional()
+    @IsDateString()
+    previsaoFimData?: string;
 }
 
 /** Os dados guardados na proposta: a entrada mais os nomes do projeto e da demanda pai, só para o cartão mostrar. */
 export class PropostaCriarDemandaDadosDto extends ProporCriarDemandaDto {
-  @IsOptional()
-  @IsString()
-  projetoNome?: string;
+    @IsOptional()
+    @IsString()
+    projetoNome?: string;
 
-  @IsOptional()
-  @IsString()
-  demandaPaiNome?: string;
+    @IsOptional()
+    @IsString()
+    demandaPaiNome?: string;
 }

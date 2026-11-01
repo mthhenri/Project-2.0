@@ -4,8 +4,8 @@ import { ConfigService } from '../../../config/config.service';
 import { dataNoFuso } from '../../chat/domain/chat-conversa';
 
 interface Suspensao {
-  desde: Date;
-  motivo: string | null;
+    desde: Date;
+    motivo: string | null;
 }
 
 /**
@@ -14,45 +14,45 @@ interface Suspensao {
  */
 @Injectable()
 export class CheckinSuspensaoService {
-  private readonly suspensoes = new Map<number, Suspensao>();
-  private readonly retomadas = new Map<number, Date>();
+    private readonly suspensoes = new Map<number, Suspensao>();
+    private readonly retomadas = new Map<number, Date>();
 
-  constructor(private readonly configService: ConfigService) {}
+    constructor(private readonly configService: ConfigService) {}
 
-  suspender(usuarioId: number, motivo: string | null): CheckinSuspensaoConsultadaDto {
-    this.suspensoes.set(usuarioId, { desde: this.agora(), motivo: motivo?.trim() || null });
-    return this.consultar(usuarioId);
-  }
-
-  /** Devolve a suspensão que acabou (para o desfazer poder restaurá-la), ou `null` se não havia. */
-  retomar(usuarioId: number): CheckinSuspensaoConsultadaDto | null {
-    const anterior = this.consultar(usuarioId);
-    this.suspensoes.delete(usuarioId);
-    if (anterior.suspenso) this.retomadas.set(usuarioId, this.agora());
-    return anterior.suspenso ? anterior : null;
-  }
-
-  /** Quando o usuário voltou da última reunião (a agenda do check-in recomeça dali), ou `null`. */
-  ultimaRetomada(usuarioId: number): Date | null {
-    return this.retomadas.get(usuarioId) ?? null;
-  }
-
-  consultar(usuarioId: number): CheckinSuspensaoConsultadaDto {
-    const suspensao = this.suspensoes.get(usuarioId);
-    if (suspensao && this.ehDeDiaAnterior(suspensao.desde)) {
-      this.suspensoes.delete(usuarioId);
-      return { suspenso: false, desde: null, motivo: null };
+    suspender(usuarioId: number, motivo: string | null): CheckinSuspensaoConsultadaDto {
+        this.suspensoes.set(usuarioId, { desde: this.agora(), motivo: motivo?.trim() || null });
+        return this.consultar(usuarioId);
     }
-    return suspensao ? { suspenso: true, desde: suspensao.desde, motivo: suspensao.motivo } : { suspenso: false, desde: null, motivo: null };
-  }
 
-  private ehDeDiaAnterior(desde: Date): boolean {
-    const fuso = this.configService.obter().aplicacao.fusoHorario;
-    return dataNoFuso(desde, fuso) !== dataNoFuso(this.agora(), fuso);
-  }
+    /** Devolve a suspensão que acabou (para o desfazer poder restaurá-la), ou `null` se não havia. */
+    retomar(usuarioId: number): CheckinSuspensaoConsultadaDto | null {
+        const anterior = this.consultar(usuarioId);
+        this.suspensoes.delete(usuarioId);
+        if (anterior.suspenso) this.retomadas.set(usuarioId, this.agora());
+        return anterior.suspenso ? anterior : null;
+    }
 
-  /** Separado para os testes fixarem o instante. */
-  protected agora(): Date {
-    return new Date();
-  }
+    /** Quando o usuário voltou da última reunião (a agenda do check-in recomeça dali), ou `null`. */
+    ultimaRetomada(usuarioId: number): Date | null {
+        return this.retomadas.get(usuarioId) ?? null;
+    }
+
+    consultar(usuarioId: number): CheckinSuspensaoConsultadaDto {
+        const suspensao = this.suspensoes.get(usuarioId);
+        if (suspensao && this.ehDeDiaAnterior(suspensao.desde)) {
+            this.suspensoes.delete(usuarioId);
+            return { suspenso: false, desde: null, motivo: null };
+        }
+        return suspensao ? { suspenso: true, desde: suspensao.desde, motivo: suspensao.motivo } : { suspenso: false, desde: null, motivo: null };
+    }
+
+    private ehDeDiaAnterior(desde: Date): boolean {
+        const fuso = this.configService.obter().aplicacao.fusoHorario;
+        return dataNoFuso(desde, fuso) !== dataNoFuso(this.agora(), fuso);
+    }
+
+    /** Separado para os testes fixarem o instante. */
+    protected agora(): Date {
+        return new Date();
+    }
 }

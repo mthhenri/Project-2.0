@@ -8,23 +8,23 @@ import { ModelagemController } from './modelagem.controller';
 const rotas = () => rotasPorNome(ModelagemController);
 
 test('ver o diagrama é aberto a qualquer usuário autenticado', () => {
-  assert.equal(rotas()['obterDiagrama'].gestorOnly, false);
+    assert.equal(rotas()['obterDiagrama'].gestorOnly, false);
 });
 
 test('criar, alterar e excluir grupo e alterar e tirar a tabela da modelagem são @GestorOnly', () => {
-  for (const nome of ['criarGrupo', 'alterarGrupo', 'excluirGrupo', 'alterarTabela', 'removerTabela']) assert.equal(rotas()[nome].gestorOnly, true, nome);
+    for (const nome of ['criarGrupo', 'alterarGrupo', 'excluirGrupo', 'alterarTabela', 'removerTabela']) assert.equal(rotas()[nome].gestorOnly, true, nome);
 });
 
 test('nenhuma rota é pública nem exclusiva de administrador', () => {
-  for (const rota of Object.values(rotas())) {
-    assert.equal(rota.publica, false, rota.nome);
-    assert.equal(rota.administradorOnly, false, rota.nome);
-  }
+    for (const rota of Object.values(rotas())) {
+        assert.equal(rota.publica, false, rota.nome);
+        assert.equal(rota.administradorOnly, false, rota.nome);
+    }
 });
 
 test('verbos e caminhos de todas as rotas', () => {
-  assert.deepEqual(
-    Object.values(rotas()).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
-    ['DELETE grupo/:id', 'DELETE tabela/:nome', 'GET /', 'POST grupo', 'PUT grupo/:id', 'PUT tabela/:nome'].sort(),
-  );
+    assert.deepEqual(
+        Object.values(rotas()).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
+        ['DELETE grupo/:id', 'DELETE tabela/:nome', 'GET /', 'POST grupo', 'PUT grupo/:id', 'PUT tabela/:nome'].sort(),
+    );
 });

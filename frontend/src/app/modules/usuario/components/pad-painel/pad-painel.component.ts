@@ -20,78 +20,78 @@ import { SecaoAnotacao } from '../usuario-anotacoes-dialog/secao-anotacao';
  * cabeçalho (`comTitulo`; os botões entram em `[padAcoes]`). O estado é o do `PadService`, um só para todos os lugares.
  */
 @Component({
-  selector: 'app-pad-painel',
-  standalone: true,
-  imports: [
-    DatePipe,
-    ReactiveFormsModule,
-    AccordionModule,
-    ButtonModule,
-    ContextMenuModule,
-    MarkdownEditorComponent,
-    MarkdownVisualizadorComponent,
-    SkeletonModule,
-    TooltipModule,
-  ],
-  templateUrl: './pad-painel.component.html',
-  styleUrl: './pad-painel.component.scss',
+    selector: 'app-pad-painel',
+    standalone: true,
+    imports: [
+        DatePipe,
+        ReactiveFormsModule,
+        AccordionModule,
+        ButtonModule,
+        ContextMenuModule,
+        MarkdownEditorComponent,
+        MarkdownVisualizadorComponent,
+        SkeletonModule,
+        TooltipModule,
+    ],
+    templateUrl: './pad-painel.component.html',
+    styleUrl: './pad-painel.component.scss',
 })
 export class PadPainelComponent {
-  protected readonly pad = inject(PadService);
+    protected readonly pad = inject(PadService);
 
-  /** Falso mostra cada seção só no visualizador, sem salvar e sem "Limpar". */
-  readonly editavel = input(true);
-  /** Mostra o título e o "Editado há…" no cabeçalho. Sem título e sem `[padAcoes]` o cabeçalho some. */
-  readonly comTitulo = input(true);
-  /** O conteúdo numa coluna centralizada de até 880 px (o drawer em tela cheia). */
-  readonly colunaCentral = input(false);
+    /** Falso mostra cada seção só no visualizador, sem salvar e sem "Limpar". */
+    readonly editavel = input(true);
+    /** Mostra o título e o "Editado há…" no cabeçalho. Sem título e sem `[padAcoes]` o cabeçalho some. */
+    readonly comTitulo = input(true);
+    /** O conteúdo numa coluna centralizada de até 880 px (o drawer em tela cheia). */
+    readonly colunaCentral = input(false);
 
-  readonly rotuloSecao = ROTULO_SECAO_ANOTACAO;
-  readonly iconeSecao = ICONE_SECAO_ANOTACAO;
-  private readonly editores = viewChildren(MarkdownEditorComponent);
-  private readonly menuContexto = viewChild<ContextMenu>('menuContexto');
+    readonly rotuloSecao = ROTULO_SECAO_ANOTACAO;
+    readonly iconeSecao = ICONE_SECAO_ANOTACAO;
+    private readonly editores = viewChildren(MarkdownEditorComponent);
+    private readonly menuContexto = viewChild<ContextMenu>('menuContexto');
 
-  /**
+    /**
    * Menu do botão direito sobre um trecho selecionado: "Enviar para" com as cinco seções (a de origem fica
    * oculta ao abrir). Itens são propriedades diretas (um getter reconstruiria o menu a cada ciclo e ele fecharia).
    */
-  readonly itensMenu: MenuItem[] = [
-    {
-      label: 'Enviar para',
-      icon: 'pi pi-send',
-      items: ORDEM_SECOES_PAD.map((tipo): MenuItem => ({
-        id: tipo,
-        label: ROTULO_SECAO_ANOTACAO[tipo],
-        icon: ICONE_SECAO_ANOTACAO[tipo],
-        command: () => this.enviarTrecho(tipo),
-      })),
-    },
-  ];
-  /** Seção e trecho do menu aberto (lidos quando um destino é escolhido). */
-  private trechoDoMenu: { secao: SecaoAnotacao; texto: string } | null = null;
+    readonly itensMenu: MenuItem[] = [
+        {
+            label: 'Enviar para',
+            icon: 'pi pi-send',
+            items: ORDEM_SECOES_PAD.map((tipo): MenuItem => ({
+                id: tipo,
+                label: ROTULO_SECAO_ANOTACAO[tipo],
+                icon: ICONE_SECAO_ANOTACAO[tipo],
+                command: () => this.enviarTrecho(tipo),
+            })),
+        },
+    ];
+    /** Seção e trecho do menu aberto (lidos quando um destino é escolhido). */
+    private trechoDoMenu: { secao: SecaoAnotacao; texto: string } | null = null;
 
-  constructor() {
+    constructor() {
     // Os editores só existem depois que o esqueleto some: o primeiro recebe o foco quando o pad termina de carregar.
-    effect(() => {
-      if (this.pad.carregando() || this.pad.secoes().length === 0) return;
-      setTimeout(() => this.editores()[0]?.focar());
-    });
-  }
+        effect(() => {
+            if (this.pad.carregando() || this.pad.secoes().length === 0) return;
+            setTimeout(() => this.editores()[0]?.focar());
+        });
+    }
 
-  /** Botão direito sobre um trecho selecionado: mostra "Enviar para" sem a própria seção. */
-  abrirMenuDoTrecho(secao: SecaoAnotacao, selecao: MenuContextoEditorEvento): void {
-    if (!this.editavel()) return;
-    this.trechoDoMenu = { secao, texto: selecao.texto };
-    this.itensMenu[0].items?.forEach((item) => (item.visible = item.id !== secao.tipo));
-    this.menuContexto()?.show(selecao.evento);
-  }
+    /** Botão direito sobre um trecho selecionado: mostra "Enviar para" sem a própria seção. */
+    abrirMenuDoTrecho(secao: SecaoAnotacao, selecao: MenuContextoEditorEvento): void {
+        if (!this.editavel()) return;
+        this.trechoDoMenu = { secao, texto: selecao.texto };
+        this.itensMenu[0].items?.forEach((item) => (item.visible = item.id !== secao.tipo));
+        this.menuContexto()?.show(selecao.evento);
+    }
 
-  limpar(secao: SecaoAnotacao): void {
-    if (this.editavel()) this.pad.limpar(secao);
-  }
+    limpar(secao: SecaoAnotacao): void {
+        if (this.editavel()) this.pad.limpar(secao);
+    }
 
-  private enviarTrecho(destino: TipoAnotacaoEnum): void {
-    const alvo = this.trechoDoMenu;
-    if (alvo) this.pad.enviarTrecho(alvo.secao, destino, alvo.texto);
-  }
+    private enviarTrecho(destino: TipoAnotacaoEnum): void {
+        const alvo = this.trechoDoMenu;
+        if (alvo) this.pad.enviarTrecho(alvo.secao, destino, alvo.texto);
+    }
 }

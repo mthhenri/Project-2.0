@@ -1,147 +1,212 @@
 <div class="configuracao-ia">
-  <div class="configuracao-ia__cabecalho">
-    <div class="configuracao-ia__titulo-grupo">
-      <h1 class="configuracao-ia__titulo">Configurações da IA</h1>
-      @if (ativa(); as versaoAtiva) {
-        <span class="configuracao-ia__contador">versão {{ versaoAtiva.versao }} ativa</span>
-      }
-    </div>
-
-    @if (jaCarregou()) {
-      <!-- Enquanto salva ou recarrega a tela, o interruptor não aceita troca (o recarregamento descartaria o que fosse mudado agora). -->
-      <div class="configuracao-ia__liga" [attr.inert]="salvando() || carregando() ? '' : null">
-        @if (estado(); as estadoAtual) {
-          <p-tag [value]="'IA ' + (rotuloEstado[estadoAtual] | lowercase)" [severity]="severidadeEstado[estadoAtual]" [rounded]="true" class="configuracao-ia__estado" />
-        }
-        <label class="configuracao-ia__interruptor">
-          <!-- O dado gravado segue sendo `iaDesligada`; o interruptor mostra o contrário (aceso = IA ligada). -->
-          <p-toggleswitch [formControl]="formulario.controls.iaDesligada" [trueValue]="false" [falseValue]="true" />
-          @if (iaLigada()) {
-            <strong class="configuracao-ia__estado-ia configuracao-ia__estado-ia--ligada"><i class="pi pi-check-circle"></i>IA ligada</strong>
-          } @else {
-            <strong class="configuracao-ia__estado-ia"><i class="pi pi-ban"></i>IA desligada</strong>
-          }
-        </label>
-        <i
-          class="pi pi-info-circle configuracao-ia__info"
-          role="img"
-          tabindex="0"
-          [attr.aria-label]="iaLigada() ? 'IA ligada: o que isso significa' : 'IA desligada: o que isso significa'"
-          [pTooltip]="
-            iaLigada()
-              ? 'O chat responde às mensagens e os check-ins e as sugestões usam a IA. Sem a chave da API no ambiente ela fica fora do ar (a chave fica no .env, não nesta tela).'
-              : 'Nenhuma chamada à IA é feita: o chat não responde e o sistema usa as telas convencionais para todos.'
-          "
-          tooltipPosition="bottom"
-        ></i>
-      </div>
-    }
-  </div>
-
-  @if (erro()) {
-    <div class="configuracao-ia__erro" role="alert">
-      <i class="pi pi-exclamation-triangle"></i>
-      <span>Não foi possível carregar a configuração da IA.</span>
-      <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
-    </div>
-  } @else {
-    <div class="configuracao-ia__grade" [class.configuracao-ia__grade--recarregando]="carregando()">
-      <div class="configuracao-ia__principal">
-        <p-tabs [value]="abaAtiva()" (valueChange)="abaAtiva.set($any($event))">
-          <p-tablist>
-            <p-tab value="provedor">
-              <i class="pi pi-sliders-h mr-2"></i>Provedor e modelos
-              @if (provedorComErro()) {
-                <i class="pi pi-exclamation-circle configuracao-ia__aba-erro" role="img" aria-label="Há erros nesta aba"></i>
-              }
-            </p-tab>
-            <p-tab value="comportamento">
-              <i class="pi pi-cog mr-2"></i>Comportamento
-              @if (comportamentoComErro()) {
-                <i class="pi pi-exclamation-circle configuracao-ia__aba-erro" role="img" aria-label="Há erros nesta aba"></i>
-              }
-            </p-tab>
-            <p-tab value="autonomia"><i class="pi pi-sparkles mr-2"></i>Autonomia</p-tab>
-            <p-tab value="prompts"><i class="pi pi-file-edit mr-2"></i>Prompts</p-tab>
-            <p-tab value="custos"><i class="pi pi-dollar mr-2"></i>Custos</p-tab>
-          </p-tablist>
-
-          <p-tabpanels>
-            <p-tabpanel value="provedor">
-              @if (!jaCarregou()) {
-                <div class="configuracao-ia__esqueleto" aria-busy="true">
-                  <p-skeleton height="6rem" />
-                  <p-skeleton height="10rem" />
-                  <p-skeleton height="4rem" width="60%" />
-                </div>
-              } @else {
-                <app-provedor-aba
-                  [formulario]="formulario"
-                  [valor]="valorAtual()"
-                  [provedoresComChave]="provedoresComChave()"
-                  [erros]="errosDeProvedorVisiveis()"
-                [errosPorProvedor]="errosPorProvedorVisiveis()"
-                />
-              }
-            </p-tabpanel>
-
-            <p-tabpanel value="comportamento">
-              @if (!jaCarregou()) {
-                <div class="configuracao-ia__esqueleto" aria-busy="true">
-                  <p-skeleton height="14rem" />
-                </div>
-              } @else {
-                <app-comportamento-aba [formulario]="formulario" [valor]="valorAtual()" [tentouSalvar]="tentouSalvar()" />
-              }
-            </p-tabpanel>
-
-            <p-tabpanel value="autonomia">
-              @if (!jaCarregou()) {
-                <div class="configuracao-ia__esqueleto" aria-busy="true">
-                  <p-skeleton height="20rem" />
-                </div>
-              } @else {
-                <app-autonomia-aba [formulario]="formulario" [valor]="valorAtual()" />
-              }
-            </p-tabpanel>
-
-            <p-tabpanel value="prompts">
-              <app-prompts-aba />
-            </p-tabpanel>
-
-            <!-- A aba só existe enquanto está aberta: cada vez que o administrador entra nela, a consulta de custos roda de novo. -->
-            <p-tabpanel value="custos">
-              @if (abaAtiva() === 'custos') {
-                <app-custos-aba />
-              }
-            </p-tabpanel>
-          </p-tabpanels>
-        </p-tabs>
-
-        @if (jaCarregou() && barraDeSalvarVisivel()) {
-          <div class="configuracao-ia__acoes">
-            <span class="configuracao-ia__dica">
-              @if (semAlteracoes()) {
-                Nada a salvar: o formulário é igual à versão {{ ativa()?.versao }}.
-              } @else {
-                Salvar cria a versão {{ proximaVersao() }}; a versão {{ ativa()?.versao }} continua no histórico.
-              }
-            </span>
-            <p-button label="Descartar alterações" severity="secondary" [outlined]="true" [disabled]="semAlteracoes() || salvando()" (onClick)="descartarAlteracoes()" />
-            <p-button label="Salvar nova versão" icon="pi pi-save" [disabled]="semAlteracoes() || salvando()" [loading]="salvando()" (onClick)="salvar()" />
-          </div>
-        }
-      </div>
-
-      @if (jaCarregou()) {
-        <app-historico-versoes class="configuracao-ia__historico" [versoes]="versoes()" [ativa]="ativa()" (usarComoBase)="usarComoBase($event)" />
-      } @else {
-        <div class="configuracao-ia__historico configuracao-ia__esqueleto" aria-busy="true">
-          <p-skeleton height="2rem" />
-          <p-skeleton height="2rem" />
-          <p-skeleton height="2rem" />
+    <div class="configuracao-ia__cabecalho">
+        <div class="configuracao-ia__titulo-grupo">
+            <h1 class="configuracao-ia__titulo">Configurações da IA</h1>
+            @if (ativa(); as versaoAtiva) {
+                <span class="configuracao-ia__contador">versão {{ versaoAtiva.versao }} ativa</span>
+            }
         </div>
-      }
+
+        @if (jaCarregou()) {
+            <!-- Enquanto salva ou recarrega a tela, o interruptor não aceita troca (o recarregamento descartaria o que fosse mudado agora). -->
+            <div
+                class="configuracao-ia__liga"
+                [attr.inert]="salvando() || carregando() ? '' : null"
+            >
+                @if (estado(); as estadoAtual) {
+                    <p-tag
+                        [value]="'IA ' + (rotuloEstado[estadoAtual] | lowercase)"
+                        [severity]="severidadeEstado[estadoAtual]"
+                        [rounded]="true"
+                        class="configuracao-ia__estado"
+                    />
+                }
+                <label class="configuracao-ia__interruptor">
+                    <!-- O dado gravado segue sendo `iaDesligada`; o interruptor mostra o contrário (aceso = IA ligada). -->
+                    <p-toggleswitch
+                        [formControl]="formulario.controls.iaDesligada"
+                        [trueValue]="false"
+                        [falseValue]="true"
+                    />
+                    @if (iaLigada()) {
+                        <strong
+                            class="configuracao-ia__estado-ia configuracao-ia__estado-ia--ligada"
+                            ><i class="pi pi-check-circle"></i>IA ligada</strong
+                        >
+                    } @else {
+                        <strong class="configuracao-ia__estado-ia"
+                            ><i class="pi pi-ban"></i>IA desligada</strong
+                        >
+                    }
+                </label>
+                <i
+                    class="pi pi-info-circle configuracao-ia__info"
+                    role="img"
+                    tabindex="0"
+                    [attr.aria-label]="
+                        iaLigada()
+                            ? 'IA ligada: o que isso significa'
+                            : 'IA desligada: o que isso significa'
+                    "
+                    [pTooltip]="
+                        iaLigada()
+                            ? 'O chat responde às mensagens e os check-ins e as sugestões usam a IA. Sem a chave da API no ambiente ela fica fora do ar (a chave fica no .env, não nesta tela).'
+                            : 'Nenhuma chamada à IA é feita: o chat não responde e o sistema usa as telas convencionais para todos.'
+                    "
+                    tooltipPosition="bottom"
+                ></i>
+            </div>
+        }
     </div>
-  }
+
+    @if (erro()) {
+        <div class="configuracao-ia__erro" role="alert">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>Não foi possível carregar a configuração da IA.</span>
+            <p-button
+                label="Tentar de novo"
+                icon="pi pi-refresh"
+                size="small"
+                [outlined]="true"
+                (onClick)="carregar()"
+            />
+        </div>
+    } @else {
+        <div
+            class="configuracao-ia__grade"
+            [class.configuracao-ia__grade--recarregando]="carregando()"
+        >
+            <div class="configuracao-ia__principal">
+                <p-tabs [value]="abaAtiva()" (valueChange)="abaAtiva.set($any($event))">
+                    <p-tablist>
+                        <p-tab value="provedor">
+                            <i class="pi pi-sliders-h mr-2"></i>Provedor e modelos
+                            @if (provedorComErro()) {
+                                <i
+                                    class="pi pi-exclamation-circle configuracao-ia__aba-erro"
+                                    role="img"
+                                    aria-label="Há erros nesta aba"
+                                ></i>
+                            }
+                        </p-tab>
+                        <p-tab value="comportamento">
+                            <i class="pi pi-cog mr-2"></i>Comportamento
+                            @if (comportamentoComErro()) {
+                                <i
+                                    class="pi pi-exclamation-circle configuracao-ia__aba-erro"
+                                    role="img"
+                                    aria-label="Há erros nesta aba"
+                                ></i>
+                            }
+                        </p-tab>
+                        <p-tab value="autonomia"
+                            ><i class="pi pi-sparkles mr-2"></i>Autonomia</p-tab
+                        >
+                        <p-tab value="prompts"><i class="pi pi-file-edit mr-2"></i>Prompts</p-tab>
+                        <p-tab value="custos"><i class="pi pi-dollar mr-2"></i>Custos</p-tab>
+                    </p-tablist>
+
+                    <p-tabpanels>
+                        <p-tabpanel value="provedor">
+                            @if (!jaCarregou()) {
+                                <div class="configuracao-ia__esqueleto" aria-busy="true">
+                                    <p-skeleton height="6rem" />
+                                    <p-skeleton height="10rem" />
+                                    <p-skeleton height="4rem" width="60%" />
+                                </div>
+                            } @else {
+                                <app-provedor-aba
+                                    [formulario]="formulario"
+                                    [valor]="valorAtual()"
+                                    [provedoresComChave]="provedoresComChave()"
+                                    [erros]="errosDeProvedorVisiveis()"
+                                    [errosPorProvedor]="errosPorProvedorVisiveis()"
+                                />
+                            }
+                        </p-tabpanel>
+
+                        <p-tabpanel value="comportamento">
+                            @if (!jaCarregou()) {
+                                <div class="configuracao-ia__esqueleto" aria-busy="true">
+                                    <p-skeleton height="14rem" />
+                                </div>
+                            } @else {
+                                <app-comportamento-aba
+                                    [formulario]="formulario"
+                                    [valor]="valorAtual()"
+                                    [tentouSalvar]="tentouSalvar()"
+                                />
+                            }
+                        </p-tabpanel>
+
+                        <p-tabpanel value="autonomia">
+                            @if (!jaCarregou()) {
+                                <div class="configuracao-ia__esqueleto" aria-busy="true">
+                                    <p-skeleton height="20rem" />
+                                </div>
+                            } @else {
+                                <app-autonomia-aba
+                                    [formulario]="formulario"
+                                    [valor]="valorAtual()"
+                                />
+                            }
+                        </p-tabpanel>
+
+                        <p-tabpanel value="prompts">
+                            <app-prompts-aba />
+                        </p-tabpanel>
+
+                        <!-- A aba só existe enquanto está aberta: cada vez que o administrador entra nela, a consulta de custos roda de novo. -->
+                        <p-tabpanel value="custos">
+                            @if (abaAtiva() === "custos") {
+                                <app-custos-aba />
+                            }
+                        </p-tabpanel>
+                    </p-tabpanels>
+                </p-tabs>
+
+                @if (jaCarregou() && barraDeSalvarVisivel()) {
+                    <div class="configuracao-ia__acoes">
+                        <span class="configuracao-ia__dica">
+                            @if (semAlteracoes()) {
+                                Nada a salvar: o formulário é igual à versão {{ ativa()?.versao }}.
+                            } @else {
+                                Salvar cria a versão {{ proximaVersao() }}; a versão
+                                {{ ativa()?.versao }} continua no histórico.
+                            }
+                        </span>
+                        <p-button
+                            label="Descartar alterações"
+                            severity="secondary"
+                            [outlined]="true"
+                            [disabled]="semAlteracoes() || salvando()"
+                            (onClick)="descartarAlteracoes()"
+                        />
+                        <p-button
+                            label="Salvar nova versão"
+                            icon="pi pi-save"
+                            [disabled]="semAlteracoes() || salvando()"
+                            [loading]="salvando()"
+                            (onClick)="salvar()"
+                        />
+                    </div>
+                }
+            </div>
+
+            @if (jaCarregou()) {
+                <app-historico-versoes
+                    class="configuracao-ia__historico"
+                    [versoes]="versoes()"
+                    [ativa]="ativa()"
+                    (usarComoBase)="usarComoBase($event)"
+                />
+            } @else {
+                <div class="configuracao-ia__historico configuracao-ia__esqueleto" aria-busy="true">
+                    <p-skeleton height="2rem" />
+                    <p-skeleton height="2rem" />
+                    <p-skeleton height="2rem" />
+                </div>
+            }
+        </div>
+    }
 </div>

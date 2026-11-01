@@ -1,3 +1,3 @@
 export class ExecucaoAcessoFiltrarDto {
-  usuarioId: number;
+    usuarioId: number;
 }

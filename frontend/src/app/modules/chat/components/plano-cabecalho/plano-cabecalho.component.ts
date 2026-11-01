@@ -19,122 +19,122 @@ import { ProjetoService } from '../../../projeto/services/projeto.service';
  * Análogo visual: o cabeçalho do detalhe da demanda e os chips da tela de Atividades.
  */
 @Component({
-  selector: 'app-plano-cabecalho',
-  standalone: true,
-  imports: [DatePipe, ReactiveFormsModule, ButtonModule, ConfirmPopupModule, InputTextModule, PopoverModule, SelectModule, TooltipModule],
-  providers: [ConfirmationService],
-  templateUrl: './plano-cabecalho.component.html',
-  styleUrl: './plano-cabecalho.component.scss',
+    selector: 'app-plano-cabecalho',
+    standalone: true,
+    imports: [DatePipe, ReactiveFormsModule, ButtonModule, ConfirmPopupModule, InputTextModule, PopoverModule, SelectModule, TooltipModule],
+    providers: [ConfirmationService],
+    templateUrl: './plano-cabecalho.component.html',
+    styleUrl: './plano-cabecalho.component.scss',
 })
 export class PlanoCabecalhoComponent {
-  readonly plano = input.required<PlanoRecuperadoDto>();
-  /** Uma ação do cabeçalho está em andamento (desabilita os botões). */
-  readonly ocupado = input(false);
+    readonly plano = input.required<PlanoRecuperadoDto>();
+    /** Uma ação do cabeçalho está em andamento (desabilita os botões). */
+    readonly ocupado = input(false);
 
-  readonly tituloAlterado = output<string>();
-  readonly soloAlterado = output<boolean>();
-  readonly projetoAtribuido = output<number>();
-  readonly demandaLigada = output<number>();
-  /** Publicar os textos na demanda ligada (task 237). */
-  readonly publicarSolicitado = output<void>();
-  /** Criar uma demanda nova a partir do plano e ligá-la a ele (task 237). */
-  readonly demandaNovaSolicitada = output<void>();
-  readonly arquivadoAlterado = output<boolean>();
-  readonly excluido = output<void>();
+    readonly tituloAlterado = output<string>();
+    readonly soloAlterado = output<boolean>();
+    readonly projetoAtribuido = output<number>();
+    readonly demandaLigada = output<number>();
+    /** Publicar os textos na demanda ligada (task 237). */
+    readonly publicarSolicitado = output<void>();
+    /** Criar uma demanda nova a partir do plano e ligá-la a ele (task 237). */
+    readonly demandaNovaSolicitada = output<void>();
+    readonly arquivadoAlterado = output<boolean>();
+    readonly excluido = output<void>();
 
-  private readonly sessao = inject(UsuarioSessaoService);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly projetoService = inject(ProjetoService);
-  private readonly demandaService = inject(DemandaService);
-  private readonly campoTitulo = viewChild<ElementRef<HTMLInputElement>>('campoTitulo');
-  private readonly popoverProjeto = viewChild<Popover>('popoverProjeto');
-  private readonly popoverDemanda = viewChild<Popover>('popoverDemanda');
+    private readonly sessao = inject(UsuarioSessaoService);
+    private readonly confirmationService = inject(ConfirmationService);
+    private readonly projetoService = inject(ProjetoService);
+    private readonly demandaService = inject(DemandaService);
+    private readonly campoTitulo = viewChild<ElementRef<HTMLInputElement>>('campoTitulo');
+    private readonly popoverProjeto = viewChild<Popover>('popoverProjeto');
+    private readonly popoverDemanda = viewChild<Popover>('popoverDemanda');
 
-  readonly editandoTitulo = signal(false);
-  readonly controleTitulo = new FormControl<string>('', { nonNullable: true });
-  readonly projetos = signal<ProjetoResumoDto[]>([]);
-  readonly demandas = signal<DemandaResumoDto[]>([]);
-  readonly carregandoOpcoes = signal(false);
-  readonly controleProjeto = new FormControl<number | null>(null);
-  readonly controleDemanda = new FormControl<number | null>(null);
+    readonly editandoTitulo = signal(false);
+    readonly controleTitulo = new FormControl<string>('', { nonNullable: true });
+    readonly projetos = signal<ProjetoResumoDto[]>([]);
+    readonly demandas = signal<DemandaResumoDto[]>([]);
+    readonly carregandoOpcoes = signal(false);
+    readonly controleProjeto = new FormControl<number | null>(null);
+    readonly controleDemanda = new FormControl<number | null>(null);
 
-  /** Só quem criou o plano o marca como solo e lhe atribui projeto. */
-  readonly eCriador = computed(() => this.plano().criadorId === this.sessao.id());
-  readonly ePessoal = computed(() => this.plano().projetoId === null);
+    /** Só quem criou o plano o marca como solo e lhe atribui projeto. */
+    readonly eCriador = computed(() => this.plano().criadorId === this.sessao.id());
+    readonly ePessoal = computed(() => this.plano().projetoId === null);
 
-  iniciarEdicaoDoTitulo(): void {
-    this.controleTitulo.setValue(this.plano().titulo);
-    this.editandoTitulo.set(true);
-    setTimeout(() => {
-      const campo = this.campoTitulo()?.nativeElement;
-      campo?.focus();
-      campo?.select();
-    });
-  }
+    iniciarEdicaoDoTitulo(): void {
+        this.controleTitulo.setValue(this.plano().titulo);
+        this.editandoTitulo.set(true);
+        setTimeout(() => {
+            const campo = this.campoTitulo()?.nativeElement;
+            campo?.focus();
+            campo?.select();
+        });
+    }
 
-  cancelarEdicaoDoTitulo(): void {
-    this.editandoTitulo.set(false);
-  }
+    cancelarEdicaoDoTitulo(): void {
+        this.editandoTitulo.set(false);
+    }
 
-  /** Enter ou perder o foco confirma; vazio ou igual ao atual só fecha o campo. */
-  confirmarTitulo(): void {
-    if (!this.editandoTitulo()) return;
-    this.editandoTitulo.set(false);
-    const digitado = this.controleTitulo.value.trim();
-    if (digitado && digitado !== this.plano().titulo) this.tituloAlterado.emit(digitado);
-  }
+    /** Enter ou perder o foco confirma; vazio ou igual ao atual só fecha o campo. */
+    confirmarTitulo(): void {
+        if (!this.editandoTitulo()) return;
+        this.editandoTitulo.set(false);
+        const digitado = this.controleTitulo.value.trim();
+        if (digitado && digitado !== this.plano().titulo) this.tituloAlterado.emit(digitado);
+    }
 
-  abrirProjetos(evento: Event): void {
-    this.controleProjeto.reset();
-    this.popoverProjeto()?.toggle(evento);
-    if (this.projetos().length > 0) return;
-    this.carregandoOpcoes.set(true);
-    this.projetoService.listar({ allRows: true }).subscribe({
-      next: (resposta) => {
-        this.projetos.set(resposta.dados?.itens ?? []);
-        this.carregandoOpcoes.set(false);
-      },
-      error: () => this.carregandoOpcoes.set(false),
-    });
-  }
+    abrirProjetos(evento: Event): void {
+        this.controleProjeto.reset();
+        this.popoverProjeto()?.toggle(evento);
+        if (this.projetos().length > 0) return;
+        this.carregandoOpcoes.set(true);
+        this.projetoService.listar({ allRows: true }).subscribe({
+            next: (resposta) => {
+                this.projetos.set(resposta.dados?.itens ?? []);
+                this.carregandoOpcoes.set(false);
+            },
+            error: () => this.carregandoOpcoes.set(false),
+        });
+    }
 
-  atribuirProjeto(): void {
-    const projetoId = this.controleProjeto.value;
-    if (projetoId === null) return;
-    this.popoverProjeto()?.hide();
-    this.projetoAtribuido.emit(projetoId);
-  }
+    atribuirProjeto(): void {
+        const projetoId = this.controleProjeto.value;
+        if (projetoId === null) return;
+        this.popoverProjeto()?.hide();
+        this.projetoAtribuido.emit(projetoId);
+    }
 
-  abrirDemandas(evento: Event): void {
-    const projetoId = this.plano().projetoId;
-    if (projetoId === null) return;
-    this.controleDemanda.setValue(this.plano().demandaId);
-    this.popoverDemanda()?.toggle(evento);
-    this.carregandoOpcoes.set(true);
-    this.demandaService.listar({ projetoId, pagina: 1, itensPorPagina: 200 }).subscribe({
-      next: (resposta) => {
-        this.demandas.set(resposta.dados?.itens ?? []);
-        this.carregandoOpcoes.set(false);
-      },
-      error: () => this.carregandoOpcoes.set(false),
-    });
-  }
+    abrirDemandas(evento: Event): void {
+        const projetoId = this.plano().projetoId;
+        if (projetoId === null) return;
+        this.controleDemanda.setValue(this.plano().demandaId);
+        this.popoverDemanda()?.toggle(evento);
+        this.carregandoOpcoes.set(true);
+        this.demandaService.listar({ projetoId, pagina: 1, itensPorPagina: 200 }).subscribe({
+            next: (resposta) => {
+                this.demandas.set(resposta.dados?.itens ?? []);
+                this.carregandoOpcoes.set(false);
+            },
+            error: () => this.carregandoOpcoes.set(false),
+        });
+    }
 
-  ligarDemanda(): void {
-    const demandaId = this.controleDemanda.value;
-    if (demandaId === null || demandaId === this.plano().demandaId) return;
-    this.popoverDemanda()?.hide();
-    this.demandaLigada.emit(demandaId);
-  }
+    ligarDemanda(): void {
+        const demandaId = this.controleDemanda.value;
+        if (demandaId === null || demandaId === this.plano().demandaId) return;
+        this.popoverDemanda()?.hide();
+        this.demandaLigada.emit(demandaId);
+    }
 
-  confirmarExclusao(evento: Event): void {
-    this.confirmationService.confirm({
-      target: evento.currentTarget ?? evento.target ?? undefined,
-      message: `Excluir o plano "${this.plano().titulo}"?`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Excluir',
-      rejectLabel: 'Cancelar',
-      accept: () => this.excluido.emit(),
-    });
-  }
+    confirmarExclusao(evento: Event): void {
+        this.confirmationService.confirm({
+            target: evento.currentTarget ?? evento.target ?? undefined,
+            message: `Excluir o plano "${this.plano().titulo}"?`,
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Excluir',
+            rejectLabel: 'Cancelar',
+            accept: () => this.excluido.emit(),
+        });
+    }
 }

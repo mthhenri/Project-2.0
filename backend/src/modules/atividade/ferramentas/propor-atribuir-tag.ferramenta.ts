@@ -18,70 +18,70 @@ import { AtividadeService } from '../services/atividade.service';
  */
 @Injectable()
 export class ProporAtribuirTagFerramenta extends FerramentaPropostaIa<ProporAtribuirTagDto> {
-  readonly nome = 'propor_atribuir_tag';
-  readonly descricao =
-    'Propõe acrescentar (`adicionarTagIds`) e/ou tirar (`removerTagIds`) tags de uma DEMANDA ou de uma ATIVIDADE (`alvo` e `alvoId`). Os ids das tags vêm de listar_tags; nunca invente id nem nome de tag. ' +
+    readonly nome = 'propor_atribuir_tag';
+    readonly descricao =
+        'Propõe acrescentar (`adicionarTagIds`) e/ou tirar (`removerTagIds`) tags de uma DEMANDA ou de uma ATIVIDADE (`alvo` e `alvoId`). Os ids das tags vêm de listar_tags; nunca invente id nem nome de tag. ' +
     'Se a tag que o usuário pediu não existe, avise que criar tag é pela tela de Tags. Informe só o que muda. Nada muda até o usuário confirmar no cartão. ' +
     'O desenvolvedor marca tags nas suas ATIVIDADES e nas DEMANDAS de que é membro; o gestor, em qualquer uma.';
-  readonly permissao = 'QUALQUER' as const;
-  readonly classeDeEntrada = ProporAtribuirTagDto;
-  readonly tipoProposta = TipoPropostaIaEnum.ATRIBUIR_TAG;
+    readonly permissao = 'QUALQUER' as const;
+    readonly classeDeEntrada = ProporAtribuirTagDto;
+    readonly tipoProposta = TipoPropostaIaEnum.ATRIBUIR_TAG;
 
-  constructor(
-    propostaIaService: PropostaIaService,
-    private readonly demandaService: DemandaService,
-    private readonly atividadeService: AtividadeService,
-    private readonly tagService: TagService,
-  ) {
-    super(propostaIaService);
-  }
-
-  protected async montarDados(entrada: ProporAtribuirTagDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const adicionar = entrada.adicionarTagIds ?? [];
-    const remover = entrada.removerTagIds ?? [];
-    if (adicionar.length === 0 && remover.length === 0) throw new BusinessException('Informe as tags a acrescentar (adicionarTagIds) e/ou a tirar (removerTagIds)');
-    const emAmbos = adicionar.filter((tagId) => remover.includes(tagId));
-    if (emAmbos.length > 0) throw new BusinessException('Uma mesma tag não pode entrar e sair na mesma proposta');
-
-    const nomesPorId = new Map(((await this.tagService.listar()).dados ?? []).map((tag) => [tag.id, tag.nome]));
-    const inexistentes = [...adicionar, ...remover].filter((tagId) => !nomesPorId.has(tagId));
-    if (inexistentes.length > 0) {
-      throw new BusinessException(`Tag(s) inexistente(s): ${inexistentes.join(', ')}. Use os ids de listar_tags; criar tag é pela tela de Tags. Avise o usuário.`);
+    constructor(
+        propostaIaService: PropostaIaService,
+        private readonly demandaService: DemandaService,
+        private readonly atividadeService: AtividadeService,
+        private readonly tagService: TagService,
+    ) {
+        super(propostaIaService);
     }
 
-    // As leituras conferem a existência e o acesso do usuário ao alvo: erro aqui volta ao modelo, e nenhuma proposta nasce.
-    let alvoNome: string;
-    let demandaNome: string | undefined;
-    let tagsAtuais: number[];
-    if (entrada.alvo === 'DEMANDA') {
-      const demanda = (await this.demandaService.recuperar({ id: entrada.alvoId }, usuarioAtivo)).dados;
-      if (!demanda) throw new BusinessException('Demanda não encontrada');
-      alvoNome = demanda.nome;
-      tagsAtuais = ((await this.demandaService.listarTagsDemanda({ id: entrada.alvoId }, usuarioAtivo)).dados ?? []).map((tag) => tag.id);
-    } else {
-      const atividade = (await this.atividadeService.recuperar({ id: entrada.alvoId }, usuarioAtivo)).dados;
-      if (!atividade) throw new BusinessException('Atividade não encontrada');
-      alvoNome = atividade.nome;
-      demandaNome = (await this.demandaService.recuperar({ id: atividade.demandaId }, usuarioAtivo)).dados?.nome;
-      tagsAtuais = ((await this.atividadeService.listarTags({ id: entrada.alvoId }, usuarioAtivo)).dados ?? []).map((tag) => tag.id);
-    }
+    protected async montarDados(entrada: ProporAtribuirTagDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const adicionar = entrada.adicionarTagIds ?? [];
+        const remover = entrada.removerTagIds ?? [];
+        if (adicionar.length === 0 && remover.length === 0) throw new BusinessException('Informe as tags a acrescentar (adicionarTagIds) e/ou a tirar (removerTagIds)');
+        const emAmbos = adicionar.filter((tagId) => remover.includes(tagId));
+        if (emAmbos.length > 0) throw new BusinessException('Uma mesma tag não pode entrar e sair na mesma proposta');
 
-    const depois = calcularConjuntoDeTags(tagsAtuais, adicionar, remover);
-    if (mesmoConjuntoDeTags(tagsAtuais, depois)) {
-      throw new BusinessException(`"${alvoNome}" já está com essas tags: não há o que alterar. Avise o usuário.`);
+        const nomesPorId = new Map(((await this.tagService.listar()).dados ?? []).map((tag) => [tag.id, tag.nome]));
+        const inexistentes = [...adicionar, ...remover].filter((tagId) => !nomesPorId.has(tagId));
+        if (inexistentes.length > 0) {
+            throw new BusinessException(`Tag(s) inexistente(s): ${inexistentes.join(', ')}. Use os ids de listar_tags; criar tag é pela tela de Tags. Avise o usuário.`);
+        }
+
+        // As leituras conferem a existência e o acesso do usuário ao alvo: erro aqui volta ao modelo, e nenhuma proposta nasce.
+        let alvoNome: string;
+        let demandaNome: string | undefined;
+        let tagsAtuais: number[];
+        if (entrada.alvo === 'DEMANDA') {
+            const demanda = (await this.demandaService.recuperar({ id: entrada.alvoId }, usuarioAtivo)).dados;
+            if (!demanda) throw new BusinessException('Demanda não encontrada');
+            alvoNome = demanda.nome;
+            tagsAtuais = ((await this.demandaService.listarTagsDemanda({ id: entrada.alvoId }, usuarioAtivo)).dados ?? []).map((tag) => tag.id);
+        } else {
+            const atividade = (await this.atividadeService.recuperar({ id: entrada.alvoId }, usuarioAtivo)).dados;
+            if (!atividade) throw new BusinessException('Atividade não encontrada');
+            alvoNome = atividade.nome;
+            demandaNome = (await this.demandaService.recuperar({ id: atividade.demandaId }, usuarioAtivo)).dados?.nome;
+            tagsAtuais = ((await this.atividadeService.listarTags({ id: entrada.alvoId }, usuarioAtivo)).dados ?? []).map((tag) => tag.id);
+        }
+
+        const depois = calcularConjuntoDeTags(tagsAtuais, adicionar, remover);
+        if (mesmoConjuntoDeTags(tagsAtuais, depois)) {
+            throw new BusinessException(`"${alvoNome}" já está com essas tags: não há o que alterar. Avise o usuário.`);
+        }
+        const nomes = (ids: readonly number[]): string[] => ids.map((tagId) => nomesPorId.get(tagId) ?? `Tag ${tagId}`);
+        const dados: PropostaAtribuirTagDadosDto = {
+            alvo: entrada.alvo,
+            alvoId: entrada.alvoId,
+            // Só o que de fato muda (o que já estava como pedido não vira "mudança").
+            adicionarTagIds: adicionar.filter((tagId) => !tagsAtuais.includes(tagId)),
+            removerTagIds: remover.filter((tagId) => tagsAtuais.includes(tagId)),
+            alvoNome,
+            ...(demandaNome ? { demandaNome } : {}),
+            tagsAntesNomes: nomes([...tagsAtuais].sort((item, segundo) => item - segundo)),
+            tagsDepoisNomes: nomes(depois),
+        };
+        return { ...dados };
     }
-    const nomes = (ids: readonly number[]): string[] => ids.map((tagId) => nomesPorId.get(tagId) ?? `Tag ${tagId}`);
-    const dados: PropostaAtribuirTagDadosDto = {
-      alvo: entrada.alvo,
-      alvoId: entrada.alvoId,
-      // Só o que de fato muda (o que já estava como pedido não vira "mudança").
-      adicionarTagIds: adicionar.filter((tagId) => !tagsAtuais.includes(tagId)),
-      removerTagIds: remover.filter((tagId) => tagsAtuais.includes(tagId)),
-      alvoNome,
-      ...(demandaNome ? { demandaNome } : {}),
-      tagsAntesNomes: nomes([...tagsAtuais].sort((a, b) => a - b)),
-      tagsDepoisNomes: nomes(depois),
-    };
-    return { ...dados };
-  }
 }

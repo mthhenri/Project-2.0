@@ -1,86 +1,142 @@
 <form class="compositor-direto" (submit)="$event.preventDefault(); enviarMensagem()">
-  @if (listaAberta()) {
-    <div class="compositor-direto__lista">
-      <p class="compositor-direto__cabecalho-da-lista">{{ cabecalhoDaLista() }}</p>
-      @if (gatilho()?.tipo === 'REFERENCIA' && (situacaoDaBusca() === 'carregando' || situacaoDaBusca() === 'ocioso') && itens().length === 0) {
-        <p class="compositor-direto__aviso-da-lista" role="status"><i class="pi pi-spinner pi-spin" aria-hidden="true"></i> Buscando…</p>
-      } @else if (situacaoDaBusca() === 'erro') {
-        <p class="compositor-direto__aviso-da-lista compositor-direto__aviso-da-lista--erro" role="alert"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i> Não foi possível buscar.</p>
-      } @else if (itens().length === 0) {
-        <p class="compositor-direto__aviso-da-lista" role="status">Nenhum resultado</p>
-      }
-      <div role="listbox" [attr.aria-label]="cabecalhoDaLista()" id="sugestoes-do-compositor">
-      @for (item of itens(); track $index) {
-        <button
-          type="button"
-          role="option"
-          class="compositor-direto__item"
-          [class.compositor-direto__item--ativo]="$index === indice()"
-          [attr.id]="'sugestao-' + $index"
-          [attr.aria-selected]="$index === indice()"
-          (mousedown)="manterFoco($event)"
-          (mouseenter)="indice.set($index)"
-          (click)="escolher($index)"
-        >
-          @if (item.nomeDoAvatar) {
-            <app-mensagem-direta-avatar [nome]="item.nomeDoAvatar" [pequeno]="true" />
-          } @else {
-            <span class="compositor-direto__icone"><i class="pi" [class]="item.icone" aria-hidden="true"></i></span>
-          }
-          <span class="compositor-direto__item-texto">
-            <span class="compositor-direto__item-titulo">{{ item.titulo }}</span>
-            @if (item.detalhe) {
-              <span class="compositor-direto__item-detalhe">{{ item.detalhe }}</span>
+    @if (listaAberta()) {
+        <div class="compositor-direto__lista">
+            <p class="compositor-direto__cabecalho-da-lista">{{ cabecalhoDaLista() }}</p>
+            @if (
+                gatilho()?.tipo === "REFERENCIA" &&
+                (situacaoDaBusca() === "carregando" || situacaoDaBusca() === "ocioso") &&
+                itens().length === 0
+            ) {
+                <p class="compositor-direto__aviso-da-lista" role="status">
+                    <i class="pi pi-spinner pi-spin" aria-hidden="true"></i> Buscando…
+                </p>
+            } @else if (situacaoDaBusca() === "erro") {
+                <p
+                    class="compositor-direto__aviso-da-lista compositor-direto__aviso-da-lista--erro"
+                    role="alert"
+                >
+                    <i class="pi pi-exclamation-triangle" aria-hidden="true"></i> Não foi possível
+                    buscar.
+                </p>
+            } @else if (itens().length === 0) {
+                <p class="compositor-direto__aviso-da-lista" role="status">Nenhum resultado</p>
             }
-          </span>
+            <div role="listbox" [attr.aria-label]="cabecalhoDaLista()" id="sugestoes-do-compositor">
+                @for (item of itens(); track $index) {
+                    <button
+                        type="button"
+                        role="option"
+                        class="compositor-direto__item"
+                        [class.compositor-direto__item--ativo]="$index === indice()"
+                        [attr.id]="'sugestao-' + $index"
+                        [attr.aria-selected]="$index === indice()"
+                        (mousedown)="manterFoco($event)"
+                        (mouseenter)="indice.set($index)"
+                        (click)="escolher($index)"
+                    >
+                        @if (item.nomeDoAvatar) {
+                            <app-mensagem-direta-avatar
+                                [nome]="item.nomeDoAvatar"
+                                [pequeno]="true"
+                            />
+                        } @else {
+                            <span class="compositor-direto__icone"
+                                ><i class="pi" [class]="item.icone" aria-hidden="true"></i
+                            ></span>
+                        }
+                        <span class="compositor-direto__item-texto">
+                            <span class="compositor-direto__item-titulo">{{ item.titulo }}</span>
+                            @if (item.detalhe) {
+                                <span class="compositor-direto__item-detalhe">{{
+                                    item.detalhe
+                                }}</span>
+                            }
+                        </span>
+                    </button>
+                }
+            </div>
+        </div>
+    }
+
+    @if (painelDeCodigo(); as painel) {
+        <app-mensagem-direta-codigo-painel
+            class="compositor-direto__painel"
+            [texto]="texto()"
+            [inicio]="texto().length - painel.selecionado.length"
+            [fim]="texto().length"
+            [codigoInicial]="painel.selecionado"
+            (inserir)="inserirDoPainel($event)"
+            (cancelar)="fecharPainelDeCodigo()"
+        />
+    }
+
+    @if (resposta(); as alvo) {
+        <div class="compositor-direto__resposta" role="group" aria-label="Resposta em preparo">
+            <span class="compositor-direto__resposta-texto">
+                <span class="compositor-direto__resposta-nome">Respondendo a {{ alvo.nome }}</span>
+                <span class="compositor-direto__resposta-trecho">{{ alvo.trecho }}</span>
+            </span>
+            <p-button
+                icon="pi pi-times"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                ariaLabel="Cancelar a resposta"
+                pTooltip="Cancelar a resposta (Esc)"
+                tooltipPosition="top"
+                (onClick)="cancelarResposta.emit()"
+            />
+        </div>
+    }
+
+    <div class="compositor-direto__caixa" [attr.inert]="painelDeCodigo() ? '' : null">
+        <app-editor-mensagem
+            class="compositor-direto__campo"
+            [embutido]="true"
+            placeholder="Mensagem — @ pessoa, # demanda"
+            rotulo="Mensagem"
+            [listaControlada]="listaAberta() ? 'sugestoes-do-compositor' : null"
+            [opcaoAtiva]="listaAberta() && itens().length > 0 ? 'sugestao-' + indice() : null"
+            (mudou)="aoMudar($event)"
+            (atualizou)="aoAtualizar()"
+            (teclou)="aoTeclar($event)"
+            (colou)="aoColar($event)"
+            (perdeuFoco)="aoPerderOFoco()"
+        />
+        <p-button
+            class="compositor-direto__codigo"
+            icon="pi pi-code"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Inserir bloco de código"
+            pTooltip="Bloco de código"
+            tooltipPosition="top"
+            (onClick)="inserirCodigo()"
+        />
+        <button
+            type="submit"
+            class="compositor-direto__enviar"
+            aria-label="Enviar mensagem"
+            pTooltip="Enviar (Enter) · Shift+Enter nova linha · Ctrl+Enter envia em lista e código"
+            tooltipPosition="top"
+            [disabled]="!podeEnviar()"
+        >
+            <i class="pi pi-send" aria-hidden="true"></i>
         </button>
-      }
-      </div>
     </div>
-  }
-
-  @if (painelDeCodigo(); as painel) {
-    <app-mensagem-direta-codigo-painel
-      class="compositor-direto__painel"
-      [texto]="texto()"
-      [inicio]="texto().length - painel.selecionado.length"
-      [fim]="texto().length"
-      [codigoInicial]="painel.selecionado"
-      (inserir)="inserirDoPainel($event)"
-      (cancelar)="fecharPainelDeCodigo()"
-    />
-  }
-
-  @if (resposta(); as alvo) {
-    <div class="compositor-direto__resposta" role="group" aria-label="Resposta em preparo">
-      <span class="compositor-direto__resposta-texto">
-        <span class="compositor-direto__resposta-nome">Respondendo a {{ alvo.nome }}</span>
-        <span class="compositor-direto__resposta-trecho">{{ alvo.trecho }}</span>
-      </span>
-      <p-button icon="pi pi-times" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Cancelar a resposta" pTooltip="Cancelar a resposta (Esc)" tooltipPosition="top" (onClick)="cancelarResposta.emit()" />
-    </div>
-  }
-
-  <div class="compositor-direto__caixa" [attr.inert]="painelDeCodigo() ? '' : null">
-    <app-editor-mensagem
-      class="compositor-direto__campo"
-      [embutido]="true"
-      placeholder="Mensagem — @ pessoa, # demanda"
-      rotulo="Mensagem"
-      [listaControlada]="listaAberta() ? 'sugestoes-do-compositor' : null"
-      [opcaoAtiva]="listaAberta() && itens().length > 0 ? 'sugestao-' + indice() : null"
-      (mudou)="aoMudar($event)"
-      (atualizou)="aoAtualizar()"
-      (teclou)="aoTeclar($event)"
-      (colou)="aoColar($event)"
-      (perdeuFoco)="aoPerderOFoco()"
-    />
-    <p-button class="compositor-direto__codigo" icon="pi pi-code" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Inserir bloco de código" pTooltip="Bloco de código" tooltipPosition="top" (onClick)="inserirCodigo()" />
-    <button type="submit" class="compositor-direto__enviar" aria-label="Enviar mensagem" pTooltip="Enviar (Enter) · Shift+Enter nova linha · Ctrl+Enter envia em lista e código" tooltipPosition="top" [disabled]="!podeEnviar()"><i class="pi pi-send" aria-hidden="true"></i></button>
-  </div>
-  @if (mostrarContador()) {
-    <span class="compositor-direto__contador" [class.compositor-direto__contador--excedeu]="excedeu()" [attr.role]="excedeu() ? 'alert' : null">
-      @if (excedeu()) { Passou do limite da mensagem: } {{ contador() }}
-    </span>
-  }
+    @if (mostrarContador()) {
+        <span
+            class="compositor-direto__contador"
+            [class.compositor-direto__contador--excedeu]="excedeu()"
+            [attr.role]="excedeu() ? 'alert' : null"
+        >
+            @if (excedeu()) {
+                Passou do limite da mensagem:
+            }
+            {{ contador() }}
+        </span>
+    }
 </form>

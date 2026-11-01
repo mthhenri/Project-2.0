@@ -16,57 +16,57 @@ import { DemandaService } from '../services/demanda.service';
  */
 @Injectable()
 export class CriarDemandaExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.CRIAR_DEMANDA;
+    readonly tipo = TipoPropostaIaEnum.CRIAR_DEMANDA;
 
-  constructor(
-    private readonly demandaService: DemandaService,
-    private readonly demandaRepositorio: DemandaRepository,
-    private readonly propostaIaService: PropostaIaService,
-  ) {}
+    constructor(
+        private readonly demandaService: DemandaService,
+        private readonly demandaRepositorio: DemandaRepository,
+        private readonly propostaIaService: PropostaIaService,
+    ) {}
 
-  validar(dados: Record<string, unknown>): void {
-    validarDadosDaProposta(PropostaCriarDemandaDadosDto, dados);
-  }
-
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const entrada = validarDadosDaProposta(PropostaCriarDemandaDadosDto, dados);
-
-    let projetoId = entrada.projetoId;
-    if (!projetoId) {
-      const propostaDoProjeto = await recuperarPropostaReferenciada(this.propostaIaService, entrada.projetoPropostaId as number, TipoPropostaIaEnum.CRIAR_PROJETO, usuarioAtivo);
-      projetoId = idCriadoPelaProposta(propostaDoProjeto, 'projetoId', `o projeto "${entrada.projetoNome ?? ''}"`);
-    }
-    let demandaPaiId = entrada.demandaPaiId;
-    if (!demandaPaiId && entrada.demandaPaiPropostaId) {
-      const propostaDaPai = await recuperarPropostaReferenciada(this.propostaIaService, entrada.demandaPaiPropostaId, TipoPropostaIaEnum.CRIAR_DEMANDA, usuarioAtivo);
-      demandaPaiId = idCriadoPelaProposta(propostaDaPai, 'demandaId', `a demanda "${entrada.demandaPaiNome ?? ''}"`);
+    validar(dados: Record<string, unknown>): void {
+        validarDadosDaProposta(PropostaCriarDemandaDadosDto, dados);
     }
 
-    const criada = await this.demandaService.criar(
-      {
-        projetoId,
-        demandaPaiId,
-        nome: entrada.nome,
-        descricaoTecnica: entrada.descricaoTecnica,
-        descricaoCliente: entrada.descricaoCliente,
-        horasEstimadas: entrada.horasEstimadas ?? 0,
-        status: TipoDemandaStatusEnum.PLANEJADA,
-        isEstrutural: entrada.isEstrutural ?? false,
-        previsaoFimData: entrada.previsaoFimData,
-      },
-      usuarioAtivo,
-    );
-    return { demandaId: criada.dados?.id, projetoId, nome: entrada.nome };
-  }
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const entrada = validarDadosDaProposta(PropostaCriarDemandaDadosDto, dados);
 
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    const demandaId = Number(resultado['demandaId']);
-    if (!Number.isInteger(demandaId)) throw new BusinessException('Não há demanda a desfazer nesta proposta');
-    // `recuperar` confere a permissão do usuário sobre a demanda (e a existência).
-    await this.demandaService.recuperar({ id: demandaId }, usuarioAtivo);
-    if (await this.demandaRepositorio.possuiFilhasOuAtividades({ id: demandaId })) {
-      throw new BusinessException('A demanda já tem sub-demandas ou atividades: não dá para desfazer a criação');
+        let projetoId = entrada.projetoId;
+        if (!projetoId) {
+            const propostaDoProjeto = await recuperarPropostaReferenciada(this.propostaIaService, entrada.projetoPropostaId as number, TipoPropostaIaEnum.CRIAR_PROJETO, usuarioAtivo);
+            projetoId = idCriadoPelaProposta(propostaDoProjeto, 'projetoId', `o projeto "${entrada.projetoNome ?? ''}"`);
+        }
+        let demandaPaiId = entrada.demandaPaiId;
+        if (!demandaPaiId && entrada.demandaPaiPropostaId) {
+            const propostaDaPai = await recuperarPropostaReferenciada(this.propostaIaService, entrada.demandaPaiPropostaId, TipoPropostaIaEnum.CRIAR_DEMANDA, usuarioAtivo);
+            demandaPaiId = idCriadoPelaProposta(propostaDaPai, 'demandaId', `a demanda "${entrada.demandaPaiNome ?? ''}"`);
+        }
+
+        const criada = await this.demandaService.criar(
+            {
+                projetoId,
+                demandaPaiId,
+                nome: entrada.nome,
+                descricaoTecnica: entrada.descricaoTecnica,
+                descricaoCliente: entrada.descricaoCliente,
+                horasEstimadas: entrada.horasEstimadas ?? 0,
+                status: TipoDemandaStatusEnum.PLANEJADA,
+                isEstrutural: entrada.isEstrutural ?? false,
+                previsaoFimData: entrada.previsaoFimData,
+            },
+            usuarioAtivo,
+        );
+        return { demandaId: criada.dados?.id, projetoId, nome: entrada.nome };
     }
-    await this.demandaService.excluir({ id: demandaId });
-  }
+
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        const demandaId = Number(resultado['demandaId']);
+        if (!Number.isInteger(demandaId)) throw new BusinessException('Não há demanda a desfazer nesta proposta');
+        // `recuperar` confere a permissão do usuário sobre a demanda (e a existência).
+        await this.demandaService.recuperar({ id: demandaId }, usuarioAtivo);
+        if (await this.demandaRepositorio.possuiFilhasOuAtividades({ id: demandaId })) {
+            throw new BusinessException('A demanda já tem sub-demandas ou atividades: não dá para desfazer a criação');
+        }
+        await this.demandaService.excluir({ id: demandaId });
+    }
 }

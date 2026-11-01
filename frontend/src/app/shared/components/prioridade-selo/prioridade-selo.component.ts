@@ -8,22 +8,22 @@ import { AtividadePrioridadeService } from '../../../core/services/atividade-pri
  * todas as telas abertas; sem cache, usa a que veio com a atividade.
  */
 @Component({
-  selector: 'app-prioridade-selo',
-  standalone: true,
-  templateUrl: './prioridade-selo.component.html',
-  styleUrl: './prioridade-selo.component.scss',
+    selector: 'app-prioridade-selo',
+    standalone: true,
+    templateUrl: './prioridade-selo.component.html',
+    styleUrl: './prioridade-selo.component.scss',
 })
 export class PrioridadeSeloComponent {
-  private readonly prioridadeService = inject(AtividadePrioridadeService);
+    private readonly prioridadeService = inject(AtividadePrioridadeService);
 
-  readonly prioridade = input.required<Pick<AtividadePrioridadeResumoDto, 'codigo' | 'descricao' | 'cor'>>();
-  /** Cor de pré-visualização (a tela de Configurações mostra o selo com a cor ainda não salva). */
-  readonly corForcada = input<string | null>(null);
+    readonly prioridade = input.required<Pick<AtividadePrioridadeResumoDto, 'codigo' | 'descricao' | 'cor'>>();
+    /** Cor de pré-visualização (a tela de Configurações mostra o selo com a cor ainda não salva). */
+    readonly corForcada = input<string | null>(null);
 
-  readonly cor = computed(() => {
-    const forcada = this.corForcada();
-    if (forcada) return forcada;
-    const codigo = this.prioridade().codigo;
-    return this.prioridadeService.prioridades().find((item) => item.codigo === codigo)?.cor ?? this.prioridade().cor;
-  });
+    readonly cor = computed(() => {
+        const forcada = this.corForcada();
+        if (forcada) return forcada;
+        const codigo = this.prioridade().codigo;
+        return this.prioridadeService.prioridades().find((item) => item.codigo === codigo)?.cor ?? this.prioridade().cor;
+    });
 }

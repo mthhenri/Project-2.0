@@ -1,0 +1,7 @@
+<span class="atividade-em-execucao" role="status">
+    <span class="atividade-em-execucao__ponto" aria-hidden="true"></span>
+    Em execução
+    @if (inicio(); as inicioData) {
+        <app-execucao-timer [inicioData]="inicioData" tamanho="compacto" />
+    }
+</span>

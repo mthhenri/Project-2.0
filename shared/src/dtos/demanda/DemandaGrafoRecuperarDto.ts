@@ -1,3 +1,3 @@
 export class DemandaGrafoRecuperarDto {
-  projetoId: number;
+    projetoId: number;
 }

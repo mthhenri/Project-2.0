@@ -1,4 +1,4 @@
 export class UsuarioRecuperarDto {
-  id?: number;
-  login?: string;
+    id?: number;
+    login?: string;
 }

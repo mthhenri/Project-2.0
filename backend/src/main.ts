@@ -10,46 +10,46 @@ import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
 
 async function inicializar(): Promise<void> {
-  const aplicacao = await NestFactory.create(AppModule, {
+    const aplicacao = await NestFactory.create(AppModule, {
     // Na parada o servidor não espera conexões que ainda estejam abertas (os streams do chat são longos); os clientes reconectam em outra instância.
-    forceCloseConnections: true,
-  });
+        forceCloseConnections: true,
+    });
 
-  // Parada ordenada: SIGTERM/SIGINT chamam os ganchos de encerramento (os streams do chat avisam os clientes e fecham).
-  aplicacao.enableShutdownHooks();
+    // Parada ordenada: SIGTERM/SIGINT chamam os ganchos de encerramento (os streams do chat avisam os clientes e fecham).
+    aplicacao.enableShutdownHooks();
 
-  const configService = aplicacao.get(ConfigService);
-  const corsOrigem = configService.obter().aplicacao.corsOrigem;
+    const configService = aplicacao.get(ConfigService);
+    const corsOrigem = configService.obter().aplicacao.corsOrigem;
 
-  aplicacao.enableCors({
-    origin:      corsOrigem ?? true,
-    credentials: true,
-  });
+    aplicacao.enableCors({
+        origin:      corsOrigem ?? true,
+        credentials: true,
+    });
 
-  aplicacao.useGlobalPipes(
-    new ValidationPipe({
-      whitelist:            true,
-      forbidNonWhitelisted: true,
-      transform:            true,
-    }),
-  );
+    aplicacao.useGlobalPipes(
+        new ValidationPipe({
+            whitelist:            true,
+            forbidNonWhitelisted: true,
+            transform:            true,
+        }),
+    );
 
-  aplicacao.setGlobalPrefix('api/v1');
+    aplicacao.setGlobalPrefix('api/v1');
 
-  const documentoConfig = new DocumentBuilder()
-    .setTitle('Project 2.0 API')
-    .setDescription('API de controle de ponto e gestão de projetos')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
+    const documentoConfig = new DocumentBuilder()
+        .setTitle('Project 2.0 API')
+        .setDescription('API de controle de ponto e gestão de projetos')
+        .setVersion('1.0')
+        .addBearerAuth()
+        .build();
 
-  const documento = SwaggerModule.createDocument(aplicacao, documentoConfig);
-  SwaggerModule.setup('api/docs', aplicacao, documento);
+    const documento = SwaggerModule.createDocument(aplicacao, documentoConfig);
+    SwaggerModule.setup('api/docs', aplicacao, documento);
 
-  const porta = configService.obter().aplicacao.porta;
-  await aplicacao.listen(porta, '0.0.0.0');
+    const porta = configService.obter().aplicacao.porta;
+    await aplicacao.listen(porta, '0.0.0.0');
 
-  console.log(`Backend rodando na porta ${porta}`);
+    console.log(`Backend rodando na porta ${porta}`);
 }
 
 inicializar();

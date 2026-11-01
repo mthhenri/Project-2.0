@@ -68,12 +68,13 @@
         font-variant-numeric: tabular-nums;
         font-weight: 600;
     }
-
 }
 
 // Pausar: no hover fica um verde mais escuro, no tom do chip, em vez do branco padrão do botão.
 // O `styleClass` cai no próprio <button> do PrimeNG, fora deste encapsulamento: por isso o ::ng-deep.
-:host ::ng-deep .chip-execucao__pausa.p-button.p-button-text.p-button-secondary:not(:disabled):hover {
+:host
+    ::ng-deep
+    .chip-execucao__pausa.p-button.p-button-text.p-button-secondary:not(:disabled):hover {
     background: var(--p-green-200);
     color: var(--p-green-800);
 }

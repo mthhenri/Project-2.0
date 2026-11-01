@@ -7,13 +7,13 @@ import { DialogDicaAtalhosComponent } from './dialog-dica-atalhos.component';
 const texto = (elemento: HTMLElement) => (elemento.textContent ?? '').replace(/\s+/g, ' ').trim();
 
 describe('DialogDicaAtalhosComponent', () => {
-  it('dialog sem textarea ensina que Enter confirma e Esc cancela', async () => {
-    const montado = await montarComponente(DialogDicaAtalhosComponent);
-    expect(texto(montado.elemento)).toBe('Enter confirma · Esc cancela');
-  });
+    it('dialog sem textarea ensina que Enter confirma e Esc cancela', async () => {
+        const montado = await montarComponente(DialogDicaAtalhosComponent);
+        expect(texto(montado.elemento)).toBe('Enter confirma · Esc cancela');
+    });
 
-  it('dialog com textarea ensina que Ctrl+Enter confirma e Esc cancela', async () => {
-    const montado = await montarComponente(DialogDicaAtalhosComponent, { entradas: { comTextarea: true } });
-    expect(texto(montado.elemento)).toBe('Ctrl+Enter confirma · Esc cancela');
-  });
+    it('dialog com textarea ensina que Ctrl+Enter confirma e Esc cancela', async () => {
+        const montado = await montarComponente(DialogDicaAtalhosComponent, { entradas: { comTextarea: true } });
+        expect(texto(montado.elemento)).toBe('Ctrl+Enter confirma · Esc cancela');
+    });
 });

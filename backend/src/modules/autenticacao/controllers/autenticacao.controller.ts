@@ -7,45 +7,45 @@ import { Public } from '../decorators/public.decorator';
 @ApiTags('autenticacao')
 @Controller('autenticacao')
 export class AutenticacaoController {
-  constructor(private readonly autenticacaoService: AutenticacaoService) {}
+    constructor(private readonly autenticacaoService: AutenticacaoService) {}
 
-  @ApiOperation({ summary: 'Login com credenciais e retorno de token JWT' })
-  @ApiResponse({
-    status: 200,
-    description: 'Login realizado com sucesso',
-    schema: {
-      example: {
-        sucesso: true,
-        dados: {
-          accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImxvZ2luIjoiam9hby5zaWx2YSIsInRpcG8iOiJHRVNUT1IifQ.signature',
-          tipo: 'Bearer',
-          usuario: {
-            id: 1,
-            login: 'joao.silva',
-            nomeCompleto: 'João Silva',
-            tipo: 'GESTOR',
-          },
+    @ApiOperation({ summary: 'Login com credenciais e retorno de token JWT' })
+    @ApiResponse({
+        status: 200,
+        description: 'Login realizado com sucesso',
+        schema: {
+            example: {
+                sucesso: true,
+                dados: {
+                    accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImxvZ2luIjoiam9hby5zaWx2YSIsInRpcG8iOiJHRVNUT1IifQ.signature',
+                    tipo: 'Bearer',
+                    usuario: {
+                        id: 1,
+                        login: 'joao.silva',
+                        nomeCompleto: 'João Silva',
+                        tipo: 'GESTOR',
+                    },
+                },
+                mensagem: 'Login realizado com sucesso',
+            },
         },
-        mensagem: 'Login realizado com sucesso',
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Usuário ou senha incorretos, ou usuário inativo',
-    schema: {
-      example: {
-        sucesso: false,
-        dados: null,
-        mensagem: 'Usuário ou senha incorretos. Confira e tente de novo.',
-        erros: ['Usuário ou senha incorretos. Confira e tente de novo.'],
-      },
-    },
-  })
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  @Post('login')
-  login(@Body() dto: AutenticacaoLoginDto) {
-    return this.autenticacaoService.login(dto);
-  }
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Usuário ou senha incorretos, ou usuário inativo',
+        schema: {
+            example: {
+                sucesso: false,
+                dados: null,
+                mensagem: 'Usuário ou senha incorretos. Confira e tente de novo.',
+                erros: ['Usuário ou senha incorretos. Confira e tente de novo.'],
+            },
+        },
+    })
+    @Public()
+    @HttpCode(HttpStatus.OK)
+    @Post('login')
+    login(@Body() dto: AutenticacaoLoginDto) {
+        return this.autenticacaoService.login(dto);
+    }
 }

@@ -12,6 +12,6 @@ export const DESTINO_SEM_IA = '/atividade';
  * quando a IA está no ar e Atividades quando não está (ou quando o estado não pôde ser lido: sem informação, o fluxo convencional).
  */
 export function destinoPosLogin(retornoSeguro: string, estadoDaIa: EstadoIaEnum | null): string {
-  if (retornoSeguro !== DESTINO_SEM_RETORNO) return retornoSeguro;
-  return estadoDaIa === EstadoIaEnum.NO_AR ? DESTINO_COM_IA : DESTINO_SEM_IA;
+    if (retornoSeguro !== DESTINO_SEM_RETORNO) return retornoSeguro;
+    return estadoDaIa === EstadoIaEnum.NO_AR ? DESTINO_COM_IA : DESTINO_SEM_IA;
 }

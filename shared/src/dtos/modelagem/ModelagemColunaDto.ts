@@ -2,10 +2,10 @@
 export type ModelagemMarcaColuna = 'pk' | 'fk' | 'lg' | '';
 
 export interface ModelagemColunaDto {
-  nome: string;
-  /** Tipo já abreviado para exibição; termina em `?` quando a coluna aceita nulo. */
-  tipo: string;
-  marca: ModelagemMarcaColuna;
-  /** Tabela apontada quando a marca é `fk` ou `lg`. */
-  tabelaReferenciada: string | null;
+    nome: string;
+    /** Tipo já abreviado para exibição; termina em `?` quando a coluna aceita nulo. */
+    tipo: string;
+    marca: ModelagemMarcaColuna;
+    /** Tabela apontada quando a marca é `fk` ou `lg`. */
+    tabelaReferenciada: string | null;
 }

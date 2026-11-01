@@ -16,43 +16,43 @@ import { ProjetoService } from '../services/projeto.service';
  */
 @Injectable()
 export class CriarProjetoExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.CRIAR_PROJETO;
+    readonly tipo = TipoPropostaIaEnum.CRIAR_PROJETO;
 
-  constructor(
-    private readonly projetoService: ProjetoService,
-    private readonly projetoRepositorio: ProjetoRepository,
-  ) {}
+    constructor(
+        private readonly projetoService: ProjetoService,
+        private readonly projetoRepositorio: ProjetoRepository,
+    ) {}
 
-  validar(dados: Record<string, unknown>): void {
-    validarDadosDaProposta(ProporCriarProjetoDto, dados);
-  }
-
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    this.exigirGestor(usuarioAtivo);
-    const entrada = validarDadosDaProposta(ProporCriarProjetoDto, dados);
-    const criado = await this.projetoService.criar({
-      nome: entrada.nome,
-      codigo: (entrada.codigo ?? derivarCodigoDoProjeto(entrada.nome)).trim().toUpperCase(),
-      cor: entrada.cor ?? escolherCorDoProjeto(entrada.nome),
-      status: TipoProjetoStatusEnum.ATIVO,
-      inicioData: entrada.inicioData,
-      previsaoFimData: entrada.previsaoFimData,
-    });
-    return { projetoId: criado.dados?.id, nome: entrada.nome };
-  }
-
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    this.exigirGestor(usuarioAtivo);
-    const projetoId = Number(resultado['projetoId']);
-    if (!Number.isInteger(projetoId)) throw new BusinessException('Não há projeto a desfazer nesta proposta');
-    await this.projetoService.recuperar({ id: projetoId }, usuarioAtivo);
-    if (await this.projetoRepositorio.possuiDemandas({ id: projetoId })) {
-      throw new BusinessException('O projeto já tem demandas: não dá para desfazer a criação');
+    validar(dados: Record<string, unknown>): void {
+        validarDadosDaProposta(ProporCriarProjetoDto, dados);
     }
-    await this.projetoService.excluir({ id: projetoId });
-  }
 
-  private exigirGestor(usuarioAtivo: JwtPayload): void {
-    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Apenas gestores podem criar projetos');
-  }
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        this.exigirGestor(usuarioAtivo);
+        const entrada = validarDadosDaProposta(ProporCriarProjetoDto, dados);
+        const criado = await this.projetoService.criar({
+            nome: entrada.nome,
+            codigo: (entrada.codigo ?? derivarCodigoDoProjeto(entrada.nome)).trim().toUpperCase(),
+            cor: entrada.cor ?? escolherCorDoProjeto(entrada.nome),
+            status: TipoProjetoStatusEnum.ATIVO,
+            inicioData: entrada.inicioData,
+            previsaoFimData: entrada.previsaoFimData,
+        });
+        return { projetoId: criado.dados?.id, nome: entrada.nome };
+    }
+
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        this.exigirGestor(usuarioAtivo);
+        const projetoId = Number(resultado['projetoId']);
+        if (!Number.isInteger(projetoId)) throw new BusinessException('Não há projeto a desfazer nesta proposta');
+        await this.projetoService.recuperar({ id: projetoId }, usuarioAtivo);
+        if (await this.projetoRepositorio.possuiDemandas({ id: projetoId })) {
+            throw new BusinessException('O projeto já tem demandas: não dá para desfazer a criação');
+        }
+        await this.projetoService.excluir({ id: projetoId });
+    }
+
+    private exigirGestor(usuarioAtivo: JwtPayload): void {
+        if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Apenas gestores podem criar projetos');
+    }
 }

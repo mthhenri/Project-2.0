@@ -3,14 +3,14 @@ import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class AutenticacaoLoginDto {
-  @ApiProperty({ example: 'joao.silva' })
-  @Transform(({ value }) => typeof value === 'string' ? value.toLowerCase().trim() : value)
-  @IsString()
-  @MinLength(4)
-  login: string;
+    @ApiProperty({ example: 'joao.silva' })
+    @Transform(({ value }) => typeof value === 'string' ? value.toLowerCase().trim() : value)
+    @IsString()
+    @MinLength(4)
+    login: string;
 
-  @ApiProperty({ example: 'senha@123' })
-  @IsString()
-  @IsNotEmpty()
-  senha: string;
+    @ApiProperty({ example: 'senha@123' })
+    @IsString()
+    @IsNotEmpty()
+    senha: string;
 }

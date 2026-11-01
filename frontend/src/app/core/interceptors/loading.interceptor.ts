@@ -15,7 +15,7 @@ export const SEM_OVERLAY_GLOBAL = new HttpContextToken<boolean>(() => false);
 
 /** Opções de `HttpClient` para uma leitura com feedback próprio da tela. */
 export const comFeedbackProprio = (): { context: HttpContext } => ({
-  context: new HttpContext().set(SEM_OVERLAY_GLOBAL, true),
+    context: new HttpContext().set(SEM_OVERLAY_GLOBAL, true),
 });
 
 /**
@@ -23,38 +23,38 @@ export const comFeedbackProprio = (): { context: HttpContext } => ({
  * `...comFeedbackProprio(), ...comErroTratadoPelaTela()`: o segundo `context` substitui o primeiro.
  */
 export const comFeedbackProprioEErroTratado = (): { context: HttpContext } => ({
-  context: new HttpContext().set(SEM_OVERLAY_GLOBAL, true).set(ERRO_TRATADO_PELA_TELA, true),
+    context: new HttpContext().set(SEM_OVERLAY_GLOBAL, true).set(ERRO_TRATADO_PELA_TELA, true),
 });
 
 let requisicoesAtivas = 0;
 let temporizador: ReturnType<typeof setTimeout> | null = null;
 
 export const loadingInterceptor: HttpInterceptorFn = (requisicao, proximo) => {
-  // Leituras usam esqueleto/loading local; o scrim global é só das mutações (task 96).
-  if (requisicao.method === 'GET' || requisicao.context.get(SEM_OVERLAY_GLOBAL)) return proximo(requisicao);
+    // Leituras usam esqueleto/loading local; o scrim global é só das mutações (task 96).
+    if (requisicao.method === 'GET' || requisicao.context.get(SEM_OVERLAY_GLOBAL)) return proximo(requisicao);
 
-  requisicoesAtivas++;
+    requisicoesAtivas++;
 
-  // Agenda a exibição apenas quando a primeira requisição da rajada começa.
-  if (requisicoesAtivas === 1 && temporizador === null) {
-    temporizador = setTimeout(() => {
-      carregamento.set(true);
-      temporizador = null;
-    }, ATRASO_EXIBICAO_MS);
-  }
+    // Agenda a exibição apenas quando a primeira requisição da rajada começa.
+    if (requisicoesAtivas === 1 && temporizador === null) {
+        temporizador = setTimeout(() => {
+            carregamento.set(true);
+            temporizador = null;
+        }, ATRASO_EXIBICAO_MS);
+    }
 
-  return proximo(requisicao).pipe(
-    finalize(() => {
-      requisicoesAtivas--;
+    return proximo(requisicao).pipe(
+        finalize(() => {
+            requisicoesAtivas--;
 
-      // Só esconde quando todas as requisições em andamento terminam.
-      if (requisicoesAtivas === 0) {
-        if (temporizador !== null) {
-          clearTimeout(temporizador);
-          temporizador = null;
-        }
-        carregamento.set(false);
-      }
-    }),
-  );
+            // Só esconde quando todas as requisições em andamento terminam.
+            if (requisicoesAtivas === 0) {
+                if (temporizador !== null) {
+                    clearTimeout(temporizador);
+                    temporizador = null;
+                }
+                carregamento.set(false);
+            }
+        }),
+    );
 };

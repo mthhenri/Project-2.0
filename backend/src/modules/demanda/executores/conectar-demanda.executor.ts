@@ -13,28 +13,28 @@ import { DemandaService } from '../services/demanda.service';
  */
 @Injectable()
 export class ConectarDemandaExecutor implements ExecutorPropostaIa {
-  readonly tipo = TipoPropostaIaEnum.CONECTAR_DEMANDA;
+    readonly tipo = TipoPropostaIaEnum.CONECTAR_DEMANDA;
 
-  constructor(private readonly demandaService: DemandaService) {}
+    constructor(private readonly demandaService: DemandaService) {}
 
-  validar(dados: Record<string, unknown>): void {
-    validarDadosDaProposta(PropostaConectarDemandaDadosDto, dados);
-  }
+    validar(dados: Record<string, unknown>): void {
+        validarDadosDaProposta(PropostaConectarDemandaDadosDto, dados);
+    }
 
-  async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const entrada = validarDadosDaProposta(PropostaConectarDemandaDadosDto, dados);
-    const criada = await this.demandaService.criarConexao({
-      demandaOrigemId: entrada.demandaOrigemId,
-      demandaDestinoId: entrada.demandaDestinoId,
-      ehBidirecional: entrada.ehBidirecional ?? false,
-    }, usuarioAtivo);
-    return { conexaoId: criada.dados?.id, demandaOrigemId: entrada.demandaOrigemId, demandaDestinoId: entrada.demandaDestinoId };
-  }
+    async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const entrada = validarDadosDaProposta(PropostaConectarDemandaDadosDto, dados);
+        const criada = await this.demandaService.criarConexao({
+            demandaOrigemId: entrada.demandaOrigemId,
+            demandaDestinoId: entrada.demandaDestinoId,
+            ehBidirecional: entrada.ehBidirecional ?? false,
+        }, usuarioAtivo);
+        return { conexaoId: criada.dados?.id, demandaOrigemId: entrada.demandaOrigemId, demandaDestinoId: entrada.demandaDestinoId };
+    }
 
-  async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    const conexaoId = Number(resultado['conexaoId']);
-    const demandaId = Number(resultado['demandaOrigemId']);
-    if (!Number.isInteger(conexaoId) || !Number.isInteger(demandaId)) throw new BusinessException('Não há conexão a desfazer nesta proposta');
-    await this.demandaService.excluirConexao({ demandaId, conexaoId }, usuarioAtivo);
-  }
+    async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
+        const conexaoId = Number(resultado['conexaoId']);
+        const demandaId = Number(resultado['demandaOrigemId']);
+        if (!Number.isInteger(conexaoId) || !Number.isInteger(demandaId)) throw new BusinessException('Não há conexão a desfazer nesta proposta');
+        await this.demandaService.excluirConexao({ demandaId, conexaoId }, usuarioAtivo);
+    }
 }

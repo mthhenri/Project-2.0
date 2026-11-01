@@ -26,154 +26,154 @@ export type PeriodoVolume = 'MENSAL' | 'ANUAL';
  * Com `projetoId` (task 290, dentro do detalhe do projeto) mostra só aquele projeto e **começa no anual**; sem ele, é a visão de Projetos (todos, mensal).
  */
 @Component({
-  selector: 'app-projeto-volume',
-  standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, ButtonModule, DatePickerModule, SelectButtonModule, TooltipModule, GraficoBarrasComponent, SkeletonListaComponent, BarraRecargaComponent],
-  templateUrl: './projeto-volume.component.html',
-  styleUrl: './projeto-volume.component.scss',
+    selector: 'app-projeto-volume',
+    standalone: true,
+    imports: [ReactiveFormsModule, RouterLink, ButtonModule, DatePickerModule, SelectButtonModule, TooltipModule, GraficoBarrasComponent, SkeletonListaComponent, BarraRecargaComponent],
+    templateUrl: './projeto-volume.component.html',
+    styleUrl: './projeto-volume.component.scss',
 })
 export class ProjetoVolumeComponent implements OnInit {
-  private readonly projetoService = inject(ProjetoService);
-  /** Só este projeto (o detalhe do projeto); `null` mostra todos (a tela de Projetos). */
-  readonly projetoId = input<number | null>(null);
-  readonly unidadeTempo = inject(VisualizacaoTempoService);
+    private readonly projetoService = inject(ProjetoService);
+    /** Só este projeto (o detalhe do projeto); `null` mostra todos (a tela de Projetos). */
+    readonly projetoId = input<number | null>(null);
+    readonly unidadeTempo = inject(VisualizacaoTempoService);
 
-  /** O mês e o ano atuais no fuso do sistema: o teto da navegação e o "voltar ao atual". */
-  readonly hoje = hojeNoFuso(ambiente.fusoHorario);
+    /** O mês e o ano atuais no fuso do sistema: o teto da navegação e o "voltar ao atual". */
+    readonly hoje = hojeNoFuso(ambiente.fusoHorario);
 
-  readonly opcoesPeriodo = [
-    { rotulo: 'Mensal', valor: 'MENSAL' as PeriodoVolume },
-    { rotulo: 'Anual', valor: 'ANUAL' as PeriodoVolume },
-  ];
-  readonly periodoControl = new FormControl<PeriodoVolume>('MENSAL', { nonNullable: true });
-  readonly periodo = signal<PeriodoVolume>('MENSAL');
+    readonly opcoesPeriodo = [
+        { rotulo: 'Mensal', valor: 'MENSAL' as PeriodoVolume },
+        { rotulo: 'Anual', valor: 'ANUAL' as PeriodoVolume },
+    ];
+    readonly periodoControl = new FormControl<PeriodoVolume>('MENSAL', { nonNullable: true });
+    readonly periodo = signal<PeriodoVolume>('MENSAL');
 
-  readonly mes = signal<Date>(this.hoje);
-  readonly ano = signal<number>(this.hoje.getFullYear());
-  /** Os seletores do datepicker; os botões de navegação os atualizam sem disparar nova carga (a carga é do `escolherMes`/`escolherAno`). */
-  readonly mesControl = new FormControl<Date>(this.hoje, { nonNullable: true });
-  readonly anoControl = new FormControl<Date>(this.hoje, { nonNullable: true });
+    readonly mes = signal<Date>(this.hoje);
+    readonly ano = signal<number>(this.hoje.getFullYear());
+    /** Os seletores do datepicker; os botões de navegação os atualizam sem disparar nova carga (a carga é do `escolherMes`/`escolherAno`). */
+    readonly mesControl = new FormControl<Date>(this.hoje, { nonNullable: true });
+    readonly anoControl = new FormControl<Date>(this.hoje, { nonNullable: true });
 
-  readonly itensMensais = signal<ProjetoVolumeResumoDto[]>([]);
-  readonly itensAnuais = signal<ProjetoVolumeAnualResumoDto[]>([]);
-  readonly carregando = signal<boolean>(false);
-  private readonly jaCarregou = signal<boolean>(false);
-  readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
-  readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
+    readonly itensMensais = signal<ProjetoVolumeResumoDto[]>([]);
+    readonly itensAnuais = signal<ProjetoVolumeAnualResumoDto[]>([]);
+    readonly carregando = signal<boolean>(false);
+    private readonly jaCarregou = signal<boolean>(false);
+    readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
+    readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
 
-  private readonly mensaisVisiveis = computed(() => this.itensMensais().filter((item) => this.projetoId() === null || item.projetoId === this.projetoId()));
-  private readonly anuaisVisiveis = computed(() => this.itensAnuais().filter((item) => this.projetoId() === null || item.projetoId === this.projetoId()));
-  readonly categoriasMensais = computed(() => montarCategoriasMensais(this.mensaisVisiveis(), this.unidadeTempo.emDias()));
-  readonly projetosAnuais = computed(() =>
-    this.anuaisVisiveis().map((item) => ({
-      item,
-      categorias: montarCategoriasAnuais(item, this.unidadeTempo.emDias()),
-      rotuloEsperado: item.volumeEsperadoHorasPorMes.every(valor => valor === null) ? 'sem volume definido' : 'Esperado de cada mês (tracejado)',
-    })),
-  );
+    private readonly mensaisVisiveis = computed(() => this.itensMensais().filter((item) => this.projetoId() === null || item.projetoId === this.projetoId()));
+    private readonly anuaisVisiveis = computed(() => this.itensAnuais().filter((item) => this.projetoId() === null || item.projetoId === this.projetoId()));
+    readonly categoriasMensais = computed(() => montarCategoriasMensais(this.mensaisVisiveis(), this.unidadeTempo.emDias()));
+    readonly projetosAnuais = computed(() =>
+        this.anuaisVisiveis().map((item) => ({
+            item,
+            categorias: montarCategoriasAnuais(item, this.unidadeTempo.emDias()),
+            rotuloEsperado: item.volumeEsperadoHorasPorMes.every(valor => valor === null) ? 'sem volume definido' : 'Esperado de cada mês (tracejado)',
+        })),
+    );
 
-  readonly visualizandoMesAtual = computed(
-    () => this.mes().getFullYear() === this.hoje.getFullYear() && this.mes().getMonth() === this.hoje.getMonth(),
-  );
-  readonly visualizandoAnoAtual = computed(() => this.ano() === this.hoje.getFullYear());
+    readonly visualizandoMesAtual = computed(
+        () => this.mes().getFullYear() === this.hoje.getFullYear() && this.mes().getMonth() === this.hoje.getMonth(),
+    );
+    readonly visualizandoAnoAtual = computed(() => this.ano() === this.hoje.getFullYear());
 
-  readonly corEsperado = COR_VOLUME_ESPERADO;
-  readonly corEstouro = COR_VOLUME_ESTOURO;
+    readonly corEsperado = COR_VOLUME_ESPERADO;
+    readonly corEstouro = COR_VOLUME_ESTOURO;
 
-  constructor() {
-    this.periodoControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((periodo) => {
-      this.periodo.set(periodo);
-      this.carregar();
-    });
-    this.mesControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((mes) => {
-      if (mes) this.escolherMes(mes);
-    });
-    this.anoControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((data) => {
-      if (data) this.escolherAno(data.getFullYear());
-    });
-  }
-
-  ngOnInit(): void {
-    // Dentro do projeto o volume abre no anual.
-    if (this.projetoId() !== null) {
-      this.periodoControl.setValue('ANUAL', { emitEvent: false });
-      this.periodo.set('ANUAL');
-    }
-    this.carregar();
-  }
-
-  escolherMes(mes: Date): void {
-    const primeiroDia = new Date(mes.getFullYear(), mes.getMonth(), 1);
-    this.mes.set(primeiroDia);
-    this.mesControl.setValue(primeiroDia, { emitEvent: false });
-    this.carregar();
-  }
-
-  retornarMes(): void {
-    const atual = this.mes();
-    this.escolherMes(new Date(atual.getFullYear(), atual.getMonth() - 1, 1));
-  }
-
-  avancarMes(): void {
-    if (this.visualizandoMesAtual()) return;
-    const atual = this.mes();
-    this.escolherMes(new Date(atual.getFullYear(), atual.getMonth() + 1, 1));
-  }
-
-  irParaMesAtual(): void {
-    this.escolherMes(this.hoje);
-  }
-
-  escolherAno(ano: number): void {
-    this.ano.set(ano);
-    this.anoControl.setValue(new Date(ano, 0, 1), { emitEvent: false });
-    this.carregar();
-  }
-
-  retornarAno(): void {
-    this.escolherAno(this.ano() - 1);
-  }
-
-  avancarAno(): void {
-    if (this.visualizandoAnoAtual()) return;
-    this.escolherAno(this.ano() + 1);
-  }
-
-  irParaAnoAtual(): void {
-    this.escolherAno(this.hoje.getFullYear());
-  }
-
-  private encerrarCarga(): void {
-    this.carregando.set(false);
-    this.jaCarregou.set(true);
-  }
-
-  private carregar(): void {
-    this.carregando.set(true);
-    const periodo = this.periodo();
-
-    if (periodo === 'MENSAL') {
-      const mes = this.mes();
-      this.projetoService
-        .listarVolume({ ano: mes.getFullYear(), mes: mes.getMonth() + 1 })
-        .pipe(finalize(() => this.encerrarCarga()))
-        .subscribe({
-          next: (resposta) => {
-            // Uma resposta atrasada de outro mês (ou de outra visão) não pode sobrescrever o que está na tela.
-            if (resposta.sucesso && resposta.dados && this.periodo() === 'MENSAL' && this.mes() === mes) this.itensMensais.set(resposta.dados);
-          },
+    constructor() {
+        this.periodoControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((periodo) => {
+            this.periodo.set(periodo);
+            this.carregar();
         });
-      return;
+        this.mesControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((mes) => {
+            if (mes) this.escolherMes(mes);
+        });
+        this.anoControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((data) => {
+            if (data) this.escolherAno(data.getFullYear());
+        });
     }
 
-    const ano = this.ano();
-    this.projetoService
-      .listarVolumeAnual({ ano })
-      .pipe(finalize(() => this.encerrarCarga()))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados && this.periodo() === 'ANUAL' && this.ano() === ano) this.itensAnuais.set(resposta.dados);
-        },
-      });
-  }
+    ngOnInit(): void {
+    // Dentro do projeto o volume abre no anual.
+        if (this.projetoId() !== null) {
+            this.periodoControl.setValue('ANUAL', { emitEvent: false });
+            this.periodo.set('ANUAL');
+        }
+        this.carregar();
+    }
+
+    escolherMes(mes: Date): void {
+        const primeiroDia = new Date(mes.getFullYear(), mes.getMonth(), 1);
+        this.mes.set(primeiroDia);
+        this.mesControl.setValue(primeiroDia, { emitEvent: false });
+        this.carregar();
+    }
+
+    retornarMes(): void {
+        const atual = this.mes();
+        this.escolherMes(new Date(atual.getFullYear(), atual.getMonth() - 1, 1));
+    }
+
+    avancarMes(): void {
+        if (this.visualizandoMesAtual()) return;
+        const atual = this.mes();
+        this.escolherMes(new Date(atual.getFullYear(), atual.getMonth() + 1, 1));
+    }
+
+    irParaMesAtual(): void {
+        this.escolherMes(this.hoje);
+    }
+
+    escolherAno(ano: number): void {
+        this.ano.set(ano);
+        this.anoControl.setValue(new Date(ano, 0, 1), { emitEvent: false });
+        this.carregar();
+    }
+
+    retornarAno(): void {
+        this.escolherAno(this.ano() - 1);
+    }
+
+    avancarAno(): void {
+        if (this.visualizandoAnoAtual()) return;
+        this.escolherAno(this.ano() + 1);
+    }
+
+    irParaAnoAtual(): void {
+        this.escolherAno(this.hoje.getFullYear());
+    }
+
+    private encerrarCarga(): void {
+        this.carregando.set(false);
+        this.jaCarregou.set(true);
+    }
+
+    private carregar(): void {
+        this.carregando.set(true);
+        const periodo = this.periodo();
+
+        if (periodo === 'MENSAL') {
+            const mes = this.mes();
+            this.projetoService
+                .listarVolume({ ano: mes.getFullYear(), mes: mes.getMonth() + 1 })
+                .pipe(finalize(() => this.encerrarCarga()))
+                .subscribe({
+                    next: (resposta) => {
+                        // Uma resposta atrasada de outro mês (ou de outra visão) não pode sobrescrever o que está na tela.
+                        if (resposta.sucesso && resposta.dados && this.periodo() === 'MENSAL' && this.mes() === mes) this.itensMensais.set(resposta.dados);
+                    },
+                });
+            return;
+        }
+
+        const ano = this.ano();
+        this.projetoService
+            .listarVolumeAnual({ ano })
+            .pipe(finalize(() => this.encerrarCarga()))
+            .subscribe({
+                next: (resposta) => {
+                    if (resposta.sucesso && resposta.dados && this.periodo() === 'ANUAL' && this.ano() === ano) this.itensAnuais.set(resposta.dados);
+                },
+            });
+    }
 }

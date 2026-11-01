@@ -13,24 +13,24 @@ export type UnidadeTempoEntrada = 'horas' | 'minutos';
  * no modo dias converte para dias (1 dia = `HORAS_POR_DIA` horas) em pt-BR.
  */
 export function formatarTempoExibicao(
-  valor: number,
-  emDias: boolean,
-  unidade: UnidadeTempoEntrada,
+    valor: number,
+    emDias: boolean,
+    unidade: UnidadeTempoEntrada,
 ): string {
-  const minutos = unidade === 'horas' ? valor * 60 : valor;
+    const minutos = unidade === 'horas' ? valor * 60 : valor;
 
-  if (emDias) return formatarEmDias(minutos);
+    if (emDias) return formatarEmDias(minutos);
 
-  if (unidade === 'horas') return `${valor}h`;
+    if (unidade === 'horas') return `${valor}h`;
 
-  const horas = Math.floor(minutos / 60);
-  const restanteMinutos = minutos % 60;
-  return `${horas}h ${restanteMinutos}min`;
+    const horas = Math.floor(minutos / 60);
+    const restanteMinutos = minutos % 60;
+    return `${horas}h ${restanteMinutos}min`;
 }
 
 /** Converte minutos em dias e formata em pt-BR: vírgula, até 2 casas, singular só em "1 dia". */
 function formatarEmDias(minutos: number): string {
-  const dias = Math.round((minutos / (HORAS_POR_DIA * 60)) * 100) / 100;
-  const texto = dias.toString().replace('.', ',');
-  return `${texto} ${dias === 1 ? 'dia' : 'dias'}`;
+    const dias = Math.round((minutos / (HORAS_POR_DIA * 60)) * 100) / 100;
+    const texto = dias.toString().replace('.', ',');
+    return `${texto} ${dias === 1 ? 'dia' : 'dias'}`;
 }

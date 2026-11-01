@@ -15,31 +15,31 @@ import { BusinessException } from '../../../core/exceptions/business.exception';
  */
 @Injectable()
 export class ProporAnotarPadFerramenta extends FerramentaPropostaIa<ProporAnotarPadDto> {
-  readonly nome = 'propor_anotar_pad';
-  readonly descricao =
-    'Propõe uma anotação no pad do usuário; nada é gravado até ele confirmar. Seções: EM_ANDAMENTO (o que está sendo feito ou parou), FEITO (o que foi concluído; entra ' +
+    readonly nome = 'propor_anotar_pad';
+    readonly descricao =
+        'Propõe uma anotação no pad do usuário; nada é gravado até ele confirmar. Seções: EM_ANDAMENTO (o que está sendo feito ou parou), FEITO (o que foi concluído; entra ' +
     'debaixo do título do dia), PENDENCIA (o que falta e depende de algo ou alguém), LEMBRETE (avisos e horários) e PESSOAL (anotações do próprio usuário, como comandos: ' +
     'só escreva ali quando o usuário pedir explicitamente e então passe pedidoExplicito=true). Nunca reescreva a seção: use operacao ANEXAR com um texto curto, ou ' +
     'TROCAR com trechoAntigo (copiado exatamente de consultar_pad e que apareça uma única vez) e trechoNovo. Não reorganize nem apague o que o usuário escreveu.';
-  readonly permissao = 'QUALQUER' as const;
-  readonly classeDeEntrada = ProporAnotarPadDto;
-  readonly tipoProposta = TipoPropostaIaEnum.ANOTAR_PAD;
+    readonly permissao = 'QUALQUER' as const;
+    readonly classeDeEntrada = ProporAnotarPadDto;
+    readonly tipoProposta = TipoPropostaIaEnum.ANOTAR_PAD;
 
-  constructor(
-    propostaIaService: PropostaIaService,
-    private readonly anotacaoService: AnotacaoService,
-  ) {
-    super(propostaIaService);
-  }
-
-  protected async montarDados(entrada: ProporAnotarPadDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    validarOperacaoDeAnotacao(entrada);
-    if (entrada.operacao === 'TROCAR') {
-      const secao = (await this.anotacaoService.listar({ usuarioId: usuarioAtivo.sub, tipos: [entrada.secao] }, usuarioAtivo)).dados?.[0];
-      const ocorrencias = contarOcorrencias(secao?.texto ?? '', entrada.trechoAntigo ?? '');
-      if (ocorrencias === 0) throw new BusinessException('O trecho a trocar não foi encontrado na seção; leia a seção com consultar_pad e copie o trecho exatamente.');
-      if (ocorrencias > 1) throw new BusinessException('O trecho a trocar aparece mais de uma vez na seção; informe um trecho maior.');
+    constructor(
+        propostaIaService: PropostaIaService,
+        private readonly anotacaoService: AnotacaoService,
+    ) {
+        super(propostaIaService);
     }
-    return { ...entrada };
-  }
+
+    protected async montarDados(entrada: ProporAnotarPadDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        validarOperacaoDeAnotacao(entrada);
+        if (entrada.operacao === 'TROCAR') {
+            const secao = (await this.anotacaoService.listar({ usuarioId: usuarioAtivo.sub, tipos: [entrada.secao] }, usuarioAtivo)).dados?.[0];
+            const ocorrencias = contarOcorrencias(secao?.texto ?? '', entrada.trechoAntigo ?? '');
+            if (ocorrencias === 0) throw new BusinessException('O trecho a trocar não foi encontrado na seção; leia a seção com consultar_pad e copie o trecho exatamente.');
+            if (ocorrencias > 1) throw new BusinessException('O trecho a trocar aparece mais de uma vez na seção; informe um trecho maior.');
+        }
+        return { ...entrada };
+    }
 }

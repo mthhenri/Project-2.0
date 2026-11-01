@@ -1,3 +1,3 @@
 export class DemandaRestaurarDto {
-  id: number;
+    id: number;
 }

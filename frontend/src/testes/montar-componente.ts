@@ -17,37 +17,37 @@ import { criarUsuarioTeste } from './usuarios-teste';
 // ela, e qualquer outro erro continua sendo lançado.
 let destinoDosErrosHttp: HttpErrorResponse[] = [];
 rxjsConfig.onUnhandledError = (erro) => {
-  if (erro instanceof HttpErrorResponse) destinoDosErrosHttp.push(erro);
-  else throw erro;
+    if (erro instanceof HttpErrorResponse) destinoDosErrosHttp.push(erro);
+    else throw erro;
 };
 
 /** Quanto `atualizar()` espera a zona estabilizar antes de seguir (metade do limite de tempo de um teste, 20 s). */
 const TETO_DA_ESTABILIDADE_MS = 8000;
 
 export interface OpcoesMontagem {
-  /** Tipo do usuário autenticado; omitido = ninguém autenticado. */
-  usuario?: TipoUsuarioEnum;
-  /** Rotas do roteador de teste (padrão: nenhuma). */
-  rotas?: Routes;
-  /** Chaves do localStorage já preenchidas antes de o componente nascer (ele é limpo a cada montagem). */
-  armazenamento?: Record<string, string>;
-  /** Entradas (`input()`) do componente, aplicadas antes da primeira detecção de mudanças. */
-  entradas?: Record<string, unknown>;
-  /** Provedores extras (substituições de serviço, por exemplo). */
-  provedores?: Array<Provider | EnvironmentProviders>;
+    /** Tipo do usuário autenticado; omitido = ninguém autenticado. */
+    usuario?: TipoUsuarioEnum;
+    /** Rotas do roteador de teste (padrão: nenhuma). */
+    rotas?: Routes;
+    /** Chaves do localStorage já preenchidas antes de o componente nascer (ele é limpo a cada montagem). */
+    armazenamento?: Record<string, string>;
+    /** Entradas (`input()`) do componente, aplicadas antes da primeira detecção de mudanças. */
+    entradas?: Record<string, unknown>;
+    /** Provedores extras (substituições de serviço, por exemplo). */
+    provedores?: Array<Provider | EnvironmentProviders>;
 }
 
 export interface ComponenteMontado<T> {
-  fixture: ComponentFixture<T>;
-  componente: T;
-  /** Raiz do DOM do componente. */
-  elemento: HTMLElement;
-  http: HttpTestingController;
-  /** Falhas HTTP que o componente não tratou (o interceptor as relança, e o rxjs as reporta como erro global). */
-  errosHttpNaoTratados: HttpErrorResponse[];
-  mensagens: MessageService;
-  /** Detecta mudanças e espera a estabilização (efeitos, Signals e promessas pendentes). */
-  atualizar(): Promise<void>;
+    fixture: ComponentFixture<T>;
+    componente: T;
+    /** Raiz do DOM do componente. */
+    elemento: HTMLElement;
+    http: HttpTestingController;
+    /** Falhas HTTP que o componente não tratou (o interceptor as relança, e o rxjs as reporta como erro global). */
+    errosHttpNaoTratados: HttpErrorResponse[];
+    mensagens: MessageService;
+    /** Detecta mudanças e espera a estabilização (efeitos, Signals e promessas pendentes). */
+    atualizar(): Promise<void>;
 }
 
 /**
@@ -56,52 +56,52 @@ export interface ComponenteMontado<T> {
  * `HttpTestingController`: nenhuma chega à rede.
  */
 export async function montarComponente<T>(componente: Type<T>, opcoes: OpcoesMontagem = {}): Promise<ComponenteMontado<T>> {
-  localStorage.clear();
-  for (const [chave, valor] of Object.entries(opcoes.armazenamento ?? {})) localStorage.setItem(chave, valor);
-  TestBed.configureTestingModule({
-    imports: [componente],
-    providers: [
-      provideHttpClient(withInterceptors([errorHandlerInterceptor])),
-      provideHttpClientTesting(),
-      provideRouter(opcoes.rotas ?? []),
-      provideNoopAnimations(),
-      providePrimeNG({ theme: 'none' }),
-      MessageService,
-      ...(opcoes.provedores ?? []),
-    ],
-  });
-  // Componentes com `@defer` (como a barra do topo e o popup do chat) só montam depois de resolvidas as dependências adiadas.
-  await TestBed.compileComponents();
+    localStorage.clear();
+    for (const [chave, valor] of Object.entries(opcoes.armazenamento ?? {})) localStorage.setItem(chave, valor);
+    TestBed.configureTestingModule({
+        imports: [componente],
+        providers: [
+            provideHttpClient(withInterceptors([errorHandlerInterceptor])),
+            provideHttpClientTesting(),
+            provideRouter(opcoes.rotas ?? []),
+            provideNoopAnimations(),
+            providePrimeNG({ theme: 'none' }),
+            MessageService,
+            ...(opcoes.provedores ?? []),
+        ],
+    });
+    // Componentes com `@defer` (como a barra do topo e o popup do chat) só montam depois de resolvidas as dependências adiadas.
+    await TestBed.compileComponents();
 
-  if (opcoes.usuario) TestBed.inject(UsuarioSessaoService).definirUsuario(criarUsuarioTeste(opcoes.usuario));
+    if (opcoes.usuario) TestBed.inject(UsuarioSessaoService).definirUsuario(criarUsuarioTeste(opcoes.usuario));
 
-  // Lista nova por montagem; o coletor global (abaixo) grava sempre na lista da montagem mais recente.
-  const errosHttpNaoTratados: HttpErrorResponse[] = [];
-  destinoDosErrosHttp = errosHttpNaoTratados;
+    // Lista nova por montagem; o coletor global (abaixo) grava sempre na lista da montagem mais recente.
+    const errosHttpNaoTratados: HttpErrorResponse[] = [];
+    destinoDosErrosHttp = errosHttpNaoTratados;
 
-  const fixture = TestBed.createComponent(componente);
-  for (const [nome, valor] of Object.entries(opcoes.entradas ?? {})) fixture.componentRef.setInput(nome, valor);
-  const montado: ComponenteMontado<T> = {
-    fixture,
-    componente: fixture.componentInstance,
-    elemento: fixture.nativeElement as HTMLElement,
-    http: TestBed.inject(HttpTestingController),
-    errosHttpNaoTratados,
-    mensagens: TestBed.inject(MessageService),
-    async atualizar() {
-      fixture.detectChanges();
-      // `whenStable` espera todo temporizador pendente da zona. Às vezes um deles (a transição do d3 no diagrama da Modelagem e no grafo) não
-      // termina e o teste fica preso até o limite de 20 s (P-059), embora passe sozinho. Com o teto, a trava vira só uma espera: a seguir
-      // as afirmações do teste conferem se a tela chegou ao estado esperado, então um estado não alcançado continua falhando.
-      let teto: ReturnType<typeof setTimeout> | undefined;
-      try {
-        await Promise.race([fixture.whenStable(), new Promise<void>((resolver) => { teto = setTimeout(resolver, TETO_DA_ESTABILIDADE_MS); })]);
-      } finally {
-        clearTimeout(teto); // não deixa um temporizador a mais para os testes que contam os pendentes
-      }
-      fixture.detectChanges();
-    },
-  };
-  await montado.atualizar();
-  return montado;
+    const fixture = TestBed.createComponent(componente);
+    for (const [nome, valor] of Object.entries(opcoes.entradas ?? {})) fixture.componentRef.setInput(nome, valor);
+    const montado: ComponenteMontado<T> = {
+        fixture,
+        componente: fixture.componentInstance,
+        elemento: fixture.nativeElement as HTMLElement,
+        http: TestBed.inject(HttpTestingController),
+        errosHttpNaoTratados,
+        mensagens: TestBed.inject(MessageService),
+        async atualizar() {
+            fixture.detectChanges();
+            // `whenStable` espera todo temporizador pendente da zona. Às vezes um deles (a transição do d3 no diagrama da Modelagem e no grafo) não
+            // termina e o teste fica preso até o limite de 20 s (P-059), embora passe sozinho. Com o teto, a trava vira só uma espera: a seguir
+            // as afirmações do teste conferem se a tela chegou ao estado esperado, então um estado não alcançado continua falhando.
+            let teto: ReturnType<typeof setTimeout> | undefined;
+            try {
+                await Promise.race([fixture.whenStable(), new Promise<void>((resolver) => { teto = setTimeout(resolver, TETO_DA_ESTABILIDADE_MS); })]);
+            } finally {
+                clearTimeout(teto); // não deixa um temporizador a mais para os testes que contam os pendentes
+            }
+            fixture.detectChanges();
+        },
+    };
+    await montado.atualizar();
+    return montado;
 }

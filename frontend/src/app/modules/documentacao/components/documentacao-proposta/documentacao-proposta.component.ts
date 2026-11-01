@@ -11,20 +11,20 @@ export type EstadoDaProposta = 'PEDINDO' | 'PRONTA' | 'ERRO' | 'EXPIRADA';
  * está mais lá. Aceitar não grava: troca o bloco no editor e a aba fica como "Alterações sem gravar".
  */
 @Component({
-  selector: 'app-documentacao-proposta',
-  standalone: true,
-  imports: [ButtonModule, DiffPorPalavraComponent],
-  templateUrl: './documentacao-proposta.component.html',
-  styleUrl: './documentacao-proposta.component.scss',
+    selector: 'app-documentacao-proposta',
+    standalone: true,
+    imports: [ButtonModule, DiffPorPalavraComponent],
+    templateUrl: './documentacao-proposta.component.html',
+    styleUrl: './documentacao-proposta.component.scss',
 })
 export class DocumentacaoPropostaComponent {
-  readonly estado = input.required<EstadoDaProposta>();
-  readonly bloco = input('');
-  readonly blocoNovo = input('');
-  readonly mensagemDeErro = input('');
+    readonly estado = input.required<EstadoDaProposta>();
+    readonly bloco = input('');
+    readonly blocoNovo = input('');
+    readonly mensagemDeErro = input('');
 
-  readonly aceitar = output<void>();
-  readonly descartar = output<void>();
-  readonly pedirDeNovo = output<void>();
-  readonly tentarDeNovo = output<void>();
+    readonly aceitar = output<void>();
+    readonly descartar = output<void>();
+    readonly pedirDeNovo = output<void>();
+    readonly tentarDeNovo = output<void>();
 }

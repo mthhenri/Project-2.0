@@ -14,9 +14,9 @@ import { UsuarioService } from '../../usuario/services/usuario.service';
  */
 @Injectable()
 export class ProporCriarAtividadeFerramenta extends FerramentaPropostaIa<ProporCriarAtividadeDto> {
-  readonly nome = 'propor_criar_atividade';
-  readonly descricao =
-    'Propõe criar UMA atividade do usuário numa demanda, com nome e prioridade (URGENTE, ALTA, MEDIA, BAIXA ou INDEFINIDA; defina conforme o que o usuário disse). ' +
+    readonly nome = 'propor_criar_atividade';
+    readonly descricao =
+        'Propõe criar UMA atividade do usuário numa demanda, com nome e prioridade (URGENTE, ALTA, MEDIA, BAIXA ou INDEFINIDA; defina conforme o que o usuário disse). ' +
     'Nada é criado até o usuário confirmar no cartão. Se o usuário citar várias atividades, chame a ferramenta uma vez para cada. ' +
     'O demandaId vem das atividades já listadas; se o usuário citar uma demanda que você não conhece, pergunte qual é antes de propor. ' +
     'Atividade é um BLOCO do trabalho (a tela, o repositório, os testes), com várias execuções: nunca crie uma atividade por execução nem para uma continuação. ' +
@@ -24,39 +24,39 @@ export class ProporCriarAtividadeFerramenta extends FerramentaPropostaIa<ProporC
     'Para uma coisa nova (um bug, um chamado), o nome descreve o trabalho e leva o identificador do caso quando houver ("investigar CPF válido recusado, caso 4821"). ' +
     'Quando o resultado vier como feito, ele traz o `atividadeId` da atividade criada: use-o para iniciar a execução (propor_iniciar_execucao). ' +
     'Só o gestor pode criar a atividade PARA OUTRA PESSOA: nesse caso passe `usuarioId` (de listar_usuarios; nome ambíguo, pergunte); sem ele, a atividade é de quem conversa com você.';
-  readonly permissao = 'QUALQUER' as const;
-  readonly classeDeEntrada = ProporCriarAtividadeDto;
-  readonly tipoProposta = TipoPropostaIaEnum.CRIAR_ATIVIDADE;
+    readonly permissao = 'QUALQUER' as const;
+    readonly classeDeEntrada = ProporCriarAtividadeDto;
+    readonly tipoProposta = TipoPropostaIaEnum.CRIAR_ATIVIDADE;
 
-  constructor(
-    propostaIaService: PropostaIaService,
-    private readonly demandaRepositorio: DemandaRepository,
-    private readonly usuarioService: UsuarioService,
-  ) {
-    super(propostaIaService);
-  }
-
-  protected async montarDados(entrada: ProporCriarAtividadeDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    const demanda = await this.demandaRepositorio.recuperar({ id: entrada.demandaId });
-    if (!demanda) throw new ResourceNotFoundException('Demanda');
-
-    // Para si mesmo, `usuarioId` é só ruído: some da proposta. Para outra pessoa, só o gestor; a pessoa precisa existir e estar ativa.
-    const { usuarioId, ...semUsuario } = entrada;
-    let usuarioNome: string | undefined;
-    if (usuarioId !== undefined && usuarioId !== usuarioAtivo.sub) {
-      if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new BusinessException('Só o gestor cria atividade para outra pessoa. Crie a atividade para o próprio usuário.');
-      const dono = (await this.usuarioService.recuperar({ id: usuarioId }, usuarioAtivo)).dados;
-      if (!dono) throw new BusinessException('Usuário não encontrado');
-      if (dono.status !== TipoUsuarioStatusEnum.ATIVO) throw new BusinessException(`${dono.nomeCompleto} está inativo e não recebe atividades.`);
-      usuarioNome = dono.nomeCompleto;
+    constructor(
+        propostaIaService: PropostaIaService,
+        private readonly demandaRepositorio: DemandaRepository,
+        private readonly usuarioService: UsuarioService,
+    ) {
+        super(propostaIaService);
     }
-    // O aviso e o cartão mostram o caminho completo da demanda (raiz › … › demanda), para o desenvolvedor ver se o lugar está certo.
-    const ancestrais = await this.demandaRepositorio.listarAncestral({ demandaId: demanda.id });
-    const dados: PropostaCriarAtividadeDadosDto = {
-      ...semUsuario,
-      demandaNome: [...ancestrais.map((ancestral) => ancestral.nome), demanda.nome].join(' › '),
-      ...(usuarioNome ? { usuarioId, usuarioNome } : {}),
-    };
-    return { ...dados };
-  }
+
+    protected async montarDados(entrada: ProporCriarAtividadeDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+        const demanda = await this.demandaRepositorio.recuperar({ id: entrada.demandaId });
+        if (!demanda) throw new ResourceNotFoundException('Demanda');
+
+        // Para si mesmo, `usuarioId` é só ruído: some da proposta. Para outra pessoa, só o gestor; a pessoa precisa existir e estar ativa.
+        const { usuarioId, ...semUsuario } = entrada;
+        let usuarioNome: string | undefined;
+        if (usuarioId !== undefined && usuarioId !== usuarioAtivo.sub) {
+            if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new BusinessException('Só o gestor cria atividade para outra pessoa. Crie a atividade para o próprio usuário.');
+            const dono = (await this.usuarioService.recuperar({ id: usuarioId }, usuarioAtivo)).dados;
+            if (!dono) throw new BusinessException('Usuário não encontrado');
+            if (dono.status !== TipoUsuarioStatusEnum.ATIVO) throw new BusinessException(`${dono.nomeCompleto} está inativo e não recebe atividades.`);
+            usuarioNome = dono.nomeCompleto;
+        }
+        // O aviso e o cartão mostram o caminho completo da demanda (raiz › … › demanda), para o desenvolvedor ver se o lugar está certo.
+        const ancestrais = await this.demandaRepositorio.listarAncestral({ demandaId: demanda.id });
+        const dados: PropostaCriarAtividadeDadosDto = {
+            ...semUsuario,
+            demandaNome: [...ancestrais.map((ancestral) => ancestral.nome), demanda.nome].join(' › '),
+            ...(usuarioNome ? { usuarioId, usuarioNome } : {}),
+        };
+        return { ...dados };
+    }
 }

@@ -1,3 +1,3 @@
 export class CalendarioVerificarDiaDto {
-  data: Date;
+    data: Date;
 }

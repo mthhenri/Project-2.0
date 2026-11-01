@@ -1,3 +1,3 @@
 export class ExecucaoAtivaRecuperarDto {
-  usuarioId: number;
+    usuarioId: number;
 }

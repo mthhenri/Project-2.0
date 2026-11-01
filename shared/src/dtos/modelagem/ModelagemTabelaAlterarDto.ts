@@ -6,20 +6,20 @@ import { IsInt, Max, Min, ValidateIf } from 'class-validator';
  * trocar o grupo não desfaz a posição); `x` e `y` vão sempre juntos. Tirar a tabela da modelagem é outra rota (`DELETE`).
  */
 export class ModelagemTabelaAlterarDto {
-  @ValidateIf((dto: ModelagemTabelaAlterarDto) => dto.grupoId !== undefined)
-  @IsInt()
-  @Min(1)
-  grupoId?: number;
+    @ValidateIf((dto: ModelagemTabelaAlterarDto) => dto.grupoId !== undefined)
+    @IsInt()
+    @Min(1)
+    grupoId?: number;
 
-  @ValidateIf((dto: ModelagemTabelaAlterarDto) => dto.x !== undefined || dto.y !== undefined)
-  @IsInt()
-  @Min(-100000)
-  @Max(100000)
-  x?: number;
+    @ValidateIf((dto: ModelagemTabelaAlterarDto) => dto.x !== undefined || dto.y !== undefined)
+    @IsInt()
+    @Min(-100000)
+    @Max(100000)
+    x?: number;
 
-  @ValidateIf((dto: ModelagemTabelaAlterarDto) => dto.x !== undefined || dto.y !== undefined)
-  @IsInt()
-  @Min(-100000)
-  @Max(100000)
-  y?: number;
+    @ValidateIf((dto: ModelagemTabelaAlterarDto) => dto.x !== undefined || dto.y !== undefined)
+    @IsInt()
+    @Min(-100000)
+    @Max(100000)
+    y?: number;
 }

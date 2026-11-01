@@ -1,0 +1,15 @@
+<p-dialog
+    dialogFormulario
+    header="Novo"
+    [visible]="visivel()"
+    [dialogSemAutofocus]="semAutofocus()"
+    [dialogBloqueado]="bloqueado()"
+    (dialogEnviar)="enviados = enviados + 1"
+>
+    <input aria-label="nome" value="preenchido" />
+    <input aria-label="descricao" />
+    <input aria-label="oculto" type="hidden" />
+    <input aria-label="desabilitado" disabled />
+    <textarea aria-label="texto"></textarea>
+    <button type="button" aria-label="botao">Salvar</button>
+</p-dialog>

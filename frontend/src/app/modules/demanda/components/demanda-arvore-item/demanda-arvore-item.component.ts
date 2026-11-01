@@ -14,148 +14,148 @@ import { construirMenuDemanda, CampoDescricaoDemanda } from '../../utils/demanda
 type CampoDescricao = CampoDescricaoDemanda;
 
 @Component({
-  selector: 'app-demanda-arvore-item',
-  standalone: true,
-  imports: [ButtonModule, DemandaStatusComponent, ContextMenu, TooltipModule, TempoExibicaoPipe, forwardRef(() => DemandaArvoreItemComponent)],
-  templateUrl: './demanda-arvore-item.component.html',
-  styleUrl: './demanda-arvore-item.component.scss',
+    selector: 'app-demanda-arvore-item',
+    standalone: true,
+    imports: [ButtonModule, DemandaStatusComponent, ContextMenu, TooltipModule, TempoExibicaoPipe, forwardRef(() => DemandaArvoreItemComponent)],
+    templateUrl: './demanda-arvore-item.component.html',
+    styleUrl: './demanda-arvore-item.component.scss',
 })
 export class DemandaArvoreItemComponent implements OnChanges {
-  @Input({ required: true }) arvoreItem!: DemandaArvoreItemDto;
-  @Input() nivel: number = 0;
-  /** IDs expandidos, guardados no painel: sobrevivem a recargas e recriação dos itens (task 98). */
-  @Input() expandidos: ReadonlySet<number> = new Set<number>();
-  /** Termo da busca da toolbar: destacado no nome (task 106). */
-  @Input() termoBusca: string = '';
-  /** Linha com o foco do teclado na árvore (↑↓→←); null quando a árvore não está focada. */
-  @Input() focoId: number | null = null;
-  /** O chip de status vira popover de troca rápida (só onde há quem persista: o painel da árvore). */
-  @Input() statusEditavel: boolean = false;
-  /** Executores ativos por demanda, quando os dados do planejamento estão carregados (gestor). */
-  @Input() executoresPorDemanda: ReadonlyMap<number, string[]> = new Map();
-  @Output() expansaoAlternada = new EventEmitter<number>();
-  @Output() focoAlterado = new EventEmitter<number>();
-  @Output() statusAlterado = new EventEmitter<{ demandaId: number; de: TipoDemandaStatusEnum; para: TipoDemandaStatusEnum }>();
-  @Output() demandaSelecionada = new EventEmitter<number>();
-  @Output() demandaEditarSolicitada = new EventEmitter<number>();
-  @Output() demandaEditarDescricaoSolicitada = new EventEmitter<{ id: number; campo: CampoDescricao }>();
-  @Output() demandaNovaFilhaSolicitada = new EventEmitter<number>();
-  @Output() demandaTagsSolicitadas = new EventEmitter<number>();
-  @Output() demandaMembrosSolicitados = new EventEmitter<number>();
+    @Input({ required: true }) arvoreItem!: DemandaArvoreItemDto;
+    @Input() nivel: number = 0;
+    /** IDs expandidos, guardados no painel: sobrevivem a recargas e recriação dos itens (task 98). */
+    @Input() expandidos: ReadonlySet<number> = new Set<number>();
+    /** Termo da busca da toolbar: destacado no nome (task 106). */
+    @Input() termoBusca: string = '';
+    /** Linha com o foco do teclado na árvore (↑↓→←); null quando a árvore não está focada. */
+    @Input() focoId: number | null = null;
+    /** O chip de status vira popover de troca rápida (só onde há quem persista: o painel da árvore). */
+    @Input() statusEditavel: boolean = false;
+    /** Executores ativos por demanda, quando os dados do planejamento estão carregados (gestor). */
+    @Input() executoresPorDemanda: ReadonlyMap<number, string[]> = new Map();
+    @Output() expansaoAlternada = new EventEmitter<number>();
+    @Output() focoAlterado = new EventEmitter<number>();
+    @Output() statusAlterado = new EventEmitter<{ demandaId: number; de: TipoDemandaStatusEnum; para: TipoDemandaStatusEnum }>();
+    @Output() demandaSelecionada = new EventEmitter<number>();
+    @Output() demandaEditarSolicitada = new EventEmitter<number>();
+    @Output() demandaEditarDescricaoSolicitada = new EventEmitter<{ id: number; campo: CampoDescricao }>();
+    @Output() demandaNovaFilhaSolicitada = new EventEmitter<number>();
+    @Output() demandaTagsSolicitadas = new EventEmitter<number>();
+    @Output() demandaMembrosSolicitados = new EventEmitter<number>();
 
-  private readonly sessao = inject(UsuarioSessaoService);
+    private readonly sessao = inject(UsuarioSessaoService);
 
-  /** Ícones de descrição da linha: ícone, nome do campo e o tipo que escolhe a cor (tokens de ícone de descrição). */
-  readonly descricoes: Array<{ campo: CampoDescricao; icone: string; rotulo: string; tipo: string }> = [
-    { campo: 'descricaoTecnica', icone: 'icone-descricao icone-descricao--tecnica', rotulo: 'Descrição técnica',   tipo: 'tecnica' },
-    { campo: 'descricaoCliente', icone: 'pi pi-user', rotulo: 'Descrição do cliente', tipo: 'cliente' },
-    { campo: 'documentacao',     icone: 'icone-descricao icone-descricao--doc', rotulo: 'Documentação',        tipo: 'doc' },
-  ];
+    /** Ícones de descrição da linha: ícone, nome do campo e o tipo que escolhe a cor (tokens de ícone de descrição). */
+    readonly descricoes: Array<{ campo: CampoDescricao; icone: string; rotulo: string; tipo: string }> = [
+        { campo: 'descricaoTecnica', icone: 'icone-descricao icone-descricao--tecnica', rotulo: 'Descrição técnica',   tipo: 'tecnica' },
+        { campo: 'descricaoCliente', icone: 'pi pi-user', rotulo: 'Descrição do cliente', tipo: 'cliente' },
+        { campo: 'documentacao',     icone: 'icone-descricao icone-descricao--doc', rotulo: 'Documentação',        tipo: 'doc' },
+    ];
 
-  descricaoPreenchida(campo: CampoDescricao): boolean {
-    const item = this.arvoreItem;
-    return campo === 'descricaoTecnica' ? item.temDescricaoTecnica : campo === 'descricaoCliente' ? item.temDescricaoCliente : item.temDocumentacao;
-  }
-
-  abrirDescricao(evento: Event, campo: CampoDescricao): void {
-    evento.stopPropagation();
-    this.demandaEditarDescricaoSolicitada.emit({ id: this.arvoreItem.id, campo });
-  }
-
-  get eGestor(): boolean {
-    return this.sessao.eGestor();
-  }
-  readonly unidadeTempo = inject(VisualizacaoTempoService);
-
-  /** Único menu de contexto aberto na árvore, compartilhado entre todas as instâncias. */
-  private static menuAberto: ContextMenu | null = null;
-
-  itensMenu: MenuItem[] = [];
-
-  ngOnChanges(mudancas: SimpleChanges): void {
-    if (mudancas['arvoreItem']) {
-      this.reconstruirMenu();
+    descricaoPreenchida(campo: CampoDescricao): boolean {
+        const item = this.arvoreItem;
+        return campo === 'descricaoTecnica' ? item.temDescricaoTecnica : campo === 'descricaoCliente' ? item.temDescricaoCliente : item.temDocumentacao;
     }
-  }
 
-  private reconstruirMenu(): void {
-    this.itensMenu = construirMenuDemanda(
-      this.arvoreItem,
-      {
-        aoVisualizar: (id) => this.demandaSelecionada.emit(id),
-        aoEditar:     (id) => this.demandaEditarSolicitada.emit(id),
-        aoNovaFilha:  (id) => this.demandaNovaFilhaSolicitada.emit(id),
-        aoTags:       (id) => this.demandaTagsSolicitadas.emit(id),
-        aoMembros:    (id) => this.demandaMembrosSolicitados.emit(id),
-        aoDescricao:  (id, campo) => this.demandaEditarDescricaoSolicitada.emit({ id, campo }),
-      },
-      this.sessao.eGestor(),
-    );
-  }
-
-  /** Abre o menu desta demanda, fechando antes qualquer outro já aberto na árvore. */
-  abrirMenuContexto(evento: MouseEvent, menu: ContextMenu): void {
-    const menuAnterior = DemandaArvoreItemComponent.menuAberto;
-    if (menuAnterior && menuAnterior !== menu) {
-      menuAnterior.hide();
+    abrirDescricao(evento: Event, campo: CampoDescricao): void {
+        evento.stopPropagation();
+        this.demandaEditarDescricaoSolicitada.emit({ id: this.arvoreItem.id, campo });
     }
-    DemandaArvoreItemComponent.menuAberto = menu;
-    menu.show(evento);
-  }
 
-  /** Limpa a referência compartilhada quando este menu fecha (clique fora, comando, etc.). */
-  aoFecharMenu(menu: ContextMenu): void {
-    if (DemandaArvoreItemComponent.menuAberto === menu) {
-      DemandaArvoreItemComponent.menuAberto = null;
+    get eGestor(): boolean {
+        return this.sessao.eGestor();
     }
-  }
+    readonly unidadeTempo = inject(VisualizacaoTempoService);
 
-  get expandido(): boolean {
-    return this.expandidos.has(this.arvoreItem.id);
-  }
+    /** Único menu de contexto aberto na árvore, compartilhado entre todas as instâncias. */
+    private static menuAberto: ContextMenu | null = null;
 
-  get nomeEmPartes(): { texto: string; destaque: boolean }[] {
-    return dividirDestaque(this.arvoreItem.nome, this.termoBusca);
-  }
+    itensMenu: MenuItem[] = [];
 
-  get executores(): string[] {
-    return this.executoresPorDemanda.get(this.arvoreItem.id) ?? [];
-  }
+    ngOnChanges(mudancas: SimpleChanges): void {
+        if (mudancas['arvoreItem']) {
+            this.reconstruirMenu();
+        }
+    }
 
-  /** Fração 0..100 do executado sobre o estimado; a barra trava em 100 mesmo estourando. */
-  get percentualExecutado(): number {
-    const minutosEstimados = this.arvoreItem.horasEstimadas * 60;
-    if (minutosEstimados <= 0) return 0;
-    return Math.min(100, Math.round((this.arvoreItem.minutosExecutados / minutosEstimados) * 100));
-  }
+    private reconstruirMenu(): void {
+        this.itensMenu = construirMenuDemanda(
+            this.arvoreItem,
+            {
+                aoVisualizar: (id) => this.demandaSelecionada.emit(id),
+                aoEditar:     (id) => this.demandaEditarSolicitada.emit(id),
+                aoNovaFilha:  (id) => this.demandaNovaFilhaSolicitada.emit(id),
+                aoTags:       (id) => this.demandaTagsSolicitadas.emit(id),
+                aoMembros:    (id) => this.demandaMembrosSolicitados.emit(id),
+                aoDescricao:  (id, campo) => this.demandaEditarDescricaoSolicitada.emit({ id, campo }),
+            },
+            this.sessao.eGestor(),
+        );
+    }
 
-  get estourou(): boolean {
-    return this.arvoreItem.horasEstimadas > 0 && this.arvoreItem.minutosExecutados >= this.arvoreItem.horasEstimadas * 60;
-  }
+    /** Abre o menu desta demanda, fechando antes qualquer outro já aberto na árvore. */
+    abrirMenuContexto(evento: MouseEvent, menu: ContextMenu): void {
+        const menuAnterior = DemandaArvoreItemComponent.menuAberto;
+        if (menuAnterior && menuAnterior !== menu) {
+            menuAnterior.hide();
+        }
+        DemandaArvoreItemComponent.menuAberto = menu;
+        menu.show(evento);
+    }
 
-  /** Clicar na linha abre o detalhe (como no grafo); só o chevron expande. */
-  selecionar(): void {
-    this.focoAlterado.emit(this.arvoreItem.id);
-    this.demandaSelecionada.emit(this.arvoreItem.id);
-  }
+    /** Limpa a referência compartilhada quando este menu fecha (clique fora, comando, etc.). */
+    aoFecharMenu(menu: ContextMenu): void {
+        if (DemandaArvoreItemComponent.menuAberto === menu) {
+            DemandaArvoreItemComponent.menuAberto = null;
+        }
+    }
 
-  alternarExpansao(evento: Event): void {
-    evento.stopPropagation();
-    this.focoAlterado.emit(this.arvoreItem.id);
-    this.expansaoAlternada.emit(this.arvoreItem.id);
-  }
+    get expandido(): boolean {
+        return this.expandidos.has(this.arvoreItem.id);
+    }
 
-  novaFilha(evento: Event): void {
-    evento.stopPropagation();
-    this.demandaNovaFilhaSolicitada.emit(this.arvoreItem.id);
-  }
+    get nomeEmPartes(): { texto: string; destaque: boolean }[] {
+        return dividirDestaque(this.arvoreItem.nome, this.termoBusca);
+    }
 
-  abrirMenuPelaLinha(evento: Event, menu: ContextMenu): void {
-    evento.stopPropagation();
-    this.abrirMenuContexto(evento as MouseEvent, menu);
-  }
+    get executores(): string[] {
+        return this.executoresPorDemanda.get(this.arvoreItem.id) ?? [];
+    }
 
-  aoEscolherStatus(para: TipoDemandaStatusEnum): void {
-    this.statusAlterado.emit({ demandaId: this.arvoreItem.id, de: this.arvoreItem.status, para });
-  }
+    /** Fração 0..100 do executado sobre o estimado; a barra trava em 100 mesmo estourando. */
+    get percentualExecutado(): number {
+        const minutosEstimados = this.arvoreItem.horasEstimadas * 60;
+        if (minutosEstimados <= 0) return 0;
+        return Math.min(100, Math.round((this.arvoreItem.minutosExecutados / minutosEstimados) * 100));
+    }
+
+    get estourou(): boolean {
+        return this.arvoreItem.horasEstimadas > 0 && this.arvoreItem.minutosExecutados >= this.arvoreItem.horasEstimadas * 60;
+    }
+
+    /** Clicar na linha abre o detalhe (como no grafo); só o chevron expande. */
+    selecionar(): void {
+        this.focoAlterado.emit(this.arvoreItem.id);
+        this.demandaSelecionada.emit(this.arvoreItem.id);
+    }
+
+    alternarExpansao(evento: Event): void {
+        evento.stopPropagation();
+        this.focoAlterado.emit(this.arvoreItem.id);
+        this.expansaoAlternada.emit(this.arvoreItem.id);
+    }
+
+    novaFilha(evento: Event): void {
+        evento.stopPropagation();
+        this.demandaNovaFilhaSolicitada.emit(this.arvoreItem.id);
+    }
+
+    abrirMenuPelaLinha(evento: Event, menu: ContextMenu): void {
+        evento.stopPropagation();
+        this.abrirMenuContexto(evento as MouseEvent, menu);
+    }
+
+    aoEscolherStatus(para: TipoDemandaStatusEnum): void {
+        this.statusAlterado.emit({ demandaId: this.arvoreItem.id, de: this.arvoreItem.status, para });
+    }
 }

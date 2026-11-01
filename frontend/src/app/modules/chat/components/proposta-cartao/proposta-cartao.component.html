@@ -1,491 +1,973 @@
 @if (linha(); as linhaAtual) {
-  <app-chat-proposta-linha
-    [resumo]="linhaAtual.resumo"
-    [modo]="linhaAtual.modo"
-    [status]="linhaAtual.status"
-    [podeAjustar]="podeAjustar()"
-    [operando]="operando()"
-    [desfazerDisponivel]="desfazerDisponivel()"
-    [feitaPelaIa]="linhaAtual.feitaPelaIa"
-    (confirmar)="confirmar()"
-    (ajustar)="abrirAjuste()"
-    (recusar)="recusar()"
-    (desfazer)="desfazer()"
-    (detalhar)="expandido.set(true)"
-  />
+    <app-chat-proposta-linha
+        [resumo]="linhaAtual.resumo"
+        [modo]="linhaAtual.modo"
+        [status]="linhaAtual.status"
+        [podeAjustar]="podeAjustar()"
+        [operando]="operando()"
+        [desfazerDisponivel]="desfazerDisponivel()"
+        [feitaPelaIa]="linhaAtual.feitaPelaIa"
+        (confirmar)="confirmar()"
+        (ajustar)="abrirAjuste()"
+        (recusar)="recusar()"
+        (desfazer)="desfazer()"
+        (detalhar)="expandido.set(true)"
+    />
 } @else if (proposta(); as propostaAtual) {
-  <article class="proposta-cartao" [class.proposta-cartao--operando]="operando()" [attr.aria-label]="'Proposta: ' + rotuloTipo[propostaAtual.tipo]">
-    <header class="proposta-cartao__cabecalho">
-      <span class="proposta-cartao__titulo">Proposta · {{ rotuloTipo[propostaAtual.tipo] }}</span>
-      <span class="proposta-cartao__situacao">
-        @if (expandido() && !ajustando()) {
-          <p-button label="Resumir" icon="pi pi-angle-up" severity="secondary" size="small" [text]="true" (onClick)="expandido.set(false)" />
-        }
-        <p-tag [value]="rotuloStatus[propostaAtual.status]" [severity]="severidade[propostaAtual.status]" [rounded]="true" />
-      </span>
-    </header>
+    <article
+        class="proposta-cartao"
+        [class.proposta-cartao--operando]="operando()"
+        [attr.aria-label]="'Proposta: ' + rotuloTipo[propostaAtual.tipo]"
+    >
+        <header class="proposta-cartao__cabecalho">
+            <span class="proposta-cartao__titulo"
+                >Proposta · {{ rotuloTipo[propostaAtual.tipo] }}</span
+            >
+            <span class="proposta-cartao__situacao">
+                @if (expandido() && !ajustando()) {
+                    <p-button
+                        label="Resumir"
+                        icon="pi pi-angle-up"
+                        severity="secondary"
+                        size="small"
+                        [text]="true"
+                        (onClick)="expandido.set(false)"
+                    />
+                }
+                <p-tag
+                    [value]="rotuloStatus[propostaAtual.status]"
+                    [severity]="severidade[propostaAtual.status]"
+                    [rounded]="true"
+                />
+            </span>
+        </header>
 
-    @switch (propostaAtual.tipo) {
-      @case (Tipo.CRIAR_ATIVIDADE) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>
-          <span class="proposta-cartao__linha">
-            @if (texto('demandaNome')) {
-              <span>Demanda: {{ texto('demandaNome') }}</span>
+        @switch (propostaAtual.tipo) {
+            @case (Tipo.CRIAR_ATIVIDADE) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{ texto("nome") }}</strong>
+                    <span class="proposta-cartao__linha">
+                        @if (texto("demandaNome")) {
+                            <span>Demanda: {{ texto("demandaNome") }}</span>
+                        }
+                        <app-prioridade-selo
+                            [prioridade]="prioridadeDe(texto('prioridade') || 'INDEFINIDA')"
+                        />
+                    </span>
+                    @if (texto("usuarioNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Pessoa: {{ texto("usuarioNome") }}</span
+                        >
+                    }
+                </div>
             }
-            <app-prioridade-selo [prioridade]="prioridadeDe(texto('prioridade') || 'INDEFINIDA')" />
-          </span>
-          @if (texto('usuarioNome')) {
-            <span class="proposta-cartao__linha">Pessoa: {{ texto('usuarioNome') }}</span>
-          }
-        </div>
-      }
-      @case (Tipo.ALTERAR_ATIVIDADE) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
-          @if (texto('demandaNome')) {
-            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
-          }
-          @if (texto('statusAnterior')) {
-            <span class="proposta-cartao__linha">Status: {{ rotuloDoStatus('statusAnterior') }} → {{ rotuloDoStatus('status') }}</span>
-          }
-          @if (texto('prioridadeAnterior')) {
-            <span class="proposta-cartao__linha">
-              Prioridade:
-              <app-prioridade-selo [prioridade]="prioridadeDe(texto('prioridadeAnterior'))" />
-              <i class="pi pi-arrow-right" aria-hidden="true"></i>
-              <app-prioridade-selo [prioridade]="prioridadeDe(texto('prioridade'))" />
-            </span>
-          }
-          @if (texto('nome')) {
-            <span class="proposta-cartao__linha">Nome</span>
-            <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('atividadeNome')" [depois]="texto('nome')" /></div>
-          }
-        </div>
-      }
-      @case (Tipo.REGISTRAR_EXECUCAO) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
-          @if (texto('demandaNome')) {
-            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
-          }
-          @if (texto('usuarioNome')) {
-            <span class="proposta-cartao__linha">Pessoa: {{ texto('usuarioNome') }}</span>
-          }
-          <span class="proposta-cartao__linha">Período: {{ texto('periodoTexto') }}@if (numero('duracaoMinutos')) { ({{ formatarDuracao(numero('duracaoMinutos')) }}) }</span>
-          <span class="proposta-cartao__linha">Descrição: {{ texto('descricao') }}</span>
-        </div>
-      }
-      @case (Tipo.CORRIGIR_EXECUCAO) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Execução ' + propostaAtual.dados['execucaoId'] }}</strong>
-          @if (texto('demandaNome')) {
-            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
-          }
-          <span class="proposta-cartao__linha">Horário e duração</span>
-          <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="periodoAnteriorDaExecucao()" [depois]="periodoNovoDaExecucao()" /></div>
-          @if (texto('descricao')) {
-            <span class="proposta-cartao__linha">Descrição</span>
-            <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('descricaoAnterior')" [depois]="texto('descricao')" /></div>
-          }
-        </div>
-      }
-      @case (Tipo.ALTERAR_DEMANDA) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('demandaNome') || 'Demanda ' + propostaAtual.dados['demandaId'] }}</strong>
-          @if (texto('projetoNome')) {
-            <span class="proposta-cartao__linha">Projeto: {{ texto('projetoNome') }}</span>
-          }
-          @if (texto('nome')) {
-            <span class="proposta-cartao__linha">Nome</span>
-            <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('demandaNome')" [depois]="texto('nome')" /></div>
-          }
-          @if (texto('statusAnterior')) {
-            <span class="proposta-cartao__linha">Status: {{ rotuloDoStatusDaDemanda('statusAnterior') }} → {{ rotuloDoStatusDaDemanda('status') }}</span>
-          }
-          @if (propostaAtual.dados['horasAnteriores'] !== undefined) {
-            <span class="proposta-cartao__linha">Horas estimadas: {{ numero('horasAnteriores') }}h → {{ numero('horasEstimadas') }}h</span>
-          }
-          @if (propostaAtual.dados['previsaoAnteriorData'] !== undefined) {
-            <span class="proposta-cartao__linha">Previsão de término: {{ dataBr(texto('previsaoAnteriorData')) || 'sem previsão' }} → {{ dataBr(texto('previsaoFimData')) }}</span>
-          }
-          @if (texto('paiNovoNome')) {
-            <span class="proposta-cartao__linha">Pai: {{ texto('paiAnteriorNome') || 'topo da árvore' }} → {{ texto('paiNovoNome') }}</span>
-          }
-          @if (texto('acrescentarDocumentacao')) {
-            <span class="proposta-cartao__linha">Acrescenta à documentação</span>
-            @if (documentacaoAcrescentada(); as documentacao) {
-              <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="documentacao.antes" [depois]="documentacao.depois" /></div>
-            } @else {
-              <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('acrescentarDocumentacao')" /></div>
+            @case (Tipo.ALTERAR_ATIVIDADE) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("atividadeNome") || "Atividade " + propostaAtual.dados["atividadeId"]
+                    }}</strong>
+                    @if (texto("demandaNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Demanda: {{ texto("demandaNome") }}</span
+                        >
+                    }
+                    @if (texto("statusAnterior")) {
+                        <span class="proposta-cartao__linha"
+                            >Status: {{ rotuloDoStatus("statusAnterior") }} →
+                            {{ rotuloDoStatus("status") }}</span
+                        >
+                    }
+                    @if (texto("prioridadeAnterior")) {
+                        <span class="proposta-cartao__linha">
+                            Prioridade:
+                            <app-prioridade-selo
+                                [prioridade]="prioridadeDe(texto('prioridadeAnterior'))"
+                            />
+                            <i class="pi pi-arrow-right" aria-hidden="true"></i>
+                            <app-prioridade-selo [prioridade]="prioridadeDe(texto('prioridade'))" />
+                        </span>
+                    }
+                    @if (texto("nome")) {
+                        <span class="proposta-cartao__linha">Nome</span>
+                        <div class="proposta-cartao__trecho">
+                            <app-diff-por-palavra
+                                [antes]="texto('atividadeNome')"
+                                [depois]="texto('nome')"
+                            />
+                        </div>
+                    }
+                </div>
             }
-          }
-          @if (numero('atividadesEmAberto') > 0) {
-            <span class="proposta-cartao__aviso"><i class="pi pi-exclamation-triangle"></i>Ainda há {{ numero('atividadesEmAberto') }} {{ numero('atividadesEmAberto') === 1 ? 'atividade' : 'atividades' }} em aberto nesta demanda.</span>
-          }
-        </div>
-      }
-      @case (Tipo.CONCLUIR_DEMANDA) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('demandaNome') || 'Demanda ' + propostaAtual.dados['demandaId'] }}</strong>
-          @if (texto('projetoNome')) {
-            <span class="proposta-cartao__linha">Projeto: {{ texto('projetoNome') }}</span>
-          }
-          @if (texto('statusAnterior')) {
-            <span class="proposta-cartao__linha">Status: {{ rotuloDoStatusDaDemanda('statusAnterior') }} → Concluída</span>
-          }
-          @if (numero('atividadesEmAberto') > 0) {
-            <span class="proposta-cartao__aviso">
-              <i class="pi pi-exclamation-triangle"></i>Ainda há {{ numero('atividadesEmAberto') }} {{ numero('atividadesEmAberto') === 1 ? 'atividade' : 'atividades' }} em aberto nesta demanda. Só a demanda será concluída: as atividades continuam como estão.
-            </span>
-          }
-        </div>
-      }
-      @case (Tipo.MOVER_ATIVIDADE) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
-          <span class="proposta-cartao__linha">De: {{ texto('demandaOrigemNome') || 'Demanda ' + propostaAtual.dados['demandaOrigemId'] }}</span>
-          <span class="proposta-cartao__linha">Para: {{ texto('demandaDestinoNome') || 'Demanda ' + propostaAtual.dados['demandaDestinoId'] }}</span>
-          <span class="proposta-cartao__linha">As execuções da atividade vão junto.</span>
-        </div>
-      }
-      @case (Tipo.DESCONECTAR_DEMANDA) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('demandaOrigemNome') || 'Demanda ' + propostaAtual.dados['demandaOrigemId'] }}</strong>
-          <span class="proposta-cartao__linha">{{ propostaAtual.dados['ehBidirecional'] === true ? 'Conectada nos dois sentidos a' : 'Conectada a' }}: {{ texto('demandaDestinoNome') || 'Demanda ' + propostaAtual.dados['demandaDestinoId'] }}</span>
-          <span class="proposta-cartao__linha">Só a conexão sai do grafo; as demandas ficam onde estão.</span>
-        </div>
-      }
-      @case (Tipo.EXCLUIR_ATIVIDADE) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
-          @if (texto('demandaNome')) {
-            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
-          }
-          <span class="proposta-cartao__linha">Esta atividade não tem execuções.</span>
-        </div>
-      }
-      @case (Tipo.JUSTIFICAR_PONTO) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>
-          @if (texto('usuarioNome')) {
-            <span class="proposta-cartao__linha">Pessoa: {{ texto('usuarioNome') }}</span>
-          }
-          <span class="proposta-cartao__linha">Dia: {{ dataBr(texto('diaData')) }}</span>
-          <span class="proposta-cartao__linha">Horas que não contam na meta: {{ numero('horasCobertas') }} h</span>
-          <span class="proposta-cartao__linha">Motivo: {{ texto('descricao') }}</span>
-        </div>
-      }
-      @case (Tipo.ATRIBUIR_MEMBRO) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('usuarioNome') || 'Usuário ' + propostaAtual.dados['usuarioId'] }}</strong>
-          @if (texto('usuarioCargo')) {
-            <span class="proposta-cartao__linha">{{ texto('usuarioCargo') }}</span>
-          }
-          <span class="proposta-cartao__linha">
-            {{ texto('acao') === 'REMOVER' ? 'Sai da demanda' : 'Entra na demanda' }}: {{ texto('demandaNome') || propostaAtual.dados['demandaId'] }}
-          </span>
-          @if (texto('projetoNome')) {
-            <span class="proposta-cartao__linha">Projeto: {{ texto('projetoNome') }}</span>
-          }
-        </div>
-      }
-      @case (Tipo.ATRIBUIR_TAG) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('alvoNome') || 'Alvo ' + propostaAtual.dados['alvoId'] }}</strong>
-          <span class="proposta-cartao__linha">
-            {{ texto('alvo') === 'ATIVIDADE' ? 'Atividade' : 'Demanda' }}@if (texto('demandaNome')) { · {{ texto('demandaNome') }} }
-          </span>
-          <span class="proposta-cartao__linha">Tags antes: {{ lista('tagsAntesNomes') || 'nenhuma' }}</span>
-          <span class="proposta-cartao__linha">Tags depois: {{ lista('tagsDepoisNomes') || 'nenhuma' }}</span>
-        </div>
-      }
-      @case (Tipo.CRIAR_PROJETO) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>
-          <span class="proposta-cartao__linha">
-            <span>Código: {{ texto('codigo') }}</span>
-            <span class="proposta-cartao__cor" [style.background-color]="texto('cor')"></span>
-            <span>O projeto nasce ativo</span>
-          </span>
-          @if (texto('inicioData') || texto('previsaoFimData')) {
-            <span class="proposta-cartao__linha">
-              @if (texto('inicioData')) {
-                <span>Início: {{ texto('inicioData').slice(0, 10) }}</span>
-              }
-              @if (texto('previsaoFimData')) {
-                <span>Previsão de fim: {{ texto('previsaoFimData').slice(0, 10) }}</span>
-              }
-            </span>
-          }
-        </div>
-      }
-      @case (Tipo.CRIAR_DEMANDA) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>
-          <span class="proposta-cartao__linha">
-            <span>Projeto: {{ texto('projetoNome') }}</span>
-            <span>{{ propostaAtual.dados['isEstrutural'] === true ? 'Demanda de estrutura' : 'Demanda de trabalho' }}</span>
-          </span>
-          <span class="proposta-cartao__linha">
-            {{ texto('demandaPaiNome') ? 'Dentro de: ' + texto('demandaPaiNome') : 'Demanda de topo do projeto' }}
-          </span>
-          @if (texto('descricaoTecnica') || texto('descricaoCliente')) {
-            <span class="proposta-cartao__linha">{{ texto('descricaoTecnica') || texto('descricaoCliente') }}</span>
-          }
-          @if (propostaAtual.status === Status.PENDENTE && (propostaAtual.dados['projetoPropostaId'] || propostaAtual.dados['demandaPaiPropostaId'])) {
-            <span class="proposta-cartao__aviso"><i class="pi pi-info-circle"></i>Confirme antes a proposta {{ propostaAtual.dados['projetoPropostaId'] ? 'do projeto' : 'da demanda de estrutura' }} acima: esta depende dela.</span>
-          }
-        </div>
-      }
-      @case (Tipo.DESCREVER_DEMANDA) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('demandaNome') || 'Demanda ' + propostaAtual.dados['demandaId'] }}</strong>
-          @if (texto('projetoNome')) {
-            <span class="proposta-cartao__linha">Projeto: {{ texto('projetoNome') }}</span>
-          }
-          @if (temAnteriorDaDescricao()) {
-            <div class="proposta-cartao__visoes" role="group" aria-label="O que mostrar">
-              @for (visao of visoesDosTextos; track visao.codigo) {
-                <button type="button" class="proposta-cartao__visao" [class.proposta-cartao__visao--ativa]="visaoDosTextos() === visao.codigo" [attr.aria-pressed]="visaoDosTextos() === visao.codigo" (click)="visaoDosTextos.set(visao.codigo)">{{ visao.rotulo }}</button>
-              }
+            @case (Tipo.REGISTRAR_EXECUCAO) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("atividadeNome") || "Atividade " + propostaAtual.dados["atividadeId"]
+                    }}</strong>
+                    @if (texto("demandaNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Demanda: {{ texto("demandaNome") }}</span
+                        >
+                    }
+                    @if (texto("usuarioNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Pessoa: {{ texto("usuarioNome") }}</span
+                        >
+                    }
+                    <span class="proposta-cartao__linha"
+                        >Período: {{ texto("periodoTexto") }}
+                        @if (numero("duracaoMinutos")) {
+                            ({{ formatarDuracao(numero("duracaoMinutos")) }})
+                        }
+                    </span>
+                    <span class="proposta-cartao__linha">Descrição: {{ texto("descricao") }}</span>
+                </div>
+            }
+            @case (Tipo.CORRIGIR_EXECUCAO) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("atividadeNome") || "Execução " + propostaAtual.dados["execucaoId"]
+                    }}</strong>
+                    @if (texto("demandaNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Demanda: {{ texto("demandaNome") }}</span
+                        >
+                    }
+                    <span class="proposta-cartao__linha">Horário e duração</span>
+                    <div class="proposta-cartao__trecho">
+                        <app-diff-por-palavra
+                            [antes]="periodoAnteriorDaExecucao()"
+                            [depois]="periodoNovoDaExecucao()"
+                        />
+                    </div>
+                    @if (texto("descricao")) {
+                        <span class="proposta-cartao__linha">Descrição</span>
+                        <div class="proposta-cartao__trecho">
+                            <app-diff-por-palavra
+                                [antes]="texto('descricaoAnterior')"
+                                [depois]="texto('descricao')"
+                            />
+                        </div>
+                    }
+                </div>
+            }
+            @case (Tipo.ALTERAR_DEMANDA) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("demandaNome") || "Demanda " + propostaAtual.dados["demandaId"]
+                    }}</strong>
+                    @if (texto("projetoNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Projeto: {{ texto("projetoNome") }}</span
+                        >
+                    }
+                    @if (texto("nome")) {
+                        <span class="proposta-cartao__linha">Nome</span>
+                        <div class="proposta-cartao__trecho">
+                            <app-diff-por-palavra
+                                [antes]="texto('demandaNome')"
+                                [depois]="texto('nome')"
+                            />
+                        </div>
+                    }
+                    @if (texto("statusAnterior")) {
+                        <span class="proposta-cartao__linha"
+                            >Status: {{ rotuloDoStatusDaDemanda("statusAnterior") }} →
+                            {{ rotuloDoStatusDaDemanda("status") }}</span
+                        >
+                    }
+                    @if (propostaAtual.dados["horasAnteriores"] !== undefined) {
+                        <span class="proposta-cartao__linha"
+                            >Horas estimadas: {{ numero("horasAnteriores") }}h →
+                            {{ numero("horasEstimadas") }}h</span
+                        >
+                    }
+                    @if (propostaAtual.dados["previsaoAnteriorData"] !== undefined) {
+                        <span class="proposta-cartao__linha"
+                            >Previsão de término:
+                            {{ dataBr(texto("previsaoAnteriorData")) || "sem previsão" }} →
+                            {{ dataBr(texto("previsaoFimData")) }}</span
+                        >
+                    }
+                    @if (texto("paiNovoNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Pai: {{ texto("paiAnteriorNome") || "topo da árvore" }} →
+                            {{ texto("paiNovoNome") }}</span
+                        >
+                    }
+                    @if (texto("acrescentarDocumentacao")) {
+                        <span class="proposta-cartao__linha">Acrescenta à documentação</span>
+                        @if (documentacaoAcrescentada(); as documentacao) {
+                            <div class="proposta-cartao__trecho">
+                                <app-diff-por-palavra
+                                    [antes]="documentacao.antes"
+                                    [depois]="documentacao.depois"
+                                />
+                            </div>
+                        } @else {
+                            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois">
+                                <app-markdown-visualizador
+                                    [texto]="texto('acrescentarDocumentacao')"
+                                />
+                            </div>
+                        }
+                    }
+                    @if (numero("atividadesEmAberto") > 0) {
+                        <span class="proposta-cartao__aviso"
+                            ><i class="pi pi-exclamation-triangle"></i>Ainda há
+                            {{ numero("atividadesEmAberto") }}
+                            {{ numero("atividadesEmAberto") === 1 ? "atividade" : "atividades" }} em
+                            aberto nesta demanda.</span
+                        >
+                    }
+                </div>
+            }
+            @case (Tipo.CONCLUIR_DEMANDA) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("demandaNome") || "Demanda " + propostaAtual.dados["demandaId"]
+                    }}</strong>
+                    @if (texto("projetoNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Projeto: {{ texto("projetoNome") }}</span
+                        >
+                    }
+                    @if (texto("statusAnterior")) {
+                        <span class="proposta-cartao__linha"
+                            >Status: {{ rotuloDoStatusDaDemanda("statusAnterior") }} →
+                            Concluída</span
+                        >
+                    }
+                    @if (numero("atividadesEmAberto") > 0) {
+                        <span class="proposta-cartao__aviso">
+                            <i class="pi pi-exclamation-triangle"></i>Ainda há
+                            {{ numero("atividadesEmAberto") }}
+                            {{ numero("atividadesEmAberto") === 1 ? "atividade" : "atividades" }} em
+                            aberto nesta demanda. Só a demanda será concluída: as atividades
+                            continuam como estão.
+                        </span>
+                    }
+                </div>
+            }
+            @case (Tipo.MOVER_ATIVIDADE) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("atividadeNome") || "Atividade " + propostaAtual.dados["atividadeId"]
+                    }}</strong>
+                    <span class="proposta-cartao__linha"
+                        >De:
+                        {{
+                            texto("demandaOrigemNome") ||
+                                "Demanda " + propostaAtual.dados["demandaOrigemId"]
+                        }}</span
+                    >
+                    <span class="proposta-cartao__linha"
+                        >Para:
+                        {{
+                            texto("demandaDestinoNome") ||
+                                "Demanda " + propostaAtual.dados["demandaDestinoId"]
+                        }}</span
+                    >
+                    <span class="proposta-cartao__linha">As execuções da atividade vão junto.</span>
+                </div>
+            }
+            @case (Tipo.DESCONECTAR_DEMANDA) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("demandaOrigemNome") ||
+                            "Demanda " + propostaAtual.dados["demandaOrigemId"]
+                    }}</strong>
+                    <span class="proposta-cartao__linha"
+                        >{{
+                            propostaAtual.dados["ehBidirecional"] === true
+                                ? "Conectada nos dois sentidos a"
+                                : "Conectada a"
+                        }}:
+                        {{
+                            texto("demandaDestinoNome") ||
+                                "Demanda " + propostaAtual.dados["demandaDestinoId"]
+                        }}</span
+                    >
+                    <span class="proposta-cartao__linha"
+                        >Só a conexão sai do grafo; as demandas ficam onde estão.</span
+                    >
+                </div>
+            }
+            @case (Tipo.EXCLUIR_ATIVIDADE) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("atividadeNome") || "Atividade " + propostaAtual.dados["atividadeId"]
+                    }}</strong>
+                    @if (texto("demandaNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Demanda: {{ texto("demandaNome") }}</span
+                        >
+                    }
+                    <span class="proposta-cartao__linha">Esta atividade não tem execuções.</span>
+                </div>
+            }
+            @case (Tipo.JUSTIFICAR_PONTO) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{ texto("nome") }}</strong>
+                    @if (texto("usuarioNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Pessoa: {{ texto("usuarioNome") }}</span
+                        >
+                    }
+                    <span class="proposta-cartao__linha">Dia: {{ dataBr(texto("diaData")) }}</span>
+                    <span class="proposta-cartao__linha"
+                        >Horas que não contam na meta: {{ numero("horasCobertas") }} h</span
+                    >
+                    <span class="proposta-cartao__linha">Motivo: {{ texto("descricao") }}</span>
+                </div>
+            }
+            @case (Tipo.ATRIBUIR_MEMBRO) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("usuarioNome") || "Usuário " + propostaAtual.dados["usuarioId"]
+                    }}</strong>
+                    @if (texto("usuarioCargo")) {
+                        <span class="proposta-cartao__linha">{{ texto("usuarioCargo") }}</span>
+                    }
+                    <span class="proposta-cartao__linha">
+                        {{ texto("acao") === "REMOVER" ? "Sai da demanda" : "Entra na demanda" }}:
+                        {{ texto("demandaNome") || propostaAtual.dados["demandaId"] }}
+                    </span>
+                    @if (texto("projetoNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Projeto: {{ texto("projetoNome") }}</span
+                        >
+                    }
+                </div>
+            }
+            @case (Tipo.ATRIBUIR_TAG) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("alvoNome") || "Alvo " + propostaAtual.dados["alvoId"]
+                    }}</strong>
+                    <span class="proposta-cartao__linha">
+                        {{ texto("alvo") === "ATIVIDADE" ? "Atividade" : "Demanda" }}
+                        @if (texto("demandaNome")) {
+                            · {{ texto("demandaNome") }}
+                        }
+                    </span>
+                    <span class="proposta-cartao__linha"
+                        >Tags antes: {{ lista("tagsAntesNomes") || "nenhuma" }}</span
+                    >
+                    <span class="proposta-cartao__linha"
+                        >Tags depois: {{ lista("tagsDepoisNomes") || "nenhuma" }}</span
+                    >
+                </div>
+            }
+            @case (Tipo.CRIAR_PROJETO) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{ texto("nome") }}</strong>
+                    <span class="proposta-cartao__linha">
+                        <span>Código: {{ texto("codigo") }}</span>
+                        <span
+                            class="proposta-cartao__cor"
+                            [style.background-color]="texto('cor')"
+                        ></span>
+                        <span>O projeto nasce ativo</span>
+                    </span>
+                    @if (texto("inicioData") || texto("previsaoFimData")) {
+                        <span class="proposta-cartao__linha">
+                            @if (texto("inicioData")) {
+                                <span>Início: {{ texto("inicioData").slice(0, 10) }}</span>
+                            }
+                            @if (texto("previsaoFimData")) {
+                                <span
+                                    >Previsão de fim:
+                                    {{ texto("previsaoFimData").slice(0, 10) }}</span
+                                >
+                            }
+                        </span>
+                    }
+                </div>
+            }
+            @case (Tipo.CRIAR_DEMANDA) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{ texto("nome") }}</strong>
+                    <span class="proposta-cartao__linha">
+                        <span>Projeto: {{ texto("projetoNome") }}</span>
+                        <span>{{
+                            propostaAtual.dados["isEstrutural"] === true
+                                ? "Demanda de estrutura"
+                                : "Demanda de trabalho"
+                        }}</span>
+                    </span>
+                    <span class="proposta-cartao__linha">
+                        {{
+                            texto("demandaPaiNome")
+                                ? "Dentro de: " + texto("demandaPaiNome")
+                                : "Demanda de topo do projeto"
+                        }}
+                    </span>
+                    @if (texto("descricaoTecnica") || texto("descricaoCliente")) {
+                        <span class="proposta-cartao__linha">{{
+                            texto("descricaoTecnica") || texto("descricaoCliente")
+                        }}</span>
+                    }
+                    @if (
+                        propostaAtual.status === Status.PENDENTE &&
+                        (propostaAtual.dados["projetoPropostaId"] ||
+                            propostaAtual.dados["demandaPaiPropostaId"])
+                    ) {
+                        <span class="proposta-cartao__aviso"
+                            ><i class="pi pi-info-circle"></i>Confirme antes a proposta
+                            {{
+                                propostaAtual.dados["projetoPropostaId"]
+                                    ? "do projeto"
+                                    : "da demanda de estrutura"
+                            }}
+                            acima: esta depende dela.</span
+                        >
+                    }
+                </div>
+            }
+            @case (Tipo.DESCREVER_DEMANDA) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("demandaNome") || "Demanda " + propostaAtual.dados["demandaId"]
+                    }}</strong>
+                    @if (texto("projetoNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Projeto: {{ texto("projetoNome") }}</span
+                        >
+                    }
+                    @if (temAnteriorDaDescricao()) {
+                        <div
+                            class="proposta-cartao__visoes"
+                            role="group"
+                            aria-label="O que mostrar"
+                        >
+                            @for (visao of visoesDosTextos; track visao.codigo) {
+                                <button
+                                    type="button"
+                                    class="proposta-cartao__visao"
+                                    [class.proposta-cartao__visao--ativa]="
+                                        visaoDosTextos() === visao.codigo
+                                    "
+                                    [attr.aria-pressed]="visaoDosTextos() === visao.codigo"
+                                    (click)="visaoDosTextos.set(visao.codigo)"
+                                >
+                                    {{ visao.rotulo }}
+                                </button>
+                            }
+                        </div>
+                    }
+                    @if (texto("descricaoCliente")) {
+                        <span class="proposta-cartao__linha">Descrição do cliente</span>
+                        @if (temAnteriorDaDescricao() && visaoDosTextos() === "MUDANCAS") {
+                            <div class="proposta-cartao__trecho">
+                                <app-diff-por-palavra
+                                    [antes]="texto('descricaoClienteAnterior')"
+                                    [depois]="texto('descricaoCliente')"
+                                />
+                            </div>
+                        } @else if (temAnteriorDaDescricao() && visaoDosTextos() === "ANTES") {
+                            <div class="proposta-cartao__trecho proposta-cartao__trecho--antes">
+                                @if (texto("descricaoClienteAnterior")) {
+                                    <app-markdown-visualizador
+                                        [texto]="texto('descricaoClienteAnterior')"
+                                    />
+                                } @else {
+                                    <em>Sem descrição até agora</em>
+                                }
+                            </div>
+                        } @else {
+                            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois">
+                                <app-markdown-visualizador [texto]="texto('descricaoCliente')" />
+                            </div>
+                        }
+                    }
+                    @if (texto("descricaoTecnica")) {
+                        <span class="proposta-cartao__linha">Descrição técnica</span>
+                        @if (temAnteriorDaDescricao() && visaoDosTextos() === "MUDANCAS") {
+                            <div class="proposta-cartao__trecho">
+                                <app-diff-por-palavra
+                                    [antes]="texto('descricaoTecnicaAnterior')"
+                                    [depois]="texto('descricaoTecnica')"
+                                />
+                            </div>
+                        } @else if (temAnteriorDaDescricao() && visaoDosTextos() === "ANTES") {
+                            <div class="proposta-cartao__trecho proposta-cartao__trecho--antes">
+                                @if (texto("descricaoTecnicaAnterior")) {
+                                    <app-markdown-visualizador
+                                        [texto]="texto('descricaoTecnicaAnterior')"
+                                    />
+                                } @else {
+                                    <em>Sem descrição até agora</em>
+                                }
+                            </div>
+                        } @else {
+                            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois">
+                                <app-markdown-visualizador [texto]="texto('descricaoTecnica')" />
+                            </div>
+                        }
+                    }
+                </div>
+            }
+            @case (Tipo.CONECTAR_DEMANDA) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">
+                        {{
+                            texto("demandaOrigemNome") ||
+                                "Demanda " + propostaAtual.dados["demandaOrigemId"]
+                        }}
+                        <i
+                            class="pi"
+                            [class.pi-arrow-right]="propostaAtual.dados['ehBidirecional'] !== true"
+                            [class.pi-arrows-h]="propostaAtual.dados['ehBidirecional'] === true"
+                            aria-hidden="true"
+                        ></i>
+                        {{
+                            texto("demandaDestinoNome") ||
+                                "Demanda " + propostaAtual.dados["demandaDestinoId"]
+                        }}
+                    </strong>
+                    <span class="proposta-cartao__linha">{{
+                        propostaAtual.dados["ehBidirecional"] === true
+                            ? "Conexão nos dois sentidos"
+                            : "Conexão do primeiro para o segundo"
+                    }}</span>
+                    <span class="proposta-cartao__linha">Motivo: {{ texto("motivo") }}</span>
+                </div>
+            }
+            @case (Tipo.INICIAR_EXECUCAO) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("atividadeNome") || "Atividade " + propostaAtual.dados["atividadeId"]
+                    }}</strong>
+                    @if (texto("demandaNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Demanda: {{ texto("demandaNome") }}</span
+                        >
+                    }
+                    @if (texto("usuarioNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Pessoa: {{ texto("usuarioNome") }}</span
+                        >
+                    }
+                    <span class="proposta-cartao__linha"
+                        >Descrição provisória: {{ texto("descricao") }}</span
+                    >
+                    @if (texto("statusAnterior")) {
+                        <span class="proposta-cartao__linha"
+                            >Status: {{ rotuloDoStatus("statusAnterior") }} →
+                            {{ rotuloDoStatus("novoStatus") }}</span
+                        >
+                    }
+                    @if (texto("pausaraAtividadeNome")) {
+                        <span class="proposta-cartao__aviso"
+                            ><i class="pi pi-pause"></i>Pausa antes a execução em andamento:
+                            {{ texto("pausaraAtividadeNome") }}</span
+                        >
+                    }
+                </div>
+            }
+            @case (Tipo.PAUSAR_EXECUCAO) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("atividadeNome") || "Execução em andamento"
+                    }}</strong>
+                    @if (texto("demandaNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Demanda: {{ texto("demandaNome") }}</span
+                        >
+                    }
+                    @if (texto("usuarioNome")) {
+                        <span class="proposta-cartao__linha"
+                            >Pessoa: {{ texto("usuarioNome") }}</span
+                        >
+                    }
+                    <span class="proposta-cartao__linha">
+                        {{
+                            texto("descricao")
+                                ? "Descrição do que foi feito: " + texto("descricao")
+                                : "Vale a descrição provisória da execução."
+                        }}
+                    </span>
+                </div>
+            }
+            @case (Tipo.DESCREVER_EXECUCAO) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("atividadeNome") || "Execução em andamento"
+                    }}</strong>
+                    <span class="proposta-cartao__linha">
+                        @if (texto("demandaNome")) {
+                            <span>Demanda: {{ texto("demandaNome") }}</span>
+                        }
+                        <span>Execução de {{ formatarDuracao(numero("minutos")) }}</span>
+                    </span>
+                    <span class="proposta-cartao__linha">Descrição formal</span>
+                    <div class="proposta-cartao__trecho proposta-cartao__trecho--depois">
+                        {{ texto("descricao") }}
+                    </div>
+                    <span class="proposta-cartao__linha">
+                        Depois:
+                        {{
+                            texto("escolha") === "TROCAR"
+                                ? "trocar para " +
+                                  (texto("atividadeSeguinteNome") || "outra atividade")
+                                : "continuar nesta atividade (abre um novo trecho)"
+                        }}
+                    </span>
+                </div>
+            }
+            @case (Tipo.SUSPENDER_CHECKIN) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque">{{
+                        texto("acao") === "RETOMAR"
+                            ? "Retomar os check-ins"
+                            : "Suspender os check-ins até você voltar"
+                    }}</strong>
+                    @if (texto("motivo")) {
+                        <span class="proposta-cartao__linha">Motivo: {{ texto("motivo") }}</span>
+                    }
+                    <span class="proposta-cartao__linha">
+                        {{
+                            texto("acao") === "RETOMAR"
+                                ? "Os check-ins voltam a aparecer no intervalo normal."
+                                : "Vale até você voltar ou até o fim do dia."
+                        }}
+                    </span>
+                </div>
+            }
+            @case (Tipo.ALTERAR_TRECHO_PLANO) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque"
+                        >{{ texto("planoTitulo") || "Plano " + propostaAtual.dados["planoId"] }} ·
+                        {{ rotuloAbaDoPlano(texto("aba")) }}</strong
+                    >
+                    <span class="proposta-cartao__linha">Trecho alterado</span>
+                    <div class="proposta-cartao__trecho">
+                        <app-diff-por-palavra
+                            [antes]="texto('trechoAntigo')"
+                            [depois]="texto('trechoNovo')"
+                        />
+                    </div>
+                </div>
+            }
+            @case (Tipo.ANOTAR_PAD) {
+                <div class="proposta-cartao__resumo">
+                    <strong class="proposta-cartao__destaque"
+                        >Pad · {{ rotuloSecao(texto("secao")) }}</strong
+                    >
+                    @if (texto("operacao") === "TROCAR") {
+                        <span class="proposta-cartao__linha">Trecho trocado</span>
+                        <div class="proposta-cartao__trecho">
+                            <app-diff-por-palavra
+                                [antes]="texto('trechoAntigo')"
+                                [depois]="texto('trechoNovo')"
+                            />
+                        </div>
+                    } @else {
+                        <span class="proposta-cartao__linha">{{
+                            texto("secao") === "FEITO"
+                                ? "Acrescentar debaixo do título de hoje:"
+                                : "Acrescentar ao fim:"
+                        }}</span>
+                        <div class="proposta-cartao__trecho proposta-cartao__trecho--depois">
+                            <app-markdown-visualizador [texto]="texto('texto')" />
+                        </div>
+                    }
+                </div>
+            }
+            @default {
+                <dl class="proposta-cartao__dados">
+                    @for (par of paresDosDados(propostaAtual.dados); track par.chave) {
+                        <dt>{{ par.chave }}</dt>
+                        <dd>{{ par.valor }}</dd>
+                    }
+                </dl>
+            }
+        }
+
+        @if (ajustando()) {
+            <form
+                class="proposta-cartao__ajuste"
+                [formGroup]="formularioAjuste"
+                (ngSubmit)="confirmarAjuste()"
+            >
+                @if (propostaAtual.tipo === Tipo.CRIAR_ATIVIDADE) {
+                    <label class="proposta-cartao__rotulo" for="ajuste-nome-{{ propostaAtual.id }}"
+                        >Nome da atividade</label
+                    >
+                    <input
+                        pInputText
+                        id="ajuste-nome-{{ propostaAtual.id }}"
+                        formControlName="nome"
+                        maxlength="255"
+                        class="w-full"
+                    />
+                    @if (
+                        formularioAjuste.controls.nome.touched &&
+                        formularioAjuste.controls.nome.invalid
+                    ) {
+                        <small class="proposta-cartao__erro-campo"
+                            >Informe um nome com ao menos 3 caracteres</small
+                        >
+                    }
+                    <label
+                        class="proposta-cartao__rotulo"
+                        for="ajuste-prioridade-{{ propostaAtual.id }}"
+                        >Prioridade</label
+                    >
+                    <p-select
+                        [inputId]="'ajuste-prioridade-' + propostaAtual.id"
+                        formControlName="prioridade"
+                        [options]="prioridadeService.prioridades()"
+                        optionLabel="descricao"
+                        optionValue="codigo"
+                        appendTo="body"
+                        class="w-full"
+                    >
+                        <ng-template #selectedItem let-prioridade>
+                            <app-prioridade-selo [prioridade]="prioridade" />
+                        </ng-template>
+                        <ng-template #item let-prioridade>
+                            <app-prioridade-selo [prioridade]="prioridade" />
+                        </ng-template>
+                    </p-select>
+                } @else if (
+                    propostaAtual.tipo === Tipo.CRIAR_PROJETO ||
+                    propostaAtual.tipo === Tipo.CRIAR_DEMANDA
+                ) {
+                    <label class="proposta-cartao__rotulo" for="ajuste-nome-{{ propostaAtual.id }}">
+                        {{
+                            propostaAtual.tipo === Tipo.CRIAR_PROJETO
+                                ? "Nome do projeto"
+                                : "Nome da demanda"
+                        }}
+                    </label>
+                    <input
+                        pInputText
+                        id="ajuste-nome-{{ propostaAtual.id }}"
+                        formControlName="nome"
+                        maxlength="255"
+                        class="w-full"
+                    />
+                    @if (
+                        formularioAjuste.controls.nome.touched &&
+                        formularioAjuste.controls.nome.invalid
+                    ) {
+                        <small class="proposta-cartao__erro-campo"
+                            >Informe um nome com ao menos 3 caracteres</small
+                        >
+                    }
+                    @if (propostaAtual.tipo === Tipo.CRIAR_PROJETO) {
+                        <label
+                            class="proposta-cartao__rotulo"
+                            for="ajuste-codigo-{{ propostaAtual.id }}"
+                            >Código</label
+                        >
+                        <input
+                            pInputText
+                            id="ajuste-codigo-{{ propostaAtual.id }}"
+                            formControlName="codigo"
+                            maxlength="50"
+                            class="w-full"
+                        />
+                        @if (
+                            formularioAjuste.controls.codigo.touched &&
+                            formularioAjuste.controls.codigo.invalid
+                        ) {
+                            <small class="proposta-cartao__erro-campo"
+                                >Informe um código com ao menos 2 caracteres</small
+                            >
+                        }
+                    }
+                } @else if (propostaAtual.tipo === Tipo.DESCREVER_DEMANDA) {
+                    @if (texto("descricaoCliente")) {
+                        <label
+                            class="proposta-cartao__rotulo"
+                            for="ajuste-cliente-{{ propostaAtual.id }}"
+                            >Descrição do cliente (Markdown)</label
+                        >
+                        <textarea
+                            pTextarea
+                            id="ajuste-cliente-{{ propostaAtual.id }}"
+                            formControlName="descricaoCliente"
+                            rows="5"
+                            [autoResize]="true"
+                            class="w-full"
+                        ></textarea>
+                        @if (
+                            formularioAjuste.controls.descricaoCliente.touched &&
+                            formularioAjuste.controls.descricaoCliente.value.trim() === ""
+                        ) {
+                            <small class="proposta-cartao__erro-campo"
+                                >A descrição não pode ficar vazia</small
+                            >
+                        }
+                    }
+                    @if (texto("descricaoTecnica")) {
+                        <label
+                            class="proposta-cartao__rotulo"
+                            for="ajuste-tecnica-{{ propostaAtual.id }}"
+                            >Descrição técnica (Markdown)</label
+                        >
+                        <textarea
+                            pTextarea
+                            id="ajuste-tecnica-{{ propostaAtual.id }}"
+                            formControlName="descricaoTecnica"
+                            rows="5"
+                            [autoResize]="true"
+                            class="w-full"
+                        ></textarea>
+                        @if (
+                            formularioAjuste.controls.descricaoTecnica.touched &&
+                            formularioAjuste.controls.descricaoTecnica.value.trim() === ""
+                        ) {
+                            <small class="proposta-cartao__erro-campo"
+                                >A descrição não pode ficar vazia</small
+                            >
+                        }
+                    }
+                } @else if (propostaAtual.tipo === Tipo.DESCREVER_EXECUCAO) {
+                    <label
+                        class="proposta-cartao__rotulo"
+                        for="ajuste-descricao-{{ propostaAtual.id }}"
+                        >Descrição formal</label
+                    >
+                    <textarea
+                        pTextarea
+                        id="ajuste-descricao-{{ propostaAtual.id }}"
+                        formControlName="descricao"
+                        rows="4"
+                        [autoResize]="true"
+                        maxlength="2000"
+                        class="w-full"
+                    ></textarea>
+                    @if (
+                        formularioAjuste.controls.descricao.touched &&
+                        formularioAjuste.controls.descricao.value.trim().length < 3
+                    ) {
+                        <small class="proposta-cartao__erro-campo">Informe a descrição</small>
+                    }
+                    <label
+                        class="proposta-cartao__rotulo"
+                        for="ajuste-seguinte-{{ propostaAtual.id }}"
+                        >Depois de salvar</label
+                    >
+                    <p-select
+                        [inputId]="'ajuste-seguinte-' + propostaAtual.id"
+                        formControlName="atividadeSeguinteId"
+                        [options]="atividadesParaTroca()"
+                        optionLabel="rotulo"
+                        optionValue="id"
+                        placeholder="Continuar nesta atividade"
+                        [showClear]="true"
+                        [filter]="true"
+                        filterBy="rotulo"
+                        appendTo="body"
+                        class="w-full"
+                    />
+                } @else {
+                    <label
+                        class="proposta-cartao__rotulo"
+                        for="ajuste-descricao-{{ propostaAtual.id }}"
+                    >
+                        {{
+                            propostaAtual.tipo === Tipo.INICIAR_EXECUCAO
+                                ? "Descrição provisória"
+                                : propostaAtual.tipo === Tipo.ANOTAR_PAD
+                                  ? texto("operacao") === "TROCAR"
+                                      ? "Trecho novo"
+                                      : "Texto a acrescentar"
+                                  : "Descrição do que foi feito"
+                        }}
+                    </label>
+                    <textarea
+                        pTextarea
+                        id="ajuste-descricao-{{ propostaAtual.id }}"
+                        formControlName="descricao"
+                        rows="3"
+                        [autoResize]="true"
+                        maxlength="1000"
+                        class="w-full"
+                    ></textarea>
+                }
+                <div class="proposta-cartao__acoes">
+                    <p-button
+                        type="submit"
+                        label="Confirmar com o ajuste"
+                        icon="pi pi-check"
+                        size="small"
+                        [disabled]="operando()"
+                    />
+                    <p-button
+                        label="Cancelar"
+                        severity="secondary"
+                        size="small"
+                        [text]="true"
+                        [disabled]="operando()"
+                        (onClick)="cancelarAjuste()"
+                    />
+                </div>
+            </form>
+        } @else if (propostaAtual.status === Status.PENDENTE) {
+            <div class="proposta-cartao__acoes">
+                <p-button
+                    label="Confirmar"
+                    icon="pi pi-check"
+                    size="small"
+                    [disabled]="operando()"
+                    (onClick)="confirmar()"
+                />
+                @if (podeAjustar()) {
+                    <p-button
+                        label="Ajustar"
+                        icon="pi pi-pencil"
+                        severity="secondary"
+                        size="small"
+                        [outlined]="true"
+                        [disabled]="operando()"
+                        (onClick)="abrirAjuste()"
+                    />
+                }
+                <p-button
+                    label="Recusar"
+                    severity="secondary"
+                    size="small"
+                    [text]="true"
+                    [disabled]="operando()"
+                    (onClick)="recusar()"
+                />
             </div>
-          }
-          @if (texto('descricaoCliente')) {
-            <span class="proposta-cartao__linha">Descrição do cliente</span>
-            @if (temAnteriorDaDescricao() && visaoDosTextos() === 'MUDANCAS') {
-              <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('descricaoClienteAnterior')" [depois]="texto('descricaoCliente')" /></div>
-            } @else if (temAnteriorDaDescricao() && visaoDosTextos() === 'ANTES') {
-              <div class="proposta-cartao__trecho proposta-cartao__trecho--antes">
-                @if (texto('descricaoClienteAnterior')) { <app-markdown-visualizador [texto]="texto('descricaoClienteAnterior')" /> } @else { <em>Sem descrição até agora</em> }
-              </div>
-            } @else {
-              <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('descricaoCliente')" /></div>
-            }
-          }
-          @if (texto('descricaoTecnica')) {
-            <span class="proposta-cartao__linha">Descrição técnica</span>
-            @if (temAnteriorDaDescricao() && visaoDosTextos() === 'MUDANCAS') {
-              <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('descricaoTecnicaAnterior')" [depois]="texto('descricaoTecnica')" /></div>
-            } @else if (temAnteriorDaDescricao() && visaoDosTextos() === 'ANTES') {
-              <div class="proposta-cartao__trecho proposta-cartao__trecho--antes">
-                @if (texto('descricaoTecnicaAnterior')) { <app-markdown-visualizador [texto]="texto('descricaoTecnicaAnterior')" /> } @else { <em>Sem descrição até agora</em> }
-              </div>
-            } @else {
-              <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('descricaoTecnica')" /></div>
-            }
-          }
-        </div>
-      }
-      @case (Tipo.CONECTAR_DEMANDA) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">
-            {{ texto('demandaOrigemNome') || 'Demanda ' + propostaAtual.dados['demandaOrigemId'] }}
-            <i class="pi" [class.pi-arrow-right]="propostaAtual.dados['ehBidirecional'] !== true" [class.pi-arrows-h]="propostaAtual.dados['ehBidirecional'] === true" aria-hidden="true"></i>
-            {{ texto('demandaDestinoNome') || 'Demanda ' + propostaAtual.dados['demandaDestinoId'] }}
-          </strong>
-          <span class="proposta-cartao__linha">{{ propostaAtual.dados['ehBidirecional'] === true ? 'Conexão nos dois sentidos' : 'Conexão do primeiro para o segundo' }}</span>
-          <span class="proposta-cartao__linha">Motivo: {{ texto('motivo') }}</span>
-        </div>
-      }
-      @case (Tipo.INICIAR_EXECUCAO) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
-          @if (texto('demandaNome')) {
-            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
-          }
-          @if (texto('usuarioNome')) {
-            <span class="proposta-cartao__linha">Pessoa: {{ texto('usuarioNome') }}</span>
-          }
-          <span class="proposta-cartao__linha">Descrição provisória: {{ texto('descricao') }}</span>
-          @if (texto('statusAnterior')) {
-            <span class="proposta-cartao__linha">Status: {{ rotuloDoStatus('statusAnterior') }} → {{ rotuloDoStatus('novoStatus') }}</span>
-          }
-          @if (texto('pausaraAtividadeNome')) {
-            <span class="proposta-cartao__aviso"><i class="pi pi-pause"></i>Pausa antes a execução em andamento: {{ texto('pausaraAtividadeNome') }}</span>
-          }
-        </div>
-      }
-      @case (Tipo.PAUSAR_EXECUCAO) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Execução em andamento' }}</strong>
-          @if (texto('demandaNome')) {
-            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
-          }
-          @if (texto('usuarioNome')) {
-            <span class="proposta-cartao__linha">Pessoa: {{ texto('usuarioNome') }}</span>
-          }
-          <span class="proposta-cartao__linha">
-            {{ texto('descricao') ? 'Descrição do que foi feito: ' + texto('descricao') : 'Vale a descrição provisória da execução.' }}
-          </span>
-        </div>
-      }
-      @case (Tipo.DESCREVER_EXECUCAO) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Execução em andamento' }}</strong>
-          <span class="proposta-cartao__linha">
-            @if (texto('demandaNome')) {
-              <span>Demanda: {{ texto('demandaNome') }}</span>
-            }
-            <span>Execução de {{ formatarDuracao(numero('minutos')) }}</span>
-          </span>
-          <span class="proposta-cartao__linha">Descrição formal</span>
-          <div class="proposta-cartao__trecho proposta-cartao__trecho--depois">{{ texto('descricao') }}</div>
-          <span class="proposta-cartao__linha">
-            Depois:
-            {{ texto('escolha') === 'TROCAR' ? 'trocar para ' + (texto('atividadeSeguinteNome') || 'outra atividade') : 'continuar nesta atividade (abre um novo trecho)' }}
-          </span>
-        </div>
-      }
-      @case (Tipo.SUSPENDER_CHECKIN) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('acao') === 'RETOMAR' ? 'Retomar os check-ins' : 'Suspender os check-ins até você voltar' }}</strong>
-          @if (texto('motivo')) {
-            <span class="proposta-cartao__linha">Motivo: {{ texto('motivo') }}</span>
-          }
-          <span class="proposta-cartao__linha">
-            {{ texto('acao') === 'RETOMAR' ? 'Os check-ins voltam a aparecer no intervalo normal.' : 'Vale até você voltar ou até o fim do dia.' }}
-          </span>
-        </div>
-      }
-      @case (Tipo.ALTERAR_TRECHO_PLANO) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">{{ texto('planoTitulo') || 'Plano ' + propostaAtual.dados['planoId'] }} · {{ rotuloAbaDoPlano(texto('aba')) }}</strong>
-          <span class="proposta-cartao__linha">Trecho alterado</span>
-          <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('trechoAntigo')" [depois]="texto('trechoNovo')" /></div>
-        </div>
-      }
-      @case (Tipo.ANOTAR_PAD) {
-        <div class="proposta-cartao__resumo">
-          <strong class="proposta-cartao__destaque">Pad · {{ rotuloSecao(texto('secao')) }}</strong>
-          @if (texto('operacao') === 'TROCAR') {
-            <span class="proposta-cartao__linha">Trecho trocado</span>
-            <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('trechoAntigo')" [depois]="texto('trechoNovo')" /></div>
-          } @else {
-            <span class="proposta-cartao__linha">{{ texto('secao') === 'FEITO' ? 'Acrescentar debaixo do título de hoje:' : 'Acrescentar ao fim:' }}</span>
-            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('texto')" /></div>
-          }
-        </div>
-      }
-      @default {
-        <dl class="proposta-cartao__dados">
-          @for (par of paresDosDados(propostaAtual.dados); track par.chave) {
-            <dt>{{ par.chave }}</dt>
-            <dd>{{ par.valor }}</dd>
-          }
-        </dl>
-      }
-    }
-
-    @if (ajustando()) {
-      <form class="proposta-cartao__ajuste" [formGroup]="formularioAjuste" (ngSubmit)="confirmarAjuste()">
-        @if (propostaAtual.tipo === Tipo.CRIAR_ATIVIDADE) {
-          <label class="proposta-cartao__rotulo" for="ajuste-nome-{{ propostaAtual.id }}">Nome da atividade</label>
-          <input pInputText id="ajuste-nome-{{ propostaAtual.id }}" formControlName="nome" maxlength="255" class="w-full" />
-          @if (formularioAjuste.controls.nome.touched && formularioAjuste.controls.nome.invalid) {
-            <small class="proposta-cartao__erro-campo">Informe um nome com ao menos 3 caracteres</small>
-          }
-          <label class="proposta-cartao__rotulo" for="ajuste-prioridade-{{ propostaAtual.id }}">Prioridade</label>
-          <p-select
-            [inputId]="'ajuste-prioridade-' + propostaAtual.id"
-            formControlName="prioridade"
-            [options]="prioridadeService.prioridades()"
-            optionLabel="descricao"
-            optionValue="codigo"
-            appendTo="body"
-            class="w-full"
-          >
-            <ng-template #selectedItem let-prioridade>
-              <app-prioridade-selo [prioridade]="prioridade" />
-            </ng-template>
-            <ng-template #item let-prioridade>
-              <app-prioridade-selo [prioridade]="prioridade" />
-            </ng-template>
-          </p-select>
-        } @else if (propostaAtual.tipo === Tipo.CRIAR_PROJETO || propostaAtual.tipo === Tipo.CRIAR_DEMANDA) {
-          <label class="proposta-cartao__rotulo" for="ajuste-nome-{{ propostaAtual.id }}">
-            {{ propostaAtual.tipo === Tipo.CRIAR_PROJETO ? 'Nome do projeto' : 'Nome da demanda' }}
-          </label>
-          <input pInputText id="ajuste-nome-{{ propostaAtual.id }}" formControlName="nome" maxlength="255" class="w-full" />
-          @if (formularioAjuste.controls.nome.touched && formularioAjuste.controls.nome.invalid) {
-            <small class="proposta-cartao__erro-campo">Informe um nome com ao menos 3 caracteres</small>
-          }
-          @if (propostaAtual.tipo === Tipo.CRIAR_PROJETO) {
-            <label class="proposta-cartao__rotulo" for="ajuste-codigo-{{ propostaAtual.id }}">Código</label>
-            <input pInputText id="ajuste-codigo-{{ propostaAtual.id }}" formControlName="codigo" maxlength="50" class="w-full" />
-            @if (formularioAjuste.controls.codigo.touched && formularioAjuste.controls.codigo.invalid) {
-              <small class="proposta-cartao__erro-campo">Informe um código com ao menos 2 caracteres</small>
-            }
-          }
-        } @else if (propostaAtual.tipo === Tipo.DESCREVER_DEMANDA) {
-          @if (texto('descricaoCliente')) {
-            <label class="proposta-cartao__rotulo" for="ajuste-cliente-{{ propostaAtual.id }}">Descrição do cliente (Markdown)</label>
-            <textarea pTextarea id="ajuste-cliente-{{ propostaAtual.id }}" formControlName="descricaoCliente" rows="5" [autoResize]="true" class="w-full"></textarea>
-            @if (formularioAjuste.controls.descricaoCliente.touched && formularioAjuste.controls.descricaoCliente.value.trim() === '') {
-              <small class="proposta-cartao__erro-campo">A descrição não pode ficar vazia</small>
-            }
-          }
-          @if (texto('descricaoTecnica')) {
-            <label class="proposta-cartao__rotulo" for="ajuste-tecnica-{{ propostaAtual.id }}">Descrição técnica (Markdown)</label>
-            <textarea pTextarea id="ajuste-tecnica-{{ propostaAtual.id }}" formControlName="descricaoTecnica" rows="5" [autoResize]="true" class="w-full"></textarea>
-            @if (formularioAjuste.controls.descricaoTecnica.touched && formularioAjuste.controls.descricaoTecnica.value.trim() === '') {
-              <small class="proposta-cartao__erro-campo">A descrição não pode ficar vazia</small>
-            }
-          }
-        } @else if (propostaAtual.tipo === Tipo.DESCREVER_EXECUCAO) {
-          <label class="proposta-cartao__rotulo" for="ajuste-descricao-{{ propostaAtual.id }}">Descrição formal</label>
-          <textarea pTextarea id="ajuste-descricao-{{ propostaAtual.id }}" formControlName="descricao" rows="4" [autoResize]="true" maxlength="2000" class="w-full"></textarea>
-          @if (formularioAjuste.controls.descricao.touched && formularioAjuste.controls.descricao.value.trim().length < 3) {
-            <small class="proposta-cartao__erro-campo">Informe a descrição</small>
-          }
-          <label class="proposta-cartao__rotulo" for="ajuste-seguinte-{{ propostaAtual.id }}">Depois de salvar</label>
-          <p-select
-            [inputId]="'ajuste-seguinte-' + propostaAtual.id"
-            formControlName="atividadeSeguinteId"
-            [options]="atividadesParaTroca()"
-            optionLabel="rotulo"
-            optionValue="id"
-            placeholder="Continuar nesta atividade"
-            [showClear]="true"
-            [filter]="true"
-            filterBy="rotulo"
-            appendTo="body"
-            class="w-full"
-          />
-        } @else {
-          <label class="proposta-cartao__rotulo" for="ajuste-descricao-{{ propostaAtual.id }}">
-            {{ propostaAtual.tipo === Tipo.INICIAR_EXECUCAO ? 'Descrição provisória' : propostaAtual.tipo === Tipo.ANOTAR_PAD ? (texto('operacao') === 'TROCAR' ? 'Trecho novo' : 'Texto a acrescentar') : 'Descrição do que foi feito' }}
-          </label>
-          <textarea pTextarea id="ajuste-descricao-{{ propostaAtual.id }}" formControlName="descricao" rows="3" [autoResize]="true" maxlength="1000" class="w-full"></textarea>
+        } @else if (
+            propostaAtual.status === Status.CONFIRMADA || propostaAtual.status === Status.AJUSTADA
+        ) {
+            <!-- Desfazer fica no lado oposto ao de Confirmar e vale por 30 min depois de resolvida (task 194). -->
+            <div class="proposta-cartao__acoes proposta-cartao__acoes--desfazer">
+                <span
+                    [pTooltip]="
+                        desfazerDisponivel()
+                            ? ''
+                            : 'Passou o prazo de ' + prazoParaDesfazerMinutos + ' min para desfazer'
+                    "
+                    tooltipPosition="top"
+                >
+                    <p-button
+                        label="Desfazer"
+                        icon="pi pi-undo"
+                        severity="secondary"
+                        size="small"
+                        [outlined]="true"
+                        [disabled]="operando() || !desfazerDisponivel()"
+                        (onClick)="desfazer()"
+                    />
+                </span>
+            </div>
         }
-        <div class="proposta-cartao__acoes">
-          <p-button type="submit" label="Confirmar com o ajuste" icon="pi pi-check" size="small" [disabled]="operando()" />
-          <p-button label="Cancelar" severity="secondary" size="small" [text]="true" [disabled]="operando()" (onClick)="cancelarAjuste()" />
-        </div>
-      </form>
-    } @else if (propostaAtual.status === Status.PENDENTE) {
-      <div class="proposta-cartao__acoes">
-        <p-button label="Confirmar" icon="pi pi-check" size="small" [disabled]="operando()" (onClick)="confirmar()" />
-        @if (podeAjustar()) {
-          <p-button label="Ajustar" icon="pi pi-pencil" severity="secondary" size="small" [outlined]="true" [disabled]="operando()" (onClick)="abrirAjuste()" />
-        }
-        <p-button label="Recusar" severity="secondary" size="small" [text]="true" [disabled]="operando()" (onClick)="recusar()" />
-      </div>
-    } @else if (propostaAtual.status === Status.CONFIRMADA || propostaAtual.status === Status.AJUSTADA) {
-      <!-- Desfazer fica no lado oposto ao de Confirmar e vale por 30 min depois de resolvida (task 194). -->
-      <div class="proposta-cartao__acoes proposta-cartao__acoes--desfazer">
-        <span [pTooltip]="desfazerDisponivel() ? '' : 'Passou o prazo de ' + prazoParaDesfazerMinutos + ' min para desfazer'" tooltipPosition="top">
-          <p-button label="Desfazer" icon="pi pi-undo" severity="secondary" size="small" [outlined]="true" [disabled]="operando() || !desfazerDisponivel()" (onClick)="desfazer()" />
-        </span>
-      </div>
-    }
-  </article>
+    </article>
 } @else if (erro()) {
-  <div class="proposta-cartao proposta-cartao--erro" role="alert">
-    <i class="pi pi-exclamation-triangle"></i>
-    <span>Não foi possível carregar a proposta.</span>
-    <p-button label="Tentar de novo" size="small" [text]="true" (onClick)="carregar()" />
-  </div>
+    <div class="proposta-cartao proposta-cartao--erro" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>Não foi possível carregar a proposta.</span>
+        <p-button label="Tentar de novo" size="small" [text]="true" (onClick)="carregar()" />
+    </div>
 } @else {
-  <p class="proposta-cartao__carregando" role="status">Carregando proposta…</p>
+    <p class="proposta-cartao__carregando" role="status">Carregando proposta…</p>
 }

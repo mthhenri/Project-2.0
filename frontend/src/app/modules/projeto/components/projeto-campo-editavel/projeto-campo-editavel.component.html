@@ -80,10 +80,7 @@
     <!-- A paleta abre num popover ancorado no selo (como a de Tags), em vez de se espalhar pelo cabeçalho. -->
     <p-popover #popoverCor (onHide)="aoFecharPopover()">
         <div class="campo-editavel__popover-cor" (keydown.escape)="descartar()">
-            <app-seletor-cor
-                [formControl]="rascunhoCor"
-                [compacto]="true"
-            />
+            <app-seletor-cor [formControl]="rascunhoCor" [compacto]="true" />
             <div class="campo-editavel__rodape-cor">
                 <p-button
                     label="Cancelar"

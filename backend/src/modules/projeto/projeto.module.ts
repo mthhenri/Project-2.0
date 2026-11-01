@@ -13,24 +13,24 @@ import { ProjetoVolumeVigenciaService } from './services/projeto-volume-vigencia
 import { ProjetoVolumeVigenciaRepository } from './repositories/projeto-volume-vigencia.repository';
 
 @Module({
-  imports:     [FerramentaIaModule, PropostaIaModule],
-  controllers: [ProjetoController],
-  providers:   [ProjetoService, ProjetoRepository, ProjetoVolumeVigenciaService, ProjetoVolumeVigenciaRepository, ListarProjetosFerramenta, ProporCriarProjetoFerramenta, CriarProjetoExecutor],
-  exports:     [ProjetoService, ProjetoRepository],
+    imports:     [FerramentaIaModule, PropostaIaModule],
+    controllers: [ProjetoController],
+    providers:   [ProjetoService, ProjetoRepository, ProjetoVolumeVigenciaService, ProjetoVolumeVigenciaRepository, ListarProjetosFerramenta, ProporCriarProjetoFerramenta, CriarProjetoExecutor],
+    exports:     [ProjetoService, ProjetoRepository],
 })
 export class ProjetoModule implements OnModuleInit {
-  constructor(
-    private readonly registroDeFerramentas: FerramentaIaRegistro,
-    private readonly listarProjetos: ListarProjetosFerramenta,
-    private readonly proporCriarProjeto: ProporCriarProjetoFerramenta,
-    private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
-    private readonly criarProjetoExecutor: CriarProjetoExecutor,
-  ) {}
+    constructor(
+        private readonly registroDeFerramentas: FerramentaIaRegistro,
+        private readonly listarProjetos: ListarProjetosFerramenta,
+        private readonly proporCriarProjeto: ProporCriarProjetoFerramenta,
+        private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
+        private readonly criarProjetoExecutor: CriarProjetoExecutor,
+    ) {}
 
-  /** As ferramentas de IA do domínio de projeto se registram aqui (a IA só lê o que a service entrega ao usuário). */
-  onModuleInit(): void {
-    this.registroDeFerramentas.registrar(this.listarProjetos);
-    this.registroDeFerramentas.registrar(this.proporCriarProjeto);
-    this.registroDeExecutores.registrar(this.criarProjetoExecutor);
-  }
+    /** As ferramentas de IA do domínio de projeto se registram aqui (a IA só lê o que a service entrega ao usuário). */
+    onModuleInit(): void {
+        this.registroDeFerramentas.registrar(this.listarProjetos);
+        this.registroDeFerramentas.registrar(this.proporCriarProjeto);
+        this.registroDeExecutores.registrar(this.criarProjetoExecutor);
+    }
 }

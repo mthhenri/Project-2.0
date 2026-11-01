@@ -1,3 +1,3 @@
 export class ProjetoRestaurarDto {
-  id: number;
+    id: number;
 }

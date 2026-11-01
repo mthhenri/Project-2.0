@@ -5,15 +5,16 @@ import { PrioridadesCoresComponent } from '../prioridades-cores/prioridades-core
 
 /** Dialog "Alterar prioridades" da listagem de atividades (só administrador): hospeda a edição da cor de cada prioridade. */
 @Component({
-  selector: 'app-atividade-prioridades-dialog',
-  standalone: true,
-  imports: [ButtonModule, DialogModule, PrioridadesCoresComponent],
-  templateUrl: './atividade-prioridades-dialog.component.html',
+    selector: 'app-atividade-prioridades-dialog',
+    standalone: true,
+    imports: [ButtonModule, DialogModule, PrioridadesCoresComponent],
+    templateUrl: './atividade-prioridades-dialog.component.html',
+    styleUrl: './atividade-prioridades-dialog.component.scss',
 })
 export class AtividadePrioridadesDialogComponent {
-  readonly visivel = signal<boolean>(false);
+    readonly visivel = signal<boolean>(false);
 
-  abrir(): void {
-    this.visivel.set(true);
-  }
+    abrir(): void {
+        this.visivel.set(true);
+    }
 }

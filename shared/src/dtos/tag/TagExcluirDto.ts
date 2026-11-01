@@ -1,3 +1,3 @@
 export class TagExcluirDto {
-  id: number;
+    id: number;
 }

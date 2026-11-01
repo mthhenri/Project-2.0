@@ -17,18 +17,18 @@ import { MensagemDiretaService } from './services/mensagem-direta.service';
  * (task 209: stream, barramento entre instâncias e presença) e a supervisão pelo gestor (task 214).
  */
 @Module({
-  imports:     [UsuarioModule, DemandaModule, AtividadeModule],
-  controllers: [MensagemDiretaController],
-  providers:   [
-    armazenamentoDeMensagemDiretaProvider,
-    publicadorDeEventosDiretosProvider,
-    MensagemDiretaLeituraRepository,
-    MensagemDiretaPreferenciaRepository,
-    MensagemDiretaSupervisaoRepository,
-    MensagemDiretaEventosService,
-    MensagemDiretaService,
-    MensagemDiretaSupervisaoService,
-  ],
-  exports:     [ARMAZENAMENTO_DE_MENSAGEM_DIRETA, MensagemDiretaService],
+    imports:     [UsuarioModule, DemandaModule, AtividadeModule],
+    controllers: [MensagemDiretaController],
+    providers:   [
+        armazenamentoDeMensagemDiretaProvider,
+        publicadorDeEventosDiretosProvider,
+        MensagemDiretaLeituraRepository,
+        MensagemDiretaPreferenciaRepository,
+        MensagemDiretaSupervisaoRepository,
+        MensagemDiretaEventosService,
+        MensagemDiretaService,
+        MensagemDiretaSupervisaoService,
+    ],
+    exports:     [ARMAZENAMENTO_DE_MENSAGEM_DIRETA, MensagemDiretaService],
 })
 export class MensagemDiretaModule {}

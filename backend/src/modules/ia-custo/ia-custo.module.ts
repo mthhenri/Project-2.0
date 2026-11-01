@@ -7,9 +7,9 @@ import { IaCustoService } from './services/ia-custo.service';
 import { IaUsoService } from './services/ia-uso.service';
 
 @Module({
-  imports:     [ConfigModule, ConfiguracaoIaModule, ChatModule],
-  controllers: [IaCustoController],
-  providers:   [IaCustoService, IaUsoService],
-  exports:     [IaUsoService],
+    imports:     [ConfigModule, ConfiguracaoIaModule, ChatModule],
+    controllers: [IaCustoController],
+    providers:   [IaCustoService, IaUsoService],
+    exports:     [IaUsoService],
 })
 export class IaCustoModule {}

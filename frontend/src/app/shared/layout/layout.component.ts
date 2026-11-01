@@ -12,14 +12,15 @@ import { AutenticacaoService } from '../../core/services/autenticacao.service';
 import { LoadingSpinnerComponent } from '../components/loading-spinner/loading-spinner.component';
 
 @Component({
-  selector: 'app-layout',
-  standalone: true,
-  imports: [RouterOutlet, SidebarComponent, TopbarComponent, LoadingSpinnerComponent, ToastModule, ToastDesfazerComponent, CheckinJanelinhaComponent, IaRetornoAvisoComponent, MensagemDiretaPopupComponent, MensagemDiretaAvisosComponent],
-  templateUrl: './layout.component.html',
+    selector: 'app-layout',
+    standalone: true,
+    imports: [RouterOutlet, SidebarComponent, TopbarComponent, LoadingSpinnerComponent, ToastModule, ToastDesfazerComponent, CheckinJanelinhaComponent, IaRetornoAvisoComponent, MensagemDiretaPopupComponent, MensagemDiretaAvisosComponent],
+    templateUrl: './layout.component.html',
+    styleUrl: './layout.component.scss',
 })
 export class LayoutComponent {
-  constructor() {
+    constructor() {
     // A casca só abre autenticada: confere o tipo do usuário no servidor uma vez, a cada abertura do app (P-062).
-    inject(AutenticacaoService).atualizarSessao();
-  }
+        inject(AutenticacaoService).atualizarSessao();
+    }
 }

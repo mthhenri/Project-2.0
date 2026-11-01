@@ -1,50 +1,50 @@
-@use 'realce';
+@use "realce";
 
 :host {
-  display: block;
-  margin: 0 0 0.6em;
+    display: block;
+    margin: 0 0 0.6em;
 
-  @include realce.variaveis-do-realce;
+    @include realce.variaveis-do-realce;
 }
 
 :host-context(.app-escuro) {
-  @include realce.variaveis-do-realce-escuro;
+    @include realce.variaveis-do-realce-escuro;
 }
 
 .bloco-codigo {
-  overflow: hidden;
-  border: 1px solid var(--app-surface-200);
-  border-radius: 6px;
-  background: var(--app-surface-100);
+    overflow: hidden;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 6px;
+    background: var(--app-surface-100);
 
-  &__cabecalho {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.125rem 0.25rem 0.125rem 0.75rem;
-    border-bottom: 1px solid var(--app-surface-200);
-    background: var(--app-surface-50, var(--app-surface-100));
-  }
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.125rem 0.25rem 0.125rem 0.75rem;
+        border-bottom: 1px solid var(--app-surface-200);
+        background: var(--app-surface-50, var(--app-surface-100));
+    }
 
-  &__linguagem {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    color: var(--p-text-muted-color);
-  }
+    &__linguagem {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: var(--p-text-muted-color);
+    }
 
-  &__corpo {
-    margin: 0;
-    padding: 0.75em 1em;
-    overflow-x: auto;
-    font-family: var(--font-mono, monospace);
-    font-size: 0.85em;
-    line-height: 1.45;
-    white-space: pre;
-    word-break: normal;
-    overflow-wrap: normal;
-  }
+    &__corpo {
+        margin: 0;
+        padding: 0.75em 1em;
+        overflow-x: auto;
+        font-family: var(--font-mono, monospace);
+        font-size: 0.85em;
+        line-height: 1.45;
+        white-space: pre;
+        word-break: normal;
+        overflow-wrap: normal;
+    }
 
-  @include realce.classes-dos-tokens;
+    @include realce.classes-dos-tokens;
 }

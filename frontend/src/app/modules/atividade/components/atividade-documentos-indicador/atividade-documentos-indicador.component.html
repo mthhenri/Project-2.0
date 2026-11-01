@@ -1,16 +1,16 @@
 <div class="atividade-documentos">
-  @for (documento of documentos; track documento.campo) {
-    <button
-      type="button"
-      class="atividade-documentos__icone atividade-documentos__icone--{{ documento.tipo }}"
-      [class.atividade-documentos__icone--ativo]="temConteudo(documento.campo)"
-      [attr.aria-pressed]="campoAberto() === documento.campo"
-      [attr.aria-label]="documento.rotulo"
-      [pTooltip]="documento.rotulo"
-      tooltipPosition="top"
-      (click)="abrir.emit(documento.campo)"
-    >
-      <i class="{{ documento.icone }}" aria-hidden="true"></i>
-    </button>
-  }
+    @for (documento of documentos; track documento.campo) {
+        <button
+            type="button"
+            class="atividade-documentos__icone atividade-documentos__icone--{{ documento.tipo }}"
+            [class.atividade-documentos__icone--ativo]="temConteudo(documento.campo)"
+            [attr.aria-pressed]="campoAberto() === documento.campo"
+            [attr.aria-label]="documento.rotulo"
+            [pTooltip]="documento.rotulo"
+            tooltipPosition="top"
+            (click)="abrir.emit(documento.campo)"
+        >
+            <i class="{{ documento.icone }}" aria-hidden="true"></i>
+        </button>
+    }
 </div>

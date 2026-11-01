@@ -7,19 +7,19 @@ import { FerramentaIaRegistro } from '../ferramenta-ia/services/ferramenta-ia.re
 import { ConsultarDiasNaoUteisFerramenta } from './ferramentas/consultar-dias-nao-uteis.ferramenta';
 
 @Module({
-  imports:     [FerramentaIaModule],
-  controllers: [CalendarioController],
-  providers:   [CalendarioService, CalendarioRepository, ConsultarDiasNaoUteisFerramenta],
-  exports:     [CalendarioService, CalendarioRepository],
+    imports:     [FerramentaIaModule],
+    controllers: [CalendarioController],
+    providers:   [CalendarioService, CalendarioRepository, ConsultarDiasNaoUteisFerramenta],
+    exports:     [CalendarioService, CalendarioRepository],
 })
 export class CalendarioModule implements OnModuleInit {
-  constructor(
-    private readonly registroDeFerramentas: FerramentaIaRegistro,
-    private readonly consultarDiasNaoUteis: ConsultarDiasNaoUteisFerramenta,
-  ) {}
+    constructor(
+        private readonly registroDeFerramentas: FerramentaIaRegistro,
+        private readonly consultarDiasNaoUteis: ConsultarDiasNaoUteisFerramenta,
+    ) {}
 
-  /** A ferramenta de IA do calendário se registra aqui. */
-  onModuleInit(): void {
-    this.registroDeFerramentas.registrar(this.consultarDiasNaoUteis);
-  }
+    /** A ferramenta de IA do calendário se registra aqui. */
+    onModuleInit(): void {
+        this.registroDeFerramentas.registrar(this.consultarDiasNaoUteis);
+    }
 }

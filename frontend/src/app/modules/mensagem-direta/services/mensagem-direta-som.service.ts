@@ -9,29 +9,29 @@ const PICO_DO_VOLUME = 0.3;
  */
 @Injectable({ providedIn: 'root' })
 export class MensagemDiretaSomService {
-  private contexto: AudioContext | null = null;
+    private contexto: AudioContext | null = null;
 
-  tocar(): void {
-    try {
-      const Contexto = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!Contexto) return;
-      const contexto = (this.contexto ??= new Contexto());
-      if (contexto.state === 'suspended') void contexto.resume().catch(() => undefined);
+    tocar(): void {
+        try {
+            const Contexto = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+            if (!Contexto) return;
+            const contexto = (this.contexto ??= new Contexto());
+            if (contexto.state === 'suspended') void contexto.resume().catch(() => undefined);
 
-      const inicio = contexto.currentTime;
-      const oscilador = contexto.createOscillator();
-      const volume = contexto.createGain();
-      oscilador.type = 'sine';
-      oscilador.frequency.setValueAtTime(880, inicio);
-      oscilador.frequency.setValueAtTime(1175, inicio + 0.09);
-      volume.gain.setValueAtTime(0.0001, inicio);
-      volume.gain.exponentialRampToValueAtTime(PICO_DO_VOLUME, inicio + 0.02);
-      volume.gain.exponentialRampToValueAtTime(0.0001, inicio + 0.24);
-      oscilador.connect(volume).connect(contexto.destination);
-      oscilador.start(inicio);
-      oscilador.stop(inicio + 0.26);
-    } catch {
-      // Sem áudio liberado: o aviso segue sem som.
+            const inicio = contexto.currentTime;
+            const oscilador = contexto.createOscillator();
+            const volume = contexto.createGain();
+            oscilador.type = 'sine';
+            oscilador.frequency.setValueAtTime(880, inicio);
+            oscilador.frequency.setValueAtTime(1175, inicio + 0.09);
+            volume.gain.setValueAtTime(0.0001, inicio);
+            volume.gain.exponentialRampToValueAtTime(PICO_DO_VOLUME, inicio + 0.02);
+            volume.gain.exponentialRampToValueAtTime(0.0001, inicio + 0.24);
+            oscilador.connect(volume).connect(contexto.destination);
+            oscilador.start(inicio);
+            oscilador.stop(inicio + 0.26);
+        } catch {
+            // Sem áudio liberado: o aviso segue sem som.
+        }
     }
-  }
 }

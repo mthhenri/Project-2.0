@@ -11,32 +11,32 @@ import { DemandaStatusMarcaComponent } from '../demanda-status-marca/demanda-sta
  * (otimista, com rollback) é de quem hospeda.
  */
 @Component({
-  selector: 'app-demanda-status',
-  standalone: true,
-  imports: [PopoverModule, TooltipModule, DemandaStatusMarcaComponent],
-  templateUrl: './demanda-status.component.html',
-  styleUrl: './demanda-status.component.scss',
+    selector: 'app-demanda-status',
+    standalone: true,
+    imports: [PopoverModule, TooltipModule, DemandaStatusMarcaComponent],
+    templateUrl: './demanda-status.component.html',
+    styleUrl: './demanda-status.component.scss',
 })
 export class DemandaStatusComponent {
-  readonly status = input.required<TipoDemandaStatusEnum>();
-  readonly editavel = input<boolean>(false);
-  /** Lado da bolinha, em px. */
-  readonly tamanho = input<number>(18);
-  readonly statusEscolhido = output<TipoDemandaStatusEnum>();
+    readonly status = input.required<TipoDemandaStatusEnum>();
+    readonly editavel = input<boolean>(false);
+    /** Lado da bolinha, em px. */
+    readonly tamanho = input<number>(18);
+    readonly statusEscolhido = output<TipoDemandaStatusEnum>();
 
-  readonly opcoes = OPCOES_STATUS_DEMANDA;
+    readonly opcoes = OPCOES_STATUS_DEMANDA;
 
-  rotulo(status: TipoDemandaStatusEnum): string {
-    return ROTULO_STATUS_DEMANDA[status];
-  }
+    rotulo(status: TipoDemandaStatusEnum): string {
+        return ROTULO_STATUS_DEMANDA[status];
+    }
 
-  abrir(evento: Event, popover: Popover): void {
-    evento.stopPropagation();
-    popover.toggle(evento);
-  }
+    abrir(evento: Event, popover: Popover): void {
+        evento.stopPropagation();
+        popover.toggle(evento);
+    }
 
-  escolher(novoStatus: TipoDemandaStatusEnum, popover: Popover): void {
-    popover.hide();
-    if (novoStatus !== this.status()) this.statusEscolhido.emit(novoStatus);
-  }
+    escolher(novoStatus: TipoDemandaStatusEnum, popover: Popover): void {
+        popover.hide();
+        if (novoStatus !== this.status()) this.statusEscolhido.emit(novoStatus);
+    }
 }

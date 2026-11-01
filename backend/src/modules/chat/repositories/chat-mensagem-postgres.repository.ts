@@ -4,18 +4,18 @@ import { randomUUID } from 'node:crypto';
 import { BaseRepository } from '../../../core/base/base.repository';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import {
-  BaldeConversa,
-  ConsultaBusca,
-  ConsultaConversa,
-  ConsultaConversas,
-  ConsultaTitulos,
-  ConsultaTokens,
-  LIMITE_BUSCA,
-  LIMITE_CONVERSA,
-  LIMITE_CONVERSAS,
-  TituloDaConversa,
-  TituloParaGravar,
-  TokensSomados,
+    BaldeConversa,
+    ConsultaBusca,
+    ConsultaConversa,
+    ConsultaConversas,
+    ConsultaTitulos,
+    ConsultaTokens,
+    LIMITE_BUSCA,
+    LIMITE_CONVERSA,
+    LIMITE_CONVERSAS,
+    TituloDaConversa,
+    TituloParaGravar,
+    TokensSomados,
 } from '../domain/chat-consultas';
 import { ChatMensagemFonte, ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
 import { ArmazenamentoDeChat } from './armazenamento-de-chat';
@@ -24,23 +24,42 @@ import { ArmazenamentoDeChat } from './armazenamento-de-chat';
 type LinhaDeMensagem = Omit<ChatMensagemFonte, 'created_date'> & { created_date: Date };
 
 interface LinhaDeConversa {
-  chave: string;
-  total: number;
-  ultima: Date;
-  primeira_texto: string;
+    chave: string;
+    total: number;
+    ultima: Date;
+    primeira_texto: string;
 }
 
 interface LinhaDeTitulo {
-  conversa_id: string;
-  titulo: string;
-  titulo_editado: boolean;
+    conversa_id: string;
+    titulo: string;
+    titulo_editado: boolean;
 }
 
-const COLUNAS_DA_MENSAGEM = `mensagem_id, conversa_id, usuario_id, contexto, autor, assunto, texto, nivel, modelo, tokens_entrada, tokens_saida,
-  tokens_cache, proposta_id, propostas_ids, execucao_id, atividade_id, demanda_id, conteudo_bruto, created_date`;
+const COLUNAS_DA_MENSAGEM = `
+    mensagem_id,
+    conversa_id,
+    usuario_id,
+    contexto,
+    autor,
+    assunto,
+    texto,
+    nivel,
+    modelo,
+    tokens_entrada,
+    tokens_saida,
+    tokens_cache,
+    proposta_id,
+    propostas_ids,
+    execucao_id,
+    atividade_id,
+    demanda_id,
+    conteudo_bruto,
+    created_date
+`;
 
 function deLinha(linha: LinhaDeMensagem): ChatMensagemLida {
-  return deFonte({ ...linha, created_date: linha.created_date.toISOString() });
+    return deFonte({ ...linha, created_date: linha.created_date.toISOString() });
 }
 
 /**
@@ -50,168 +69,307 @@ function deLinha(linha: LinhaDeMensagem): ChatMensagemLida {
  * Mensagens são gravadas uma vez e nunca reescritas (não há método de exclusão nem de alteração).
  */
 export class ChatMensagemPostgresRepository extends BaseRepository<ChatMensagemFonte> implements ArmazenamentoDeChat {
-  private readonly logger = new Logger(ChatMensagemPostgresRepository.name);
+    private readonly logger = new Logger(ChatMensagemPostgresRepository.name);
 
-  constructor(conexaoBancoDados: Knex) {
-    super(conexaoBancoDados, 'chat_mensagem');
-  }
-
-  async gravar(mensagem: ChatMensagemNova): Promise<ChatMensagemLida> {
-    return this.proteger(async () => {
-      const fonte = paraFonte(mensagem, randomUUID(), new Date());
-      await this.executarConsulta(
-        `INSERT INTO chat_mensagem (created_date, updated_date, is_deleted, mensagem_id, conversa_id, usuario_id, contexto, autor, assunto,
-                                    texto, nivel, modelo, tokens_entrada, tokens_saida, tokens_cache, proposta_id, propostas_ids,
-                                    execucao_id, atividade_id, demanda_id, conteudo_bruto)
-         SELECT :criadaEm, :criadaEm, false, CAST(:mensagemId AS uuid), :conversaId, :usuarioId, :contexto, :autor, :assunto,
-                :texto, :nivel, :modelo, :tokensEntrada, :tokensSaida, :tokensCache, :propostaId, CAST(:propostasIds AS integer[]),
-                :execucaoId, :atividadeId, :demandaId, CAST(:conteudoBruto AS jsonb)
-         RETURNING id`,
-        {
-          criadaEm: fonte.created_date,
-          mensagemId: fonte.mensagem_id,
-          conversaId: fonte.conversa_id,
-          usuarioId: fonte.usuario_id,
-          contexto: fonte.contexto,
-          autor: fonte.autor,
-          assunto: fonte.assunto ?? null,
-          texto: fonte.texto,
-          nivel: fonte.nivel,
-          modelo: fonte.modelo,
-          tokensEntrada: fonte.tokens_entrada,
-          tokensSaida: fonte.tokens_saida,
-          tokensCache: fonte.tokens_cache,
-          propostaId: fonte.proposta_id,
-          // Literal de array do Postgres (`{1,2}`): o driver não converte um array JS de forma portável para `integer[]`.
-          propostasIds: `{${(fonte.propostas_ids ?? []).join(',')}}`,
-          execucaoId: fonte.execucao_id,
-          atividadeId: fonte.atividade_id,
-          demandaId: fonte.demanda_id,
-          conteudoBruto: JSON.stringify(fonte.conteudo_bruto),
-        },
-      );
-      return deFonte(fonte);
-    });
-  }
-
-  async listarConversa(consulta: ConsultaConversa): Promise<ChatMensagemLida[]> {
-    return this.proteger(async () => {
-      const linhas = await this.executarConsulta<LinhaDeMensagem>(
-        `SELECT ${COLUNAS_DA_MENSAGEM}
-         FROM chat_mensagem
-         WHERE conversa_id = :conversaId AND is_deleted = false
-           AND (CAST(:usuarioId AS integer) IS NULL OR usuario_id = CAST(:usuarioId AS integer))
-         ORDER BY created_date ASC, id ASC
-         LIMIT :limite`,
-        { conversaId: consulta.conversaId, usuarioId: consulta.usuarioId ?? null, limite: LIMITE_CONVERSA },
-      );
-      return linhas.map(deLinha);
-    });
-  }
-
-  async listarConversas(consulta: ConsultaConversas): Promise<BaldeConversa[]> {
-    return this.proteger(async () => {
-      const linhas = await this.executarConsulta<LinhaDeConversa>(
-        `SELECT conversa_id AS chave,
-                CAST(COUNT(*) AS integer) AS total,
-                MAX(created_date) AS ultima,
-                (ARRAY_AGG(texto ORDER BY created_date ASC, id ASC))[1] AS primeira_texto
-         FROM chat_mensagem
-         WHERE usuario_id = :usuarioId AND contexto = 'CHAT' AND is_deleted = false
-         GROUP BY conversa_id
-         ORDER BY conversa_id DESC
-         LIMIT :limite`,
-        { usuarioId: consulta.usuarioId, limite: LIMITE_CONVERSAS },
-      );
-      return linhas.map((linha) => ({
-        key: linha.chave,
-        doc_count: linha.total,
-        ultima: { value: linha.ultima.getTime() },
-        primeira: { hits: { hits: [{ _source: { texto: linha.primeira_texto } }] } },
-      }));
-    });
-  }
-
-  async gravarTitulo(titulo: TituloParaGravar): Promise<void> {
-    await this.proteger(async () => {
-      await this.executarConsulta(
-        `INSERT INTO chat_conversa (created_date, updated_date, is_deleted, conversa_id, usuario_id, titulo, titulo_editado)
-         SELECT NOW(), NOW(), false, :conversaId, :usuarioId, :titulo, :editado
-         ON CONFLICT (conversa_id) DO UPDATE SET titulo = EXCLUDED.titulo, titulo_editado = EXCLUDED.titulo_editado,
-           usuario_id = EXCLUDED.usuario_id, updated_date = NOW()
-         RETURNING id`,
-        { ...titulo },
-      );
-    });
-  }
-
-  async listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, TituloDaConversa>> {
-    if (consulta.conversaIds.length === 0) return {};
-    return this.proteger(async () => {
-      const linhas = await this.executarConsulta<LinhaDeTitulo>(
-        `SELECT conversa_id, titulo, titulo_editado
-         FROM chat_conversa
-         WHERE usuario_id = :usuarioId AND conversa_id = ANY(CAST(:conversaIds AS text[])) AND is_deleted = false
-         LIMIT :limite`,
-        { usuarioId: consulta.usuarioId, conversaIds: consulta.conversaIds, limite: LIMITE_CONVERSAS },
-      );
-      return Object.fromEntries(linhas.map((linha) => [linha.conversa_id, { titulo: linha.titulo ?? '', editado: linha.titulo_editado }]));
-    });
-  }
-
-  /** Mesmo comportamento do OpenSearch: sem acento (`descricao` acha `descrição`), todas as palavras, relevância e depois a mais recente. */
-  async buscar(consulta: ConsultaBusca): Promise<ChatMensagemLida[]> {
-    return this.proteger(async () => {
-      const linhas = await this.executarConsulta<LinhaDeMensagem>(
-        `SELECT ${COLUNAS_DA_MENSAGEM}
-         FROM chat_mensagem
-         WHERE usuario_id = :usuarioId AND is_deleted = false AND contexto NOT IN ('PLANEJAMENTO', 'USO_DE_IA')
-           AND fn_chat_texto_busca(texto) @@ fn_chat_texto_consulta(:texto)
-           AND (CAST(:inicio AS timestamptz) IS NULL OR created_date >= CAST(:inicio AS timestamptz))
-           AND (CAST(:fim AS timestamptz) IS NULL OR created_date <= CAST(:fim AS timestamptz))
-         ORDER BY ts_rank(fn_chat_texto_busca(texto), fn_chat_texto_consulta(:texto)) DESC, created_date DESC
-         LIMIT :limite`,
-        {
-          usuarioId: consulta.usuarioId,
-          texto: consulta.texto,
-          inicio: consulta.inicio?.toISOString() ?? null,
-          fim: consulta.fim?.toISOString() ?? null,
-          limite: LIMITE_BUSCA,
-        },
-      );
-      return linhas.map(deLinha);
-    });
-  }
-
-  /** O dia e o mês são os do fuso do sistema (`AT TIME ZONE`), como nos índices; só mensagem com modelo e tokens gravados entra. */
-  async somarTokens(consulta: ConsultaTokens): Promise<TokensSomados[]> {
-    return this.proteger(async () =>
-      this.executarConsulta<TokensSomados>(
-        `SELECT
-           TO_CHAR(chat_mensagem.created_date AT TIME ZONE CAST(:fusoHorario AS text), :formato) AS periodo,
-           chat_mensagem.modelo,
-           CAST(COUNT(*) AS float8)                                      AS mensagens,
-           CAST(SUM(chat_mensagem.tokens_entrada) AS float8)             AS "tokensEntrada",
-           CAST(COALESCE(SUM(chat_mensagem.tokens_saida), 0) AS float8)  AS "tokensSaida",
-           CAST(COALESCE(SUM(chat_mensagem.tokens_cache), 0) AS float8)  AS "tokensCache"
-         FROM chat_mensagem
-         WHERE chat_mensagem.is_deleted = false
-           AND chat_mensagem.modelo IS NOT NULL
-           AND chat_mensagem.tokens_entrada IS NOT NULL
-           AND CAST(chat_mensagem.created_date AT TIME ZONE CAST(:fusoHorario AS text) AS date) BETWEEN CAST(:dataInicio AS date) AND CAST(:dataFim AS date)
-         GROUP BY periodo, chat_mensagem.modelo`,
-        { fusoHorario: consulta.fusoHorario, formato: consulta.porMes ? 'YYYY-MM' : 'YYYY-MM-DD', dataInicio: consulta.dataInicio, dataFim: consulta.dataFim },
-      ),
-    );
-  }
-
-  private async proteger<T>(operacao: () => Promise<T>): Promise<T> {
-    try {
-      return await operacao();
-    } catch (erro) {
-      if (erro instanceof BusinessException) throw erro;
-      this.logger.error(`Falha no Postgres do chat: ${erro instanceof Error ? erro.message : String(erro)}`);
-      throw new BusinessException('O chat está indisponível no momento (armazenamento das mensagens fora do ar). Tente de novo em instantes.');
+    constructor(conexaoBancoDados: Knex) {
+        super(conexaoBancoDados, 'chat_mensagem');
     }
-  }
+
+    async gravar(mensagem: ChatMensagemNova): Promise<ChatMensagemLida> {
+        return this.proteger(async () => {
+            const fonte = paraFonte(mensagem, randomUUID(), new Date());
+            await this.executarConsulta(
+                `
+                    INSERT INTO
+                        chat_mensagem (
+                            created_date,
+                            updated_date,
+                            is_deleted,
+                            mensagem_id,
+                            conversa_id,
+                            usuario_id,
+                            contexto,
+                            autor,
+                            assunto,
+                            texto,
+                            nivel,
+                            modelo,
+                            tokens_entrada,
+                            tokens_saida,
+                            tokens_cache,
+                            proposta_id,
+                            propostas_ids,
+                            execucao_id,
+                            atividade_id,
+                            demanda_id,
+                            conteudo_bruto
+                        )
+                    SELECT
+                        :criadaEm,
+                        :criadaEm,
+                        false,
+                        CAST(:mensagemId AS uuid),
+                        :conversaId,
+                        :usuarioId,
+                        :contexto,
+                        :autor,
+                        :assunto,
+                        :texto,
+                        :nivel,
+                        :modelo,
+                        :tokensEntrada,
+                        :tokensSaida,
+                        :tokensCache,
+                        :propostaId,
+                        CAST(:propostasIds AS integer[]),
+                        :execucaoId,
+                        :atividadeId,
+                        :demandaId,
+                        CAST(:conteudoBruto AS jsonb)
+                    RETURNING
+                        id
+                `,
+                {
+                    criadaEm: fonte.created_date,
+                    mensagemId: fonte.mensagem_id,
+                    conversaId: fonte.conversa_id,
+                    usuarioId: fonte.usuario_id,
+                    contexto: fonte.contexto,
+                    autor: fonte.autor,
+                    assunto: fonte.assunto ?? null,
+                    texto: fonte.texto,
+                    nivel: fonte.nivel,
+                    modelo: fonte.modelo,
+                    tokensEntrada: fonte.tokens_entrada,
+                    tokensSaida: fonte.tokens_saida,
+                    tokensCache: fonte.tokens_cache,
+                    propostaId: fonte.proposta_id,
+                    // Literal de array do Postgres (`{1,2}`): o driver não converte um array JS de forma portável para `integer[]`.
+                    propostasIds: `{${(fonte.propostas_ids ?? []).join(',')}}`,
+                    execucaoId: fonte.execucao_id,
+                    atividadeId: fonte.atividade_id,
+                    demandaId: fonte.demanda_id,
+                    conteudoBruto: JSON.stringify(fonte.conteudo_bruto),
+                },
+            );
+            return deFonte(fonte);
+        });
+    }
+
+    async listarConversa(consulta: ConsultaConversa): Promise<ChatMensagemLida[]> {
+        return this.proteger(async () => {
+            const linhas = await this.executarConsulta<LinhaDeMensagem>(
+                `
+                    SELECT
+                        ${COLUNAS_DA_MENSAGEM}
+                    FROM
+                        chat_mensagem
+                    WHERE
+                        conversa_id = :conversaId
+                        AND is_deleted = false
+                        AND (
+                            CAST(:usuarioId AS integer) IS NULL
+                            OR usuario_id = CAST(:usuarioId AS integer)
+                        )
+                    ORDER BY
+                        created_date ASC,
+                        id ASC
+                    LIMIT
+                        :limite
+                `,
+                { conversaId: consulta.conversaId, usuarioId: consulta.usuarioId ?? null, limite: LIMITE_CONVERSA },
+            );
+            return linhas.map(deLinha);
+        });
+    }
+
+    async listarConversas(consulta: ConsultaConversas): Promise<BaldeConversa[]> {
+        return this.proteger(async () => {
+            const linhas = await this.executarConsulta<LinhaDeConversa>(
+                `
+                    SELECT
+                        conversa_id AS chave,
+                        CAST(COUNT(*) AS integer) AS total,
+                        MAX(created_date) AS ultima,
+                        (
+                            ARRAY_AGG(
+                                texto
+                                ORDER BY
+                                    created_date ASC,
+                                    id ASC
+                            )
+                        ) [1] AS primeira_texto
+                    FROM
+                        chat_mensagem
+                    WHERE
+                        usuario_id = :usuarioId
+                        AND contexto = 'CHAT'
+                        AND is_deleted = false
+                    GROUP BY
+                        conversa_id
+                    ORDER BY
+                        conversa_id DESC
+                    LIMIT
+                        :limite
+                `,
+                { usuarioId: consulta.usuarioId, limite: LIMITE_CONVERSAS },
+            );
+            return linhas.map((linha) => ({
+                key: linha.chave,
+                doc_count: linha.total,
+                ultima: { value: linha.ultima.getTime() },
+                primeira: { hits: { hits: [{ _source: { texto: linha.primeira_texto } }] } },
+            }));
+        });
+    }
+
+    async gravarTitulo(titulo: TituloParaGravar): Promise<void> {
+        await this.proteger(async () => {
+            await this.executarConsulta(
+                `
+                    INSERT INTO
+                        chat_conversa (
+                            created_date,
+                            updated_date,
+                            is_deleted,
+                            conversa_id,
+                            usuario_id,
+                            titulo,
+                            titulo_editado
+                        )
+                    SELECT
+                        NOW(),
+                        NOW(),
+                        false,
+                        :conversaId,
+                        :usuarioId,
+                        :titulo,
+                        :editado
+                    ON CONFLICT (conversa_id) DO UPDATE
+                    SET
+                        titulo = EXCLUDED.titulo,
+                        titulo_editado = EXCLUDED.titulo_editado,
+                        usuario_id = EXCLUDED.usuario_id,
+                        updated_date = NOW()
+                    RETURNING
+                        id
+                `,
+                { ...titulo },
+            );
+        });
+    }
+
+    async listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, TituloDaConversa>> {
+        if (consulta.conversaIds.length === 0) return {};
+        return this.proteger(async () => {
+            const linhas = await this.executarConsulta<LinhaDeTitulo>(
+                `
+                    SELECT
+                        conversa_id,
+                        titulo,
+                        titulo_editado
+                    FROM
+                        chat_conversa
+                    WHERE
+                        usuario_id = :usuarioId
+                        AND conversa_id = ANY (CAST(:conversaIds AS text[]))
+                        AND is_deleted = false
+                    LIMIT
+                        :limite
+                `,
+                { usuarioId: consulta.usuarioId, conversaIds: consulta.conversaIds, limite: LIMITE_CONVERSAS },
+            );
+            return Object.fromEntries(linhas.map((linha) => [linha.conversa_id, { titulo: linha.titulo ?? '', editado: linha.titulo_editado }]));
+        });
+    }
+
+    /** Mesmo comportamento do OpenSearch: sem acento (`descricao` acha `descrição`), todas as palavras, relevância e depois a mais recente. */
+    async buscar(consulta: ConsultaBusca): Promise<ChatMensagemLida[]> {
+        return this.proteger(async () => {
+            const linhas = await this.executarConsulta<LinhaDeMensagem>(
+                `
+                    SELECT
+                        ${COLUNAS_DA_MENSAGEM}
+                    FROM
+                        chat_mensagem
+                    WHERE
+                        usuario_id = :usuarioId
+                        AND is_deleted = false
+                        AND contexto NOT IN ('PLANEJAMENTO', 'USO_DE_IA')
+                        AND fn_chat_texto_busca (texto) @@ fn_chat_texto_consulta (:texto)
+                        AND (
+                            CAST(:inicio AS timestamptz) IS NULL
+                            OR created_date >= CAST(:inicio AS timestamptz)
+                        )
+                        AND (
+                            CAST(:fim AS timestamptz) IS NULL
+                            OR created_date <= CAST(:fim AS timestamptz)
+                        )
+                    ORDER BY
+                        ts_rank(
+                            fn_chat_texto_busca (texto),
+                            fn_chat_texto_consulta (:texto)
+                        ) DESC,
+                        created_date DESC
+                    LIMIT
+                        :limite
+                `,
+                {
+                    usuarioId: consulta.usuarioId,
+                    texto: consulta.texto,
+                    inicio: consulta.inicio?.toISOString() ?? null,
+                    fim: consulta.fim?.toISOString() ?? null,
+                    limite: LIMITE_BUSCA,
+                },
+            );
+            return linhas.map(deLinha);
+        });
+    }
+
+    /** O dia e o mês são os do fuso do sistema (`AT TIME ZONE`), como nos índices; só mensagem com modelo e tokens gravados entra. */
+    async somarTokens(consulta: ConsultaTokens): Promise<TokensSomados[]> {
+        return this.proteger(async () =>
+            this.executarConsulta<TokensSomados>(
+                `
+                    SELECT
+                        TO_CHAR(
+                            chat_mensagem.created_date AT TIME ZONE CAST(:fusoHorario AS text),
+                            :formato
+                        ) AS periodo,
+                        chat_mensagem.modelo,
+                        CAST(COUNT(*) AS float8) AS mensagens,
+                        CAST(SUM(chat_mensagem.tokens_entrada) AS float8) AS "tokensEntrada",
+                        CAST(
+                            COALESCE(SUM(chat_mensagem.tokens_saida), 0) AS float8
+                        ) AS "tokensSaida",
+                        CAST(
+                            COALESCE(SUM(chat_mensagem.tokens_cache), 0) AS float8
+                        ) AS "tokensCache"
+                    FROM
+                        chat_mensagem
+                    WHERE
+                        chat_mensagem.is_deleted = false
+                        AND chat_mensagem.modelo IS NOT NULL
+                        AND chat_mensagem.tokens_entrada IS NOT NULL
+                        AND CAST(
+                            chat_mensagem.created_date AT TIME ZONE CAST(:fusoHorario AS text) AS date
+                        ) BETWEEN CAST(:dataInicio AS date) AND CAST(:dataFim AS date)
+                    GROUP BY
+                        periodo,
+                        chat_mensagem.modelo
+                `,
+                { fusoHorario: consulta.fusoHorario, formato: consulta.porMes ? 'YYYY-MM' : 'YYYY-MM-DD', dataInicio: consulta.dataInicio, dataFim: consulta.dataFim },
+            ),
+        );
+    }
+
+    private async proteger<T>(operacao: () => Promise<T>): Promise<T> {
+        try {
+            return await operacao();
+        } catch (erro) {
+            if (erro instanceof BusinessException) throw erro;
+            this.logger.error(`Falha no Postgres do chat: ${erro instanceof Error ? erro.message : String(erro)}`);
+            throw new BusinessException('O chat está indisponível no momento (armazenamento das mensagens fora do ar). Tente de novo em instantes.');
+        }
+    }
 }

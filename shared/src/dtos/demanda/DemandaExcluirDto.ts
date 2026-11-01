@@ -1,3 +1,3 @@
 export class DemandaExcluirDto {
-  id: number;
+    id: number;
 }

@@ -1,13 +1,13 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Body,
-  Query,
-  Param,
-  ParseIntPipe,
-  UseGuards,
+    Controller,
+    Get,
+    Post,
+    Delete,
+    Body,
+    Query,
+    Param,
+    ParseIntPipe,
+    UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../autenticacao/guards/jwt-auth.guard';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
@@ -20,20 +20,20 @@ import { PontoJustificativaCriarDto, PontoJustificativaListarDto } from '@projec
 @UseGuards(JwtAuthGuard)
 @GestorOnly()
 export class PontoJustificativaController {
-  constructor(private readonly pontoJustificativaService: PontoJustificativaService) {}
+    constructor(private readonly pontoJustificativaService: PontoJustificativaService) {}
 
-  @Post()
-  criar(@Body() dto: PontoJustificativaCriarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
-    return this.pontoJustificativaService.criar(dto, usuarioAtivo);
-  }
+    @Post()
+    criar(@Body() dto: PontoJustificativaCriarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.pontoJustificativaService.criar(dto, usuarioAtivo);
+    }
 
-  @Get()
-  listar(@Query() dto: PontoJustificativaListarDto) {
-    return this.pontoJustificativaService.listar(dto);
-  }
+    @Get()
+    listar(@Query() dto: PontoJustificativaListarDto) {
+        return this.pontoJustificativaService.listar(dto);
+    }
 
-  @Delete(':id')
-  excluir(@Param('id', ParseIntPipe) id: number) {
-    return this.pontoJustificativaService.excluir({ id });
-  }
+    @Delete(':id')
+    excluir(@Param('id', ParseIntPipe) id: number) {
+        return this.pontoJustificativaService.excluir({ id });
+    }
 }

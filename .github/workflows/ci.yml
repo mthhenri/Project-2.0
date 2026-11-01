@@ -30,9 +30,19 @@ jobs:
           node --test scripts/verificar-organizacao.test.mjs
           node scripts/verificar-organizacao.mjs --staged
 
-      # Sem lint no projeto ainda (docs/context/PROBLEMS.md P-001).
       - name: Instalar dependências
         run: npm ci
+
+      # ESLint (TypeScript, JavaScript e templates), Stylelint, Prettier em HTML/SCSS e formatação do SQL dos repositories.
+      - name: Lint e padrão do código
+        run: |
+          npm run lint
+          npm run lint:estilos
+          npm run lint:templates
+          npm run lint:sql
+
+      - name: Testes dos scripts do repositório e das regras de lint
+        run: npm run repo:test
 
       - name: Testes do shared
         run: npm run test --workspace=shared

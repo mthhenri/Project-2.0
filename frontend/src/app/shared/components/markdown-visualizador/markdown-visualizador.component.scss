@@ -1,173 +1,173 @@
 // Tipografia e espaçamento próximos do editor rico anterior, que ele substitui: corpo compacto, títulos
 // proporcionais ao texto e quebra de palavra longa. Só tokens semânticos, para valer nos dois temas.
 :host {
-  display: block;
-  min-width: 0;
+    display: block;
+    min-width: 0;
 }
 
 .markdown {
-  color: var(--p-text-color);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+    color: var(--p-text-color);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 
-  > :first-child {
-    margin-top: 0;
-  }
-
-  > :last-child {
-    margin-bottom: 0;
-  }
-
-  // Sobre o balão colorido da própria mensagem (task 253): tudo herda a cor do entorno.
-  &--herda-cor {
-    color: inherit;
-    font-size: inherit;
-    line-height: inherit;
-
-    .markdown__link,
-    .markdown__citacao {
-      color: inherit;
+    > :first-child {
+        margin-top: 0;
     }
 
-    .markdown__citacao {
-      border-left-color: currentcolor;
+    > :last-child {
+        margin-bottom: 0;
     }
 
-    .markdown__codigo {
-      background: color-mix(in srgb, var(--p-primary-contrast-color) 20%, transparent);
-    }
-  }
+    // Sobre o balão colorido da própria mensagem (task 253): tudo herda a cor do entorno.
+    &--herda-cor {
+        color: inherit;
+        font-size: inherit;
+        line-height: inherit;
 
-  &__titulo {
-    margin: 1em 0 0.4em;
-    font-weight: 600;
-    line-height: 1.3;
+        .markdown__link,
+        .markdown__citacao {
+            color: inherit;
+        }
 
-    &--1 {
-      font-size: 1.5em;
-    }
+        .markdown__citacao {
+            border-left-color: currentcolor;
+        }
 
-    &--2 {
-      font-size: 1.25em;
-    }
-
-    &--3 {
-      font-size: 1.1em;
+        .markdown__codigo {
+            background: color-mix(in srgb, var(--p-primary-contrast-color) 20%, transparent);
+        }
     }
 
-    &--4 {
-      font-size: 1em;
-    }
-  }
+    &__titulo {
+        margin: 1em 0 0.4em;
+        font-weight: 600;
+        line-height: 1.3;
 
-  &__paragrafo {
-    margin: 0 0 0.6em;
-  }
+        &--1 {
+            font-size: 1.5em;
+        }
 
-  &__lista {
-    margin: 0 0 0.6em;
-    padding-left: 1.5em;
-    list-style: disc;
+        &--2 {
+            font-size: 1.25em;
+        }
 
-    &--ordenada {
-      list-style: decimal;
-    }
+        &--3 {
+            font-size: 1.1em;
+        }
 
-    // Sublistas ficam coladas no item de origem.
-    .markdown__lista {
-      margin: 0.2em 0 0;
-    }
-  }
-
-  &__item {
-    margin: 0.15em 0;
-
-    &--tarefa {
-      list-style: none;
-      margin-left: -1.25em;
-    }
-  }
-
-  &__caixa {
-    margin-right: 0.5em;
-    vertical-align: middle;
-    accent-color: var(--p-primary-color);
-  }
-
-  &__citacao {
-    margin: 0 0 0.6em;
-    padding: 0.1em 0 0.1em 1em;
-    border-left: 4px solid var(--app-surface-300, var(--app-surface-200));
-    color: var(--p-text-muted-color);
-  }
-
-  &__codigo {
-    padding: 0.1em 0.35em;
-    border-radius: 4px;
-    background: var(--app-surface-100);
-    font-family: var(--font-mono, monospace);
-    font-size: 0.92em;
-  }
-
-  &__regua {
-    margin: 1em 0;
-    border: 0;
-    border-top: 1px solid var(--app-surface-200);
-  }
-
-  // Tabela da resposta da IA: a rolagem é do contêiner, para a tabela larga não estourar o balão.
-  &__tabela-rolagem {
-    max-width: 100%;
-    margin: 0.75em 0;
-    overflow-x: auto;
-    border: 1px solid var(--app-surface-200);
-    border-radius: 0.5rem;
-  }
-
-  &__tabela {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.95em;
-
-    th,
-    td {
-      padding: 0.4rem 0.75rem;
-      border-top: 1px solid var(--app-surface-200);
-      text-align: left;
-      vertical-align: top;
-      overflow-wrap: normal;
-      word-break: normal;
-      min-width: 6rem;
+        &--4 {
+            font-size: 1em;
+        }
     }
 
-    thead th {
-      border-top: 0;
-      background: var(--app-surface-100);
-      font-weight: 600;
+    &__paragrafo {
+        margin: 0 0 0.6em;
     }
 
-    [data-alinha='centro'] {
-      text-align: center;
+    &__lista {
+        margin: 0 0 0.6em;
+        padding-left: 1.5em;
+        list-style: disc;
+
+        &--ordenada {
+            list-style: decimal;
+        }
+
+        // Sublistas ficam coladas no item de origem.
+        .markdown__lista {
+            margin: 0.2em 0 0;
+        }
     }
 
-    [data-alinha='direita'] {
-      text-align: right;
+    &__item {
+        margin: 0.15em 0;
+
+        &--tarefa {
+            list-style: none;
+            margin-left: -1.25em;
+        }
     }
-  }
 
-  &__link {
-    color: var(--p-primary-color);
-    text-decoration: underline;
-  }
+    &__caixa {
+        margin-right: 0.5em;
+        vertical-align: middle;
+        accent-color: var(--p-primary-color);
+    }
 
-  // Menção a pessoa e referência a demanda/atividade (chat entre colaboradores).
-  &__destaque {
-    padding: 0.05em 0.3em;
-    border-radius: 4px;
-    background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
-    color: var(--p-primary-color);
-    font-weight: 600;
-  }
+    &__citacao {
+        margin: 0 0 0.6em;
+        padding: 0.1em 0 0.1em 1em;
+        border-left: 4px solid var(--app-surface-300, var(--app-surface-200));
+        color: var(--p-text-muted-color);
+    }
+
+    &__codigo {
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+        background: var(--app-surface-100);
+        font-family: var(--font-mono, monospace);
+        font-size: 0.92em;
+    }
+
+    &__regua {
+        margin: 1em 0;
+        border: 0;
+        border-top: 1px solid var(--app-surface-200);
+    }
+
+    // Tabela da resposta da IA: a rolagem é do contêiner, para a tabela larga não estourar o balão.
+    &__tabela-rolagem {
+        max-width: 100%;
+        margin: 0.75em 0;
+        overflow-x: auto;
+        border: 1px solid var(--app-surface-200);
+        border-radius: 0.5rem;
+    }
+
+    &__tabela {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95em;
+
+        th,
+        td {
+            padding: 0.4rem 0.75rem;
+            border-top: 1px solid var(--app-surface-200);
+            text-align: left;
+            vertical-align: top;
+            overflow-wrap: normal;
+            word-break: normal;
+            min-width: 6rem;
+        }
+
+        thead th {
+            border-top: 0;
+            background: var(--app-surface-100);
+            font-weight: 600;
+        }
+
+        [data-alinha="centro"] {
+            text-align: center;
+        }
+
+        [data-alinha="direita"] {
+            text-align: right;
+        }
+    }
+
+    &__link {
+        color: var(--p-primary-color);
+        text-decoration: underline;
+    }
+
+    // Menção a pessoa e referência a demanda/atividade (chat entre colaboradores).
+    &__destaque {
+        padding: 0.05em 0.3em;
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+        color: var(--p-primary-color);
+        font-weight: 600;
+    }
 }

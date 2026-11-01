@@ -1,57 +1,71 @@
-@use '../../../../shared/styles/form' as *;
+@use "../../../../shared/styles/form" as *;
 
 .projeto-formulario-dialog {
-  &__form {
-    @include form-dialog-form(1.25rem);
-    padding: 0.5rem 0;
-  }
+    &__form {
+        @include form-dialog-form(1.25rem);
+        padding: 0.5rem 0;
+    }
 
-  &__linha { @include form-dialog-linha; }
+    &__linha {
+        @include form-dialog-linha;
+    }
 
-  &__campo       { @include form-campo; }
-  // Duas perguntas empilhadas na coluna que a cor (alta) deixaria meio vazia.
-  &__coluna      { display: flex; flex-direction: column; gap: 1.25rem; }
-  &__label       { @include form-label; }
-  &__obrigatorio { @include form-obrigatorio; }
-  &__erro        { @include form-erro; }
+    &__campo {
+        @include form-campo;
+    }
+    // Duas perguntas empilhadas na coluna que a cor (alta) deixaria meio vazia.
+    &__coluna {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+    &__label {
+        @include form-label;
+    }
+    &__obrigatorio {
+        @include form-obrigatorio;
+    }
+    &__erro {
+        @include form-erro;
+    }
 
-  &__dica {
-    font-size: 0.75rem;
-    color: var(--p-text-muted-color);
-  }
+    &__dica {
+        font-size: 0.75rem;
+        color: var(--p-text-muted-color);
+    }
 
-  &__input-codigo {
-    text-transform: uppercase;
-  }
+    &__input-codigo {
+        text-transform: uppercase;
+    }
 }
 
 .projeto-formulario-dialog {
-  &__codigo-envolucro {
-    display: block;
-  }
-
-  &__periodo-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem 0;
-    border: none;
-    border-top: 1px solid var(--app-surface-200);
-    background: transparent;
-    color: var(--p-text-color);
-    font-family: inherit;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    text-align: left;
-
-    i {
-      font-size: 0.75rem;
+    &__codigo-envolucro {
+        display: block;
     }
-  }
 
-  &__periodo-dica {
-    color: var(--p-text-muted-color);
-    font-weight: 400;
-  }
+    &__periodo-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0;
+        border: none;
+        border-top: 1px solid var(--app-surface-200);
+        background: transparent;
+        color: var(--p-text-color);
+        font-family: inherit;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: left;
+
+        i {
+            font-size: 0.75rem;
+        }
+    }
+
+    &__periodo-dica {
+        color: var(--p-text-muted-color);
+        font-weight: 400;
+    }
 }

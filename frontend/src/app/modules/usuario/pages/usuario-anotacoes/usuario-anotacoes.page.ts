@@ -7,23 +7,24 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
  * Gestor → listagem; o próprio usuário → Ponto; id alheio de quem não é gestor → Ponto, sem drawer.
  */
 @Component({
-  selector: 'app-usuario-anotacoes',
-  standalone: true,
-  template: '',
+    selector: 'app-usuario-anotacoes',
+    standalone: true,
+    templateUrl: './usuario-anotacoes.page.html',
+    styleUrl: './usuario-anotacoes.page.scss',
 })
 export class UsuarioAnotacoesPage implements OnInit {
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-  private readonly sessao = inject(UsuarioSessaoService);
+    private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
+    private readonly sessao = inject(UsuarioSessaoService);
 
-  ngOnInit(): void {
-    const usuarioId = Number(this.route.snapshot.paramMap.get('id'));
-    if (this.sessao.eGestor()) {
-      this.router.navigate(['/usuario'], { queryParams: { anotacoes: usuarioId }, replaceUrl: true });
-    } else if (usuarioId === this.sessao.id()) {
-      this.router.navigate(['/ponto'], { queryParams: { anotacoes: usuarioId }, replaceUrl: true });
-    } else {
-      this.router.navigate(['/ponto'], { replaceUrl: true });
+    ngOnInit(): void {
+        const usuarioId = Number(this.route.snapshot.paramMap.get('id'));
+        if (this.sessao.eGestor()) {
+            this.router.navigate(['/usuario'], { queryParams: { anotacoes: usuarioId }, replaceUrl: true });
+        } else if (usuarioId === this.sessao.id()) {
+            this.router.navigate(['/ponto'], { queryParams: { anotacoes: usuarioId }, replaceUrl: true });
+        } else {
+            this.router.navigate(['/ponto'], { replaceUrl: true });
+        }
     }
-  }
 }

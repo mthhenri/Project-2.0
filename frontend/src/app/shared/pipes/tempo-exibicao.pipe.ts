@@ -8,7 +8,7 @@ import { formatarTempoExibicao, UnidadeTempoEntrada } from '../../core/models/vi
  */
 @Pipe({ name: 'tempoExibicao', standalone: true })
 export class TempoExibicaoPipe implements PipeTransform {
-  transform(valor: number, emDias: boolean, unidade: UnidadeTempoEntrada): string {
-    return formatarTempoExibicao(valor, emDias, unidade);
-  }
+    transform(valor: number, emDias: boolean, unidade: UnidadeTempoEntrada): string {
+        return formatarTempoExibicao(valor, emDias, unidade);
+    }
 }

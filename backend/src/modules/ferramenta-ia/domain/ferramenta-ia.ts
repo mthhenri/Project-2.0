@@ -15,10 +15,10 @@ export type PermissaoFerramentaIa = 'QUALQUER' | 'GESTOR' | 'ADMINISTRADOR';
 
 /** O que volta ao modelo depois de uma ferramenta: sempre um texto (JSON) e se foi erro. Nunca uma exceção que derrube o turno. */
 export interface ResultadoFerramentaIa {
-  conteudo: string;
-  erro: boolean;
-  /** Preenchido quando a ferramenta de proposta criou uma proposta (o chat mostra o cartão). */
-  propostaId?: number;
+    conteudo: string;
+    erro: boolean;
+    /** Preenchido quando a ferramenta de proposta criou uma proposta (o chat mostra o cartão). */
+    propostaId?: number;
 }
 
 export type ClasseDeEntrada<T extends object> = new () => T;
@@ -29,36 +29,36 @@ export type ClasseDeEntrada<T extends object> = new () => T;
  */
 /** De onde a IA está chamando a ferramenta; só quem decide algo por isso lê (as propostas, para o nível). */
 export interface OrigemDaFerramentaIa {
-  contexto: ContextoChatEnum;
+    contexto: ContextoChatEnum;
 }
 
 export abstract class FerramentaIa<TEntrada extends object = object> {
-  abstract readonly nome: string;
-  /** O que o modelo lê para decidir quando usar a ferramenta. */
-  abstract readonly descricao: string;
-  abstract readonly tipo: TipoFerramentaIa;
-  abstract readonly permissao: PermissaoFerramentaIa;
-  abstract readonly classeDeEntrada: ClasseDeEntrada<TEntrada>;
-  /** Ferramenta do plano: só a conversa do planejamento a vê (o chat de perguntas nunca a lista). */
-  readonly somentePlanejamento?: boolean;
+    abstract readonly nome: string;
+    /** O que o modelo lê para decidir quando usar a ferramenta. */
+    abstract readonly descricao: string;
+    abstract readonly tipo: TipoFerramentaIa;
+    abstract readonly permissao: PermissaoFerramentaIa;
+    abstract readonly classeDeEntrada: ClasseDeEntrada<TEntrada>;
+    /** Ferramenta do plano: só a conversa do planejamento a vê (o chat de perguntas nunca a lista). */
+    readonly somentePlanejamento?: boolean;
 
-  /**
+    /**
    * Ferramenta que depende de uma configuração (flag da IA): quando devolve `false` ela some da lista do modelo e, se for chamada
    * mesmo assim, é recusada. Sem este método, a ferramenta está sempre habilitada.
    */
-  habilitada?(): boolean;
+    habilitada?(): boolean;
 
-  /** Devolve algo serializável em JSON; limitar o tamanho do que devolve é responsabilidade de cada ferramenta. */
-  abstract executar(entrada: TEntrada, usuarioAtivo: JwtPayload, origem?: OrigemDaFerramentaIa): Promise<unknown>;
+    /** Devolve algo serializável em JSON; limitar o tamanho do que devolve é responsabilidade de cada ferramenta. */
+    abstract executar(entrada: TEntrada, usuarioAtivo: JwtPayload, origem?: OrigemDaFerramentaIa): Promise<unknown>;
 }
 
 export function usuarioPodeUsar(permissao: PermissaoFerramentaIa, tipo: TipoUsuarioEnum): boolean {
-  switch (permissao) {
-    case 'QUALQUER':
-      return true;
-    case 'GESTOR':
-      return temPermissaoDeGestor(tipo);
-    case 'ADMINISTRADOR':
-      return temPermissaoDeAdministrador(tipo);
-  }
+    switch (permissao) {
+        case 'QUALQUER':
+            return true;
+        case 'GESTOR':
+            return temPermissaoDeGestor(tipo);
+        case 'ADMINISTRADOR':
+            return temPermissaoDeAdministrador(tipo);
+    }
 }

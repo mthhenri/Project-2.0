@@ -6,19 +6,19 @@ import { UnauthorizedAccessException } from '../../../core/exceptions/unauthoriz
 
 @Injectable()
 export class AdministradorGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+    constructor(private readonly reflector: Reflector) {}
 
-  canActivate(contexto: ExecutionContext): boolean {
-    const administradorOnly = this.reflector.getAllAndOverride<boolean>('administradorOnly', [
-      contexto.getHandler(),
-      contexto.getClass(),
-    ]);
-    if (!administradorOnly) return true;
+    canActivate(contexto: ExecutionContext): boolean {
+        const administradorOnly = this.reflector.getAllAndOverride<boolean>('administradorOnly', [
+            contexto.getHandler(),
+            contexto.getClass(),
+        ]);
+        if (!administradorOnly) return true;
 
-    const usuarioAtivo: JwtPayload = contexto.switchToHttp().getRequest().user;
-    if (!usuarioAtivo || !temPermissaoDeAdministrador(usuarioAtivo.tipo)) {
-      throw new UnauthorizedAccessException('Acesso restrito a administradores');
+        const usuarioAtivo: JwtPayload = contexto.switchToHttp().getRequest().user;
+        if (!usuarioAtivo || !temPermissaoDeAdministrador(usuarioAtivo.tipo)) {
+            throw new UnauthorizedAccessException('Acesso restrito a administradores');
+        }
+        return true;
     }
-    return true;
-  }
 }

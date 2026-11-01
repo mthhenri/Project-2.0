@@ -27,79 +27,79 @@ export type AbaDemandaAberta = 'tecnica' | 'cliente' | 'doc' | 'atividades' | 'c
  * descrições, atividades, exclusão, histórico) é da `DemandaDetalheBase`, a mesma do diálogo de detalhe; aqui só muda o desenho.
  */
 @Component({
-  selector: 'app-demanda-aberta',
-  standalone: true,
-  imports: [
-    NgTemplateOutlet,
-    ButtonModule,
-    ConfirmDialogModule,
-    TabsModule,
-    TooltipModule,
-    MarkdownVisualizadorComponent,
-    AtividadeNovaDialogComponent,
-    DemandaAtividadesPainelComponent,
-    DemandaBarraHorasComponent,
-    DemandaConexaoListaComponent,
-    DemandaFormularioDialogComponent,
-    DemandaMembrosCabecalhoComponent,
-    DemandaMetricasComponent,
-    DemandaStatusComponent,
-    DemandaTagsCabecalhoComponent,
-  ],
-  providers: [ConfirmationService],
-  templateUrl: './demanda-aberta.component.html',
-  styleUrl: './demanda-aberta.component.scss',
+    selector: 'app-demanda-aberta',
+    standalone: true,
+    imports: [
+        NgTemplateOutlet,
+        ButtonModule,
+        ConfirmDialogModule,
+        TabsModule,
+        TooltipModule,
+        MarkdownVisualizadorComponent,
+        AtividadeNovaDialogComponent,
+        DemandaAtividadesPainelComponent,
+        DemandaBarraHorasComponent,
+        DemandaConexaoListaComponent,
+        DemandaFormularioDialogComponent,
+        DemandaMembrosCabecalhoComponent,
+        DemandaMetricasComponent,
+        DemandaStatusComponent,
+        DemandaTagsCabecalhoComponent,
+    ],
+    providers: [ConfirmationService],
+    templateUrl: './demanda-aberta.component.html',
+    styleUrl: './demanda-aberta.component.scss',
 })
 export class DemandaAbertaComponent extends DemandaDetalheBase implements OnChanges {
-  /** Minutos executados na demanda (vêm do nó do grafo; a demanda recuperada não os traz), para a barra de horas. */
-  readonly minutosExecutados = input<number>(0);
-  /** A aba mostrada: a Técnica ao abrir; clicar num ícone de descrição da linha abre a aba dela. */
-  readonly aba = model<AbaDemandaAberta>('tecnica');
-  /** A demanda mostrada mudou por dentro (caminho, conexão, "Voltar"): a página acompanha a pasta e a seleção. */
-  readonly navegou = output<number>();
-  /** Pediu para escrever ou editar uma descrição: a tela passa ao modo Dividido, com o editor ao lado da lista. */
-  readonly editarDescricao = output<'descricaoTecnica' | 'descricaoCliente' | 'documentacao'>();
+    /** Minutos executados na demanda (vêm do nó do grafo; a demanda recuperada não os traz), para a barra de horas. */
+    readonly minutosExecutados = input<number>(0);
+    /** A aba mostrada: a Técnica ao abrir; clicar num ícone de descrição da linha abre a aba dela. */
+    readonly aba = model<AbaDemandaAberta>('tecnica');
+    /** A demanda mostrada mudou por dentro (caminho, conexão, "Voltar"): a página acompanha a pasta e a seleção. */
+    readonly navegou = output<number>();
+    /** Pediu para escrever ou editar uma descrição: a tela passa ao modo Dividido, com o editor ao lado da lista. */
+    readonly editarDescricao = output<'descricaoTecnica' | 'descricaoCliente' | 'documentacao'>();
 
-  readonly rotuloStatus = ROTULO_STATUS_DEMANDA;
+    readonly rotuloStatus = ROTULO_STATUS_DEMANDA;
 
-  /** A aba que vale: Atividades só para quem é membro (ou gestor); sem isso volta para a Técnica. */
-  readonly abaAtiva = computed<AbaDemandaAberta>(() => (this.aba() === 'atividades' && !this.eMembro() ? 'tecnica' : this.aba()));
+    /** A aba que vale: Atividades só para quem é membro (ou gestor); sem isso volta para a Técnica. */
+    readonly abaAtiva = computed<AbaDemandaAberta>(() => (this.aba() === 'atividades' && !this.eMembro() ? 'tecnica' : this.aba()));
 
-  readonly podeEditarDescricao = (campo: 'descricaoTecnica' | 'descricaoCliente' | 'documentacao'): boolean =>
-    campo === 'descricaoCliente' ? this.sessao.eGestor() : this.eMembro();
+    readonly podeEditarDescricao = (campo: 'descricaoTecnica' | 'descricaoCliente' | 'documentacao'): boolean =>
+        campo === 'descricaoCliente' ? this.sessao.eGestor() : this.eMembro();
 
-  ngOnChanges(mudancas: SimpleChanges): void {
-    const mudou = mudancas['demandaId'];
-    if (!mudou || !this.demandaId || this.demandaId === this.demandaIdAtual()) return;
-    this.historico.set([]);
-    this.demandaIdAtual.set(this.demandaId);
-    this.carregarTudo(this.demandaId);
-  }
+    ngOnChanges(mudancas: SimpleChanges): void {
+        const mudou = mudancas['demandaId'];
+        if (!mudou || !this.demandaId || this.demandaId === this.demandaIdAtual()) return;
+        this.historico.set([]);
+        this.demandaIdAtual.set(this.demandaId);
+        this.carregarTudo(this.demandaId);
+    }
 
-  /** Recarrega a demanda mostrada (mudou por fora: status trocado na lista, edição por diálogo). */
-  atualizar(): void {
-    const id = this.demandaIdAtual();
-    if (id) this.carregarDemanda(id);
-  }
+    /** Recarrega a demanda mostrada (mudou por fora: status trocado na lista, edição por diálogo). */
+    atualizar(): void {
+        const id = this.demandaIdAtual();
+        if (id) this.carregarDemanda(id);
+    }
 
-  override navegarParaSubDemanda(id: number): void {
-    if (id === this.demandaIdAtual()) return;
-    super.navegarParaSubDemanda(id);
-    this.navegou.emit(id);
-  }
+    override navegarParaSubDemanda(id: number): void {
+        if (id === this.demandaIdAtual()) return;
+        super.navegarParaSubDemanda(id);
+        this.navegou.emit(id);
+    }
 
-  override voltar(): void {
-    super.voltar();
-    this.navegou.emit(this.demandaIdAtual());
-  }
+    override voltar(): void {
+        super.voltar();
+        this.navegou.emit(this.demandaIdAtual());
+    }
 
-  /** A aba da descrição que o ícone representa. */
-  abaDaDescricao(campo: 'descricaoTecnica' | 'descricaoCliente' | 'documentacao'): AbaDemandaAberta {
-    return campo === 'descricaoTecnica' ? 'tecnica' : campo === 'descricaoCliente' ? 'cliente' : 'doc';
-  }
+    /** A aba da descrição que o ícone representa. */
+    abaDaDescricao(campo: 'descricaoTecnica' | 'descricaoCliente' | 'documentacao'): AbaDemandaAberta {
+        return campo === 'descricaoTecnica' ? 'tecnica' : campo === 'descricaoCliente' ? 'cliente' : 'doc';
+    }
 
-  /** O texto da descrição de uma aba, para leitura. */
-  textoDaDescricao(campo: 'descricaoTecnica' | 'descricaoCliente' | 'documentacao'): string {
-    return this.demanda()?.[campo] ?? '';
-  }
+    /** O texto da descrição de uma aba, para leitura. */
+    textoDaDescricao(campo: 'descricaoTecnica' | 'descricaoCliente' | 'documentacao'): string {
+        return this.demanda()?.[campo] ?? '';
+    }
 }

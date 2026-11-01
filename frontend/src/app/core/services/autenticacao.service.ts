@@ -11,52 +11,52 @@ import { ambiente } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AutenticacaoService {
-  private readonly http = inject(HttpClient);
-  private readonly router = inject(Router);
-  private readonly sessao = inject(UsuarioSessaoService);
-  private readonly execucaoAtiva = inject(ExecucaoAtivaService);
+    private readonly http = inject(HttpClient);
+    private readonly router = inject(Router);
+    private readonly sessao = inject(UsuarioSessaoService);
+    private readonly execucaoAtiva = inject(ExecucaoAtivaService);
 
-  login(dto: AutenticacaoLoginDto): Observable<StandardResponse<AutenticacaoTokenDto>> {
-    return this.http.post<StandardResponse<AutenticacaoTokenDto>>(
-      `${ambiente.apiUrl}/autenticacao/login`,
-      dto,
-      comErroTratadoPelaTela(),
-    ).pipe(
-      tap((resposta) => {
-        if (resposta.sucesso && resposta.dados) {
-          localStorage.setItem('access_token', resposta.dados.accessToken);
-          this.sessao.definirUsuario(resposta.dados.usuario as any);
-        }
-      }),
-    );
-  }
+    login(dto: AutenticacaoLoginDto): Observable<StandardResponse<AutenticacaoTokenDto>> {
+        return this.http.post<StandardResponse<AutenticacaoTokenDto>>(
+            `${ambiente.apiUrl}/autenticacao/login`,
+            dto,
+            comErroTratadoPelaTela(),
+        ).pipe(
+            tap((resposta) => {
+                if (resposta.sucesso && resposta.dados) {
+                    localStorage.setItem('access_token', resposta.dados.accessToken);
+                    this.sessao.definirUsuario(resposta.dados.usuario as unknown as UsuarioRecuperadoDto);
+                }
+            }),
+        );
+    }
 
-  logout(): void {
-    localStorage.removeItem('access_token');
-    this.sessao.limpar();
-    this.execucaoAtiva.limpar();
-    this.router.navigate(['/autenticacao']);
-  }
+    logout(): void {
+        localStorage.removeItem('access_token');
+        this.sessao.limpar();
+        this.execucaoAtiva.limpar();
+        this.router.navigate(['/autenticacao']);
+    }
 
-  /**
+    /**
    * Troca o usuário guardado no login pelo atual do servidor (P-062): o token dura dias, e uma mudança de tipo ou de nome
    * nesse intervalo não chegaria aos menus. O backend já confere o tipo atual em cada requisição, então aqui só a tela
    * alcança a verdade. Falha de rede deixa a sessão como está; 401 segue o redirecionamento global.
    */
-  atualizarSessao(): void {
-    const usuario = this.sessao.usuarioAtual();
-    if (!usuario || !this.estaAutenticado()) return;
+    atualizarSessao(): void {
+        const usuario = this.sessao.usuarioAtual();
+        if (!usuario || !this.estaAutenticado()) return;
 
-    this.http.get<StandardResponse<UsuarioRecuperadoDto>>(`${ambiente.apiUrl}/usuario/${usuario.id}`).subscribe({
-      next: (resposta) => {
-        // O usuário pode ter saído (ou trocado de conta) enquanto a resposta voltava.
-        if (resposta.sucesso && resposta.dados && this.sessao.id() === resposta.dados.id) this.sessao.definirUsuario(resposta.dados);
-      },
-      error: () => undefined,
-    });
-  }
+        this.http.get<StandardResponse<UsuarioRecuperadoDto>>(`${ambiente.apiUrl}/usuario/${usuario.id}`).subscribe({
+            next: (resposta) => {
+                // O usuário pode ter saído (ou trocado de conta) enquanto a resposta voltava.
+                if (resposta.sucesso && resposta.dados && this.sessao.id() === resposta.dados.id) this.sessao.definirUsuario(resposta.dados);
+            },
+            error: () => undefined,
+        });
+    }
 
-  estaAutenticado(): boolean {
-    return !!localStorage.getItem('access_token');
-  }
+    estaAutenticado(): boolean {
+        return !!localStorage.getItem('access_token');
+    }
 }

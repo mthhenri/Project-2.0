@@ -1,12 +1,12 @@
 import {
-  Component,
-  inject,
-  signal,
-  computed,
-  OnInit,
-  HostListener,
-  ViewChild,
-  effect,
+    Component,
+    inject,
+    signal,
+    computed,
+    OnInit,
+    HostListener,
+    ViewChild,
+    effect,
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormsModule } from '@angular/forms';
@@ -18,13 +18,13 @@ import { Select } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import {
-  PontoDiarioDto,
-  PontoMensalDto,
-  PontoDiaResumoDto,
-  PontoMensalConsultarDto,
-  UsuarioResumoDto,
-  TipoUsuarioStatusEnum,
-  hojeNoFuso,
+    PontoDiarioDto,
+    PontoMensalDto,
+    PontoDiaResumoDto,
+    PontoMensalConsultarDto,
+    UsuarioResumoDto,
+    TipoUsuarioStatusEnum,
+    hojeNoFuso,
 } from '@project20/shared';
 import { ambiente } from '../../../../../environments/environment';
 import { PontoService } from '../../services/ponto.service';
@@ -44,256 +44,256 @@ import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalho
 type ModoPonto = 'todos' | 'mensal';
 
 @Component({
-  selector: 'app-ponto',
-  standalone: true,
-  imports: [
-    RouterModule,
-    ReactiveFormsModule,
-    FormsModule,
-    ToggleSwitchModule,
-    DatePickerModule,
-    Select,
-    ButtonModule,
-    TooltipModule,
-    SkeletonListaComponent,
-    BarraRecargaComponent,
-    MinutosParaHorasPipe,
-    PontoResumoCardComponent,
-    PontoUsuarioCardComponent,
-    PontoMesDiaComponent,
-    PontoJustificativaDialogComponent,
-    PontoImpressaoComponent,
-  ],
-  templateUrl: './ponto.page.html',
-  styleUrl: './ponto.page.scss',
+    selector: 'app-ponto',
+    standalone: true,
+    imports: [
+        RouterModule,
+        ReactiveFormsModule,
+        FormsModule,
+        ToggleSwitchModule,
+        DatePickerModule,
+        Select,
+        ButtonModule,
+        TooltipModule,
+        SkeletonListaComponent,
+        BarraRecargaComponent,
+        MinutosParaHorasPipe,
+        PontoResumoCardComponent,
+        PontoUsuarioCardComponent,
+        PontoMesDiaComponent,
+        PontoJustificativaDialogComponent,
+        PontoImpressaoComponent,
+    ],
+    templateUrl: './ponto.page.html',
+    styleUrl: './ponto.page.scss',
 })
 export class PontoPage implements OnInit {
-  private readonly pontoService = inject(PontoService);
-  private readonly usuarioService = inject(UsuarioService);
-  private readonly formBuilder = inject(FormBuilder);
-  readonly sessao = inject(UsuarioSessaoService);
-  private readonly roteador = inject(Router);
+    private readonly pontoService = inject(PontoService);
+    private readonly usuarioService = inject(UsuarioService);
+    private readonly formBuilder = inject(FormBuilder);
+    readonly sessao = inject(UsuarioSessaoService);
+    private readonly roteador = inject(Router);
 
-  readonly hoje = hojeNoFuso(ambiente.fusoHorario);
+    readonly hoje = hojeNoFuso(ambiente.fusoHorario);
 
-  readonly formularioFiltros = this.formBuilder.group({
-    usuarioId: [null as number | null],
-    mesAno:    [this.hoje as Date],
-  });
+    readonly formularioFiltros = this.formBuilder.group({
+        usuarioId: [null as number | null],
+        mesAno:    [this.hoje as Date],
+    });
 
-  /** Gestor sem usuário filtrado → "todos hoje"; caso contrário → "mensal". */
-  readonly modo = signal<ModoPonto>(this.sessao.eGestor() ? 'todos' : 'mensal');
+    /** Gestor sem usuário filtrado → "todos hoje"; caso contrário → "mensal". */
+    readonly modo = signal<ModoPonto>(this.sessao.eGestor() ? 'todos' : 'mensal');
 
-  /** Mês em exibição, espelhado em signal para habilitar/desabilitar a navegação. */
-  readonly mesSelecionado = signal<Date>(this.hoje);
-  readonly visualizandoMesAtual = computed(() => {
-    const mes = this.mesSelecionado();
-    return mes.getFullYear() === this.hoje.getFullYear() && mes.getMonth() === this.hoje.getMonth();
-  });
+    /** Mês em exibição, espelhado em signal para habilitar/desabilitar a navegação. */
+    readonly mesSelecionado = signal<Date>(this.hoje);
+    readonly visualizandoMesAtual = computed(() => {
+        const mes = this.mesSelecionado();
+        return mes.getFullYear() === this.hoje.getFullYear() && mes.getMonth() === this.hoje.getMonth();
+    });
 
-  /** Visão "Equipe · hoje": só quem tem execução em andamento (filtro no cliente). */
-  readonly somenteAtivos = signal<boolean>(false);
+    /** Visão "Equipe · hoje": só quem tem execução em andamento (filtro no cliente). */
+    readonly somenteAtivos = signal<boolean>(false);
 
-  readonly carregando = signal<boolean>(false);
-  private readonly todosCarregado = signal<boolean>(false);
-  readonly pontosTodos = signal<PontoDiarioDto[]>([]);
-  readonly pontoMensal = signal<PontoMensalDto | null>(null);
-  readonly usuarios = signal<UsuarioResumoDto[]>([]);
+    readonly carregando = signal<boolean>(false);
+    private readonly todosCarregado = signal<boolean>(false);
+    readonly pontosTodos = signal<PontoDiarioDto[]>([]);
+    readonly pontoMensal = signal<PontoMensalDto | null>(null);
+    readonly usuarios = signal<UsuarioResumoDto[]>([]);
 
-  /** Sem nada do modo atual para mostrar: a carga vira esqueleto; senão, recarga com o conteúdo esmaecido. */
-  private readonly semDadosDoModo = computed(() =>
-    this.modo() === 'todos' ? !this.todosCarregado() : this.pontoMensal() === null,
-  );
-  readonly primeiraCarga = computed(() => this.carregando() && this.semDadosDoModo());
-  readonly recarregando = computed(() => this.carregando() && !this.semDadosDoModo());
-
-  /** Equipe ordenada com quem está trabalhando agora primeiro (ordem estável entre os demais). */
-  readonly equipeExibida = computed(() => {
-    const pontos = this.pontosTodos();
-    const ordenados = [...pontos].sort(
-      (a, b) => Number(this.trabalhandoAgora(b)) - Number(this.trabalhandoAgora(a)),
+    /** Sem nada do modo atual para mostrar: a carga vira esqueleto; senão, recarga com o conteúdo esmaecido. */
+    private readonly semDadosDoModo = computed(() =>
+        this.modo() === 'todos' ? !this.todosCarregado() : this.pontoMensal() === null,
     );
-    return this.somenteAtivos() ? ordenados.filter((ponto) => this.trabalhandoAgora(ponto)) : ordenados;
-  });
-  readonly totalPessoas = computed(() => this.pontosTodos().length);
-  readonly totalTrabalhando = computed(() => this.pontosTodos().filter((ponto) => this.trabalhandoAgora(ponto)).length);
+    readonly primeiraCarga = computed(() => this.carregando() && this.semDadosDoModo());
+    readonly recarregando = computed(() => this.carregando() && !this.semDadosDoModo());
 
-  /** Execução em andamento = alguma execução do dia sem `fimData`. */
-  trabalhandoAgora(ponto: PontoDiarioDto): boolean {
-    return ponto.execucoes.some((execucao) => execucao.fimData === null);
-  }
-
-  /** "Saldo até hoje": soma dos saldos dos dias até hoje — só faz sentido no mês corrente. */
-  readonly saldoAteHojeMinutos = computed(() => {
-    const mensal = this.pontoMensal();
-    if (!mensal || !this.visualizandoMesAtual()) return null;
-    const hojeIso = this.formatarData(this.hoje);
-    return mensal.dias
-      .filter((dia) => dia.data.slice(0, 10) <= hojeIso)
-      .reduce((soma, dia) => soma + dia.saldoMinutos, 0);
-  });
-
-  constructor() {
-    // Controles do mês não somem na visão equipe: só ficam desabilitados (cabeçalho estável).
-    effect(() => {
-      const controle = this.formularioFiltros.controls.mesAno;
-      if (this.modo() === 'mensal') controle.enable({ emitEvent: false });
-      else controle.disable({ emitEvent: false });
+    /** Equipe ordenada com quem está trabalhando agora primeiro (ordem estável entre os demais). */
+    readonly equipeExibida = computed(() => {
+        const pontos = this.pontosTodos();
+        const ordenados = [...pontos].sort(
+            (pontoDiarioDto, segundo) => Number(this.trabalhandoAgora(segundo)) - Number(this.trabalhandoAgora(pontoDiarioDto)),
+        );
+        return this.somenteAtivos() ? ordenados.filter((ponto) => this.trabalhandoAgora(ponto)) : ordenados;
     });
-  }
+    readonly totalPessoas = computed(() => this.pontosTodos().length);
+    readonly totalTrabalhando = computed(() => this.pontosTodos().filter((ponto) => this.trabalhandoAgora(ponto)).length);
 
-  ngOnInit(): void {
-    if (this.sessao.eGestor()) this.carregarUsuarios();
-    this.carregar();
-  }
-
-  /** Recarrega o modo atual ao voltar para a aba (ex.: após encerrar uma execução). */
-  @HostListener('document:visibilitychange')
-  aoVoltarParaAba(): void {
-    if (document.visibilityState === 'visible') this.carregar();
-  }
-
-  carregar(): void {
-    if (this.modo() === 'todos') {
-      this.carregarTodos();
-    } else {
-      this.carregarMensal();
+    /** Execução em andamento = alguma execução do dia sem `fimData`. */
+    trabalhandoAgora(ponto: PontoDiarioDto): boolean {
+        return ponto.execucoes.some((execucao) => execucao.fimData === null);
     }
-  }
 
-  aoMudarUsuario(): void {
-    if (!this.sessao.eGestor()) return;
-    const usuarioId = this.formularioFiltros.value.usuarioId ?? null;
-    this.modo.set(usuarioId ? 'mensal' : 'todos');
-    this.carregar();
-  }
-
-  /** Volta ao mês corrente. */
-  irParaHoje(): void {
-    this.formularioFiltros.patchValue({ mesAno: this.hoje });
-    this.aoMudarMes();
-  }
-
-  /** Abre o mensal de um usuário a partir do card da equipe (100% no cliente). */
-  abrirMensalDe(usuarioId: number): void {
-    this.formularioFiltros.patchValue({ usuarioId });
-    this.aoMudarUsuario();
-  }
-
-  /** Dialog de justificativa direto da linha do dia (ou do badge de uma justificativa existente). */
-  justificarDia(dia: PontoDiaResumoDto, usuarioId: number): void {
-    this.justificativaDialog?.abrir(usuarioId, this.mesSelecionado(), {
-      data: dia.data.slice(0, 10),
-      horasFaltantes: Math.max(0, -dia.saldoMinutos) / 60,
+    /** "Saldo até hoje": soma dos saldos dos dias até hoje — só faz sentido no mês corrente. */
+    readonly saldoAteHojeMinutos = computed(() => {
+        const mensal = this.pontoMensal();
+        if (!mensal || !this.visualizandoMesAtual()) return null;
+        const hojeIso = this.formatarData(this.hoje);
+        return mensal.dias
+            .filter((dia) => dia.data.slice(0, 10) <= hojeIso)
+            .reduce((soma, dia) => soma + dia.saldoMinutos, 0);
     });
-  }
 
-  /** Atalhos do mês (task 100): ← mês anterior, → próximo, T volta a hoje. Só no modo mensal. */
-  @HostListener('document:keydown', ['$event'])
-  aoTeclar(evento: KeyboardEvent): void {
-    if (this.modo() !== 'mensal' || evento.defaultPrevented) return;
-    if (evento.ctrlKey || evento.metaKey || evento.altKey || evento.shiftKey) return;
-    if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
+    constructor() {
+    // Controles do mês não somem na visão equipe: só ficam desabilitados (cabeçalho estável).
+        effect(() => {
+            const controle = this.formularioFiltros.controls.mesAno;
+            if (this.modo() === 'mensal') controle.enable({ emitEvent: false });
+            else controle.disable({ emitEvent: false });
+        });
+    }
 
-    const tecla = evento.key.toLowerCase();
-    if (tecla === 'arrowleft') this.retornarMes();
-    else if (tecla === 'arrowright') this.avancarMes();
-    else if (tecla === 't') this.irParaHoje();
-    else return;
-    evento.preventDefault();
-  }
+    ngOnInit(): void {
+        if (this.sessao.eGestor()) this.carregarUsuarios();
+        this.carregar();
+    }
 
-  irParaGerenciarUsuarios(): void {
-    this.roteador.navigate(['/usuario']);
-  }
+    /** Recarrega o modo atual ao voltar para a aba (ex.: após encerrar uma execução). */
+    @HostListener('document:visibilitychange')
+    aoVoltarParaAba(): void {
+        if (document.visibilityState === 'visible') this.carregar();
+    }
 
-  aoMudarMes(): void {
-    const mesAno = this.formularioFiltros.value.mesAno ?? this.hoje;
-    this.mesSelecionado.set(mesAno);
-    this.carregar();
-  }
+    carregar(): void {
+        if (this.modo() === 'todos') {
+            this.carregarTodos();
+        } else {
+            this.carregarMensal();
+        }
+    }
 
-  /** Avança um mês. Bloqueado quando já se está no mês atual (sem meses futuros). */
-  avancarMes(): void {
-    if (this.visualizandoMesAtual()) return;
-    this.deslocarMes(1);
-  }
+    aoMudarUsuario(): void {
+        if (!this.sessao.eGestor()) return;
+        const usuarioId = this.formularioFiltros.value.usuarioId ?? null;
+        this.modo.set(usuarioId ? 'mensal' : 'todos');
+        this.carregar();
+    }
 
-  /** Retorna um mês. Sempre disponível — não há limite para o passado. */
-  retornarMes(): void {
-    this.deslocarMes(-1);
-  }
+    /** Volta ao mês corrente. */
+    irParaHoje(): void {
+        this.formularioFiltros.patchValue({ mesAno: this.hoje });
+        this.aoMudarMes();
+    }
 
-  private deslocarMes(meses: number): void {
-    const atual = this.formularioFiltros.value.mesAno ?? this.hoje;
-    const nova = new Date(atual.getFullYear(), atual.getMonth() + meses, 1);
-    const limitada = nova > this.hoje ? this.hoje : nova;
-    this.formularioFiltros.patchValue({ mesAno: limitada });
-    this.aoMudarMes();
-  }
+    /** Abre o mensal de um usuário a partir do card da equipe (100% no cliente). */
+    abrirMensalDe(usuarioId: number): void {
+        this.formularioFiltros.patchValue({ usuarioId });
+        this.aoMudarUsuario();
+    }
 
-  formatarSaldo(saldoMinutos: number): string {
-    return formatarSaldoMinutos(saldoMinutos);
-  }
+    /** Dialog de justificativa direto da linha do dia (ou do badge de uma justificativa existente). */
+    justificarDia(dia: PontoDiaResumoDto, usuarioId: number): void {
+        this.justificativaDialog?.abrir(usuarioId, this.mesSelecionado(), {
+            data: dia.data.slice(0, 10),
+            horasFaltantes: Math.max(0, -dia.saldoMinutos) / 60,
+        });
+    }
 
-  nomeMes(mes: number): string {
-    const meses = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-    ];
-    return meses[mes - 1] ?? '';
-  }
+    /** Atalhos do mês (task 100): ← mês anterior, → próximo, T volta a hoje. Só no modo mensal. */
+    @HostListener('document:keydown', ['$event'])
+    aoTeclar(evento: KeyboardEvent): void {
+        if (this.modo() !== 'mensal' || evento.defaultPrevented) return;
+        if (evento.ctrlKey || evento.metaKey || evento.altKey || evento.shiftKey) return;
+        if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
 
-  private carregarTodos(): void {
-    this.carregando.set(true);
-    this.pontoService
-      .consultarTodos(this.formatarData(this.hoje))
-      .pipe(finalize(() => this.carregando.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.pontosTodos.set(resposta.dados);
-            this.todosCarregado.set(true);
-          }
-        },
-      });
-  }
+        const tecla = evento.key.toLowerCase();
+        if (tecla === 'arrowleft') this.retornarMes();
+        else if (tecla === 'arrowright') this.avancarMes();
+        else if (tecla === 't') this.irParaHoje();
+        else return;
+        evento.preventDefault();
+    }
 
-  private carregarMensal(): void {
-    const mesAno = this.formularioFiltros.value.mesAno ?? this.hoje;
-    const filtros: PontoMensalConsultarDto = {
-      ano: mesAno.getFullYear(),
-      mes: mesAno.getMonth() + 1,
-    };
+    irParaGerenciarUsuarios(): void {
+        this.roteador.navigate(['/usuario']);
+    }
 
-    const usuarioId = this.formularioFiltros.value.usuarioId ?? null;
-    if (this.sessao.eGestor() && usuarioId) filtros.usuarioId = usuarioId;
+    aoMudarMes(): void {
+        const mesAno = this.formularioFiltros.value.mesAno ?? this.hoje;
+        this.mesSelecionado.set(mesAno);
+        this.carregar();
+    }
 
-    this.carregando.set(true);
-    this.pontoService
-      .consultarMensal(filtros)
-      .pipe(finalize(() => this.carregando.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) this.pontoMensal.set(resposta.dados);
-        },
-      });
-  }
+    /** Avança um mês. Bloqueado quando já se está no mês atual (sem meses futuros). */
+    avancarMes(): void {
+        if (this.visualizandoMesAtual()) return;
+        this.deslocarMes(1);
+    }
 
-  private carregarUsuarios(): void {
-    this.usuarioService.listar({ status: TipoUsuarioStatusEnum.ATIVO, itensPorPagina: 100 }).subscribe({
-      next: (resposta) => {
-        if (resposta.sucesso && resposta.dados) this.usuarios.set(resposta.dados.itens);
-      },
-    });
-  }
+    /** Retorna um mês. Sempre disponível — não há limite para o passado. */
+    retornarMes(): void {
+        this.deslocarMes(-1);
+    }
 
-  @ViewChild('justificativaDialog') private justificativaDialog?: PontoJustificativaDialogComponent;
+    private deslocarMes(meses: number): void {
+        const atual = this.formularioFiltros.value.mesAno ?? this.hoje;
+        const nova = new Date(atual.getFullYear(), atual.getMonth() + meses, 1);
+        const limitada = nova > this.hoje ? this.hoje : nova;
+        this.formularioFiltros.patchValue({ mesAno: limitada });
+        this.aoMudarMes();
+    }
 
-  private formatarData(data: Date): string {
-    const ano = data.getFullYear();
-    const mes = String(data.getMonth() + 1).padStart(2, '0');
-    const dia = String(data.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
-  }
+    formatarSaldo(saldoMinutos: number): string {
+        return formatarSaldoMinutos(saldoMinutos);
+    }
+
+    nomeMes(mes: number): string {
+        const meses = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+        ];
+        return meses[mes - 1] ?? '';
+    }
+
+    private carregarTodos(): void {
+        this.carregando.set(true);
+        this.pontoService
+            .consultarTodos(this.formatarData(this.hoje))
+            .pipe(finalize(() => this.carregando.set(false)))
+            .subscribe({
+                next: (resposta) => {
+                    if (resposta.sucesso && resposta.dados) {
+                        this.pontosTodos.set(resposta.dados);
+                        this.todosCarregado.set(true);
+                    }
+                },
+            });
+    }
+
+    private carregarMensal(): void {
+        const mesAno = this.formularioFiltros.value.mesAno ?? this.hoje;
+        const filtros: PontoMensalConsultarDto = {
+            ano: mesAno.getFullYear(),
+            mes: mesAno.getMonth() + 1,
+        };
+
+        const usuarioId = this.formularioFiltros.value.usuarioId ?? null;
+        if (this.sessao.eGestor() && usuarioId) filtros.usuarioId = usuarioId;
+
+        this.carregando.set(true);
+        this.pontoService
+            .consultarMensal(filtros)
+            .pipe(finalize(() => this.carregando.set(false)))
+            .subscribe({
+                next: (resposta) => {
+                    if (resposta.sucesso && resposta.dados) this.pontoMensal.set(resposta.dados);
+                },
+            });
+    }
+
+    private carregarUsuarios(): void {
+        this.usuarioService.listar({ status: TipoUsuarioStatusEnum.ATIVO, itensPorPagina: 100 }).subscribe({
+            next: (resposta) => {
+                if (resposta.sucesso && resposta.dados) this.usuarios.set(resposta.dados.itens);
+            },
+        });
+    }
+
+    @ViewChild('justificativaDialog') private justificativaDialog?: PontoJustificativaDialogComponent;
+
+    private formatarData(data: Date): string {
+        const ano = data.getFullYear();
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const dia = String(data.getDate()).padStart(2, '0');
+        return `${ano}-${mes}-${dia}`;
+    }
 }

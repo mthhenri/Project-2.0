@@ -8,11 +8,11 @@ export const ARMAZENAMENTOS_DO_CHAT: readonly ArmazenamentoDoChat[] = ['opensear
 
 /** Lê `CHAT_ARMAZENAMENTO` (padrão `opensearch`); valor desconhecido derruba a subida com mensagem clara. */
 export function lerArmazenamentoDoChat(valor: string | undefined): ArmazenamentoDoChat {
-  const informado = valor?.trim().toLowerCase();
-  if (!informado) return 'opensearch';
-  const suportado = ARMAZENAMENTOS_DO_CHAT.find((armazenamento) => armazenamento === informado);
-  if (!suportado) {
-    throw new Error(`Armazenamento do chat não suportado: ${valor} (CHAT_ARMAZENAMENTO aceita ${ARMAZENAMENTOS_DO_CHAT.join(' ou ')})`);
-  }
-  return suportado;
+    const informado = valor?.trim().toLowerCase();
+    if (!informado) return 'opensearch';
+    const suportado = ARMAZENAMENTOS_DO_CHAT.find((armazenamento) => armazenamento === informado);
+    if (!suportado) {
+        throw new Error(`Armazenamento do chat não suportado: ${valor} (CHAT_ARMAZENAMENTO aceita ${ARMAZENAMENTOS_DO_CHAT.join(' ou ')})`);
+    }
+    return suportado;
 }

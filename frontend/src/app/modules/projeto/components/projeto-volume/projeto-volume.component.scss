@@ -1,118 +1,118 @@
 .projeto-volume {
-  &__navegacao {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
+    &__navegacao {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
 
-    p-selectbutton {
-      margin-right: 0.75rem;
+        p-selectbutton {
+            margin-right: 0.75rem;
+        }
     }
-  }
 
-  &__conteudo {
-    position: relative;
-  }
-
-  &__vazio {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 4rem 0;
-  }
-
-  &__cartao {
-    padding: 1rem 1.25rem 0.75rem;
-    background: var(--app-surface-0);
-    border: 1px solid var(--app-surface-200);
-    border-radius: 8px;
-  }
-
-  &__anual {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(28rem, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-
-  &__legenda {
-    list-style: none;
-    margin: 0 0 0.5rem;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
-    font-size: 0.8125rem;
-    color: var(--p-text-muted-color);
-
-    li {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
+    &__conteudo {
+        position: relative;
     }
-  }
 
-  &__legenda-cor {
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 3px;
-
-    // "Cor do projeto" não é uma cor só: um degradê de exemplo deixa claro que cada projeto usa a sua.
-    &--projeto {
-      background: linear-gradient(135deg, var(--p-primary-500), var(--p-green-500));
+    &__vazio {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 4rem 0;
     }
-  }
 
-  &__cabecalho-projeto {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
-  }
-
-  &__cor {
-    flex: 0 0 auto;
-    width: 0.5rem;
-    align-self: stretch;
-    border-radius: 4px;
-  }
-
-  &__identificacao {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  &__codigo {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--p-text-muted-color);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  &__nome {
-    font-weight: 600;
-    color: var(--p-text-color);
-    text-decoration: none;
-    overflow-wrap: anywhere;
-
-    &:hover,
-    &:focus-visible {
-      color: var(--p-primary-600);
-      text-decoration: underline;
+    &__cartao {
+        padding: 1rem 1.25rem 0.75rem;
+        background: var(--app-surface-0);
+        border: 1px solid var(--app-surface-200);
+        border-radius: 8px;
     }
-  }
 
-  &__esperado {
-    margin-left: auto;
-    font-size: 0.8125rem;
-    color: var(--p-text-muted-color);
-    white-space: nowrap;
-
-    &--vazio {
-      font-style: italic;
+    &__anual {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(28rem, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
     }
-  }
+
+    &__legenda {
+        list-style: none;
+        margin: 0 0 0.5rem;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem 1.25rem;
+        font-size: 0.8125rem;
+        color: var(--p-text-muted-color);
+
+        li {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+    }
+
+    &__legenda-cor {
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 3px;
+
+        // "Cor do projeto" não é uma cor só: um degradê de exemplo deixa claro que cada projeto usa a sua.
+        &--projeto {
+            background: linear-gradient(135deg, var(--p-primary-500), var(--p-green-500));
+        }
+    }
+
+    &__cabecalho-projeto {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    &__cor {
+        flex: 0 0 auto;
+        width: 0.5rem;
+        align-self: stretch;
+        border-radius: 4px;
+    }
+
+    &__identificacao {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    &__codigo {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--p-text-muted-color);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    &__nome {
+        font-weight: 600;
+        color: var(--p-text-color);
+        text-decoration: none;
+        overflow-wrap: anywhere;
+
+        &:hover,
+        &:focus-visible {
+            color: var(--p-primary-600);
+            text-decoration: underline;
+        }
+    }
+
+    &__esperado {
+        margin-left: auto;
+        font-size: 0.8125rem;
+        color: var(--p-text-muted-color);
+        white-space: nowrap;
+
+        &--vazio {
+            font-style: italic;
+        }
+    }
 }

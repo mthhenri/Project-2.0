@@ -7,8 +7,8 @@ import { AssistenteController } from './controllers/assistente.controller';
 import { AssistenteService } from './services/assistente.service';
 
 @Module({
-  imports: [IaModule, DemandaModule, IaCustoModule, PromptModule],
-  controllers: [AssistenteController],
-  providers: [AssistenteService],
+    imports: [IaModule, DemandaModule, IaCustoModule, PromptModule],
+    controllers: [AssistenteController],
+    providers: [AssistenteService],
 })
 export class AssistenteModule {}

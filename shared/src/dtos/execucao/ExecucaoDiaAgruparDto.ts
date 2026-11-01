@@ -1,5 +1,5 @@
 export class ExecucaoDiaAgruparDto {
-  usuarioId: number;
-  dataInicio: string;
-  dataFim: string;
+    usuarioId: number;
+    dataInicio: string;
+    dataFim: string;
 }

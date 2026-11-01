@@ -8,70 +8,70 @@ import { MENSAGEM_CARACTERES_PROIBIDOS, REGEX_SEM_CARACTERES_PROIBIDOS } from '.
  * (`yyyy-mm-dd`) para mover o trecho de dia. Informe só o que muda.
  */
 export class ProporCorrigirExecucaoDto {
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  execucaoId: number;
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    execucaoId: number;
 
-  @IsOptional()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/)
-  data?: string;
+    @IsOptional()
+    @Matches(/^\d{4}-\d{2}-\d{2}$/)
+    data?: string;
 
-  @IsOptional()
-  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
-  horaInicio?: string;
+    @IsOptional()
+    @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+    horaInicio?: string;
 
-  @IsOptional()
-  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
-  horaFim?: string;
+    @IsOptional()
+    @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+    horaFim?: string;
 
-  @IsOptional()
-  @IsString()
-  @MinLength(3)
-  @MaxLength(1000)
-  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
-  descricao?: string;
+    @IsOptional()
+    @IsString()
+    @MinLength(3)
+    @MaxLength(1000)
+    @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
+    descricao?: string;
 }
 
 /** Os dados guardados na proposta: a entrada, o novo período em instantes (ISO), o de antes (para o desfazer) e os textos do cartão. */
 export class PropostaCorrigirExecucaoDadosDto extends ProporCorrigirExecucaoDto {
-  /** ISO 8601 do período novo. `novoFimData` é nulo se a execução segue em andamento. */
-  @IsString()
-  novoInicioData: string;
+    /** ISO 8601 do período novo. `novoFimData` é nulo se a execução segue em andamento. */
+    @IsString()
+    novoInicioData: string;
 
-  @IsOptional()
-  @IsString()
-  novoFimData?: string | null;
+    @IsOptional()
+    @IsString()
+    novoFimData?: string | null;
 
-  /** Como a execução estava antes da proposta. */
-  @IsString()
-  inicioAnteriorData: string;
+    /** Como a execução estava antes da proposta. */
+    @IsString()
+    inicioAnteriorData: string;
 
-  @IsOptional()
-  @IsString()
-  fimAnteriorData?: string | null;
+    @IsOptional()
+    @IsString()
+    fimAnteriorData?: string | null;
 
-  @IsOptional()
-  @IsString()
-  descricaoAnterior?: string;
+    @IsOptional()
+    @IsString()
+    descricaoAnterior?: string;
 
-  @IsOptional()
-  @IsString()
-  periodoAnteriorTexto?: string;
+    @IsOptional()
+    @IsString()
+    periodoAnteriorTexto?: string;
 
-  @IsOptional()
-  @IsString()
-  periodoNovoTexto?: string;
+    @IsOptional()
+    @IsString()
+    periodoNovoTexto?: string;
 
-  @IsOptional()
-  @IsNumber()
-  duracaoNovaMinutos?: number | null;
+    @IsOptional()
+    @IsNumber()
+    duracaoNovaMinutos?: number | null;
 
-  @IsOptional()
-  @IsString()
-  atividadeNome?: string;
+    @IsOptional()
+    @IsString()
+    atividadeNome?: string;
 
-  @IsOptional()
-  @IsString()
-  demandaNome?: string;
+    @IsOptional()
+    @IsString()
+    demandaNome?: string;
 }

@@ -3,6 +3,6 @@
  * demandas; o desenvolvedor, as dos projetos em que tem ao menos uma linha em `demanda_usuario` (SYSTEM.SPEC.md §14).
  */
 export class DemandaDocumentacaoListarDto {
-  usuarioId: number;
-  todosOsProjetos: boolean;
+    usuarioId: number;
+    todosOsProjetos: boolean;
 }

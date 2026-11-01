@@ -1,4 +1,4 @@
 export interface PlanoProjetoAtribuidoDto {
-  id: number;
-  projetoId: number;
+    id: number;
+    projetoId: number;
 }

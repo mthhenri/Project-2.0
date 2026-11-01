@@ -1,3 +1,3 @@
 export class ProjetoRecuperarDto {
-  id: number;
+    id: number;
 }

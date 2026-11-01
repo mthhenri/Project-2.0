@@ -8,22 +8,22 @@ import { TagResumoDto } from '@project20/shared';
  * Análogo: o chip do cabeçalho da demanda (`demanda-tags-cabecalho`), que mostra todas e edita.
  */
 @Component({
-  selector: 'app-tag-lista',
-  standalone: true,
-  imports: [TooltipModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.tag-lista--compacto]': 'compacto()' },
-  templateUrl: './tag-lista.component.html',
-  styleUrl: './tag-lista.component.scss',
+    selector: 'app-tag-lista',
+    standalone: true,
+    imports: [TooltipModule],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    host: { '[class.tag-lista--compacto]': 'compacto()' },
+    templateUrl: './tag-lista.component.html',
+    styleUrl: './tag-lista.component.scss',
 })
 export class TagListaComponent {
-  readonly tags = input.required<readonly TagResumoDto[]>();
-  /** Quantas aparecem antes do "+N". */
-  readonly maximo = input(3);
-  /** Chip mais estreito, para coluna de tabela que não tem folga. */
-  readonly compacto = input(false);
+    readonly tags = input.required<readonly TagResumoDto[]>();
+    /** Quantas aparecem antes do "+N". */
+    readonly maximo = input(3);
+    /** Chip mais estreito, para coluna de tabela que não tem folga. */
+    readonly compacto = input(false);
 
-  readonly visiveis = computed(() => this.tags().slice(0, this.maximo()));
-  readonly ocultas = computed(() => this.tags().slice(this.maximo()));
-  readonly nomesOcultos = computed(() => this.ocultas().map((tag) => tag.nome).join(', '));
+    readonly visiveis = computed(() => this.tags().slice(0, this.maximo()));
+    readonly ocultas = computed(() => this.tags().slice(this.maximo()));
+    readonly nomesOcultos = computed(() => this.ocultas().map((tag) => tag.nome).join(', '));
 }

@@ -9,10 +9,10 @@ export type EstadoDoCheckin = 'CARREGANDO' | 'EM_ANDAMENTO' | 'SEM_EXECUCAO' | '
  * check-in (a execução foi pausada); se os check-ins foram suspensos (reunião), pode fechar.
  */
 export function decidirEstado(situacao: CheckinSituacaoConsultadaDto, execucaoDaAbertura: number | null): EstadoDoCheckin {
-  if (situacao.suspensao.suspenso) return 'SUSPENSO';
-  if (!situacao.haCheckin || !situacao.execucao) return execucaoDaAbertura === null ? 'SEM_EXECUCAO' : 'REGISTRADO';
-  if (execucaoDaAbertura !== null && situacao.execucao.id !== execucaoDaAbertura) return 'REGISTRADO';
-  return 'EM_ANDAMENTO';
+    if (situacao.suspensao.suspenso) return 'SUSPENSO';
+    if (!situacao.haCheckin || !situacao.execucao) return execucaoDaAbertura === null ? 'SEM_EXECUCAO' : 'REGISTRADO';
+    if (execucaoDaAbertura !== null && situacao.execucao.id !== execucaoDaAbertura) return 'REGISTRADO';
+    return 'EM_ANDAMENTO';
 }
 
 /**
@@ -20,13 +20,13 @@ export function decidirEstado(situacao: CheckinSituacaoConsultadaDto, execucaoDa
  * suspensos. Com a IA desligada ou fora do ar ela **não** trava a tela (sem IA não há conversa; o fallback é da task 157).
  */
 export function deveMostrarJanelinha(situacao: CheckinSituacaoConsultadaDto | null, estadoDaIa: EstadoIaEnum | null): boolean {
-  if (!situacao || !situacao.disparado || !situacao.haCheckin || situacao.suspensao.suspenso) return false;
-  return estadoDaIa === null || estadoDaIa === EstadoIaEnum.NO_AR;
+    if (!situacao || !situacao.disparado || !situacao.haCheckin || situacao.suspensao.suspenso) return false;
+    return estadoDaIa === null || estadoDaIa === EstadoIaEnum.NO_AR;
 }
 
 /** Em quanto tempo (ms) a janelinha deve conferir a situação para aparecer na hora do horário sorteado, ou `null` se não há horário. */
 export function esperaAteOCheckin(situacao: CheckinSituacaoConsultadaDto | null, agora: number): number | null {
-  if (!situacao?.proximoCheckinData || situacao.disparado) return null;
-  const alvo = new Date(situacao.proximoCheckinData).getTime();
-  return Math.max(0, alvo - agora);
+    if (!situacao?.proximoCheckinData || situacao.disparado) return null;
+    const alvo = new Date(situacao.proximoCheckinData).getTime();
+    return Math.max(0, alvo - agora);
 }

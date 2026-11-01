@@ -1,3 +1,3 @@
 export class UsuarioRestaurarDto {
-  id: number;
+    id: number;
 }

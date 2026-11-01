@@ -1,4 +1,4 @@
 export class DemandaMembroInternoRemoverDto {
-  demandaId: number;
-  usuarioId: number;
+    demandaId: number;
+    usuarioId: number;
 }

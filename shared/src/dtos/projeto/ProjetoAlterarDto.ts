@@ -2,36 +2,36 @@ import { IsOptional, IsString, MinLength, Matches, IsEnum, IsDateString } from '
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoProjetoStatusEnum } from '../../enums/tipo-projeto-status.enum';
 import {
-  REGEX_SEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS,
+    REGEX_SEM_CARACTERES_PROIBIDOS,
+    MENSAGEM_CARACTERES_PROIBIDOS,
 } from '../../validators/caracteres-proibidos.validator';
 
 export class ProjetoAlterarDto {
-  @ApiPropertyOptional({ example: 'Sistema de Gestão v2' })
-  @IsOptional()
-  @IsString()
-  @MinLength(3)
-  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
-  nome?: string;
+    @ApiPropertyOptional({ example: 'Sistema de Gestão v2' })
+    @IsOptional()
+    @IsString()
+    @MinLength(3)
+    @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
+    nome?: string;
 
-  @ApiPropertyOptional({ example: '#f59e0b' })
-  @IsOptional()
-  @IsString()
-  @Matches(/^#[0-9A-Fa-f]{6}$/)
-  cor?: string;
+    @ApiPropertyOptional({ example: '#f59e0b' })
+    @IsOptional()
+    @IsString()
+    @Matches(/^#[0-9A-Fa-f]{6}$/)
+    cor?: string;
 
-  @ApiPropertyOptional({ enum: TipoProjetoStatusEnum })
-  @IsOptional()
-  @IsEnum(TipoProjetoStatusEnum)
-  status?: TipoProjetoStatusEnum;
+    @ApiPropertyOptional({ enum: TipoProjetoStatusEnum })
+    @IsOptional()
+    @IsEnum(TipoProjetoStatusEnum)
+    status?: TipoProjetoStatusEnum;
 
-  @ApiPropertyOptional({ example: '2026-01-01' })
-  @IsOptional()
-  @IsDateString()
-  inicioData?: string;
+    @ApiPropertyOptional({ example: '2026-01-01' })
+    @IsOptional()
+    @IsDateString()
+    inicioData?: string;
 
-  @ApiPropertyOptional({ example: '2026-12-31' })
-  @IsOptional()
-  @IsDateString()
-  previsaoFimData?: string;
+    @ApiPropertyOptional({ example: '2026-12-31' })
+    @IsOptional()
+    @IsDateString()
+    previsaoFimData?: string;
 }

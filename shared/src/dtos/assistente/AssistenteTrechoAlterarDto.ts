@@ -8,31 +8,31 @@ import { PlanoAbaEnum } from '../../enums/plano-aba.enum';
  * tipo de texto. A chamada não grava nada: devolve o bloco com só a seleção alterada. O complemento `Trecho` precede o verbo.
  */
 export class AssistenteTrechoAlterarDto {
-  @ApiProperty({ example: 12, description: 'A demanda do texto: a permissão é a de quem pode editar aquela aba dela.' })
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  demandaId: number;
+    @ApiProperty({ example: 12, description: 'A demanda do texto: a permissão é a de quem pode editar aquela aba dela.' })
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    demandaId: number;
 
-  @ApiProperty({ enum: PlanoAbaEnum, example: PlanoAbaEnum.DESCRICAO_TECNICA })
-  @IsEnum(PlanoAbaEnum)
-  aba: PlanoAbaEnum;
+    @ApiProperty({ enum: PlanoAbaEnum, example: PlanoAbaEnum.DESCRICAO_TECNICA })
+    @IsEnum(PlanoAbaEnum)
+    aba: PlanoAbaEnum;
 
-  @ApiProperty({ example: 'O sistema deve **exportar o relatório** em PDF.' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(8000)
-  bloco: string;
+    @ApiProperty({ example: 'O sistema deve **exportar o relatório** em PDF.' })
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(8000)
+    bloco: string;
 
-  @ApiProperty({ example: 'exportar' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(8000)
-  selecao: string;
+    @ApiProperty({ example: 'exportar' })
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(8000)
+    selecao: string;
 
-  @ApiProperty({ example: 'trocar por "gerar"' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(2000)
-  pedido: string;
+    @ApiProperty({ example: 'trocar por "gerar"' })
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(2000)
+    pedido: string;
 }

@@ -33,121 +33,121 @@ const LIMITE_DE_ATIVIDADES = 100;
  * visualizador de Markdown, abas).
  */
 @Component({
-  selector: 'app-chat-demanda-leitura',
-  standalone: true,
-  imports: [
-    ButtonModule,
-    SkeletonModule,
-    TabsModule,
-    TooltipModule,
-    MarkdownVisualizadorComponent,
-    AvisoPedidoDoClienteComponent,
-    PadPainelComponent,
-    TempoExibicaoPipe,
-    DemandaBarraHorasComponent,
-    DemandaStatusMarcaComponent,
-  ],
-  templateUrl: './demanda-leitura.component.html',
-  styleUrl: './demanda-leitura.component.scss',
+    selector: 'app-chat-demanda-leitura',
+    standalone: true,
+    imports: [
+        ButtonModule,
+        SkeletonModule,
+        TabsModule,
+        TooltipModule,
+        MarkdownVisualizadorComponent,
+        AvisoPedidoDoClienteComponent,
+        PadPainelComponent,
+        TempoExibicaoPipe,
+        DemandaBarraHorasComponent,
+        DemandaStatusMarcaComponent,
+    ],
+    templateUrl: './demanda-leitura.component.html',
+    styleUrl: './demanda-leitura.component.scss',
 })
 export class DemandaLeituraComponent {
-  private readonly demandaService = inject(DemandaService);
-  private readonly atividadeService = inject(AtividadeService);
-  private readonly roteador = inject(Router);
-  private readonly pad = inject(PadService);
-  readonly sessao = inject(UsuarioSessaoService);
-  /** Itens de tarefa em aberto nas Pendências, o número ao lado do nome da aba Anotações. */
-  readonly pendencias = this.pad.pendenciasEmAberto;
+    private readonly demandaService = inject(DemandaService);
+    private readonly atividadeService = inject(AtividadeService);
+    private readonly roteador = inject(Router);
+    private readonly pad = inject(PadService);
+    readonly sessao = inject(UsuarioSessaoService);
+    /** Itens de tarefa em aberto nas Pendências, o número ao lado do nome da aba Anotações. */
+    readonly pendencias = this.pad.pendenciasEmAberto;
 
-  readonly demandaId = input.required<number>();
-  /** Voltar para a lista de demandas. */
-  readonly voltar = output<void>();
-  /** "Planejar com a IA": a página do chat troca para o modo planejamento. */
-  readonly planejar = output<void>();
+    readonly demandaId = input.required<number>();
+    /** Voltar para a lista de demandas. */
+    readonly voltar = output<void>();
+    /** "Planejar com a IA": a página do chat troca para o modo planejamento. */
+    readonly planejar = output<void>();
 
-  readonly TipoStatus = TipoAtividadeStatusEnum;
-  readonly rotuloStatus = ROTULO_STATUS_DEMANDA;
+    readonly TipoStatus = TipoAtividadeStatusEnum;
+    readonly rotuloStatus = ROTULO_STATUS_DEMANDA;
 
-  readonly demanda = signal<DemandaRecuperadaDto | null>(null);
-  readonly atividades = signal<AtividadeResumoDto[]>([]);
-  readonly carregando = signal(true);
-  readonly erro = signal(false);
-  /** A demanda abre nas Anotações (o pad, decisão do autor de 2026-10-27); o Checklist é a aba ao lado. */
-  readonly aba = signal<AbaDemandaLeitura>('anotacoes');
-  /** A aba em que a demanda abre: a página pede o Checklist quando é a demanda em que a pessoa está executando. */
-  readonly abaInicial = input<AbaDemandaLeitura>('anotacoes');
+    readonly demanda = signal<DemandaRecuperadaDto | null>(null);
+    readonly atividades = signal<AtividadeResumoDto[]>([]);
+    readonly carregando = signal(true);
+    readonly erro = signal(false);
+    /** A demanda abre nas Anotações (o pad, decisão do autor de 2026-10-27); o Checklist é a aba ao lado. */
+    readonly aba = signal<AbaDemandaLeitura>('anotacoes');
+    /** A aba em que a demanda abre: a página pede o Checklist quando é a demanda em que a pessoa está executando. */
+    readonly abaInicial = input<AbaDemandaLeitura>('anotacoes');
 
-  /** O checklist na ordem de leitura (desenvolvidas, a que roda, as em aberto). */
-  readonly checklist = computed<ItemDoChecklist[]>(() =>
-    ordenarChecklist(
-      this.atividades().map((atividade) => ({
-        id: atividade.id,
-        nome: atividade.nome,
-        status: atividade.status,
-        emExecucao: atividade.execucaoAtivaId !== null,
-        minutosExecutados: atividade.totalMinutosExecutados,
-        totalExecucoes: atividade.totalExecucoes,
-      })),
-    ),
-  );
-  readonly minutosExecutados = computed(() => this.atividades().reduce((soma, atividade) => soma + atividade.totalMinutosExecutados, 0));
-  readonly desenvolvidas = computed(() => this.atividades().filter((atividade) => atividade.status === TipoAtividadeStatusEnum.DESENVOLVIDA).length);
+    /** O checklist na ordem de leitura (desenvolvidas, a que roda, as em aberto). */
+    readonly checklist = computed<ItemDoChecklist[]>(() =>
+        ordenarChecklist(
+            this.atividades().map((atividade) => ({
+                id: atividade.id,
+                nome: atividade.nome,
+                status: atividade.status,
+                emExecucao: atividade.execucaoAtivaId !== null,
+                minutosExecutados: atividade.totalMinutosExecutados,
+                totalExecucoes: atividade.totalExecucoes,
+            })),
+        ),
+    );
+    readonly minutosExecutados = computed(() => this.atividades().reduce((soma, atividade) => soma + atividade.totalMinutosExecutados, 0));
+    readonly desenvolvidas = computed(() => this.atividades().filter((atividade) => atividade.status === TipoAtividadeStatusEnum.DESENVOLVIDA).length);
 
-  /** A aba que vale. */
-  readonly abaAtiva = computed<AbaDemandaLeitura>(() => this.aba());
+    /** A aba que vale. */
+    readonly abaAtiva = computed<AbaDemandaLeitura>(() => this.aba());
 
-  constructor() {
-    effect(() => {
-      const id = this.demandaId();
-      untracked(() => this.carregar(id));
-    });
-    // O pad é o da própria pessoa e o estado é o mesmo do drawer da barra superior; ao sair, o que foi digitado é gravado.
-    effect(() => {
-      const usuarioId = this.sessao.id();
-      if (usuarioId) untracked(() => this.pad.garantirCarregado(usuarioId, this.sessao.nomeCompleto() ?? ''));
-    });
-    inject(DestroyRef).onDestroy(() => this.pad.salvar());
-  }
+    constructor() {
+        effect(() => {
+            const id = this.demandaId();
+            untracked(() => this.carregar(id));
+        });
+        // O pad é o da própria pessoa e o estado é o mesmo do drawer da barra superior; ao sair, o que foi digitado é gravado.
+        effect(() => {
+            const usuarioId = this.sessao.id();
+            if (usuarioId) untracked(() => this.pad.garantirCarregado(usuarioId, this.sessao.nomeCompleto() ?? ''));
+        });
+        inject(DestroyRef).onDestroy(() => this.pad.salvar());
+    }
 
-  carregar(id: number = this.demandaId()): void {
-    this.carregando.set(true);
-    this.erro.set(false);
-    this.aba.set(this.abaInicial());
-    this.demanda.set(null);
-    this.atividades.set([]);
-    this.demandaService.recuperar(id).subscribe({
-      next: (resposta) => {
-        if (id !== this.demandaId()) return;
-        this.demanda.set(resposta.dados ?? null);
-        this.carregando.set(false);
-        this.carregarAtividades(id);
-      },
-      error: () => {
-        if (id !== this.demandaId()) return;
-        this.erro.set(true);
-        this.carregando.set(false);
-      },
-    });
-  }
+    carregar(id: number = this.demandaId()): void {
+        this.carregando.set(true);
+        this.erro.set(false);
+        this.aba.set(this.abaInicial());
+        this.demanda.set(null);
+        this.atividades.set([]);
+        this.demandaService.recuperar(id).subscribe({
+            next: (resposta) => {
+                if (id !== this.demandaId()) return;
+                this.demanda.set(resposta.dados ?? null);
+                this.carregando.set(false);
+                this.carregarAtividades(id);
+            },
+            error: () => {
+                if (id !== this.demandaId()) return;
+                this.erro.set(true);
+                this.carregando.set(false);
+            },
+        });
+    }
 
-  private carregarAtividades(id: number): void {
-    this.atividadeService.listar({ demandaId: id, itensPorPagina: LIMITE_DE_ATIVIDADES }).subscribe({
-      next: (resposta) => {
-        if (id === this.demandaId()) this.atividades.set(resposta.dados?.itens ?? []);
-      },
-    });
-  }
+    private carregarAtividades(id: number): void {
+        this.atividadeService.listar({ demandaId: id, itensPorPagina: LIMITE_DE_ATIVIDADES }).subscribe({
+            next: (resposta) => {
+                if (id === this.demandaId()) this.atividades.set(resposta.dados?.itens ?? []);
+            },
+        });
+    }
 
-  textoDaAba(): string {
-    const demanda = this.demanda();
-    if (!demanda) return '';
-    const aba = this.abaAtiva();
-    return (aba === 'tecnica' ? demanda.descricaoTecnica : aba === 'cliente' ? demanda.descricaoCliente : aba === 'documentacao' ? demanda.documentacao : '') ?? '';
-  }
+    textoDaAba(): string {
+        const demanda = this.demanda();
+        if (!demanda) return '';
+        const aba = this.abaAtiva();
+        return (aba === 'tecnica' ? demanda.descricaoTecnica : aba === 'cliente' ? demanda.descricaoCliente : aba === 'documentacao' ? demanda.documentacao : '') ?? '';
+    }
 
-  /** "Editar" leva à tela de Demandas do projeto: o chat não edita a demanda. */
-  editar(): void {
-    const demanda = this.demanda();
-    if (demanda) void this.roteador.navigate(['/demanda'], { queryParams: { projetoId: demanda.projetoId } });
-  }
+    /** "Editar" leva à tela de Demandas do projeto: o chat não edita a demanda. */
+    editar(): void {
+        const demanda = this.demanda();
+        if (demanda) void this.roteador.navigate(['/demanda'], { queryParams: { projetoId: demanda.projetoId } });
+    }
 }

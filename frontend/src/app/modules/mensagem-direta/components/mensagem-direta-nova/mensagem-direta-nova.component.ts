@@ -12,27 +12,27 @@ import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensage
 
 /** Escolher com quem conversar: todas as pessoas ativas, com a presença. A lista vem de `GET /mensagem-direta/pessoas` (qualquer usuário). */
 @Component({
-  selector: 'app-mensagem-direta-nova',
-  standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TooltipModule, MensagemDiretaAvatarComponent],
-  templateUrl: './mensagem-direta-nova.component.html',
-  styleUrl: './mensagem-direta-nova.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-mensagem-direta-nova',
+    standalone: true,
+    imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TooltipModule, MensagemDiretaAvatarComponent],
+    templateUrl: './mensagem-direta-nova.component.html',
+    styleUrl: './mensagem-direta-nova.component.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MensagemDiretaNovaComponent {
-  protected readonly estado = inject(MensagemDiretaEstadoService);
+    protected readonly estado = inject(MensagemDiretaEstadoService);
 
-  readonly controleBusca = new FormControl('', { nonNullable: true });
-  private readonly texto = toSignal(this.controleBusca.valueChanges, { initialValue: '' });
-  protected readonly rotuloTipo = rotuloTipoUsuario;
+    readonly controleBusca = new FormControl('', { nonNullable: true });
+    private readonly texto = toSignal(this.controleBusca.valueChanges, { initialValue: '' });
+    protected readonly rotuloTipo = rotuloTipoUsuario;
 
-  protected readonly pessoas = computed(() => filtrarPessoasPorNome(this.estado.pessoas() ?? [], this.texto()));
+    protected readonly pessoas = computed(() => filtrarPessoasPorNome(this.estado.pessoas() ?? [], this.texto()));
 
-  protected voltar(): void {
-    this.estado.visao.set('LISTA');
-  }
+    protected voltar(): void {
+        this.estado.visao.set('LISTA');
+    }
 
-  protected escolher(usuarioId: number, nome: string): void {
-    void this.estado.abrirConversa(usuarioId, nome);
-  }
+    protected escolher(usuarioId: number, nome: string): void {
+        void this.estado.abrirConversa(usuarioId, nome);
+    }
 }

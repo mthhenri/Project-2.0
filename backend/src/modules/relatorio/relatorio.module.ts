@@ -10,18 +10,18 @@ import { FerramentaIaRegistro } from '../ferramenta-ia/services/ferramenta-ia.re
 import { ConsultarRelatorioDeExecucoesFerramenta } from './ferramentas/consultar-relatorio-de-execucoes.ferramenta';
 
 @Module({
-  imports:     [ExecucaoModule, ProjetoModule, IaModule, PromptModule, FerramentaIaModule],
-  controllers: [RelatorioController],
-  providers:   [RelatorioService, ConsultarRelatorioDeExecucoesFerramenta],
+    imports:     [ExecucaoModule, ProjetoModule, IaModule, PromptModule, FerramentaIaModule],
+    controllers: [RelatorioController],
+    providers:   [RelatorioService, ConsultarRelatorioDeExecucoesFerramenta],
 })
 export class RelatorioModule implements OnModuleInit {
-  constructor(
-    private readonly registroDeFerramentas: FerramentaIaRegistro,
-    private readonly consultarRelatorioDeExecucoes: ConsultarRelatorioDeExecucoesFerramenta,
-  ) {}
+    constructor(
+        private readonly registroDeFerramentas: FerramentaIaRegistro,
+        private readonly consultarRelatorioDeExecucoes: ConsultarRelatorioDeExecucoesFerramenta,
+    ) {}
 
-  /** A ferramenta de IA do relatório se registra aqui (só o gestor a vê). */
-  onModuleInit(): void {
-    this.registroDeFerramentas.registrar(this.consultarRelatorioDeExecucoes);
-  }
+    /** A ferramenta de IA do relatório se registra aqui (só o gestor a vê). */
+    onModuleInit(): void {
+        this.registroDeFerramentas.registrar(this.consultarRelatorioDeExecucoes);
+    }
 }

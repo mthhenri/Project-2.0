@@ -28,295 +28,295 @@ import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalho
 const CHAVE_FILTROS = 'usuario.filtros';
 
 interface FiltrosPersistidos {
-  tipo: TipoUsuarioEnum | null;
-  status: TipoUsuarioStatusEnum | null;
+    tipo: TipoUsuarioEnum | null;
+    status: TipoUsuarioStatusEnum | null;
 }
 
 @Component({
-  selector: 'app-usuario-listagem',
-  standalone: true,
-  imports: [
-    SkeletonListaComponent,
-    BarraRecargaComponent,
-    FormsModule,
-    ReactiveFormsModule,
-    TableModule,
-    ButtonModule,
-    InputTextModule,
-    SelectButtonModule,
-    ToggleSwitchModule,
-    Tag,
-    TooltipModule,
-    UsuarioCartaoComponent,
-    UsuarioAnotacoesDialogComponent,
-    UsuarioFormularioDialogComponent,
-    UsuarioSenhaDialogComponent,
-  ],
-  templateUrl: './usuario-listagem.page.html',
-  styleUrl: './usuario-listagem.page.scss',
+    selector: 'app-usuario-listagem',
+    standalone: true,
+    imports: [
+        SkeletonListaComponent,
+        BarraRecargaComponent,
+        FormsModule,
+        ReactiveFormsModule,
+        TableModule,
+        ButtonModule,
+        InputTextModule,
+        SelectButtonModule,
+        ToggleSwitchModule,
+        Tag,
+        TooltipModule,
+        UsuarioCartaoComponent,
+        UsuarioAnotacoesDialogComponent,
+        UsuarioFormularioDialogComponent,
+        UsuarioSenhaDialogComponent,
+    ],
+    templateUrl: './usuario-listagem.page.html',
+    styleUrl: './usuario-listagem.page.scss',
 })
 export class UsuarioListagemPage implements OnInit {
-  private readonly usuarioService = inject(UsuarioService);
-  readonly sessao = inject(UsuarioSessaoService);
-  /** Os rótulos e as larguras da tabela real (a coluna Anotações só existe para o gestor), para o esqueleto não parecer outra tela. */
-  readonly esqueleto = computed(() =>
-    montarEsqueletoDeTabela([
-      { rotulo: 'Usuário', peso: 248 },
-      { rotulo: 'Cargo', peso: 218 },
-      { rotulo: 'Tipo', peso: 176 },
-      { rotulo: 'Status', peso: 160 },
-      ...(this.sessao.eGestor() ? [{ rotulo: 'Anotações', peso: 99 }] : []),
-      { rotulo: '', peso: 128 },
-    ]),
-  );
-  private readonly desfazerService = inject(DesfazerService);
-  private readonly formBuilder = inject(FormBuilder);
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-
-  private readonly campoBusca = viewChild<ElementRef<HTMLInputElement>>('campoBusca');
-  private readonly anotacoesDialog = viewChild.required(UsuarioAnotacoesDialogComponent);
-
-  readonly formularioFiltros = this.formBuilder.group({ busca: [''] });
-  readonly tipoFiltro = signal<TipoUsuarioEnum | null>(null);
-  readonly statusFiltro = signal<TipoUsuarioStatusEnum | null>(null);
-  private readonly termoBusca = signal<string>('');
-  readonly filtroAtivo = computed(() => !!this.tipoFiltro() || !!this.statusFiltro() || !!this.termoBusca().trim());
-
-  readonly usuarios = signal<UsuarioResumoDto[]>([]);
-  readonly totalRegistros = signal<number>(0);
-  readonly carregando = signal<boolean>(false);
-  readonly jaCarregou = signal<boolean>(false);
-  readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
-  readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
-  readonly paginaAtual = signal<number>(1);
-  readonly itensPorPagina = signal<number>(10);
-
-  readonly tiposOpcoes = [
-    { label: 'Todos', value: null },
-    { label: 'Desenvolvedores', value: TipoUsuarioEnum.DESENVOLVEDOR },
-    { label: 'Gestores', value: TipoUsuarioEnum.GESTOR },
-    { label: 'Administradores', value: TipoUsuarioEnum.ADMINISTRADOR },
-  ];
-
-  readonly statusOpcoes = [
-    { label: 'Todos', value: null },
-    { label: 'Ativos', value: TipoUsuarioStatusEnum.ATIVO },
-    { label: 'Inativos', value: TipoUsuarioStatusEnum.INATIVO },
-  ];
-
-  ngOnInit(): void {
-    const filtrosSalvos = this.lerFiltrosPersistidos();
-    this.tipoFiltro.set(filtrosSalvos.tipo);
-    this.statusFiltro.set(filtrosSalvos.status);
-
-    this.formularioFiltros.controls.busca.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe((busca) => {
-        this.termoBusca.set(busca ?? '');
-        this.aoMudarFiltro();
-      });
-
-    this.buscarUsuarios();
-    this.abrirAnotacoesDoLink();
-  }
-
-  /** Deep-link `/usuario/:id/anotacoes` → `/usuario?anotacoes=:id`: abre o drawer e limpa o parâmetro. */
-  private abrirAnotacoesDoLink(): void {
-    const usuarioId = Number(this.route.snapshot.queryParamMap.get('anotacoes'));
-    if (!usuarioId) return;
-    this.anotacoesDialog().abrir(usuarioId);
-    this.router.navigate([], { queryParams: { anotacoes: null }, queryParamsHandling: 'merge', replaceUrl: true });
-  }
-
-  /** O drawer salvou: o ícone da linha acompanha sem recarregar a listagem. */
-  aoAnotacoesAlteradas(evento: AnotacoesAlteradasEvento): void {
-    this.usuarios.update((lista) =>
-      lista.map((item) => (item.id === evento.usuarioId ? { ...item, temAnotacoes: evento.temAnotacoes } : item)),
+    private readonly usuarioService = inject(UsuarioService);
+    readonly sessao = inject(UsuarioSessaoService);
+    /** Os rótulos e as larguras da tabela real (a coluna Anotações só existe para o gestor), para o esqueleto não parecer outra tela. */
+    readonly esqueleto = computed(() =>
+        montarEsqueletoDeTabela([
+            { rotulo: 'Usuário', peso: 248 },
+            { rotulo: 'Cargo', peso: 218 },
+            { rotulo: 'Tipo', peso: 176 },
+            { rotulo: 'Status', peso: 160 },
+            ...(this.sessao.eGestor() ? [{ rotulo: 'Anotações', peso: 99 }] : []),
+            { rotulo: '', peso: 128 },
+        ]),
     );
-  }
+    private readonly desfazerService = inject(DesfazerService);
+    private readonly formBuilder = inject(FormBuilder);
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
 
-  /** Recarrega a listagem sempre que a aba/janela volta a ficar visível. */
-  @HostListener('document:visibilitychange')
-  aoVoltarParaAba(): void {
-    if (document.visibilityState === 'visible') this.buscarUsuarios();
-  }
+    private readonly campoBusca = viewChild<ElementRef<HTMLInputElement>>('campoBusca');
+    private readonly anotacoesDialog = viewChild.required(UsuarioAnotacoesDialogComponent);
 
-  /** `/` foca a busca. */
-  @HostListener('document:keydown', ['$event'])
-  aoTeclar(evento: KeyboardEvent): void {
-    if (evento.ctrlKey || evento.metaKey || evento.altKey) return;
-    if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
-    if (evento.key === '/') {
-      evento.preventDefault();
-      this.campoBusca()?.nativeElement.focus();
+    readonly formularioFiltros = this.formBuilder.group({ busca: [''] });
+    readonly tipoFiltro = signal<TipoUsuarioEnum | null>(null);
+    readonly statusFiltro = signal<TipoUsuarioStatusEnum | null>(null);
+    private readonly termoBusca = signal<string>('');
+    readonly filtroAtivo = computed(() => !!this.tipoFiltro() || !!this.statusFiltro() || !!this.termoBusca().trim());
+
+    readonly usuarios = signal<UsuarioResumoDto[]>([]);
+    readonly totalRegistros = signal<number>(0);
+    readonly carregando = signal<boolean>(false);
+    readonly jaCarregou = signal<boolean>(false);
+    readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
+    readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
+    readonly paginaAtual = signal<number>(1);
+    readonly itensPorPagina = signal<number>(10);
+
+    readonly tiposOpcoes = [
+        { label: 'Todos', value: null },
+        { label: 'Desenvolvedores', value: TipoUsuarioEnum.DESENVOLVEDOR },
+        { label: 'Gestores', value: TipoUsuarioEnum.GESTOR },
+        { label: 'Administradores', value: TipoUsuarioEnum.ADMINISTRADOR },
+    ];
+
+    readonly statusOpcoes = [
+        { label: 'Todos', value: null },
+        { label: 'Ativos', value: TipoUsuarioStatusEnum.ATIVO },
+        { label: 'Inativos', value: TipoUsuarioStatusEnum.INATIVO },
+    ];
+
+    ngOnInit(): void {
+        const filtrosSalvos = this.lerFiltrosPersistidos();
+        this.tipoFiltro.set(filtrosSalvos.tipo);
+        this.statusFiltro.set(filtrosSalvos.status);
+
+        this.formularioFiltros.controls.busca.valueChanges
+            .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+            .subscribe((busca) => {
+                this.termoBusca.set(busca ?? '');
+                this.aoMudarFiltro();
+            });
+
+        this.buscarUsuarios();
+        this.abrirAnotacoesDoLink();
     }
-  }
 
-  aoEsc(evento: Event): void {
-    const campo = this.campoBusca()?.nativeElement;
-    if (campo?.value) {
-      evento.stopPropagation();
-      this.formularioFiltros.controls.busca.setValue('');
-    } else {
-      campo?.blur();
+    /** Deep-link `/usuario/:id/anotacoes` → `/usuario?anotacoes=:id`: abre o drawer e limpa o parâmetro. */
+    private abrirAnotacoesDoLink(): void {
+        const usuarioId = Number(this.route.snapshot.queryParamMap.get('anotacoes'));
+        if (!usuarioId) return;
+        this.anotacoesDialog().abrir(usuarioId);
+        this.router.navigate([], { queryParams: { anotacoes: null }, queryParamsHandling: 'merge', replaceUrl: true });
     }
-  }
 
-  buscarUsuarios(): void {
-    this.carregando.set(true);
+    /** O drawer salvou: o ícone da linha acompanha sem recarregar a listagem. */
+    aoAnotacoesAlteradas(evento: AnotacoesAlteradasEvento): void {
+        this.usuarios.update((lista) =>
+            lista.map((item) => (item.id === evento.usuarioId ? { ...item, temAnotacoes: evento.temAnotacoes } : item)),
+        );
+    }
 
-    const filtros: UsuarioListarDto = {
-      pagina: this.paginaAtual(),
-      itensPorPagina: this.itensPorPagina(),
-    };
-    const tipo = this.tipoFiltro();
-    const status = this.statusFiltro();
-    const busca = this.termoBusca().trim();
-    if (tipo) filtros.tipo = tipo;
-    if (status) filtros.status = status;
-    if (busca) filtros.busca = busca;
+    /** Recarrega a listagem sempre que a aba/janela volta a ficar visível. */
+    @HostListener('document:visibilitychange')
+    aoVoltarParaAba(): void {
+        if (document.visibilityState === 'visible') this.buscarUsuarios();
+    }
 
-    this.usuarioService
-      .listar(filtros)
-      .pipe(finalize(() => {
-        this.carregando.set(false);
-        this.jaCarregou.set(true);
-      }))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.usuarios.set(resposta.dados.itens);
-            this.totalRegistros.set(resposta.dados.totalItens);
-          }
-        },
-      });
-  }
+    /** `/` foca a busca. */
+    @HostListener('document:keydown', ['$event'])
+    aoTeclar(evento: KeyboardEvent): void {
+        if (evento.ctrlKey || evento.metaKey || evento.altKey) return;
+        if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
+        if (evento.key === '/') {
+            evento.preventDefault();
+            this.campoBusca()?.nativeElement.focus();
+        }
+    }
 
-  aoCarregarTabela(evento: TableLazyLoadEvent): void {
-    const primeira = evento.first ?? 0;
-    const linhas = evento.rows ?? 10;
-    this.paginaAtual.set(Math.floor(primeira / linhas) + 1);
-    this.itensPorPagina.set(linhas);
-    this.buscarUsuarios();
-  }
+    aoEsc(evento: Event): void {
+        const campo = this.campoBusca()?.nativeElement;
+        if (campo?.value) {
+            evento.stopPropagation();
+            this.formularioFiltros.controls.busca.setValue('');
+        } else {
+            campo?.blur();
+        }
+    }
 
-  aoMudarFiltro(): void {
-    this.paginaAtual.set(1);
-    this.buscarUsuarios();
-  }
+    buscarUsuarios(): void {
+        this.carregando.set(true);
 
-  aoMudarTipo(tipo: TipoUsuarioEnum | null): void {
-    this.tipoFiltro.set(tipo);
-    this.persistirFiltros();
-    this.aoMudarFiltro();
-  }
+        const filtros: UsuarioListarDto = {
+            pagina: this.paginaAtual(),
+            itensPorPagina: this.itensPorPagina(),
+        };
+        const tipo = this.tipoFiltro();
+        const status = this.statusFiltro();
+        const busca = this.termoBusca().trim();
+        if (tipo) filtros.tipo = tipo;
+        if (status) filtros.status = status;
+        if (busca) filtros.busca = busca;
 
-  aoMudarStatus(status: TipoUsuarioStatusEnum | null): void {
-    this.statusFiltro.set(status);
-    this.persistirFiltros();
-    this.aoMudarFiltro();
-  }
+        this.usuarioService
+            .listar(filtros)
+            .pipe(finalize(() => {
+                this.carregando.set(false);
+                this.jaCarregou.set(true);
+            }))
+            .subscribe({
+                next: (resposta) => {
+                    if (resposta.sucesso && resposta.dados) {
+                        this.usuarios.set(resposta.dados.itens);
+                        this.totalRegistros.set(resposta.dados.totalItens);
+                    }
+                },
+            });
+    }
 
-  limparFiltros(): void {
-    this.tipoFiltro.set(null);
-    this.statusFiltro.set(null);
-    this.persistirFiltros();
-    this.termoBusca.set('');
-    this.formularioFiltros.controls.busca.setValue('', { emitEvent: false });
-    this.aoMudarFiltro();
-  }
+    aoCarregarTabela(evento: TableLazyLoadEvent): void {
+        const primeira = evento.first ?? 0;
+        const linhas = evento.rows ?? 10;
+        this.paginaAtual.set(Math.floor(primeira / linhas) + 1);
+        this.itensPorPagina.set(linhas);
+        this.buscarUsuarios();
+    }
 
-  /** O botão de anotações só aparece onde o backend deixa abrir: o pad de desenvolvedores e o próprio (task 195). */
-  podeVerAnotacoes(usuario: UsuarioResumoDto): boolean {
-    const atual = this.sessao.usuarioAtual();
-    return !!atual && podeAbrirAnotacoes(atual, usuario);
-  }
+    aoMudarFiltro(): void {
+        this.paginaAtual.set(1);
+        this.buscarUsuarios();
+    }
 
-  /** Quem pode alterar o cadastro de `usuario`: gestor, ou a própria pessoa. */
-  podeEditar(usuario: UsuarioResumoDto): boolean {
-    return this.podeGerenciar(usuario) || this.sessao.usuarioAtual()?.id === usuario.id;
-  }
+    aoMudarTipo(tipo: TipoUsuarioEnum | null): void {
+        this.tipoFiltro.set(tipo);
+        this.persistirFiltros();
+        this.aoMudarFiltro();
+    }
 
-  /** Gestor gerencia todos, menos administradores: estes só o administrador gerencia. */
-  podeGerenciar(usuario: UsuarioResumoDto): boolean {
-    return this.sessao.eGestor() && (usuario.tipo !== TipoUsuarioEnum.ADMINISTRADOR || this.sessao.eAdministrador());
-  }
+    aoMudarStatus(status: TipoUsuarioStatusEnum | null): void {
+        this.statusFiltro.set(status);
+        this.persistirFiltros();
+        this.aoMudarFiltro();
+    }
 
-  /** Inativar/excluir a si mesmo derrubaria a própria sessão: o gestor faz isso por outro gestor. */
-  eOutraPessoa(usuario: UsuarioResumoDto): boolean {
-    return this.sessao.usuarioAtual()?.id !== usuario.id;
-  }
+    limparFiltros(): void {
+        this.tipoFiltro.set(null);
+        this.statusFiltro.set(null);
+        this.persistirFiltros();
+        this.termoBusca.set('');
+        this.formularioFiltros.controls.busca.setValue('', { emitEvent: false });
+        this.aoMudarFiltro();
+    }
 
-  /**
+    /** O botão de anotações só aparece onde o backend deixa abrir: o pad de desenvolvedores e o próprio (task 195). */
+    podeVerAnotacoes(usuario: UsuarioResumoDto): boolean {
+        const atual = this.sessao.usuarioAtual();
+        return !!atual && podeAbrirAnotacoes(atual, usuario);
+    }
+
+    /** Quem pode alterar o cadastro de `usuario`: gestor, ou a própria pessoa. */
+    podeEditar(usuario: UsuarioResumoDto): boolean {
+        return this.podeGerenciar(usuario) || this.sessao.usuarioAtual()?.id === usuario.id;
+    }
+
+    /** Gestor gerencia todos, menos administradores: estes só o administrador gerencia. */
+    podeGerenciar(usuario: UsuarioResumoDto): boolean {
+        return this.sessao.eGestor() && (usuario.tipo !== TipoUsuarioEnum.ADMINISTRADOR || this.sessao.eAdministrador());
+    }
+
+    /** Inativar/excluir a si mesmo derrubaria a própria sessão: o gestor faz isso por outro gestor. */
+    eOutraPessoa(usuario: UsuarioResumoDto): boolean {
+        return this.sessao.usuarioAtual()?.id !== usuario.id;
+    }
+
+    /**
    * Switch de status direto na linha (task 113): a linha muda na hora, o toast oferece
    * "Desfazer" e, se o servidor recusar, o switch volta ao valor anterior.
    */
-  alternarStatus(usuario: UsuarioResumoDto, ativo: boolean): void {
-    const statusAnterior = usuario.status;
-    const statusNovo = ativo ? TipoUsuarioStatusEnum.ATIVO : TipoUsuarioStatusEnum.INATIVO;
-    if (statusAnterior === statusNovo) return;
-    this.definirStatusLocal(usuario.id, statusNovo);
+    alternarStatus(usuario: UsuarioResumoDto, ativo: boolean): void {
+        const statusAnterior = usuario.status;
+        const statusNovo = ativo ? TipoUsuarioStatusEnum.ATIVO : TipoUsuarioStatusEnum.INATIVO;
+        if (statusAnterior === statusNovo) return;
+        this.definirStatusLocal(usuario.id, statusNovo);
 
-    this.usuarioService.alterar(usuario.id, { status: statusNovo }).subscribe({
-      next: () =>
-        this.desfazerService.oferecer({
-          mensagem: `${usuario.nomeCompleto} ${ativo ? 'ativado' : 'inativado'}`,
-          desfazer: () => this.usuarioService.alterar(usuario.id, { status: statusAnterior }),
-          aposDesfazer: () => this.definirStatusLocal(usuario.id, statusAnterior),
-        }),
-      error: () => this.definirStatusLocal(usuario.id, statusAnterior),
-    });
-  }
-
-  /** Exclusão imediata (task 99): a linha sai na hora e o toast oferece "Desfazer". */
-  excluir(usuario: UsuarioResumoDto): void {
-    const listaAnterior = this.usuarios();
-    const totalAnterior = this.totalRegistros();
-    this.usuarios.set(listaAnterior.filter((item) => item.id !== usuario.id));
-    this.totalRegistros.set(Math.max(0, totalAnterior - 1));
-
-    this.usuarioService.excluir(usuario.id).subscribe({
-      next: () =>
-        this.desfazerService.oferecer({
-          mensagem: `Usuário "${usuario.nomeCompleto}" excluído`,
-          desfazer: () => this.usuarioService.restaurar(usuario.id),
-          aposDesfazer: () => this.buscarUsuarios(),
-        }),
-      error: () => {
-        this.usuarios.set(listaAnterior);
-        this.totalRegistros.set(totalAnterior);
-      },
-    });
-  }
-
-  readonly rotuloTipo = rotuloTipoUsuario;
-
-  severidadeTipo(tipo: TipoUsuarioEnum): 'info' | 'warn' | 'contrast' {
-    return severidadeTipoUsuario(tipo);
-  }
-
-  private definirStatusLocal(usuarioId: number, status: TipoUsuarioStatusEnum): void {
-    this.usuarios.update((lista) => lista.map((item) => (item.id === usuarioId ? { ...item, status } : item)));
-  }
-
-  private lerFiltrosPersistidos(): FiltrosPersistidos {
-    try {
-      const salvo = JSON.parse(localStorage.getItem(CHAVE_FILTROS) ?? 'null') as Partial<FiltrosPersistidos> | null;
-      const tipo = Object.values(TipoUsuarioEnum).includes(salvo?.tipo as TipoUsuarioEnum) ? (salvo!.tipo as TipoUsuarioEnum) : null;
-      const status = Object.values(TipoUsuarioStatusEnum).includes(salvo?.status as TipoUsuarioStatusEnum) ? (salvo!.status as TipoUsuarioStatusEnum) : null;
-      return { tipo, status };
-    } catch {
-      return { tipo: null, status: null };
+        this.usuarioService.alterar(usuario.id, { status: statusNovo }).subscribe({
+            next: () =>
+                this.desfazerService.oferecer({
+                    mensagem: `${usuario.nomeCompleto} ${ativo ? 'ativado' : 'inativado'}`,
+                    desfazer: () => this.usuarioService.alterar(usuario.id, { status: statusAnterior }),
+                    aposDesfazer: () => this.definirStatusLocal(usuario.id, statusAnterior),
+                }),
+            error: () => this.definirStatusLocal(usuario.id, statusAnterior),
+        });
     }
-  }
 
-  private persistirFiltros(): void {
-    try {
-      localStorage.setItem(CHAVE_FILTROS, JSON.stringify({ tipo: this.tipoFiltro(), status: this.statusFiltro() }));
-    } catch {
-      // armazenamento indisponível: o filtro vale só para esta visita
+    /** Exclusão imediata (task 99): a linha sai na hora e o toast oferece "Desfazer". */
+    excluir(usuario: UsuarioResumoDto): void {
+        const listaAnterior = this.usuarios();
+        const totalAnterior = this.totalRegistros();
+        this.usuarios.set(listaAnterior.filter((item) => item.id !== usuario.id));
+        this.totalRegistros.set(Math.max(0, totalAnterior - 1));
+
+        this.usuarioService.excluir(usuario.id).subscribe({
+            next: () =>
+                this.desfazerService.oferecer({
+                    mensagem: `Usuário "${usuario.nomeCompleto}" excluído`,
+                    desfazer: () => this.usuarioService.restaurar(usuario.id),
+                    aposDesfazer: () => this.buscarUsuarios(),
+                }),
+            error: () => {
+                this.usuarios.set(listaAnterior);
+                this.totalRegistros.set(totalAnterior);
+            },
+        });
     }
-  }
+
+    readonly rotuloTipo = rotuloTipoUsuario;
+
+    severidadeTipo(tipo: TipoUsuarioEnum): 'info' | 'warn' | 'contrast' {
+        return severidadeTipoUsuario(tipo);
+    }
+
+    private definirStatusLocal(usuarioId: number, status: TipoUsuarioStatusEnum): void {
+        this.usuarios.update((lista) => lista.map((item) => (item.id === usuarioId ? { ...item, status } : item)));
+    }
+
+    private lerFiltrosPersistidos(): FiltrosPersistidos {
+        try {
+            const salvo = JSON.parse(localStorage.getItem(CHAVE_FILTROS) ?? 'null') as Partial<FiltrosPersistidos> | null;
+            const tipo = Object.values(TipoUsuarioEnum).includes(salvo?.tipo as TipoUsuarioEnum) ? (salvo!.tipo as TipoUsuarioEnum) : null;
+            const status = Object.values(TipoUsuarioStatusEnum).includes(salvo?.status as TipoUsuarioStatusEnum) ? (salvo!.status as TipoUsuarioStatusEnum) : null;
+            return { tipo, status };
+        } catch {
+            return { tipo: null, status: null };
+        }
+    }
+
+    private persistirFiltros(): void {
+        try {
+            localStorage.setItem(CHAVE_FILTROS, JSON.stringify({ tipo: this.tipoFiltro(), status: this.statusFiltro() }));
+        } catch {
+            // armazenamento indisponível: o filtro vale só para esta visita
+        }
+    }
 }

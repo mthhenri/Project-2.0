@@ -2,68 +2,123 @@
 
 <!-- Controles flutuantes: legenda (ⓘ) e zoom -->
 <div class="demanda-grafo__controles">
-  <p-button
-    icon="pi pi-info-circle"
-    severity="secondary"
-    [outlined]="true"
-    size="small"
-    ariaLabel="Legenda"
-    pTooltip="Legenda e filtro de status"
-    tooltipPosition="left"
-    (onClick)="alternarLegenda($event, legenda)"
-  />
-  <div class="demanda-grafo__zoom" role="group" aria-label="Zoom">
-    <p-button icon="pi pi-plus" severity="secondary" [outlined]="true" size="small" ariaLabel="Aproximar" pTooltip="Aproximar" tooltipPosition="left" (onClick)="aproximar()" />
-    <p-button icon="pi pi-minus" severity="secondary" [outlined]="true" size="small" ariaLabel="Afastar" pTooltip="Afastar" tooltipPosition="left" (onClick)="afastar()" />
-    <p-button icon="pi pi-home" severity="secondary" [outlined]="true" size="small" ariaLabel="Centralizar" pTooltip="Centralizar" tooltipPosition="left" (onClick)="centralizar()" />
-  </div>
+    <p-button
+        icon="pi pi-info-circle"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        ariaLabel="Legenda"
+        pTooltip="Legenda e filtro de status"
+        tooltipPosition="left"
+        (onClick)="alternarLegenda($event, legenda)"
+    />
+    <div class="demanda-grafo__zoom" role="group" aria-label="Zoom">
+        <p-button
+            icon="pi pi-plus"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            ariaLabel="Aproximar"
+            pTooltip="Aproximar"
+            tooltipPosition="left"
+            (onClick)="aproximar()"
+        />
+        <p-button
+            icon="pi pi-minus"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            ariaLabel="Afastar"
+            pTooltip="Afastar"
+            tooltipPosition="left"
+            (onClick)="afastar()"
+        />
+        <p-button
+            icon="pi pi-home"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            ariaLabel="Centralizar"
+            pTooltip="Centralizar"
+            tooltipPosition="left"
+            (onClick)="centralizar()"
+        />
+    </div>
 </div>
 
 <!-- Cartão do nó sob o mouse -->
 @if (cartao(); as c) {
-  <div class="demanda-grafo__cartao" [style.left.px]="c.esquerda" [style.top.px]="c.topo">
-    <div class="demanda-grafo__cartao-nome">{{ c.no.nome }}</div>
-    <span class="demanda-grafo__cartao-status">
-      <app-demanda-status [status]="c.no.status" />
-      <span class="demanda-grafo__cartao-status-nome">{{ rotuloStatus[c.no.status] }}</span>
-    </span>
-    @if (c.no.horasEstimadas > 0 || c.no.minutosExecutados > 0) {
-      <app-demanda-barra-controle-horas [minutosExecutados]="c.no.minutosExecutados" [horasEstimadas]="c.no.horasEstimadas" />
-    }
-    @if (c.no.tags.length) {
-      <div class="demanda-grafo__cartao-tags">
-        @for (tag of c.no.tags; track tag.id) {
-          <span class="demanda-grafo__cartao-tag" [style.background-color]="tag.cor + '22'" [style.border-color]="tag.cor + '55'" [style.color]="tag.cor">{{ tag.nome }}</span>
+    <div class="demanda-grafo__cartao" [style.left.px]="c.esquerda" [style.top.px]="c.topo">
+        <div class="demanda-grafo__cartao-nome">{{ c.no.nome }}</div>
+        <span class="demanda-grafo__cartao-status">
+            <app-demanda-status [status]="c.no.status" />
+            <span class="demanda-grafo__cartao-status-nome">{{ rotuloStatus[c.no.status] }}</span>
+        </span>
+        @if (c.no.horasEstimadas > 0 || c.no.minutosExecutados > 0) {
+            <app-demanda-barra-controle-horas
+                [minutosExecutados]="c.no.minutosExecutados"
+                [horasEstimadas]="c.no.horasEstimadas"
+            />
         }
-      </div>
-    }
-  </div>
+        @if (c.no.tags.length) {
+            <div class="demanda-grafo__cartao-tags">
+                @for (tag of c.no.tags; track tag.id) {
+                    <span
+                        class="demanda-grafo__cartao-tag"
+                        [style.background-color]="tag.cor + '22'"
+                        [style.border-color]="tag.cor + '55'"
+                        [style.color]="tag.cor"
+                        >{{ tag.nome }}</span
+                    >
+                }
+            </div>
+        }
+    </div>
 }
 
 <!-- Legenda: os status são o filtro (ligar/desligar) -->
 <p-popover #legenda>
-  <div class="demanda-grafo__legenda">
-    <h3 class="demanda-grafo__legenda-titulo">Status (clique para ocultar/mostrar)</h3>
-    @for (item of itensLegenda; track item.status) {
-      <button
-        type="button"
-        class="demanda-grafo__legenda-status"
-        [class.demanda-grafo__legenda-status--oculto]="!statusEstaVisivel(item.status)"
-        [attr.aria-pressed]="statusEstaVisivel(item.status)"
-        (click)="statusAlternado.emit(item.status)"
-      >
-        <app-demanda-status-marca [status]="item.status" [tamanho]="16" />
-        <span class="demanda-grafo__legenda-texto">{{ item.rotulo }}</span>
-        <i class="pi" [class.pi-eye]="statusEstaVisivel(item.status)" [class.pi-eye-slash]="!statusEstaVisivel(item.status)"></i>
-      </button>
-    }
+    <div class="demanda-grafo__legenda">
+        <h3 class="demanda-grafo__legenda-titulo">Status (clique para ocultar/mostrar)</h3>
+        @for (item of itensLegenda; track item.status) {
+            <button
+                type="button"
+                class="demanda-grafo__legenda-status"
+                [class.demanda-grafo__legenda-status--oculto]="!statusEstaVisivel(item.status)"
+                [attr.aria-pressed]="statusEstaVisivel(item.status)"
+                (click)="statusAlternado.emit(item.status)"
+            >
+                <app-demanda-status-marca [status]="item.status" [tamanho]="16" />
+                <span class="demanda-grafo__legenda-texto">{{ item.rotulo }}</span>
+                <i
+                    class="pi"
+                    [class.pi-eye]="statusEstaVisivel(item.status)"
+                    [class.pi-eye-slash]="!statusEstaVisivel(item.status)"
+                ></i>
+            </button>
+        }
 
-    <h3 class="demanda-grafo__legenda-titulo">Nós</h3>
-    <div class="demanda-grafo__legenda-linha-item"><span class="demanda-grafo__legenda-no"></span> Demanda comum</div>
-    <div class="demanda-grafo__legenda-linha-item"><span class="demanda-grafo__legenda-no demanda-grafo__legenda-no--estrutura"></span> Demanda de estrutura</div>
+        <h3 class="demanda-grafo__legenda-titulo">Nós</h3>
+        <div class="demanda-grafo__legenda-linha-item">
+            <span class="demanda-grafo__legenda-no"></span> Demanda comum
+        </div>
+        <div class="demanda-grafo__legenda-linha-item">
+            <span class="demanda-grafo__legenda-no demanda-grafo__legenda-no--estrutura"></span>
+            Demanda de estrutura
+        </div>
 
-    <h3 class="demanda-grafo__legenda-titulo">Arestas</h3>
-    <div class="demanda-grafo__legenda-linha-item"><span class="demanda-grafo__legenda-aresta demanda-grafo__legenda-aresta--hierarquia"></span> Hierarquia</div>
-    <div class="demanda-grafo__legenda-linha-item"><span class="demanda-grafo__legenda-aresta demanda-grafo__legenda-aresta--conexao"></span> Conexão</div>
-  </div>
+        <h3 class="demanda-grafo__legenda-titulo">Arestas</h3>
+        <div class="demanda-grafo__legenda-linha-item">
+            <span
+                class="demanda-grafo__legenda-aresta demanda-grafo__legenda-aresta--hierarquia"
+            ></span>
+            Hierarquia
+        </div>
+        <div class="demanda-grafo__legenda-linha-item">
+            <span
+                class="demanda-grafo__legenda-aresta demanda-grafo__legenda-aresta--conexao"
+            ></span>
+            Conexão
+        </div>
+    </div>
 </p-popover>

@@ -23,11 +23,11 @@ import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { PropostaIaService } from '../../services/proposta-ia.service';
 import { ROTULO_ABA_DO_PLANO } from '../../utils/plano.util';
 import {
-  ROTULO_STATUS_PROPOSTA,
-  ROTULO_TIPO_PROPOSTA,
-  SEVERIDADE_STATUS_PROPOSTA,
-  formatarDuracao,
-  paresDosDados,
+    ROTULO_STATUS_PROPOSTA,
+    ROTULO_TIPO_PROPOSTA,
+    SEVERIDADE_STATUS_PROPOSTA,
+    formatarDuracao,
+    paresDosDados,
 } from '../../utils/chat.util';
 import { periodoAnteriorDaExecucao, periodoNovoDaExecucao, resumirProposta, ROTULO_STATUS_DA_DEMANDA } from '../../utils/proposta-compacta.util';
 
@@ -43,352 +43,352 @@ type VisaoDosTextos = 'MUDANCAS' | 'ANTES' | 'DEPOIS';
 const CONTEXTO_DA_DOCUMENTACAO = 240;
 
 @Component({
-  selector: 'app-chat-proposta-cartao',
-  standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TooltipModule, TagModule, TextareaModule, PrioridadeSeloComponent, MarkdownVisualizadorComponent, DiffPorPalavraComponent, PropostaLinhaComponent],
-  templateUrl: './proposta-cartao.component.html',
-  styleUrl: './proposta-cartao.component.scss',
+    selector: 'app-chat-proposta-cartao',
+    standalone: true,
+    imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TooltipModule, TagModule, TextareaModule, PrioridadeSeloComponent, MarkdownVisualizadorComponent, DiffPorPalavraComponent, PropostaLinhaComponent],
+    templateUrl: './proposta-cartao.component.html',
+    styleUrl: './proposta-cartao.component.scss',
 })
 export class PropostaCartaoComponent {
-  private readonly propostaIaService = inject(PropostaIaService);
-  private readonly messageService = inject(MessageService);
-  private readonly desfazerService = inject(DesfazerService);
-  private readonly atividadeService = inject(AtividadeService);
-  private readonly sessao = inject(UsuarioSessaoService);
-  private readonly zona = inject(NgZone);
+    private readonly propostaIaService = inject(PropostaIaService);
+    private readonly messageService = inject(MessageService);
+    private readonly desfazerService = inject(DesfazerService);
+    private readonly atividadeService = inject(AtividadeService);
+    private readonly sessao = inject(UsuarioSessaoService);
+    private readonly zona = inject(NgZone);
 
-  readonly propostaId = input.required<number>();
-  /**
+    readonly propostaId = input.required<number>();
+    /**
    * A proposta já lida por quem hospeda o cartão (o grupo, task 227): o cartão a usa em vez de ler de novo e acompanha as mudanças que o
    * grupo faz nela (confirmar todas, recusar todas, desfazer todas). Sem ela, o cartão lê a proposta sozinho.
    */
-  readonly propostaCarregada = input<PropostaIaResumoDto | null>(null);
+    readonly propostaCarregada = input<PropostaIaResumoDto | null>(null);
 
-  readonly proposta = signal<PropostaIaResumoDto | null>(null);
-  readonly erro = signal(false);
-  readonly operando = signal(false);
+    readonly proposta = signal<PropostaIaResumoDto | null>(null);
+    readonly erro = signal(false);
+    readonly operando = signal(false);
 
-  readonly Status = StatusPropostaIaEnum;
-  readonly rotuloTipo = ROTULO_TIPO_PROPOSTA;
-  readonly rotuloStatus = ROTULO_STATUS_PROPOSTA;
-  readonly severidade = SEVERIDADE_STATUS_PROPOSTA;
-  readonly paresDosDados = paresDosDados;
-  readonly Tipo = TipoPropostaIaEnum;
-  protected readonly prioridadeService = inject(AtividadePrioridadeService);
+    readonly Status = StatusPropostaIaEnum;
+    readonly rotuloTipo = ROTULO_TIPO_PROPOSTA;
+    readonly rotuloStatus = ROTULO_STATUS_PROPOSTA;
+    readonly severidade = SEVERIDADE_STATUS_PROPOSTA;
+    readonly paresDosDados = paresDosDados;
+    readonly Tipo = TipoPropostaIaEnum;
+    protected readonly prioridadeService = inject(AtividadePrioridadeService);
 
-  /** O formulário de "Ajustar" (só os campos do tipo da proposta valem). */
-  readonly ajustando = signal(false);
-  readonly formularioAjuste = new FormGroup({
-    nome: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3), Validators.maxLength(255)] }),
-    descricao: new FormControl('', { nonNullable: true }),
-    /** Na descrição da demanda: os dois textos em Markdown (cada um só vale se a proposta o trouxe). */
-    descricaoCliente: new FormControl('', { nonNullable: true }),
-    descricaoTecnica: new FormControl('', { nonNullable: true }),
-    /** No projeto proposto: o código único (a IA derivou um do nome). */
-    codigo: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2), Validators.maxLength(50)] }),
-    prioridade: new FormControl<TipoAtividadePrioridadeEnum>(TipoAtividadePrioridadeEnum.INDEFINIDA, { nonNullable: true }),
-    /** Na descrição do check-in: para qual atividade trocar depois (nulo é continuar na mesma). */
-    atividadeSeguinteId: new FormControl<number | null>(null),
-  });
-  /** As atividades do usuário em que dá para começar uma execução (a escolha "Trocar para…" do check-in). */
-  readonly atividadesParaTroca = signal<{ id: number; rotulo: string }[]>([]);
-  readonly formatarDuracao = formatarDuracao;
-  /** O nome da aba do plano como ela aparece no documento. */
-  rotuloAbaDoPlano(aba: string): string {
-    return ROTULO_ABA_DO_PLANO[aba as PlanoAbaEnum] ?? aba;
-  }
+    /** O formulário de "Ajustar" (só os campos do tipo da proposta valem). */
+    readonly ajustando = signal(false);
+    readonly formularioAjuste = new FormGroup({
+        nome: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3), Validators.maxLength(255)] }),
+        descricao: new FormControl('', { nonNullable: true }),
+        /** Na descrição da demanda: os dois textos em Markdown (cada um só vale se a proposta o trouxe). */
+        descricaoCliente: new FormControl('', { nonNullable: true }),
+        descricaoTecnica: new FormControl('', { nonNullable: true }),
+        /** No projeto proposto: o código único (a IA derivou um do nome). */
+        codigo: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2), Validators.maxLength(50)] }),
+        prioridade: new FormControl<TipoAtividadePrioridadeEnum>(TipoAtividadePrioridadeEnum.INDEFINIDA, { nonNullable: true }),
+        /** Na descrição do check-in: para qual atividade trocar depois (nulo é continuar na mesma). */
+        atividadeSeguinteId: new FormControl<number | null>(null),
+    });
+    /** As atividades do usuário em que dá para começar uma execução (a escolha "Trocar para…" do check-in). */
+    readonly atividadesParaTroca = signal<{ id: number; rotulo: string }[]>([]);
+    readonly formatarDuracao = formatarDuracao;
+    /** O nome da aba do plano como ela aparece no documento. */
+    rotuloAbaDoPlano(aba: string): string {
+        return ROTULO_ABA_DO_PLANO[aba as PlanoAbaEnum] ?? aba;
+    }
 
-  private static readonly TIPOS_AJUSTAVEIS: TipoPropostaIaEnum[] = [
-    TipoPropostaIaEnum.CRIAR_ATIVIDADE,
-    TipoPropostaIaEnum.CRIAR_PROJETO,
-    TipoPropostaIaEnum.CRIAR_DEMANDA,
-    TipoPropostaIaEnum.DESCREVER_DEMANDA,
-    TipoPropostaIaEnum.INICIAR_EXECUCAO,
-    TipoPropostaIaEnum.PAUSAR_EXECUCAO,
-    TipoPropostaIaEnum.ANOTAR_PAD,
-    TipoPropostaIaEnum.DESCREVER_EXECUCAO,
-  ];
-  /** Pendente e de um tipo que sabe ser ajustado. */
-  readonly podeAjustar = computed(() => {
-    const atual = this.proposta();
-    return !!atual && atual.status === StatusPropostaIaEnum.PENDENTE && PropostaCartaoComponent.TIPOS_AJUSTAVEIS.includes(atual.tipo);
-  });
+    private static readonly TIPOS_AJUSTAVEIS: TipoPropostaIaEnum[] = [
+        TipoPropostaIaEnum.CRIAR_ATIVIDADE,
+        TipoPropostaIaEnum.CRIAR_PROJETO,
+        TipoPropostaIaEnum.CRIAR_DEMANDA,
+        TipoPropostaIaEnum.DESCREVER_DEMANDA,
+        TipoPropostaIaEnum.INICIAR_EXECUCAO,
+        TipoPropostaIaEnum.PAUSAR_EXECUCAO,
+        TipoPropostaIaEnum.ANOTAR_PAD,
+        TipoPropostaIaEnum.DESCREVER_EXECUCAO,
+    ];
+    /** Pendente e de um tipo que sabe ser ajustado. */
+    readonly podeAjustar = computed(() => {
+        const atual = this.proposta();
+        return !!atual && atual.status === StatusPropostaIaEnum.PENDENTE && PropostaCartaoComponent.TIPOS_AJUSTAVEIS.includes(atual.tipo);
+    });
 
-  readonly prazoParaDesfazerMinutos = PRAZO_PARA_DESFAZER_PROPOSTA_MINUTOS;
-  /** O relógio do cartão: só avança quando o prazo de desfazer vence, para o botão desativar com o cartão aberto. */
-  private readonly agora = signal(Date.now());
-  readonly desfazerDisponivel = computed(() => podeDesfazerProposta(this.proposta()?.resolucaoData, new Date(this.agora())));
+    readonly prazoParaDesfazerMinutos = PRAZO_PARA_DESFAZER_PROPOSTA_MINUTOS;
+    /** O relógio do cartão: só avança quando o prazo de desfazer vence, para o botão desativar com o cartão aberto. */
+    private readonly agora = signal(Date.now());
+    readonly desfazerDisponivel = computed(() => podeDesfazerProposta(this.proposta()?.resolucaoData, new Date(this.agora())));
 
-  /** Como o cartão de Descrever demanda mostra os textos: o que muda (diff por palavra), o de antes ou o de depois. */
-  readonly visaoDosTextos = signal<VisaoDosTextos>('MUDANCAS');
-  readonly visoesDosTextos: { codigo: VisaoDosTextos; rotulo: string }[] = [
-    { codigo: 'MUDANCAS', rotulo: 'Mudanças' },
-    { codigo: 'ANTES', rotulo: 'Antes' },
-    { codigo: 'DEPOIS', rotulo: 'Depois' },
-  ];
-  /** A proposta traz o texto de antes (as de antes da task 224 não trazem: seguem mostrando só o texto novo). */
-  readonly temAnteriorDaDescricao = computed(() => {
-    const dados = this.proposta()?.dados;
-    return !!dados && (dados['descricaoClienteAnterior'] !== undefined || dados['descricaoTecnicaAnterior'] !== undefined);
-  });
+    /** Como o cartão de Descrever demanda mostra os textos: o que muda (diff por palavra), o de antes ou o de depois. */
+    readonly visaoDosTextos = signal<VisaoDosTextos>('MUDANCAS');
+    readonly visoesDosTextos: { codigo: VisaoDosTextos; rotulo: string }[] = [
+        { codigo: 'MUDANCAS', rotulo: 'Mudanças' },
+        { codigo: 'ANTES', rotulo: 'Antes' },
+        { codigo: 'DEPOIS', rotulo: 'Depois' },
+    ];
+    /** A proposta traz o texto de antes (as de antes da task 224 não trazem: seguem mostrando só o texto novo). */
+    readonly temAnteriorDaDescricao = computed(() => {
+        const dados = this.proposta()?.dados;
+        return !!dados && (dados['descricaoClienteAnterior'] !== undefined || dados['descricaoTecnicaAnterior'] !== undefined);
+    });
 
-  /** Período e duração da execução corrigida, antes e depois, em texto, para o diff por palavra da correção. */
-  readonly periodoAnteriorDaExecucao = computed(() => periodoAnteriorDaExecucao(this.proposta()?.dados ?? {}));
-  readonly periodoNovoDaExecucao = computed(() => periodoNovoDaExecucao(this.proposta()?.dados ?? {}));
+    /** Período e duração da execução corrigida, antes e depois, em texto, para o diff por palavra da correção. */
+    readonly periodoAnteriorDaExecucao = computed(() => periodoAnteriorDaExecucao(this.proposta()?.dados ?? {}));
+    readonly periodoNovoDaExecucao = computed(() => periodoNovoDaExecucao(this.proposta()?.dados ?? {}));
 
-  /** O usuário pediu os detalhes de uma proposta que cabia numa linha: o cartão grande aparece no mesmo lugar (task 226). */
-  readonly expandido = signal(false);
-  /** O resumo de uma linha da proposta e se ela cabe numa linha só. */
-  readonly resumo = computed(() => {
-    const atual = this.proposta();
-    return atual ? resumirProposta(atual.tipo, atual.dados) : null;
-  });
-  /**
+    /** O usuário pediu os detalhes de uma proposta que cabia numa linha: o cartão grande aparece no mesmo lugar (task 226). */
+    readonly expandido = signal(false);
+    /** O resumo de uma linha da proposta e se ela cabe numa linha só. */
+    readonly resumo = computed(() => {
+        const atual = this.proposta();
+        return atual ? resumirProposta(atual.tipo, atual.dados) : null;
+    });
+    /**
    * A linha em que a proposta se mostra, ou `null` quando o que vale é o cartão grande. Pendente e pequena: linha com ✓, lápis e ×;
    * confirmada (qualquer tipo): linha verde de "feito" (azul, com o ícone da IA, se ela executou sozinha, task 228); recusada, expirada ou desfeita e pequena: linha sem botões. Ajustando ou com
    * os detalhes abertos, sempre o cartão grande, que também é o de toda proposta que não cabe numa linha.
    */
-  readonly linha = computed(() => {
-    const atual = this.proposta();
-    const resumo = this.resumo();
-    if (!atual || !resumo || this.ajustando() || this.expandido()) return null;
-    if (atual.status === StatusPropostaIaEnum.PENDENTE) return resumo.compacto ? { resumo, modo: 'PENDENTE' as const, status: atual.status, feitaPelaIa: false } : null;
-    if (atual.status === StatusPropostaIaEnum.CONFIRMADA || atual.status === StatusPropostaIaEnum.AJUSTADA) {
-      return { resumo, modo: 'FEITA' as const, status: atual.status, feitaPelaIa: atual.aplicadaPelaIa === true };
-    }
-    return resumo.compacto ? { resumo, modo: 'ENCERRADA' as const, status: atual.status, feitaPelaIa: false } : null;
-  });
+    readonly linha = computed(() => {
+        const atual = this.proposta();
+        const resumo = this.resumo();
+        if (!atual || !resumo || this.ajustando() || this.expandido()) return null;
+        if (atual.status === StatusPropostaIaEnum.PENDENTE) return resumo.compacto ? { resumo, modo: 'PENDENTE' as const, status: atual.status, feitaPelaIa: false } : null;
+        if (atual.status === StatusPropostaIaEnum.CONFIRMADA || atual.status === StatusPropostaIaEnum.AJUSTADA) {
+            return { resumo, modo: 'FEITA' as const, status: atual.status, feitaPelaIa: atual.aplicadaPelaIa === true };
+        }
+        return resumo.compacto ? { resumo, modo: 'ENCERRADA' as const, status: atual.status, feitaPelaIa: false } : null;
+    });
 
-  /**
+    /**
    * A documentação que o cartão de Alterar demanda acrescenta, como antes e depois: o fim da documentação de antes (o suficiente para
    * situar o trecho) e o mesmo fim com o acréscimo, como o executor grava. Nulo nas propostas sem a documentação de antes.
    */
-  readonly documentacaoAcrescentada = computed(() => {
-    const dados = this.proposta()?.dados;
-    if (!dados || dados['documentacaoAnterior'] === undefined) return null;
-    const anterior = (typeof dados['documentacaoAnterior'] === 'string' ? dados['documentacaoAnterior'] : '').trimEnd();
-    const acrescimo = this.texto('acrescentarDocumentacao');
-    if (!anterior.trim()) return { antes: '', depois: acrescimo };
-    const cortou = anterior.length > CONTEXTO_DA_DOCUMENTACAO;
-    // Corta no começo de uma palavra, para o contexto não abrir no meio dela.
-    const contexto = cortou ? `… ${anterior.slice(-CONTEXTO_DA_DOCUMENTACAO).replace(/^\S*\s+/, '')}` : anterior;
-    return { antes: contexto, depois: `${contexto}\n\n${acrescimo}` };
-  });
-
-  /** A proposta mudou de situação por uma ação do usuário (confirmar, ajustar, recusar, desfazer): a tela atualiza os botões de sugestão. */
-  readonly resolvida = output<PropostaIaResumoDto>();
-
-  constructor() {
-    this.prioridadeService.carregar();
-    effect(() => {
-      const id = this.propostaId();
-      const carregada = this.propostaCarregada();
-      untracked(() => {
-        if (carregada && carregada.id === id) {
-          this.erro.set(false);
-          this.proposta.set(carregada);
-        } else {
-          this.carregar(id);
-        }
-      });
+    readonly documentacaoAcrescentada = computed(() => {
+        const dados = this.proposta()?.dados;
+        if (!dados || dados['documentacaoAnterior'] === undefined) return null;
+        const anterior = (typeof dados['documentacaoAnterior'] === 'string' ? dados['documentacaoAnterior'] : '').trimEnd();
+        const acrescimo = this.texto('acrescentarDocumentacao');
+        if (!anterior.trim()) return { antes: '', depois: acrescimo };
+        const cortou = anterior.length > CONTEXTO_DA_DOCUMENTACAO;
+        // Corta no começo de uma palavra, para o contexto não abrir no meio dela.
+        const contexto = cortou ? `… ${anterior.slice(-CONTEXTO_DA_DOCUMENTACAO).replace(/^\S*\s+/, '')}` : anterior;
+        return { antes: contexto, depois: `${contexto}\n\n${acrescimo}` };
     });
-    effect((aoLimpar) => {
-      const limite = limiteParaDesfazerProposta(this.proposta()?.resolucaoData);
-      if (!limite) return;
-      const espera = limite.getTime() - Date.now() + 1000;
-      if (espera <= 0 || espera > 2_147_000_000) return;
-      // Fora da zona: um temporizador de até 30 min dentro dela seguraria a estabilização da aplicação (e dos testes).
-      const temporizador = this.zona.runOutsideAngular(() => setTimeout(() => this.zona.run(() => this.agora.set(Date.now())), espera));
-      aoLimpar(() => clearTimeout(temporizador));
-    });
-  }
 
-  carregar(id: number = this.propostaId()): void {
-    this.erro.set(false);
-    this.propostaIaService.recuperarPorId(id).subscribe({
-      next: (resposta) => this.proposta.set(resposta.dados ?? null),
-      error: () => this.erro.set(true),
-    });
-  }
+    /** A proposta mudou de situação por uma ação do usuário (confirmar, ajustar, recusar, desfazer): a tela atualiza os botões de sugestão. */
+    readonly resolvida = output<PropostaIaResumoDto>();
 
-  confirmar(): void {
-    const id = this.propostaId();
-    this.executar(this.propostaIaService.confirmar(id), () =>
-      this.desfazerService.oferecer({
-        mensagem: 'Proposta confirmada',
-        desfazer: () => this.propostaIaService.desfazer(id),
-        aposDesfazer: () => this.carregar(id),
-      }),
-    );
-  }
-
-  /** Um dado da proposta como texto (vazio se não houver). */
-  texto(chave: string): string {
-    const valor = this.proposta()?.dados[chave];
-    return typeof valor === 'string' ? valor : '';
-  }
-
-  /** Rótulo de um status de atividade guardado na proposta (vazio se não houver). */
-  rotuloDoStatus(chave: string): string {
-    const codigo = this.texto(chave);
-    return ATIVIDADE_STATUS_OPCOES.find((opcao) => opcao.value === codigo)?.label ?? '';
-  }
-
-  /** Rótulo de um status de demanda guardado na proposta (vazio se não houver). */
-  rotuloDoStatusDaDemanda(chave: string): string {
-    return ROTULO_STATUS_DA_DEMANDA[this.texto(chave)] ?? '';
-  }
-
-  /** `yyyy-mm-dd` como `dd/mm/aaaa` (vazio se não houver). */
-  dataBr(data: string): string {
-    return data ? data.slice(0, 10).split('-').reverse().join('/') : '';
-  }
-
-  /** Uma lista de textos da proposta, separada por vírgula (vazio se não houver). */
-  lista(chave: string): string {
-    const valor = this.proposta()?.dados[chave];
-    return Array.isArray(valor) ? valor.filter((item) => typeof item === 'string').join(', ') : '';
-  }
-
-  /** Um dado numérico da proposta (0 se não houver). */
-  numero(chave: string): number {
-    const valor = this.proposta()?.dados[chave];
-    return typeof valor === 'number' ? valor : 0;
-  }
-
-  /** O nome da seção do pad como a tela do pad mostra. */
-  rotuloSecao(codigo: string): string {
-    return (ROTULO_SECAO_ANOTACAO as Record<string, string>)[codigo] ?? codigo;
-  }
-
-  prioridadeDe(codigo: string): { codigo: TipoAtividadePrioridadeEnum; descricao: string; cor: string } {
-    const encontrada = this.prioridadeService.prioridades().find((item) => item.codigo === codigo);
-    return encontrada ?? { codigo: codigo as TipoAtividadePrioridadeEnum, descricao: codigo, cor: '#94a3b8' };
-  }
-
-  abrirAjuste(): void {
-    const atual = this.proposta();
-    if (!atual) return;
-    // Na anotação do pad o campo editável é o texto novo: `texto` (anexar) ou `trechoNovo` (trocar).
-    const textoDoPad = this.texto('operacao') === 'TROCAR' ? this.texto('trechoNovo') : this.texto('texto');
-    this.formularioAjuste.reset({
-      nome: this.texto('nome'),
-      codigo: this.texto('codigo'),
-      descricaoCliente: this.texto('descricaoCliente'),
-      descricaoTecnica: this.texto('descricaoTecnica'),
-      descricao: atual.tipo === TipoPropostaIaEnum.ANOTAR_PAD ? textoDoPad : this.texto('descricao'),
-      atividadeSeguinteId: this.numero('atividadeSeguinteId') || null,
-      prioridade: (this.texto('prioridade') || TipoAtividadePrioridadeEnum.INDEFINIDA) as TipoAtividadePrioridadeEnum,
-    });
-    if (atual.tipo === TipoPropostaIaEnum.DESCREVER_EXECUCAO) this.carregarAtividadesParaTroca();
-    this.ajustando.set(true);
-  }
-
-  private carregarAtividadesParaTroca(): void {
-    this.atividadeService
-      .listar({ usuarioId: this.sessao.id() ?? undefined, status: [TipoAtividadeStatusEnum.PLANEJADA, TipoAtividadeStatusEnum.DESENVOLVENDO], itensPorPagina: 100 })
-      .subscribe({
-        next: (resposta) =>
-          this.atividadesParaTroca.set((resposta.dados?.itens ?? []).map((item) => ({ id: item.id, rotulo: `${item.nome} · ${item.nomeDemanda}` }))),
-        error: () => this.atividadesParaTroca.set([]),
-      });
-  }
-
-  cancelarAjuste(): void {
-    this.ajustando.set(false);
-  }
-
-  /** Confirma já com os campos corrigidos; os nomes de exibição continuam como a IA propôs. */
-  confirmarAjuste(): void {
-    const atual = this.proposta();
-    if (!atual) return;
-    const valores = this.formularioAjuste.getRawValue();
-    const dados: Record<string, unknown> = { ...atual.dados };
-    if (atual.tipo === TipoPropostaIaEnum.CRIAR_ATIVIDADE || atual.tipo === TipoPropostaIaEnum.CRIAR_PROJETO || atual.tipo === TipoPropostaIaEnum.CRIAR_DEMANDA) {
-      const ehProjeto = atual.tipo === TipoPropostaIaEnum.CRIAR_PROJETO;
-      if (this.formularioAjuste.controls.nome.invalid || (ehProjeto && this.formularioAjuste.controls.codigo.invalid)) {
-        this.formularioAjuste.controls.nome.markAsTouched();
-        this.formularioAjuste.controls.codigo.markAsTouched();
-        return;
-      }
-      dados['nome'] = valores.nome.trim();
-      if (atual.tipo === TipoPropostaIaEnum.CRIAR_ATIVIDADE) dados['prioridade'] = valores.prioridade;
-      if (ehProjeto) dados['codigo'] = valores.codigo.trim().toUpperCase();
-    } else if (atual.tipo === TipoPropostaIaEnum.DESCREVER_DEMANDA) {
-      // Só os campos que a proposta trouxe: um campo ausente não é alterado na demanda; esvaziar um que veio não é um ajuste válido.
-      const cliente = valores.descricaoCliente.trim();
-      const tecnica = valores.descricaoTecnica.trim();
-      if ((this.texto('descricaoCliente') && !cliente) || (this.texto('descricaoTecnica') && !tecnica)) {
-        this.formularioAjuste.controls.descricaoCliente.markAsTouched();
-        this.formularioAjuste.controls.descricaoTecnica.markAsTouched();
-        return;
-      }
-      if (this.texto('descricaoCliente')) dados['descricaoCliente'] = cliente;
-      if (this.texto('descricaoTecnica')) dados['descricaoTecnica'] = tecnica;
-    } else if (atual.tipo === TipoPropostaIaEnum.INICIAR_EXECUCAO) {
-      dados['descricao'] = valores.descricao.trim();
-    } else if (atual.tipo === TipoPropostaIaEnum.DESCREVER_EXECUCAO) {
-      const descricao = valores.descricao.trim();
-      if (descricao.length < 3) {
-        this.formularioAjuste.controls.descricao.markAsTouched();
-        return;
-      }
-      dados['descricao'] = descricao;
-      const seguinte = this.atividadesParaTroca().find((item) => item.id === valores.atividadeSeguinteId);
-      if (valores.atividadeSeguinteId) {
-        dados['escolha'] = 'TROCAR';
-        dados['atividadeSeguinteId'] = valores.atividadeSeguinteId;
-        dados['atividadeSeguinteNome'] = seguinte?.rotulo.split(' · ')[0] ?? '';
-        delete dados['descricaoSeguinte'];
-      } else {
-        dados['escolha'] = 'CONTINUAR';
-        delete dados['atividadeSeguinteId'];
-        delete dados['atividadeSeguinteNome'];
-      }
-    } else if (atual.tipo === TipoPropostaIaEnum.ANOTAR_PAD) {
-      const campo = this.texto('operacao') === 'TROCAR' ? 'trechoNovo' : 'texto';
-      dados[campo] = valores.descricao;
-    } else if (atual.tipo === TipoPropostaIaEnum.PAUSAR_EXECUCAO) {
-      const descricao = valores.descricao.trim();
-      if (descricao) dados['descricao'] = descricao;
-      else delete dados['descricao'];
+    constructor() {
+        this.prioridadeService.carregar();
+        effect(() => {
+            const id = this.propostaId();
+            const carregada = this.propostaCarregada();
+            untracked(() => {
+                if (carregada && carregada.id === id) {
+                    this.erro.set(false);
+                    this.proposta.set(carregada);
+                } else {
+                    this.carregar(id);
+                }
+            });
+        });
+        effect((aoLimpar) => {
+            const limite = limiteParaDesfazerProposta(this.proposta()?.resolucaoData);
+            if (!limite) return;
+            const espera = limite.getTime() - Date.now() + 1000;
+            if (espera <= 0 || espera > 2_147_000_000) return;
+            // Fora da zona: um temporizador de até 30 min dentro dela seguraria a estabilização da aplicação (e dos testes).
+            const temporizador = this.zona.runOutsideAngular(() => setTimeout(() => this.zona.run(() => this.agora.set(Date.now())), espera));
+            aoLimpar(() => clearTimeout(temporizador));
+        });
     }
-    const id = this.propostaId();
-    this.executar(this.propostaIaService.ajustar(id, { dados }), () => {
-      this.ajustando.set(false);
-      this.desfazerService.oferecer({
-        mensagem: 'Proposta ajustada e confirmada',
-        desfazer: () => this.propostaIaService.desfazer(id),
-        aposDesfazer: () => this.carregar(id),
-      });
-    });
-  }
 
-  recusar(): void {
-    this.executar(this.propostaIaService.recusar(this.propostaId()));
-  }
+    carregar(id: number = this.propostaId()): void {
+        this.erro.set(false);
+        this.propostaIaService.recuperarPorId(id).subscribe({
+            next: (resposta) => this.proposta.set(resposta.dados ?? null),
+            error: () => this.erro.set(true),
+        });
+    }
 
-  desfazer(): void {
-    this.executar(this.propostaIaService.desfazer(this.propostaId()));
-  }
+    confirmar(): void {
+        const id = this.propostaId();
+        this.executar(this.propostaIaService.confirmar(id), () =>
+            this.desfazerService.oferecer({
+                mensagem: 'Proposta confirmada',
+                desfazer: () => this.propostaIaService.desfazer(id),
+                aposDesfazer: () => this.carregar(id),
+            }),
+        );
+    }
 
-  private executar(chamada: Observable<StandardResponse<PropostaIaResumoDto>>, aoSucesso?: () => void): void {
-    if (this.operando()) return;
-    this.operando.set(true);
-    chamada.subscribe({
-      next: (resposta) => {
-        this.operando.set(false);
-        this.proposta.set(resposta.dados ?? null);
-        if (resposta.dados) this.resolvida.emit(resposta.dados);
-        aoSucesso?.();
-      },
-      error: (erro: HttpErrorResponse) => {
-        this.operando.set(false);
-        const mensagem = erro.error?.mensagem ?? 'Não foi possível concluir a ação';
-        // Já resolvida em outro lugar: mostra a situação de hoje em vez de insistir.
-        if (erro.status === 409) this.carregar();
-        this.messageService.add({ severity: erro.status === 409 ? 'info' : 'warn', summary: 'Proposta', detail: mensagem });
-      },
-    });
-  }
+    /** Um dado da proposta como texto (vazio se não houver). */
+    texto(chave: string): string {
+        const valor = this.proposta()?.dados[chave];
+        return typeof valor === 'string' ? valor : '';
+    }
+
+    /** Rótulo de um status de atividade guardado na proposta (vazio se não houver). */
+    rotuloDoStatus(chave: string): string {
+        const codigo = this.texto(chave);
+        return ATIVIDADE_STATUS_OPCOES.find((opcao) => opcao.value === codigo)?.label ?? '';
+    }
+
+    /** Rótulo de um status de demanda guardado na proposta (vazio se não houver). */
+    rotuloDoStatusDaDemanda(chave: string): string {
+        return ROTULO_STATUS_DA_DEMANDA[this.texto(chave)] ?? '';
+    }
+
+    /** `yyyy-mm-dd` como `dd/mm/aaaa` (vazio se não houver). */
+    dataBr(data: string): string {
+        return data ? data.slice(0, 10).split('-').reverse().join('/') : '';
+    }
+
+    /** Uma lista de textos da proposta, separada por vírgula (vazio se não houver). */
+    lista(chave: string): string {
+        const valor = this.proposta()?.dados[chave];
+        return Array.isArray(valor) ? valor.filter((item) => typeof item === 'string').join(', ') : '';
+    }
+
+    /** Um dado numérico da proposta (0 se não houver). */
+    numero(chave: string): number {
+        const valor = this.proposta()?.dados[chave];
+        return typeof valor === 'number' ? valor : 0;
+    }
+
+    /** O nome da seção do pad como a tela do pad mostra. */
+    rotuloSecao(codigo: string): string {
+        return (ROTULO_SECAO_ANOTACAO as Record<string, string>)[codigo] ?? codigo;
+    }
+
+    prioridadeDe(codigo: string): { codigo: TipoAtividadePrioridadeEnum; descricao: string; cor: string } {
+        const encontrada = this.prioridadeService.prioridades().find((item) => item.codigo === codigo);
+        return encontrada ?? { codigo: codigo as TipoAtividadePrioridadeEnum, descricao: codigo, cor: '#94a3b8' };
+    }
+
+    abrirAjuste(): void {
+        const atual = this.proposta();
+        if (!atual) return;
+        // Na anotação do pad o campo editável é o texto novo: `texto` (anexar) ou `trechoNovo` (trocar).
+        const textoDoPad = this.texto('operacao') === 'TROCAR' ? this.texto('trechoNovo') : this.texto('texto');
+        this.formularioAjuste.reset({
+            nome: this.texto('nome'),
+            codigo: this.texto('codigo'),
+            descricaoCliente: this.texto('descricaoCliente'),
+            descricaoTecnica: this.texto('descricaoTecnica'),
+            descricao: atual.tipo === TipoPropostaIaEnum.ANOTAR_PAD ? textoDoPad : this.texto('descricao'),
+            atividadeSeguinteId: this.numero('atividadeSeguinteId') || null,
+            prioridade: (this.texto('prioridade') || TipoAtividadePrioridadeEnum.INDEFINIDA) as TipoAtividadePrioridadeEnum,
+        });
+        if (atual.tipo === TipoPropostaIaEnum.DESCREVER_EXECUCAO) this.carregarAtividadesParaTroca();
+        this.ajustando.set(true);
+    }
+
+    private carregarAtividadesParaTroca(): void {
+        this.atividadeService
+            .listar({ usuarioId: this.sessao.id() ?? undefined, status: [TipoAtividadeStatusEnum.PLANEJADA, TipoAtividadeStatusEnum.DESENVOLVENDO], itensPorPagina: 100 })
+            .subscribe({
+                next: (resposta) =>
+                    this.atividadesParaTroca.set((resposta.dados?.itens ?? []).map((item) => ({ id: item.id, rotulo: `${item.nome} · ${item.nomeDemanda}` }))),
+                error: () => this.atividadesParaTroca.set([]),
+            });
+    }
+
+    cancelarAjuste(): void {
+        this.ajustando.set(false);
+    }
+
+    /** Confirma já com os campos corrigidos; os nomes de exibição continuam como a IA propôs. */
+    confirmarAjuste(): void {
+        const atual = this.proposta();
+        if (!atual) return;
+        const valores = this.formularioAjuste.getRawValue();
+        const dados: Record<string, unknown> = { ...atual.dados };
+        if (atual.tipo === TipoPropostaIaEnum.CRIAR_ATIVIDADE || atual.tipo === TipoPropostaIaEnum.CRIAR_PROJETO || atual.tipo === TipoPropostaIaEnum.CRIAR_DEMANDA) {
+            const ehProjeto = atual.tipo === TipoPropostaIaEnum.CRIAR_PROJETO;
+            if (this.formularioAjuste.controls.nome.invalid || (ehProjeto && this.formularioAjuste.controls.codigo.invalid)) {
+                this.formularioAjuste.controls.nome.markAsTouched();
+                this.formularioAjuste.controls.codigo.markAsTouched();
+                return;
+            }
+            dados['nome'] = valores.nome.trim();
+            if (atual.tipo === TipoPropostaIaEnum.CRIAR_ATIVIDADE) dados['prioridade'] = valores.prioridade;
+            if (ehProjeto) dados['codigo'] = valores.codigo.trim().toUpperCase();
+        } else if (atual.tipo === TipoPropostaIaEnum.DESCREVER_DEMANDA) {
+            // Só os campos que a proposta trouxe: um campo ausente não é alterado na demanda; esvaziar um que veio não é um ajuste válido.
+            const cliente = valores.descricaoCliente.trim();
+            const tecnica = valores.descricaoTecnica.trim();
+            if ((this.texto('descricaoCliente') && !cliente) || (this.texto('descricaoTecnica') && !tecnica)) {
+                this.formularioAjuste.controls.descricaoCliente.markAsTouched();
+                this.formularioAjuste.controls.descricaoTecnica.markAsTouched();
+                return;
+            }
+            if (this.texto('descricaoCliente')) dados['descricaoCliente'] = cliente;
+            if (this.texto('descricaoTecnica')) dados['descricaoTecnica'] = tecnica;
+        } else if (atual.tipo === TipoPropostaIaEnum.INICIAR_EXECUCAO) {
+            dados['descricao'] = valores.descricao.trim();
+        } else if (atual.tipo === TipoPropostaIaEnum.DESCREVER_EXECUCAO) {
+            const descricao = valores.descricao.trim();
+            if (descricao.length < 3) {
+                this.formularioAjuste.controls.descricao.markAsTouched();
+                return;
+            }
+            dados['descricao'] = descricao;
+            const seguinte = this.atividadesParaTroca().find((item) => item.id === valores.atividadeSeguinteId);
+            if (valores.atividadeSeguinteId) {
+                dados['escolha'] = 'TROCAR';
+                dados['atividadeSeguinteId'] = valores.atividadeSeguinteId;
+                dados['atividadeSeguinteNome'] = seguinte?.rotulo.split(' · ')[0] ?? '';
+                delete dados['descricaoSeguinte'];
+            } else {
+                dados['escolha'] = 'CONTINUAR';
+                delete dados['atividadeSeguinteId'];
+                delete dados['atividadeSeguinteNome'];
+            }
+        } else if (atual.tipo === TipoPropostaIaEnum.ANOTAR_PAD) {
+            const campo = this.texto('operacao') === 'TROCAR' ? 'trechoNovo' : 'texto';
+            dados[campo] = valores.descricao;
+        } else if (atual.tipo === TipoPropostaIaEnum.PAUSAR_EXECUCAO) {
+            const descricao = valores.descricao.trim();
+            if (descricao) dados['descricao'] = descricao;
+            else delete dados['descricao'];
+        }
+        const id = this.propostaId();
+        this.executar(this.propostaIaService.ajustar(id, { dados }), () => {
+            this.ajustando.set(false);
+            this.desfazerService.oferecer({
+                mensagem: 'Proposta ajustada e confirmada',
+                desfazer: () => this.propostaIaService.desfazer(id),
+                aposDesfazer: () => this.carregar(id),
+            });
+        });
+    }
+
+    recusar(): void {
+        this.executar(this.propostaIaService.recusar(this.propostaId()));
+    }
+
+    desfazer(): void {
+        this.executar(this.propostaIaService.desfazer(this.propostaId()));
+    }
+
+    private executar(chamada: Observable<StandardResponse<PropostaIaResumoDto>>, aoSucesso?: () => void): void {
+        if (this.operando()) return;
+        this.operando.set(true);
+        chamada.subscribe({
+            next: (resposta) => {
+                this.operando.set(false);
+                this.proposta.set(resposta.dados ?? null);
+                if (resposta.dados) this.resolvida.emit(resposta.dados);
+                aoSucesso?.();
+            },
+            error: (erro: HttpErrorResponse) => {
+                this.operando.set(false);
+                const mensagem = erro.error?.mensagem ?? 'Não foi possível concluir a ação';
+                // Já resolvida em outro lugar: mostra a situação de hoje em vez de insistir.
+                if (erro.status === 409) this.carregar();
+                this.messageService.add({ severity: erro.status === 409 ? 'info' : 'warn', summary: 'Proposta', detail: mensagem });
+            },
+        });
+    }
 }

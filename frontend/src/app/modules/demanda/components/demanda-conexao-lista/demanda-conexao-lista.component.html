@@ -1,101 +1,109 @@
 <div class="demanda-conexao-lista">
-  <div class="demanda-conexao-lista__cabecalho">
-    <span class="demanda-conexao-lista__titulo">
-      Conexões
-      @if (conexoes().length > 0) {
-        <span class="demanda-conexao-lista__contador">{{ conexoes().length }}</span>
-      }
-    </span>
-  </div>
-
-  <!-- Criação inline (gestor): escolher o destino e confirmar com Enter ou "Adicionar" -->
-  @if (sessao.eGestor()) {
-    <div class="demanda-conexao-lista__criacao">
-      <p-select
-        [options]="candidatos()"
-        [ngModel]="destinoId()"
-        (ngModelChange)="aoEscolherDestino($event)"
-        optionLabel="nomeDemandaConectada"
-        optionValue="demandaConectadaId"
-        [filter]="true"
-        filterPlaceholder="Digite para buscar…"
-        placeholder="Conectar a outra demanda…"
-        emptyFilterMessage="Nenhuma demanda encontrada"
-        [showClear]="true"
-        appendTo="body"
-        class="demanda-conexao-lista__destino"
-      />
-      <p-selectbutton
-        [options]="opcoesDirecao"
-        [ngModel]="ehBidirecional()"
-        (ngModelChange)="ehBidirecional.set($event)"
-        optionLabel="rotulo"
-        optionValue="valor"
-        [allowEmpty]="false"
-        size="small"
-      />
-      <p-button
-        label="Adicionar"
-        icon="pi pi-plus"
-        size="small"
-        class="demanda-conexao-lista__adicionar"
-        [disabled]="!destinoId()"
-        [loading]="salvando()"
-        (onClick)="adicionar()"
-      />
-    </div>
-    @if (erroInline()) {
-      <p class="demanda-conexao-lista__erro" role="alert"><i class="pi pi-exclamation-circle"></i> {{ erroInline() }}</p>
-    }
-  }
-
-  @if (conexoes().length === 0) {
-    <div class="demanda-conexao-lista__vazio">
-      <i class="pi pi-share-alt"></i>
-      <p>Nenhuma conexão. {{ sessao.eGestor() ? 'Escolha uma demanda acima para criar a primeira.' : '' }}</p>
-    </div>
-  }
-
-  @for (grupo of grupos(); track grupo.direcao) {
-    <section class="demanda-conexao-lista__grupo" [attr.aria-label]="grupo.titulo">
-      <h4 class="demanda-conexao-lista__grupo-titulo">
-        <span
-          class="demanda-conexao-lista__direcao"
-          [class.demanda-conexao-lista__direcao--saida]="grupo.direcao === 'saida'"
-          [class.demanda-conexao-lista__direcao--entrada]="grupo.direcao === 'entrada'"
-          [class.demanda-conexao-lista__direcao--bidirecional]="grupo.direcao === 'bidirecional'"
-          aria-hidden="true"
-        ><i [class]="'pi ' + grupo.icone"></i></span>
-        {{ grupo.titulo }}
-        <span class="demanda-conexao-lista__grupo-contador">{{ grupo.itens.length }}</span>
-      </h4>
-      <ul class="demanda-conexao-lista__lista">
-        @for (conexao of grupo.itens; track conexao.id) {
-          <li class="demanda-conexao-lista__item">
-            <button
-              type="button"
-              class="demanda-conexao-lista__nome"
-              [pTooltip]="tooltipDirecao(conexao)"
-              tooltipPosition="top"
-              (click)="demandaAbrir.emit(conexao.demandaConectadaId)"
-            >
-              {{ conexao.nomeDemandaConectada }}
-            </button>
-            @if (sessao.eGestor()) {
-              <p-button
-                icon="pi pi-trash"
-                severity="danger"
-                [text]="true"
-                size="small"
-                ariaLabel="Remover conexão"
-                pTooltip="Remover conexão"
-                tooltipPosition="top"
-                (onClick)="excluir(conexao)"
-              />
+    <div class="demanda-conexao-lista__cabecalho">
+        <span class="demanda-conexao-lista__titulo">
+            Conexões
+            @if (conexoes().length > 0) {
+                <span class="demanda-conexao-lista__contador">{{ conexoes().length }}</span>
             }
-          </li>
+        </span>
+    </div>
+
+    <!-- Criação inline (gestor): escolher o destino e confirmar com Enter ou "Adicionar" -->
+    @if (sessao.eGestor()) {
+        <div class="demanda-conexao-lista__criacao">
+            <p-select
+                [options]="candidatos()"
+                [ngModel]="destinoId()"
+                (ngModelChange)="aoEscolherDestino($event)"
+                optionLabel="nomeDemandaConectada"
+                optionValue="demandaConectadaId"
+                [filter]="true"
+                filterPlaceholder="Digite para buscar…"
+                placeholder="Conectar a outra demanda…"
+                emptyFilterMessage="Nenhuma demanda encontrada"
+                [showClear]="true"
+                appendTo="body"
+                class="demanda-conexao-lista__destino"
+            />
+            <p-selectbutton
+                [options]="opcoesDirecao"
+                [ngModel]="ehBidirecional()"
+                (ngModelChange)="ehBidirecional.set($event)"
+                optionLabel="rotulo"
+                optionValue="valor"
+                [allowEmpty]="false"
+                size="small"
+            />
+            <p-button
+                label="Adicionar"
+                icon="pi pi-plus"
+                size="small"
+                class="demanda-conexao-lista__adicionar"
+                [disabled]="!destinoId()"
+                [loading]="salvando()"
+                (onClick)="adicionar()"
+            />
+        </div>
+        @if (erroInline()) {
+            <p class="demanda-conexao-lista__erro" role="alert">
+                <i class="pi pi-exclamation-circle"></i> {{ erroInline() }}
+            </p>
         }
-      </ul>
-    </section>
-  }
+    }
+
+    @if (conexoes().length === 0) {
+        <div class="demanda-conexao-lista__vazio">
+            <i class="pi pi-share-alt"></i>
+            <p>
+                Nenhuma conexão.
+                {{ sessao.eGestor() ? "Escolha uma demanda acima para criar a primeira." : "" }}
+            </p>
+        </div>
+    }
+
+    @for (grupo of grupos(); track grupo.direcao) {
+        <section class="demanda-conexao-lista__grupo" [attr.aria-label]="grupo.titulo">
+            <h4 class="demanda-conexao-lista__grupo-titulo">
+                <span
+                    class="demanda-conexao-lista__direcao"
+                    [class.demanda-conexao-lista__direcao--saida]="grupo.direcao === 'saida'"
+                    [class.demanda-conexao-lista__direcao--entrada]="grupo.direcao === 'entrada'"
+                    [class.demanda-conexao-lista__direcao--bidirecional]="
+                        grupo.direcao === 'bidirecional'
+                    "
+                    aria-hidden="true"
+                    ><i [class]="'pi ' + grupo.icone"></i
+                ></span>
+                {{ grupo.titulo }}
+                <span class="demanda-conexao-lista__grupo-contador">{{ grupo.itens.length }}</span>
+            </h4>
+            <ul class="demanda-conexao-lista__lista">
+                @for (conexao of grupo.itens; track conexao.id) {
+                    <li class="demanda-conexao-lista__item">
+                        <button
+                            type="button"
+                            class="demanda-conexao-lista__nome"
+                            [pTooltip]="tooltipDirecao(conexao)"
+                            tooltipPosition="top"
+                            (click)="demandaAbrir.emit(conexao.demandaConectadaId)"
+                        >
+                            {{ conexao.nomeDemandaConectada }}
+                        </button>
+                        @if (sessao.eGestor()) {
+                            <p-button
+                                icon="pi pi-trash"
+                                severity="danger"
+                                [text]="true"
+                                size="small"
+                                ariaLabel="Remover conexão"
+                                pTooltip="Remover conexão"
+                                tooltipPosition="top"
+                                (onClick)="excluir(conexao)"
+                            />
+                        }
+                    </li>
+                }
+            </ul>
+        </section>
+    }
 </div>

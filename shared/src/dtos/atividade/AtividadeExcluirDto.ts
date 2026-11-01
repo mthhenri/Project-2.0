@@ -1,3 +1,3 @@
 export class AtividadeExcluirDto {
-  id: number;
+    id: number;
 }

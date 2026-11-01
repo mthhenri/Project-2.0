@@ -16,181 +16,181 @@ import { AutenticacaoLoginDto } from '@project20/shared';
 
 /** Só o login e o nome ficam no navegador — a senha nunca é persistida (task 94). */
 interface UsuarioLembrado {
-  login: string;
-  nomeCompleto: string;
+    login: string;
+    nomeCompleto: string;
 }
 
 const CHAVE_ULTIMO_LOGIN = 'ultimo_login';
 
 @Component({
-  selector: 'app-login',
-  standalone: true,
-  imports: [ReactiveFormsModule, CardModule, InputTextModule, ButtonModule],
-  templateUrl: './login.page.html',
-  styleUrl: './login.page.scss',
+    selector: 'app-login',
+    standalone: true,
+    imports: [ReactiveFormsModule, CardModule, InputTextModule, ButtonModule],
+    templateUrl: './login.page.html',
+    styleUrl: './login.page.scss',
 })
 export class LoginPage implements OnInit {
-  private readonly autenticacaoService = inject(AutenticacaoService);
-  private readonly sessao = inject(UsuarioSessaoService);
-  private readonly router = inject(Router);
-  private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
-  private readonly rotaAtiva = inject(ActivatedRoute);
-  private readonly formBuilder = inject(FormBuilder);
-  private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
-  readonly tema = inject(TemaService);
+    private readonly autenticacaoService = inject(AutenticacaoService);
+    private readonly sessao = inject(UsuarioSessaoService);
+    private readonly router = inject(Router);
+    private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
+    private readonly rotaAtiva = inject(ActivatedRoute);
+    private readonly formBuilder = inject(FormBuilder);
+    private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
+    readonly tema = inject(TemaService);
 
-  readonly formulario = this.formBuilder.group({
-    login:  ['', [Validators.required, Validators.minLength(4)]],
-    senha:  ['', [Validators.required]],
-  });
-
-  readonly carregando = signal<boolean>(false);
-  readonly erroLogin = signal<string>('');
-  /** O erro é do servidor (fora do ar), não da senha: não marca o campo como inválido. */
-  private readonly falhaDeServidor = signal<boolean>(false);
-  readonly capsLockAtivo = signal<boolean>(false);
-  readonly senhaVisivel = signal<boolean>(false);
-  readonly usuarioLembrado = signal<UsuarioLembrado | null>(null);
-  private readonly usandoOutroUsuario = signal<boolean>(false);
-
-  /** Campos com erro, para `aria-invalid` e para ligar a mensagem ao campo (`aria-describedby`). */
-  loginComErro(): boolean {
-    const controle = this.formulario.controls.login;
-    return controle.touched && controle.invalid;
-  }
-
-  senhaComErro(): boolean {
-    const controle = this.formulario.controls.senha;
-    return (controle.touched && controle.invalid) || (this.erroLogin() !== '' && !this.falhaDeServidor());
-  }
-
-  /** Estado A (usuário lembrado, só a senha) ou B (formulário completo). */
-  readonly modoLembrado = computed(() => this.usuarioLembrado() !== null && !this.usandoOutroUsuario());
-  readonly iniciais = computed(() =>
-    (this.usuarioLembrado()?.nomeCompleto ?? '')
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((parte) => parte[0])
-      .join('')
-      .toUpperCase(),
-  );
-
-  constructor() {
-    afterNextRender(() => this.focarCampoInicial());
-  }
-
-  ngOnInit(): void {
-    this.lerUsuarioLembrado();
-    const lembrado = this.usuarioLembrado();
-    if (lembrado) this.formulario.patchValue({ login: lembrado.login });
-
-    // Digitar de novo apaga o erro da tentativa anterior.
-    this.formulario.valueChanges.subscribe(() => {
-      if (this.erroLogin()) this.erroLogin.set('');
+    readonly formulario = this.formBuilder.group({
+        login:  ['', [Validators.required, Validators.minLength(4)]],
+        senha:  ['', [Validators.required]],
     });
-  }
 
-  entrar(): void {
-    if (this.carregando()) return;
-    if (this.formulario.invalid) {
-      this.formulario.markAllAsTouched();
-      return;
+    readonly carregando = signal<boolean>(false);
+    readonly erroLogin = signal<string>('');
+    /** O erro é do servidor (fora do ar), não da senha: não marca o campo como inválido. */
+    private readonly falhaDeServidor = signal<boolean>(false);
+    readonly capsLockAtivo = signal<boolean>(false);
+    readonly senhaVisivel = signal<boolean>(false);
+    readonly usuarioLembrado = signal<UsuarioLembrado | null>(null);
+    private readonly usandoOutroUsuario = signal<boolean>(false);
+
+    /** Campos com erro, para `aria-invalid` e para ligar a mensagem ao campo (`aria-describedby`). */
+    loginComErro(): boolean {
+        const controle = this.formulario.controls.login;
+        return controle.touched && controle.invalid;
     }
 
-    this.normalizarLogin();
-    const { login, senha } = this.formulario.getRawValue();
-    this.carregando.set(true);
-    this.erroLogin.set('');
-    this.formulario.disable({ emitEvent: false });
-
-    this.autenticacaoService
-      .login({ login, senha } as AutenticacaoLoginDto)
-      .pipe(finalize(() => {
-        this.carregando.set(false);
-        this.formulario.enable({ emitEvent: false });
-      }))
-      .subscribe({
-        next: () => {
-          this.guardarUsuarioLembrado();
-          const retorno = urlRetornoSegura(this.router, this.rotaAtiva.snapshot.queryParamMap.get('returnUrl'));
-          // Com a IA no ar o login cai no chat; senão, no fluxo convencional (a consulta já vai com o token novo).
-          this.iaDisponibilidade.consultar().subscribe((estado) => this.router.navigateByUrl(destinoPosLogin(retorno, estado)));
-        },
-        error: (erro: HttpErrorResponse) => this.aoFalhar(erro),
-      });
-  }
-
-  /** Troca para o formulário completo sem apagar o usuário lembrado (só o próximo sucesso o sobrescreve). */
-  entrarComOutroUsuario(): void {
-    this.usandoOutroUsuario.set(true);
-    this.erroLogin.set('');
-    this.formulario.reset({ login: '', senha: '' });
-    setTimeout(() => this.campo('#login-input')?.focus());
-  }
-
-  /** Espelha o `@Transform` do backend: trim + minúsculas. */
-  normalizarLogin(): void {
-    const controle = this.formulario.controls.login;
-    const normalizado = (controle.value ?? '').trim().toLowerCase();
-    if (normalizado !== controle.value) controle.setValue(normalizado);
-  }
-
-  alternarSenha(): void {
-    this.senhaVisivel.update((visivel) => !visivel);
-  }
-
-  atualizarCapsLock(evento: KeyboardEvent): void {
-    if (typeof evento.getModifierState === 'function') {
-      this.capsLockAtivo.set(evento.getModifierState('CapsLock'));
+    senhaComErro(): boolean {
+        const controle = this.formulario.controls.senha;
+        return (controle.touched && controle.invalid) || (this.erroLogin() !== '' && !this.falhaDeServidor());
     }
-  }
 
-  private aoFalhar(erro: HttpErrorResponse): void {
-    this.falhaDeServidor.set(erro.status === 0 || erro.status >= 500);
-    if (this.falhaDeServidor()) {
-      this.erroLogin.set('Servidor indisponível. Tente novamente em instantes.');
-      return;
+    /** Estado A (usuário lembrado, só a senha) ou B (formulário completo). */
+    readonly modoLembrado = computed(() => this.usuarioLembrado() !== null && !this.usandoOutroUsuario());
+    readonly iniciais = computed(() =>
+        (this.usuarioLembrado()?.nomeCompleto ?? '')
+            .split(' ')
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((parte) => parte[0])
+            .join('')
+            .toUpperCase(),
+    );
+
+    constructor() {
+        afterNextRender(() => this.focarCampoInicial());
     }
-    this.erroLogin.set(erro.error?.mensagem ?? 'Usuário ou senha incorretos. Confira e tente de novo.');
-    // O formulário volta a ficar habilitado no finalize; foca depois disso.
-    setTimeout(() => {
-      const senha = this.campo('input[type=password], #senha-input') as HTMLInputElement | null;
-      senha?.focus();
-      senha?.select();
-    });
-  }
 
-  private focarCampoInicial(): void {
-    this.campo(this.modoLembrado() ? '#senha-input' : '#login-input')?.focus();
-  }
+    ngOnInit(): void {
+        this.lerUsuarioLembrado();
+        const lembrado = this.usuarioLembrado();
+        if (lembrado) this.formulario.patchValue({ login: lembrado.login });
 
-  private campo(seletor: string): HTMLInputElement | null {
-    return this.elemento.nativeElement.querySelector<HTMLInputElement>(seletor);
-  }
-
-  private lerUsuarioLembrado(): void {
-    const salvo = localStorage.getItem(CHAVE_ULTIMO_LOGIN);
-    if (!salvo) return;
-    try {
-      const dados = JSON.parse(salvo) as Partial<UsuarioLembrado> & { senha?: string };
-      // Formato antigo guardava a senha: some na hora, sem reaproveitar nada.
-      if (dados.senha !== undefined || !dados.login || !dados.nomeCompleto) {
-        localStorage.removeItem(CHAVE_ULTIMO_LOGIN);
-        return;
-      }
-      this.usuarioLembrado.set({ login: dados.login, nomeCompleto: dados.nomeCompleto });
-    } catch {
-      localStorage.removeItem(CHAVE_ULTIMO_LOGIN);
+        // Digitar de novo apaga o erro da tentativa anterior.
+        this.formulario.valueChanges.subscribe(() => {
+            if (this.erroLogin()) this.erroLogin.set('');
+        });
     }
-  }
 
-  /** O usuário é sempre lembrado (a sessão dura 7 dias e a tela só some do caminho); "Entrar com outro usuário" troca. */
-  private guardarUsuarioLembrado(): void {
-    const nomeCompleto = this.sessao.nomeCompleto();
-    const login = this.sessao.login();
-    if (nomeCompleto && login) {
-      localStorage.setItem(CHAVE_ULTIMO_LOGIN, JSON.stringify({ login, nomeCompleto }));
+    entrar(): void {
+        if (this.carregando()) return;
+        if (this.formulario.invalid) {
+            this.formulario.markAllAsTouched();
+            return;
+        }
+
+        this.normalizarLogin();
+        const { login, senha } = this.formulario.getRawValue();
+        this.carregando.set(true);
+        this.erroLogin.set('');
+        this.formulario.disable({ emitEvent: false });
+
+        this.autenticacaoService
+            .login({ login, senha } as AutenticacaoLoginDto)
+            .pipe(finalize(() => {
+                this.carregando.set(false);
+                this.formulario.enable({ emitEvent: false });
+            }))
+            .subscribe({
+                next: () => {
+                    this.guardarUsuarioLembrado();
+                    const retorno = urlRetornoSegura(this.router, this.rotaAtiva.snapshot.queryParamMap.get('returnUrl'));
+                    // Com a IA no ar o login cai no chat; senão, no fluxo convencional (a consulta já vai com o token novo).
+                    this.iaDisponibilidade.consultar().subscribe((estado) => this.router.navigateByUrl(destinoPosLogin(retorno, estado)));
+                },
+                error: (erro: HttpErrorResponse) => this.aoFalhar(erro),
+            });
     }
-  }
+
+    /** Troca para o formulário completo sem apagar o usuário lembrado (só o próximo sucesso o sobrescreve). */
+    entrarComOutroUsuario(): void {
+        this.usandoOutroUsuario.set(true);
+        this.erroLogin.set('');
+        this.formulario.reset({ login: '', senha: '' });
+        setTimeout(() => this.campo('#login-input')?.focus());
+    }
+
+    /** Espelha o `@Transform` do backend: trim + minúsculas. */
+    normalizarLogin(): void {
+        const controle = this.formulario.controls.login;
+        const normalizado = (controle.value ?? '').trim().toLowerCase();
+        if (normalizado !== controle.value) controle.setValue(normalizado);
+    }
+
+    alternarSenha(): void {
+        this.senhaVisivel.update((visivel) => !visivel);
+    }
+
+    atualizarCapsLock(evento: KeyboardEvent): void {
+        if (typeof evento.getModifierState === 'function') {
+            this.capsLockAtivo.set(evento.getModifierState('CapsLock'));
+        }
+    }
+
+    private aoFalhar(erro: HttpErrorResponse): void {
+        this.falhaDeServidor.set(erro.status === 0 || erro.status >= 500);
+        if (this.falhaDeServidor()) {
+            this.erroLogin.set('Servidor indisponível. Tente novamente em instantes.');
+            return;
+        }
+        this.erroLogin.set(erro.error?.mensagem ?? 'Usuário ou senha incorretos. Confira e tente de novo.');
+        // O formulário volta a ficar habilitado no finalize; foca depois disso.
+        setTimeout(() => {
+            const senha = this.campo('input[type=password], #senha-input') as HTMLInputElement | null;
+            senha?.focus();
+            senha?.select();
+        });
+    }
+
+    private focarCampoInicial(): void {
+        this.campo(this.modoLembrado() ? '#senha-input' : '#login-input')?.focus();
+    }
+
+    private campo(seletor: string): HTMLInputElement | null {
+        return this.elemento.nativeElement.querySelector<HTMLInputElement>(seletor);
+    }
+
+    private lerUsuarioLembrado(): void {
+        const salvo = localStorage.getItem(CHAVE_ULTIMO_LOGIN);
+        if (!salvo) return;
+        try {
+            const dados = JSON.parse(salvo) as Partial<UsuarioLembrado> & { senha?: string };
+            // Formato antigo guardava a senha: some na hora, sem reaproveitar nada.
+            if (dados.senha !== undefined || !dados.login || !dados.nomeCompleto) {
+                localStorage.removeItem(CHAVE_ULTIMO_LOGIN);
+                return;
+            }
+            this.usuarioLembrado.set({ login: dados.login, nomeCompleto: dados.nomeCompleto });
+        } catch {
+            localStorage.removeItem(CHAVE_ULTIMO_LOGIN);
+        }
+    }
+
+    /** O usuário é sempre lembrado (a sessão dura 7 dias e a tela só some do caminho); "Entrar com outro usuário" troca. */
+    private guardarUsuarioLembrado(): void {
+        const nomeCompleto = this.sessao.nomeCompleto();
+        const login = this.sessao.login();
+        if (nomeCompleto && login) {
+            localStorage.setItem(CHAVE_ULTIMO_LOGIN, JSON.stringify({ login, nomeCompleto }));
+        }
+    }
 }

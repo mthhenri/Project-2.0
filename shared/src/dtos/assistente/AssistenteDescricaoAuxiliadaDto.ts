@@ -1,4 +1,4 @@
 export class AssistenteDescricaoAuxiliadaDto {
-  textoOriginal: string;
-  textoAuxiliado: string;
+    textoOriginal: string;
+    textoAuxiliado: string;
 }

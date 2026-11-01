@@ -1,4 +1,4 @@
 export class PlanoFonteExcluirDto {
-  planoId: number;
-  id: number;
+    planoId: number;
+    id: number;
 }

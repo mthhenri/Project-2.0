@@ -8,228 +8,228 @@ import { ProjetoCampoEditavelComponent } from './projeto-campo-editavel.componen
 type Montado = ComponenteMontado<ProjetoCampoEditavelComponent>;
 
 async function montar(tipo: 'texto' | 'data' | 'cor', valor: string | null, editavel = true): Promise<{ montado: Montado; emitidos: string[] }> {
-  const montado = await montarComponente(ProjetoCampoEditavelComponent, {
-    usuario: TipoUsuarioEnum.GESTOR,
-    entradas: { tipo, valor, editavel, rotulo: 'nome do projeto' },
-  });
-  const emitidos: string[] = [];
-  montado.componente.confirmado.subscribe((novo) => emitidos.push(novo));
-  await montado.atualizar();
-  return { montado, emitidos };
+    const montado = await montarComponente(ProjetoCampoEditavelComponent, {
+        usuario: TipoUsuarioEnum.GESTOR,
+        entradas: { tipo, valor, editavel, rotulo: 'nome do projeto' },
+    });
+    const emitidos: string[] = [];
+    montado.componente.confirmado.subscribe((novo) => emitidos.push(novo));
+    await montado.atualizar();
+    return { montado, emitidos };
 }
 
 const campoTexto = (montado: Montado) => montado.elemento.querySelector('input') as HTMLInputElement;
 const botao = (montado: Montado, rotulo: string) =>
-  Array.from(montado.elemento.querySelectorAll('button')).find((candidato) => candidato.textContent?.trim() === rotulo) as HTMLButtonElement;
+    Array.from(montado.elemento.querySelectorAll('button')).find((candidato) => candidato.textContent?.trim() === rotulo) as HTMLButtonElement;
 
 async function digitar(montado: Montado, texto: string): Promise<void> {
-  const campo = campoTexto(montado);
-  campo.value = texto;
-  campo.dispatchEvent(new Event('input'));
-  await montado.atualizar();
+    const campo = campoTexto(montado);
+    campo.value = texto;
+    campo.dispatchEvent(new Event('input'));
+    await montado.atualizar();
 }
 
 describe('ProjetoCampoEditavelComponent', () => {
-  it('o botão direito de quem edita abre o menu com "Editar"', async () => {
-    const { montado } = await montar('texto', 'Portal');
-    montado.elemento.querySelector('.campo-editavel__exibicao')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
-    await montado.atualizar();
-    expect(document.body.textContent).toContain('Editar');
-  });
+    it('o botão direito de quem edita abre o menu com "Editar"', async () => {
+        const { montado } = await montar('texto', 'Portal');
+        montado.elemento.querySelector('.campo-editavel__exibicao')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+        await montado.atualizar();
+        expect(document.body.textContent).toContain('Editar');
+    });
 
-  it('sem permissão de editar, o botão direito não abre menu', async () => {
-    const { montado } = await montar('texto', 'Portal', false);
-    expect(montado.elemento.querySelector('.campo-editavel__exibicao--editavel')).toBeNull();
-    montado.elemento.querySelector('.campo-editavel__exibicao')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
-    await montado.atualizar();
-    expect(document.body.querySelector('.p-contextmenu')).toBeNull();
-  });
+    it('sem permissão de editar, o botão direito não abre menu', async () => {
+        const { montado } = await montar('texto', 'Portal', false);
+        expect(montado.elemento.querySelector('.campo-editavel__exibicao--editavel')).toBeNull();
+        montado.elemento.querySelector('.campo-editavel__exibicao')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+        await montado.atualizar();
+        expect(document.body.querySelector('.p-contextmenu')).toBeNull();
+    });
 
-  it('o lápis ao lado do campo abre a edição, e só aparece para quem pode editar', async () => {
-    const { montado } = await montar('texto', 'Portal');
-    (montado.elemento.querySelector('.campo-editavel__lapis') as HTMLElement).click();
-    await montado.atualizar();
-    expect(montado.componente.editando()).toBe(true);
-    expect(campoTexto(montado).value).toBe('Portal');
-  });
+    it('o lápis ao lado do campo abre a edição, e só aparece para quem pode editar', async () => {
+        const { montado } = await montar('texto', 'Portal');
+        (montado.elemento.querySelector('.campo-editavel__lapis') as HTMLElement).click();
+        await montado.atualizar();
+        expect(montado.componente.editando()).toBe(true);
+        expect(campoTexto(montado).value).toBe('Portal');
+    });
 
-  it('sem permissão não há lápis', async () => {
-    const { montado } = await montar('texto', 'Portal', false);
-    expect(montado.elemento.querySelector('.campo-editavel__lapis')).toBeNull();
-  });
+    it('sem permissão não há lápis', async () => {
+        const { montado } = await montar('texto', 'Portal', false);
+        expect(montado.elemento.querySelector('.campo-editavel__lapis')).toBeNull();
+    });
 
-  it('Editar troca o texto pelo campo, já preenchido', async () => {
-    const { montado } = await montar('texto', 'Portal');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    expect(campoTexto(montado).value).toBe('Portal');
-  });
+    it('Editar troca o texto pelo campo, já preenchido', async () => {
+        const { montado } = await montar('texto', 'Portal');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        expect(campoTexto(montado).value).toBe('Portal');
+    });
 
-  it('Enter com mudança pergunta; "Sim" emite o valor novo e volta à exibição', async () => {
-    const { montado, emitidos } = await montar('texto', 'Portal');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    await digitar(montado, 'Portal Novo');
-    montado.componente.sair();
-    await montado.atualizar();
-    expect(montado.elemento.textContent).toContain('Salvar alteração?');
+    it('Enter com mudança pergunta; "Sim" emite o valor novo e volta à exibição', async () => {
+        const { montado, emitidos } = await montar('texto', 'Portal');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        await digitar(montado, 'Portal Novo');
+        montado.componente.sair();
+        await montado.atualizar();
+        expect(montado.elemento.textContent).toContain('Salvar alteração?');
 
-    botao(montado, 'Sim').click();
-    await montado.atualizar();
-    expect(emitidos).toEqual(['Portal Novo']);
-    expect(montado.componente.editando()).toBe(false);
-  });
+        botao(montado, 'Sim').click();
+        await montado.atualizar();
+        expect(emitidos).toEqual(['Portal Novo']);
+        expect(montado.componente.editando()).toBe(false);
+    });
 
-  it('"Não" descarta, sem emitir', async () => {
-    const { montado, emitidos } = await montar('texto', 'Portal');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    await digitar(montado, 'Outro nome');
-    montado.componente.sair();
-    await montado.atualizar();
-    botao(montado, 'Não').click();
-    await montado.atualizar();
-    expect(emitidos).toEqual([]);
-    expect(montado.componente.editando()).toBe(false);
-  });
+    it('"Não" descarta, sem emitir', async () => {
+        const { montado, emitidos } = await montar('texto', 'Portal');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        await digitar(montado, 'Outro nome');
+        montado.componente.sair();
+        await montado.atualizar();
+        botao(montado, 'Não').click();
+        await montado.atualizar();
+        expect(emitidos).toEqual([]);
+        expect(montado.componente.editando()).toBe(false);
+    });
 
-  it('sair sem mudança fecha em silêncio, sem perguntar', async () => {
-    const { montado, emitidos } = await montar('texto', 'Portal');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    montado.componente.sair();
-    await montado.atualizar();
-    expect(montado.componente.editando()).toBe(false);
-    expect(montado.elemento.textContent).not.toContain('Salvar alteração?');
-    expect(emitidos).toEqual([]);
-  });
+    it('sair sem mudança fecha em silêncio, sem perguntar', async () => {
+        const { montado, emitidos } = await montar('texto', 'Portal');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        montado.componente.sair();
+        await montado.atualizar();
+        expect(montado.componente.editando()).toBe(false);
+        expect(montado.elemento.textContent).not.toContain('Salvar alteração?');
+        expect(emitidos).toEqual([]);
+    });
 
-  it('nome com menos de 3 caracteres fica na edição com o erro, sem perguntar', async () => {
-    const { montado } = await montar('texto', 'Portal');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    await digitar(montado, 'ab');
-    montado.componente.sair();
-    await montado.atualizar();
-    expect(montado.componente.confirmando()).toBe(false);
-    expect(montado.elemento.textContent).toContain('ao menos 3 caracteres');
-  });
+    it('nome com menos de 3 caracteres fica na edição com o erro, sem perguntar', async () => {
+        const { montado } = await montar('texto', 'Portal');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        await digitar(montado, 'ab');
+        montado.componente.sair();
+        await montado.atualizar();
+        expect(montado.componente.confirmando()).toBe(false);
+        expect(montado.elemento.textContent).toContain('ao menos 3 caracteres');
+    });
 
-  it('Esc cancela a edição', async () => {
-    const { montado, emitidos } = await montar('texto', 'Portal');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    await digitar(montado, 'Mudou');
-    montado.elemento.querySelector('.campo-editavel__editor')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    await montado.atualizar();
-    expect(montado.componente.editando()).toBe(false);
-    expect(emitidos).toEqual([]);
-  });
+    it('Esc cancela a edição', async () => {
+        const { montado, emitidos } = await montar('texto', 'Portal');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        await digitar(montado, 'Mudou');
+        montado.elemento.querySelector('.campo-editavel__editor')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        await montado.atualizar();
+        expect(montado.componente.editando()).toBe(false);
+        expect(emitidos).toEqual([]);
+    });
 
-  it('data: sem valor, o campo começa vazio e sair vazio é desistir (a API não limpa a data)', async () => {
-    const { montado, emitidos } = await montar('data', null);
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    expect(montado.componente.rascunhoData.value).toBeNull();
-    montado.componente.sair();
-    expect(montado.componente.editando()).toBe(false);
-    expect(emitidos).toEqual([]);
-  });
+    it('data: sem valor, o campo começa vazio e sair vazio é desistir (a API não limpa a data)', async () => {
+        const { montado, emitidos } = await montar('data', null);
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        expect(montado.componente.rascunhoData.value).toBeNull();
+        montado.componente.sair();
+        expect(montado.componente.editando()).toBe(false);
+        expect(emitidos).toEqual([]);
+    });
 
-  it('data: escolher outro dia pergunta e emite yyyy-mm-dd', async () => {
-    const { montado, emitidos } = await montar('data', '2026-03-01');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    expect(montado.componente.rascunhoData.value?.getDate()).toBe(1);
-    montado.componente.rascunhoData.setValue(new Date(2026, 3, 15));
-    montado.componente.sair();
-    await montado.atualizar();
-    botao(montado, 'Sim').click();
-    expect(emitidos).toEqual(['2026-04-15']);
-  });
+    it('data: escolher outro dia pergunta e emite yyyy-mm-dd', async () => {
+        const { montado, emitidos } = await montar('data', '2026-03-01');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        expect(montado.componente.rascunhoData.value?.getDate()).toBe(1);
+        montado.componente.rascunhoData.setValue(new Date(2026, 3, 15));
+        montado.componente.sair();
+        await montado.atualizar();
+        botao(montado, 'Sim').click();
+        expect(emitidos).toEqual(['2026-04-15']);
+    });
 
-  it('Cancelar fica visível ao lado do campo em edição, descarta o rascunho e não pergunta (task 290)', async () => {
-    const { montado, emitidos } = await montar('texto', 'Portal');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    await digitar(montado, 'Mudou');
-    expect(botao(montado, 'Cancelar')).toBeDefined();
+    it('Cancelar fica visível ao lado do campo em edição, descarta o rascunho e não pergunta (task 290)', async () => {
+        const { montado, emitidos } = await montar('texto', 'Portal');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        await digitar(montado, 'Mudou');
+        expect(botao(montado, 'Cancelar')).toBeDefined();
 
-    botao(montado, 'Cancelar').click();
-    await montado.atualizar();
-    expect(montado.componente.editando()).toBe(false);
-    expect(montado.elemento.textContent).not.toContain('Salvar alteração?');
-    expect(emitidos).toEqual([]);
-  });
+        botao(montado, 'Cancelar').click();
+        await montado.atualizar();
+        expect(montado.componente.editando()).toBe(false);
+        expect(montado.elemento.textContent).not.toContain('Salvar alteração?');
+        expect(emitidos).toEqual([]);
+    });
 
-  it('o mousedown do Cancelar não tira o foco do campo (senão a saída do campo perguntaria antes do clique)', async () => {
-    const { montado } = await montar('texto', 'Portal');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    const evento = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
-    botao(montado, 'Cancelar').dispatchEvent(evento);
-    expect(evento.defaultPrevented).toBe(true);
-  });
+    it('o mousedown do Cancelar não tira o foco do campo (senão a saída do campo perguntaria antes do clique)', async () => {
+        const { montado } = await montar('texto', 'Portal');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        const evento = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+        botao(montado, 'Cancelar').dispatchEvent(evento);
+        expect(evento.defaultPrevented).toBe(true);
+    });
 
-  it('com a pergunta "Salvar alteração?" na tela, o Cancelar some (o "Não" já cancela)', async () => {
-    const { montado } = await montar('texto', 'Portal');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    await digitar(montado, 'Outro');
-    montado.componente.sair();
-    await montado.atualizar();
-    expect(botao(montado, 'Cancelar')).toBeUndefined();
-    expect(botao(montado, 'Não')).toBeDefined();
-  });
+    it('com a pergunta "Salvar alteração?" na tela, o Cancelar some (o "Não" já cancela)', async () => {
+        const { montado } = await montar('texto', 'Portal');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        await digitar(montado, 'Outro');
+        montado.componente.sair();
+        await montado.atualizar();
+        expect(botao(montado, 'Cancelar')).toBeUndefined();
+        expect(botao(montado, 'Não')).toBeDefined();
+    });
 
-  it('data: Cancelar também descarta', async () => {
-    const { montado, emitidos } = await montar('data', '2026-03-01');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    montado.componente.rascunhoData.setValue(new Date(2026, 3, 15));
-    botao(montado, 'Cancelar').click();
-    await montado.atualizar();
-    expect(montado.componente.editando()).toBe(false);
-    expect(emitidos).toEqual([]);
-  });
+    it('data: Cancelar também descarta', async () => {
+        const { montado, emitidos } = await montar('data', '2026-03-01');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        montado.componente.rascunhoData.setValue(new Date(2026, 3, 15));
+        botao(montado, 'Cancelar').click();
+        await montado.atualizar();
+        expect(montado.componente.editando()).toBe(false);
+        expect(emitidos).toEqual([]);
+    });
 
-  it('cor: abre a paleta num popover, sem espalhá-la pelo cabeçalho; Salvar só habilita com outra cor e emite o hex', async () => {
-    const { montado, emitidos } = await montar('cor', '#336699');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    await new Promise((resolver) => setTimeout(resolver));
-    await montado.atualizar();
-    expect(montado.elemento.querySelector('.campo-editavel__editor')).toBeNull();
-    expect(montado.componente.confirmando()).toBe(false);
-    const salvar = () => Array.from(document.body.querySelectorAll('.campo-editavel__rodape-cor button')).find((item) => item.textContent?.trim() === 'Salvar') as HTMLButtonElement;
-    expect(document.body.querySelector('.campo-editavel__popover-cor')).not.toBeNull();
-    expect(salvar().disabled).toBe(true);
+    it('cor: abre a paleta num popover, sem espalhá-la pelo cabeçalho; Salvar só habilita com outra cor e emite o hex', async () => {
+        const { montado, emitidos } = await montar('cor', '#336699');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        await new Promise((resolver) => setTimeout(resolver));
+        await montado.atualizar();
+        expect(montado.elemento.querySelector('.campo-editavel__editor')).toBeNull();
+        expect(montado.componente.confirmando()).toBe(false);
+        const salvar = () => Array.from(document.body.querySelectorAll('.campo-editavel__rodape-cor button')).find((item) => item.textContent?.trim() === 'Salvar') as HTMLButtonElement;
+        expect(document.body.querySelector('.campo-editavel__popover-cor')).not.toBeNull();
+        expect(salvar().disabled).toBe(true);
 
-    montado.componente.rascunhoCor.setValue('#ef4444');
-    await montado.atualizar();
-    expect(salvar().disabled).toBe(false);
-    salvar().click();
-    await montado.atualizar();
-    expect(emitidos).toEqual(['#ef4444']);
-    expect(montado.componente.editando()).toBe(false);
-  });
+        montado.componente.rascunhoCor.setValue('#ef4444');
+        await montado.atualizar();
+        expect(salvar().disabled).toBe(false);
+        salvar().click();
+        await montado.atualizar();
+        expect(emitidos).toEqual(['#ef4444']);
+        expect(montado.componente.editando()).toBe(false);
+    });
 
-  it('cor: Cancelar e fechar o popover descartam, sem emitir', async () => {
-    const { montado, emitidos } = await montar('cor', '#336699');
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    await new Promise((resolver) => setTimeout(resolver));
-    await montado.atualizar();
-    montado.componente.rascunhoCor.setValue('#ef4444');
-    const cancelar = Array.from(document.body.querySelectorAll('.campo-editavel__rodape-cor button')).find((item) => item.textContent?.trim() === 'Cancelar') as HTMLButtonElement;
-    cancelar.click();
-    await montado.atualizar();
-    expect(montado.componente.editando()).toBe(false);
+    it('cor: Cancelar e fechar o popover descartam, sem emitir', async () => {
+        const { montado, emitidos } = await montar('cor', '#336699');
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        await new Promise((resolver) => setTimeout(resolver));
+        await montado.atualizar();
+        montado.componente.rascunhoCor.setValue('#ef4444');
+        const cancelar = Array.from(document.body.querySelectorAll('.campo-editavel__rodape-cor button')).find((item) => item.textContent?.trim() === 'Cancelar') as HTMLButtonElement;
+        cancelar.click();
+        await montado.atualizar();
+        expect(montado.componente.editando()).toBe(false);
 
-    montado.componente.iniciarEdicao();
-    await montado.atualizar();
-    montado.componente.aoFecharPopover();
-    expect(montado.componente.editando()).toBe(false);
-    expect(emitidos).toEqual([]);
-  });
+        montado.componente.iniciarEdicao();
+        await montado.atualizar();
+        montado.componente.aoFecharPopover();
+        expect(montado.componente.editando()).toBe(false);
+        expect(emitidos).toEqual([]);
+    });
 });

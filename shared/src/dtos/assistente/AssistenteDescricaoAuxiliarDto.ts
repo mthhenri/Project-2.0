@@ -1,15 +1,15 @@
 import { IsIn, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class AssistenteDescricaoAuxiliarDto {
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(10)
-  textoOriginal: string;
+    @IsString()
+    @IsNotEmpty()
+    @MinLength(10)
+    textoOriginal: string;
 
-  @IsIn(['execucao', 'demanda'])
-  tipoEntidade: 'execucao' | 'demanda';
+    @IsIn(['execucao', 'demanda'])
+    tipoEntidade: 'execucao' | 'demanda';
 
-  @IsString()
-  @IsNotEmpty()
-  contextoEntidade: string;
+    @IsString()
+    @IsNotEmpty()
+    contextoEntidade: string;
 }

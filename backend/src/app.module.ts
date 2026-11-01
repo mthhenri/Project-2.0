@@ -30,6 +30,6 @@ import { RelatorioModule } from './modules/relatorio/relatorio.module';
 import { DesktopModule } from './modules/desktop/desktop.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, AtividadePrioridadeModule, CheckinModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, MensagemDiretaModule, PropostaIaModule, FerramentaIaModule, AssistenteModule, RelatorioModule, DesktopModule, IaCustoModule, ModelagemModule, PlanoModule],
+    imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, AtividadePrioridadeModule, CheckinModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, MensagemDiretaModule, PropostaIaModule, FerramentaIaModule, AssistenteModule, RelatorioModule, DesktopModule, IaCustoModule, ModelagemModule, PlanoModule],
 })
 export class AppModule {}

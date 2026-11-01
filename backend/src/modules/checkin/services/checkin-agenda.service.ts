@@ -8,18 +8,18 @@ import { AgendaDoCheckin, EntradaDaAgenda, calcularAgenda } from '../domain/agen
  */
 @Injectable()
 export class CheckinAgendaService {
-  private readonly agendas = new Map<number, AgendaDoCheckin>();
+    private readonly agendas = new Map<number, AgendaDoCheckin>();
 
-  /** Recalcula a agenda do usuário (guardando o resultado) e a devolve; `null` quando não há próximo check-in. */
-  atualizar(usuarioId: number, entrada: Omit<EntradaDaAgenda, 'anterior' | 'aleatorio'>): AgendaDoCheckin | null {
-    const agenda = calcularAgenda({ ...entrada, anterior: this.agendas.get(usuarioId) ?? null, aleatorio: this.sortear() });
-    if (agenda) this.agendas.set(usuarioId, agenda);
-    else this.agendas.delete(usuarioId);
-    return agenda;
-  }
+    /** Recalcula a agenda do usuário (guardando o resultado) e a devolve; `null` quando não há próximo check-in. */
+    atualizar(usuarioId: number, entrada: Omit<EntradaDaAgenda, 'anterior' | 'aleatorio'>): AgendaDoCheckin | null {
+        const agenda = calcularAgenda({ ...entrada, anterior: this.agendas.get(usuarioId) ?? null, aleatorio: this.sortear() });
+        if (agenda) this.agendas.set(usuarioId, agenda);
+        else this.agendas.delete(usuarioId);
+        return agenda;
+    }
 
-  /** Separado para os testes fixarem o sorteio. */
-  protected sortear(): number {
-    return Math.random();
-  }
+    /** Separado para os testes fixarem o sorteio. */
+    protected sortear(): number {
+        return Math.random();
+    }
 }

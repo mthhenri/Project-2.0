@@ -7,10 +7,10 @@ import { config } from 'rxjs';
  * tratado continua estourando como antes (relançado fora da pilha do rxjs, como o rxjs faria).
  */
 export function ignorarErrosHttpJaTratados(): void {
-  config.onUnhandledError = (erro: unknown) => {
-    if (erro instanceof HttpErrorResponse) return;
-    setTimeout(() => {
-      throw erro;
-    });
-  };
+    config.onUnhandledError = (erro: unknown) => {
+        if (erro instanceof HttpErrorResponse) return;
+        setTimeout(() => {
+            throw erro;
+        });
+    };
 }

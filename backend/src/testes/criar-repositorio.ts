@@ -6,8 +6,8 @@ import type { ConexaoTeste } from './banco-teste';
  * (suporta `raw` e `transaction`, esta última como savepoint).
  */
 export function criarRepositorio<TRepositorio>(
-  classe: new (conexao: any) => TRepositorio,
-  conexao: ConexaoTeste,
+    classe: new (conexao: any) => TRepositorio,
+    conexao: ConexaoTeste,
 ): TRepositorio {
-  return new classe(conexao);
+    return new classe(conexao);
 }

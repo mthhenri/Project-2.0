@@ -10,17 +10,17 @@ import { MensagemDiretaPostgresRepository } from './mensagem-direta-postgres.rep
 let transacao: ConexaoTeste | undefined;
 
 registrarContratoDeArmazenamentoDeMensagemDireta(
-  'PostgreSQL provisório',
-  async () => {
-    transacao = await obterConexaoBancoTeste().transaction();
-    return new MensagemDiretaPostgresRepository(transacao);
-  },
-  async () => {
-    await transacao?.rollback();
-  },
-  { sempreLigado: true },
+    'PostgreSQL provisório',
+    async () => {
+        transacao = await obterConexaoBancoTeste().transaction();
+        return new MensagemDiretaPostgresRepository(transacao);
+    },
+    async () => {
+        await transacao?.rollback();
+    },
+    { sempreLigado: true },
 );
 
 after(async () => {
-  await encerrarConexaoBancoTeste();
+    await encerrarConexaoBancoTeste();
 });

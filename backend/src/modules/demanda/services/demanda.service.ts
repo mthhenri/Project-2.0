@@ -3,39 +3,39 @@ import { DemandaRepository } from '../repositories/demanda.repository';
 import { TagRepository } from '../../tag/repositories/tag.repository';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import {
-  DemandaCriarDto,
-  DemandaCriadaDto,
-  DemandaListarDto,
-  DemandaAtribuidaDto,
-  DemandaExecutadaListarDto,
-  DemandaExecutadaResumoDto,
-  LIMITE_PADRAO_DEMANDAS_EXECUTADAS,
-  DemandaResumoDto,
-  DemandaRecuperadaDto,
-  DemandaRecuperarDto,
-  DemandaInternoAlterarDto,
-  DemandaDocumentacaoResumoDto,
-  DemandaTextosAlteradosDto,
-  DemandaTextosInternoAlterarDto,
-  DemandaGrafoDto,
-  DemandaGrafoRecuperarDto,
-  DemandaArvoreItemDto,
-  DemandaAncestralDto,
-  DemandaConexaoCriarDto,
-  DemandaConexaoCriadaDto,
-  DemandaConexaoResumoDto,
-  DemandaConexaoExcluirDto,
-  DemandaTagsAtribuirDto,
-  DemandaTagsAtribuidasDto,
-  DemandaUsuarioAtribuirDto,
-  DemandaUsuarioAtribuidoDto,
-  DemandaMembroDto,
-  DemandaMembroRemoverDto,
-  DemandaPlanejamentoDto,
-  DemandaPlanejamentoListarDto,
-  TagResumoDto,
-  TipoUsuarioEnum,
-  temPermissaoDeGestor,
+    DemandaCriarDto,
+    DemandaCriadaDto,
+    DemandaListarDto,
+    DemandaAtribuidaDto,
+    DemandaExecutadaListarDto,
+    DemandaExecutadaResumoDto,
+    LIMITE_PADRAO_DEMANDAS_EXECUTADAS,
+    DemandaResumoDto,
+    DemandaRecuperadaDto,
+    DemandaRecuperarDto,
+    DemandaInternoAlterarDto,
+    DemandaDocumentacaoResumoDto,
+    DemandaTextosAlteradosDto,
+    DemandaTextosInternoAlterarDto,
+    DemandaGrafoDto,
+    DemandaGrafoRecuperarDto,
+    DemandaArvoreItemDto,
+    DemandaAncestralDto,
+    DemandaConexaoCriarDto,
+    DemandaConexaoCriadaDto,
+    DemandaConexaoResumoDto,
+    DemandaConexaoExcluirDto,
+    DemandaTagsAtribuirDto,
+    DemandaTagsAtribuidasDto,
+    DemandaUsuarioAtribuirDto,
+    DemandaUsuarioAtribuidoDto,
+    DemandaMembroDto,
+    DemandaMembroRemoverDto,
+    DemandaPlanejamentoDto,
+    DemandaPlanejamentoListarDto,
+    TagResumoDto,
+    TipoUsuarioEnum,
+    temPermissaoDeGestor,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
@@ -50,877 +50,877 @@ const MENSAGEM_VERSAO_DOS_TEXTOS_MAIS_NOVA = 'Alguém gravou uma versão mais no
 
 @Injectable()
 export class DemandaService {
-  constructor(
-    private readonly demandaRepositorio: DemandaRepository,
-    private readonly tagRepositorio: TagRepository,
-    private readonly usuarioRepositorio: UsuarioRepository,
-  ) {}
+    constructor(
+        private readonly demandaRepositorio: DemandaRepository,
+        private readonly tagRepositorio: TagRepository,
+        private readonly usuarioRepositorio: UsuarioRepository,
+    ) {}
 
-  /**
+    /**
    * Cria nova demanda com atribuição transacional apenas do criador desenvolvedor
    * (e dos membros explicitamente selecionados na criação). O gestor tem acesso total
    * a qualquer demanda/projeto por ser gestor — não é atribuído via demanda_usuario.
    * Desenvolvedor só pode criar em projetos onde já tem acesso via demanda_usuario.
    */
-  async criar(
-    dto: DemandaCriarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaCriadaDto>> {
-    if (
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
+    async criar(
+        dto: DemandaCriarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaCriadaDto>> {
+        if (
+            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
       dto.demandaPaiId === undefined
-    ) {
-      throw new UnauthorizedAccessException(
-        'Desenvolvedor só pode criar sub-demandas (é obrigatório informar a demanda pai)',
-      );
-    }
-
-    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
-      const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
-        projetoId: dto.projetoId,
-        usuarioId: usuarioAtivo.sub,
-      });
-
-      if (!temAcesso) {
-        throw new UnauthorizedAccessException(
-          'Desenvolvedor não tem acesso ao projeto informado',
-        );
-      }
-    }
-
-    if (dto.demandaPaiId !== undefined) {
-      const demandaPaiEncontrada = await this.demandaRepositorio.recuperar(
-        { id: dto.demandaPaiId },
-      );
-
-      if (!demandaPaiEncontrada) {
-        throw new ResourceNotFoundException('Demanda pai');
-      }
-
-      if (demandaPaiEncontrada.projetoId !== dto.projetoId) {
-        throw new BusinessException(
-          'A demanda pai deve pertencer ao mesmo projeto',
-        );
-      }
-
-      if (!demandaPaiEncontrada.isEstrutural) {
-        throw new BusinessException(
-          'Apenas demandas estruturais podem ter sub-demandas',
-        );
-      }
-    }
-
-    const membroIds = [...new Set(dto.usuarioIds ?? [])];
-    if (membroIds.length > 0) {
-      if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
-        const apenasProprio = membroIds.every((membroId) => membroId === usuarioAtivo.sub);
-        if (!apenasProprio) {
-          throw new UnauthorizedAccessException(
-            'Desenvolvedor não pode atribuir outros membros na criação',
-          );
+        ) {
+            throw new UnauthorizedAccessException(
+                'Desenvolvedor só pode criar sub-demandas (é obrigatório informar a demanda pai)',
+            );
         }
-      }
 
-      for (const membroId of membroIds) {
-        const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: membroId });
-        if (!usuarioEncontrado) {
-          throw new ResourceNotFoundException(`Usuário com id ${membroId}`);
+        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+            const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
+                projetoId: dto.projetoId,
+                usuarioId: usuarioAtivo.sub,
+            });
+
+            if (!temAcesso) {
+                throw new UnauthorizedAccessException(
+                    'Desenvolvedor não tem acesso ao projeto informado',
+                );
+            }
         }
-      }
+
+        if (dto.demandaPaiId !== undefined) {
+            const demandaPaiEncontrada = await this.demandaRepositorio.recuperar(
+                { id: dto.demandaPaiId },
+            );
+
+            if (!demandaPaiEncontrada) {
+                throw new ResourceNotFoundException('Demanda pai');
+            }
+
+            if (demandaPaiEncontrada.projetoId !== dto.projetoId) {
+                throw new BusinessException(
+                    'A demanda pai deve pertencer ao mesmo projeto',
+                );
+            }
+
+            if (!demandaPaiEncontrada.isEstrutural) {
+                throw new BusinessException(
+                    'Apenas demandas estruturais podem ter sub-demandas',
+                );
+            }
+        }
+
+        const membroIds = [...new Set(dto.usuarioIds ?? [])];
+        if (membroIds.length > 0) {
+            if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+                const apenasProprio = membroIds.every((membroId) => membroId === usuarioAtivo.sub);
+                if (!apenasProprio) {
+                    throw new UnauthorizedAccessException(
+                        'Desenvolvedor não pode atribuir outros membros na criação',
+                    );
+                }
+            }
+
+            for (const membroId of membroIds) {
+                const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: membroId });
+                if (!usuarioEncontrado) {
+                    throw new ResourceNotFoundException(`Usuário com id ${membroId}`);
+                }
+            }
+        }
+
+        for (const tagId of dto.tagIds ?? []) {
+            const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
+            if (!tagEncontrada) {
+                throw new ResourceNotFoundException(`Tag com id ${tagId}`);
+            }
+        }
+
+        const usuarioIds = [
+            ...new Set([
+                ...(usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? [usuarioAtivo.sub] : []),
+                ...membroIds,
+            ]),
+        ];
+
+        const demandaCriada = await this.demandaRepositorio.inserirComAtribuicao(
+            {
+                projetoId:        dto.projetoId,
+                demandaPaiId:     dto.demandaPaiId ?? null,
+                nome:             dto.nome,
+                descricaoTecnica: dto.descricaoTecnica ?? null,
+                descricaoCliente: dto.descricaoCliente ?? null,
+                documentacao:     dto.documentacao ?? null,
+                horasEstimadas:   dto.horasEstimadas,
+                status:           dto.status,
+                isEstrutural:     dto.isEstrutural,
+                previsaoFimData:  dto.previsaoFimData ? new Date(dto.previsaoFimData) : null,
+            },
+            { usuarioIds },
+        );
+
+        if (dto.tagIds && dto.tagIds.length > 0) {
+            await this.demandaRepositorio.atribuirTagsDemanda({ demandaId: demandaCriada.id, tagIds: dto.tagIds });
+        }
+
+        return {
+            sucesso:  true,
+            dados:    demandaCriada,
+            mensagem: 'Demanda criada com sucesso',
+        };
     }
 
-    for (const tagId of dto.tagIds ?? []) {
-      const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
-      if (!tagEncontrada) {
-        throw new ResourceNotFoundException(`Tag com id ${tagId}`);
-      }
-    }
-
-    const usuarioIds = [
-      ...new Set([
-        ...(usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? [usuarioAtivo.sub] : []),
-        ...membroIds,
-      ]),
-    ];
-
-    const demandaCriada = await this.demandaRepositorio.inserirComAtribuicao(
-      {
-        projetoId:        dto.projetoId,
-        demandaPaiId:     dto.demandaPaiId ?? null,
-        nome:             dto.nome,
-        descricaoTecnica: dto.descricaoTecnica ?? null,
-        descricaoCliente: dto.descricaoCliente ?? null,
-        documentacao:     dto.documentacao ?? null,
-        horasEstimadas:   dto.horasEstimadas,
-        status:           dto.status,
-        isEstrutural:     dto.isEstrutural,
-        previsaoFimData:  dto.previsaoFimData ? new Date(dto.previsaoFimData) : null,
-      },
-      { usuarioIds },
-    );
-
-    if (dto.tagIds && dto.tagIds.length > 0) {
-      await this.demandaRepositorio.atribuirTagsDemanda({ demandaId: demandaCriada.id, tagIds: dto.tagIds });
-    }
-
-    return {
-      sucesso:  true,
-      dados:    demandaCriada,
-      mensagem: 'Demanda criada com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Lista demandas de um projeto com paginação.
    * Gestor vê todas as demandas do projeto; desenvolvedor vê apenas as suas.
    */
-  async listar(
-    filtros: DemandaListarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<PaginatedResult<DemandaResumoDto>>> {
-    const pagina         = filtros.pagina ?? 1;
-    const itensPorPagina = filtros.itensPorPagina ?? 20;
+    async listar(
+        filtros: DemandaListarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<PaginatedResult<DemandaResumoDto>>> {
+        const pagina         = filtros.pagina ?? 1;
+        const itensPorPagina = filtros.itensPorPagina ?? 20;
 
-    const restricao =
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR
-        ? { usuarioId: usuarioAtivo.sub }
-        : undefined;
+        const restricao =
+            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR
+                ? { usuarioId: usuarioAtivo.sub }
+                : undefined;
 
-    const { itens, total } = await this.demandaRepositorio.listar(filtros, restricao);
+        const { itens, total } = await this.demandaRepositorio.listar(filtros, restricao);
 
-    if (filtros.allRows) {
-      return {
-        sucesso: true,
-        dados: {
-          itens,
-          totalItens:     itens.length,
-          paginaAtual:    1,
-          itensPorPagina: itens.length,
-          totalPaginas:   1,
-        },
-        mensagem: 'Demandas listadas com sucesso',
-      };
+        if (filtros.allRows) {
+            return {
+                sucesso: true,
+                dados: {
+                    itens,
+                    totalItens:     itens.length,
+                    paginaAtual:    1,
+                    itensPorPagina: itens.length,
+                    totalPaginas:   1,
+                },
+                mensagem: 'Demandas listadas com sucesso',
+            };
+        }
+
+        const totalPaginas     = Math.ceil(total / itensPorPagina);
+
+        return {
+            sucesso: true,
+            dados: {
+                itens,
+                totalItens:    total,
+                paginaAtual:   pagina,
+                itensPorPagina,
+                totalPaginas,
+            },
+            mensagem: 'Demandas listadas com sucesso',
+        };
     }
 
-    const totalPaginas     = Math.ceil(total / itensPorPagina);
-
-    return {
-      sucesso: true,
-      dados: {
-        itens,
-        totalItens:    total,
-        paginaAtual:   pagina,
-        itensPorPagina,
-        totalPaginas,
-      },
-      mensagem: 'Demandas listadas com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Lista as demandas planejadas/pendentes para seleção na criação de atividades.
    * Desenvolvedor recebe apenas as demandas às quais está atribuído (demanda_usuario);
    * gestor recebe todas as demandas não-concluídas de todos os projetos (acesso total).
    */
-  async listarAtribuidas(
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaAtribuidaDto[]>> {
-    const demandas = await this.demandaRepositorio.listarAtribuidas({
-      usuarioId: usuarioAtivo.sub,
-      apenasAtribuidas: usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR,
-    });
+    async listarAtribuidas(
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaAtribuidaDto[]>> {
+        const demandas = await this.demandaRepositorio.listarAtribuidas({
+            usuarioId: usuarioAtivo.sub,
+            apenasAtribuidas: usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR,
+        });
 
-    return {
-      sucesso: true,
-      dados: demandas,
-      mensagem: 'Demandas atribuídas listadas com sucesso',
-    };
-  }
+        return {
+            sucesso: true,
+            dados: demandas,
+            mensagem: 'Demandas atribuídas listadas com sucesso',
+        };
+    }
 
-  /**
+    /**
    * As últimas demandas que o próprio usuário executou (a lateral "Minhas demandas" do chat, task 245), da execução mais recente para a mais
    * antiga. Sempre as do token: o desenvolvedor só vê as de que é membro, o gestor e o administrador veem as que executaram, sem esse filtro.
    */
-  async listarExecutadas(
-    filtros: DemandaExecutadaListarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaExecutadaResumoDto[]>> {
-    const demandas = await this.demandaRepositorio.listarExecutadas({
-      usuarioId: usuarioAtivo.sub,
-      apenasMembro: usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR,
-      limite: filtros.limite ?? LIMITE_PADRAO_DEMANDAS_EXECUTADAS,
-    });
+    async listarExecutadas(
+        filtros: DemandaExecutadaListarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaExecutadaResumoDto[]>> {
+        const demandas = await this.demandaRepositorio.listarExecutadas({
+            usuarioId: usuarioAtivo.sub,
+            apenasMembro: usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR,
+            limite: filtros.limite ?? LIMITE_PADRAO_DEMANDAS_EXECUTADAS,
+        });
 
-    return {
-      sucesso: true,
-      dados: demandas,
-      mensagem: 'Demandas executadas listadas com sucesso',
-    };
-  }
+        return {
+            sucesso: true,
+            dados: demandas,
+            mensagem: 'Demandas executadas listadas com sucesso',
+        };
+    }
 
-  /**
+    /**
    * Lista as demandas de trabalho não-concluídas do projeto para a visão de Planejamento,
    * com horas estimadas × executadas e execuções ativas. Restrito a gestor (garantido pelo
    * `@GestorOnly()` da controller); gestor tem acesso total, sem filtro por demanda_usuario.
    */
-  async listarPlanejamento(
-    dto: DemandaPlanejamentoListarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaPlanejamentoDto[]>> {
-    void usuarioAtivo; // acesso gestor-only garantido pelo @GestorOnly() da controller
-    const itens = await this.demandaRepositorio.listarPlanejamento(dto);
+    async listarPlanejamento(
+        dto: DemandaPlanejamentoListarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaPlanejamentoDto[]>> {
+        void usuarioAtivo; // acesso gestor-only garantido pelo @GestorOnly() da controller
+        const itens = await this.demandaRepositorio.listarPlanejamento(dto);
 
-    return {
-      sucesso: true,
-      dados: itens,
-      mensagem: 'Planejamento do projeto recuperado com sucesso',
-    };
-  }
+        return {
+            sucesso: true,
+            dados: itens,
+            mensagem: 'Planejamento do projeto recuperado com sucesso',
+        };
+    }
 
-  /**
+    /**
    * Recupera demanda por ID.
    * Desenvolvedor pode visualizar qualquer demanda de um projeto ao qual tem acesso;
    * a flag `podeEditar` indica se ele pode editá-la (só quando é membro da demanda).
    */
-  async recuperar(
-    dto: DemandaRecuperarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaRecuperadaDto>> {
-    const usuarioId =
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+    async recuperar(
+        dto: DemandaRecuperarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaRecuperadaDto>> {
+        const usuarioId =
+            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.recuperar(
-      { id: dto.id },
-      usuarioId !== undefined ? { usuarioId } : undefined,
-    );
+        const demandaEncontrada = await this.demandaRepositorio.recuperar(
+            { id: dto.id },
+            usuarioId !== undefined ? { usuarioId } : undefined,
+        );
 
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
-    }
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
 
-    demandaEncontrada.podeEditar =
-      usuarioAtivo.tipo !== TipoUsuarioEnum.DESENVOLVEDOR ||
+        demandaEncontrada.podeEditar =
+            usuarioAtivo.tipo !== TipoUsuarioEnum.DESENVOLVEDOR ||
       (await this.demandaRepositorio.validarMembro({ demandaId: dto.id, usuarioId: usuarioAtivo.sub }));
 
-    return {
-      sucesso:  true,
-      dados:    demandaEncontrada,
-      mensagem: 'Demanda recuperada com sucesso',
-    };
-  }
+        return {
+            sucesso:  true,
+            dados:    demandaEncontrada,
+            mensagem: 'Demanda recuperada com sucesso',
+        };
+    }
 
-  /**
+    /**
    * Altera dados da demanda.
    * Desenvolvedor só pode alterar demandas das quais é membro (demanda_usuario);
    * a descrição do cliente permanece exclusiva do gestor.
    */
-  async alterar(
-    dto: DemandaInternoAlterarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaRecuperadaDto>> {
-    const demandaEncontrada = await this.recuperarDemandaParaEditar(dto.id, dto.descricaoCliente !== undefined, usuarioAtivo);
+    async alterar(
+        dto: DemandaInternoAlterarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaRecuperadaDto>> {
+        const demandaEncontrada = await this.recuperarDemandaParaEditar(dto.id, dto.descricaoCliente !== undefined, usuarioAtivo);
 
-    if (dto.demandaPaiId !== undefined) {
-      const demandaPaiEncontrada = await this.demandaRepositorio.recuperar(
-        { id: dto.demandaPaiId },
-      );
+        if (dto.demandaPaiId !== undefined) {
+            const demandaPaiEncontrada = await this.demandaRepositorio.recuperar(
+                { id: dto.demandaPaiId },
+            );
 
-      if (!demandaPaiEncontrada) {
-        throw new ResourceNotFoundException('Demanda pai');
-      }
+            if (!demandaPaiEncontrada) {
+                throw new ResourceNotFoundException('Demanda pai');
+            }
 
-      if (demandaPaiEncontrada.projetoId !== demandaEncontrada.projetoId) {
-        throw new BusinessException(
-          'A demanda pai deve pertencer ao mesmo projeto',
-        );
-      }
+            if (demandaPaiEncontrada.projetoId !== demandaEncontrada.projetoId) {
+                throw new BusinessException(
+                    'A demanda pai deve pertencer ao mesmo projeto',
+                );
+            }
 
-      // Mover para dentro de si mesma ou de uma descendente cortaria a demanda da árvore (ciclo de hierarquia).
-      if (dto.demandaPaiId === dto.id) {
-        throw new BusinessException('Uma demanda não pode ser filha de si mesma');
-      }
-      const descendentes = await this.demandaRepositorio.listarDescendentes({ demandaId: dto.id });
-      if (descendentes.some((descendente) => descendente.id === dto.demandaPaiId)) {
-        throw new BusinessException('Uma demanda não pode ser movida para dentro de uma descendente');
-      }
+            // Mover para dentro de si mesma ou de uma descendente cortaria a demanda da árvore (ciclo de hierarquia).
+            if (dto.demandaPaiId === dto.id) {
+                throw new BusinessException('Uma demanda não pode ser filha de si mesma');
+            }
+            const descendentes = await this.demandaRepositorio.listarDescendentes({ demandaId: dto.id });
+            if (descendentes.some((descendente) => descendente.id === dto.demandaPaiId)) {
+                throw new BusinessException('Uma demanda não pode ser movida para dentro de uma descendente');
+            }
+        }
+
+        const demandaAlterada = await this.demandaRepositorio.alterar({
+            id:               dto.id,
+            demandaPaiId:     dto.demandaPaiId,
+            nome:             dto.nome,
+            descricaoTecnica: dto.descricaoTecnica,
+            descricaoCliente: dto.descricaoCliente,
+            documentacao:     dto.documentacao,
+            horasEstimadas:   dto.horasEstimadas,
+            status:           dto.status,
+            isEstrutural:     dto.isEstrutural,
+            previsaoFimData:  dto.previsaoFimData,
+        });
+
+        return {
+            sucesso:  true,
+            dados:    demandaAlterada,
+            mensagem: 'Demanda alterada com sucesso',
+        };
     }
 
-    const demandaAlterada = await this.demandaRepositorio.alterar({
-      id:               dto.id,
-      demandaPaiId:     dto.demandaPaiId,
-      nome:             dto.nome,
-      descricaoTecnica: dto.descricaoTecnica,
-      descricaoCliente: dto.descricaoCliente,
-      documentacao:     dto.documentacao,
-      horasEstimadas:   dto.horasEstimadas,
-      status:           dto.status,
-      isEstrutural:     dto.isEstrutural,
-      previsaoFimData:  dto.previsaoFimData,
-    });
-
-    return {
-      sucesso:  true,
-      dados:    demandaAlterada,
-      mensagem: 'Demanda alterada com sucesso',
-    };
-  }
-
-  /**
+    /**
    * A árvore da tela de Documentações (task 259): gestor e administrador veem todas as demandas; o desenvolvedor, as dos projetos em que tem ao menos
    * uma linha em `demanda_usuario`. Sem os textos, só as marcas de preenchimento.
    */
-  async listarParaDocumentacao(usuarioAtivo: JwtPayload): Promise<StandardResponse<DemandaDocumentacaoResumoDto[]>> {
-    const demandas = await this.demandaRepositorio.listarParaDocumentacao({
-      usuarioId:       usuarioAtivo.sub,
-      todosOsProjetos: temPermissaoDeGestor(usuarioAtivo.tipo),
-    });
-    return { sucesso: true, dados: demandas, mensagem: 'Demandas listadas com sucesso' };
-  }
+    async listarParaDocumentacao(usuarioAtivo: JwtPayload): Promise<StandardResponse<DemandaDocumentacaoResumoDto[]>> {
+        const demandas = await this.demandaRepositorio.listarParaDocumentacao({
+            usuarioId:       usuarioAtivo.sub,
+            todosOsProjetos: temPermissaoDeGestor(usuarioAtivo.tipo),
+        });
+        return { sucesso: true, dados: demandas, mensagem: 'Demandas listadas com sucesso' };
+    }
 
-  /**
+    /**
    * Grava os textos da demanda com a versão que a pessoa leu (task 258, tela de Documentações): versão mais nova no banco recusa a gravação (409).
    * Permissões de §14: desenvolvedor só se for membro e nunca a descrição do cliente.
    */
-  async alterarTextos(
-    dto: DemandaTextosInternoAlterarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaTextosAlteradosDto>> {
-    await this.recuperarDemandaParaEditar(dto.id, dto.descricaoCliente !== undefined, usuarioAtivo);
+    async alterarTextos(
+        dto: DemandaTextosInternoAlterarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaTextosAlteradosDto>> {
+        await this.recuperarDemandaParaEditar(dto.id, dto.descricaoCliente !== undefined, usuarioAtivo);
 
-    if (dto.descricaoTecnica === undefined && dto.descricaoCliente === undefined && dto.documentacao === undefined) {
-      throw new BusinessException('Informe ao menos um texto para alterar');
+        if (dto.descricaoTecnica === undefined && dto.descricaoCliente === undefined && dto.documentacao === undefined) {
+            throw new BusinessException('Informe ao menos um texto para alterar');
+        }
+
+        const textosAlterados = await this.demandaRepositorio.alterarTextos(dto);
+        if (!textosAlterados) throw new ConflictException(MENSAGEM_VERSAO_DOS_TEXTOS_MAIS_NOVA);
+
+        return { sucesso: true, dados: textosAlterados, mensagem: 'Textos da demanda alterados com sucesso' };
     }
 
-    const textosAlterados = await this.demandaRepositorio.alterarTextos(dto);
-    if (!textosAlterados) throw new ConflictException(MENSAGEM_VERSAO_DOS_TEXTOS_MAIS_NOVA);
-
-    return { sucesso: true, dados: textosAlterados, mensagem: 'Textos da demanda alterados com sucesso' };
-  }
-
-  /**
+    /**
    * A demanda a editar, depois das regras de §14: desenvolvedor só edita demanda de que é membro e nunca a descrição do cliente. Usada por `alterar` e
    * `alterarTextos`.
    */
-  async recuperarDemandaParaEditar(
-    demandaId: number,
-    alteraDescricaoCliente: boolean,
-    usuarioAtivo: JwtPayload,
-  ): Promise<DemandaRecuperadaDto> {
-    const usuarioId =
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+    async recuperarDemandaParaEditar(
+        demandaId: number,
+        alteraDescricaoCliente: boolean,
+        usuarioAtivo: JwtPayload,
+    ): Promise<DemandaRecuperadaDto> {
+        const usuarioId =
+            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.recuperar(
-      { id: demandaId },
-      usuarioId !== undefined ? { usuarioId } : undefined,
-    );
-
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
-    }
-
-    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
-      const eMembro = await this.demandaRepositorio.validarMembro({
-        demandaId: demandaId,
-        usuarioId: usuarioAtivo.sub,
-      });
-      if (!eMembro) {
-        throw new UnauthorizedAccessException(
-          'Você só pode editar demandas das quais é membro',
+        const demandaEncontrada = await this.demandaRepositorio.recuperar(
+            { id: demandaId },
+            usuarioId !== undefined ? { usuarioId } : undefined,
         );
-      }
-    }
 
-    if (
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
+
+        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+            const eMembro = await this.demandaRepositorio.validarMembro({
+                demandaId: demandaId,
+                usuarioId: usuarioAtivo.sub,
+            });
+            if (!eMembro) {
+                throw new UnauthorizedAccessException(
+                    'Você só pode editar demandas das quais é membro',
+                );
+            }
+        }
+
+        if (
+            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
       alteraDescricaoCliente
-    ) {
-      throw new UnauthorizedAccessException(
-        'Apenas gestores podem alterar a descrição do cliente',
-      );
+        ) {
+            throw new UnauthorizedAccessException(
+                'Apenas gestores podem alterar a descrição do cliente',
+            );
+        }
+
+        return demandaEncontrada;
     }
 
-    return demandaEncontrada;
-  }
-
-  /**
+    /**
    * Retorna a árvore de descendentes como estrutura aninhada.
    * Converte a lista plana do repositório em árvore recursiva.
    * Desenvolvedor só pode consultar demandas às quais está atribuído.
    */
-  async recuperarArvore(
-    dto: DemandaRecuperarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaArvoreItemDto>> {
-    const usuarioId =
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+    async recuperarArvore(
+        dto: DemandaRecuperarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaArvoreItemDto>> {
+        const usuarioId =
+            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.recuperar(
-      { id: dto.id },
-      usuarioId !== undefined ? { usuarioId } : undefined,
-    );
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
+        const demandaEncontrada = await this.demandaRepositorio.recuperar(
+            { id: dto.id },
+            usuarioId !== undefined ? { usuarioId } : undefined,
+        );
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
+
+        const descendentes = await this.demandaRepositorio.listarDescendentes({ demandaId: dto.id });
+
+        const mapa = new Map<number, DemandaArvoreItemDto>();
+        for (const item of descendentes) {
+            mapa.set(item.id, {
+                id:                  item.id,
+                nome:                item.nome,
+                status:              item.status,
+                isEstrutural:        item.isEstrutural,
+                horasEstimadas:      item.horasEstimadas,
+                minutosExecutados:   item.minutosExecutados,
+                temDescricaoTecnica: item.temDescricaoTecnica,
+                temDescricaoCliente: item.temDescricaoCliente,
+                temDocumentacao:     item.temDocumentacao,
+                tags:                item.tags,
+                nivel:               item.nivel,
+                filhos:              [],
+            });
+        }
+
+        let raiz: DemandaArvoreItemDto | null = null;
+        for (const item of descendentes) {
+            const no = mapa.get(item.id)!;
+            if (item.demandaPaiId === null || !mapa.has(item.demandaPaiId)) {
+                raiz = no;
+            } else {
+                mapa.get(item.demandaPaiId)!.filhos.push(no);
+            }
+        }
+
+        return {
+            sucesso:  true,
+            dados:    raiz!,
+            mensagem: 'Árvore de demanda recuperada com sucesso',
+        };
     }
 
-    const descendentes = await this.demandaRepositorio.listarDescendentes({ demandaId: dto.id });
-
-    const mapa = new Map<number, DemandaArvoreItemDto>();
-    for (const item of descendentes) {
-      mapa.set(item.id, {
-        id:                  item.id,
-        nome:                item.nome,
-        status:              item.status,
-        isEstrutural:        item.isEstrutural,
-        horasEstimadas:      item.horasEstimadas,
-        minutosExecutados:   item.minutosExecutados,
-        temDescricaoTecnica: item.temDescricaoTecnica,
-        temDescricaoCliente: item.temDescricaoCliente,
-        temDocumentacao:     item.temDocumentacao,
-        tags:                item.tags,
-        nivel:               item.nivel,
-        filhos:              [],
-      });
-    }
-
-    let raiz: DemandaArvoreItemDto | null = null;
-    for (const item of descendentes) {
-      const no = mapa.get(item.id)!;
-      if (item.demandaPaiId === null || !mapa.has(item.demandaPaiId)) {
-        raiz = no;
-      } else {
-        mapa.get(item.demandaPaiId)!.filhos.push(no);
-      }
-    }
-
-    return {
-      sucesso:  true,
-      dados:    raiz!,
-      mensagem: 'Árvore de demanda recuperada com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Retorna a lista de ancestrais em ordem do pai até a raiz (breadcrumb).
    * Desenvolvedor só pode consultar demandas às quais está atribuído.
    */
-  async recuperarAncestral(
-    dto: DemandaRecuperarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaAncestralDto[]>> {
-    const usuarioId =
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+    async recuperarAncestral(
+        dto: DemandaRecuperarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaAncestralDto[]>> {
+        const usuarioId =
+            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.recuperar(
-      { id: dto.id },
-      usuarioId !== undefined ? { usuarioId } : undefined,
-    );
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
+        const demandaEncontrada = await this.demandaRepositorio.recuperar(
+            { id: dto.id },
+            usuarioId !== undefined ? { usuarioId } : undefined,
+        );
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
+
+        const ancestrais = await this.demandaRepositorio.listarAncestral({ demandaId: dto.id });
+
+        return {
+            sucesso:  true,
+            dados:    ancestrais,
+            mensagem: 'Ancestrais da demanda recuperados com sucesso',
+        };
     }
 
-    const ancestrais = await this.demandaRepositorio.listarAncestral({ demandaId: dto.id });
-
-    return {
-      sucesso:  true,
-      dados:    ancestrais,
-      mensagem: 'Ancestrais da demanda recuperados com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Cria uma conexão entre demandas com prevenção de ciclos via CTE recursivo.
    * Verifica existência de origem e destino, auto-referência e duplicidade antes de inserir.
    * Restrito a gestores: a regra mora aqui, além do `@GestorOnly` da rota, porque a IA conecta demandas pelo executor (task 228).
    */
-  async criarConexao(
-    dto: DemandaConexaoCriarDto & { demandaOrigemId: number },
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaConexaoCriadaDto>> {
-    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
-      throw new UnauthorizedAccessException('Apenas gestores conectam demandas');
+    async criarConexao(
+        dto: DemandaConexaoCriarDto & { demandaOrigemId: number },
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaConexaoCriadaDto>> {
+        if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
+            throw new UnauthorizedAccessException('Apenas gestores conectam demandas');
+        }
+        const demandaOrigemId = dto.demandaOrigemId;
+
+        const demandaOrigemEncontrada = await this.demandaRepositorio.recuperar(
+            { id: demandaOrigemId },
+        );
+        if (!demandaOrigemEncontrada) {
+            throw new ResourceNotFoundException('Demanda origem');
+        }
+
+        const demandaDestinoEncontrada = await this.demandaRepositorio.recuperar(
+            { id: dto.demandaDestinoId },
+        );
+        if (!demandaDestinoEncontrada) {
+            throw new ResourceNotFoundException('Demanda destino');
+        }
+
+        if (demandaOrigemId === dto.demandaDestinoId) {
+            throw new BusinessException('A demanda origem e destino não podem ser a mesma');
+        }
+
+        const conexaoJaExiste = await this.demandaRepositorio.validarConexao({
+            demandaOrigemId,
+            demandaDestinoId: dto.demandaDestinoId,
+        });
+        if (conexaoJaExiste) {
+            throw new BusinessException('Já existe uma conexão ativa entre essas demandas neste sentido');
+        }
+
+        const criariaCiclo = await this.demandaRepositorio.verificarCriariaCiclo({
+            demandaOrigemId,
+            demandaDestinoId: dto.demandaDestinoId,
+        });
+        if (criariaCiclo) {
+            throw new BusinessException('Essa conexão criaria um ciclo no grafo de demandas');
+        }
+
+        const conexaoCriada = await this.demandaRepositorio.inserirConexao({
+            demandaOrigemId,
+            demandaDestinoId: dto.demandaDestinoId,
+            ehBidirecional:   dto.ehBidirecional,
+        });
+
+        return {
+            sucesso:  true,
+            dados:    conexaoCriada,
+            mensagem: 'Conexão criada com sucesso',
+        };
     }
-    const demandaOrigemId = dto.demandaOrigemId;
 
-    const demandaOrigemEncontrada = await this.demandaRepositorio.recuperar(
-      { id: demandaOrigemId },
-    );
-    if (!demandaOrigemEncontrada) {
-      throw new ResourceNotFoundException('Demanda origem');
-    }
-
-    const demandaDestinoEncontrada = await this.demandaRepositorio.recuperar(
-      { id: dto.demandaDestinoId },
-    );
-    if (!demandaDestinoEncontrada) {
-      throw new ResourceNotFoundException('Demanda destino');
-    }
-
-    if (demandaOrigemId === dto.demandaDestinoId) {
-      throw new BusinessException('A demanda origem e destino não podem ser a mesma');
-    }
-
-    const conexaoJaExiste = await this.demandaRepositorio.validarConexao({
-      demandaOrigemId,
-      demandaDestinoId: dto.demandaDestinoId,
-    });
-    if (conexaoJaExiste) {
-      throw new BusinessException('Já existe uma conexão ativa entre essas demandas neste sentido');
-    }
-
-    const criariaCiclo = await this.demandaRepositorio.verificarCriariaCiclo({
-      demandaOrigemId,
-      demandaDestinoId: dto.demandaDestinoId,
-    });
-    if (criariaCiclo) {
-      throw new BusinessException('Essa conexão criaria um ciclo no grafo de demandas');
-    }
-
-    const conexaoCriada = await this.demandaRepositorio.inserirConexao({
-      demandaOrigemId,
-      demandaDestinoId: dto.demandaDestinoId,
-      ehBidirecional:   dto.ehBidirecional,
-    });
-
-    return {
-      sucesso:  true,
-      dados:    conexaoCriada,
-      mensagem: 'Conexão criada com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Lista todas as conexões de uma demanda (saída, entrada bidirecional).
    * Desenvolvedor só pode listar conexões de demandas às quais está atribuído.
    */
-  async listarConexoes(
-    dto: DemandaRecuperarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaConexaoResumoDto[]>> {
-    const usuarioId =
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+    async listarConexoes(
+        dto: DemandaRecuperarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaConexaoResumoDto[]>> {
+        const usuarioId =
+            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.recuperar(
-      { id: dto.id },
-      usuarioId !== undefined ? { usuarioId } : undefined,
-    );
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
+        const demandaEncontrada = await this.demandaRepositorio.recuperar(
+            { id: dto.id },
+            usuarioId !== undefined ? { usuarioId } : undefined,
+        );
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
+
+        const conexoes = await this.demandaRepositorio.listarConexoes({ demandaId: dto.id });
+
+        return {
+            sucesso:  true,
+            dados:    conexoes,
+            mensagem: 'Conexões listadas com sucesso',
+        };
     }
 
-    const conexoes = await this.demandaRepositorio.listarConexoes({ demandaId: dto.id });
-
-    return {
-      sucesso:  true,
-      dados:    conexoes,
-      mensagem: 'Conexões listadas com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Remove uma conexão via soft delete. Verifica que a conexão pertence à demanda.
    * Restrito a gestores (a regra mora aqui, além do `@GestorOnly` da rota, porque a IA desfaz a conexão pelo executor).
    */
-  async excluirConexao(
-    dto: DemandaConexaoExcluirDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<void>> {
-    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
-      throw new UnauthorizedAccessException('Apenas gestores desconectam demandas');
-    }
-    const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: dto.demandaId });
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
-    }
+    async excluirConexao(
+        dto: DemandaConexaoExcluirDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<void>> {
+        if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
+            throw new UnauthorizedAccessException('Apenas gestores desconectam demandas');
+        }
+        const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: dto.demandaId });
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
 
-    const conexaoPertence = await this.demandaRepositorio.validarConexaoDemanda({
-      conexaoId: dto.conexaoId,
-      demandaId: dto.demandaId,
-    });
-    if (!conexaoPertence) {
-      throw new ResourceNotFoundException('Conexão');
-    }
+        const conexaoPertence = await this.demandaRepositorio.validarConexaoDemanda({
+            conexaoId: dto.conexaoId,
+            demandaId: dto.demandaId,
+        });
+        if (!conexaoPertence) {
+            throw new ResourceNotFoundException('Conexão');
+        }
 
-    await this.demandaRepositorio.excluirConexao({ demandaId: dto.demandaId, conexaoId: dto.conexaoId });
+        await this.demandaRepositorio.excluirConexao({ demandaId: dto.demandaId, conexaoId: dto.conexaoId });
 
-    return {
-      sucesso:  true,
-      dados:    null,
-      mensagem: 'Conexão removida com sucesso',
-    };
-  }
-
-  /** Realiza soft delete da demanda. Restrito a gestores. */
-  async excluir(dto: DemandaRecuperarDto): Promise<StandardResponse<void>> {
-    const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: dto.id });
-
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
+        return {
+            sucesso:  true,
+            dados:    null,
+            mensagem: 'Conexão removida com sucesso',
+        };
     }
 
-    await this.demandaRepositorio.excluir({ id: dto.id });
+    /** Realiza soft delete da demanda. Restrito a gestores. */
+    async excluir(dto: DemandaRecuperarDto): Promise<StandardResponse<void>> {
+        const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: dto.id });
 
-    return {
-      sucesso:  true,
-      dados:    null,
-      mensagem: 'Demanda excluída com sucesso',
-    };
-  }
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
 
-  /** Restaura a demanda excluída (soft delete revertido, sem cascata). Restrito a gestores. */
-  async restaurar(dto: DemandaRestaurarDto): Promise<StandardResponse<DemandaRestauradaDto>> {
-    const demandaExcluida = await this.demandaRepositorio.recuperarExcluida({ id: dto.id });
-    if (!demandaExcluida) {
-      throw new ResourceNotFoundException('Demanda');
+        await this.demandaRepositorio.excluir({ id: dto.id });
+
+        return {
+            sucesso:  true,
+            dados:    null,
+            mensagem: 'Demanda excluída com sucesso',
+        };
     }
 
-    if (!demandaExcluida.projetoAtivo) {
-      throw new BusinessException('O projeto desta demanda foi excluído; restaure o projeto antes de restaurar a demanda');
+    /** Restaura a demanda excluída (soft delete revertido, sem cascata). Restrito a gestores. */
+    async restaurar(dto: DemandaRestaurarDto): Promise<StandardResponse<DemandaRestauradaDto>> {
+        const demandaExcluida = await this.demandaRepositorio.recuperarExcluida({ id: dto.id });
+        if (!demandaExcluida) {
+            throw new ResourceNotFoundException('Demanda');
+        }
+
+        if (!demandaExcluida.projetoAtivo) {
+            throw new BusinessException('O projeto desta demanda foi excluído; restaure o projeto antes de restaurar a demanda');
+        }
+        if (!demandaExcluida.paiAtivo) {
+            throw new BusinessException('A demanda pai foi excluída; restaure-a antes de restaurar esta demanda');
+        }
+
+        const demandaRestaurada = await this.demandaRepositorio.restaurar({ id: dto.id });
+
+        return {
+            sucesso:  true,
+            dados:    demandaRestaurada,
+            mensagem: 'Demanda restaurada com sucesso',
+        };
     }
-    if (!demandaExcluida.paiAtivo) {
-      throw new BusinessException('A demanda pai foi excluída; restaure-a antes de restaurar esta demanda');
-    }
 
-    const demandaRestaurada = await this.demandaRepositorio.restaurar({ id: dto.id });
-
-    return {
-      sucesso:  true,
-      dados:    demandaRestaurada,
-      mensagem: 'Demanda restaurada com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Retorna o grafo de demandas de um projeto (nós e arestas para D3).
    * Desenvolvedor só vê o grafo se tiver acesso ao projeto.
    */
-  async recuperarGrafo(
-    dto: DemandaGrafoRecuperarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaGrafoDto>> {
-    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
-      const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
-        projetoId: dto.projetoId,
-        usuarioId: usuarioAtivo.sub,
-      });
+    async recuperarGrafo(
+        dto: DemandaGrafoRecuperarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaGrafoDto>> {
+        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+            const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
+                projetoId: dto.projetoId,
+                usuarioId: usuarioAtivo.sub,
+            });
 
-      if (!temAcesso) {
-        throw new UnauthorizedAccessException(
-          'Desenvolvedor não tem acesso ao projeto informado',
-        );
-      }
+            if (!temAcesso) {
+                throw new UnauthorizedAccessException(
+                    'Desenvolvedor não tem acesso ao projeto informado',
+                );
+            }
+        }
+
+        const grafo = await this.demandaRepositorio.recuperarGrafo({ projetoId: dto.projetoId });
+
+        return {
+            sucesso:  true,
+            dados:    grafo,
+            mensagem: 'Grafo de demandas recuperado com sucesso',
+        };
     }
 
-    const grafo = await this.demandaRepositorio.recuperarGrafo({ projetoId: dto.projetoId });
-
-    return {
-      sucesso:  true,
-      dados:    grafo,
-      mensagem: 'Grafo de demandas recuperado com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Sincroniza as tags de uma demanda com a lista enviada.
    * Remove as que saíram, insere as novas, mantém as que continuam.
    * Gestor sempre pode; desenvolvedor só nas demandas das quais é membro.
    */
-  async alterarTagsDemanda(
-    dto: DemandaTagsAtribuirDto & { demandaId: number },
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaTagsAtribuidasDto>> {
-    const demandaId = dto.demandaId;
+    async alterarTagsDemanda(
+        dto: DemandaTagsAtribuirDto & { demandaId: number },
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaTagsAtribuidasDto>> {
+        const demandaId = dto.demandaId;
 
-    const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
+        const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
+
+        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+            const eMembro = await this.demandaRepositorio.validarMembro({ demandaId, usuarioId: usuarioAtivo.sub });
+            if (!eMembro) {
+                throw new UnauthorizedAccessException('Você só pode atribuir tags em demandas das quais é membro');
+            }
+        }
+
+        for (const tagId of dto.tagIds) {
+            const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
+            if (!tagEncontrada) {
+                throw new ResourceNotFoundException(`Tag com id ${tagId}`);
+            }
+        }
+
+        await this.demandaRepositorio.atribuirTagsDemanda({ demandaId, tagIds: dto.tagIds });
+
+        const tagsAlteradas = await this.demandaRepositorio.listarTagsDemanda({ demandaId });
+
+        return {
+            sucesso:  true,
+            dados:    { demandaId, tags: tagsAlteradas },
+            mensagem: 'Tags da demanda alteradas com sucesso',
+        };
     }
 
-    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
-      const eMembro = await this.demandaRepositorio.validarMembro({ demandaId, usuarioId: usuarioAtivo.sub });
-      if (!eMembro) {
-        throw new UnauthorizedAccessException('Você só pode atribuir tags em demandas das quais é membro');
-      }
-    }
-
-    for (const tagId of dto.tagIds) {
-      const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
-      if (!tagEncontrada) {
-        throw new ResourceNotFoundException(`Tag com id ${tagId}`);
-      }
-    }
-
-    await this.demandaRepositorio.atribuirTagsDemanda({ demandaId, tagIds: dto.tagIds });
-
-    const tagsAlteradas = await this.demandaRepositorio.listarTagsDemanda({ demandaId });
-
-    return {
-      sucesso:  true,
-      dados:    { demandaId, tags: tagsAlteradas },
-      mensagem: 'Tags da demanda alteradas com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Lista as tags ativas de uma demanda.
    * Desenvolvedor só pode consultar demandas às quais está atribuído.
    */
-  async listarTagsDemanda(
-    dto: DemandaRecuperarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<TagResumoDto[]>> {
-    const usuarioId =
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+    async listarTagsDemanda(
+        dto: DemandaRecuperarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<TagResumoDto[]>> {
+        const usuarioId =
+            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.recuperar(
-      { id: dto.id },
-      usuarioId !== undefined ? { usuarioId } : undefined,
-    );
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
+        const demandaEncontrada = await this.demandaRepositorio.recuperar(
+            { id: dto.id },
+            usuarioId !== undefined ? { usuarioId } : undefined,
+        );
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
+
+        const tags = await this.demandaRepositorio.listarTagsDemanda({ demandaId: dto.id });
+
+        return {
+            sucesso:  true,
+            dados:    tags,
+            mensagem: 'Tags da demanda listadas com sucesso',
+        };
     }
 
-    const tags = await this.demandaRepositorio.listarTagsDemanda({ demandaId: dto.id });
-
-    return {
-      sucesso:  true,
-      dados:    tags,
-      mensagem: 'Tags da demanda listadas com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Lista os membros ativos de uma demanda.
    * Desenvolvedor só pode consultar demandas às quais está atribuído.
    */
-  async listarMembros(
-    dto: DemandaRecuperarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaMembroDto[]>> {
-    const usuarioId =
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+    async listarMembros(
+        dto: DemandaRecuperarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaMembroDto[]>> {
+        const usuarioId =
+            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.recuperar(
-      { id: dto.id },
-      usuarioId !== undefined ? { usuarioId } : undefined,
-    );
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
+        const demandaEncontrada = await this.demandaRepositorio.recuperar(
+            { id: dto.id },
+            usuarioId !== undefined ? { usuarioId } : undefined,
+        );
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
+
+        const membros = await this.demandaRepositorio.listarMembrosDemanda({ demandaId: dto.id });
+
+        return {
+            sucesso:  true,
+            dados:    membros,
+            mensagem: 'Membros da demanda listados com sucesso',
+        };
     }
 
-    const membros = await this.demandaRepositorio.listarMembrosDemanda({ demandaId: dto.id });
-
-    return {
-      sucesso:  true,
-      dados:    membros,
-      mensagem: 'Membros da demanda listados com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Atribui um usuário à demanda. Impede duplicidade.
    * Gestor atribui qualquer usuário; desenvolvedor só pode incluir a si mesmo,
    * desde que tenha acesso ao projeto da demanda.
    */
-  async atribuirMembro(
-    dto: DemandaUsuarioAtribuirDto & { demandaId: number },
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<DemandaUsuarioAtribuidoDto>> {
-    const demandaId = dto.demandaId;
+    async atribuirMembro(
+        dto: DemandaUsuarioAtribuirDto & { demandaId: number },
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaUsuarioAtribuidoDto>> {
+        const demandaId = dto.demandaId;
 
-    const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
+        const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
+
+        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+            if (dto.usuarioId !== usuarioAtivo.sub) {
+                throw new UnauthorizedAccessException(
+                    'Desenvolvedor só pode incluir a si mesmo como membro',
+                );
+            }
+
+            const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
+                projetoId: demandaEncontrada.projetoId,
+                usuarioId: usuarioAtivo.sub,
+            });
+            if (!temAcesso) {
+                throw new UnauthorizedAccessException(
+                    'Desenvolvedor não tem acesso ao projeto desta demanda',
+                );
+            }
+        }
+
+        const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.usuarioId });
+        if (!usuarioEncontrado) {
+            throw new ResourceNotFoundException('Usuário');
+        }
+
+        const jaAtribuido = await this.demandaRepositorio.validarMembro({
+            demandaId,
+            usuarioId: dto.usuarioId,
+        });
+        if (jaAtribuido) {
+            throw new BusinessException('Usuário já está atribuído a esta demanda');
+        }
+
+        await this.demandaRepositorio.atribuirMembroDemanda({
+            demandaId,
+            usuarioId: dto.usuarioId,
+        });
+
+        return {
+            sucesso: true,
+            dados: {
+                demandaId,
+                usuarioId:   usuarioEncontrado.id,
+                nomeUsuario: usuarioEncontrado.nomeCompleto,
+                login:       usuarioEncontrado.login,
+                tipo:        usuarioEncontrado.tipo,
+            },
+            mensagem: 'Membro atribuído à demanda com sucesso',
+        };
     }
 
-    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
-      if (dto.usuarioId !== usuarioAtivo.sub) {
-        throw new UnauthorizedAccessException(
-          'Desenvolvedor só pode incluir a si mesmo como membro',
-        );
-      }
-
-      const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
-        projetoId: demandaEncontrada.projetoId,
-        usuarioId: usuarioAtivo.sub,
-      });
-      if (!temAcesso) {
-        throw new UnauthorizedAccessException(
-          'Desenvolvedor não tem acesso ao projeto desta demanda',
-        );
-      }
-    }
-
-    const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.usuarioId });
-    if (!usuarioEncontrado) {
-      throw new ResourceNotFoundException('Usuário');
-    }
-
-    const jaAtribuido = await this.demandaRepositorio.validarMembro({
-      demandaId,
-      usuarioId: dto.usuarioId,
-    });
-    if (jaAtribuido) {
-      throw new BusinessException('Usuário já está atribuído a esta demanda');
-    }
-
-    await this.demandaRepositorio.atribuirMembroDemanda({
-      demandaId,
-      usuarioId: dto.usuarioId,
-    });
-
-    return {
-      sucesso: true,
-      dados: {
-        demandaId,
-        usuarioId:   usuarioEncontrado.id,
-        nomeUsuario: usuarioEncontrado.nomeCompleto,
-        login:       usuarioEncontrado.login,
-        tipo:        usuarioEncontrado.tipo,
-      },
-      mensagem: 'Membro atribuído à demanda com sucesso',
-    };
-  }
-
-  /**
+    /**
    * Remove um membro da demanda via soft delete. Impede remoção do último membro.
    * Gestor remove qualquer membro; desenvolvedor só pode remover a si mesmo.
    */
-  async removerMembro(
-    dto: DemandaMembroRemoverDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<void>> {
-    const { demandaId, usuarioId } = dto;
+    async removerMembro(
+        dto: DemandaMembroRemoverDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<void>> {
+        const { demandaId, usuarioId } = dto;
 
-    const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
-    }
+        const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
+        if (!demandaEncontrada) {
+            throw new ResourceNotFoundException('Demanda');
+        }
 
-    if (
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
+        if (
+            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
       usuarioId !== usuarioAtivo.sub
-    ) {
-      throw new UnauthorizedAccessException(
-        'Desenvolvedor só pode remover a si mesmo como membro',
-      );
+        ) {
+            throw new UnauthorizedAccessException(
+                'Desenvolvedor só pode remover a si mesmo como membro',
+            );
+        }
+
+        const estaAtribuido = await this.demandaRepositorio.validarMembro({ demandaId, usuarioId });
+        if (!estaAtribuido) {
+            throw new ResourceNotFoundException('Membro');
+        }
+
+        const totalMembros = await this.demandaRepositorio.contarMembrosDemanda({ demandaId });
+        if (totalMembros <= 1) {
+            throw new BusinessException('Não é possível remover o último membro da demanda');
+        }
+
+        await this.demandaRepositorio.removerMembroDemanda({ demandaId, usuarioId });
+
+        return {
+            sucesso:  true,
+            dados:    null,
+            mensagem: 'Membro removido da demanda com sucesso',
+        };
     }
-
-    const estaAtribuido = await this.demandaRepositorio.validarMembro({ demandaId, usuarioId });
-    if (!estaAtribuido) {
-      throw new ResourceNotFoundException('Membro');
-    }
-
-    const totalMembros = await this.demandaRepositorio.contarMembrosDemanda({ demandaId });
-    if (totalMembros <= 1) {
-      throw new BusinessException('Não é possível remover o último membro da demanda');
-    }
-
-    await this.demandaRepositorio.removerMembroDemanda({ demandaId, usuarioId });
-
-    return {
-      sucesso:  true,
-      dados:    null,
-      mensagem: 'Membro removido da demanda com sucesso',
-    };
-  }
 }

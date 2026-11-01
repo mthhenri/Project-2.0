@@ -8,9 +8,9 @@ import { comFeedbackProprio } from '../../../core/interceptors/loading.intercept
 /** Situação do check-in do próprio usuário (a conversa em si usa o `ChatService`, na rota `/checkin/mensagem`). */
 @Injectable({ providedIn: 'root' })
 export class CheckinService {
-  private readonly httpClient = inject(HttpClient);
+    private readonly httpClient = inject(HttpClient);
 
-  consultarSituacao(): Observable<StandardResponse<CheckinSituacaoConsultadaDto>> {
-    return this.httpClient.get<StandardResponse<CheckinSituacaoConsultadaDto>>(`${ambiente.apiUrl}/checkin/situacao`, comFeedbackProprio());
-  }
+    consultarSituacao(): Observable<StandardResponse<CheckinSituacaoConsultadaDto>> {
+        return this.httpClient.get<StandardResponse<CheckinSituacaoConsultadaDto>>(`${ambiente.apiUrl}/checkin/situacao`, comFeedbackProprio());
+    }
 }

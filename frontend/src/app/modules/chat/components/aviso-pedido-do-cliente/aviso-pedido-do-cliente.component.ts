@@ -5,9 +5,9 @@ import { Component } from '@angular/core';
  * administrador o alteram. Usado na demanda aberta do chat e no documento do plano.
  */
 @Component({
-  selector: 'app-aviso-pedido-do-cliente',
-  standalone: true,
-  templateUrl: './aviso-pedido-do-cliente.component.html',
-  styleUrl: './aviso-pedido-do-cliente.component.scss',
+    selector: 'app-aviso-pedido-do-cliente',
+    standalone: true,
+    templateUrl: './aviso-pedido-do-cliente.component.html',
+    styleUrl: './aviso-pedido-do-cliente.component.scss',
 })
 export class AvisoPedidoDoClienteComponent {}

@@ -6,10 +6,10 @@ import { TipoUsuarioEnum } from '../enums/tipo-usuario.enum';
  * O administrador é um gestor com mais permissões, portanto também passa.
  */
 export function temPermissaoDeGestor(tipo: TipoUsuarioEnum): boolean {
-  return tipo === TipoUsuarioEnum.GESTOR || tipo === TipoUsuarioEnum.ADMINISTRADOR;
+    return tipo === TipoUsuarioEnum.GESTOR || tipo === TipoUsuarioEnum.ADMINISTRADOR;
 }
 
 /** Permissões exclusivas do administrador (criar outros administradores, configurações da IA). */
 export function temPermissaoDeAdministrador(tipo: TipoUsuarioEnum): boolean {
-  return tipo === TipoUsuarioEnum.ADMINISTRADOR;
+    return tipo === TipoUsuarioEnum.ADMINISTRADOR;
 }

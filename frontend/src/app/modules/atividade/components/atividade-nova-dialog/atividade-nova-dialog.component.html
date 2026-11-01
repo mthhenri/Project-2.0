@@ -1,25 +1,33 @@
 <p-dialog
-  [visible]="visivel()"
-  (visibleChange)="visivel.set($event)"
-  header="Nova Atividade"
-  dialogFormulario
-  [dialogBloqueado]="salvando()"
-  (dialogEnviar)="salvar()"
-  [dialogSemAutofocus]="true"
-  [modal]="true"
-  [style]="{ width: '40rem' }"
-  [draggable]="false"
-  [dismissableMask]="true"
+    [visible]="visivel()"
+    (visibleChange)="visivel.set($event)"
+    header="Nova Atividade"
+    dialogFormulario
+    [dialogBloqueado]="salvando()"
+    (dialogEnviar)="salvar()"
+    [dialogSemAutofocus]="true"
+    [modal]="true"
+    [style]="{ width: '40rem' }"
+    [draggable]="false"
+    [dismissableMask]="true"
 >
-  <!-- O conteúdo do p-dialog é projetado e nasceria com o componente; o @if cria o formulário a cada abertura, com a demanda de abrir(). -->
-  @if (visivel()) {
-    <app-atividade-formulario [demandaIdInicial]="demandaIdInicial()" (criada)="aoCriarAtividade($event.criarOutra)" />
-  }
+    <!-- O conteúdo do p-dialog é projetado e nasceria com o componente; o @if cria o formulário a cada abertura, com a demanda de abrir(). -->
+    @if (visivel()) {
+        <app-atividade-formulario
+            [demandaIdInicial]="demandaIdInicial()"
+            (criada)="aoCriarAtividade($event.criarOutra)"
+        />
+    }
 
-  <ng-template pTemplate="footer">
-    <app-dialog-dica-atalhos />
-    <p-button label="Cancelar" [text]="true" (onClick)="visivel.set(false)" />
-    <p-button label="Salvar e criar outra" severity="secondary" [loading]="salvando()" (onClick)="salvar(true)" />
-    <p-button label="Criar" icon="pi pi-check" [loading]="salvando()" (onClick)="salvar()" />
-  </ng-template>
+    <ng-template pTemplate="footer">
+        <app-dialog-dica-atalhos />
+        <p-button label="Cancelar" [text]="true" (onClick)="visivel.set(false)" />
+        <p-button
+            label="Salvar e criar outra"
+            severity="secondary"
+            [loading]="salvando()"
+            (onClick)="salvar(true)"
+        />
+        <p-button label="Criar" icon="pi pi-check" [loading]="salvando()" (onClick)="salvar()" />
+    </ng-template>
 </p-dialog>

@@ -8,10 +8,10 @@ export const LIMITE_MAXIMO_DEMANDAS_EXECUTADAS = 50;
 
 /** Filtro de `GET /demanda/executadas`: as demandas que o próprio usuário executou (sempre o do token), da execução mais recente para a mais antiga. */
 export class DemandaExecutadaListarDto {
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(LIMITE_MAXIMO_DEMANDAS_EXECUTADAS)
-  @Type(() => Number)
-  limite?: number;
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Max(LIMITE_MAXIMO_DEMANDAS_EXECUTADAS)
+    @Type(() => Number)
+    limite?: number;
 }

@@ -3,8 +3,8 @@
  * A execução não tem coluna de usuário: o dono é o da atividade (`atividade.usuario_id`).
  */
 export class DemandaExecutadaInternoListarDto {
-  usuarioId: number;
-  /** true → desenvolvedor: só as demandas em que ele tem linha em `demanda_usuario`. false → gestor e administrador: sem esse filtro. */
-  apenasMembro: boolean;
-  limite: number;
+    usuarioId: number;
+    /** true → desenvolvedor: só as demandas em que ele tem linha em `demanda_usuario`. false → gestor e administrador: sem esse filtro. */
+    apenasMembro: boolean;
+    limite: number;
 }

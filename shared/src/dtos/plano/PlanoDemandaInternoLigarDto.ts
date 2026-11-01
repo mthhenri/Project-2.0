@@ -1,4 +1,4 @@
 export class PlanoDemandaInternoLigarDto {
-  id: number;
-  demandaId: number;
+    id: number;
+    demandaId: number;
 }

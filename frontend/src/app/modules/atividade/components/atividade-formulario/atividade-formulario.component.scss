@@ -1,144 +1,146 @@
 .nova-atividade {
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding-top: 0.25rem;
-  }
-
-  &__linha {
-    display: flex;
-    gap: 1rem;
-
-    @media (max-width: 640px) {
-      flex-direction: column;
-    }
-  }
-
-  &__campo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  &__rotulo {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--p-text-color);
-  }
-
-  &__erro {
-    font-size: 0.75rem;
-    color: var(--p-red-500);
-  }
-
-  &__dica {
-    font-size: 0.75rem;
-    color: var(--p-text-muted-color);
-  }
-
-  // Status em segmentos: as quatro opções sempre à vista, sem abrir lista.
-  &__segmentos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.375rem;
-  }
-
-  &__segmento {
-    padding: 0.375rem 0.875rem;
-    border: 1px solid var(--app-surface-300);
-    border-radius: 999px;
-    background: transparent;
-    color: var(--p-text-color);
-    font-size: 0.8125rem;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-
-    &:hover {
-      background: var(--app-surface-100);
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding-top: 0.25rem;
     }
 
-    &--ativo {
-      font-weight: 600;
+    &__linha {
+        display: flex;
+        gap: 1rem;
+
+        @media (max-width: 640px) {
+            flex-direction: column;
+        }
     }
 
-    // A cor do status selecionado é a mesma do selo da coluna Status da listagem (tokens do p-tag).
-    &--ativo[data-severidade='warn'] {
-      border-color: var(--p-tag-warn-color);
-      background: var(--p-tag-warn-background);
-      color: var(--p-tag-warn-color);
-    }
-    &--ativo[data-severidade='secondary'] {
-      border-color: var(--p-tag-secondary-color);
-      background: var(--p-tag-secondary-background);
-      color: var(--p-tag-secondary-color);
-    }
-    &--ativo[data-severidade='info'] {
-      border-color: var(--p-tag-info-color);
-      background: var(--p-tag-info-background);
-      color: var(--p-tag-info-color);
-    }
-    &--ativo[data-severidade='success'] {
-      border-color: var(--p-tag-success-color);
-      background: var(--p-tag-success-background);
-      color: var(--p-tag-success-color);
-    }
-  }
-
-  &__tags {
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    gap: 0.375rem;
-    max-height: 6rem;
-    overflow-y: auto;
-    padding: 0.125rem;
-    padding-right: 0.375rem;
-  }
-
-  &__tag-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.25rem 0.625rem;
-    border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--cor-tag) 45%, transparent);
-    background: color-mix(in srgb, var(--cor-tag) 14%, transparent);
-    color: var(--p-text-color);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    line-height: 1.2;
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-
-    &:hover {
-      border-color: color-mix(in srgb, var(--cor-tag) 70%, transparent);
-      background: color-mix(in srgb, var(--cor-tag) 22%, transparent);
+    &__campo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        flex: 1 1 0;
+        min-width: 0;
     }
 
-    &--ativo {
-      background: color-mix(in srgb, var(--cor-tag) 88%, transparent);
-      border-color: var(--cor-tag);
-      color: #fff;
-
-      &:hover {
-        background: var(--cor-tag);
-      }
+    &__rotulo {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--p-text-color);
     }
-  }
 
-  &__tag-check {
-    font-size: 0.75rem;
-    flex-shrink: 0;
-  }
+    &__erro {
+        font-size: 0.75rem;
+        color: var(--p-red-500);
+    }
 
-  &__tag-bolinha {
-    display: inline-block;
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+    &__dica {
+        font-size: 0.75rem;
+        color: var(--p-text-muted-color);
+    }
+
+    // Status em segmentos: as quatro opções sempre à vista, sem abrir lista.
+    &__segmentos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+    }
+
+    &__segmento {
+        padding: 0.375rem 0.875rem;
+        border: 1px solid var(--app-surface-300);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--p-text-color);
+        font-size: 0.8125rem;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+
+        &:hover {
+            background: var(--app-surface-100);
+        }
+
+        &--ativo {
+            font-weight: 600;
+        }
+
+        // A cor do status selecionado é a mesma do selo da coluna Status da listagem (tokens do p-tag).
+        &--ativo[data-severidade="warn"] {
+            border-color: var(--p-tag-warn-color);
+            background: var(--p-tag-warn-background);
+            color: var(--p-tag-warn-color);
+        }
+        &--ativo[data-severidade="secondary"] {
+            border-color: var(--p-tag-secondary-color);
+            background: var(--p-tag-secondary-background);
+            color: var(--p-tag-secondary-color);
+        }
+        &--ativo[data-severidade="info"] {
+            border-color: var(--p-tag-info-color);
+            background: var(--p-tag-info-background);
+            color: var(--p-tag-info-color);
+        }
+        &--ativo[data-severidade="success"] {
+            border-color: var(--p-tag-success-color);
+            background: var(--p-tag-success-background);
+            color: var(--p-tag-success-color);
+        }
+    }
+
+    &__tags {
+        display: flex;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        gap: 0.375rem;
+        max-height: 6rem;
+        overflow-y: auto;
+        padding: 0.125rem;
+        padding-right: 0.375rem;
+    }
+
+    &__tag-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.25rem 0.625rem;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--cor-tag) 45%, transparent);
+        background: color-mix(in srgb, var(--cor-tag) 14%, transparent);
+        color: var(--p-text-color);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        line-height: 1.2;
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease;
+
+        &:hover {
+            border-color: color-mix(in srgb, var(--cor-tag) 70%, transparent);
+            background: color-mix(in srgb, var(--cor-tag) 22%, transparent);
+        }
+
+        &--ativo {
+            background: color-mix(in srgb, var(--cor-tag) 88%, transparent);
+            border-color: var(--cor-tag);
+            color: #fff;
+
+            &:hover {
+                background: var(--cor-tag);
+            }
+        }
+    }
+
+    &__tag-check {
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    &__tag-bolinha {
+        display: inline-block;
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
 }

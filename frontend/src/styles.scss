@@ -1,5 +1,5 @@
 // Ícones PrimeNG
-@import 'primeicons/primeicons.css';
+@import "primeicons/primeicons.css";
 
 // Diretivas Tailwind — ordem obrigatória
 @tailwind base;
@@ -23,108 +23,124 @@ $raio-borda-padrao: 0.5rem;
 // coerentes. Componentes usam sempre `--app-surface-N`.
 // ---------------------------------------------------------------------------
 :root {
-  --app-surface-0:   var(--p-surface-0);
-  --app-surface-50:  var(--p-surface-50);
-  --app-surface-100: var(--p-surface-100);
-  --app-surface-200: var(--p-surface-200);
-  --app-surface-300: var(--p-surface-300);
-  --app-surface-400: var(--p-surface-400);
-  --app-surface-500: var(--p-surface-500);
-  --app-surface-600: var(--p-surface-600);
-  --app-surface-700: var(--p-surface-700);
-  --app-surface-800: var(--p-surface-800);
+    --app-surface-0: var(--p-surface-0);
+    --app-surface-50: var(--p-surface-50);
+    --app-surface-100: var(--p-surface-100);
+    --app-surface-200: var(--p-surface-200);
+    --app-surface-300: var(--p-surface-300);
+    --app-surface-400: var(--p-surface-400);
+    --app-surface-500: var(--p-surface-500);
+    --app-surface-600: var(--p-surface-600);
+    --app-surface-700: var(--p-surface-700);
+    --app-surface-800: var(--p-surface-800);
 
-  // Fundo da página (um degrau "atrás" do cartão).
-  --app-fundo: var(--p-surface-50);
+    // Fundo da página (um degrau "atrás" do cartão).
+    --app-fundo: var(--p-surface-50);
 
-  // Avatares/badges circulares com iniciais (fundo tom primário + texto primário).
-  --app-avatar-fundo: var(--p-primary-100);
-  --app-avatar-cor:   var(--p-primary-700);
+    // Avatares/badges circulares com iniciais (fundo tom primário + texto primário).
+    --app-avatar-fundo: var(--p-primary-100);
+    --app-avatar-cor: var(--p-primary-700);
 
-  // Realce de linha/opção selecionada (fundo tom primário, texto normal por cima).
-  --app-realce-sutil: var(--p-primary-50);
+    // Realce de linha/opção selecionada (fundo tom primário, texto normal por cima).
+    --app-realce-sutil: var(--p-primary-50);
 
-  // Texto/ícone de realce na cor primária (tom meio-termo), usado com glow para
-  // destacar o item selecionado. Acompanha a troca de cor do tema.
-  --app-realce-primario: var(--p-primary-600);
+    // Texto/ícone de realce na cor primária (tom meio-termo), usado com glow para
+    // destacar o item selecionado. Acompanha a troca de cor do tema.
+    --app-realce-primario: var(--p-primary-600);
 
-  // Cores das três descrições da demanda (cliente / técnica / documentação) e das abas
-  // que as mostram (task 288). A técnica é a própria cor do tema; cliente e documentação
-  // giram o matiz dela em +/- `--app-giro-descricoes` graus, então as três ficam separadas
-  // em qualquer tema (o giro de 30 foi escolhido no POC com o tema azul). `max(s, 55)` dá
-  // cor ao tema sem matiz (preto, cinza), onde o giro por si só não mudaria nada.
-  --app-giro-descricoes: 30;
-  --app-icone-cliente: hsl(from var(--p-primary-600) calc(h + var(--app-giro-descricoes)) max(s, 55) l);
-  --app-icone-tecnica: var(--p-primary-600);
-  --app-icone-doc:     hsl(from var(--p-primary-600) calc(h - var(--app-giro-descricoes)) max(s, 55) l);
+    // Cores das três descrições da demanda (cliente / técnica / documentação) e das abas
+    // que as mostram (task 288). A técnica é a própria cor do tema; cliente e documentação
+    // giram o matiz dela em +/- `--app-giro-descricoes` graus, então as três ficam separadas
+    // em qualquer tema (o giro de 30 foi escolhido no POC com o tema azul). `max(s, 55)` dá
+    // cor ao tema sem matiz (preto, cinza), onde o giro por si só não mudaria nada.
+    --app-giro-descricoes: 30;
+    --app-icone-cliente: hsl(
+        from var(--p-primary-600) calc(h + var(--app-giro-descricoes)) max(s, 55) l
+    );
+    --app-icone-tecnica: var(--p-primary-600);
+    --app-icone-doc: hsl(
+        from var(--p-primary-600) calc(h - var(--app-giro-descricoes)) max(s, 55) l
+    );
 
-  // Realce do ícone de anotações do usuário: vibrante e distinto, também puxando
-  // para a cor primária (resíduo de azul-céu mantém o brilho).
-  --app-icone-anotacao: color-mix(in srgb, var(--p-primary-500) 70%, var(--p-sky-500));
+    // Realce do ícone de anotações do usuário: vibrante e distinto, também puxando
+    // para a cor primária (resíduo de azul-céu mantém o brilho).
+    --app-icone-anotacao: color-mix(in srgb, var(--p-primary-500) 70%, var(--p-sky-500));
 
-  // Marcas de TIPO (badge do calendário + tag da tabela) — ancoradas na cor primária
-  // do tema selecionado (seguem claro/escuro e presets customizados), mas com um
-  // deslocamento de matiz para os "primos" da família azul, dando diferenciação sem
-  // sair da linha do tema: feriado puxa para indigo (azul mais fundo), recesso fica
-  // no azul puro do tema, ponto facultativo puxa para ciano (azul indo ao verde). A
-  // gradação de tom (fundo 200/100/50) reforça a separação. Mesmo padrão dos
-  // --app-icone-* (primário dominante + resíduo do vizinho).
-  --app-marca-feriado-fundo:     color-mix(in srgb, var(--p-primary-200) 50%, var(--p-indigo-300));
-  --app-marca-feriado-cor:       color-mix(in srgb, var(--p-primary-800) 55%, var(--p-indigo-800));
-  --app-marca-recesso-fundo:     var(--p-primary-100);
-  --app-marca-recesso-cor:       var(--p-primary-700);
-  --app-marca-facultativo-fundo: color-mix(in srgb, var(--p-primary-100) 40%, var(--p-cyan-200));
-  --app-marca-facultativo-cor:   color-mix(in srgb, var(--p-primary-700) 45%, var(--p-cyan-700));
+    // Marcas de TIPO (badge do calendário + tag da tabela) — ancoradas na cor primária
+    // do tema selecionado (seguem claro/escuro e presets customizados), mas com um
+    // deslocamento de matiz para os "primos" da família azul, dando diferenciação sem
+    // sair da linha do tema: feriado puxa para indigo (azul mais fundo), recesso fica
+    // no azul puro do tema, ponto facultativo puxa para ciano (azul indo ao verde). A
+    // gradação de tom (fundo 200/100/50) reforça a separação. Mesmo padrão dos
+    // --app-icone-* (primário dominante + resíduo do vizinho).
+    --app-marca-feriado-fundo: color-mix(in srgb, var(--p-primary-200) 50%, var(--p-indigo-300));
+    --app-marca-feriado-cor: color-mix(in srgb, var(--p-primary-800) 55%, var(--p-indigo-800));
+    --app-marca-recesso-fundo: var(--p-primary-100);
+    --app-marca-recesso-cor: var(--p-primary-700);
+    --app-marca-facultativo-fundo: color-mix(in srgb, var(--p-primary-100) 40%, var(--p-cyan-200));
+    --app-marca-facultativo-cor: color-mix(in srgb, var(--p-primary-700) 45%, var(--p-cyan-700));
 }
 
 .app-escuro {
-  --app-surface-0:   var(--p-surface-900); // cartão / painel
-  --app-surface-50:  var(--p-surface-800); // fundo levemente elevado
-  --app-surface-100: var(--p-surface-700); // hover / badge / aninhado
-  --app-surface-200: var(--p-surface-700); // borda / divisória / avatar
-  --app-surface-300: var(--p-surface-600); // borda de input / tracejada
-  --app-surface-400: var(--p-surface-500); // texto/borda mais fraco
-  --app-surface-500: var(--p-surface-400); // texto secundário
-  --app-surface-600: var(--p-surface-400); // texto secundário forte
-  --app-surface-700: var(--p-surface-200); // texto forte
-  --app-surface-800: var(--p-surface-100); // texto mais forte
+    --app-surface-0: var(--p-surface-900); // cartão / painel
+    --app-surface-50: var(--p-surface-800); // fundo levemente elevado
+    --app-surface-100: var(--p-surface-700); // hover / badge / aninhado
+    --app-surface-200: var(--p-surface-700); // borda / divisória / avatar
+    --app-surface-300: var(--p-surface-600); // borda de input / tracejada
+    --app-surface-400: var(--p-surface-500); // texto/borda mais fraco
+    --app-surface-500: var(--p-surface-400); // texto secundário
+    --app-surface-600: var(--p-surface-400); // texto secundário forte
+    --app-surface-700: var(--p-surface-200); // texto forte
+    --app-surface-800: var(--p-surface-100); // texto mais forte
 
-  --app-fundo: var(--p-surface-950);
+    --app-fundo: var(--p-surface-950);
 
-  // No escuro, tons fixos primary-50/100 viram manchas claras: troca por tinta
-  // translúcida do primário (que já inverte) + texto claro legível.
-  --app-avatar-fundo: color-mix(in srgb, var(--p-primary-400) 26%, transparent);
-  --app-avatar-cor:   var(--p-primary-200);
-  --app-realce-sutil: color-mix(in srgb, var(--p-primary-400) 16%, transparent);
+    // No escuro, tons fixos primary-50/100 viram manchas claras: troca por tinta
+    // translúcida do primário (que já inverte) + texto claro legível.
+    --app-avatar-fundo: color-mix(in srgb, var(--p-primary-400) 26%, transparent);
+    --app-avatar-cor: var(--p-primary-200);
+    --app-realce-sutil: color-mix(in srgb, var(--p-primary-400) 16%, transparent);
 
-  // No escuro, tom mais claro do primário lê melhor para o texto de realce.
-  --app-realce-primario: var(--p-primary-400);
+    // No escuro, tom mais claro do primário lê melhor para o texto de realce.
+    --app-realce-primario: var(--p-primary-400);
 
-  // No escuro, tons mais claros leem melhor sobre superfície escura. Mesma lógica
-  // do tema claro: primário + resíduo da família original.
-  --app-icone-cliente: hsl(from var(--p-primary-400) calc(h + var(--app-giro-descricoes)) max(s, 55) l);
-  --app-icone-tecnica: var(--p-primary-400);
-  --app-icone-doc:     hsl(from var(--p-primary-400) calc(h - var(--app-giro-descricoes)) max(s, 55) l);
+    // No escuro, tons mais claros leem melhor sobre superfície escura. Mesma lógica
+    // do tema claro: primário + resíduo da família original.
+    --app-icone-cliente: hsl(
+        from var(--p-primary-400) calc(h + var(--app-giro-descricoes)) max(s, 55) l
+    );
+    --app-icone-tecnica: var(--p-primary-400);
+    --app-icone-doc: hsl(
+        from var(--p-primary-400) calc(h - var(--app-giro-descricoes)) max(s, 55) l
+    );
 
-  // No escuro, tom mais claro mantém o brilho do azul-céu puxando para o primário.
-  --app-icone-anotacao: color-mix(in srgb, var(--p-primary-400) 70%, var(--p-sky-400));
+    // No escuro, tom mais claro mantém o brilho do azul-céu puxando para o primário.
+    --app-icone-anotacao: color-mix(in srgb, var(--p-primary-400) 70%, var(--p-sky-400));
 
-  // No escuro, tinta translúcida do tom 400 (que já inverte) com o mesmo
-  // deslocamento de matiz (indigo no feriado, ciano no facultativo); a opacidade
-  // decrescente (38/26/16%) mantém a gradação feriado→facultativo e o texto usa os
-  // tons claros com o mesmo resíduo do vizinho.
-  --app-marca-feriado-fundo:     color-mix(in srgb, color-mix(in srgb, var(--p-primary-400) 50%, var(--p-indigo-400)) 42%, transparent);
-  --app-marca-feriado-cor:       color-mix(in srgb, var(--p-primary-200) 55%, var(--p-indigo-200));
-  --app-marca-recesso-fundo:     color-mix(in srgb, var(--p-primary-400) 30%, transparent);
-  --app-marca-recesso-cor:       var(--p-primary-200);
-  --app-marca-facultativo-fundo: color-mix(in srgb, color-mix(in srgb, var(--p-primary-400) 45%, var(--p-cyan-400)) 26%, transparent);
-  --app-marca-facultativo-cor:   color-mix(in srgb, var(--p-primary-300) 50%, var(--p-cyan-300));
+    // No escuro, tinta translúcida do tom 400 (que já inverte) com o mesmo
+    // deslocamento de matiz (indigo no feriado, ciano no facultativo); a opacidade
+    // decrescente (38/26/16%) mantém a gradação feriado→facultativo e o texto usa os
+    // tons claros com o mesmo resíduo do vizinho.
+    --app-marca-feriado-fundo: color-mix(
+        in srgb,
+        color-mix(in srgb, var(--p-primary-400) 50%, var(--p-indigo-400)) 42%,
+        transparent
+    );
+    --app-marca-feriado-cor: color-mix(in srgb, var(--p-primary-200) 55%, var(--p-indigo-200));
+    --app-marca-recesso-fundo: color-mix(in srgb, var(--p-primary-400) 30%, transparent);
+    --app-marca-recesso-cor: var(--p-primary-200);
+    --app-marca-facultativo-fundo: color-mix(
+        in srgb,
+        color-mix(in srgb, var(--p-primary-400) 45%, var(--p-cyan-400)) 26%,
+        transparent
+    );
+    --app-marca-facultativo-cor: color-mix(in srgb, var(--p-primary-300) 50%, var(--p-cyan-300));
 }
 
 // Fundo e cor de texto base. `--p-text-color` já troca sozinho no tema escuro.
 body {
-  background-color: var(--app-fundo);
-  color: var(--p-text-color);
+    background-color: var(--app-fundo);
+    color: var(--p-text-color);
 }
 
 // ---------------------------------------------------------------------------
@@ -139,31 +155,31 @@ body {
 // defini-los desativaria os pseudo-elementos acima.
 // ---------------------------------------------------------------------------
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track,
 ::-webkit-scrollbar-corner {
-  background: transparent;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--app-surface-300);
-  border-radius: 9999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+    background-color: var(--app-surface-300);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
 
-  &:hover {
-    background-color: var(--app-surface-400);
-  }
+    &:hover {
+        background-color: var(--app-surface-400);
+    }
 }
 
 @supports not selector(::-webkit-scrollbar) {
-  html {
-    scrollbar-width: thin;
-    scrollbar-color: var(--app-surface-300) transparent;
-  }
+    html {
+        scrollbar-width: thin;
+        scrollbar-color: var(--app-surface-300) transparent;
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -183,94 +199,93 @@ body {
 // necessário porque o PrimeNG grava o z-index inline no elemento.
 // ---------------------------------------------------------------------------
 .p-toast {
-  z-index: 1000000 !important;
+    z-index: 1000000 !important;
 }
 
 /* Impressão do espelho de ponto: some com toda a página e revela apenas a folha
    imprimível (.ponto-impressao), posicionada no topo da folha. Regra global porque
    precisa alcançar elementos fora do componente de impressão. */
 @page {
-  size: A4 portrait;
-  margin: 12mm;
+    size: A4 portrait;
+    margin: 12mm;
 }
 
 @media print {
-  body * {
-    visibility: hidden;
-  }
+    body * {
+        visibility: hidden;
+    }
 
-  .ponto-impressao,
-  .ponto-impressao * {
-    visibility: visible;
-  }
+    .ponto-impressao,
+    .ponto-impressao * {
+        visibility: visible;
+    }
 
-  .ponto-impressao {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
+    .ponto-impressao {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
 }
-
 
 /* Recarga com o conteúdo anterior visível (task 98): esmaece e bloqueia cliques até a resposta
    chegar; a `app-barra-recarga` indica o andamento. Primeira carga usa `app-skeleton-lista`. */
 .conteudo-recarregando {
-  opacity: 0.55;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
 }
 
 .lista-recarga {
-  position: relative;
+    position: relative;
 }
 
 // Com o drawer de anotações aberto (task 114) o toast "Desfazer" sai do rodapé do drawer.
 body:has(.anotacoes-drawer) .toast-desfazer {
-  right: calc(520px + 1.25rem);
+    right: calc(520px + 1.25rem);
 }
 
 // Tooltip do gráfico de barras: as descrições (data, modelo, gasto, tokens) são longas e o limite padrão do PrimeNG as quebra no meio de um valor.
 // O tooltip vai para o <body>, por isso o estilo é global.
 .p-tooltip.grafico-barras__tooltip {
-  max-width: 24rem;
+    max-width: 24rem;
 }
 
 // Ícones das descrições da demanda que o PrimeIcons não tem (task 238): terminal para a técnica e folha com texto para a documentação. São
 // desenhados por máscara SVG na cor do texto (`currentColor`), então herdam o `--app-icone-*` e o brilho de quem os usa. O desenho está no
 // `::before` para o `filter: drop-shadow` do brilho (descrição preenchida) enxergar o ícone já recortado.
 .icone-descricao {
-  display: inline-block;
-  position: relative;
-  width: 1.1em;
-  height: 1.1em;
-  vertical-align: -0.2em;
+    display: inline-block;
+    position: relative;
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.2em;
 
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-color: currentColor;
-    mask: var(--icone-descricao-mascara) center / contain no-repeat;
-    -webkit-mask: var(--icone-descricao-mascara) center / contain no-repeat;
-  }
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-color: currentColor;
+        mask: var(--icone-descricao-mascara) center / contain no-repeat;
+        -webkit-mask: var(--icone-descricao-mascara) center / contain no-repeat;
+    }
 
-  &--tecnica {
-    --icone-descricao-mascara: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 20 20' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='16' rx='2'/><path d='M7 9l3 3-3 3M12 15h5'/></svg>");
-  }
+    &--tecnica {
+        --icone-descricao-mascara: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 20 20' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='16' rx='2'/><path d='M7 9l3 3-3 3M12 15h5'/></svg>");
+    }
 
-  &--doc {
-    --icone-descricao-mascara: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 20 20' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 3h9l4 4v14H6z'/><path d='M9 12h7M9 16h7M14 3v5h5'/></svg>");
-  }
+    &--doc {
+        --icone-descricao-mascara: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 20 20' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 3h9l4 4v14H6z'/><path d='M9 12h7M9 16h7M14 3v5h5'/></svg>");
+    }
 
-  // Brilho de uma descrição preenchida.
-  &--brilho {
-    filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 55%, transparent));
-  }
+    // Brilho de uma descrição preenchida.
+    &--brilho {
+        filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 55%, transparent));
+    }
 }
 
 // O menu de Minhas demandas é anexado ao body; perto do rodapé o submenu abre para cima.
 .minhas-demandas-menu--para-cima .p-contextmenu-submenu {
-  top: auto !important; // PrimeNG posiciona o submenu em top: 0 por estilo inline.
-  bottom: 0;
+    top: auto !important; // PrimeNG posiciona o submenu em top: 0 por estilo inline.
+    bottom: 0;
 }

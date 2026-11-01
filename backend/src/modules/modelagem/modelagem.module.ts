@@ -6,7 +6,7 @@ import { ModelagemTabelaRepository } from './repositories/modelagem-tabela.repos
 import { ModelagemService } from './services/modelagem.service';
 
 @Module({
-  controllers: [ModelagemController],
-  providers:   [ModelagemService, ModelagemCatalogoRepository, ModelagemGrupoRepository, ModelagemTabelaRepository],
+    controllers: [ModelagemController],
+    providers:   [ModelagemService, ModelagemCatalogoRepository, ModelagemGrupoRepository, ModelagemTabelaRepository],
 })
 export class ModelagemModule {}

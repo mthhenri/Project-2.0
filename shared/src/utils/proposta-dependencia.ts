@@ -2,8 +2,8 @@ import { TipoPropostaIaEnum } from '../enums/tipo-proposta-ia.enum';
 
 /** O inteiro positivo que a proposta guarda numa chave (`undefined` se não houver). */
 function idGuardado(dados: Record<string, unknown>, chave: string): number | undefined {
-  const valor = dados[chave];
-  return typeof valor === 'number' && Number.isInteger(valor) && valor > 0 ? valor : undefined;
+    const valor = dados[chave];
+    return typeof valor === 'number' && Number.isInteger(valor) && valor > 0 ? valor : undefined;
 }
 
 /**
@@ -13,6 +13,6 @@ function idGuardado(dados: Record<string, unknown>, chave: string): number | und
  * quando a referenciada falhou. Quem referencia sempre nasce depois de quem é referenciado, então o id menor vem primeiro.
  */
 export function idsDasPropostasDeQueDepende(tipo: TipoPropostaIaEnum, dados: Record<string, unknown>): number[] {
-  if (tipo !== TipoPropostaIaEnum.CRIAR_DEMANDA) return [];
-  return [idGuardado(dados, 'projetoPropostaId'), idGuardado(dados, 'demandaPaiPropostaId')].filter((id): id is number => id !== undefined);
+    if (tipo !== TipoPropostaIaEnum.CRIAR_DEMANDA) return [];
+    return [idGuardado(dados, 'projetoPropostaId'), idGuardado(dados, 'demandaPaiPropostaId')].filter((id): id is number => id !== undefined);
 }

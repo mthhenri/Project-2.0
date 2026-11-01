@@ -18,40 +18,40 @@ export type ModoDaLinha = 'PENDENTE' | 'FEITA' | 'ENCERRADA';
  * escolhe o modo e executa as ações; o botão de detalhes abre o cartão grande no mesmo lugar.
  */
 @Component({
-  selector: 'app-chat-proposta-linha',
-  standalone: true,
-  imports: [ButtonModule, TagModule, TooltipModule, DiffPorPalavraComponent, PrioridadeSeloComponent],
-  templateUrl: './proposta-linha.component.html',
-  styleUrl: './proposta-linha.component.scss',
+    selector: 'app-chat-proposta-linha',
+    standalone: true,
+    imports: [ButtonModule, TagModule, TooltipModule, DiffPorPalavraComponent, PrioridadeSeloComponent],
+    templateUrl: './proposta-linha.component.html',
+    styleUrl: './proposta-linha.component.scss',
 })
 export class PropostaLinhaComponent {
-  private readonly prioridadeService = inject(AtividadePrioridadeService);
+    private readonly prioridadeService = inject(AtividadePrioridadeService);
 
-  readonly resumo = input.required<ResumoDaProposta>();
-  readonly modo = input.required<ModoDaLinha>();
-  readonly status = input.required<StatusPropostaIaEnum>();
-  readonly podeAjustar = input(false);
-  readonly operando = input(false);
-  /** Dentro do prazo de desfazer (a linha "feita" só mostra o botão enquanto vale). */
-  readonly desfazerDisponivel = input(false);
-  /** A IA executou sozinha (nível "Faz e avisa", task 228): a linha vira o aviso da IA, com o ícone dela, em vez do "feito" do usuário. */
-  readonly feitaPelaIa = input(false);
+    readonly resumo = input.required<ResumoDaProposta>();
+    readonly modo = input.required<ModoDaLinha>();
+    readonly status = input.required<StatusPropostaIaEnum>();
+    readonly podeAjustar = input(false);
+    readonly operando = input(false);
+    /** Dentro do prazo de desfazer (a linha "feita" só mostra o botão enquanto vale). */
+    readonly desfazerDisponivel = input(false);
+    /** A IA executou sozinha (nível "Faz e avisa", task 228): a linha vira o aviso da IA, com o ícone dela, em vez do "feito" do usuário. */
+    readonly feitaPelaIa = input(false);
 
-  readonly confirmar = output<void>();
-  readonly ajustar = output<void>();
-  readonly recusar = output<void>();
-  readonly desfazer = output<void>();
-  readonly detalhar = output<void>();
+    readonly confirmar = output<void>();
+    readonly ajustar = output<void>();
+    readonly recusar = output<void>();
+    readonly desfazer = output<void>();
+    readonly detalhar = output<void>();
 
-  readonly rotuloStatus = ROTULO_STATUS_PROPOSTA;
-  readonly severidade = SEVERIDADE_STATUS_PROPOSTA;
-  readonly rotuloDaLinha = computed(() => `Proposta: ${this.resumo().acao}`);
-  /** O aviso da IA só existe na linha de "feito". */
-  readonly avisoDaIa = computed(() => this.modo() === 'FEITA' && this.feitaPelaIa());
+    readonly rotuloStatus = ROTULO_STATUS_PROPOSTA;
+    readonly severidade = SEVERIDADE_STATUS_PROPOSTA;
+    readonly rotuloDaLinha = computed(() => `Proposta: ${this.resumo().acao}`);
+    /** O aviso da IA só existe na linha de "feito". */
+    readonly avisoDaIa = computed(() => this.modo() === 'FEITA' && this.feitaPelaIa());
 
-  /** A prioridade como o selo pede (descrição e cor do cache; sem cache, o código e um cinza). */
-  prioridadeDe(codigo: string): { codigo: TipoAtividadePrioridadeEnum; descricao: string; cor: string } {
-    const encontrada = this.prioridadeService.prioridades().find((item) => item.codigo === codigo);
-    return encontrada ?? { codigo: codigo as TipoAtividadePrioridadeEnum, descricao: codigo, cor: '#94a3b8' };
-  }
+    /** A prioridade como o selo pede (descrição e cor do cache; sem cache, o código e um cinza). */
+    prioridadeDe(codigo: string): { codigo: TipoAtividadePrioridadeEnum; descricao: string; cor: string } {
+        const encontrada = this.prioridadeService.prioridades().find((item) => item.codigo === codigo);
+        return encontrada ?? { codigo: codigo as TipoAtividadePrioridadeEnum, descricao: codigo, cor: '#94a3b8' };
+    }
 }

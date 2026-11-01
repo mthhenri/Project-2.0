@@ -22,50 +22,50 @@ import { ProporAlterarTrechoDoPlanoFerramenta } from './ferramentas/propor-alter
 import { AlterarTrechoDoPlanoExecutor } from './executores/alterar-trecho-do-plano.executor';
 
 @Module({
-  imports:     [DemandaModule, ProjetoModule, FerramentaIaModule, PropostaIaModule, IaModule],
-  controllers: [PlanoController],
-  providers:   [
-    PlanoService,
-    PlanoRepository,
-    PlanoPontoRepository,
-    PlanoPontoService,
-    PlanoFonteRepository,
-    PlanoFonteService,
-    PlanoPublicacaoService,
-    AnotarPontoEmAbertoFerramenta,
-    ResolverPontoDoPlanoFerramenta,
-    ListarPontosDoPlanoFerramenta,
-    ConsultarPlanoFerramenta,
-    AprofundarAnaliseDoPlanoFerramenta,
-    EscreverNoPlanoFerramenta,
-    ProporAlterarTrechoDoPlanoFerramenta,
-    AlterarTrechoDoPlanoExecutor,
-  ],
-  exports:     [PlanoService, PlanoRepository, PlanoPontoService, PlanoFonteService],
+    imports:     [DemandaModule, ProjetoModule, FerramentaIaModule, PropostaIaModule, IaModule],
+    controllers: [PlanoController],
+    providers:   [
+        PlanoService,
+        PlanoRepository,
+        PlanoPontoRepository,
+        PlanoPontoService,
+        PlanoFonteRepository,
+        PlanoFonteService,
+        PlanoPublicacaoService,
+        AnotarPontoEmAbertoFerramenta,
+        ResolverPontoDoPlanoFerramenta,
+        ListarPontosDoPlanoFerramenta,
+        ConsultarPlanoFerramenta,
+        AprofundarAnaliseDoPlanoFerramenta,
+        EscreverNoPlanoFerramenta,
+        ProporAlterarTrechoDoPlanoFerramenta,
+        AlterarTrechoDoPlanoExecutor,
+    ],
+    exports:     [PlanoService, PlanoRepository, PlanoPontoService, PlanoFonteService],
 })
 export class PlanoModule implements OnModuleInit {
-  constructor(
-    private readonly registroDeFerramentas: FerramentaIaRegistro,
-    private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
-    private readonly consultarPlano: ConsultarPlanoFerramenta,
-    private readonly aprofundarAnalise: AprofundarAnaliseDoPlanoFerramenta,
-    private readonly escreverNoPlano: EscreverNoPlanoFerramenta,
-    private readonly proporAlterarTrecho: ProporAlterarTrechoDoPlanoFerramenta,
-    private readonly alterarTrechoExecutor: AlterarTrechoDoPlanoExecutor,
-    private readonly anotarPonto: AnotarPontoEmAbertoFerramenta,
-    private readonly resolverPonto: ResolverPontoDoPlanoFerramenta,
-    private readonly listarPontos: ListarPontosDoPlanoFerramenta,
-  ) {}
+    constructor(
+        private readonly registroDeFerramentas: FerramentaIaRegistro,
+        private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
+        private readonly consultarPlano: ConsultarPlanoFerramenta,
+        private readonly aprofundarAnalise: AprofundarAnaliseDoPlanoFerramenta,
+        private readonly escreverNoPlano: EscreverNoPlanoFerramenta,
+        private readonly proporAlterarTrecho: ProporAlterarTrechoDoPlanoFerramenta,
+        private readonly alterarTrechoExecutor: AlterarTrechoDoPlanoExecutor,
+        private readonly anotarPonto: AnotarPontoEmAbertoFerramenta,
+        private readonly resolverPonto: ResolverPontoDoPlanoFerramenta,
+        private readonly listarPontos: ListarPontosDoPlanoFerramenta,
+    ) {}
 
-  /** As ferramentas do planejamento (só a conversa do plano as vê) e o executor da alteração de trecho se registram aqui. */
-  onModuleInit(): void {
-    this.registroDeFerramentas.registrar(this.consultarPlano);
-    this.registroDeFerramentas.registrar(this.aprofundarAnalise);
-    this.registroDeFerramentas.registrar(this.escreverNoPlano);
-    this.registroDeFerramentas.registrar(this.proporAlterarTrecho);
-    this.registroDeExecutores.registrar(this.alterarTrechoExecutor);
-    this.registroDeFerramentas.registrar(this.anotarPonto);
-    this.registroDeFerramentas.registrar(this.resolverPonto);
-    this.registroDeFerramentas.registrar(this.listarPontos);
-  }
+    /** As ferramentas do planejamento (só a conversa do plano as vê) e o executor da alteração de trecho se registram aqui. */
+    onModuleInit(): void {
+        this.registroDeFerramentas.registrar(this.consultarPlano);
+        this.registroDeFerramentas.registrar(this.aprofundarAnalise);
+        this.registroDeFerramentas.registrar(this.escreverNoPlano);
+        this.registroDeFerramentas.registrar(this.proporAlterarTrecho);
+        this.registroDeExecutores.registrar(this.alterarTrechoExecutor);
+        this.registroDeFerramentas.registrar(this.anotarPonto);
+        this.registroDeFerramentas.registrar(this.resolverPonto);
+        this.registroDeFerramentas.registrar(this.listarPontos);
+    }
 }

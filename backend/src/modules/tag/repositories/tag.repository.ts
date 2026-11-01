@@ -4,157 +4,194 @@ import { BaseRepository } from '../../../core/base/base.repository';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 import { Tag } from '../domain/models/tag.model';
 import {
-  TagCriadaDto,
-  TagRecuperadaDto,
-  TagResumoDto,
-  TagAlteradaDto,
-  TagInternoAlterarDto,
-  TagValidarNomeDto,
-  TagRecuperarDto,
-  TagExcluirDto,
+    TagCriadaDto,
+    TagRecuperadaDto,
+    TagResumoDto,
+    TagAlteradaDto,
+    TagInternoAlterarDto,
+    TagValidarNomeDto,
+    TagRecuperarDto,
+    TagExcluirDto,
 } from '@project20/shared';
 import { TagRestaurarDto, TagRestauradaDto } from '@project20/shared';
 
 @Injectable()
 export class TagRepository extends BaseRepository<Tag> {
-  constructor(
-    @Inject(DATABASE_CONNECTION)
-    conexaoBancoDados: Knex,
-  ) {
-    super(conexaoBancoDados, 'tag');
-  }
-
-  /** Verifica se já existe tag ativa com o mesmo nome, opcionalmente excluindo um ID. */
-  async validarNome(dto: TagValidarNomeDto): Promise<boolean> {
-    const clausulaExcluirId = dto.idExcluir !== undefined
-      ? 'AND tag.id <> :idExcluir'
-      : '';
-
-    const resultado = await this.executarConsulta<{ existe: boolean }>(
-      `SELECT EXISTS(
-         SELECT 1 FROM tag
-         WHERE tag.nome = :nome
-           AND tag.is_deleted = false
-           ${clausulaExcluirId}
-       ) AS existe`,
-      { nome: dto.nome, idExcluir: dto.idExcluir },
-    );
-    return resultado[0].existe;
-  }
-
-  /** Insere nova tag e retorna os dados da tag criada. */
-  async inserir(dados: { nome: string; cor: string }): Promise<TagCriadaDto> {
-    const resultado = await this.executarConsulta<TagCriadaDto>(
-      `INSERT INTO tag (nome, cor, created_date, updated_date, is_deleted)
-       SELECT :nome, :cor, NOW(), NOW(), false
-       RETURNING
-         id,
-         nome,
-         cor,
-         created_date AS "createdDate"`,
-      { nome: dados.nome, cor: dados.cor },
-    );
-    return resultado[0];
-  }
-
-  /** Recupera tag por ID. Retorna null se não encontrada ou deletada. */
-  async recuperar(dto: TagRecuperarDto): Promise<TagRecuperadaDto | null> {
-    const resultado = await this.executarConsulta<TagRecuperadaDto>(
-      `SELECT
-         tag.id,
-         tag.nome,
-         tag.cor,
-         tag.created_date AS "createdDate"
-       FROM tag
-       WHERE tag.id = :id
-         AND tag.is_deleted = false
-       LIMIT 1`,
-      { id: dto.id },
-    );
-    return resultado[0] ?? null;
-  }
-
-  /** Lista todas as tags ativas ordenadas por nome. */
-  async listar(): Promise<TagResumoDto[]> {
-    return this.executarConsulta<TagResumoDto>(
-      `SELECT
-         tag.id,
-         tag.nome,
-         tag.cor
-       FROM tag
-       WHERE tag.is_deleted = false
-       ORDER BY tag.nome ASC`,
-    );
-  }
-
-  /** Altera campos da tag e retorna os dados alterados. */
-  async alterar(dto: TagInternoAlterarDto): Promise<TagAlteradaDto> {
-    const setClauses: string[] = ['updated_date = NOW()'];
-    const parametros: Record<string, unknown> = { id: dto.id };
-
-    if (dto.nome !== undefined) {
-      setClauses.push('nome = :nome');
-      parametros.nome = dto.nome;
-    }
-    if (dto.cor !== undefined) {
-      setClauses.push('cor = :cor');
-      parametros.cor = dto.cor;
+    constructor(
+        @Inject(DATABASE_CONNECTION)
+        conexaoBancoDados: Knex,
+    ) {
+        super(conexaoBancoDados, 'tag');
     }
 
-    const resultado = await this.executarConsulta<TagAlteradaDto>(
-      `UPDATE tag
-       SET ${setClauses.join(', ')}
-       WHERE tag.id = :id
-         AND tag.is_deleted = false
-       RETURNING
-         id,
-         nome,
-         cor,
-         created_date AS "createdDate"`,
-      parametros,
-    );
-    return resultado[0];
-  }
+    /** Verifica se já existe tag ativa com o mesmo nome, opcionalmente excluindo um ID. */
+    async validarNome(dto: TagValidarNomeDto): Promise<boolean> {
+        const clausulaExcluirId = dto.idExcluir !== undefined
+            ? 'AND tag.id <> :idExcluir'
+            : '';
 
-  /** Soft delete da tag. */
-  async excluir(dto: TagExcluirDto): Promise<void> {
-    await this.executarSoftDelete(dto.id);
-  }
+        const resultado = await this.executarConsulta<{ existe: boolean }>(
+            `
+                SELECT
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            tag
+                        WHERE
+                            tag.nome = :nome
+                            AND tag.is_deleted = false ${clausulaExcluirId}
+                    ) AS existe
+            `,
+            { nome: dto.nome, idExcluir: dto.idExcluir },
+        );
+        return resultado[0].existe;
+    }
 
-  /**
+    /** Insere nova tag e retorna os dados da tag criada. */
+    async inserir(dados: { nome: string; cor: string }): Promise<TagCriadaDto> {
+        const resultado = await this.executarConsulta<TagCriadaDto>(
+            `
+                INSERT INTO
+                    tag (nome, cor, created_date, updated_date, is_deleted)
+                SELECT
+                    :nome,
+                    :cor,
+                    NOW(),
+                    NOW(),
+                    false
+                RETURNING
+                    id,
+                    nome,
+                    cor,
+                    created_date AS "createdDate"
+            `,
+            { nome: dados.nome, cor: dados.cor },
+        );
+        return resultado[0];
+    }
+
+    /** Recupera tag por ID. Retorna null se não encontrada ou deletada. */
+    async recuperar(dto: TagRecuperarDto): Promise<TagRecuperadaDto | null> {
+        const resultado = await this.executarConsulta<TagRecuperadaDto>(
+            `
+                SELECT
+                    tag.id,
+                    tag.nome,
+                    tag.cor,
+                    tag.created_date AS "createdDate"
+                FROM
+                    tag
+                WHERE
+                    tag.id = :id
+                    AND tag.is_deleted = false
+                LIMIT
+                    1
+            `,
+            { id: dto.id },
+        );
+        return resultado[0] ?? null;
+    }
+
+    /** Lista todas as tags ativas ordenadas por nome. */
+    async listar(): Promise<TagResumoDto[]> {
+        return this.executarConsulta<TagResumoDto>(
+            `
+                SELECT
+                    tag.id,
+                    tag.nome,
+                    tag.cor
+                FROM
+                    tag
+                WHERE
+                    tag.is_deleted = false
+                ORDER BY
+                    tag.nome ASC
+            `,
+        );
+    }
+
+    /** Altera campos da tag e retorna os dados alterados. */
+    async alterar(dto: TagInternoAlterarDto): Promise<TagAlteradaDto> {
+        const setClauses: string[] = ['updated_date = NOW()'];
+        const parametros: Record<string, unknown> = { id: dto.id };
+
+        if (dto.nome !== undefined) {
+            setClauses.push('nome = :nome');
+            parametros.nome = dto.nome;
+        }
+        if (dto.cor !== undefined) {
+            setClauses.push('cor = :cor');
+            parametros.cor = dto.cor;
+        }
+
+        const resultado = await this.executarConsulta<TagAlteradaDto>(
+            `
+                UPDATE tag
+                SET
+                    ${setClauses.join(', ')}
+                WHERE
+                    tag.id = :id
+                    AND tag.is_deleted = false
+                RETURNING
+                    id,
+                    nome,
+                    cor,
+                    created_date AS "createdDate"
+            `,
+            parametros,
+        );
+        return resultado[0];
+    }
+
+    /** Soft delete da tag. */
+    async excluir(dto: TagExcluirDto): Promise<void> {
+        await this.executarSoftDelete(dto.id);
+    }
+
+    /**
    * Recupera a tag **excluída**. É a única leitura que filtra `is_deleted = true`: a restauração
    * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
    */
-  async recuperarExcluida(dto: TagRestaurarDto): Promise<(TagRestauradaDto) | null> {
-    const resultado = await this.executarConsulta<TagRestauradaDto>(
-      `SELECT
-         tag.id,
-         tag.nome,
-         tag.cor
-       FROM tag
-       WHERE tag.id = :id
-         AND tag.is_deleted = true
-       LIMIT 1`,
-      { id: dto.id },
-    );
-    return resultado[0] ?? null;
-  }
+    async recuperarExcluida(dto: TagRestaurarDto): Promise<(TagRestauradaDto) | null> {
+        const resultado = await this.executarConsulta<TagRestauradaDto>(
+            `
+                SELECT
+                    tag.id,
+                    tag.nome,
+                    tag.cor
+                FROM
+                    tag
+                WHERE
+                    tag.id = :id
+                    AND tag.is_deleted = true
+                LIMIT
+                    1
+            `,
+            { id: dto.id },
+        );
+        return resultado[0] ?? null;
+    }
 
-  /** Restaura a tag: desfaz o soft delete (sem DELETE físico e sem cascata). */
-  async restaurar(dto: TagRestaurarDto): Promise<TagRestauradaDto> {
-    const resultado = await this.executarConsulta<TagRestauradaDto>(
-      `UPDATE tag
-       SET is_deleted = false,
-           deleted_date = NULL,
-           updated_date = NOW()
-       WHERE tag.id = :id
-         AND tag.is_deleted = true
-       RETURNING
-         id,
-         nome,
-         cor`,
-      { id: dto.id },
-    );
-    return resultado[0];
-  }
+    /** Restaura a tag: desfaz o soft delete (sem DELETE físico e sem cascata). */
+    async restaurar(dto: TagRestaurarDto): Promise<TagRestauradaDto> {
+        const resultado = await this.executarConsulta<TagRestauradaDto>(
+            `
+                UPDATE tag
+                SET
+                    is_deleted = false,
+                    deleted_date = NULL,
+                    updated_date = NOW()
+                WHERE
+                    tag.id = :id
+                    AND tag.is_deleted = true
+                RETURNING
+                    id,
+                    nome,
+                    cor
+            `,
+            { id: dto.id },
+        );
+        return resultado[0];
+    }
 }
