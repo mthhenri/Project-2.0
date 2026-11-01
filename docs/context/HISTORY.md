@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-01 — Tipo de usuário "Ajudante" passa a se chamar "Auxiliar"
+
+Decisão do autor, entre Coordenador, Líder técnico e Auxiliar. Só a spec existia (nenhum código, enum ou migration usava o nome): `tipo-ajudante.spec.md` virou `tipo-auxiliar.spec.md` (valor do enum `AUXILIAR`, `eAuxiliar`), com `PRIORITIES.md` e `CONTEXT.md` apontando para o arquivo novo. Blocos antigos deste histórico (I-035) seguem com o nome antigo, como registro. Verificação: `repo:verificar`; busca por "ajudante" só acha o ajudante de teste `testes/campo-mensagem.ts`, que não tem relação.
+
 ## 2026-11-01 — Fecho dos pontos em aberto da 297–299: acessibilidade de template, tipo do shared e formatador de SQL
 
 Resolvidos os dois problemas que a 297–299 deixou (`PROBLEMS.md` P-066 e P-067, removidos). **P-067:** as listas de `proposta-nivel.test.ts` agora são `ChaveDeNivelDaProposta[]` e o `tsc` do shared fica limpo. **P-066:** religadas `label-has-associated-control`, `click-events-have-key-events` e `interactive-supports-focus`; 33 labels ganharam `for` + `inputId`/`id` (ou viraram `<span>` quando não rotulam campo: Tags e Cor), a linha do dia do Ponto virou botão com Enter/Espaço (só quando o foco está nela; teste novo), o item da Árvore e o chevron das pastas ganharam `tabindex="-1"` e Enter, e os atalhos só de mouse ou de delegação de tecla (cartões, células de calendário, wrappers) levam `role="presentation"` ou `group`. `no-inline-styles` segue desligada (falso positivo do `[style]` do `p-dialog`) e foi trocada por `scripts/verificar-estilo-inline.mjs`, com teste, dentro de `lint:templates`. **Formatador de SQL:** `tokensSql` passou a ler `:x:` e `??` como um token só e o fragmento devolvido por ternário, parênteses, `??` ou `||` também fica numa linha (teste novo).
