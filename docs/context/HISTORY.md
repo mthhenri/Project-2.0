@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-01 — Task 285: visibilidade e atribuição do Auxiliar (regra escrita e coberta por teste)
+
+A visibilidade e a regra de membro já estavam no código da 284; esta task conferiu que nenhuma consulta do Auxiliar leva o filtro de `demanda_usuario`, que ele não é auto-atribuído e que atribui e remove qualquer membro, e levou a regra para `SYSTEM.SPEC.md` §14 (o auxiliar, `@ExigePermissao`, quem pode ser membro). Testes novos em `demanda.service.regras.test.ts`. O Auxiliar segue vendo todas as demandas em aberto na lista de criar atividade (decisão registrada na spec 285).
+
 ## 2026-11-01 — Task 284: backend do tipo Auxiliar (permissão por ação em controllers, services e ferramentas da IA)
 
 Conferidas as ocorrências de checagem de tipo do backend. O escopo do desenvolvedor (`tipo === DESENVOLVEDOR`) virou `!temVisibilidadeTotal`, o que dá ao Auxiliar a visão total sem tocar nos outros tipos. `@ExigePermissao(podeX)` com `PermissaoGuard` global atende às rotas que o Auxiliar também faz (atividade excluir/restaurar, tag, registro e exclusão de execução, ponto de todos, planejamento e conexões de demanda, `GET /usuario`); as ferramentas da IA ganharam a permissão `'AUXILIAR'`. **Achado na revisão:** a troca mecânica abria demais em dois pontos (descrição do cliente e perfil de outro usuário), porque ali "não é desenvolvedor" significava "não é gestor"; os dois voltaram a `temPermissaoDeGestor`, com teste. Decisões do que o Auxiliar pode e não pode estão em `docs/specs/done/284-backend-do-tipo-auxiliar.spec.md`. Verificação: backend 1603 testes, integração 368, build e `eslint` limpos.

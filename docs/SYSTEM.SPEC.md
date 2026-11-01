@@ -1232,6 +1232,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 - **Guard global** `JwtAuthGuard` aplicado em toda a aplicação via `APP_GUARD`
 - **`@Public()`** — decorator para rotas sem autenticação (somente login)
 - **`@GestorOnly()`** — decorator que restringe a rota a quem tem permissão de gestor (`temPermissaoDeGestor`, em `@project20/shared`; hoje, o tipo GESTOR)
+- **`@ExigePermissao(podeX)`** — decorator (`PermissaoGuard`) que restringe a rota a quem tem a permissão por ação do `shared`, para o que o auxiliar também faz
 - **`@ActiveUser()`** — injeta o payload do JWT decodificado no parâmetro do método
 
 ---
@@ -1407,6 +1408,8 @@ correspondente é um `INTEGER` FK para o `id` dela; o repositório traduz `codig
 
 O **administrador** é um gestor com mais permissões: tem tudo o que a coluna "Gestor" abaixo concede e, além disso, é o único que cria, promove, altera, inativa, exclui, restaura e troca a senha de outros administradores. **Sempre existe ao menos um administrador ativo e não excluído** (`UsuarioService.validarPermanenciaDeAdministradorAtivo`): rebaixar, inativar ou excluir o último é recusado. Gestor deixou de ser obrigatório. Decisões de permissão usam `temPermissaoDeGestor`/`temPermissaoDeAdministrador` (`@project20/shared`).
 
+O **auxiliar** é um desenvolvedor com permissões a mais (task `tipo-auxiliar`, 283–287): executa as próprias atividades, tem ponto, horas diárias e a trava de uma execução ativa como o desenvolvedor, e **aparece na equipe como desenvolvedor** (`atuaComoDesenvolvedor`), mas conduz o trabalho: **vê todos** os projetos, demandas e atividades por tipo (`temVisibilidadeTotal`, sem depender de `demanda_usuario`) e **nunca é atribuído sozinho** a uma demanda (nem ao criá-la). Pode: editar qualquer demanda (nome, horas, previsão, status), criar demanda raiz e sub-demanda, criar e remover conexões, concluir demanda e mover atividade (inclusive pelo chat), atribuir e remover **membros e tags de qualquer pessoa, ele mesmo incluído**, editar a atividade dos outros e iniciar/pausar a execução delas, excluir e restaurar atividade, registrar, editar e excluir execução, ver o histórico de execuções e o ponto de qualquer usuário, o Controle de horas, e criar/editar/excluir tag. **Não pode:** criar atividade para outra pessoa (cria só para si), editar a `descricaoCliente`, excluir ou restaurar demanda, gerenciar usuários e ver o perfil de outro, calendário, relatórios, justificar/imprimir o ponto, alterar prioridades, criar ou editar projeto, ação em massa nas atividades, Configurações da IA. Cada permissão é uma função por ação em `shared/src/utils/permissao-usuario.ts`, escrita por lista positiva de tipos (nunca `tipo !== DESENVOLVEDOR`); a rota que o auxiliar também faz usa `@ExigePermissao(podeX)`, e as ferramentas da IA têm a permissão `'AUXILIAR'` (auxiliar, gestor e administrador). `GET /usuario` é aberto a quem tem visão total, pois alimenta os seletores de membro e de executor; a tela de Usuários segue só do gestor.
+
 | Regra | Gestor | Desenvolvedor |
 |---|---|---|
 | Criar projeto | ✅ | ❌ |
@@ -1433,6 +1436,7 @@ O **administrador** é um gestor com mais permissões: tem tudo o que a coluna "
 - Desenvolvedor não gerencia atribuições de terceiros, mas **pode incluir e remover a si mesmo** como membro de uma demanda em projeto acessível — esta é a exceção à regra "Atribuir usuário manualmente — Dev ❌"
 - O **último membro** de uma demanda não pode ser removido
 - O **gestor** tem acesso total a qualquer demanda/projeto **por ser gestor**, sem depender de `demanda_usuario` (task `done/71-demanda-gestor-acesso-total-sem-atribuicao`); por isso não é atribuído na criação de demandas.
+- O **auxiliar** também tem acesso total por tipo e também **não é atribuído** na criação; ao contrário do gestor, **pode ser membro** (`podeSerMembroDeDemanda`: desenvolvedor e auxiliar), atribuído por quem conduz o trabalho ou por ele mesmo, e conta na equipe como desenvolvedor.
 
 - Um usuário **não pode ter duas execuções ativas** (sem `fim_data`) simultaneamente
 - O campo `fim_data` é obrigatório para fechar uma execução
