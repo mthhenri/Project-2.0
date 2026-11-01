@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioListarDto } from '@project20/shared';
+import { TipoUsuarioEnum, UsuarioListarDto } from '@project20/shared';
 import { TagService } from '../../tag/services/tag.service';
 import { ListarTagsFerramenta, LIMITE_TAGS_DA_FERRAMENTA } from '../../tag/ferramentas/listar-tags.ferramenta';
 import { UsuarioService } from '../services/usuario.service';
@@ -11,7 +11,7 @@ const GESTOR = { sub: 1, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as neve
 function usuario(id: number) {
     return {
         id, login: `user.${id}`, nomeCompleto: `Pessoa ${id}`, cargoTitulo: 'Desenvolvedor', tipo: TipoUsuarioEnum.DESENVOLVEDOR,
-        status: TipoUsuarioStatusEnum.ATIVO, temAnotacoes: true, senhaEncriptada: 'nao-pode-vazar', horasDiariasNecessarias: 8,
+        ativo: true, temAnotacoes: true, senhaEncriptada: 'nao-pode-vazar', horasDiariasNecessarias: 8,
     };
 }
 
@@ -20,7 +20,7 @@ test('listar usuários pede só os ativos, repassa os filtros e não devolve dad
     const servico = { listar: async (dto: UsuarioListarDto) => { filtros.push(dto); return { sucesso: true, dados: { itens: [usuario(2)] }, mensagem: '' }; } };
     const ferramenta = new ListarUsuariosFerramenta(servico as unknown as UsuarioService);
     const resultado = await ferramenta.executar({ tipo: TipoUsuarioEnum.DESENVOLVEDOR, busca: 'pes' }, GESTOR);
-    assert.deepEqual(filtros[0], { tipo: TipoUsuarioEnum.DESENVOLVEDOR, busca: 'pes', status: TipoUsuarioStatusEnum.ATIVO, allRows: true });
+    assert.deepEqual(filtros[0], { tipo: TipoUsuarioEnum.DESENVOLVEDOR, busca: 'pes', ativo: true, allRows: true });
     assert.deepEqual(resultado.usuarios, [{ id: 2, nome: 'Pessoa 2', login: 'user.2', cargo: 'Desenvolvedor', tipo: 'DESENVOLVEDOR' }]);
     assert.equal(JSON.stringify(resultado).includes('nao-pode-vazar'), false);
     assert.equal(ferramenta.permissao, 'AUXILIAR');

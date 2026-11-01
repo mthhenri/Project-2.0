@@ -1,4 +1,3 @@
-import { TipoUsuarioStatusEnum } from '../../enums/tipo-usuario-status.enum';
 import { TipoUsuarioEnum } from '../../enums/tipo-usuario.enum';
 
 export class UsuarioInternoAlterarDto {
@@ -7,6 +6,6 @@ export class UsuarioInternoAlterarDto {
     nomeCompleto?: string;
     cargoTitulo?: string;
     horasDiariasNecessarias?: number;
-    status?: TipoUsuarioStatusEnum;
+    ativo?: boolean;
     tipo?: TipoUsuarioEnum;
 }

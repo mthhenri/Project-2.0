@@ -27,7 +27,6 @@ import {
     AtividadeAlterarDto,
     TagResumoDto,
     UsuarioResumoDto,
-    TipoUsuarioStatusEnum,
     ExecucaoItemDto,
     ExecucaoIniciarDto,
     temPermissaoDeGestor,
@@ -850,7 +849,7 @@ export class AtividadeListagemPage implements OnInit {
     }
 
     private carregarUsuarios(): void {
-        this.usuarioService.listar({ status: TipoUsuarioStatusEnum.ATIVO, itensPorPagina: 100 }).subscribe({
+        this.usuarioService.listar({ ativo: true, itensPorPagina: 100 }).subscribe({
             next: (resposta) => {
                 if (resposta.sucesso && resposta.dados) this.usuarios.set(resposta.dados.itens);
             },

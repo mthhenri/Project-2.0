@@ -34,11 +34,9 @@ export async function semearConversas(conexao: Knex, ambiente: NodeJS.ProcessEnv
                 usuario
                 JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
                 AND tipo_usuario.is_deleted = false
-                JOIN tipo_usuario_status ON tipo_usuario_status.id = usuario.tipo_usuario_status_id
-                AND tipo_usuario_status.is_deleted = false
             WHERE
                 usuario.is_deleted = false
-                AND tipo_usuario_status.codigo = 'ATIVO'
+                AND usuario.ativo = true
                 AND usuario.login = ANY (:logins)
         `, { logins: [...LOGINS_SEED_CONVERSAS] },
     );

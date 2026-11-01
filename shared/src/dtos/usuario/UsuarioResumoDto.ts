@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { TipoUsuarioEnum } from '../../enums/tipo-usuario.enum';
-import { TipoUsuarioStatusEnum } from '../../enums/tipo-usuario-status.enum';
 
 export class UsuarioResumoDto {
     @ApiProperty({ example: 1 })
@@ -18,8 +17,8 @@ export class UsuarioResumoDto {
     @ApiProperty({ enum: TipoUsuarioEnum, example: TipoUsuarioEnum.DESENVOLVEDOR })
     tipo: TipoUsuarioEnum;
 
-    @ApiProperty({ enum: TipoUsuarioStatusEnum, example: TipoUsuarioStatusEnum.ATIVO })
-    status: TipoUsuarioStatusEnum;
+    @ApiProperty({ example: true })
+    ativo: boolean;
 
     @ApiProperty({ example: true, description: 'Indica se o usuário possui anotações registradas' })
     temAnotacoes: boolean;

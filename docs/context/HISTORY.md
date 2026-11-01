@@ -12,6 +12,24 @@
 
 ---
 
+## 2026-11-01 — Task 302: usuário `ativo` no lugar do status
+
+O status do usuário só tinha `ATIVO` e `INATIVO` e não há outro estado previsto (afastado, férias): `tipo_usuario_status` saiu e entrou a coluna booleana `usuario.ativo` (I-036, primeira parte; a task 301, nomes dos booleanos, segue no backlog). A spec nasceu como 300, mas esse número já era dos esqueletos de carregamento (commit `17dbd2b`); foi renumerada para 302. A avaliação das demais tabelas `tipo_*` ficou registrada com o autor: `tipo_projeto_status`, `tipo_demanda_status`, `tipo_atividade_status`, `tipo_proposta_ia_status` e `tipo_plano_ponto_situacao` são ciclos de vida reais, e `tipo_dia_nao_util_duracao` e `tipo_plano_fonte_origem` são enums que podem crescer; todas ficam como tabela de referência.
+
+- **Migration `0075`:** adiciona `ativo` (o `DEFAULT` entra só para preencher e sai em seguida, como na `0044`), converte os inativos com o gatilho de `updated_date` desligado (a conversão não altera a data de ninguém), remove a FK, `tipo_usuario_status_id` e a tabela, e marca como excluída a posição dela no diagrama da Modelagem. `DOWN` recria tudo e restaura o status a partir de `ativo`.
+- **`shared`:** `status` virou `ativo: boolean` em 7 DTOs de usuário; o filtro da listagem é `ativo?: boolean` com o `@Transform` de boolean dos outros filtros; `TipoUsuarioStatusEnum` foi removido.
+- **Backend:** o repository de usuário perdeu o `JOIN`, o subselect de gravação e o filtro por `codigo`; autenticação, JWT, mensagem direta e as ferramentas e executores da IA (listar usuários, atribuir membro, criar atividade) usam o booleano. Seeds e fábricas de teste acompanham.
+- **Frontend:** a tela de Usuários, o serviço (`ativo=false` é enviado), os formulários de atividade e os selects de Ponto e Execuções. O filtro salvo no navegador mudou de formato (`status` virou `ativo`): cada pessoa volta a ver "Todos" uma vez. Visual igual.
+- **Documentação:** `SCHEMA.md`, `SYSTEM.SPEC.md` (§5.4, tabela de `usuario` e lista de enums) e o exemplo do `CONVENTIONS.md`.
+
+**Testes:** `shared` 308, `backend` unitários 1610, integração 367 (banco de teste migrado) e `frontend` 2423, todos passando; builds do backend e do frontend passam; `npm run repo:verificar` passa. Migration aplicada, revertida (`DOWN` conferido: tabela e dois valores de volta, todos os usuários com status) e reaplicada no banco de teste. O projeto não tem lint (P-001).
+
+**Ao vivo (1920×1080, 1366×768 e 1080×1920):** a migration foi aplicada no banco de desenvolvimento (7 ativos mantidos). Na tela de Usuários, o switch inativou o Mateus Trovão sem recarregar (a linha ficou inativa, `PUT` 200 e `ativo = false` no banco), o filtro "Inativos" enviou `ativo=false` e listou só ele, e reativar devolveu os 7 ativos. No login, o inativo recebeu "Usuário inativo" e o ativo com senha errada, a mensagem comum. O layout não mudou nos três tamanhos. Estados vazio e de erro não foram refeitos: a mudança é só de dado e de binding, sem tela nova. Capturas da sessão não foram arquivadas em `.artifacts/`.
+
+**Achados:** (1) o teste de eventos da mensagem direta montava o usuário com o texto `'ATIVO'` e não com o enum, e só apareceu na suíte unitária, não na busca por `TipoUsuarioStatusEnum`: ao trocar um enum por booleano, buscar também o literal. (2) O backend de desenvolvimento roda com `node --watch` e se reergue sozinho; a migration precisa ser aplicada antes de ele recarregar o código novo, ou a tela dá 500 até lá.
+
+---
+
 ## 2026-11-01 — Task 300: esqueletos fiéis às telas atuais
 
 Os esqueletos de carregamento ficaram para trás quando as telas mudaram (Atividades mostrava 10 colunas, o Ponto da equipe 2 cartões por linha onde a tela tem 3, a Árvore e o Controle de horas só linhas genéricas). Método: banco isolado com o seed de histórico, API atrasada no navegador e **medida no DOM** da tela carregada (colunas, altura e passo de linha, topo e altura de cada bloco), refletida no esqueleto.

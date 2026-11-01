@@ -14,7 +14,7 @@ import {
     UsuarioSenhaInternoAlterarDto,
     UsuarioExcluirDto,
 } from '@project20/shared';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioAtivoListadoDto, UsuarioExistenciaVerificarDto, UsuarioNomeListadoDto, UsuarioNomeListarDto, UsuarioTipoListadoDto } from '@project20/shared';
+import { TipoUsuarioEnum, UsuarioAtivoListadoDto, UsuarioExistenciaVerificarDto, UsuarioNomeListadoDto, UsuarioNomeListarDto, UsuarioTipoListadoDto } from '@project20/shared';
 import { UsuarioRestaurarDto, UsuarioRestauradoDto } from '@project20/shared';
 
 @Injectable()
@@ -74,7 +74,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                     usuario.cargo_titulo AS "cargoTitulo",
                     usuario.horas_diarias_necessarias AS "horasDiariasNecessarias",
                     tipo_usuario.codigo AS tipo,
-                    tipo_usuario_status.codigo AS status,
+                    usuario.ativo,
                     usuario.created_date AS "createdDate",
                     usuario.updated_date AS "updatedDate",
                     usuario.is_deleted AS "isDeleted",
@@ -83,8 +83,6 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                     usuario
                     INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
                     AND tipo_usuario.is_deleted = false
-                    INNER JOIN tipo_usuario_status ON tipo_usuario_status.id = usuario.tipo_usuario_status_id
-                    AND tipo_usuario_status.is_deleted = false
                 WHERE
                     ${condicoes.join(' AND ')}
                 LIMIT
@@ -109,9 +107,9 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
             parametros.tipo = filtros.tipo;
         }
 
-        if (filtros.status) {
-            condicoes.push('tipo_usuario_status.codigo = :status');
-            parametros.status = filtros.status;
+        if (filtros.ativo !== undefined) {
+            condicoes.push('usuario.ativo = :ativo');
+            parametros.ativo = filtros.ativo;
         }
 
         if (filtros.busca !== undefined && filtros.busca.trim() !== '') {
@@ -128,8 +126,6 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
         const clausulasJoin = `
             INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
             AND tipo_usuario.is_deleted = false
-            INNER JOIN tipo_usuario_status ON tipo_usuario_status.id = usuario.tipo_usuario_status_id
-            AND tipo_usuario_status.is_deleted = false
         `;
 
         const resultadoTotal = await this.executarConsulta<{ total: string }>(
@@ -162,7 +158,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                     usuario.nome_completo AS "nomeCompleto",
                     usuario.cargo_titulo AS "cargoTitulo",
                     tipo_usuario.codigo AS tipo,
-                    tipo_usuario_status.codigo AS status,
+                    usuario.ativo,
                     (
                         EXISTS (
                             SELECT
@@ -188,7 +184,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
         return { itens, total };
     }
 
-    /** Insere novo usuário. Recebe senha já encriptada. Status inicial sempre ATIVO. */
+    /** Insere novo usuário. Recebe senha já encriptada. Nasce sempre ativo. */
     async inserir(dados: {
         login: string;
         senhaEncriptada: string;
@@ -251,7 +247,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                         cargo_titulo,
                         tipo_usuario_id,
                         horas_diarias_necessarias,
-                        tipo_usuario_status_id,
+                        ativo,
                         created_date,
                         updated_date,
                         is_deleted
@@ -271,15 +267,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                             AND tipo_usuario.is_deleted = false
                     ),
                     :horasDiariasNecessarias,
-                    (
-                        SELECT
-                            tipo_usuario_status.id
-                        FROM
-                            tipo_usuario_status
-                        WHERE
-                            tipo_usuario_status.codigo = :status
-                            AND tipo_usuario_status.is_deleted = false
-                    ),
+                    :ativo,
                     NOW(),
                     NOW(),
                     false
@@ -296,14 +284,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                         WHERE
                             tipo_usuario.id = usuario.tipo_usuario_id
                     ) AS tipo,
-                    (
-                        SELECT
-                            tipo_usuario_status.codigo
-                        FROM
-                            tipo_usuario_status
-                        WHERE
-                            tipo_usuario_status.id = usuario.tipo_usuario_status_id
-                    ) AS status,
+                    ativo,
                     horas_diarias_necessarias AS "horasDiariasNecessarias",
                     created_date AS "createdDate"
             `,
@@ -314,7 +295,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                 cargoTitulo:             dados.cargoTitulo,
                 tipo:                    dados.tipo,
                 horasDiariasNecessarias: dados.horasDiariasNecessarias,
-                status:                  TipoUsuarioStatusEnum.ATIVO,
+                ativo:                   true,
             },
             transacao,
         );
@@ -342,21 +323,9 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
             setClauses.push('horas_diarias_necessarias = :horasDiariasNecessarias');
             parametros.horasDiariasNecessarias = dto.horasDiariasNecessarias;
         }
-        if (dto.status !== undefined) {
-            setClauses.push(
-                `
-                    tipo_usuario_status_id = (
-                        SELECT
-                            tipo_usuario_status.id
-                        FROM
-                            tipo_usuario_status
-                        WHERE
-                            tipo_usuario_status.codigo = :status
-                            AND tipo_usuario_status.is_deleted = false
-                    )
-                `,
-            );
-            parametros.status = dto.status;
+        if (dto.ativo !== undefined) {
+            setClauses.push('ativo = :ativo');
+            parametros.ativo = dto.ativo;
         }
         if (dto.tipo !== undefined) {
             setClauses.push(
@@ -396,14 +365,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                         WHERE
                             tipo_usuario.id = usuario.tipo_usuario_id
                     ) AS tipo,
-                    (
-                        SELECT
-                            tipo_usuario_status.codigo
-                        FROM
-                            tipo_usuario_status
-                        WHERE
-                            tipo_usuario_status.id = usuario.tipo_usuario_status_id
-                    ) AS status,
+                    ativo,
                     horas_diarias_necessarias AS "horasDiariasNecessarias",
                     created_date AS "createdDate"
             `,
@@ -543,21 +505,12 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                     INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
                     AND tipo_usuario.is_deleted = false
                 WHERE
-                    usuario.tipo_usuario_status_id = (
-                        SELECT
-                            tipo_usuario_status.id
-                        FROM
-                            tipo_usuario_status
-                        WHERE
-                            tipo_usuario_status.codigo = :status
-                            AND tipo_usuario_status.is_deleted = false
-                    )
+                    usuario.ativo = true
                     AND usuario.is_deleted = false
                 ORDER BY
                     usuario.nome_completo ASC,
                     usuario.id ASC
             `,
-            { status: TipoUsuarioStatusEnum.ATIVO },
         );
     }
 
@@ -583,20 +536,11 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                 FROM
                     usuario
                 WHERE
-                    usuario.tipo_usuario_status_id = (
-                        SELECT
-                            tipo_usuario_status.id
-                        FROM
-                            tipo_usuario_status
-                        WHERE
-                            tipo_usuario_status.codigo = :status
-                            AND tipo_usuario_status.is_deleted = false
-                    )
+                    usuario.ativo = true
                     AND usuario.is_deleted = false
                 ORDER BY
                     usuario.nome_completo ASC
             `,
-            { status: TipoUsuarioStatusEnum.ATIVO },
         );
     }
 
@@ -660,18 +604,10 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                             tipo_usuario.codigo = :tipo
                             AND tipo_usuario.is_deleted = false
                     )
-                    AND usuario.tipo_usuario_status_id = (
-                        SELECT
-                            tipo_usuario_status.id
-                        FROM
-                            tipo_usuario_status
-                        WHERE
-                            tipo_usuario_status.codigo = :status
-                            AND tipo_usuario_status.is_deleted = false
-                    )
+                    AND usuario.ativo = true
                     AND usuario.is_deleted = false
             `,
-            { tipo: TipoUsuarioEnum.ADMINISTRADOR, status: TipoUsuarioStatusEnum.ATIVO },
+            { tipo: TipoUsuarioEnum.ADMINISTRADOR },
         );
     }
 }

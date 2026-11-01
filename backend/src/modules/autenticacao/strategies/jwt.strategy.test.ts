@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { UnauthorizedException } from '@nestjs/common';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioEnum } from '@project20/shared';
 import { JwtStrategy } from './jwt.strategy';
 
 const PAYLOAD = { sub: 7, login: 'maria', tipo: TipoUsuarioEnum.GESTOR };
-const ATIVO = { id: 7, login: 'maria', tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO };
+const ATIVO = { id: 7, login: 'maria', tipo: TipoUsuarioEnum.GESTOR, ativo: true };
 
 function criarEstrategia(usuario: Record<string, unknown> | null) {
     const consultas: Array<{ id?: number }> = [];
@@ -21,7 +21,7 @@ test('usuário ativo passa e a consulta é feita pelo id do token', async () => 
 });
 
 test('usuário inativo é barrado com 401 mesmo com token ainda válido', async () => {
-    const { estrategia } = criarEstrategia({ ...ATIVO, status: TipoUsuarioStatusEnum.INATIVO });
+    const { estrategia } = criarEstrategia({ ...ATIVO, ativo: false });
     await assert.rejects(() => estrategia.validate(PAYLOAD), UnauthorizedException);
 });
 

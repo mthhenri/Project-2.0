@@ -29,7 +29,6 @@ import {
     ReferenciaMensagemDiretaEnum,
     ReferenciaMensagemDto,
     StandardResponse,
-    TipoUsuarioStatusEnum,
     contemBlocoDeCodigo,
     montarConversaDiretaId,
     outroParticipanteDaConversaDireta,
@@ -349,7 +348,7 @@ export class MensagemDiretaService {
         if (destinatarioId === usuarioAtivo.sub) throw new BusinessException('A conversa precisa ser com outra pessoa');
         const encontrado = await this.usuarioRepositorio.recuperar({ id: destinatarioId });
         if (!encontrado) throw new ResourceNotFoundException('Usuário');
-        if (encontrado.status !== TipoUsuarioStatusEnum.ATIVO) throw new BusinessException('Não é possível enviar mensagem para um usuário inativo');
+        if (!encontrado.ativo) throw new BusinessException('Não é possível enviar mensagem para um usuário inativo');
     }
 
     /**

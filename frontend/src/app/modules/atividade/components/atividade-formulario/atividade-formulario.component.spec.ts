@@ -16,7 +16,7 @@ const DEMANDAS = [
 ];
 const TAGS = [{ id: 1, nome: 'Backend', cor: '#112233' }, { id: 2, nome: 'Frontend', cor: '#445566' }];
 const PRIORIDADES = [{ codigo: TipoAtividadePrioridadeEnum.INDEFINIDA, descricao: 'Indefinida', ordem: 5, cor: '#999999' }];
-const USUARIOS = [{ id: 2, nomeCompleto: 'Ana', login: 'ana', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: 'ATIVO' }];
+const USUARIOS = [{ id: 2, nomeCompleto: 'Ana', login: 'ana', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true }];
 
 async function abrir(tipo: TipoUsuarioEnum, entradas: Record<string, unknown> = {}) {
     const montado = await montarComponente(AtividadeFormularioComponent, { usuario: tipo, entradas });
@@ -38,7 +38,7 @@ describe('AtividadeFormularioComponent — abrir', () => {
     it('gestor: carrega demandas atribuídas, tags, prioridades e a lista de usuários ativos para escolher o responsável', async () => {
         const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
         const consultaUsuarios = esperarRequisicao(montado.http, 'GET', '/usuario');
-        expect(consultaUsuarios.request.params.get('status')).toBe('ATIVO');
+        expect(consultaUsuarios.request.params.get('ativo')).toBe('true');
         consultaUsuarios.flush({ sucesso: true, dados: { itens: USUARIOS, totalItens: 1, paginaAtual: 1, itensPorPagina: 100, totalPaginas: 1 }, mensagem: '' });
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), PRIORIDADES);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/atribuidas'), DEMANDAS);

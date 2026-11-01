@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioResumoDto } from '@project20/shared';
+import { TipoUsuarioEnum, UsuarioResumoDto } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { responderErro } from '../../../../../testes/http-teste';
 import { criarUsuarioTeste } from '../../../../../testes/usuarios-teste';
@@ -16,7 +16,7 @@ const ID_LOGADO = criarUsuarioTeste().id;
 function resumo(id: number, sobrescrita: Partial<UsuarioResumoDto> = {}): UsuarioResumoDto {
     return {
         id, login: `user${id}`, nomeCompleto: `Pessoa ${id}`, cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR,
-        status: TipoUsuarioStatusEnum.ATIVO, temAnotacoes: false, ...sobrescrita,
+        ativo: true, temAnotacoes: false, ...sobrescrita,
     } as UsuarioResumoDto;
 }
 
@@ -108,13 +108,13 @@ describe('UsuarioListagemPage — estados', () => {
         montado.componente.aoMudarTipo(TipoUsuarioEnum.GESTOR);
         const consulta = montado.http.match((registroParcial) => registroParcial.method === 'GET' && registroParcial.url.endsWith('/usuario'));
         expect(consulta.at(-1)!.request.params.get('tipo')).toBe('GESTOR');
-        expect(JSON.parse(localStorage.getItem('usuario.filtros')!)).toEqual({ tipo: 'GESTOR', status: null });
+        expect(JSON.parse(localStorage.getItem('usuario.filtros')!)).toEqual({ tipo: 'GESTOR', ativo: null });
     });
 
     it('filtros guardados com valor inválido são ignorados', async () => {
-        const montado = await montarListagem(TipoUsuarioEnum.GESTOR, { 'usuario.filtros': JSON.stringify({ tipo: 'CHEFE', status: 'XPTO' }) });
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR, { 'usuario.filtros': JSON.stringify({ tipo: 'CHEFE', ativo: 'XPTO' }) });
         expect(montado.componente.tipoFiltro()).toBeNull();
-        expect(montado.componente.statusFiltro()).toBeNull();
+        expect(montado.componente.ativoFiltro()).toBeNull();
     });
 });
 
@@ -196,9 +196,9 @@ describe('UsuarioListagemPage — status e exclusão', () => {
         await carregar(montado, [resumo(2)]);
         montado.componente.alternarStatus(montado.componente.usuarios()[0], false);
 
-        expect(montado.componente.usuarios()[0].status).toBe(TipoUsuarioStatusEnum.INATIVO);
+        expect(montado.componente.usuarios()[0].ativo).toBe(false);
         const requisicao = montado.http.expectOne((registroSelecionado) => registroSelecionado.method === 'PUT' && registroSelecionado.url.endsWith('/usuario/2'));
-        expect(requisicao.request.body).toEqual({ status: TipoUsuarioStatusEnum.INATIVO });
+        expect(requisicao.request.body).toEqual({ ativo: false });
         requisicao.flush({ sucesso: true, dados: {}, mensagem: 'ok' });
 
         const oferta = TestBed.inject(DesfazerService).oferta();
@@ -211,7 +211,7 @@ describe('UsuarioListagemPage — status e exclusão', () => {
         montado.componente.alternarStatus(montado.componente.usuarios()[0], false);
         responderErro(montado.http.expectOne((registroPrincipal) => registroPrincipal.method === 'PUT' && registroPrincipal.url.endsWith('/usuario/2')), 400, 'O sistema deve ter ao menos um administrador ativo');
         await montado.atualizar();
-        expect(montado.componente.usuarios()[0].status).toBe(TipoUsuarioStatusEnum.ATIVO);
+        expect(montado.componente.usuarios()[0].ativo).toBe(true);
     });
 
     it('excluir tira a linha na hora, chama DELETE e oferece desfazer que restaura', async () => {

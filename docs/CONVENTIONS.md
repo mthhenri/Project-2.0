@@ -181,10 +181,10 @@ SELECT * FROM usuario WHERE login = :login AND is_deleted = false
 { login }
 
 -- ✅ INSERT com SELECT — BaseEntity sempre explícito (sem DEFAULT)
-INSERT INTO usuario (login, nome_completo, status, created_date, updated_date, is_deleted)
-SELECT :login, :nomeCompleto, :status, NOW(), NOW(), false
+INSERT INTO usuario (login, nome_completo, ativo, created_date, updated_date, is_deleted)
+SELECT :login, :nomeCompleto, :ativo, NOW(), NOW(), false
 RETURNING id, login, nome_completo, created_date
-{ login, nomeCompleto, status }
+{ login, nomeCompleto, ativo }
 
 -- ✅ Soft delete via BaseRepository
 executarSoftDelete(identificador)  -- nunca DELETE físico

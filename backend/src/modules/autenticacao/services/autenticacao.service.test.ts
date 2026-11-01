@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { AutenticacaoService } from './autenticacao.service';
 
@@ -20,7 +20,7 @@ async function criarServico(usuarios: Array<Record<string, unknown>>) {
     return { servico: new AutenticacaoService(repositorio as never, jwt), jwt };
 }
 
-const ATIVO = { id: 7, login: 'maria', nomeCompleto: 'Maria', tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO };
+const ATIVO = { id: 7, login: 'maria', nomeCompleto: 'Maria', tipo: TipoUsuarioEnum.GESTOR, ativo: true };
 
 test('credencial válida gera token com o JwtPayload esperado (sub, login, tipo) e devolve o usuário sem dado sensível', async () => {
     const { servico, jwt } = await criarServico([ATIVO]);
@@ -56,7 +56,7 @@ test('senha errada e login inexistente dão a MESMA mensagem de erro', async () 
 });
 
 test('usuário inativo não entra, mesmo com a senha certa', async () => {
-    const { servico } = await criarServico([{ ...ATIVO, status: TipoUsuarioStatusEnum.INATIVO }]);
+    const { servico } = await criarServico([{ ...ATIVO, ativo: false }]);
     await assert.rejects(() => servico.login({ login: 'maria', senha: 'SenhaCerta#1' }), (erro: BusinessException) => {
         assert.equal((erro.getResponse() as { mensagem: string }).mensagem, 'Usuário inativo');
         return true;

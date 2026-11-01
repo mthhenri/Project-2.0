@@ -41,7 +41,7 @@
 
         <p-selectbutton
             [options]="statusOpcoes"
-            [ngModel]="statusFiltro()"
+            [ngModel]="ativoFiltro()"
             (ngModelChange)="aoMudarStatus($event)"
             optionLabel="label"
             optionValue="value"
@@ -109,7 +109,7 @@
             <ng-template pTemplate="body" let-usuario>
                 <tr
                     class="usuario-listagem__linha"
-                    [class.usuario-listagem__linha--inativa]="usuario.status === 'INATIVO'"
+                    [class.usuario-listagem__linha--inativa]="!usuario.ativo"
                 >
                     <td><app-usuario-cartao [usuario]="usuario" /></td>
                     <td class="text-muted-color">{{ usuario.cargoTitulo }}</td>
@@ -126,7 +126,7 @@
                         >
                             <p-toggleswitch
                                 [inputId]="'usuario-status-' + usuario.id"
-                                [ngModel]="usuario.status === 'ATIVO'"
+                                [ngModel]="usuario.ativo"
                                 (ngModelChange)="alternarStatus(usuario, $event)"
                                 [disabled]="!podeGerenciar(usuario) || !eOutraPessoa(usuario)"
                                 [pTooltip]="
@@ -138,7 +138,7 @@
                                 [attr.aria-label]="'Status de ' + usuario.nomeCompleto"
                             />
                             <span class="usuario-listagem__status-rotulo">{{
-                                usuario.status === "ATIVO" ? "Ativo" : "Inativo"
+                                usuario.ativo ? "Ativo" : "Inativo"
                             }}</span>
                         </label>
                     </td>

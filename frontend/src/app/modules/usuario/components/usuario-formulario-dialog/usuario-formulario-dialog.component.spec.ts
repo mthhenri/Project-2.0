@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { criarUsuarioTeste } from '../../../../../testes/usuarios-teste';
@@ -20,7 +20,7 @@ const rotulosDosTipos = (componente: UsuarioFormularioDialogComponent) => compon
 
 const USUARIO_EDITADO = {
     id: 50, login: 'beto', nomeCompleto: 'Beto Lima', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR,
-    status: TipoUsuarioStatusEnum.ATIVO, horasDiariasNecessarias: 6, createdDate: '2026-01-15T00:00:00Z',
+    ativo: true, horasDiariasNecessarias: 6, createdDate: '2026-01-15T00:00:00Z',
 };
 
 describe('UsuarioFormularioDialogComponent — criar', () => {

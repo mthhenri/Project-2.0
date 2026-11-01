@@ -11,7 +11,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { UsuarioResumoDto, TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioListarDto } from '@project20/shared';
+import { UsuarioResumoDto, TipoUsuarioEnum, UsuarioListarDto } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { rotuloTipoUsuario, severidadeTipoUsuario } from '../../../../core/utils/tipo-usuario';
@@ -29,7 +29,7 @@ const CHAVE_FILTROS = 'usuario.filtros';
 
 interface FiltrosPersistidos {
     tipo: TipoUsuarioEnum | null;
-    status: TipoUsuarioStatusEnum | null;
+    ativo: boolean | null;
 }
 
 @Component({
@@ -80,9 +80,9 @@ export class UsuarioListagemPage implements OnInit {
 
     readonly formularioFiltros = this.formBuilder.group({ busca: [''] });
     readonly tipoFiltro = signal<TipoUsuarioEnum | null>(null);
-    readonly statusFiltro = signal<TipoUsuarioStatusEnum | null>(null);
+    readonly ativoFiltro = signal<boolean | null>(null);
     private readonly termoBusca = signal<string>('');
-    readonly filtroAtivo = computed(() => !!this.tipoFiltro() || !!this.statusFiltro() || !!this.termoBusca().trim());
+    readonly filtroAtivo = computed(() => !!this.tipoFiltro() || this.ativoFiltro() !== null || !!this.termoBusca().trim());
 
     readonly usuarios = signal<UsuarioResumoDto[]>([]);
     readonly totalRegistros = signal<number>(0);
@@ -103,14 +103,14 @@ export class UsuarioListagemPage implements OnInit {
 
     readonly statusOpcoes = [
         { label: 'Todos', value: null },
-        { label: 'Ativos', value: TipoUsuarioStatusEnum.ATIVO },
-        { label: 'Inativos', value: TipoUsuarioStatusEnum.INATIVO },
+        { label: 'Ativos', value: true },
+        { label: 'Inativos', value: false },
     ];
 
     ngOnInit(): void {
         const filtrosSalvos = this.lerFiltrosPersistidos();
         this.tipoFiltro.set(filtrosSalvos.tipo);
-        this.statusFiltro.set(filtrosSalvos.status);
+        this.ativoFiltro.set(filtrosSalvos.ativo);
 
         this.formularioFiltros.controls.busca.valueChanges
             .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
@@ -173,10 +173,10 @@ export class UsuarioListagemPage implements OnInit {
             itensPorPagina: this.itensPorPagina(),
         };
         const tipo = this.tipoFiltro();
-        const status = this.statusFiltro();
+        const ativo = this.ativoFiltro();
         const busca = this.termoBusca().trim();
         if (tipo) filtros.tipo = tipo;
-        if (status) filtros.status = status;
+        if (ativo !== null) filtros.ativo = ativo;
         if (busca) filtros.busca = busca;
 
         this.usuarioService
@@ -214,15 +214,15 @@ export class UsuarioListagemPage implements OnInit {
         this.aoMudarFiltro();
     }
 
-    aoMudarStatus(status: TipoUsuarioStatusEnum | null): void {
-        this.statusFiltro.set(status);
+    aoMudarStatus(ativo: boolean | null): void {
+        this.ativoFiltro.set(ativo);
         this.persistirFiltros();
         this.aoMudarFiltro();
     }
 
     limparFiltros(): void {
         this.tipoFiltro.set(null);
-        this.statusFiltro.set(null);
+        this.ativoFiltro.set(null);
         this.persistirFiltros();
         this.termoBusca.set('');
         this.formularioFiltros.controls.busca.setValue('', { emitEvent: false });
@@ -255,19 +255,18 @@ export class UsuarioListagemPage implements OnInit {
    * "Desfazer" e, se o servidor recusar, o switch volta ao valor anterior.
    */
     alternarStatus(usuario: UsuarioResumoDto, ativo: boolean): void {
-        const statusAnterior = usuario.status;
-        const statusNovo = ativo ? TipoUsuarioStatusEnum.ATIVO : TipoUsuarioStatusEnum.INATIVO;
-        if (statusAnterior === statusNovo) return;
-        this.definirStatusLocal(usuario.id, statusNovo);
+        const ativoAnterior = usuario.ativo;
+        if (ativoAnterior === ativo) return;
+        this.definirAtivoLocal(usuario.id, ativo);
 
-        this.usuarioService.alterar(usuario.id, { status: statusNovo }).subscribe({
+        this.usuarioService.alterar(usuario.id, { ativo }).subscribe({
             next: () =>
                 this.desfazerService.oferecer({
                     mensagem: `${usuario.nomeCompleto} ${ativo ? 'ativado' : 'inativado'}`,
-                    desfazer: () => this.usuarioService.alterar(usuario.id, { status: statusAnterior }),
-                    aposDesfazer: () => this.definirStatusLocal(usuario.id, statusAnterior),
+                    desfazer: () => this.usuarioService.alterar(usuario.id, { ativo: ativoAnterior }),
+                    aposDesfazer: () => this.definirAtivoLocal(usuario.id, ativoAnterior),
                 }),
-            error: () => this.definirStatusLocal(usuario.id, statusAnterior),
+            error: () => this.definirAtivoLocal(usuario.id, ativoAnterior),
         });
     }
 
@@ -298,24 +297,24 @@ export class UsuarioListagemPage implements OnInit {
         return severidadeTipoUsuario(tipo);
     }
 
-    private definirStatusLocal(usuarioId: number, status: TipoUsuarioStatusEnum): void {
-        this.usuarios.update((lista) => lista.map((item) => (item.id === usuarioId ? { ...item, status } : item)));
+    private definirAtivoLocal(usuarioId: number, ativo: boolean): void {
+        this.usuarios.update((lista) => lista.map((item) => (item.id === usuarioId ? { ...item, ativo } : item)));
     }
 
     private lerFiltrosPersistidos(): FiltrosPersistidos {
         try {
             const salvo = JSON.parse(localStorage.getItem(CHAVE_FILTROS) ?? 'null') as Partial<FiltrosPersistidos> | null;
             const tipo = Object.values(TipoUsuarioEnum).includes(salvo?.tipo as TipoUsuarioEnum) ? (salvo!.tipo as TipoUsuarioEnum) : null;
-            const status = Object.values(TipoUsuarioStatusEnum).includes(salvo?.status as TipoUsuarioStatusEnum) ? (salvo!.status as TipoUsuarioStatusEnum) : null;
-            return { tipo, status };
+            const ativo = typeof salvo?.ativo === 'boolean' ? salvo.ativo : null;
+            return { tipo, ativo };
         } catch {
-            return { tipo: null, status: null };
+            return { tipo: null, ativo: null };
         }
     }
 
     private persistirFiltros(): void {
         try {
-            localStorage.setItem(CHAVE_FILTROS, JSON.stringify({ tipo: this.tipoFiltro(), status: this.statusFiltro() }));
+            localStorage.setItem(CHAVE_FILTROS, JSON.stringify({ tipo: this.tipoFiltro(), ativo: this.ativoFiltro() }));
         } catch {
             // armazenamento indisponível: o filtro vale só para esta visita
         }

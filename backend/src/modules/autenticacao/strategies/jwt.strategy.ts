@@ -1,7 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { TipoUsuarioStatusEnum } from '@project20/shared';
 import { ConfigService } from '../../../config/config.service';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import { JwtPayload } from '../domain/interfaces/jwt-payload.interface';
@@ -29,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
         const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: payload.sub });
 
-        if (!usuarioEncontrado || usuarioEncontrado.status === TipoUsuarioStatusEnum.INATIVO) {
+        if (!usuarioEncontrado || !usuarioEncontrado.ativo) {
             throw new UnauthorizedException();
         }
 

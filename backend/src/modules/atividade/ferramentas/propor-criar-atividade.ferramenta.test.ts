@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { TipoAtividadePrioridadeEnum, TipoPropostaIaEnum, TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoAtividadePrioridadeEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
@@ -21,7 +21,7 @@ function montar(opcoes: { demanda?: unknown; dono?: Record<string, unknown> | nu
         listarAncestral: async () => opcoes.ancestrais ?? [],
     };
     const usuarioService = {
-        recuperar: async () => ({ dados: opcoes.dono === undefined ? { id: 12, nomeCompleto: 'Bia', status: TipoUsuarioStatusEnum.ATIVO } : opcoes.dono }),
+        recuperar: async () => ({ dados: opcoes.dono === undefined ? { id: 12, nomeCompleto: 'Bia', ativo: true } : opcoes.dono }),
     };
     const ferramenta = new ProporCriarAtividadeFerramenta(
         propostaIaService as unknown as PropostaIaService, demandaRepositorio as unknown as DemandaRepository, usuarioService as unknown as UsuarioService,
@@ -73,7 +73,7 @@ test('gestor propõe para outra pessoa ativa, com o nome dela no cartão', async
 test('gestor não propõe para usuário inexistente nem inativo', async () => {
     const inexistente = montar({ dono: null });
     await assert.rejects(inexistente.ferramenta.executar({ demandaId: 9, nome: 'Ajustar login', usuarioId: 12 }, GESTOR), BusinessException);
-    const inativo = montar({ dono: { id: 12, nomeCompleto: 'Bia', status: TipoUsuarioStatusEnum.INATIVO } });
+    const inativo = montar({ dono: { id: 12, nomeCompleto: 'Bia', ativo: false } });
     await assert.rejects(inativo.ferramenta.executar({ demandaId: 9, nome: 'Ajustar login', usuarioId: 12 }, GESTOR), BusinessException);
     assert.equal(inexistente.propostas.length + inativo.propostas.length, 0);
 });

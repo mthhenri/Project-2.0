@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PropostaAtribuirMembroDadosDto, TipoPropostaIaEnum, TipoUsuarioStatusEnum, podeSerMembroDeDemanda } from '@project20/shared';
+import { PropostaAtribuirMembroDadosDto, TipoPropostaIaEnum, podeSerMembroDeDemanda } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
@@ -34,7 +34,7 @@ export class AtribuirMembroExecutor implements ExecutorPropostaIa {
             const dono = (await this.usuarioService.recuperarParaAtribuicao({ id: alvo.usuarioId }, usuarioAtivo)).dados;
             if (!dono) throw new BusinessException('Usuário não encontrado');
             if (!podeSerMembroDeDemanda(dono.tipo)) throw new BusinessException(`${dono.nomeCompleto} é gestor: gestores têm acesso por tipo e não são atribuídos como membros`);
-            if (dono.status !== TipoUsuarioStatusEnum.ATIVO) throw new BusinessException(`${dono.nomeCompleto} está inativo e não pode ser atribuído`);
+            if (!dono.ativo) throw new BusinessException(`${dono.nomeCompleto} está inativo e não pode ser atribuído`);
             await this.demandaService.atribuirMembro(alvo, usuarioAtivo);
         } else {
             await this.demandaService.removerMembro(alvo, usuarioAtivo);

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { TipoPropostaIaEnum, TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ProjetoService } from '../../projeto/services/projeto.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
@@ -16,16 +16,16 @@ const DESENVOLVEDOR = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDO
 /** Valida que a `BusinessException` traz o texto (a mensagem fica no corpo da resposta HTTP, não em `message`). */
 const contem = (texto: string) => (erro: BusinessException) => JSON.stringify(erro.getResponse()).includes(texto);
 
-const USUARIOS: Record<number, { nomeCompleto: string; cargoTitulo: string; tipo: TipoUsuarioEnum; status: TipoUsuarioStatusEnum }> = {
-    1: { nomeCompleto: 'Gestor Inicial', cargoTitulo: 'Gestor', tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO },
-    7: { nomeCompleto: 'Dev de Teste', cargoTitulo: 'Desenvolvedor', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO },
-    8: { nomeCompleto: 'Ana Silva', cargoTitulo: 'Desenvolvedora', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO },
-    9: { nomeCompleto: 'Beto Gestor', cargoTitulo: 'Gestor', tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO },
-    10: { nomeCompleto: 'Caio Inativo', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.INATIVO },
+const USUARIOS: Record<number, { nomeCompleto: string; cargoTitulo: string; tipo: TipoUsuarioEnum; ativo: boolean }> = {
+    1: { nomeCompleto: 'Gestor Inicial', cargoTitulo: 'Gestor', tipo: TipoUsuarioEnum.GESTOR, ativo: true },
+    7: { nomeCompleto: 'Dev de Teste', cargoTitulo: 'Desenvolvedor', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true },
+    8: { nomeCompleto: 'Ana Silva', cargoTitulo: 'Desenvolvedora', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true },
+    9: { nomeCompleto: 'Beto Gestor', cargoTitulo: 'Gestor', tipo: TipoUsuarioEnum.GESTOR, ativo: true },
+    10: { nomeCompleto: 'Caio Inativo', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: false },
 };
 
 /** `UsuarioService` que lê a tabela de usuários do teste (o executor confere o tipo e a situação do alvo). */
-const usuarioServiceDoTeste = { recuperarParaAtribuicao: async ({ id }: { id: number }) => ({ dados: USUARIOS[id] ? { id, ...USUARIOS[id] } : { id, nomeCompleto: 'Caio Novo', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO } }) } as unknown as UsuarioService;
+const usuarioServiceDoTeste = { recuperarParaAtribuicao: async ({ id }: { id: number }) => ({ dados: USUARIOS[id] ? { id, ...USUARIOS[id] } : { id, nomeCompleto: 'Caio Novo', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true } }) } as unknown as UsuarioService;
 
 /** `DemandaService` em memória: a demanda 4 com os membros informados e o registro das chamadas. */
 function criarServico(membrosIniciais: number[]) {

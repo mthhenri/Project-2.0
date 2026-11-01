@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PropostaCriarAtividadeDadosDto, ProporCriarAtividadeDto, TipoPropostaIaEnum, TipoUsuarioStatusEnum, temPermissaoDeGestor } from '@project20/shared';
+import { PropostaCriarAtividadeDadosDto, ProporCriarAtividadeDto, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
@@ -47,7 +47,7 @@ export class ProporCriarAtividadeFerramenta extends FerramentaPropostaIa<ProporC
             if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new BusinessException('Só o gestor cria atividade para outra pessoa. Crie a atividade para o próprio usuário.');
             const dono = (await this.usuarioService.recuperar({ id: usuarioId }, usuarioAtivo)).dados;
             if (!dono) throw new BusinessException('Usuário não encontrado');
-            if (dono.status !== TipoUsuarioStatusEnum.ATIVO) throw new BusinessException(`${dono.nomeCompleto} está inativo e não recebe atividades.`);
+            if (!dono.ativo) throw new BusinessException(`${dono.nomeCompleto} está inativo e não recebe atividades.`);
             usuarioNome = dono.nomeCompleto;
         }
         // O aviso e o cartão mostram o caminho completo da demanda (raiz › … › demanda), para o desenvolvedor ver se o lugar está certo.

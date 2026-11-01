@@ -393,7 +393,6 @@ singular português (`TIPO + TABELA + COMPLEMENTO`):
 | Coluna de negócio | Tabela de referência | Enum TypeScript | Coluna FK |
 |---|---|---|---|
 | `usuario.tipo` | `tipo_usuario` | `TipoUsuarioEnum` | `tipo_usuario_id` |
-| `usuario.status` | `tipo_usuario_status` | `TipoUsuarioStatusEnum` | `tipo_usuario_status_id` |
 | `projeto.status` | `tipo_projeto_status` | `TipoProjetoStatusEnum` | `tipo_projeto_status_id` |
 | `demanda.status` | `tipo_demanda_status` | `TipoDemandaStatusEnum` | `tipo_demanda_status_id` |
 | `atividade.status` | `tipo_atividade_status` | `TipoAtividadeStatusEnum` | `tipo_atividade_status_id` |
@@ -728,7 +727,7 @@ async alterar(dto: UsuarioInternoAlterarDto): Promise<UsuarioAlteradoDto> {
 }
 
 // ❌ Proibido — primitivo id + objeto anônimo inline
-async alterar(id: number, dados: { nomeCompleto?: string; status?: UsuarioStatusEnum }) { ... }
+async alterar(id: number, dados: { nomeCompleto?: string; ativo?: boolean }) { ... }
 ```
 
 O DTO interno usa o padrão de nomenclatura **verbo no fim** (§5.1): o qualificador `Interno` faz parte do complemento, então `UsuarioInternoAlterarDto` ✅ (nunca `UsuarioAlterarInternoDto` ❌). O controller monta `{ ...dto, id }`; service e repositório consomem o mesmo DTO.
@@ -1281,7 +1280,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `cargo_titulo` | VARCHAR | ex: "Desenvolvedor Sênior" |
 | `horas_diarias_necessarias` | INTEGER | em horas (ex: 8) |
 | `tipo_usuario_id` | INTEGER FK | → `tipo_usuario` (DESENVOLVEDOR, GESTOR, ADMINISTRADOR) |
-| `tipo_usuario_status_id` | INTEGER FK | → `tipo_usuario_status` (ATIVO, INATIVO) |
+| `ativo` | BOOLEAN | usuário ativo; o inativo não faz login nem é atribuível (booleano, não tabela de referência: não há outro estado) |
 
 ### Projeto
 
@@ -1393,7 +1392,6 @@ correspondente é um `INTEGER` FK para o `id` dela; o repositório traduz `codig
 | Tabela de referência | Enum TypeScript | Usada por (coluna FK) |
 |---|---|---|
 | `tipo_usuario` | `TipoUsuarioEnum` | `usuario.tipo_usuario_id` |
-| `tipo_usuario_status` | `TipoUsuarioStatusEnum` | `usuario.tipo_usuario_status_id` |
 | `tipo_projeto_status` | `TipoProjetoStatusEnum` | `projeto.tipo_projeto_status_id` |
 | `tipo_demanda_status` | `TipoDemandaStatusEnum` | `demanda.tipo_demanda_status_id` |
 | `tipo_atividade_status` | `TipoAtividadeStatusEnum` | `atividade.tipo_atividade_status_id` |

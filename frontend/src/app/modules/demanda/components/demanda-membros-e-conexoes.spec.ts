@@ -18,7 +18,7 @@ function membro(usuarioId: number, nome: string, tipo = TipoUsuarioEnum.DESENVOL
     return { usuarioId, nomeCompleto: nome, login: nome.toLowerCase(), tipo, cargoTitulo: 'Dev' } as DemandaMembroDto;
 }
 function usuario(id: number, nome: string): UsuarioResumoDto {
-    return { id, nomeCompleto: nome, login: nome.toLowerCase(), cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: 'ATIVO', temAnotacoes: false } as UsuarioResumoDto;
+    return { id, nomeCompleto: nome, login: nome.toLowerCase(), cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true, temAnotacoes: false } as UsuarioResumoDto;
 }
 
 // ---------------------------------------------------------------------------

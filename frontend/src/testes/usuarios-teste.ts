@@ -1,4 +1,4 @@
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioRecuperadoDto } from '@project20/shared';
+import { TipoUsuarioEnum, UsuarioRecuperadoDto } from '@project20/shared';
 
 /** Usuário autenticado de teste do tipo pedido (todos os campos preenchidos). */
 export function criarUsuarioTeste(tipo: TipoUsuarioEnum = TipoUsuarioEnum.DESENVOLVEDOR): UsuarioRecuperadoDto {
@@ -8,7 +8,7 @@ export function criarUsuarioTeste(tipo: TipoUsuarioEnum = TipoUsuarioEnum.DESENV
         nomeCompleto: `Usuário ${tipo}`,
         cargoTitulo: 'Cargo de teste',
         tipo,
-        status: TipoUsuarioStatusEnum.ATIVO,
+        ativo: true,
         horasDiariasNecessarias: 8,
         createdDate: new Date('2026-01-15T12:00:00.000Z'),
     };

@@ -8,7 +8,6 @@ import {
     PosicaoPopupChatEnum,
     ReferenciaMensagemDiretaEnum,
     TipoUsuarioEnum,
-    TipoUsuarioStatusEnum,
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -40,7 +39,7 @@ function mensagem(parcial: Partial<MensagemDiretaResumoDto> = {}): MensagemDiret
 }
 
 interface Cenario {
-    usuarios?: Record<number, { status?: TipoUsuarioStatusEnum; nomeCompleto?: string }>;
+    usuarios?: Record<number, { ativo?: boolean; nomeCompleto?: string }>;
     /** Ids de pessoas excluídas: não são recuperadas, mas ainda existem (o histórico continua). */
     excluidos?: number[];
     demandaVisivel?: boolean;
@@ -96,7 +95,7 @@ function montar(cenario: Cenario = {}) {
         validarExistenciaIncluindoExcluido: async ({ id }: { id: number }) => id in usuarios || (cenario.excluidos ?? []).includes(id),
         recuperar: async ({ id }: { id: number }) => {
             const encontrado = usuarios[id];
-            return encontrado ? { id, status: encontrado.status ?? TipoUsuarioStatusEnum.ATIVO, nomeCompleto: encontrado.nomeCompleto ?? `Pessoa ${id}` } : null;
+            return encontrado ? { id, ativo: encontrado.ativo ?? true, nomeCompleto: encontrado.nomeCompleto ?? `Pessoa ${id}` } : null;
         },
         listarAtivos: async () => (cenario.ativos ?? []).map((item) => ({ id: item.id, nomeCompleto: item.nome, tipo: item.tipo ?? TipoUsuarioEnum.DESENVOLVEDOR })),
         listarNomesPorIds: async ({ usuarioIds }: { usuarioIds: number[] }) =>
@@ -216,7 +215,7 @@ test('enviarMensagem: recusa enviar para si mesmo, para quem não existe e para 
     const inexistente = montar({ usuarios: {} });
     await assert.rejects(inexistente.service.enviarMensagem(envio(), ANA), ResourceNotFoundException);
 
-    const inativo = montar({ usuarios: { [BRUNO_ID]: { status: TipoUsuarioStatusEnum.INATIVO } } });
+    const inativo = montar({ usuarios: { [BRUNO_ID]: { ativo: false } } });
     await recusaComMensagem(inativo.service.enviarMensagem(envio(), ANA), /inativo/);
     assert.equal(inativo.chamadas.gravar, undefined);
 });
@@ -327,7 +326,7 @@ test('alterarLeitura: grava para a pessoa do token na conversa do par e limita a
 });
 
 test('alterarLeitura: pessoa inativa ainda pode ter a conversa lida (o histórico continua dos dois)', async () => {
-    const { service } = montar({ usuarios: { [BRUNO_ID]: { status: TipoUsuarioStatusEnum.INATIVO } } });
+    const { service } = montar({ usuarios: { [BRUNO_ID]: { ativo: false } } });
     const resposta = await service.alterarLeitura({ usuarioId: BRUNO_ID, lidaAteDate: '2026-10-21T10:00:00.000Z' }, ANA);
     assert.equal(resposta.sucesso, true);
 });

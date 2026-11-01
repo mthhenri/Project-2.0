@@ -1,4 +1,4 @@
-# 300 — Usuário `ativo` no lugar do status
+# 302 — Usuário `ativo` no lugar do status
 
 > Origem: I-036 de `docs/context/IDEAS.md`, primeira prioridade em `PRIORITIES.md` (triagem de 2026-10-31). Avaliação feita com o autor em 2026-10-31. A task 301 (nomes dos booleanos) é independente e vem depois.
 

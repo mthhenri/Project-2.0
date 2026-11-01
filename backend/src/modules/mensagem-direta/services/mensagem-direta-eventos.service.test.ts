@@ -31,7 +31,7 @@ function duasInstancias() {
 }
 
 /** O repositório de usuários que só devolve usuários ativos (o stream não fecha ninguém). */
-const USUARIOS_ATIVOS = { recuperar: async ({ id }: { id: number }) => ({ id, status: 'ATIVO' }) } as never;
+const USUARIOS_ATIVOS = { recuperar: async ({ id }: { id: number }) => ({ id, ativo: true }) } as never;
 
 const como = (id: number) => ({ sub: id, login: `u${id}`, tipo: 'DESENVOLVEDOR' }) as never;
 
@@ -188,7 +188,7 @@ function usuariosComSituacao(situacao: Map<number, 'ATIVO' | 'INATIVO' | 'EXCLUI
             const atual = situacao.get(id) ?? 'ATIVO';
             if (atual === 'ERRO') throw new Error('banco fora do ar');
             if (atual === 'EXCLUIDO') return null;
-            return { id, status: atual };
+            return { id, ativo: atual === 'ATIVO' };
         },
     } as never;
 }

@@ -1,5 +1,4 @@
 export * from './tipo-usuario.enum';
-export * from './tipo-usuario-status.enum';
 export * from './tipo-projeto-status.enum';
 export * from './tipo-demanda-status.enum';
 export * from './tipo-atividade-prioridade.enum';

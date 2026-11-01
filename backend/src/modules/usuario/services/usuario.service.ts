@@ -18,7 +18,6 @@ import {
     podeAtribuirMembroOuTag,
     temPermissaoDeAdministrador,
     temPermissaoDeGestor,
-    TipoUsuarioStatusEnum,
 } from '@project20/shared';
 import { StandardResponse, PaginatedResult } from '@project20/shared';
 import { UsuarioRestaurarDto, UsuarioRestauradoDto } from '@project20/shared';
@@ -166,7 +165,7 @@ export class UsuarioService {
         }
 
         const deixaDeSerAdministrador = dto.tipo !== undefined && !temPermissaoDeAdministrador(dto.tipo);
-        const deixaDeSerAtivo = dto.status !== undefined && dto.status !== TipoUsuarioStatusEnum.ATIVO;
+        const deixaDeSerAtivo = dto.ativo === false;
         if (deixaDeSerAdministrador || deixaDeSerAtivo) {
             await this.validarPermanenciaDeAdministradorAtivo(usuarioEncontrado);
         }
@@ -186,7 +185,7 @@ export class UsuarioService {
    * ativo não muda esse número; gestor deixa de ser obrigatório, porque o administrador já é um gestor.
    */
     private async validarPermanenciaDeAdministradorAtivo(usuario: Usuario): Promise<void> {
-        if (!temPermissaoDeAdministrador(usuario.tipo) || usuario.status !== TipoUsuarioStatusEnum.ATIVO) return;
+        if (!temPermissaoDeAdministrador(usuario.tipo) || !usuario.ativo) return;
 
         const administradoresAtivos = await this.usuarioRepositorio.listarAdministradoresAtivos();
         const outrosAdministradoresAtivos = administradoresAtivos.filter((administrador) => administrador.id !== usuario.id);
@@ -278,7 +277,7 @@ export class UsuarioService {
             nomeCompleto:            usuario.nomeCompleto,
             cargoTitulo:             usuario.cargoTitulo,
             tipo:                    usuario.tipo,
-            status:                  usuario.status,
+            ativo:                   usuario.ativo,
             horasDiariasNecessarias: usuario.horasDiariasNecessarias,
             createdDate:             usuario.createdDate,
         };

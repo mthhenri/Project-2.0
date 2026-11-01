@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { TipoUsuarioEnum } from '../../enums/tipo-usuario.enum';
-import { TipoUsuarioStatusEnum } from '../../enums/tipo-usuario-status.enum';
 
 export class UsuarioAlteradoDto {
     @ApiProperty({ example: 1 })
@@ -18,8 +17,8 @@ export class UsuarioAlteradoDto {
     @ApiProperty({ enum: TipoUsuarioEnum, example: TipoUsuarioEnum.DESENVOLVEDOR })
     tipo: TipoUsuarioEnum;
 
-    @ApiProperty({ enum: TipoUsuarioStatusEnum, example: TipoUsuarioStatusEnum.ATIVO })
-    status: TipoUsuarioStatusEnum;
+    @ApiProperty({ example: true })
+    ativo: boolean;
 
     @ApiProperty({ example: 8 })
     horasDiariasNecessarias: number;

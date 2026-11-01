@@ -30,7 +30,7 @@ const USUARIO_EXEMPLO = {
     nomeCompleto: 'João Silva',
     cargoTitulo: 'Desenvolvedor Sênior',
     tipo: 'DESENVOLVEDOR',
-    status: 'ATIVO',
+    ativo: true,
     horasDiariasNecessarias: 8,
     createdDate: '2026-06-13T12:00:00.000Z',
 };
@@ -85,8 +85,8 @@ export class UsuarioController {
                 sucesso: true,
                 dados: {
                     itens: [
-                        { id: 1, login: 'joao.silva', nomeCompleto: 'João Silva', cargoTitulo: 'Desenvolvedor Sênior', tipo: 'DESENVOLVEDOR', status: 'ATIVO' },
-                        { id: 2, login: 'maria.gestora', nomeCompleto: 'Maria Gestora', cargoTitulo: 'Gerente de Projetos', tipo: 'GESTOR', status: 'ATIVO' },
+                        { id: 1, login: 'joao.silva', nomeCompleto: 'João Silva', cargoTitulo: 'Desenvolvedor Sênior', tipo: 'DESENVOLVEDOR', ativo: true },
+                        { id: 2, login: 'maria.gestora', nomeCompleto: 'Maria Gestora', cargoTitulo: 'Gerente de Projetos', tipo: 'GESTOR', ativo: true },
                     ],
                     totalItens: 2,
                     paginaAtual: 1,

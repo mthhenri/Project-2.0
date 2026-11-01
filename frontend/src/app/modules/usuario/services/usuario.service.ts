@@ -26,7 +26,7 @@ export class UsuarioService {
     listar(filtros: UsuarioListarDto): Observable<StandardResponse<PaginatedResult<UsuarioResumoDto>>> {
         let params = new HttpParams();
         if (filtros.tipo) params = params.set('tipo', filtros.tipo);
-        if (filtros.status) params = params.set('status', filtros.status);
+        if (filtros.ativo !== undefined) params = params.set('ativo', String(filtros.ativo));
         if (filtros.busca) params = params.set('busca', filtros.busca);
         if (filtros.pagina) params = params.set('pagina', String(filtros.pagina));
         if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));

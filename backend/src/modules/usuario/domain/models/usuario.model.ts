@@ -1,5 +1,5 @@
 import { BaseEntity } from '../../../../core/base/base.entity';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioEnum } from '@project20/shared';
 
 export class Usuario extends BaseEntity {
     login: string;
@@ -8,5 +8,5 @@ export class Usuario extends BaseEntity {
     cargoTitulo: string;
     horasDiariasNecessarias: number;
     tipo: TipoUsuarioEnum;
-    status: TipoUsuarioStatusEnum;
+    ativo: boolean;
 }

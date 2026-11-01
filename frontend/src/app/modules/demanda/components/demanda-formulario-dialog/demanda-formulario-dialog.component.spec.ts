@@ -12,8 +12,8 @@ type Montado = ComponenteMontado<DemandaFormularioDialogComponent>;
 
 const TAGS = [{ id: 1, nome: 'Backend', cor: '#112233' }, { id: 2, nome: 'Frontend', cor: '#445566' }];
 const USUARIOS = [
-    { id: 2, nomeCompleto: 'Ana', login: 'ana', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: 'ATIVO' },
-    { id: 3, nomeCompleto: 'Gestora', login: 'g', cargoTitulo: 'Gestora', tipo: TipoUsuarioEnum.GESTOR, status: 'ATIVO' },
+    { id: 2, nomeCompleto: 'Ana', login: 'ana', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true },
+    { id: 3, nomeCompleto: 'Gestora', login: 'g', cargoTitulo: 'Gestora', tipo: TipoUsuarioEnum.GESTOR, ativo: true },
 ];
 const PAIS = [{ id: 5, nome: 'Estrutura', caminho: 'Estrutura', isEstrutural: true, status: 'PLANEJADA', horasEstimadas: 0 }];
 const PAGINA = (itens: unknown[]) => ({ itens, totalItens: itens.length, paginaAtual: 1, itensPorPagina: 200, totalPaginas: 1 });

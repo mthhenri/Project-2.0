@@ -183,7 +183,7 @@ export async function semearDesenvolvimento(conexao: Knex): Promise<ResultadoSee
                             cargo_titulo,
                             horas_diarias_necessarias,
                             tipo_usuario_id,
-                            tipo_usuario_status_id
+                            ativo
                         )
                     SELECT
                         NOW(),
@@ -195,15 +195,12 @@ export async function semearDesenvolvimento(conexao: Knex): Promise<ResultadoSee
                         :cargoTitulo,
                         :horasDiarias,
                         tipo_usuario.id,
-                        tipo_usuario_status.id
+                        true
                     FROM
-                        tipo_usuario,
-                        tipo_usuario_status
+                        tipo_usuario
                     WHERE
                         tipo_usuario.codigo = 'DESENVOLVEDOR'
                         AND tipo_usuario.is_deleted = false
-                        AND tipo_usuario_status.codigo = 'ATIVO'
-                        AND tipo_usuario_status.is_deleted = false
                     RETURNING
                         id
                 `,

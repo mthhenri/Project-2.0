@@ -135,6 +135,7 @@ CREATE TRIGGER trg_usuario_updated_date
 Usuários do sistema. Podem ser desenvolvedores ou gestores.
 Gestores têm acesso irrestrito. Desenvolvedores acessam apenas projetos
 onde possuem ao menos uma demanda atribuída via `demanda_usuario`.
+`ativo` diz se o usuário pode entrar e receber atribuições; a migration `0075` trocou por ele a tabela de referência `tipo_usuario_status`, que só tinha `ATIVO` e `INATIVO`.
 
 ```sql
 CREATE TABLE usuario (
@@ -151,8 +152,7 @@ CREATE TABLE usuario (
   horas_diarias_necessarias INTEGER      NOT NULL,
   tipo_usuario_id           INTEGER      NOT NULL
                               CONSTRAINT fk_usuario_tipo_usuario REFERENCES tipo_usuario(id),
-  tipo_usuario_status_id    INTEGER      NOT NULL
-                              CONSTRAINT fk_usuario_tipo_usuario_status REFERENCES tipo_usuario_status(id)
+  ativo                     BOOLEAN      NOT NULL
 );
 
 CREATE UNIQUE INDEX uix_usuario_login_ativo
@@ -771,8 +771,8 @@ Todo enum de domínio fechado é uma **tabela de referência** `tipo_<tabela>_<c
 tabela segue a BaseEntity + `codigo` (valor SCREAMING_SNAKE, espelha o enum TS de `shared/`) +
 `descricao` (rótulo legível). A coluna de negócio é um `INTEGER` FK para o `id` dela; o
 repositório traduz `codigo ⇄ id` no SQL (subselect no INSERT/UPDATE, JOIN expondo
-`codigo AS <campo>` no SELECT/RETURNING). As 7 tabelas:
-`tipo_usuario`, `tipo_usuario_status`, `tipo_projeto_status`, `tipo_demanda_status`,
+`codigo AS <campo>` no SELECT/RETURNING). As 6 tabelas:
+`tipo_usuario`, `tipo_projeto_status`, `tipo_demanda_status`,
 `tipo_atividade_status`, `tipo_dia_nao_util`, `tipo_dia_nao_util_duracao`.
 
 ```sql
@@ -802,7 +802,6 @@ Seeds (`codigo` → `descricao`):
 | Tabela | Seeds |
 |---|---|
 | `tipo_usuario` | DESENVOLVEDOR→"Desenvolvedor", GESTOR→"Gestor", ADMINISTRADOR→"Administrador" (migration `0029`), AUXILIAR→"Auxiliar" (migration `0074`) |
-| `tipo_usuario_status` | ATIVO→"Ativo", INATIVO→"Inativo" |
 | `tipo_projeto_status` | ATIVO→"Ativo", PAUSADO→"Pausado", CONCLUIDO→"Concluído", CANCELADO→"Cancelado" |
 | `tipo_demanda_status` | PENDENTE→"Pendente", PLANEJADA→"Planejada", CONCLUIDA→"Concluída" |
 | `tipo_atividade_status` | PLANEJADA→"Planejada", PENDENTE→"Pendente", DESENVOLVENDO→"Desenvolvendo", DESENVOLVIDA→"Desenvolvida" |

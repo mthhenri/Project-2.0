@@ -2,7 +2,6 @@ import { IsOptional, IsEnum, IsNumber, IsString, IsBoolean, Min, Max } from 'cla
 import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoUsuarioEnum } from '../../enums/tipo-usuario.enum';
-import { TipoUsuarioStatusEnum } from '../../enums/tipo-usuario-status.enum';
 
 export class UsuarioListarDto {
     @ApiPropertyOptional({ enum: TipoUsuarioEnum, example: TipoUsuarioEnum.DESENVOLVEDOR })
@@ -10,10 +9,15 @@ export class UsuarioListarDto {
     @IsEnum(TipoUsuarioEnum)
     tipo?: TipoUsuarioEnum;
 
-    @ApiPropertyOptional({ enum: TipoUsuarioStatusEnum, example: TipoUsuarioStatusEnum.ATIVO })
+    @ApiPropertyOptional({ example: true })
     @IsOptional()
-    @IsEnum(TipoUsuarioStatusEnum)
-    status?: TipoUsuarioStatusEnum;
+    @IsBoolean()
+    @Transform(({ value }) => {
+        if (value === 'true') return true;
+        if (value === 'false') return false;
+        return value;
+    })
+    ativo?: boolean;
 
     @ApiPropertyOptional({ example: 'joão' })
     @IsOptional()

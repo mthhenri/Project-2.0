@@ -29,7 +29,6 @@ import {
     ExecucaoAlterarDto,
     EstadoIaEnum,
     UsuarioResumoDto,
-    TipoUsuarioStatusEnum,
     REGEX_SEM_CARACTERES_PROIBIDOS,
     MENSAGEM_CARACTERES_PROIBIDOS,
 } from '@project20/shared';
@@ -520,7 +519,7 @@ export class ExecucaoHistoricoPage implements OnInit {
     }
 
     private carregarUsuarios(): void {
-        this.usuarioService.listar({ status: TipoUsuarioStatusEnum.ATIVO, allRows: true }).subscribe({
+        this.usuarioService.listar({ ativo: true, allRows: true }).subscribe({
             next: (resposta) => {
                 if (resposta.sucesso && resposta.dados) this.usuarios.set(resposta.dados.itens);
             },

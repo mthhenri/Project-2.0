@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { MensagemDiretaEventoPublicarDto, TipoUsuarioStatusEnum } from '@project20/shared';
+import { MensagemDiretaEventoPublicarDto } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import { ConexaoDeEventosDiretos, ConexoesDeEventosDiretos } from '../domain/conexoes-de-eventos-diretos';
@@ -132,7 +132,7 @@ export class MensagemDiretaEventosService implements OnModuleInit, OnModuleDestr
         for (const usuarioId of this.conexoes.usuariosConectados()) {
             try {
                 const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: usuarioId });
-                if (usuarioEncontrado && usuarioEncontrado.status !== TipoUsuarioStatusEnum.INATIVO) continue;
+                if (usuarioEncontrado && usuarioEncontrado.ativo) continue;
                 this.conexoes.encerrarUsuario(usuarioId);
                 fechou = true;
             } catch (erro) {

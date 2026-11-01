@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TipoUsuarioStatusEnum, UsuariosListadosDto, UsuariosListarDto } from '@project20/shared';
+import { UsuariosListadosDto, UsuariosListarDto } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { FerramentaIa } from '../../ferramenta-ia/domain/ferramenta-ia';
 import { UsuarioService } from '../services/usuario.service';
@@ -27,7 +27,7 @@ export class ListarUsuariosFerramenta extends FerramentaIa<UsuariosListarDto> {
 
     async executar(entrada: UsuariosListarDto, _usuarioAtivo: JwtPayload): Promise<UsuariosListadosDto> {
         const itens =
-            (await this.usuarioService.listar({ tipo: entrada.tipo, busca: entrada.busca, status: TipoUsuarioStatusEnum.ATIVO, allRows: true })).dados?.itens ?? [];
+            (await this.usuarioService.listar({ tipo: entrada.tipo, busca: entrada.busca, ativo: true, allRows: true })).dados?.itens ?? [];
         return {
             usuarios: itens
                 .slice(0, LIMITE_USUARIOS_DA_FERRAMENTA)

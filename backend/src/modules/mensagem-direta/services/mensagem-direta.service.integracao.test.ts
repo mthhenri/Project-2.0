@@ -132,7 +132,7 @@ testarComBanco('silenciar mantém a conversa na lista e não zera as não lidas;
     assert.equal(conversa.silenciada, true);
     assert.equal(conversa.naoLidas, 1);
 
-    const inativo = await criarUsuario(conexao, { statusCodigo: 'INATIVO' });
+    const inativo = await criarUsuario(conexao, { ativo: false });
     await assert.rejects(service.enviarMensagem({ destinatarioId: inativo.id, mensagemId: randomUUID(), texto: 'oi' }, como(ana)));
     await assert.rejects(service.enviarMensagem({ destinatarioId: ana.id, mensagemId: randomUUID(), texto: 'oi' }, como(ana)));
     await assert.rejects(service.enviarMensagem({ destinatarioId: 987654321, mensagemId: randomUUID(), texto: 'oi' }, como(ana)));

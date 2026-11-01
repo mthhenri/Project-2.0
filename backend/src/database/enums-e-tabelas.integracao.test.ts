@@ -7,7 +7,6 @@ import { testarComBanco } from '../testes/banco-teste';
 // linha na tabela quebra o INSERT.
 const ENUM_POR_TABELA: Record<string, Record<string, string>> = {
     tipo_usuario: shared.TipoUsuarioEnum,
-    tipo_usuario_status: shared.TipoUsuarioStatusEnum,
     tipo_projeto_status: shared.TipoProjetoStatusEnum,
     tipo_demanda_status: shared.TipoDemandaStatusEnum,
     tipo_atividade_status: shared.TipoAtividadeStatusEnum,

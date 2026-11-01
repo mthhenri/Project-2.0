@@ -3,7 +3,7 @@ import * as assert from 'node:assert/strict';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioEnum } from '@project20/shared';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { Public } from '../decorators/public.decorator';
@@ -15,7 +15,7 @@ const USUARIOS = [
     { id: 1, login: 'x', tipo: TipoUsuarioEnum.GESTOR },
     { id: 5, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR },
     { id: 9, login: 'zed', tipo: TipoUsuarioEnum.ADMINISTRADOR },
-].map((usuario) => ({ ...usuario, status: TipoUsuarioStatusEnum.ATIVO }));
+].map((usuario) => ({ ...usuario, ativo: true }));
 const criarEstrategia = () =>
     new JwtStrategy({ obter: () => ({ jwt: { secreto: SEGREDO } }) } as never, { recuperar: async (dto: { id: number }) => USUARIOS.find((usuario) => usuario.id === dto.id) ?? null } as never);
 criarEstrategia();

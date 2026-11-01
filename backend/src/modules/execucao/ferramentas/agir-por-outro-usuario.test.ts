@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { TipoPropostaIaEnum, TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { AtividadeService } from '../../atividade/services/atividade.service';
@@ -37,9 +37,9 @@ test('recuperarAtivaDoUsuario: o gestor lê a de qualquer um e o desenvolvedor s
 
 // ------------------------------------------------------------------ criar atividade para outra pessoa
 
-const USUARIOS: Record<number, { nomeCompleto: string; status: TipoUsuarioStatusEnum }> = {
-    8: { nomeCompleto: 'Matheus Henrique', status: TipoUsuarioStatusEnum.ATIVO },
-    10: { nomeCompleto: 'Caio Inativo', status: TipoUsuarioStatusEnum.INATIVO },
+const USUARIOS: Record<number, { nomeCompleto: string; ativo: boolean }> = {
+    8: { nomeCompleto: 'Matheus Henrique', ativo: true },
+    10: { nomeCompleto: 'Caio Inativo', ativo: false },
 };
 
 function criarFerramentaDeCriar() {

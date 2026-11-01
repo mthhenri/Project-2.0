@@ -1,6 +1,6 @@
 # 301 — Booleanos sem prefixo
 
-> Origem: I-036 de `docs/context/IDEAS.md` (parte dos nomes). Avaliação feita com o autor em 2026-10-31. Independente da task 300; pode vir antes ou depois dela.
+> Origem: I-036 de `docs/context/IDEAS.md` (parte dos nomes). Avaliação feita com o autor em 2026-10-31. Independente da task 302; pode vir antes ou depois dela.
 
 ## Objetivo
 

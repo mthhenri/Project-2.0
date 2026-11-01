@@ -73,7 +73,7 @@ BEGIN
                 cargo_titulo,
                 horas_diarias_necessarias,
                 tipo_usuario_id,
-                tipo_usuario_status_id
+                ativo
             )
         SELECT
             criacao,
@@ -94,15 +94,7 @@ BEGIN
                     codigo = 'DESENVOLVEDOR'
                     AND is_deleted = false
             ),
-            (
-                SELECT
-                    id
-                FROM
-                    tipo_usuario_status
-                WHERE
-                    codigo = 'ATIVO'
-                    AND is_deleted = false
-            )
+            true
         RETURNING
             id INTO usuario_id_criado;
         usuarios := array_append(usuarios, usuario_id_criado);

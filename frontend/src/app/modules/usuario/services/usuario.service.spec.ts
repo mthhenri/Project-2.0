@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioEnum } from '@project20/shared';
 import { UsuarioService } from './usuario.service';
 
 let servico: UsuarioService;
@@ -16,8 +16,8 @@ beforeEach(() => {
 
 describe('UsuarioService (frontend)', () => {
     it('listar monta a query só com os filtros informados', () => {
-        servico.listar({ tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO, busca: 'ana', pagina: 2, itensPorPagina: 10, allRows: true }).subscribe();
-        const requisicao = http.expectOne((resultado) => resultado.url.endsWith('/usuario'));      expect(requisicao.request.method).toBe('GET');      expect(requisicao.request.params.get('tipo')).toBe('GESTOR');      expect(requisicao.request.params.get('status')).toBe('ATIVO');      expect(requisicao.request.params.get('busca')).toBe('ana');      expect(requisicao.request.params.get('pagina')).toBe('2');      expect(requisicao.request.params.get('itensPorPagina')).toBe('10');      expect(requisicao.request.params.get('allRows')).toBe('true');
+        servico.listar({ tipo: TipoUsuarioEnum.GESTOR, ativo: true, busca: 'ana', pagina: 2, itensPorPagina: 10, allRows: true }).subscribe();
+        const requisicao = http.expectOne((resultado) => resultado.url.endsWith('/usuario'));      expect(requisicao.request.method).toBe('GET');      expect(requisicao.request.params.get('tipo')).toBe('GESTOR');      expect(requisicao.request.params.get('ativo')).toBe('true');      expect(requisicao.request.params.get('busca')).toBe('ana');      expect(requisicao.request.params.get('pagina')).toBe('2');      expect(requisicao.request.params.get('itensPorPagina')).toBe('10');      expect(requisicao.request.params.get('allRows')).toBe('true');
     });
 
     it('listar sem filtros não manda parâmetro nenhum', () => {

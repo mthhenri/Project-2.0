@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import * as bcrypt from 'bcrypt';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioEnum } from '@project20/shared';
 import { UsuarioService } from './usuario.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -26,7 +26,7 @@ function criarServico(repositorio: Record<string, unknown>): UsuarioService {
 
 const USUARIO_COMPLETO = {
     id: 3, login: 'dev', senhaEncriptada: 'hash-que-nao-pode-sair', nomeCompleto: 'Dev', cargoTitulo: 'Dev',
-    horasDiariasNecessarias: 8, tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO, createdDate: new Date('2026-01-15'),
+    horasDiariasNecessarias: 8, tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true, createdDate: new Date('2026-01-15'),
 };
 
 test('criar: login já usado entre os ativos é recusado e nada é gravado', async () => {
@@ -83,7 +83,7 @@ test('listar: com paginação calcula total de páginas; com allRows devolve tud
 test('listar: repassa os filtros ao repository', async () => {
     let recebido: unknown;
     const servico = criarServico({ listar: async (filtros: unknown) => { recebido = filtros; return { itens: [], total: 0 }; } });
-    const filtros = { tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO, busca: 'ana' };
+    const filtros = { tipo: TipoUsuarioEnum.GESTOR, ativo: true, busca: 'ana' };
     await servico.listar(filtros);
     assert.deepEqual(recebido, filtros);
 });

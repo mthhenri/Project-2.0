@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { UsuarioService } from './usuario.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioEnum } from '@project20/shared';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 
@@ -34,7 +34,7 @@ test('restaurar: recusa quando o login foi reutilizado por um usuário ativo', a
 
 // Permanência do último administrador ativo (substitui a guarda de gestor, P-002): rebaixar, inativar e
 // excluir passam pela mesma guarda.
-function criarRepositorioDeUsuarios(alvo: { id: number; tipo: TipoUsuarioEnum; status: TipoUsuarioStatusEnum }, administradoresAtivos: number[]) {
+function criarRepositorioDeUsuarios(alvo: { id: number; tipo: TipoUsuarioEnum; ativo: boolean }, administradoresAtivos: number[]) {
     const chamadas: string[] = [];
     return {
         chamadas,
@@ -50,15 +50,15 @@ function criarRepositorioDeUsuarios(alvo: { id: number; tipo: TipoUsuarioEnum; s
     };
 }
 
-const ADMINISTRADOR_ATIVO = { id: 2, tipo: TipoUsuarioEnum.ADMINISTRADOR, status: TipoUsuarioStatusEnum.ATIVO };
-const GESTOR_ATIVO = { id: 4, tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO };
-const DESENVOLVEDOR_ATIVO = { id: 3, tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO };
+const ADMINISTRADOR_ATIVO = { id: 2, tipo: TipoUsuarioEnum.ADMINISTRADOR, ativo: true };
+const GESTOR_ATIVO = { id: 4, tipo: TipoUsuarioEnum.GESTOR, ativo: true };
+const DESENVOLVEDOR_ATIVO = { id: 3, tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true };
 
 test('alterar: inativar o único administrador ativo é recusado', async () => {
     const repositorio = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [2]);
     const servico = criarServico(repositorio);
     await assert.rejects(
-        () => servico.alterar({ id: 2, status: TipoUsuarioStatusEnum.INATIVO }, ADMINISTRADOR_LOGADO),
+        () => servico.alterar({ id: 2, ativo: false }, ADMINISTRADOR_LOGADO),
         BusinessException,
     );
     assert.deepEqual(repositorio.chamadas, []);
@@ -67,7 +67,7 @@ test('alterar: inativar o único administrador ativo é recusado', async () => {
 test('alterar: inativar um administrador quando há outro administrador ativo é permitido', async () => {
     const repositorio = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [1, 2]);
     const servico = criarServico(repositorio);
-    await servico.alterar({ id: 2, status: TipoUsuarioStatusEnum.INATIVO }, ADMINISTRADOR_LOGADO);
+    await servico.alterar({ id: 2, ativo: false }, ADMINISTRADOR_LOGADO);
     assert.deepEqual(repositorio.chamadas, ['alterar']);
 });
 
@@ -88,23 +88,23 @@ test('alterar: administrador pode se rebaixar havendo outro administrador ativo'
 });
 
 test('alterar: administrador já inativo pode ser alterado mesmo sem outro administrador ativo', async () => {
-    const repositorio = criarRepositorioDeUsuarios({ ...ADMINISTRADOR_ATIVO, status: TipoUsuarioStatusEnum.INATIVO }, []);
+    const repositorio = criarRepositorioDeUsuarios({ ...ADMINISTRADOR_ATIVO, ativo: false }, []);
     const servico = criarServico(repositorio);
-    await servico.alterar({ id: 2, status: TipoUsuarioStatusEnum.INATIVO }, ADMINISTRADOR_LOGADO);
+    await servico.alterar({ id: 2, ativo: false }, ADMINISTRADOR_LOGADO);
     assert.deepEqual(repositorio.chamadas, ['alterar']);
 });
 
 test('alterar: editar o nome do único administrador não aciona a guarda', async () => {
     const repositorio = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [2]);
     const servico = criarServico(repositorio);
-    await servico.alterar({ id: 2, nomeCompleto: 'Novo Nome', status: TipoUsuarioStatusEnum.ATIVO }, ADMINISTRADOR_LOGADO);
+    await servico.alterar({ id: 2, nomeCompleto: 'Novo Nome', ativo: true }, ADMINISTRADOR_LOGADO);
     assert.deepEqual(repositorio.chamadas, ['alterar']);
 });
 
 test('alterar: gestor deixa de ser obrigatório — inativar o único gestor ativo é permitido', async () => {
     const repositorio = criarRepositorioDeUsuarios(GESTOR_ATIVO, [1]);
     const servico = criarServico(repositorio);
-    await servico.alterar({ id: 4, status: TipoUsuarioStatusEnum.INATIVO }, GESTOR_LOGADO);
+    await servico.alterar({ id: 4, ativo: false }, GESTOR_LOGADO);
     assert.deepEqual(repositorio.chamadas, ['alterar']);
 });
 
@@ -128,7 +128,7 @@ test('alterar: gestor também não pode se tornar auxiliar (é rebaixar), mas po
 test('alterar: inativar um desenvolvedor nunca depende de administradores', async () => {
     const repositorio = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, []);
     const servico = criarServico(repositorio);
-    await servico.alterar({ id: 3, status: TipoUsuarioStatusEnum.INATIVO }, GESTOR_LOGADO);
+    await servico.alterar({ id: 3, ativo: false }, GESTOR_LOGADO);
     assert.deepEqual(repositorio.chamadas, ['alterar']);
 });
 
@@ -238,7 +238,7 @@ test('alterar: repetir o próprio login não consulta nem recusa', async () => {
 });
 
 test('recuperarParaAtribuicao: auxiliar e gestor leem qualquer alvo; o desenvolvedor só a si mesmo; o perfil de outro segue fechado ao auxiliar', async () => {
-    const alvo = { id: 8, login: 'ana', nomeCompleto: 'Ana', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO, horasDiariasNecessarias: 8 };
+    const alvo = { id: 8, login: 'ana', nomeCompleto: 'Ana', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true, horasDiariasNecessarias: 8 };
     const servico = criarServico({ recuperar: async () => alvo });
     const auxiliar = { sub: 5, tipo: TipoUsuarioEnum.AUXILIAR } as never;
     const desenvolvedor = { sub: 3, tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;

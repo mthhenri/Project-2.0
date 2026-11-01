@@ -31,7 +31,7 @@ async function inserirLinha<T>(conexao: ConexaoTeste, sql: string, parametros: R
 
 type SobrescritaUsuario = Partial<{
     login: string; senhaEncriptada: string; nomeCompleto: string; cargoTitulo: string;
-    tipo: TipoUsuarioEnum; statusCodigo: string; horasDiariasNecessarias: number; dataBase: string;
+    tipo: TipoUsuarioEnum; ativo: boolean; horasDiariasNecessarias: number; dataBase: string;
 }>;
 
 export async function criarUsuario(conexao: ConexaoTeste, sobrescrita: SobrescritaUsuario = {}): Promise<UsuarioFabricado> {
@@ -42,7 +42,7 @@ export async function criarUsuario(conexao: ConexaoTeste, sobrescrita: Sobrescri
         nomeCompleto: `Usuário de Teste ${sufixo}`,
         cargoTitulo: 'Cargo de Teste',
         tipo: TipoUsuarioEnum.DESENVOLVEDOR,
-        statusCodigo: 'ATIVO',
+        ativo: true,
         horasDiariasNecessarias: 8,
         dataBase: DATA_BASE_TESTE,
         ...sobrescrita,
@@ -57,7 +57,7 @@ export async function criarUsuario(conexao: ConexaoTeste, sobrescrita: Sobrescri
                     cargo_titulo,
                     horas_diarias_necessarias,
                     tipo_usuario_id,
-                    tipo_usuario_status_id,
+                    ativo,
                     created_date,
                     updated_date,
                     is_deleted
@@ -76,14 +76,7 @@ export async function criarUsuario(conexao: ConexaoTeste, sobrescrita: Sobrescri
                     WHERE
                         tipo_usuario.codigo = :tipo
                 ),
-                (
-                    SELECT
-                        tipo_usuario_status.id
-                    FROM
-                        tipo_usuario_status
-                    WHERE
-                        tipo_usuario_status.codigo = :statusCodigo
-                ),
+                :ativo,
                 :dataBase::timestamptz,
                 :dataBase::timestamptz,
                 false

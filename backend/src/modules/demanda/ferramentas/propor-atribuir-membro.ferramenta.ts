@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProporAtribuirMembroDto, PropostaAtribuirMembroDadosDto, TipoPropostaIaEnum, TipoUsuarioStatusEnum, podeAtribuirMembroOuTag, podeSerMembroDeDemanda } from '@project20/shared';
+import { ProporAtribuirMembroDto, PropostaAtribuirMembroDadosDto, TipoPropostaIaEnum, podeAtribuirMembroOuTag, podeSerMembroDeDemanda } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { FerramentaPropostaIa } from '../../ferramenta-ia/ferramentas/ferramenta-proposta-ia';
@@ -49,7 +49,7 @@ export class ProporAtribuirMembroFerramenta extends FerramentaPropostaIa<ProporA
         if (!podeSerMembroDeDemanda(usuario.tipo)) {
             throw new BusinessException(`${usuario.nomeCompleto} é gestor: gestores têm acesso a todas as demandas por tipo e não são atribuídos como membros. Avise o usuário.`);
         }
-        if (usuario.status !== TipoUsuarioStatusEnum.ATIVO) throw new BusinessException(`${usuario.nomeCompleto} está inativo e não pode ser atribuído.`);
+        if (!usuario.ativo) throw new BusinessException(`${usuario.nomeCompleto} está inativo e não pode ser atribuído.`);
 
         const membros = (await this.demandaService.listarMembros({ id: entrada.demandaId }, usuarioAtivo)).dados ?? [];
         const ehMembro = membros.some((membro) => membro.usuarioId === usuarioId);

@@ -1,5 +1,5 @@
 import * as assert from 'node:assert/strict';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioEnum } from '@project20/shared';
 import { testarComBanco } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAdministrador, criarAuxiliar, criarDesenvolvedor, criarGestor, criarUsuario } from '../../../testes/fabricas';
@@ -31,13 +31,13 @@ testarComBanco('o índice único de login barra o segundo usuário ativo, mas ac
     assert.ok(novo.id > antigo.id);
 });
 
-testarComBanco('recuperar por id traz a senha encriptada e os códigos de tipo e status; por login também', async (conexao) => {
+testarComBanco('recuperar por id traz a senha encriptada e o código de tipo e o ativo; por login também', async (conexao) => {
     const repositorio = criarRepositorio(UsuarioRepository, conexao);
     const gestor = await criarGestor(conexao, { login: 'gestora.teste', senhaEncriptada: 'hash-da-gestora' });
     const porId = await repositorio.recuperar({ id: gestor.id });
     assert.equal(porId?.senhaEncriptada, 'hash-da-gestora');
     assert.equal(porId?.tipo, TipoUsuarioEnum.GESTOR);
-    assert.equal(porId?.status, TipoUsuarioStatusEnum.ATIVO);
+    assert.equal(porId?.ativo, true);
     assert.equal((await repositorio.recuperar({ login: 'gestora.teste' }))?.id, gestor.id);
 });
 
@@ -53,20 +53,20 @@ testarComBanco('o auxiliar é gravado e lido com o código AUXILIAR, e não entr
 
 testarComBanco('recuperar não devolve usuário excluído, mas devolve o inativo', async (conexao) => {
     const repositorio = criarRepositorio(UsuarioRepository, conexao);
-    const inativo = await criarDesenvolvedor(conexao, { statusCodigo: 'INATIVO' });
+    const inativo = await criarDesenvolvedor(conexao, { ativo: false });
     const excluido = await criarDesenvolvedor(conexao);
     await repositorio.excluir({ id: excluido.id });
 
-    assert.equal((await repositorio.recuperar({ id: inativo.id }))?.status, TipoUsuarioStatusEnum.INATIVO);
+    assert.equal((await repositorio.recuperar({ id: inativo.id }))?.ativo, false);
     assert.equal(await repositorio.recuperar({ id: excluido.id }), null);
 });
 
-testarComBanco('listar: só não excluídos, ordenados por nome, com filtros de tipo, status e busca; sem senha no resultado', async (conexao) => {
+testarComBanco('listar: só não excluídos, ordenados por nome, com filtros de tipo, ativo e busca; sem senha no resultado', async (conexao) => {
     const repositorio = criarRepositorio(UsuarioRepository, conexao);
     const marca = 'zzlistagem';
     await criarDesenvolvedor(conexao, { login: `${marca}.b`, nomeCompleto: `${marca} Beto` });
     await criarGestor(conexao, { login: `${marca}.a`, nomeCompleto: `${marca} Ana` });
-    await criarDesenvolvedor(conexao, { login: `${marca}.c`, nomeCompleto: `${marca} Caio`, statusCodigo: 'INATIVO' });
+    await criarDesenvolvedor(conexao, { login: `${marca}.c`, nomeCompleto: `${marca} Caio`, ativo: false });
     const excluido = await criarDesenvolvedor(conexao, { login: `${marca}.d`, nomeCompleto: `${marca} Duda` });
     await repositorio.excluir({ id: excluido.id });
 
@@ -78,7 +78,7 @@ testarComBanco('listar: só não excluídos, ordenados por nome, com filtros de 
     const soDesenvolvedores = await repositorio.listar({ busca: marca, tipo: TipoUsuarioEnum.DESENVOLVEDOR, allRows: true });
     assert.deepEqual(soDesenvolvedores.itens.map((item) => item.login), [`${marca}.b`, `${marca}.c`]);
 
-    const soAtivos = await repositorio.listar({ busca: marca, status: TipoUsuarioStatusEnum.ATIVO, allRows: true });
+    const soAtivos = await repositorio.listar({ busca: marca, ativo: true, allRows: true });
     assert.equal(soAtivos.total, 2);
 
     const porLogin = await repositorio.listar({ busca: `${marca}.a`, allRows: true });
@@ -129,10 +129,10 @@ testarComBanco('listar marca temAnotacoes só quando alguma seção do pad tem t
     assert.deepEqual(itens.map((item) => [item.login, item.temAnotacoes]), [[`${marca}.com`, true], [`${marca}.sem`, false]]);
 });
 
-testarComBanco('inserir cria o usuário ATIVO e as 5 seções do pad na mesma transação', async (conexao) => {
+testarComBanco('inserir cria o usuário ativo e as 5 seções do pad na mesma transação', async (conexao) => {
     const repositorio = criarRepositorio(UsuarioRepository, conexao);
     const criado = await repositorio.inserir(DADOS_INSERIR);
-    assert.equal(criado.status, TipoUsuarioStatusEnum.ATIVO);
+    assert.equal(criado.ativo, true);
     assert.equal(criado.tipo, TipoUsuarioEnum.DESENVOLVEDOR);
 
     const { rows: pad } = await conexao.raw(
@@ -169,14 +169,14 @@ testarComBanco('inserir é atômico: se a criação do pad falha, o usuário nã
     assert.equal(await criarRepositorio(UsuarioRepository, conexao).validarLogin({ login: 'atomico.falha' }), false, 'o usuário foi desfeito junto');
 });
 
-testarComBanco('alterar muda só o que veio, inclusive tipo e status por código, e devolve os códigos', async (conexao) => {
+testarComBanco('alterar muda só o que veio, inclusive tipo por código e ativo, e devolve o código do tipo', async (conexao) => {
     const repositorio = criarRepositorio(UsuarioRepository, conexao);
     const usuario = await criarDesenvolvedor(conexao, { nomeCompleto: 'Nome Antigo', cargoTitulo: 'Cargo Antigo' });
-    const alterado = await repositorio.alterar({ id: usuario.id, nomeCompleto: 'Nome Novo', tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.INATIVO });
+    const alterado = await repositorio.alterar({ id: usuario.id, nomeCompleto: 'Nome Novo', tipo: TipoUsuarioEnum.GESTOR, ativo: false });
     assert.equal(alterado.nomeCompleto, 'Nome Novo');
     assert.equal(alterado.cargoTitulo, 'Cargo Antigo');
     assert.equal(alterado.tipo, TipoUsuarioEnum.GESTOR);
-    assert.equal(alterado.status, TipoUsuarioStatusEnum.INATIVO);
+    assert.equal(alterado.ativo, false);
 });
 
 testarComBanco('alterarSenha grava só a senha encriptada', async (conexao) => {
@@ -228,7 +228,7 @@ testarComBanco('listarAdministradoresAtivos conta só administradores ativos e n
     const antes = (await repositorio.listarAdministradoresAtivos()).length;
 
     const ativo = await criarAdministrador(conexao);
-    const inativo = await criarAdministrador(conexao, { statusCodigo: 'INATIVO' });
+    const inativo = await criarAdministrador(conexao, { ativo: false });
     const excluido = await criarAdministrador(conexao);
     await repositorio.excluir({ id: excluido.id });
     await criarGestor(conexao);
@@ -246,7 +246,7 @@ testarComBanco('listarAtivosComMeta devolve só ativos não excluídos, ordenado
     const marca = 'zzmeta';
     const usuarioFabricadoAtual = await criarUsuario(conexao, { login: `${marca}.b`, nomeCompleto: `${marca} B`, horasDiariasNecessarias: 6 });
     const usuarioFabricado = await criarUsuario(conexao, { login: `${marca}.a`, nomeCompleto: `${marca} A`, horasDiariasNecessarias: 8 });
-    await criarUsuario(conexao, { login: `${marca}.i`, nomeCompleto: `${marca} I`, statusCodigo: 'INATIVO' });
+    await criarUsuario(conexao, { login: `${marca}.i`, nomeCompleto: `${marca} I`, ativo: false });
 
     const meus = (await repositorio.listarAtivosComMeta()).filter((linha) => linha.nomeCompleto.startsWith(marca));
     assert.deepEqual(meus.map((linha) => [linha.id, linha.horasDiariasNecessarias]), [[usuarioFabricado.id, 8], [usuarioFabricadoAtual.id, 6]]);
@@ -307,7 +307,7 @@ testarComBanco('listarAtivos: só os ativos e não excluídos, com nome e tipo, 
     const repositorio = criarRepositorio(UsuarioRepository, conexao);
     const dev = await criarDesenvolvedor(conexao, { nomeCompleto: 'AAA Ativo Dev' });
     const gestor = await criarGestor(conexao, { nomeCompleto: 'AAB Ativo Gestor' });
-    await criarUsuario(conexao, { nomeCompleto: 'AAC Inativo', statusCodigo: 'INATIVO' });
+    await criarUsuario(conexao, { nomeCompleto: 'AAC Inativo', ativo: false });
     const removido = await criarDesenvolvedor(conexao, { nomeCompleto: 'AAD Removido' });
     await repositorio.excluir({ id: removido.id });
 
