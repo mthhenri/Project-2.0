@@ -85,7 +85,7 @@
     @if (visivel(no)) {
         <li
             role="treeitem"
-            aria-selected="false"
+            [attr.aria-selected]="no.tipo !== 'projeto' && no.demanda.id === escolhidaId()"
             [attr.aria-expanded]="no.filhos.length ? aberto(no) : null"
         >
             @if (no.tipo === "projeto") {
