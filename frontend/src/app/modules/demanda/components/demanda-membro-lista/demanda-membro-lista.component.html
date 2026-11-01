@@ -90,8 +90,9 @@
 >
     <form [formGroup]="formularioMembro" class="demanda-membro-lista__form">
         <div class="demanda-membro-lista__form-campo">
-            <label>Usuários</label>
+            <label for="membros-usuarios">Usuários</label>
             <p-multiselect
+                inputId="membros-usuarios"
                 formControlName="usuarioIds"
                 [options]="usuariosDisponiveis()"
                 optionLabel="nomeCompleto"

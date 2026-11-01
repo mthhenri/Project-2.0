@@ -11,6 +11,8 @@
         [class.demanda-arvore-item__linha--foco]="focoId === arvoreItem.id"
         [attr.id]="'demanda-item-' + arvoreItem.id"
         role="treeitem"
+        tabindex="-1"
+        (keydown.enter)="selecionar()"
         [attr.aria-expanded]="arvoreItem.filhos.length ? expandido : null"
         [attr.aria-selected]="focoId === arvoreItem.id"
         (click)="selecionar()"

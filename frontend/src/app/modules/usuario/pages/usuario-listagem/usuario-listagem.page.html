@@ -118,8 +118,12 @@
                         />
                     </td>
                     <td class="usuario-listagem__coluna-status">
-                        <label class="usuario-listagem__status">
+                        <label
+                            [for]="'usuario-status-' + usuario.id"
+                            class="usuario-listagem__status"
+                        >
                             <p-toggleswitch
+                                [inputId]="'usuario-status-' + usuario.id"
                                 [ngModel]="usuario.status === 'ATIVO'"
                                 (ngModelChange)="alternarStatus(usuario, $event)"
                                 [disabled]="!podeGerenciar(usuario) || !eOutraPessoa(usuario)"

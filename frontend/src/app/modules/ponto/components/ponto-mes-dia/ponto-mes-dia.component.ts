@@ -164,6 +164,13 @@ export class PontoMesDiaComponent {
         return formatarSaldoMinutos(saldoMinutos);
     }
 
+    /** Enter e espaço só valem quando o foco está na própria linha (não num botão ou chip dentro dela). */
+    alternarPeloTeclado(evento: Event): void {
+        if (evento.target !== evento.currentTarget) return;
+        evento.preventDefault();
+        this.alternar();
+    }
+
     alternar(): void {
         if (!this.temRegistro) return;
         const proximo = !this.expandido();

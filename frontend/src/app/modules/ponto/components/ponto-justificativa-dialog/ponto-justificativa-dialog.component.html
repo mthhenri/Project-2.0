@@ -14,8 +14,11 @@
     <form [formGroup]="formulario" class="ponto-justificativa-dialog__form">
         <div class="ponto-justificativa-dialog__linha">
             <div class="ponto-justificativa-dialog__campo">
-                <label class="ponto-justificativa-dialog__label">Dia *</label>
+                <label for="justificativa-dia" class="ponto-justificativa-dialog__label"
+                    >Dia *</label
+                >
                 <p-datepicker
+                    inputId="justificativa-dia"
                     formControlName="diaData"
                     dateFormat="dd/mm/yy"
                     [minDate]="dataMinima()!"
@@ -33,8 +36,11 @@
             </div>
 
             <div class="ponto-justificativa-dialog__campo">
-                <label class="ponto-justificativa-dialog__label">Horas cobertas *</label>
+                <label for="justificativa-horas" class="ponto-justificativa-dialog__label"
+                    >Horas cobertas *</label
+                >
                 <p-inputnumber
+                    inputId="justificativa-horas"
                     formControlName="horasCobertas"
                     [min]="0"
                     [max]="maximoHoras()"
@@ -66,8 +72,11 @@
         </div>
 
         <div class="ponto-justificativa-dialog__campo">
-            <label class="ponto-justificativa-dialog__label">Título *</label>
+            <label for="justificativa-titulo" class="ponto-justificativa-dialog__label"
+                >Título *</label
+            >
             <input
+                id="justificativa-titulo"
                 pInputText
                 type="text"
                 formControlName="nome"
@@ -81,8 +90,11 @@
         </div>
 
         <div class="ponto-justificativa-dialog__campo">
-            <label class="ponto-justificativa-dialog__label">Motivo *</label>
+            <label for="justificativa-motivo" class="ponto-justificativa-dialog__label"
+                >Motivo *</label
+            >
             <textarea
+                id="justificativa-motivo"
                 pTextarea
                 spellcheck="true"
                 formControlName="descricao"

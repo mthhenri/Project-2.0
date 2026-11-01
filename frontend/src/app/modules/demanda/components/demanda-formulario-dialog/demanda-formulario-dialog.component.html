@@ -59,8 +59,9 @@
             </div>
 
             <div class="demanda-dialog__campo demanda-dialog__campo--full">
-                <label class="demanda-dialog__label">Demanda pai</label>
+                <label for="demanda-pai" class="demanda-dialog__label">Demanda pai</label>
                 <p-select
+                    inputId="demanda-pai"
                     formControlName="demandaPaiId"
                     [options]="demandasPaiOpcoes()"
                     optionLabel="caminho"
@@ -79,11 +80,12 @@
             @if (!ocultaEstimativa) {
                 <div class="demanda-dialog__linha">
                     <div class="demanda-dialog__campo demanda-dialog__campo--horas">
-                        <label class="demanda-dialog__label">
+                        <label for="demanda-estimativa" class="demanda-dialog__label">
                             {{ unidadeTempo.emDias() ? "Estimativa (dias)" : "Estimativa (horas)" }}
                             <span class="demanda-dialog__obrigatorio">*</span>
                         </label>
                         <p-inputnumber
+                            inputId="demanda-estimativa"
                             formControlName="horasEstimadas"
                             [min]="0"
                             [step]="unidadeTempo.emDias() ? 0.5 : 1"
@@ -97,8 +99,11 @@
                     </div>
 
                     <div class="demanda-dialog__campo demanda-dialog__campo--previsao">
-                        <label class="demanda-dialog__label">Previsão de término</label>
+                        <label for="demanda-previsao" class="demanda-dialog__label"
+                            >Previsão de término</label
+                        >
                         <p-datepicker
+                            inputId="demanda-previsao"
                             formControlName="previsaoFimData"
                             dateFormat="dd/mm/yy"
                             [showIcon]="true"
@@ -168,10 +173,11 @@
             @if (maisOpcoesAbertas()) {
                 <div class="demanda-dialog__mais-opcoes-corpo">
                     <div class="demanda-dialog__campo demanda-dialog__campo--full">
-                        <label class="demanda-dialog__label"
+                        <label for="demanda-status" class="demanda-dialog__label"
                             >Status <span class="demanda-dialog__obrigatorio">*</span></label
                         >
                         <p-select
+                            inputId="demanda-status"
                             formControlName="status"
                             [options]="statusOpcoes"
                             optionLabel="label"
@@ -183,8 +189,11 @@
 
                     @if (sessao.eGestor()) {
                         <div class="demanda-dialog__campo demanda-dialog__campo--full">
-                            <label class="demanda-dialog__label">Membros</label>
+                            <label for="demanda-membros" class="demanda-dialog__label"
+                                >Membros</label
+                            >
                             <p-multiselect
+                                inputId="demanda-membros"
                                 formControlName="usuarioIds"
                                 [options]="usuariosDisponiveis()"
                                 optionLabel="nomeCompleto"
@@ -199,7 +208,7 @@
                     }
 
                     <div class="demanda-dialog__campo demanda-dialog__campo--full">
-                        <label class="demanda-dialog__label">Tags</label>
+                        <span class="demanda-dialog__label">Tags</span>
                         @if (carregandoTags()) {
                             <i class="pi pi-spin pi-spinner text-muted-color"></i>
                         } @else {

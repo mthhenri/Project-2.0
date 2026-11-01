@@ -77,6 +77,7 @@
                     <ng-template pTemplate="date" let-date>
                         @let marcado = diaMarcado(date.year, date.month + 1, date.day);
                         <span
+                            role="presentation"
                             class="calendario-listagem__dia-celula"
                             [class.calendario-listagem__dia-celula--vazia]="!marcado && eGestor()"
                             (click)="aoClicarDia($event, date)"
@@ -309,10 +310,11 @@
 >
     <form [formGroup]="formulario" class="calendario-listagem__dialog-form">
         <div class="calendario-listagem__dialog-campo">
-            <label class="calendario-listagem__label">
+            <label for="calendario-dia" class="calendario-listagem__label">
                 Data <span class="calendario-listagem__obrigatorio">*</span>
             </label>
             <p-datepicker
+                inputId="calendario-dia"
                 formControlName="diaData"
                 dateFormat="dd/mm/yy"
                 appendTo="body"
@@ -338,10 +340,11 @@
         </div>
 
         <div class="calendario-listagem__dialog-campo">
-            <label class="calendario-listagem__label">
+            <label for="calendario-descricao" class="calendario-listagem__label">
                 Descrição <span class="calendario-listagem__obrigatorio">*</span>
             </label>
             <input
+                id="calendario-descricao"
                 pInputText
                 spellcheck="true"
                 formControlName="descricao"
@@ -355,10 +358,11 @@
 
         <div class="calendario-listagem__dialog-linha">
             <div class="calendario-listagem__dialog-campo">
-                <label class="calendario-listagem__label">
+                <label for="calendario-tipo" class="calendario-listagem__label">
                     Tipo <span class="calendario-listagem__obrigatorio">*</span>
                 </label>
                 <p-select
+                    inputId="calendario-tipo"
                     formControlName="tipo"
                     [options]="tipoOpcoes"
                     optionLabel="label"
@@ -369,10 +373,11 @@
             </div>
 
             <div class="calendario-listagem__dialog-campo">
-                <label class="calendario-listagem__label">
+                <label for="calendario-duracao" class="calendario-listagem__label">
                     Duração <span class="calendario-listagem__obrigatorio">*</span>
                 </label>
                 <p-select
+                    inputId="calendario-duracao"
                     formControlName="duracao"
                     [options]="duracaoOpcoes"
                     optionLabel="label"

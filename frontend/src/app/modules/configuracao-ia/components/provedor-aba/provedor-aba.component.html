@@ -16,6 +16,7 @@
             @for (cartao of cartoes(); track cartao.posicao) {
                 @if (cartao.provedor; as provedor) {
                     <div
+                        role="presentation"
                         class="provedor-aba__cartao"
                         [class.provedor-aba__cartao--aberto]="posicaoAberta() === cartao.posicao"
                         [class.provedor-aba__cartao--erro]="temErro(provedor)"

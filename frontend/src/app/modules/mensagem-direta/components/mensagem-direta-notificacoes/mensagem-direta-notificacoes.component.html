@@ -14,25 +14,33 @@
     <div class="menu-notificacoes">
         <p class="menu-notificacoes__titulo">Notificações</p>
 
-        <label class="menu-notificacoes__linha">
+        <label for="notificacao-avisos" class="menu-notificacoes__linha">
             <span class="menu-notificacoes__texto">
                 <span class="menu-notificacoes__rotulo">Avisos de mensagem</span>
                 <span class="menu-notificacoes__detalhe">Popup dentro do Project</span>
             </span>
-            <p-toggleswitch [formControl]="controleAvisos" ariaLabel="Avisos de mensagem" />
+            <p-toggleswitch
+                inputId="notificacao-avisos"
+                [formControl]="controleAvisos"
+                ariaLabel="Avisos de mensagem"
+            />
         </label>
-        <label class="menu-notificacoes__linha">
+        <label for="notificacao-desktop" class="menu-notificacoes__linha">
             <span class="menu-notificacoes__texto">
                 <span class="menu-notificacoes__rotulo">Aviso no Project Desktop</span>
                 <span class="menu-notificacoes__detalhe">Também com o app minimizado</span>
             </span>
-            <p-toggleswitch [formControl]="controleDesktop" ariaLabel="Aviso no Project Desktop" />
+            <p-toggleswitch
+                inputId="notificacao-desktop"
+                [formControl]="controleDesktop"
+                ariaLabel="Aviso no Project Desktop"
+            />
         </label>
-        <label class="menu-notificacoes__linha">
+        <label for="notificacao-som" class="menu-notificacoes__linha">
             <span class="menu-notificacoes__texto">
                 <span class="menu-notificacoes__rotulo">Som</span>
             </span>
-            <p-toggleswitch [formControl]="controleSom" ariaLabel="Som" />
+            <p-toggleswitch inputId="notificacao-som" [formControl]="controleSom" ariaLabel="Som" />
         </label>
 
         @if (noDesktop) {

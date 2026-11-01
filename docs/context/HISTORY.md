@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-11-01 — Fecho dos pontos em aberto da 297–299: acessibilidade de template, tipo do shared e formatador de SQL
+
+Resolvidos os dois problemas que a 297–299 deixou (`PROBLEMS.md` P-066 e P-067, removidos). **P-067:** as listas de `proposta-nivel.test.ts` agora são `ChaveDeNivelDaProposta[]` e o `tsc` do shared fica limpo. **P-066:** religadas `label-has-associated-control`, `click-events-have-key-events` e `interactive-supports-focus`; 33 labels ganharam `for` + `inputId`/`id` (ou viraram `<span>` quando não rotulam campo: Tags e Cor), a linha do dia do Ponto virou botão com Enter/Espaço (só quando o foco está nela; teste novo), o item da Árvore e o chevron das pastas ganharam `tabindex="-1"` e Enter, e os atalhos só de mouse ou de delegação de tecla (cartões, células de calendário, wrappers) levam `role="presentation"` ou `group`. `no-inline-styles` segue desligada (falso positivo do `[style]` do `p-dialog`) e foi trocada por `scripts/verificar-estilo-inline.mjs`, com teste, dentro de `lint:templates`. **Formatador de SQL:** `tokensSql` passou a ler `:x:` e `??` como um token só e o fragmento devolvido por ternário, parênteses, `??` ou `||` também fica numa linha (teste novo).
+
+**Estados de erro e carregamento (ao vivo, 2026-11-01):** carregamento com resposta atrasada em 8 s mostra o esqueleto em Usuários; com erro forçado em Usuários, Tags, Projetos, Calendário, Atividades e Demandas nenhuma tela quebra o layout, mas várias trocam o erro pelo estado vazio ("Nenhum projeto ainda"): `PROBLEMS.md` P-068. Verificado: `lint:tudo` limpo, `tsc` limpo nos quatro workspaces, frontend 2396 testes, shared 298, `repo:test` com os testes novos.
+
 ## 2026-11-01 — 297–299 Lint e padronização integral: concluído
 
 Lint e padrão aplicados a **todo** o código (decisão do autor), com a verificação rodando no CI. Entregue: ESLint 10 (`eslint.config.mjs`, quatro espaços, regras próprias `separate-component-files` e `descriptive-identifiers` em `scripts/eslint/regras.mjs` com `regras.test.mjs`), Stylelint, Prettier só em HTML/SCSS (`.prettierignore` tira o diagrama SVG da Modelagem), `scripts/formatar-sql.mjs` (+ `--check`, tokens preservados) e os comandos `lint`, `lint:estilos`, `lint:templates`, `lint:sql`, `lint:tudo` e `formatar`; passo "Lint e padrão do código" no `ci.yml`. 144 componentes agora têm TS, HTML e SCSS separados; SQL de repositories, infraestrutura, scripts e testes formatado (migrations intocadas).

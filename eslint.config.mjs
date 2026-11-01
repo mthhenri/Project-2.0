@@ -52,12 +52,9 @@ export default tseslint.config(
         extends: [...angular.configs.templateRecommended, ...angular.configs.templateAccessibility],
         rules: {
             '@angular-eslint/template/eqeqeq': ['error', { allowNullOrUndefined: true }],
-            // `[style]="{ width: '40rem' }"` num p-dialog é o input do componente PrimeNG, não o atributo HTML: a regra não os distingue.
+            // `[style]="{ width: '40rem' }"` num p-dialog é o input do componente PrimeNG, não o atributo HTML, e a regra não os distingue:
+            // o atributo literal `style="..."` é conferido por `scripts/verificar-estilo-inline.mjs` (npm run lint:templates).
             '@angular-eslint/template/no-inline-styles': 'off',
-            // Acessibilidade de teclado e rótulo em controles PrimeNG muda comportamento e foco: fica para uma task própria (PROBLEMS.md P-066).
-            '@angular-eslint/template/label-has-associated-control': 'off',
-            '@angular-eslint/template/click-events-have-key-events': 'off',
-            '@angular-eslint/template/interactive-supports-focus': 'off',
         },
     },
 );

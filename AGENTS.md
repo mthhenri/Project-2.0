@@ -285,7 +285,7 @@ npm run impacto -- <arquivo>               # consumidores antes de alterar algo 
 Testes ficam ao lado do código, em `*.test.ts`, com `node:test` e `node:assert/strict` (sem Jest) em
 `shared`, `backend` e `desktop`; o `frontend` usa Vitest pelo `ng test` (`*.test.ts` para lógica pura,
 `*.spec.ts` para componente; `docs/CONVENTIONS.md` "Testes de componente"). O lint é da raiz e cobre os
-quatro workspaces (`npm run lint:tudo`; lacunas conhecidas em `PROBLEMS.md` P-066). `npm run test:cobertura` mede a cobertura (sem gate). Variáveis de ambiente:
+quatro workspaces (`npm run lint:tudo`). `npm run test:cobertura` mede a cobertura (sem gate). Variáveis de ambiente:
 `.env.example` e `README.md`. Para verificação manual da aplicação real, consulte
 `.agents/skills/verify/SKILL.md`; build não a substitui quando a tarefa exige observar o app.
 

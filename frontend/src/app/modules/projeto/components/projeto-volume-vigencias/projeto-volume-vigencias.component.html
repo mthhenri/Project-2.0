@@ -41,9 +41,10 @@
         />
     }
     <div [formGroup]="formulario" class="volume-vigencias__campos">
-        <label
+        <label for="volume-mes"
             >Alterar a partir de
             <p-datepicker
+                inputId="volume-mes"
                 formControlName="mes"
                 view="month"
                 dateFormat="mm/yy"
@@ -52,9 +53,10 @@
                 ariaLabel="Mês de início da vigência"
             />
         </label>
-        <label
+        <label for="volume-definicao"
             >Volume
             <p-select
+                inputId="volume-definicao"
                 formControlName="semVolume"
                 [options]="opcoes"
                 optionLabel="rotulo"
@@ -64,9 +66,10 @@
             />
         </label>
         @if (!formulario.controls.semVolume.value) {
-            <label
+            <label for="volume-horas"
                 >Horas por mês
                 <p-inputnumber
+                    inputId="volume-horas"
                     formControlName="horas"
                     [min]="0"
                     [max]="limite"

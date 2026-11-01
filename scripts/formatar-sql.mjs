@@ -20,11 +20,26 @@ const opcoes = {
 /** Tokens exatos: ignora apenas espaços fora de literais, identificadores e comentários. */
 export function tokensSql(sql) {
     const tokens = [];
-    const padrao = /\s+|--[^\r\n]*|\/\*[\s\S]*?\*\/|'(?:''|\\[\s\S]|[^'])*'|"(?:""|[^"])*"|\$([a-zA-Z_][\w]*)?\$[\s\S]*?\$\1\$|:[a-zA-Z_][\w]*|[a-zA-Z_][\w$]*|\d+(?:\.\d+)?|::|>=|<=|<>|!=|\|\||@@|->>|->|[\s\S]/g;
+    const padrao = /\s+|--[^\r\n]*|\/\*[\s\S]*?\*\/|'(?:''|\\[\s\S]|[^'])*'|"(?:""|[^"])*"|\$([a-zA-Z_][\w]*)?\$[\s\S]*?\$\1\$|:[a-zA-Z_][\w]*:(?!:)|:[a-zA-Z_][\w]*|\?\?|[a-zA-Z_][\w$]*|\d+(?:\.\d+)?|::|>=|<=|<>|!=|\|\||@@|->>|->|[\s\S]/g;
     for (const token of sql.matchAll(padrao)) {
         if (!/^\s+$/.test(token[0])) tokens.push(token[0]);
     }
     return tokens;
+}
+
+// O literal é o valor devolvido por um `return`, direto ou por ternário, parênteses, `??` ou `||`.
+function ehValorRetornado(no) {
+    let atual = no;
+    while (atual.parent) {
+        const pai = atual.parent;
+        if (ts.isReturnStatement(pai)) return true;
+        const transparente = ts.isParenthesizedExpression(pai)
+            || (ts.isConditionalExpression(pai) && pai.condition !== atual)
+            || (ts.isBinaryExpression(pai) && [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(pai.operatorToken.kind));
+        if (!transparente) return false;
+        atual = pai;
+    }
+    return false;
 }
 
 function contextoDoLiteral(no, arquivo) {
@@ -80,7 +95,7 @@ function formatarPassagem(conteudo, caminho) {
 
         const contexto = contextoDoLiteral(no, arquivo);
         // Fragmento devolvido por um método (ex.: `LIMIT ${n} OFFSET ${m}`) é um valor comparado por chamadores e testes: não se reformata.
-        if (ts.isReturnStatement(no.parent) && !contexto) return original;
+        if (!contexto && ehValorRetornado(no)) return original;
         // SQL como dado de um teste (parser, prompt, fixture) não é uma consulta executada.
         if (/\.(?:test|spec)\.ts$/.test(caminho) && !/(?:executarConsulta|executarComando|\.raw|\.query)$/.test(contexto)) return original;
         const interpolacoes = [];

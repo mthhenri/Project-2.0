@@ -493,7 +493,7 @@ Um comando só confere tudo: `npm run lint:tudo` (zero erros; nunca desligue reg
 |---|---|
 | `npm run lint` | ESLint em TS, JS e templates (`eslint.config.mjs`): quatro espaços, ponto e vírgula, `no-explicit-any` (liberado só em dublê de teste), variável não usada (`_` à frente quando for de propósito), selector com prefixo `app` |
 | `npm run lint:estilos` | Stylelint nos `.scss` do frontend |
-| `npm run lint:templates` | Prettier `--check` em HTML e SCSS do frontend |
+| `npm run lint:templates` | Prettier `--check` em HTML e SCSS do frontend e `style="..."` literal nos templates |
 | `npm run lint:sql` | `scripts/formatar-sql.mjs --check`: SQL dos repositories e scripts, nunca migration |
 | `npm run formatar` | aplica Prettier (HTML/SCSS) e o formatador de SQL |
 
@@ -501,7 +501,7 @@ Um comando só confere tudo: `npm run lint:tudo` (zero erros; nunca desligue reg
 - **Regras próprias** (`scripts/eslint/regras.mjs`, testadas em `regras.test.mjs`): `separate-component-files` (todo componente com `templateUrl` e `styleUrl` em arquivos `.html` e `.scss` que existam, inclusive host de teste) e `descriptive-identifiers` (sem `a`, `b`, `e`, `r`, `req`, `ctx`... como variável, parâmetro ou `catch`).
 - **SQL formatado é texto**: o formatador preserva os tokens, mas não reformata fragmento devolvido por método (`LIMIT`/`ORDER BY`) nem `LISTEN`, porque testes e `pg_stat_activity` os comparam por texto. SQL que um teste compara por igualdade fica numa linha.
 - Template com texto sensível a espaço (`<text>` de SVG) sai do Prettier por `.prettierignore`; HTML novo com SVG precisa do mesmo cuidado.
-- Acessibilidade de template: regras desligadas ainda em aberto em `PROBLEMS.md` P-066.
+- **Templates:** `label` sempre associado a um controle (`for` + `id`, ou `inputId` nos componentes PrimeNG; texto que não rotula nenhum campo é `<span>`); clique em elemento não nativo precisa de teclado e foco (`role`, `tabindex`, `keydown.enter`) ou, quando é só atalho de mouse com equivalente por teclado, `role="presentation"`. O atributo literal `style="..."` é barrado por `scripts/verificar-estilo-inline.mjs` (o `[style]` do `p-dialog` é permitido).
 
 ## Proibições — Resumo Rápido
 

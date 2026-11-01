@@ -5,6 +5,7 @@ import { TipoAnotacaoEnum } from '../enums/tipo-anotacao.enum';
 import { TipoAtividadeStatusEnum } from '../enums/tipo-atividade-status.enum';
 import { TipoPropostaIaEnum } from '../enums/tipo-proposta-ia.enum';
 import {
+    ChaveDeNivelDaProposta,
     CHAVES_CONFIGURAVEIS_DE_NIVEL,
     ehEmNomeDeOutraPessoa,
     nivelDaProposta,
@@ -35,7 +36,7 @@ test('os fixos são os que mexem em horas, em ponto, em projeto ou no texto do p
 });
 
 test('o padrão segue a tabela de níveis da guarda-chuva', () => {
-    const fazEAvisa = [
+    const fazEAvisa: ChaveDeNivelDaProposta[] = [
         TipoPropostaIaEnum.ANOTAR_PAD,
         TipoPropostaIaEnum.ATRIBUIR_TAG,
         TipoPropostaIaEnum.DESCREVER_EXECUCAO,
@@ -46,7 +47,7 @@ test('o padrão segue a tabela de níveis da guarda-chuva', () => {
         TipoPropostaIaEnum.PAUSAR_EXECUCAO,
         REGRA_MARCAR_ATIVIDADE_DESENVOLVIDA,
     ];
-    const pergunta = [
+    const pergunta: ChaveDeNivelDaProposta[] = [
         TipoPropostaIaEnum.ALTERAR_ATIVIDADE,
         TipoPropostaIaEnum.CRIAR_DEMANDA,
         TipoPropostaIaEnum.ALTERAR_DEMANDA,

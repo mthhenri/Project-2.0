@@ -1,5 +1,5 @@
 @if (editando() && tipo() !== "cor") {
-    <span class="campo-editavel__editor" (keydown.escape)="descartar()">
+    <span role="presentation" class="campo-editavel__editor" (keydown.escape)="descartar()">
         @switch (tipo()) {
             @case ("texto") {
                 <input
@@ -79,7 +79,7 @@
 @if (tipo() === "cor") {
     <!-- A paleta abre num popover ancorado no selo (como a de Tags), em vez de se espalhar pelo cabeçalho. -->
     <p-popover #popoverCor (onHide)="aoFecharPopover()">
-        <div class="campo-editavel__popover-cor" (keydown.escape)="descartar()">
+        <div role="presentation" class="campo-editavel__popover-cor" (keydown.escape)="descartar()">
             <app-seletor-cor [formControl]="rascunhoCor" [compacto]="true" />
             <div class="campo-editavel__rodape-cor">
                 <p-button

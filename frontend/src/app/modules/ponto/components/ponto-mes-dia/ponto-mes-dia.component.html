@@ -4,7 +4,15 @@
     [class.ponto-mes-dia--clicavel]="temRegistro"
     [class.ponto-mes-dia--hoje]="ehHoje"
 >
-    <div class="ponto-mes-dia__linha" (click)="alternar()">
+    <div
+        class="ponto-mes-dia__linha"
+        [attr.role]="temRegistro ? 'button' : null"
+        [attr.tabindex]="temRegistro ? 0 : null"
+        [attr.aria-expanded]="temRegistro ? expandido() : null"
+        (click)="alternar()"
+        (keydown.enter)="alternarPeloTeclado($event)"
+        (keydown.space)="alternarPeloTeclado($event)"
+    >
         <span class="ponto-mes-dia__data">
             <span class="ponto-mes-dia__semana">{{ abreviacao() }}</span>
             <span class="ponto-mes-dia__numero">{{ numero() }}</span>

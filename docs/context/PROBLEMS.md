@@ -29,20 +29,13 @@
 
 ## Ativos
 
-### P-066 — Regras de acessibilidade dos templates desligadas · `ABERTO` · frontend
+### P-068 — Falha ao carregar lista aparece como lista vazia · `ABERTO` · frontend
 
-- **Sintoma:** o ESLint de templates roda com `angular-eslint` (recomendado + acessibilidade), mas quatro regras estão desligadas em `eslint.config.mjs`: `label-has-associated-control` (33 achados), `click-events-have-key-events` e `interactive-supports-focus` (16, linhas e cartões clicáveis sem teclado nem foco) e `no-inline-styles` (22, falso positivo: `[style]="{ width: '40rem' }"` num `p-dialog` é o input do PrimeNG, não o atributo HTML).
-- **Causa:** corrigir exige associar rótulos a controles PrimeNG (`for`/`inputId`), dar `tabindex`, `role` e tratamento de teclado a linhas clicáveis; isso muda foco e comportamento e não cabe numa limpeza de padrão.
-- **Contorno:** as três primeiras regras ficam desligadas com comentário no config; o atributo literal `style="..."` segue proibido por convenção (`CONVENTIONS.md` "Estilos") e conferido na revisão.
-- **Correção:** task própria de acessibilidade: tratar os 49 pontos, religar as três regras e trocar o `no-inline-styles` por uma checagem que só pegue o atributo `style` literal.
-- **Desde:** 2026-11-01 (task 297).
-
-### P-067 — `shared/src/utils/proposta-nivel.test.ts` não passa no `tsc` · `ABERTO` · shared
-
-- **Sintoma:** `npx tsc --noEmit -p shared/tsconfig.json` acusa TS2345 na linha 60 (`chave` é `string`, a função pede `ChaveDeNivelDaProposta`); o teste passa em execução porque o runner não confere tipos.
-- **Causa:** as listas `fazEAvisa` e `pergunta` são inferidas como `string[]`; já era assim antes da task 297 (o arquivo só mudou de indentação).
-- **Correção:** tipar as listas como `ChaveDeNivelDaProposta[]`.
-- **Desde:** 2026-11-01.
+- **Sintoma:** com a API respondendo erro (simulado no navegador trocando a rota por uma inexistente), Projetos mostra "Nenhum projeto ainda. Criar o primeiro projeto" e Tags mostra "Nenhuma tag ainda", além do aviso de erro; Demandas mostra "Selecione um projeto". A tela some com o erro e oferece o caminho de quem não tem dados.
+- **Causa:** as listas partem de um sinal vazio e só o interceptor mostra o erro; nenhuma tela guarda o estado "falhou ao carregar" para trocar o vazio por uma mensagem com "Tentar de novo".
+- **Contorno:** o aviso de erro (toast) aparece e recarregar a página resolve.
+- **Correção:** um estado de erro nas listas principais (Projetos, Tags, Usuários, Atividades, Calendário, Demandas), com mensagem e botão de nova tentativa, reaproveitando o padrão de uma tela que já tenha isso.
+- **Desde:** 2026-11-01 (visto na verificação dos estados de erro da task 297).
 
 ### P-064 — Chat IA sem feedback ao criar ou trocar conversas e planos · `ABERTO` · frontend/chat
 

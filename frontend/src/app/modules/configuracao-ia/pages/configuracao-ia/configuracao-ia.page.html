@@ -21,9 +21,10 @@
                         class="configuracao-ia__estado"
                     />
                 }
-                <label class="configuracao-ia__interruptor">
+                <label for="configuracao-ia-ligada" class="configuracao-ia__interruptor">
                     <!-- O dado gravado segue sendo `iaDesligada`; o interruptor mostra o contrário (aceso = IA ligada). -->
                     <p-toggleswitch
+                        inputId="configuracao-ia-ligada"
                         [formControl]="formulario.controls.iaDesligada"
                         [trueValue]="false"
                         [falseValue]="true"

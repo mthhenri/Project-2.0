@@ -86,10 +86,10 @@
             </div>
 
             <div class="projeto-formulario-dialog__campo">
-                <label class="projeto-formulario-dialog__label">
+                <span class="projeto-formulario-dialog__label">
                     Cor de identificação
                     <span class="projeto-formulario-dialog__obrigatorio">*</span>
-                </label>
+                </span>
                 <app-seletor-cor formControlName="cor" [compacto]="true" />
                 @if (campoInvalido("cor")) {
                     <small class="projeto-formulario-dialog__erro"

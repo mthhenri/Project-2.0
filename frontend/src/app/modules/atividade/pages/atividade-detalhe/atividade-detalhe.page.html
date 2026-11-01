@@ -39,12 +39,13 @@
             </div>
 
             <div class="atividade-detalhe__status-inline">
-                <label class="atividade-detalhe__status-label">Status</label>
+                <label for="atividade-status" class="atividade-detalhe__status-label">Status</label>
                 <span
                     [pTooltip]="execucaoAberta() ? 'Encerre a execução para trocar o status' : ''"
                     tooltipPosition="left"
                 >
                     <p-select
+                        inputId="atividade-status"
                         [formControl]="formularioStatus.controls.status"
                         [options]="statusOpcoes"
                         optionLabel="label"
@@ -56,8 +57,11 @@
             </div>
 
             <div class="atividade-detalhe__status-inline">
-                <label class="atividade-detalhe__status-label">Prioridade</label>
+                <label for="atividade-prioridade" class="atividade-detalhe__status-label"
+                    >Prioridade</label
+                >
                 <p-select
+                    inputId="atividade-prioridade"
                     [formControl]="formularioStatus.controls.prioridade"
                     [options]="prioridadeService.prioridades()"
                     optionLabel="descricao"

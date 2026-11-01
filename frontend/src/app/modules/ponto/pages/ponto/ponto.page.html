@@ -117,8 +117,9 @@
                             {{ totalPessoas() === 1 ? "pessoa" : "pessoas" }} ·
                             <strong>{{ totalTrabalhando() }}</strong> trabalhando agora
                         </span>
-                        <label class="ponto__triagem-filtro">
+                        <label for="ponto-somente-ativos" class="ponto__triagem-filtro">
                             <p-toggleswitch
+                                inputId="ponto-somente-ativos"
                                 [ngModel]="somenteAtivos()"
                                 (ngModelChange)="somenteAtivos.set($event)"
                             />

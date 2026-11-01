@@ -3,7 +3,9 @@
     class="modelagem-diagrama__svg"
     role="img"
     aria-label="Diagrama da modelagem do banco de dados"
+    tabindex="-1"
     (click)="aoClicarNoFundo($event)"
+    (keydown.escape)="selecionada.set(null)"
 >
     <g [attr.transform]="transformacao()">
         @for (caixa of caixasDeGrupo(); track caixa.grupo.id) {

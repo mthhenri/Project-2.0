@@ -54,6 +54,8 @@
                 <span
                     class="demanda-pastas__chevron"
                     role="button"
+                    tabindex="-1"
+                    (keydown.enter)="alternar($event, linha.pasta.id)"
                     [attr.aria-label]="
                         linha.aberta
                             ? 'Recolher ' + linha.pasta.nome

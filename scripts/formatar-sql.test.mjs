@@ -121,3 +121,9 @@ test('não reformata fragmento devolvido por método nem a instrução LISTEN, q
     const escuta = 'await cliente.query(`LISTEN ${canal}`);\n';
     assert.equal(formatarSqlDoArquivo(escuta), escuta);
 });
+
+test('fragmento devolvido por ternário também não é reformatado, e :x: e ?? contam como um token só', () => {
+    const ternario = 'function limite(n) {\n    return n ? `LIMIT ${n}` : "";\n}\n';
+    assert.equal(formatarSqlDoArquivo(ternario), ternario);
+    assert.deepEqual(tokensSql('SELECT :coluna: FROM ?? WHERE a = :b::date'), ['SELECT', ':coluna:', 'FROM', '??', 'WHERE', 'a', '=', ':b', '::', 'date']);
+});

@@ -186,6 +186,28 @@ describe('PontoMesDiaComponent: expandir o dia', () => {
         montado.http.expectNone(() => true);
     });
 
+    it('a linha com registro é um botão: Enter na linha expande, Enter num filho não, e sem registro não é botão', async () => {
+        const semRegistro = await montar(dia());
+        const linhaVazia = semRegistro.elemento.querySelector('.ponto-mes-dia__linha') as HTMLElement;
+        expect(linhaVazia.getAttribute('role')).toBeNull();
+        expect(linhaVazia.getAttribute('tabindex')).toBeNull();
+
+        const montado = await montar(comRegistro(COM_ALMOCO));
+        const linha = montado.elemento.querySelector('.ponto-mes-dia__linha') as HTMLElement;
+        expect(linha.getAttribute('role')).toBe('button');
+        expect(linha.getAttribute('tabindex')).toBe('0');
+        expect(linha.getAttribute('aria-expanded')).toBe('false');
+
+        (linha.querySelector('.ponto-mes-dia__data') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        await montado.atualizar();
+        expect(montado.componente.expandido()).toBe(false);
+
+        linha.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        await montado.atualizar();
+        expect(montado.componente.expandido()).toBe(true);
+        expect(linha.getAttribute('aria-expanded')).toBe('true');
+    });
+
     it('dia com registro consulta o diário do usuário uma vez e mostra os períodos com as execuções e os intervalos', async () => {
         const montado = await montar(comRegistro(COM_ALMOCO));
         (montado.elemento.querySelector('.ponto-mes-dia__linha') as HTMLElement).click();

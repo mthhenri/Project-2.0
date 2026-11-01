@@ -65,6 +65,7 @@
         @if (modo() === "formatado") {
             <div
                 #hospedeFormatado
+                role="group"
                 class="markdown-editor__formatado"
                 [class.markdown-editor__formatado--vazio]="valor().trim() === ''"
                 [attr.data-placeholder]="placeholder()"

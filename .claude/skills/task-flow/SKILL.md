@@ -56,7 +56,7 @@ nomear um contrato/DTO, use a skill `project20-dto-conventions`.
 > `desktop` usam `node:test` em `*.test.ts` ao lado do código (no backend, `import * as assert from
 > 'node:assert/strict'`: o tsconfig dele não tem `esModuleInterop`); o `frontend` usa Vitest pelo
 > `ng test` (`*.test.ts` lógica, `*.spec.ts` componente). O lint é da raiz: rode `npm run lint:tudo` (zero
-> erros; lacunas em `PROBLEMS.md` P-066) e relate o resultado no fecho. Para tela, os testes de componente somam-se à verificação ao vivo (skill
+> erros) e relate o resultado no fecho. Para tela, os testes de componente somam-se à verificação ao vivo (skill
 > `verify`), não a substituem. `npm run test:cobertura` mede (sem gate).
 
 - Um comando de raiz que roda tudo de uma vez, para o gate de integração/conclusão — não repita
