@@ -96,6 +96,7 @@ export class UsuarioListagemPage implements OnInit {
     readonly tiposOpcoes = [
         { label: 'Todos', value: null },
         { label: 'Desenvolvedores', value: TipoUsuarioEnum.DESENVOLVEDOR },
+        { label: 'Auxiliares', value: TipoUsuarioEnum.AUXILIAR },
         { label: 'Gestores', value: TipoUsuarioEnum.GESTOR },
         { label: 'Administradores', value: TipoUsuarioEnum.ADMINISTRADOR },
     ];

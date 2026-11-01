@@ -1,6 +1,6 @@
 # tipo-auxiliar.spec.md
 
-> Guarda-chuva (tasks **283–287**, só a spec). Origem: `IDEAS.md` I-035, definida com o autor em 2026-10-30 a partir da matriz "Permissões por tela" (artifact). Nome definido pelo autor em 2026-11-01 (antes provisório "Ajudante"; entre as opções Coordenador, Líder técnico e Auxiliar ficou Auxiliar).
+> Guarda-chuva (tasks **283–287**, **concluída em 2026-11-01**; as tasks estão em `done/283-*` a `287-*`). Origem: `IDEAS.md` I-035, definida com o autor em 2026-10-30 a partir da matriz "Permissões por tela" (artifact). Nome definido pelo autor em 2026-11-01 (antes provisório "Ajudante"; entre as opções Coordenador, Líder técnico e Auxiliar ficou Auxiliar).
 
 ## Objetivo
 

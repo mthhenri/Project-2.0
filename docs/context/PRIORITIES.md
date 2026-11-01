@@ -28,7 +28,6 @@ Resolver primeiro; o autor considera simples ou próximo.
 
 Ainda **sem ordem decidida** entre si nem em relação ao bloco "Agora". O autor define.
 
-- `tipo-auxiliar.spec.md` (tasks 283–287)
 - `chat-grupos.spec.md` (tasks 246–250)
 - `chat-proposta-no-documento.spec.md` (tasks 273–277)
 - `261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md`

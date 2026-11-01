@@ -68,6 +68,7 @@ export class UsuarioFormularioDialogComponent {
     readonly tiposOpcoes = computed(() => {
         const opcoes = [
             { label: 'Desenvolvedor', value: TipoUsuarioEnum.DESENVOLVEDOR },
+            { label: 'Auxiliar', value: TipoUsuarioEnum.AUXILIAR },
             { label: 'Gestor', value: TipoUsuarioEnum.GESTOR },
         ];
         if (this.sessao.eAdministrador() || this.usuarioEmEdicao()?.tipo === TipoUsuarioEnum.ADMINISTRADOR) {

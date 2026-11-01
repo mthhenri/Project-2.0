@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-01 — Task 287 e fecho da guarda-chuva do Auxiliar: tela de Usuários e verificação ao vivo
+
+O formulário de usuário ganhou a opção Auxiliar e a listagem o filtro "Auxiliares" (o selo veio na 283). **Achados só na verificação ao vivo** (stack isolado: banco `project20_verify`, backend na 3001, `ng serve` na 4201): o botão "Excluir demanda" aparecia ao Auxiliar (a troca por permissão o liberou, mas a rota é do gestor); com quatro tipos a Senha ficava cortada ao lado do seletor (o Tipo passou a ocupar a linha); a 720 de largura o filtro de tipos era cortado (passa a quebrar). A matriz foi exercitada contra a API real como Auxiliar: o permitido respondeu 2xx e o recusado, 403. Detalhes e limites em `docs/specs/done/287-tela-de-usuarios-do-auxiliar/VERIFICACAO.md`. Guarda-chuva `tipo-auxiliar.spec.md` e tasks 283–287 em `done/`. Pendências do autor: Imprimir do ponto e leitura do Calendário por URL (ver o bloco da 286 e `CONTEXT.md`).
+
 ## 2026-11-01 — Task 286: frontend do tipo Auxiliar (sessão por ação, guard, navegação e templates)
 
 `UsuarioSessaoService` ganhou `eAuxiliar` e uma permissão por ação (as mesmas funções do `shared` do backend); `permissaoGuard` protege Tags; a barra lateral mostra Projetos e Tags ao Auxiliar. Cada `eGestor()` dos templates foi decidido (Atividades, Demandas, Execuções, Ponto, Projeto, chat): quem conduz o trabalho usa a permissão da ação; o que é só do gestor (seleção em massa, Relatório, volume, Justificar, descrição do cliente, Calendário, Usuários) ficou como estava. Bug próprio achado no build: um replace deixou `this.this.` em 5 pontos. Decisões da matriz e a pendência sobre o Imprimir do ponto estão em `docs/specs/done/286-frontend-do-tipo-auxiliar.spec.md`. Verificação: frontend 2405 testes, build e `lint:tudo` limpos; **verificação ao vivo pendente até o fecho da 287**.

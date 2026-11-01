@@ -34,6 +34,13 @@
         margin-bottom: 1.25rem;
     }
 
+    // Com o filtro de Auxiliares o grupo de tipos passa da largura de uma tela estreita: rola em vez de cortar.
+    &__toolbar > p-selectbutton {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
     &__busca {
         position: relative;
         flex: 1;

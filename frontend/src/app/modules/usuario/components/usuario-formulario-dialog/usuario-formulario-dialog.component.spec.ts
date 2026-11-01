@@ -64,12 +64,12 @@ describe('UsuarioFormularioDialogComponent — criar', () => {
 
     it('gestor não vê "Administrador" nas opções de tipo', async () => {
         const { montado } = await montar(TipoUsuarioEnum.GESTOR);
-        expect(rotulosDosTipos(montado.componente)).toEqual(['Desenvolvedor', 'Gestor']);
+        expect(rotulosDosTipos(montado.componente)).toEqual(['Desenvolvedor', 'Auxiliar', 'Gestor']);
     });
 
     it('administrador vê "Administrador" nas opções de tipo', async () => {
         const { montado } = await montar(TipoUsuarioEnum.ADMINISTRADOR);
-        expect(rotulosDosTipos(montado.componente)).toEqual(['Desenvolvedor', 'Gestor', 'Administrador']);
+        expect(rotulosDosTipos(montado.componente)).toEqual(['Desenvolvedor', 'Auxiliar', 'Gestor', 'Administrador']);
     });
 
     it('formulário inválido não chama a API e marca os campos', async () => {

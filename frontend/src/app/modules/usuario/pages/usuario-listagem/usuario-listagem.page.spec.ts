@@ -53,6 +53,12 @@ describe('UsuarioListagemPage — anotações (task 195)', () => {
         ]);
         expect(botoesDeAnotacao(montado)).toHaveLength(3);
     });
+
+    it('o gestor abre o pad do auxiliar (que é desenvolvedor para isto) e o auxiliar só vê o botão na própria linha', async () => {
+        const gestor = await montarListagem(TipoUsuarioEnum.GESTOR);
+        await carregar(gestor, [resumo(2, { tipo: TipoUsuarioEnum.AUXILIAR })]);
+        expect(botoesDeAnotacao(gestor)).toHaveLength(1);
+    });
 });
 
 describe('UsuarioListagemPage — estados', () => {
@@ -142,6 +148,21 @@ describe('UsuarioListagemPage — ações por tipo de usuário', () => {
         expect(quantosBotoes(montado, 'Excluir usuário')).toBe(0);
         expect(quantosBotoes(montado, 'Editar usuário')).toBe(1);
         expect(montado.componente.eOutraPessoa(montado.componente.usuarios()[0])).toBe(false);
+    });
+
+    it('o filtro de tipo oferece Auxiliares, e a linha do auxiliar mostra o selo "Auxiliar"', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+        await carregar(montado, [resumo(2, { tipo: TipoUsuarioEnum.AUXILIAR })]);
+        expect(montado.componente.tiposOpcoes.map((opcao) => opcao.label)).toEqual(['Todos', 'Desenvolvedores', 'Auxiliares', 'Gestores', 'Administradores']);
+        expect(texto(montado)).toContain('Auxiliar');
+    });
+
+    it('o auxiliar não vê "Novo Usuário" nem as ações de gestão (a tela é do gestor)', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.AUXILIAR);
+        await carregar(montado, [resumo(2)]);
+        expect(texto(montado)).not.toContain('Novo Usuário');
+        expect(quantosBotoes(montado, 'Excluir usuário')).toBe(0);
+        expect(botaoPorRotulo(montado, 'Editar usuário')).toBeNull();
     });
 
     it('desenvolvedor não vê "Novo Usuário" nem a coluna de anotações nem ações de gestão', async () => {

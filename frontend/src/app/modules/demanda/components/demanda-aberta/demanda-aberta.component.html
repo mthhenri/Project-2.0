@@ -40,16 +40,18 @@
                     tooltipPosition="bottom"
                     (onClick)="mostrarDialogEditar.set(true)"
                 />
-                <p-button
-                    icon="pi pi-trash"
-                    severity="danger"
-                    [text]="true"
-                    size="small"
-                    ariaLabel="Excluir demanda"
-                    pTooltip="Excluir demanda"
-                    tooltipPosition="bottom"
-                    (onClick)="confirmarExclusao()"
-                />
+                @if (sessao.eGestor()) {
+                    <p-button
+                        icon="pi pi-trash"
+                        severity="danger"
+                        [text]="true"
+                        size="small"
+                        ariaLabel="Excluir demanda"
+                        pTooltip="Excluir demanda"
+                        tooltipPosition="bottom"
+                        (onClick)="confirmarExclusao()"
+                    />
+                }
             }
         </div>
 

@@ -12,6 +12,11 @@
 
     &__campo {
         @include form-campo;
+
+        // Os quatro tipos em linha não cabem ao lado da senha: o tipo ocupa a linha toda.
+        &--linha-inteira {
+            grid-column: 1 / -1;
+        }
     }
     &__label {
         @include form-label;
