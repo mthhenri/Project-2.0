@@ -59,7 +59,7 @@
             </div>
 
             <div class="ponto__acoes">
-                @if (!sessao.eAuxiliar()) {
+                @if (podeImprimir()) {
                     <p-button
                         label="Imprimir"
                         icon="pi pi-print"

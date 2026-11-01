@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-01 — Auxiliar: Calendário só do gestor e Imprimir do ponto do próprio
+
+Duas pendências resolvidas pelo autor. A rota `/calendario` ganhou o `gestorGuard`: o desenvolvedor, que antes lia a tela pela URL, e o Auxiliar são levados de volta à raiz (os feriados aparecem no Ponto). O Imprimir do ponto voltou ao Auxiliar só para o próprio espelho: `podeImprimir` (gestor, ou quem não vê o ponto dos outros, ou o espelho aberto é o próprio), no lugar de `eAuxiliar()` na tela. Verificação: frontend 2410 testes (rota do calendário e Imprimir do Auxiliar novos), build e `lint:tudo` limpos; **sem nova verificação ao vivo** (o stack isolado já foi desfeito).
+
 ## 2026-11-01 — Revisão independente do tipo Auxiliar: três correções
 
 Um revisor independente (agente `revisor`, só leitura) leu o diff das tasks 283–287 e não achou poder de gestor concedido por engano nas rotas, mas achou três furos de regra, todos confirmados e corrigidos: **(1)** o Auxiliar não conseguia atribuir outra pessoa pelo chat, porque a ferramenta e o executor liam o alvo por `UsuarioService.recuperar` (perfil de outro, fechado ao Auxiliar); agora usam `recuperarParaAtribuicao` (quem atribui qualquer pessoa lê o alvo; o perfil de outro continua fechado) e `listar_usuarios` passou à permissão `'AUXILIAR'`; **(2)** criar demanda gravava `descricaoCliente` sem checar o tipo (furo que o desenvolvedor já tinha na sub-demanda e o Auxiliar ampliou): agora só o gestor grava, ao criar e ao editar; **(3)** `propor_descrever_demanda` aceitava o relato do cliente do Auxiliar e só falhava na confirmação, depois de gastar a chamada da IA: recusa antes. Também ficaram testes que não provavam o título (conectar/desconectar, excluir atividade). Sem correção, por decisão: o cartão "agora" do histórico exige descrição ao Auxiliar que pausa a execução de um gestor (o backend dispensa), uma fricção de UX. Segue pendente com o autor o Imprimir do ponto e a leitura do Calendário por URL. Verificação: backend 1610, frontend 2408, lint limpo.

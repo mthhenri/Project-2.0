@@ -290,6 +290,18 @@ describe('PontoPage: desenvolvedor, só o próprio mês', () => {
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/ponto/mensal'), mensalDoMesAtual());
     });
 
+    it('o auxiliar imprime o próprio espelho, mas não o de outra pessoa', async () => {
+        const proprio = await montarPagina(TipoUsuarioEnum.AUXILIAR);
+        const idDoAuxiliar = proprio.componente.sessao.id()!;
+        proprio.componente.pontoMensal.set(mensalDoMesAtual(idDoAuxiliar));
+        await proprio.atualizar();
+        expect(proprio.componente.podeImprimir()).toBe(true);
+        proprio.componente.pontoMensal.set(mensalDoMesAtual(idDoAuxiliar + 1));
+        await proprio.atualizar();
+        expect(proprio.componente.podeImprimir()).toBe(false);
+        expect(botaoPorTexto(proprio, 'Imprimir')).toBeUndefined();
+    });
+
     it('o botão Imprimir só habilita com o espelho carregado', async () => {
         const montado = await montarPagina(TipoUsuarioEnum.DESENVOLVEDOR);
         expect(botaoPorTexto(montado, 'Imprimir')!.disabled).toBe(true);

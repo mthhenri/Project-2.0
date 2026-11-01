@@ -98,6 +98,9 @@ export class PontoPage implements OnInit {
     private readonly todosCarregado = signal<boolean>(false);
     readonly pontosTodos = signal<PontoDiarioDto[]>([]);
     readonly pontoMensal = signal<PontoMensalDto | null>(null);
+
+    /** Imprimir o espelho: o gestor imprime o de qualquer um; o desenvolvedor e o auxiliar, só o próprio (o auxiliar vê o dos outros, não o imprime). */
+    readonly podeImprimir = computed(() => this.sessao.eGestor() || !this.sessao.podeVerExecucaoEPontoDeOutro() || this.pontoMensal()?.usuarioId === this.sessao.id());
     readonly usuarios = signal<UsuarioResumoDto[]>([]);
 
     /** Sem nada do modo atual para mostrar: a carga vira esqueleto; senão, recarga com o conteúdo esmaecido. */
