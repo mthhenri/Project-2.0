@@ -314,6 +314,28 @@ describe('PropostaCartaoComponent — concluir demanda e mover atividade (task 2
     });
 });
 
+describe('PropostaCartaoComponent — conectar demandas (chave `bidirecional`, task 301)', () => {
+    const dadosConexao = { demandaOrigemId: 3, demandaOrigemNome: 'API', demandaDestinoId: 4, demandaDestinoNome: 'Tela', motivo: 'Depende' };
+
+    it('com `bidirecional: true` mostra a seta dos dois sentidos', async () => {
+        const montado = await montarCartao(proposta(TipoPropostaIaEnum.CONECTAR_DEMANDA, StatusPropostaIaEnum.PENDENTE, { ...dadosConexao, bidirecional: true }));
+        expect(texto(montado)).toContain('API ↔ Tela');
+        botao(montado, 'Ver detalhes')!.click();
+        detectar(montado);
+        expect(texto(montado)).toContain('Conexão nos dois sentidos');
+        expect(montado.elemento.querySelector('.proposta-cartao__destaque .pi-arrows-h')).not.toBeNull();
+    });
+
+    it('com `bidirecional: false` mostra a seta de um sentido só', async () => {
+        const montado = await montarCartao(proposta(TipoPropostaIaEnum.CONECTAR_DEMANDA, StatusPropostaIaEnum.PENDENTE, { ...dadosConexao, bidirecional: false }));
+        expect(texto(montado)).toContain('API → Tela');
+        botao(montado, 'Ver detalhes')!.click();
+        detectar(montado);
+        expect(texto(montado)).toContain('Conexão do primeiro para o segundo');
+        expect(montado.elemento.querySelector('.proposta-cartao__destaque .pi-arrow-right')).not.toBeNull();
+    });
+});
+
 describe('PropostaCartaoComponent — desconectar demandas e excluir atividade (task 230)', () => {
     it('Desconectar mostra as duas demandas e que só a conexão sai, nos detalhes', async () => {
         const montado = await montarCartao(proposta(TipoPropostaIaEnum.DESCONECTAR_DEMANDA, StatusPropostaIaEnum.PENDENTE, {

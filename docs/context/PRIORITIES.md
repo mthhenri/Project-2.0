@@ -21,7 +21,6 @@ Triagem de 2026-10-31, com o autor.
 
 Resolver primeiro; o autor considera simples ou próximo.
 
-- **I-036** — status de usuário vira coluna `ativo`, e os booleanos sem prefixo `is_`. "Um dos mais próximos" (2026-10-31). Antes de especificar, avaliar os casos listados no item.
 - **I-043** — atualizar os pacotes dos provedores de IA para poder usar sempre os modelos mais novos. Perto de "Agora" por ser concreto (2026-10-31).
 
 ## 2. Specs já escritas no backlog
