@@ -54,7 +54,7 @@
 - **Custo aparente:** configuração por workspace e um passo de CI; services estendem
   `BaseRepository` com injeção do Knex, então os falsos precisam de um ponto de injeção.
 - **Situação (2026-11-01):** a parte de **testes** foi entregue nas tasks 171–187
-  (`docs/specs/done/testes-automatizados.spec.md`, concluída em 2026-10-19); o **lint** virou as specs 297–299 (padronização e lint) e já roda no CI, faltando só o fecho.
+  (`docs/specs/done/testes-automatizados.spec.md`, concluída em 2026-10-19); o **lint** virou as specs 297–299 (padronização e lint) e já roda no CI (concluídas em `done/`).
 
 ### I-005 — IA lê o código dos projetos · chat IA/backend
 

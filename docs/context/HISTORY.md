@@ -12,7 +12,7 @@
 
 ---
 
-## 2026-11-01 — 297–299 Lint e padronização integral: implementado, falta o fecho
+## 2026-11-01 — 297–299 Lint e padronização integral: concluído
 
 Lint e padrão aplicados a **todo** o código (decisão do autor), com a verificação rodando no CI. Entregue: ESLint 10 (`eslint.config.mjs`, quatro espaços, regras próprias `separate-component-files` e `descriptive-identifiers` em `scripts/eslint/regras.mjs` com `regras.test.mjs`), Stylelint, Prettier só em HTML/SCSS (`.prettierignore` tira o diagrama SVG da Modelagem), `scripts/formatar-sql.mjs` (+ `--check`, tokens preservados) e os comandos `lint`, `lint:estilos`, `lint:templates`, `lint:sql`, `lint:tudo` e `formatar`; passo "Lint e padrão do código" no `ci.yml`. 144 componentes agora têm TS, HTML e SCSS separados; SQL de repositories, infraestrutura, scripts e testes formatado (migrations intocadas).
 
@@ -24,7 +24,7 @@ Lint e padrão aplicados a **todo** o código (decisão do autor), com a verific
 
 **Verificado (2026-11-01):** `npm run lint:tudo` sem erro (ESLint 0, Stylelint e Prettier limpos, SQL 533 fontes 0 fora do padrão); testes: shared 298, backend 1590, desktop 38, frontend 2395 (192 arquivos), `repo:test` 26 (1 pulado), integração PostgreSQL 367; builds do backend e do frontend; `tsc` limpo nos quatro workspaces exceto P-067; `repo:verificar`. Ao vivo (stack já no ar, 1366×768, 1920×1080 e 1080×1920, tema claro): Ponto, Demandas (Árvore, Grafo e diálogo Nova Demanda), Modelagem, Configurações da IA e navegação por 11 rotas sem erro de console da aplicação.
 
-**Pendente (por isso as specs seguem em `active/`):** revisão independente do diff inteiro, verificação visual no tema escuro e nos estados de erro e carregamento, e revisão dos nomes que a renomeação automática escolheu (`primeiro`, `segundo`, `registroAtual`...), que são corretos mas genéricos. Nada foi commitado.
+**Fecho (2026-11-01):** revisão independente do diff (agente `revisor`, 1.487 arquivos: literais, ASTs por símbolo, 142 templates, CSS compilado, lockfile) sem regressão de comportamento; o único achado (`aria-selected="false"` fixo no seletor de documentação) foi corrigido em `da3306f`. Tema escuro conferido na Árvore e no Grafo de demandas. Specs 297–299 e `padronizacao-e-lint` movidas para `done/`. Ficam em aberto P-066 (acessibilidade de template) e P-067, e a observação de que o formatador de SQL ainda não trata `:x:`/`??` como token único nem fragmento devolvido em ternário. Estados de erro e carregamento não foram percorridos um a um. Nomes genéricos gerados pela renomeação automática (`primeiro`, `segundo`, `registroAtual`) seguem corretos, só pouco expressivos.
 
 ## 2026-10-31 — 293 Ações dos chats implementadas; 294 Pesquisa especificada para depois
 

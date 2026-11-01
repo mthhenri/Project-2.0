@@ -52,7 +52,6 @@ Sem urgência; o autor quer conversar antes de especificar.
 - **I-031** — escolher pela tela o nível de IA de cada tipo de prompt. "Podemos pensar" (2026-10-31).
 - **I-044** — comando manual para pedir pesquisa na internet; só essa melhoria segue como ideia, fora da spec 294 (2026-10-31).
 - **I-040** — documentar tabelas e campos na tela de Modelagem. Olhar, sem ser prioridade (2026-10-31).
-- **I-002** e **P-001** — lint: feito na task 297–299 (2026-11-01); sai daqui quando as specs forem para `done/`.
 
 ## 5. Esperando o Git (Gitea)
 

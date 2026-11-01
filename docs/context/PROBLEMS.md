@@ -119,12 +119,3 @@
 - **Correção:** achar o temporizador que não termina (suspeita: transição do d3, no diagrama da Modelagem e no grafo, que roda dentro da zona) e tirá-lo da zona ou pará-lo; só então remover o teto. Observação: com a CPU três vezes sobrecarregada o arquivo passou (3 s viraram 11 s), então não é só lentidão.
 - **Desde:** 2026-10-30 (visto nos fechos dos P-035/P-038/P-041/P-055 e dos P-050/P-051/P-058; 10 rodadas completas, 4 falhas dele; depois mais 3 rodadas com falha e uma no CI do PR 27).
 
-### P-001 — Projeto sem lint · `EM CORREÇÃO` · repositório
-
-- **Situação (2026-11-01):** ESLint, Stylelint, Prettier (HTML/SCSS) e o formatador de SQL existem e estão no CI (`npm run lint:tudo`), com zero erros nos quatro workspaces. Falta fechar as specs 297–299 (revisão independente do diff e verificação visual nos dois temas); as regras de acessibilidade desligadas estão em P-066. Remover este item quando 297–299 forem para `done/`.
-- **Sintoma original:** não havia ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e a lacuna era só declarada no fecho de cada task.
-  (A parte de **testes** deste item foi resolvida pelas tasks 171–187: ver `HISTORY.md`, bloco da 187, com a cobertura de partida e a final.)
-- **Causa:** o projeto foi construído verificando por build, testes e execução manual; nunca se escolheu nem configurou um linter.
-- **Contorno:** `npm test` na raiz, `npm run test:integracao`, build dos workspaces e verificação ao vivo (skill `verify`); revisão do diff pela skill `conventions-check`.
-- **Correção:** escolher e configurar lint e acrescentar ao CI (`IDEAS.md` I-002).
-- **Desde:** origem do projeto.
