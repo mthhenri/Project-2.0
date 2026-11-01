@@ -31,6 +31,8 @@ Uniformizar o nome das colunas e campos booleanos de negócio: sem prefixo `is_`
 
 Renomear `is_deleted`; renomear booleanos que já não têm prefixo; alterar regra de negócio; editar migrations já aplicadas.
 
+**Decisão de 2026-11-01 (com o autor):** `tipo_dia_nao_util_duracao` (`INTEGRAL`/`MEIO_PERIODO`) e `tipo_plano_fonte_origem` (`COLADO`/`ARQUIVO`) **ficam como tabela de referência**, não viram booleano: a duração aparece como select no Calendário e pode ganhar valores (manhã, tarde); a origem da fonte pode ganhar um terceiro valor com a integração com o Git. As demais tabelas `tipo_*` e de status também ficam. `knex_migrations_lock.is_locked` é do Knex e não se renomeia.
+
 ## Dependências
 
 Skills `sql-migrations`, `gerenciamento-de-impacto` e `project20-dto-conventions`; `SCHEMA.md`, `SYSTEM.SPEC.md` §9. Coordenar com qualquer trabalho em andamento nas telas de demanda e do plano (por exemplo, o ajuste dos skeletons), que tocam os mesmos arquivos do frontend.
