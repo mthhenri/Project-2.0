@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-11-01 — Task 301 (complemento): gate visual e chaves das propostas da IA
+
+O gate visual que ficou aberto no fecho da 301 foi feito, e a verificação achou um defeito real: o cartão da proposta (`bidirecional`), a regra de criar demanda (`dados['estrutural']`) e o desfazer de uma desconexão (`resultado.bidirecional`) leem pela chave o JSON guardado em `proposta_ia.dados` e `proposta_ia.resultado`. Com o renome, as propostas já gravadas em outro banco ficariam com a chave antiga: seta errada no cartão e desfazer que recriaria a conexão como unidirecional. A busca anterior só olhou o banco de desenvolvimento (4 propostas, nenhuma com a chave antiga) e não o efeito da leitura por chave.
+
+- **Migration `0077`** (nova; a 0076 já estava commitada): renomeia `isEstrutural` e `ehBidirecional` nas chaves de `dados` e `resultado`, inclusive aninhadas, trocando só a chave entre aspas seguida de dois-pontos (um valor de texto com a palavra não muda). `DOWN` desfaz. Testada no banco de teste com uma proposta antiga (chave solta, chave aninhada e texto com a palavra): subida, descida e subida de novo deram o esperado; aplicada no de desenvolvimento.
+- **Gate visual (1920×1080, 1366×768 e 1080×1920):** Demandas (árvore, pastas e a aba Conexões com "Dependência mútua" e o seletor Depende de/Bidirecional) nos três tamanhos; cabeçalho do plano no chat (checkbox Solo marcado e o selo Arquivado) nos três tamanhos, usando o próprio cabeçalho: o clique em Solo e em Arquivar enviou `PATCH` 200 e a tela refletiu. Sem diferença de layout.
+- **Não visto:** o cartão da proposta de conectar e desconectar demanda. No desenvolvimento o histórico do chat fica no OpenSearch, e criar uma mensagem com proposta ali alteraria os dados do autor; ficou coberto pelos testes de componente e de utilitário (`proposta-cartao`, `proposta-compacta`), que passaram.
+- **Cenário apagado:** dois planos e duas demandas de teste, por API (exclusão lógica).
+
+**Testes:** integração 367 passando com a 0077; os demais conjuntos não mudaram (nenhum código alterado depois da 301).
+
+**Achado:** renomear campo de DTO exige olhar também o que está gravado como JSON (`proposta_ia.dados` e `resultado`; o histórico do chat no OpenSearch não guarda esses campos, só o id da proposta).
+
+---
+
 ## 2026-11-01 — Task 301: booleanos de negócio sem prefixo
 
 Última parte do I-036: `demanda.is_estrutural` virou `estrutural`, `demanda_conexao.eh_bidirecional` virou `bidirecional`, `plano.is_solo` virou `solo` e `plano.is_arquivado` virou `arquivado` (campos de DTO `isEstrutural`, `ehBidirecional`, `isSolo` e `isArquivado` idem). `is_deleted` fica (genérico, da `BaseEntity`) e `knex_migrations_lock.is_locked` é do Knex. A regra passou a constar em `CONVENTIONS.md`. Na avaliação com o autor, `tipo_dia_nao_util_duracao` e `tipo_plano_fonte_origem` ficam como tabela de referência, e as demais `tipo_*` também.
