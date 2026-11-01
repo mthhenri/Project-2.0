@@ -561,8 +561,21 @@ test('atribuirMembro e removerMembro: o auxiliar mexe em qualquer pessoa, sem se
     assert.equal(remove.gravacoes.length, 1);
 });
 
-test('conectar e desconectar demandas: o auxiliar pode; o desenvolvedor é recusado', async () => {
+test('criar: só o gestor grava a descrição do cliente; o auxiliar e o desenvolvedor são recusados e nada é gravado', async () => {
+    for (const usuario of [AUXILIAR, DESENVOLVEDOR]) {
+        const repo = repositorio({ recuperar: async () => PAI_ESTRUTURAL });
+        await assert.rejects(() => criarServico(repo, tagExistente, usuarioExistente).criar({ ...DADOS_CRIAR, demandaPaiId: 5, descricaoCliente: 'x' }, usuario), UnauthorizedAccessException);
+        assert.equal(gravou(repo), false);
+    }
+    await criarServico(repositorio(), tagExistente, usuarioExistente).criar({ ...DADOS_CRIAR, descricaoCliente: 'x' }, GESTOR);
+});
+
+test('conectar e desconectar demandas: o auxiliar chega até a regra do grafo; o desenvolvedor é recusado antes', async () => {
     const dto = { demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false };
+    // O dublê não tem a demanda de origem: quem passa pela permissão esbarra no 404 (a recusa de permissão é outra exceção).
+    const semOrigem = repositorio({ recuperar: async () => null });
+    await assert.rejects(() => criarServico(semOrigem).criarConexao(dto, AUXILIAR), ResourceNotFoundException);
+    await assert.rejects(() => criarServico(semOrigem).excluirConexao({ demandaId: 1, conexaoId: 9 }, AUXILIAR), ResourceNotFoundException);
     await assert.rejects(() => criarServico(repositorio()).criarConexao(dto, DESENVOLVEDOR), UnauthorizedAccessException);
     await assert.rejects(() => criarServico(repositorio()).excluirConexao({ demandaId: 1, conexaoId: 9 }, DESENVOLVEDOR), UnauthorizedAccessException);
 });

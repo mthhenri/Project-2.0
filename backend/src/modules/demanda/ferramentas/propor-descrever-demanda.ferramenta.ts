@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NivelIaEnum, ProporDescreverDemandaDto, PropostaDescreverDemandaDadosDto, TipoPropostaIaEnum, TipoPromptEnum } from '@project20/shared';
+import { NivelIaEnum, ProporDescreverDemandaDto, PropostaDescreverDemandaDadosDto, TipoPropostaIaEnum, TipoPromptEnum, temPermissaoDeGestor } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { FerramentaPropostaIa } from '../../ferramenta-ia/ferramentas/ferramenta-proposta-ia';
@@ -41,6 +41,9 @@ export class ProporDescreverDemandaFerramenta extends FerramentaPropostaIa<Propo
 
     protected async montarDados(entrada: ProporDescreverDemandaDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
         const relatoDoCliente = entrada.relatoDoCliente?.trim() || undefined;
+        if (relatoDoCliente && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+            throw new BusinessException('Só o gestor escreve a descrição do cliente: descreva apenas a parte técnica');
+        }
         const relatoTecnico = entrada.relatoTecnico?.trim() || undefined;
         if (!relatoDoCliente && !relatoTecnico) {
             throw new BusinessException('Faça a entrevista antes: informe o que o cliente pediu (relatoDoCliente) e/ou o que será feito (relatoTecnico)');

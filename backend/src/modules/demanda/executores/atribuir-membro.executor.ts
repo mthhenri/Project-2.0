@@ -31,7 +31,7 @@ export class AtribuirMembroExecutor implements ExecutorPropostaIa {
         if (entrada.acao === 'ADICIONAR') {
             // A `DemandaService.atribuirMembro` não confere o tipo do alvo, e a rota de ajuste aceita dados alterados: a regra "gestor não entra em
             // `demanda_usuario`" vale aqui também, não só na ferramenta que propôs.
-            const dono = (await this.usuarioService.recuperar({ id: alvo.usuarioId }, usuarioAtivo)).dados;
+            const dono = (await this.usuarioService.recuperarParaAtribuicao({ id: alvo.usuarioId }, usuarioAtivo)).dados;
             if (!dono) throw new BusinessException('Usuário não encontrado');
             if (!podeSerMembroDeDemanda(dono.tipo)) throw new BusinessException(`${dono.nomeCompleto} é gestor: gestores têm acesso por tipo e não são atribuídos como membros`);
             if (dono.status !== TipoUsuarioStatusEnum.ATIVO) throw new BusinessException(`${dono.nomeCompleto} está inativo e não pode ser atribuído`);

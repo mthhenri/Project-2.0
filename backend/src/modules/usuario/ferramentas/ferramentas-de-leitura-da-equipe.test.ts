@@ -23,7 +23,7 @@ test('listar usuários pede só os ativos, repassa os filtros e não devolve dad
     assert.deepEqual(filtros[0], { tipo: TipoUsuarioEnum.DESENVOLVEDOR, busca: 'pes', status: TipoUsuarioStatusEnum.ATIVO, allRows: true });
     assert.deepEqual(resultado.usuarios, [{ id: 2, nome: 'Pessoa 2', login: 'user.2', cargo: 'Desenvolvedor', tipo: 'DESENVOLVEDOR' }]);
     assert.equal(JSON.stringify(resultado).includes('nao-pode-vazar'), false);
-    assert.equal(ferramenta.permissao, 'GESTOR');
+    assert.equal(ferramenta.permissao, 'AUXILIAR');
 });
 
 test('listar usuários limita a resposta e avisa que há mais', async () => {

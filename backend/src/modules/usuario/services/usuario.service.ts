@@ -15,6 +15,7 @@ import {
     UsuarioSenhaAlterarDto,
     UsuarioSenhaAlteradaDto,
     TipoUsuarioEnum,
+    podeAtribuirMembroOuTag,
     temPermissaoDeAdministrador,
     temPermissaoDeGestor,
     TipoUsuarioStatusEnum,
@@ -112,6 +113,21 @@ export class UsuarioService {
             dados:    this.mapearParaRecuperado(usuarioEncontrado),
             mensagem: 'Usuário recuperado com sucesso',
         };
+    }
+
+    /**
+   * Recupera o usuário que vai ser atribuído como membro de uma demanda (a ferramenta e o executor da IA): quem atribui qualquer pessoa
+   * (`podeAtribuirMembroOuTag`) lê o alvo; o desenvolvedor só a si mesmo. Não abre o perfil de outro usuário na rota de perfil.
+   */
+    async recuperarParaAtribuicao(dto: UsuarioRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioRecuperadoDto>> {
+        if (!podeAtribuirMembroOuTag(usuarioAtivo.tipo) && usuarioAtivo.sub !== dto.id) {
+            throw new UnauthorizedAccessException('Desenvolvedor pode atribuir apenas a si mesmo');
+        }
+        const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
+        if (!usuarioEncontrado) {
+            throw new ResourceNotFoundException('Usuário');
+        }
+        return { sucesso: true, dados: this.mapearParaRecuperado(usuarioEncontrado), mensagem: 'Usuário recuperado com sucesso' };
     }
 
     /** Altera campos do usuário. Só gestor e administrador alteram usuários (o desenvolvedor nem o próprio perfil; o pad tem rota própria). */

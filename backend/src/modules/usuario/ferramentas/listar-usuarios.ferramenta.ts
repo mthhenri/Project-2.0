@@ -18,7 +18,7 @@ export class ListarUsuariosFerramenta extends FerramentaIa<UsuariosListarDto> {
         'Lista os usuários ativos da equipe, com id, nome, login, cargo e tipo; filtre por `tipo` ou por `busca` (parte do nome ou do login). ' +
     'Use para achar o usuarioId de alguém antes de consultar o ponto dele ou perguntar quem está na equipe.';
     readonly tipo = 'LEITURA' as const;
-    readonly permissao = 'GESTOR' as const;
+    readonly permissao = 'AUXILIAR' as const;
     readonly classeDeEntrada = UsuariosListarDto;
 
     constructor(private readonly usuarioService: UsuarioService) {

@@ -54,7 +54,7 @@ describe('UsuarioListagemPage — anotações (task 195)', () => {
         expect(botoesDeAnotacao(montado)).toHaveLength(3);
     });
 
-    it('o gestor abre o pad do auxiliar (que é desenvolvedor para isto) e o auxiliar só vê o botão na própria linha', async () => {
+    it('o gestor abre o pad do auxiliar (que é desenvolvedor para isto)', async () => {
         const gestor = await montarListagem(TipoUsuarioEnum.GESTOR);
         await carregar(gestor, [resumo(2, { tipo: TipoUsuarioEnum.AUXILIAR })]);
         expect(botoesDeAnotacao(gestor)).toHaveLength(1);

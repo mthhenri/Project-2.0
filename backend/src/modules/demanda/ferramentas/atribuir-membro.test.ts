@@ -10,6 +10,7 @@ import { DemandaService } from '../services/demanda.service';
 import { ProporAtribuirMembroFerramenta } from './propor-atribuir-membro.ferramenta';
 
 const GESTOR = { sub: 1, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as never;
+const AUXILIAR = { sub: 5, login: 'aux', tipo: TipoUsuarioEnum.AUXILIAR } as never;
 const DESENVOLVEDOR = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
 /** Valida que a `BusinessException` traz o texto (a mensagem fica no corpo da resposta HTTP, não em `message`). */
@@ -24,7 +25,7 @@ const USUARIOS: Record<number, { nomeCompleto: string; cargoTitulo: string; tipo
 };
 
 /** `UsuarioService` que lê a tabela de usuários do teste (o executor confere o tipo e a situação do alvo). */
-const usuarioServiceDoTeste = { recuperar: async ({ id }: { id: number }) => ({ dados: USUARIOS[id] ? { id, ...USUARIOS[id] } : { id, nomeCompleto: 'Caio Novo', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO } }) } as unknown as UsuarioService;
+const usuarioServiceDoTeste = { recuperarParaAtribuicao: async ({ id }: { id: number }) => ({ dados: USUARIOS[id] ? { id, ...USUARIOS[id] } : { id, nomeCompleto: 'Caio Novo', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO } }) } as unknown as UsuarioService;
 
 /** `DemandaService` em memória: a demanda 4 com os membros informados e o registro das chamadas. */
 function criarServico(membrosIniciais: number[]) {
@@ -42,7 +43,7 @@ function criarServico(membrosIniciais: number[]) {
 function criarFerramenta(membrosIniciais: number[]) {
     const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
     const propostaIaService = { criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
-    const usuarioService = { recuperar: async ({ id }: { id: number }) => ({ dados: { id, ...USUARIOS[id] } }) };
+    const usuarioService = { recuperarParaAtribuicao: async ({ id }: { id: number }) => ({ dados: { id, ...USUARIOS[id] } }) };
     const projetoService = { recuperar: async () => ({ dados: { id: 1, nome: 'Projeto Demo' } }) };
     const { servico } = criarServico(membrosIniciais);
     const ferramenta = new ProporAtribuirMembroFerramenta(
@@ -145,4 +146,14 @@ test('o executor também recusa gestor e inativo como alvo (a rota de ajuste ace
     await assert.rejects(executor.executar({ demandaId: 4, usuarioId: 10, acao: 'ADICIONAR' }, GESTOR), contem('inativo'));
     assert.deepEqual(chamadas, []);
     assert.ok(!membros.has(9) && !membros.has(1) && !membros.has(10));
+});
+
+test('o auxiliar propõe e executa a entrada de outra pessoa (como o gestor); o desenvolvedor só a de si mesmo', async () => {
+    const { ferramenta, propostas } = criarFerramenta([7]);
+    await ferramenta.executar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR' }, AUXILIAR);
+    assert.equal(propostas.length, 1);
+    await assert.rejects(ferramenta.executar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR' }, DESENVOLVEDOR), BusinessException);
+    const { servico, chamadas } = criarServico([7]);
+    await new AtribuirMembroExecutor(servico, usuarioServiceDoTeste).executar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR' }, AUXILIAR);
+    assert.deepEqual(chamadas, ['adicionar:8']);
 });

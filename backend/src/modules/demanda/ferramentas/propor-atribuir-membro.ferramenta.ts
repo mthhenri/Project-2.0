@@ -43,7 +43,7 @@ export class ProporAtribuirMembroFerramenta extends FerramentaPropostaIa<ProporA
         if (usuarioId !== usuarioAtivo.sub && !podeAtribuirMembroOuTag(usuarioAtivo.tipo)) {
             throw new BusinessException('O desenvolvedor só entra e sai de uma demanda ele mesmo. Só o gestor coloca ou tira outra pessoa.');
         }
-        const usuario = (await this.usuarioService.recuperar({ id: usuarioId }, usuarioAtivo)).dados;
+        const usuario = (await this.usuarioService.recuperarParaAtribuicao({ id: usuarioId }, usuarioAtivo)).dados;
         if (!usuario) throw new BusinessException('Usuário não encontrado');
 
         if (!podeSerMembroDeDemanda(usuario.tipo)) {

@@ -236,3 +236,14 @@ test('alterar: repetir o próprio login não consulta nem recusa', async () => {
     await criarServico(repositorio).alterar({ id: 3, login: 'ana.souza', nomeCompleto: 'Ana Souza' }, GESTOR_LOGADO);
     assert.deepEqual(repositorio.chamadas, ['alterar']);
 });
+
+test('recuperarParaAtribuicao: auxiliar e gestor leem qualquer alvo; o desenvolvedor só a si mesmo; o perfil de outro segue fechado ao auxiliar', async () => {
+    const alvo = { id: 8, login: 'ana', nomeCompleto: 'Ana', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO, horasDiariasNecessarias: 8 };
+    const servico = criarServico({ recuperar: async () => alvo });
+    const auxiliar = { sub: 5, tipo: TipoUsuarioEnum.AUXILIAR } as never;
+    const desenvolvedor = { sub: 3, tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+    assert.equal((await servico.recuperarParaAtribuicao({ id: 8 }, auxiliar)).dados?.id, 8);
+    assert.equal((await servico.recuperarParaAtribuicao({ id: 8 }, GESTOR_LOGADO)).dados?.id, 8);
+    await assert.rejects(() => servico.recuperarParaAtribuicao({ id: 8 }, desenvolvedor), UnauthorizedAccessException);
+    await assert.rejects(() => servico.recuperar({ id: 8 }, auxiliar), UnauthorizedAccessException);
+});

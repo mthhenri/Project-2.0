@@ -290,6 +290,9 @@ test('excluir: o auxiliar exclui a atividade de outra pessoa (menu da linha); o 
     const repo = repositorio();
     await criarServico(repo).excluir({ id: 10 }, AUXILIAR);
     assert.equal(repo.gravacoes.length, 1);
+    const recusada = repositorio();
+    await assert.rejects(() => criarServico(recusada).excluir({ id: 10 }, OUTRO_DESENVOLVEDOR), UnauthorizedAccessException);
+    assert.equal(gravou(recusada), false);
 });
 
 test('recuperar e listarTags: o auxiliar vê atividade de qualquer demanda sem vínculo', async () => {

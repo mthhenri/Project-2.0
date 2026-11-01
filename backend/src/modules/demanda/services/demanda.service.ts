@@ -111,6 +111,10 @@ export class DemandaService {
             }
         }
 
+        if (dto.descricaoCliente !== undefined && dto.descricaoCliente !== null && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+            throw new UnauthorizedAccessException('Apenas gestores podem alterar a descrição do cliente');
+        }
+
         const membroIds = [...new Set(dto.usuarioIds ?? [])];
         if (membroIds.length > 0) {
             if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
