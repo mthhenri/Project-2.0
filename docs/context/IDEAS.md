@@ -140,23 +140,6 @@
 - **Por quê:** o custo da IA passa a ser ajustável sem mexer em código, tipo a tipo.
 - **Custo aparente:** médio: guardar o nível por tipo (na versão do prompt ou na configuração ativa, por migration), a service ler dele no lugar da constante (chat, planejamento, assistente e teste de prompt) e um seletor por tipo na aba Prompts.
 
-### I-036 — Status de usuário vira coluna `ativo` e booleanos sem prefixo `is_` · banco/schema
-
-- **Ideia:** trocar a tabela de referência `tipo_usuario_status` (só `ATIVO` e `INATIVO`) por uma coluna booleana `ativo` em `usuario`. Na mesma linha, `demanda.is_estrutural` passa a se chamar `estrutural`. O `is_deleted` fica, por ser genérico (soft delete em todas as tabelas).
-- **Origem:** pedido do autor em 2026-10-29, só anotado. Ele pediu para avaliar também os outros casos antes de decidir.
-- **Por quê:** uma tabela de referência com dois valores fixos é mais custo que benefício (join em 16 SQLs de `usuario.repository.ts`, subselect para gravar, `codigo` para filtrar). Um booleano diz o mesmo e some do join.
-- **Casos a avaliar antes de especificar:**
-  - `tipo_usuario_status` → `usuario.ativo`: confirmar se há outros estados previstos (ex.: afastado, férias) antes de fechar em booleano.
-  - Demais tabelas `tipo_*_status` (`tipo_projeto_status`, `tipo_demanda_status`, `tipo_atividade_status`, `tipo_proposta_ia_status`): ver quantos valores cada uma tem e se alguma também é só booleana ou um enum fixo, que poderia ser coluna.
-  - Booleanos com prefixo `is_`: `is_estrutural` (`demanda`, `demanda_filho`, `caminho_demanda`, `arvore_demanda` e a DTO `isEstrutural`), e `is_solo` e `is_arquivado` em `plano` (migração 0059). Decidir o padrão de nome de booleanos antes de renomear qualquer um, e checar `docs/CONVENTIONS.md`.
-  - `is_deleted` fica como está (genérico, em `BaseEntity`).
-- **Avaliação de 2026-10-31 (com o autor):**
-  - Só `tipo_usuario_status` (`ATIVO`/`INATIVO`) é um booleano disfarçado; não há estado previsto como afastado ou férias. Vira `usuario.ativo`.
-  - Ficam como tabela de referência: `tipo_projeto_status` (4), `tipo_demanda_status` (4), `tipo_atividade_status` (4), `tipo_proposta_ia_status` (5) e `tipo_plano_ponto_situacao` (4), todas ciclos de vida reais. `tipo_dia_nao_util_duracao` (`INTEGRAL`/`MEIO_PERIODO`) e `tipo_plano_fonte_origem` (`COLADO`/`ARQUIVO`) também ficam, por serem enums que podem crescer.
-  - Nomes: convivem `is_` (`is_estrutural`, `is_solo`, `is_arquivado`), `eh_` (`eh_bidirecional`) e sem prefixo (`ativo`, `rascunho`, `recorrente`, `silenciada` e outros, a maioria). Proposta: sem prefixo, `estrutural`, `solo`, `arquivado`, `bidirecional`; `is_deleted` fica (genérico, `BaseEntity`).
-  - **Ordem:** esperar a task 299 (SQL padronizado, em `active/`) fechar, porque ela reformata os mesmos repositories (`usuario`, `demanda`, `plano`). Depois escrever a spec (próximo número livre: 300).
-- **Custo aparente:** migrations de renomear e converter (sem editar migration já aplicada, ver `sql-migrations`); ajustar DTOs no `shared` (`isEstrutural` e `status` de usuário), repositories e a UI; e atualizar `docs/SCHEMA.md`. A troca de `status` de usuário mexe em filtros de tela e em alguns testes de integração. Rodar `gerenciamento-de-impacto` nos DTOs e enums antes de mexer.
-
 ### I-037 — Visão do cliente sobre as demandas do próprio projeto · cliente/permissões
 
 - **Ideia:** um perfil de cliente que enxerga só o projeto dele: as demandas, se estão prontas, quais estão na fila, etc.
