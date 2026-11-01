@@ -3,8 +3,8 @@ import * as assert from 'node:assert/strict';
 import { DemandaDoGrafoDto } from '@project20/shared';
 import { MAXIMO_DE_SUGESTOES_DE_CONEXAO, descendentesDe, filtrarSugestoes, interpretarSugestoesDeConexao, montarContextoDaAnalise } from './sugestoes-de-conexao';
 
-function demanda(id: number, paiId: number | null, isEstrutural = false): DemandaDoGrafoDto {
-    return { id, nome: `D${id}`, status: 'PLANEJADA', isEstrutural, paiId, horasEstimadas: 0, horasExecutadas: 0, temDescricaoTecnica: false, temDescricaoCliente: false, tags: [] };
+function demanda(id: number, paiId: number | null, estrutural = false): DemandaDoGrafoDto {
+    return { id, nome: `D${id}`, status: 'PLANEJADA', estrutural, paiId, horasEstimadas: 0, horasExecutadas: 0, temDescricaoTecnica: false, temDescricaoCliente: false, tags: [] };
 }
 
 // 1 (estrutura) > 2 (estrutura) > 3 ; 4 (estrutura) ; 5 trabalho solto
@@ -24,14 +24,14 @@ test('descendentes: tudo que está abaixo, em qualquer nível', () => {
 
 test('conexão válida passa; a própria demanda, id inexistente, tipo inválido e motivo vazio saem', () => {
     const brutas = [
-        { tipo: 'CONEXAO', demandaRelacionadaId: 5, ehBidirecional: true, motivo: 'Uma depende da outra' },
+        { tipo: 'CONEXAO', demandaRelacionadaId: 5, bidirecional: true, motivo: 'Uma depende da outra' },
         { tipo: 'CONEXAO', demandaRelacionadaId: 3, motivo: 'a própria' },
         { tipo: 'CONEXAO', demandaRelacionadaId: 99, motivo: 'não existe' },
         { tipo: 'OUTRO', demandaRelacionadaId: 4, motivo: 'tipo errado' },
         { tipo: 'CONEXAO', demandaRelacionadaId: 4, motivo: '  ' },
     ];
     const validas = filtrarSugestoes({ brutas, demandaId: 3, demandas: DEMANDAS, conexoesExistentes: [] });
-    assert.deepEqual(validas.map((sugestao) => [sugestao.tipo, sugestao.demandaRelacionadaId, sugestao.ehBidirecional, sugestao.demandaRelacionadaNome]), [['CONEXAO', 5, true, 'D5']]);
+    assert.deepEqual(validas.map((sugestao) => [sugestao.tipo, sugestao.demandaRelacionadaId, sugestao.bidirecional, sugestao.demandaRelacionadaNome]), [['CONEXAO', 5, true, 'D5']]);
 });
 
 test('conexão que já existe, em qualquer sentido, não é sugerida de novo', () => {
@@ -63,8 +63,8 @@ test('sem repetidas e no máximo cinco sugestões', () => {
 test('o contexto traz a demanda alvo, as conexões que ela já tem e uma linha por outra demanda', () => {
     const texto = montarContextoDaAnalise({
         projeto: 'GR',
-        alvo: { id: 3, nome: 'Novo cadastro', paiId: 2, isEstrutural: false, status: 'PLANEJADA', descricao: null, descricaoCliente: 'Cadastro de parceiros', descricaoTecnica: null },
-        outras: [{ id: 5, nome: 'Relatório', paiId: null, isEstrutural: false, status: 'PLANEJADA', descricao: 'x'.repeat(500) }],
+        alvo: { id: 3, nome: 'Novo cadastro', paiId: 2, estrutural: false, status: 'PLANEJADA', descricao: null, descricaoCliente: 'Cadastro de parceiros', descricaoTecnica: null },
+        outras: [{ id: 5, nome: 'Relatório', paiId: null, estrutural: false, status: 'PLANEJADA', descricao: 'x'.repeat(500) }],
         conexoesDoAlvo: [{ origemId: 3, destinoId: 4 }],
     });
     assert.match(texto, /#3 "Novo cadastro"/);

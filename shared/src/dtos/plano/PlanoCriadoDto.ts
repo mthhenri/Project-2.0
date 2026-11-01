@@ -3,6 +3,6 @@ export interface PlanoCriadoDto {
     titulo: string;
     projetoId: number | null;
     demandaId: number | null;
-    isSolo: boolean;
+    solo: boolean;
     versao: number;
 }

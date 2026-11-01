@@ -18,7 +18,7 @@ export interface PastaNo {
     filhas: PastaNo[];
 }
 
-const ehPasta = (no: DemandaGrafoNoDto): boolean => no.isEstrutural;
+const ehPasta = (no: DemandaGrafoNoDto): boolean => no.estrutural;
 
 /** Os nós que são raiz do projeto: sem pai, ou com o pai fora da lista. */
 function ehRaiz(no: DemandaGrafoNoDto, ids: ReadonlySet<number>): boolean {

@@ -25,7 +25,7 @@ export interface DemandaConsultadaDto {
     nome: string;
     projetoId: number;
     demandaPaiId: number | null;
-    isEstrutural: boolean;
+    estrutural: boolean;
     status: string;
     horasEstimadas: number;
     previsaoFimData: string | null;

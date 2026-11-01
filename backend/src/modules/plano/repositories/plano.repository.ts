@@ -55,8 +55,8 @@ const SELECT_PLANO = `
         plano_demanda.publicacao_data AS "publicacaoData",
         plano.usuario_id AS "criadorId",
         usuario_criador.nome_completo AS "criadorNome",
-        plano.is_solo AS "isSolo",
-        plano.is_arquivado AS "isArquivado",
+        plano.solo AS "solo",
+        plano.arquivado AS "arquivado",
         plano.descricao_tecnica AS "descricaoTecnica",
         plano.descricao_cliente AS "descricaoCliente",
         plano.documentacao,
@@ -102,8 +102,8 @@ export class PlanoRepository extends BaseRepository<Plano> {
                         titulo,
                         projeto_id,
                         usuario_id,
-                        is_solo,
-                        is_arquivado,
+                        solo,
+                        arquivado,
                         descricao_tecnica,
                         descricao_cliente,
                         documentacao,
@@ -177,8 +177,8 @@ export class PlanoRepository extends BaseRepository<Plano> {
             PLANO_DE_PROJETO_ATIVO,
             `(
          (plano.projeto_id IS NULL AND plano.usuario_id = :usuarioId)
-         OR (plano.projeto_id IS NOT NULL AND plano.is_solo = true AND plano.usuario_id = :usuarioId)
-         OR (plano.projeto_id IS NOT NULL AND plano.is_solo = false AND ${acessoAoProjeto})
+         OR (plano.projeto_id IS NOT NULL AND plano.solo = true AND plano.usuario_id = :usuarioId)
+         OR (plano.projeto_id IS NOT NULL AND plano.solo = false AND ${acessoAoProjeto})
        )`,
         ];
 
@@ -187,7 +187,7 @@ export class PlanoRepository extends BaseRepository<Plano> {
             condicoes.push('plano.titulo ILIKE :busca');
             parametros.busca = `%${busca.replace(/[\\%_]/g, '\\$&')}%`;
         }
-        if (!dados.incluirArquivados && !busca) condicoes.push('plano.is_arquivado = false');
+        if (!dados.incluirArquivados && !busca) condicoes.push('plano.arquivado = false');
         if (dados.projetoId !== undefined) {
             condicoes.push('plano.projeto_id = :projetoId');
             parametros.projetoId = dados.projetoId;
@@ -204,8 +204,8 @@ export class PlanoRepository extends BaseRepository<Plano> {
                     recorte."demandaNome",
                     recorte."criadorId",
                     recorte."criadorNome",
-                    recorte."isSolo",
-                    recorte."isArquivado",
+                    recorte."solo",
+                    recorte."arquivado",
                     recorte."updatedDate"
                 FROM
                     (
@@ -267,41 +267,41 @@ export class PlanoRepository extends BaseRepository<Plano> {
     }
 
     /** Marca ou desmarca o plano como solo. */
-    async marcarSolo(dados: { id: number; isSolo: boolean }): Promise<PlanoSoloMarcadoDto> {
+    async marcarSolo(dados: { id: number; solo: boolean }): Promise<PlanoSoloMarcadoDto> {
         const resultado = await this.executarConsulta<PlanoSoloMarcadoDto>(
             `
                 UPDATE plano
                 SET
-                    is_solo = :isSolo,
+                    solo = :solo,
                     updated_date = NOW()
                 WHERE
                     id = :id
                     AND is_deleted = false
                 RETURNING
                     id,
-                    is_solo AS "isSolo"
+                    solo AS "solo"
             `,
-            { id: dados.id, isSolo: dados.isSolo },
+            { id: dados.id, solo: dados.solo },
         );
         return resultado[0];
     }
 
     /** Arquiva ou devolve o plano ao seletor. */
-    async arquivar(dados: { id: number; isArquivado: boolean }): Promise<PlanoArquivadoDto> {
+    async arquivar(dados: { id: number; arquivado: boolean }): Promise<PlanoArquivadoDto> {
         const resultado = await this.executarConsulta<PlanoArquivadoDto>(
             `
                 UPDATE plano
                 SET
-                    is_arquivado = :isArquivado,
+                    arquivado = :arquivado,
                     updated_date = NOW()
                 WHERE
                     id = :id
                     AND is_deleted = false
                 RETURNING
                     id,
-                    is_arquivado AS "isArquivado"
+                    arquivado AS "arquivado"
             `,
-            { id: dados.id, isArquivado: dados.isArquivado },
+            { id: dados.id, arquivado: dados.arquivado },
         );
         return resultado[0];
     }

@@ -351,7 +351,7 @@ export class DemandaProjetoPage implements OnInit {
                     this.grafo.set(resposta.dados);
                     // A pasta escolhida pode ter sido excluída: nesse caso cai na pasta de partida.
                     const atual = this.pastaId();
-                    if (atual !== null && !resposta.dados.nos.some((no) => no.id === atual && no.isEstrutural)) this.aoEscolherPasta(pastaInicial(resposta.dados.nos, undefined));
+                    if (atual !== null && !resposta.dados.nos.some((no) => no.id === atual && no.estrutural)) this.aoEscolherPasta(pastaInicial(resposta.dados.nos, undefined));
                 }
             },
             error: () => {

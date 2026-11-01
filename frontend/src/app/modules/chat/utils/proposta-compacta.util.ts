@@ -221,7 +221,7 @@ const RESUMIDORES: Record<TipoPropostaIaEnum, (dados: Dados) => ResumoBruto> = {
         campos: [
             { tipo: 'chip', texto: `Projeto: ${texto(dados, 'projetoNome')}` },
             { tipo: 'chip', texto: texto(dados, 'demandaPaiNome') ? `Dentro de: ${texto(dados, 'demandaPaiNome')}` : 'Topo do projeto' },
-            { tipo: 'chip', texto: dados['isEstrutural'] === true ? 'Estrutura' : 'Trabalho' },
+            { tipo: 'chip', texto: dados['estrutural'] === true ? 'Estrutura' : 'Trabalho' },
             ...citacao(texto(dados, 'descricaoTecnica') || texto(dados, 'descricaoCliente')),
         ],
         // Depende de outra proposta do mesmo turno: o aviso "confirme antes" precisa aparecer.
@@ -255,7 +255,7 @@ const RESUMIDORES: Record<TipoPropostaIaEnum, (dados: Dados) => ResumoBruto> = {
     }),
     [TipoPropostaIaEnum.DESCONECTAR_DEMANDA]: (dados) => ({
         acao: 'Desconectar',
-        nome: `${nomeOu(dados, 'demandaOrigemNome', 'Demanda', 'demandaOrigemId')} ${dados['ehBidirecional'] === true ? '↔' : '→'} ${nomeOu(dados, 'demandaDestinoNome', 'Demanda', 'demandaDestinoId')}`,
+        nome: `${nomeOu(dados, 'demandaOrigemNome', 'Demanda', 'demandaOrigemId')} ${dados['bidirecional'] === true ? '↔' : '→'} ${nomeOu(dados, 'demandaDestinoNome', 'Demanda', 'demandaDestinoId')}`,
         campos: [{ tipo: 'chip', texto: 'As demandas ficam onde estão' }],
     }),
     [TipoPropostaIaEnum.EXCLUIR_ATIVIDADE]: (dados) => ({
@@ -280,7 +280,7 @@ const RESUMIDORES: Record<TipoPropostaIaEnum, (dados: Dados) => ResumoBruto> = {
     }),
     [TipoPropostaIaEnum.CONECTAR_DEMANDA]: (dados) => ({
         acao: 'Conectar',
-        nome: `${nomeOu(dados, 'demandaOrigemNome', 'Demanda', 'demandaOrigemId')} ${dados['ehBidirecional'] === true ? '↔' : '→'} ${nomeOu(dados, 'demandaDestinoNome', 'Demanda', 'demandaDestinoId')}`,
+        nome: `${nomeOu(dados, 'demandaOrigemNome', 'Demanda', 'demandaOrigemId')} ${dados['bidirecional'] === true ? '↔' : '→'} ${nomeOu(dados, 'demandaDestinoNome', 'Demanda', 'demandaDestinoId')}`,
         campos: citacao(texto(dados, 'motivo')),
     }),
 };

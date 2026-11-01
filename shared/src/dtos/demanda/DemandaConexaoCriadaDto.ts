@@ -11,7 +11,7 @@ export class DemandaConexaoCriadaDto {
     demandaDestinoId: number;
 
     @ApiProperty({ example: false })
-    ehBidirecional: boolean;
+    bidirecional: boolean;
 
     @ApiProperty()
     createdDate: Date;

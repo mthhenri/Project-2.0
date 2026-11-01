@@ -15,7 +15,7 @@ import { DemandaPastasComponent } from './demanda-pastas/demanda-pastas.componen
 
 function no(id: number, nome: string, opcoes: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
-        id, nome, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, horasEstimadas: 6, minutosExecutados: 120, demandaPaiId: null,
+        id, nome, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 6, minutosExecutados: 120, demandaPaiId: null,
         temDescricaoTecnica: true, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...opcoes,
     };
 }
@@ -23,12 +23,12 @@ function no(id: number, nome: string, opcoes: Partial<DemandaGrafoNoDto> = {}): 
 // Ajustes (sem pasta) · Autenticação → Login, Senha, Sessão → Token · Relatórios (vazia)
 const NOS = [
     no(1, 'Ajustes gerais'),
-    no(2, 'Autenticação', { isEstrutural: true }),
+    no(2, 'Autenticação', { estrutural: true }),
     no(3, 'Tela de login', { demandaPaiId: 2, status: TipoDemandaStatusEnum.CONCLUIDA }),
     no(4, 'Recuperar senha', { demandaPaiId: 2 }),
-    no(5, 'Sessão e segurança', { isEstrutural: true, demandaPaiId: 2 }),
+    no(5, 'Sessão e segurança', { estrutural: true, demandaPaiId: 2 }),
     no(6, 'Validar token', { demandaPaiId: 5 }),
-    no(7, 'Relatórios', { isEstrutural: true }),
+    no(7, 'Relatórios', { estrutural: true }),
 ];
 
 const ACOES = { aoVisualizar: () => undefined, aoEditar: () => undefined, aoNovaFilha: () => undefined, aoTags: () => undefined, aoMembros: () => undefined, aoDescricao: () => undefined };
@@ -367,7 +367,7 @@ describe('DemandaArvoreTelaComponent', () => {
 describe('DemandaArvoreTelaComponent — modo Dividido (task 278)', () => {
     const DEMANDA_3 = {
         id: 3, projetoId: 7, demandaPaiId: 2, nome: 'Tela de login', descricaoTecnica: 'texto da 3', descricaoCliente: '', documentacao: '',
-        horasEstimadas: 6, status: TipoDemandaStatusEnum.CONCLUIDA, isEstrutural: false, previsaoFimData: null, createdDate: '2026-01-01T00:00:00Z', podeEditar: true,
+        horasEstimadas: 6, status: TipoDemandaStatusEnum.CONCLUIDA, estrutural: false, previsaoFimData: null, createdDate: '2026-01-01T00:00:00Z', podeEditar: true,
     };
 
     async function editar(campo: 'descricaoTecnica' | 'descricaoCliente' | 'documentacao' = 'descricaoTecnica') {

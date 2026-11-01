@@ -20,7 +20,7 @@ function resumo(id: number, nome: string, sobrescrita: Partial<DemandaDocumentac
 function demandaCompleta(id: number, nome: string) {
     return {
         id, projetoId: 1, demandaPaiId: null, nome, descricaoTecnica: 'Técnica', descricaoCliente: null, documentacao: null, versao: 1, horasEstimadas: 8,
-        status: TipoDemandaStatusEnum.PLANEJADA, isEstrutural: false, previsaoFimData: null, createdDate: '2026-01-15T12:00:00.000Z', podeEditar: true,
+        status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false, previsaoFimData: null, createdDate: '2026-01-15T12:00:00.000Z', podeEditar: true,
     };
 }
 

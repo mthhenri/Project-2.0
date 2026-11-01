@@ -16,7 +16,7 @@ import { DemandaRepository } from '../repositories/demanda.repository';
 export class ProporConectarDemandaFerramenta extends FerramentaPropostaIa<ProporConectarDemandaDto> {
     readonly nome = 'propor_conectar_demanda';
     readonly descricao =
-        'Propõe ligar duas demandas do grafo (origem → destino; ehBidirecional liga nos dois sentidos), com o motivo. Só chame DEPOIS de apresentar a sugestão ao gestor e ele aceitar; ' +
+        'Propõe ligar duas demandas do grafo (origem → destino; bidirecional liga nos dois sentidos), com o motivo. Só chame DEPOIS de apresentar a sugestão ao gestor e ele aceitar; ' +
     'nunca proponha uma conexão que ele não aceitou. Nada é criado até ele confirmar no cartão. Os ids vêm de listar_demandas_do_projeto ou de sugerir_conexoes_e_lugar.';
     readonly permissao = 'AUXILIAR' as const;
     readonly classeDeEntrada = ProporConectarDemandaDto;
@@ -38,7 +38,7 @@ export class ProporConectarDemandaFerramenta extends FerramentaPropostaIa<Propor
         const ligacao = { demandaOrigemId: entrada.demandaOrigemId, demandaDestinoId: entrada.demandaDestinoId };
         if (await this.demandaRepositorio.validarConexao(ligacao)) throw new BusinessException('Já existe uma conexão ativa entre essas demandas neste sentido');
         if (await this.demandaRepositorio.verificarCriariaCiclo(ligacao)) throw new BusinessException('Essa conexão criaria um ciclo no grafo de demandas');
-        const dados: PropostaConectarDemandaDadosDto = { ...entrada, ehBidirecional: entrada.ehBidirecional ?? false, demandaOrigemNome: origem.nome, demandaDestinoNome: destino.nome };
+        const dados: PropostaConectarDemandaDadosDto = { ...entrada, bidirecional: entrada.bidirecional ?? false, demandaOrigemNome: origem.nome, demandaDestinoNome: destino.nome };
         return { ...dados };
     }
 }

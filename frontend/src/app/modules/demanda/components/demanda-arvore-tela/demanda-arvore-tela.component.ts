@@ -100,7 +100,7 @@ export class DemandaArvoreTelaComponent implements OnInit {
     });
 
     readonly nomesDasPastas = computed<ReadonlyMap<number, string> | null>(() =>
-        this.emBusca() ? new Map(this.nos().filter((no) => no.isEstrutural).map((no) => [no.id, no.nome])) : null,
+        this.emBusca() ? new Map(this.nos().filter((no) => no.estrutural).map((no) => [no.id, no.nome])) : null,
     );
 
     /** O caminho de cada demanda até a raiz ("Suporte › GR Sisger"), só no "Projeto inteiro" e fora da busca. */

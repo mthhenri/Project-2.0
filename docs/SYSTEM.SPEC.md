@@ -148,7 +148,7 @@ automática (task 198): o backend serve o `Project-Desktop-<versão>.exe` de mai
 | Nomes de pastas: `controllers/`, `services/`, `repositories/`, `domain/`, `dtos/`, `core/`, `shared/`, `base/`, `modules/`, `config/` | Nomes de arquivo com entidade: `usuario.service.ts`, `demanda.repository.ts`, `execucao.controller.ts` |
 | Classes genéricas: `BaseEntity`, `BaseRepository`, `StandardResponse`, `PaginatedResult` | Nomes de método: `criarUsuario()`, `listarDemandas()`, `encerrarExecucao()` |
 | Campos de BaseEntity em TypeScript: `id`, `isDeleted`, `createdDate`, `updatedDate`, `deletedDate` | DTOs de negócio: `UsuarioCriarDto`, `DemandaAlterarDto`, `ExecucaoIniciarDto` |
-| Colunas BaseEntity em SQL: `id`, `is_deleted`, `created_date`, `updated_date`, `deleted_date` | Tabelas e colunas de negócio em SQL: `usuario`, `nome_completo`, `horas_estimadas`, `is_estrutural` |
+| Colunas BaseEntity em SQL: `id`, `is_deleted`, `created_date`, `updated_date`, `deleted_date` | Tabelas e colunas de negócio em SQL: `usuario`, `nome_completo`, `horas_estimadas`, `estrutural` |
 | Padrões técnicos: `global-exception.filter.ts`, `auth-token.interceptor.ts`, `base.repository.ts` | Propriedades de modelo: `nomeCompleto`, `descricaoTecnica`, `horasDiariasNecessarias` |
 | Exceptions genéricas: `BusinessException`, `ResourceNotFoundException` | Valores de enum: `DESENVOLVEDOR`, `GESTOR`, `PLANEJADA`, `DESENVOLVENDO` |
 | Decorators: `@Public()`, `@GestorOnly()`, `@ActiveUser()` | Nomes de módulo de negócio (pasta): `usuario/`, `demanda/`, `execucao/` |
@@ -1036,7 +1036,7 @@ permanece idêntico à paginação normal.
   nunca `todasAsLinhas`.
 - O campo vive no DTO de filtro em `shared/` (`UsuarioListarDto`, `ProjetoListarDto`,
   `AtividadeListarDto`, `ExecucaoListarDto`, `DemandaListarDto`, …). Como todo query param chega
-  como **string**, o campo usa o mesmo `@Transform` de boolean de `DemandaListarDto.isEstrutural`
+  como **string**, o campo usa o mesmo `@Transform` de boolean de `DemandaListarDto.estrutural`
   (converte `'true'`/`'false'`), senão `@IsBoolean()` rejeitaria a query:
 
   ```typescript
@@ -1308,7 +1308,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `documentacao` | TEXT \| NULL | Markdown |
 | `horas_estimadas` | INTEGER | |
 | `tipo_demanda_status_id` | INTEGER FK | → `tipo_demanda_status` (PENDENTE, PLANEJADA, CONCLUIDA, CANCELADA) |
-| `is_estrutural` | BOOLEAN | demanda-container que agrupa sub-demandas |
+| `estrutural` | BOOLEAN | demanda-container que agrupa sub-demandas |
 | `previsao_fim_data` | DATE \| NULL | |
 | `versao` | INTEGER | trava de versão dos três textos: nasce em 1 e sobe a cada gravação que muda um deles; `PATCH /demanda/:id/textos` só grava com a versão lida (task 258) |
 
@@ -1327,7 +1327,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 |---|---|---|
 | `demanda_origem_id` | INTEGER FK | → demanda |
 | `demanda_destino_id` | INTEGER FK | → demanda |
-| `eh_bidirecional` | BOOLEAN | se true, a conexão vale nos dois sentidos |
+| `bidirecional` | BOOLEAN | se true, a conexão vale nos dois sentidos |
 
 > Prevenção de ciclos: a service valida via CTE recursivo antes de inserir qualquer conexão.
 

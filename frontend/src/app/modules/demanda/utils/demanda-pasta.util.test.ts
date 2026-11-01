@@ -15,7 +15,7 @@ import {
 
 function no(id: number, nome: string, opcoes: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
-        id, nome, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, horasEstimadas: 0, minutosExecutados: 0, demandaPaiId: null,
+        id, nome, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 0, minutosExecutados: 0, demandaPaiId: null,
         temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...opcoes,
     };
 }
@@ -23,12 +23,12 @@ function no(id: number, nome: string, opcoes: Partial<DemandaGrafoNoDto> = {}): 
 // Projeto: Ajustes (raiz, sem pasta) · Autenticação (pasta) → Login, Senha, Sessão (sub-pasta) → Token · Relatórios (pasta vazia)
 const NOS = [
     no(1, 'Ajustes gerais'),
-    no(2, 'Autenticação', { isEstrutural: true }),
+    no(2, 'Autenticação', { estrutural: true }),
     no(3, 'Tela de login', { demandaPaiId: 2 }),
     no(4, 'Recuperar senha', { demandaPaiId: 2 }),
-    no(5, 'Sessão e segurança', { isEstrutural: true, demandaPaiId: 2 }),
+    no(5, 'Sessão e segurança', { estrutural: true, demandaPaiId: 2 }),
     no(6, 'Validar token', { demandaPaiId: 5 }),
-    no(7, 'Relatórios', { isEstrutural: true }),
+    no(7, 'Relatórios', { estrutural: true }),
 ];
 
 describe('demanda-pasta.util', () => {

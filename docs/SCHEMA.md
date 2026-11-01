@@ -260,7 +260,7 @@ CREATE TRIGGER trg_tag_updated_date
 
 Demandas pertencem a projetos e podem conter sub-demandas (hierarquia recursiva
 via `demanda_pai_id`). Demandas também se conectam em grafo via `demanda_conexao`.
-`is_estrutural = true` indica que a demanda serve como container de outras demandas.
+`estrutural = true` indica que a demanda serve como container de outras demandas.
 
 Ao criar uma demanda, o sistema auto-atribui o criador e todos os gestores ativos
 via `demanda_usuario`.
@@ -287,7 +287,7 @@ CREATE TABLE demanda (
   horas_estimadas   INTEGER      NOT NULL,
   tipo_demanda_status_id INTEGER NOT NULL
                       CONSTRAINT fk_demanda_tipo_demanda_status REFERENCES tipo_demanda_status(id),
-  is_estrutural     BOOLEAN      NOT NULL,
+  estrutural     BOOLEAN      NOT NULL,
   previsao_fim_data DATE,
   versao            INTEGER      NOT NULL,  -- sobe a cada gravação que muda um dos três textos (task 258)
   CONSTRAINT chk_demanda_versao_positiva CHECK (versao >= 1)
@@ -350,8 +350,8 @@ CREATE TRIGGER trg_demanda_usuario_updated_date
 ### demanda_conexao
 
 Grafo de conexões entre demandas. Uma conexão pode ser unidirecional
-(`eh_bidirecional = false`: origem → destino) ou bidirecional
-(`eh_bidirecional = true`: origem ↔ destino).
+(`bidirecional = false`: origem → destino) ou bidirecional
+(`bidirecional = true`: origem ↔ destino).
 
 A service valida via CTE recursivo se a nova conexão criaria um ciclo
 antes de qualquer INSERT.
@@ -366,7 +366,7 @@ CREATE TABLE demanda_conexao (
 
   demanda_origem_id   INTEGER NOT NULL REFERENCES demanda(id),
   demanda_destino_id  INTEGER NOT NULL REFERENCES demanda(id),
-  eh_bidirecional     BOOLEAN NOT NULL,
+  bidirecional     BOOLEAN NOT NULL,
 
   CONSTRAINT chk_demanda_conexao_sem_autorreferencia
     CHECK (demanda_origem_id != demanda_destino_id)
@@ -752,7 +752,7 @@ A `0052` semeia os 6 grupos (Domínio, Usuários e ponto, Calendário, IA, Chat,
 > O **plano** é o documento do modo planejamento: três textos Markdown (rascunho das descrições técnica e do cliente e da documentação de uma demanda) que vive vários dias e só grava na demanda ao publicar (task 237). Guarda-chuva `chat-planejamento.spec.md`; modelagem em `chat-planejamento/modelagem.md`. As tabelas de pontos em aberto e de fontes (`plano_ponto`, `plano_fonte`) entram nas tasks 235 e 236. Colunas de `BaseEntity`, nenhum `DEFAULT`, trigger `trg_*_updated_date`.
 
 #### `plano`
-`titulo` (`VARCHAR(255)`), `projeto_id` (FK, **anulável**: plano amplo, pessoal do criador), `usuario_id` (FK: quem criou), `is_solo`, `is_arquivado`, `descricao_tecnica`, `descricao_cliente` e `documentacao` (`TEXT`, anuláveis: o rascunho) e `versao` (`INTEGER`, a partir de 1; sobe a cada gravação do documento e é a base da recusa de gravação sobre versão mais nova: o `UPDATE` compara e grava na mesma instrução). Índices parciais em `projeto_id` e `usuario_id`.
+`titulo` (`VARCHAR(255)`), `projeto_id` (FK, **anulável**: plano amplo, pessoal do criador), `usuario_id` (FK: quem criou), `solo`, `arquivado`, `descricao_tecnica`, `descricao_cliente` e `documentacao` (`TEXT`, anuláveis: o rascunho) e `versao` (`INTEGER`, a partir de 1; sobe a cada gravação do documento e é a base da recusa de gravação sobre versão mais nova: o `UPDATE` compara e grava na mesma instrução). Índices parciais em `projeto_id` e `usuario_id`.
 Quem vê: plano amplo e plano solo, só o criador; plano de projeto, quem tem acesso ao projeto (regra pura `podeAcessarPlano`, no `shared`). A leitura esconde o plano de projeto excluído; restaurar o projeto o traz de volta.
 
 #### `plano_demanda`

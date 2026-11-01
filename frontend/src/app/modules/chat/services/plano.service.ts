@@ -60,12 +60,12 @@ export class PlanoService {
         return this.httpClient.put<StandardResponse<PlanoAlteradoDto>>(`${this.urlBase}/${id}`, dto, comFeedbackProprioEErroTratado());
     }
 
-    marcarSolo(id: number, isSolo: boolean): Observable<StandardResponse<PlanoSoloMarcadoDto>> {
-        return this.httpClient.patch<StandardResponse<PlanoSoloMarcadoDto>>(`${this.urlBase}/${id}/solo`, { isSolo }, comFeedbackProprioEErroTratado());
+    marcarSolo(id: number, solo: boolean): Observable<StandardResponse<PlanoSoloMarcadoDto>> {
+        return this.httpClient.patch<StandardResponse<PlanoSoloMarcadoDto>>(`${this.urlBase}/${id}/solo`, { solo }, comFeedbackProprioEErroTratado());
     }
 
-    arquivar(id: number, isArquivado: boolean): Observable<StandardResponse<PlanoArquivadoDto>> {
-        return this.httpClient.patch<StandardResponse<PlanoArquivadoDto>>(`${this.urlBase}/${id}/arquivo`, { isArquivado }, comFeedbackProprioEErroTratado());
+    arquivar(id: number, arquivado: boolean): Observable<StandardResponse<PlanoArquivadoDto>> {
+        return this.httpClient.patch<StandardResponse<PlanoArquivadoDto>>(`${this.urlBase}/${id}/arquivo`, { arquivado }, comFeedbackProprioEErroTratado());
     }
 
     ligarDemanda(id: number, demandaId: number): Observable<StandardResponse<PlanoDemandaLigadaDto>> {

@@ -27,8 +27,8 @@
             />
             <p-selectbutton
                 [options]="opcoesDirecao"
-                [ngModel]="ehBidirecional()"
-                (ngModelChange)="ehBidirecional.set($event)"
+                [ngModel]="bidirecional()"
+                (ngModelChange)="bidirecional.set($event)"
                 optionLabel="rotulo"
                 optionValue="valor"
                 [allowEmpty]="false"

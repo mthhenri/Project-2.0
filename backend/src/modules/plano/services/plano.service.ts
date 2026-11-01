@@ -74,7 +74,7 @@ export class PlanoService {
 
         return {
             sucesso:  true,
-            dados:    { id, titulo, projetoId, demandaId: demanda?.id ?? null, isSolo: false, versao },
+            dados:    { id, titulo, projetoId, demandaId: demanda?.id ?? null, solo: false, versao },
             mensagem: 'Plano criado com sucesso',
         };
     }
@@ -130,8 +130,8 @@ export class PlanoService {
             throw new UnauthorizedAccessException('Apenas quem criou o plano o marca como solo');
         }
 
-        const planoMarcado = await this.planoRepositorio.marcarSolo({ id: dto.id, isSolo: dto.isSolo });
-        return { sucesso: true, dados: planoMarcado, mensagem: dto.isSolo ? 'Plano marcado como solo' : 'Plano compartilhado com o projeto' };
+        const planoMarcado = await this.planoRepositorio.marcarSolo({ id: dto.id, solo: dto.solo });
+        return { sucesso: true, dados: planoMarcado, mensagem: dto.solo ? 'Plano marcado como solo' : 'Plano compartilhado com o projeto' };
     }
 
     /** Arquiva (sai do seletor, continua na busca) ou desarquiva. Criador, gestor e administrador. */
@@ -139,8 +139,8 @@ export class PlanoService {
         const plano = await this.recuperarPlanoAcessivel(dto.id, usuarioAtivo);
         this.validarPodeArquivarOuExcluir(plano, usuarioAtivo);
 
-        const planoArquivado = await this.planoRepositorio.arquivar({ id: dto.id, isArquivado: dto.isArquivado });
-        return { sucesso: true, dados: planoArquivado, mensagem: dto.isArquivado ? 'Plano arquivado' : 'Plano desarquivado' };
+        const planoArquivado = await this.planoRepositorio.arquivar({ id: dto.id, arquivado: dto.arquivado });
+        return { sucesso: true, dados: planoArquivado, mensagem: dto.arquivado ? 'Plano arquivado' : 'Plano desarquivado' };
     }
 
     /** Soft delete do plano e da ligação dele com a demanda. Criador, gestor e administrador. */
@@ -244,7 +244,7 @@ export class PlanoService {
             usuarioId:   usuarioAtivo.sub,
             criadorId:   plano.criadorId,
             projetoId:   plano.projetoId,
-            isSolo:      plano.isSolo,
+            solo:      plano.solo,
             temAcessoAoProjeto,
         });
     }

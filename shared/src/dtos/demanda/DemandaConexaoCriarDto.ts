@@ -19,5 +19,5 @@ export class DemandaConexaoCriarDto {
 
     @ApiProperty({ example: false })
     @IsBoolean()
-    ehBidirecional: boolean;
+    bidirecional: boolean;
 }

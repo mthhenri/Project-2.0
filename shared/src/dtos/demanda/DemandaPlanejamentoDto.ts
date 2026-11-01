@@ -18,7 +18,7 @@ export class DemandaPlanejamentoDto {
     caminho: string;
 
     @ApiProperty({ example: false, description: 'Demanda estrutural (pode ter sub-demandas); também aparece no planejamento' })
-    isEstrutural: boolean;
+    estrutural: boolean;
 
     @ApiProperty({ enum: TipoDemandaStatusEnum, example: TipoDemandaStatusEnum.PLANEJADA })
     status: TipoDemandaStatusEnum;

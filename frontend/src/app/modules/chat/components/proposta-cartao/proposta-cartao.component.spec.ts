@@ -317,7 +317,7 @@ describe('PropostaCartaoComponent — concluir demanda e mover atividade (task 2
 describe('PropostaCartaoComponent — desconectar demandas e excluir atividade (task 230)', () => {
     it('Desconectar mostra as duas demandas e que só a conexão sai, nos detalhes', async () => {
         const montado = await montarCartao(proposta(TipoPropostaIaEnum.DESCONECTAR_DEMANDA, StatusPropostaIaEnum.PENDENTE, {
-            demandaOrigemId: 3, demandaOrigemNome: 'API', demandaDestinoId: 4, demandaDestinoNome: 'Tela', ehBidirecional: false,
+            demandaOrigemId: 3, demandaOrigemNome: 'API', demandaDestinoId: 4, demandaDestinoNome: 'Tela', bidirecional: false,
         }));
         expect(texto(montado)).toContain('Desconectar');
         expect(texto(montado)).toContain('API → Tela');

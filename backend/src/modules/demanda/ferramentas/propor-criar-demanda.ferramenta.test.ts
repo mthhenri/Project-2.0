@@ -14,9 +14,9 @@ function montar() {
     const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
     const existentes: Record<number, { tipo: TipoPropostaIaEnum; status: StatusPropostaIaEnum; dados: Record<string, unknown> }> = {
         50: { tipo: TipoPropostaIaEnum.CRIAR_PROJETO, status: StatusPropostaIaEnum.PENDENTE, dados: { nome: 'Loja' } },
-        51: { tipo: TipoPropostaIaEnum.CRIAR_DEMANDA, status: StatusPropostaIaEnum.PENDENTE, dados: { nome: 'Cadastro', isEstrutural: true } },
-        52: { tipo: TipoPropostaIaEnum.CRIAR_DEMANDA, status: StatusPropostaIaEnum.PENDENTE, dados: { nome: 'Folha', isEstrutural: false } },
-        53: { tipo: TipoPropostaIaEnum.CRIAR_DEMANDA, status: StatusPropostaIaEnum.EXPIRADA, dados: { nome: 'Recusada', isEstrutural: true } },
+        51: { tipo: TipoPropostaIaEnum.CRIAR_DEMANDA, status: StatusPropostaIaEnum.PENDENTE, dados: { nome: 'Cadastro', estrutural: true } },
+        52: { tipo: TipoPropostaIaEnum.CRIAR_DEMANDA, status: StatusPropostaIaEnum.PENDENTE, dados: { nome: 'Folha', estrutural: false } },
+        53: { tipo: TipoPropostaIaEnum.CRIAR_DEMANDA, status: StatusPropostaIaEnum.EXPIRADA, dados: { nome: 'Recusada', estrutural: true } },
     };
     const propostaIaService = {
         criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
@@ -27,7 +27,7 @@ function montar() {
     };
     const projetoService = { recuperar: async ({ id }: { id: number }) => ({ dados: { id, nome: 'Gestão de Relacionamento' } }) };
     const demandaRepositorio = {
-        recuperar: async ({ id }: { id: number }) => (id === 3 ? { id, nome: 'Estrutura', projetoId: 2, isEstrutural: true } : id === 4 ? { id, nome: 'Trabalho', projetoId: 2, isEstrutural: false } : null),
+        recuperar: async ({ id }: { id: number }) => (id === 3 ? { id, nome: 'Estrutura', projetoId: 2, estrutural: true } : id === 4 ? { id, nome: 'Trabalho', projetoId: 2, estrutural: false } : null),
     };
     const ferramenta = new ProporCriarDemandaFerramenta(
         propostaIaService as unknown as PropostaIaService,
@@ -39,10 +39,10 @@ function montar() {
 
 test('demanda de estrutura de topo num projeto existente leva o nome do projeto', async () => {
     const { ferramenta, propostas } = montar();
-    const resultado = (await ferramenta.executar({ projetoId: 2, nome: 'Cadastro', isEstrutural: true }, GESTOR)) as { propostaId: number };
+    const resultado = (await ferramenta.executar({ projetoId: 2, nome: 'Cadastro', estrutural: true }, GESTOR)) as { propostaId: number };
     assert.equal(resultado.propostaId, 60);
     assert.equal(propostas[0].tipo, TipoPropostaIaEnum.CRIAR_DEMANDA);
-    assert.deepEqual(propostas[0].dados, { projetoId: 2, nome: 'Cadastro', isEstrutural: true, projetoNome: 'Gestão de Relacionamento' });
+    assert.deepEqual(propostas[0].dados, { projetoId: 2, nome: 'Cadastro', estrutural: true, projetoNome: 'Gestão de Relacionamento' });
 });
 
 test('sub-demanda de uma demanda existente de estrutura leva o nome da pai', async () => {

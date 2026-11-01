@@ -15,8 +15,8 @@ const ids = (itens: Array<{ id: number }>) => itens.map((item) => item.id);
 /** Árvore: raiz → (a, b); a → (a1). Todas estruturais para poderem ter filhas. */
 async function montarArvore(conexao: Parameters<typeof criarProjeto>[0]) {
     const projeto = await criarProjeto(conexao);
-    const raiz = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Raiz', isEstrutural: true });
-    const filhaA = await criarDemanda(conexao, { projetoId: projeto.id, demandaPaiId: raiz.id, nome: 'A', isEstrutural: true });
+    const raiz = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Raiz', estrutural: true });
+    const filhaA = await criarDemanda(conexao, { projetoId: projeto.id, demandaPaiId: raiz.id, nome: 'A', estrutural: true });
     const filhaB = await criarDemanda(conexao, { projetoId: projeto.id, demandaPaiId: raiz.id, nome: 'B' });
     const a1 = await criarDemanda(conexao, { projetoId: projeto.id, demandaPaiId: filhaA.id, nome: 'A1' });
     return { projeto, raiz, a: filhaA, b: filhaB, a1 };
@@ -88,7 +88,7 @@ testarComBanco('conexões: validarConexao vale por sentido; validarConexaoDemand
     const repositorio = criarRepositorio(DemandaRepository, conexao);
     const [valor, outroSelecionado, c] = await tresDemandas(conexao, 3);
     const simples = await criarDemandaConexao(conexao, { demandaOrigemId: valor.id, demandaDestinoId: outroSelecionado.id });
-    const bidirecional = await criarDemandaConexao(conexao, { demandaOrigemId: outroSelecionado.id, demandaDestinoId: c.id, ehBidirecional: true });
+    const bidirecional = await criarDemandaConexao(conexao, { demandaOrigemId: outroSelecionado.id, demandaDestinoId: c.id, bidirecional: true });
 
     assert.equal(await repositorio.validarConexao({ demandaOrigemId: valor.id, demandaDestinoId: outroSelecionado.id }), true);
     assert.equal(await repositorio.validarConexao({ demandaOrigemId: outroSelecionado.id, demandaDestinoId: valor.id }), false, 'o sentido inverso não existe');
@@ -103,7 +103,7 @@ testarComBanco('listarConexoes: direção saída, entrada (bidirecional) e bidir
     const repositorio = criarRepositorio(DemandaRepository, conexao);
     const [itemParcial, outroPrincipal, c, dataAtual] = await tresDemandas(conexao, 4);
     await criarDemandaConexao(conexao, { demandaOrigemId: itemParcial.id, demandaDestinoId: outroPrincipal.id });
-    await criarDemandaConexao(conexao, { demandaOrigemId: c.id, demandaDestinoId: itemParcial.id, ehBidirecional: true });
+    await criarDemandaConexao(conexao, { demandaOrigemId: c.id, demandaDestinoId: itemParcial.id, bidirecional: true });
     await criarDemandaConexao(conexao, { demandaOrigemId: dataAtual.id, demandaDestinoId: itemParcial.id });
     const comExcluida = await criarDemanda(conexao, { projetoId: itemParcial.projetoId });
     await criarDemandaConexao(conexao, { demandaOrigemId: itemParcial.id, demandaDestinoId: comExcluida.id });
@@ -187,7 +187,7 @@ testarComBanco('listar: caminho com a árvore de nomes; filhas de pai excluído 
 testarComBanco('listar: ordem por nome, filtros (status, estrutural, pai) e paginação com o total da busca inteira', async (conexao) => {
     const repositorio = criarRepositorio(DemandaRepository, conexao);
     const projeto = await criarProjeto(conexao);
-    const pai = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Pai', isEstrutural: true });
+    const pai = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Pai', estrutural: true });
     await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Zeta', statusCodigo: 'CONCLUIDA' });
     await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Alfa', demandaPaiId: pai.id });
     await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Beta' });
@@ -195,7 +195,7 @@ testarComBanco('listar: ordem por nome, filtros (status, estrutural, pai) e pagi
     const todas = await repositorio.listar({ projetoId: projeto.id, allRows: true });
     assert.deepEqual(todas.itens.map((item) => item.nome), ['Alfa', 'Beta', 'Pai', 'Zeta']);
     assert.deepEqual((await repositorio.listar({ projetoId: projeto.id, status: TipoDemandaStatusEnum.CONCLUIDA, allRows: true })).itens.map((item) => item.nome), ['Zeta']);
-    assert.deepEqual((await repositorio.listar({ projetoId: projeto.id, isEstrutural: true, allRows: true })).itens.map((item) => item.nome), ['Pai']);
+    assert.deepEqual((await repositorio.listar({ projetoId: projeto.id, estrutural: true, allRows: true })).itens.map((item) => item.nome), ['Pai']);
     assert.deepEqual((await repositorio.listar({ projetoId: projeto.id, demandaPaiId: pai.id, allRows: true })).itens.map((item) => item.nome), ['Alfa']);
     const pagina = await repositorio.listar({ projetoId: projeto.id, pagina: 2, itensPorPagina: 3 });
     assert.deepEqual([pagina.itens.map((item) => item.nome), pagina.total], [['Zeta'], 4]);
@@ -380,7 +380,7 @@ testarComBanco('listarExecutadas: o desenvolvedor sem linha em demanda_usuario n
 
 const DADOS_INSERIR = {
     nome: 'Criada', descricaoTecnica: null, descricaoCliente: null, documentacao: null, horasEstimadas: 3,
-    status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, previsaoFimData: null, demandaPaiId: null,
+    status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, previsaoFimData: null, demandaPaiId: null,
 };
 
 testarComBanco('inserirComAtribuicao grava a demanda e as atribuições; sem usuários (gestor) não grava nenhuma', async (conexao) => {
@@ -520,7 +520,7 @@ testarComBanco('recuperarGrafo: nós do projeto (sem excluídos) e arestas de hi
 testarComBanco('listarPlanejamento: só PENDENTE e PLANEJADA, com caminho, minutos e executores ativos', async (conexao) => {
     const repositorio = criarRepositorio(DemandaRepository, conexao);
     const projeto = await criarProjeto(conexao);
-    const pai = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Pai', isEstrutural: true, statusCodigo: 'PLANEJADA' });
+    const pai = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Pai', estrutural: true, statusCodigo: 'PLANEJADA' });
     const filha = await criarDemanda(conexao, { projetoId: projeto.id, demandaPaiId: pai.id, nome: 'Filha', statusCodigo: 'PENDENTE' });
     await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Feita', statusCodigo: 'CONCLUIDA' });
     const executor = await criarDesenvolvedor(conexao, { nomeCompleto: 'Executora' });
@@ -611,7 +611,7 @@ testarComBanco('recuperarConexaoPorPar: acha a conexão ativa só no sentido ori
     const criada = await criarDemandaConexao(conexao, { demandaOrigemId: demandaFabricadaAtual.id, demandaDestinoId: demandaFabricada.id });
     const achada = await repositorio.recuperarConexaoPorPar({ demandaOrigemId: demandaFabricadaAtual.id, demandaDestinoId: demandaFabricada.id });
     assert.equal(achada?.id, criada.id);
-    assert.equal(achada?.ehBidirecional, false);
+    assert.equal(achada?.bidirecional, false);
     assert.equal(await repositorio.recuperarConexaoPorPar({ demandaOrigemId: demandaFabricada.id, demandaDestinoId: demandaFabricadaAtual.id }), null, 'o sentido inverso não é a mesma conexão');
 
     await repositorio.excluirConexao({ demandaId: demandaFabricadaAtual.id, conexaoId: criada.id });
@@ -637,7 +637,7 @@ testarComBanco('versão: a demanda nasce na versão 1 e gravar um texto soma 1; 
 testarComBanco('versão: inserir grava a versão 1', async (conexao) => {
     const repositorio = criarRepositorio(DemandaRepository, conexao);
     const projeto = await criarProjeto(conexao);
-    const criada = await repositorio.inserir({ projetoId: projeto.id, nome: 'Nova', horasEstimadas: 1, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false } as never);
+    const criada = await repositorio.inserir({ projetoId: projeto.id, nome: 'Nova', horasEstimadas: 1, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false } as never);
     assert.equal((await repositorio.recuperar({ id: criada.id }))?.versao, 1);
 });
 
@@ -666,7 +666,7 @@ testarComBanco('documentação: o gestor vê as demandas de todos os projetos, c
     const repositorio = criarRepositorio(DemandaRepository, conexao);
     const gestor = await criarGestor(conexao);
     const projeto = await criarProjeto(conexao, { nome: 'Projeto Doc' });
-    const raiz = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Raiz', isEstrutural: true });
+    const raiz = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Raiz', estrutural: true });
     const filha = await criarDemanda(conexao, {
         projetoId: projeto.id, demandaPaiId: raiz.id, nome: 'Filha', descricaoTecnica: 'Técnica', descricaoCliente: '   ', documentacao: null,
     });

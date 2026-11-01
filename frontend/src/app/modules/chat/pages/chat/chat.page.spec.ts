@@ -912,10 +912,10 @@ describe('ChatPage — copiar', () => {
 describe('ChatPage — modo Planejamento (task 233)', () => {
     const PLANO = {
         id: 7, titulo: 'Plano da semana', projetoId: 10, projetoNome: 'Projeto Demo', demandaId: null, demandaNome: null, publicacaoData: null,
-        criadorId: 1, criadorNome: 'Eu', isSolo: false, isArquivado: false, descricaoTecnica: 'Texto técnico', documentacao: null,
+        criadorId: 1, criadorNome: 'Eu', solo: false, arquivado: false, descricaoTecnica: 'Texto técnico', documentacao: null,
         versao: 3, createdDate: '2026-10-20T12:00:00.000Z', updatedDate: '2026-10-21T12:00:00.000Z',
     };
-    const RESUMO = { id: 7, titulo: 'Plano da semana', projetoId: 10, projetoNome: 'Projeto Demo', demandaId: null, demandaNome: null, criadorId: 1, criadorNome: 'Eu', isSolo: false, isArquivado: false, updatedDate: '2026-10-21T12:00:00.000Z' };
+    const RESUMO = { id: 7, titulo: 'Plano da semana', projetoId: 10, projetoNome: 'Projeto Demo', demandaId: null, demandaNome: null, criadorId: 1, criadorNome: 'Eu', solo: false, arquivado: false, updatedDate: '2026-10-21T12:00:00.000Z' };
 
     const chave = (montado: Montado, rotulo: string) =>
         Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.chat__modo-opcao')).find((item) => item.textContent?.includes(rotulo))!;
@@ -983,7 +983,7 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
         Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.chat__sem-plano button')).find((item) => item.textContent?.includes('Novo plano'))!.click();
         const criacao = esperarRequisicao(montado.http, 'POST', '/plano');
         expect(criacao.request.body).toEqual({});
-        responderSucesso(criacao, { id: 8, titulo: 'Plano sem título', projetoId: null, demandaId: null, isSolo: false, versao: 1 });
+        responderSucesso(criacao, { id: 8, titulo: 'Plano sem título', projetoId: null, demandaId: null, solo: false, versao: 1 });
         await montado.atualizar();
         responderSucesso(pedidoDoPlano(montado, 8), { ...PLANO, id: 8, titulo: 'Plano sem título', projetoId: null, projetoNome: null });
         responderSucesso(pedidoDaConversa(montado, 8), { conversaId: 'plano-8', planoId: 8, mensagens: [], autores: {} });

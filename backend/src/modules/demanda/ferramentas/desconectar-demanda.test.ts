@@ -16,7 +16,7 @@ import { ProporDesconectarDemandaFerramenta } from './propor-desconectar-demanda
 const GESTOR = { sub: 1, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as never;
 const DESENVOLVEDOR = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-function montar(opcoes: { conexaoExiste?: boolean; ehBidirecional?: boolean; criarFalha?: string } = {}) {
+function montar(opcoes: { conexaoExiste?: boolean; bidirecional?: boolean; criarFalha?: string } = {}) {
     const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
     const exclusoes: { dto: Record<string, unknown>; usuario: unknown }[] = [];
     const criacoes: { dto: Record<string, unknown>; usuario: unknown }[] = [];
@@ -24,7 +24,7 @@ function montar(opcoes: { conexaoExiste?: boolean; ehBidirecional?: boolean; cri
     const demandas: Record<number, { id: number; nome: string }> = { 3: { id: 3, nome: 'API' }, 4: { id: 4, nome: 'Tela' } };
     const demandaRepositorio = {
         recuperar: async ({ id }: { id: number }) => demandas[id] ?? null,
-        recuperarConexaoPorPar: async () => (existe ? { id: 55, demandaOrigemId: 3, demandaDestinoId: 4, ehBidirecional: opcoes.ehBidirecional ?? false } : null),
+        recuperarConexaoPorPar: async () => (existe ? { id: 55, demandaOrigemId: 3, demandaDestinoId: 4, bidirecional: opcoes.bidirecional ?? false } : null),
     } as unknown as DemandaRepository;
     const demandaService = {
         excluirConexao: async (dto: Record<string, unknown>, usuario: unknown) => {
@@ -49,11 +49,11 @@ function montar(opcoes: { conexaoExiste?: boolean; ehBidirecional?: boolean; cri
 }
 
 test('propor: guarda o par, os nomes e o sentido da conexão, sem remover nada; é ferramenta só do gestor', async () => {
-    const { ferramenta, propostas, exclusoes } = montar({ ehBidirecional: true });
+    const { ferramenta, propostas, exclusoes } = montar({ bidirecional: true });
     assert.equal(ferramenta.permissao, 'AUXILIAR');
     assert.equal(ferramenta.tipoProposta, TipoPropostaIaEnum.DESCONECTAR_DEMANDA);
     await ferramenta.executar({ demandaOrigemId: 3, demandaDestinoId: 4 }, GESTOR);
-    assert.deepEqual(propostas[0].dados, { demandaOrigemId: 3, demandaDestinoId: 4, demandaOrigemNome: 'API', demandaDestinoNome: 'Tela', ehBidirecional: true });
+    assert.deepEqual(propostas[0].dados, { demandaOrigemId: 3, demandaDestinoId: 4, demandaOrigemNome: 'API', demandaDestinoNome: 'Tela', bidirecional: true });
     assert.deepEqual(exclusoes, []);
 });
 
@@ -68,10 +68,10 @@ test('propor: mesma demanda, demanda inexistente e conexão que não existe são
 });
 
 test('executar: remove a conexão pela service com o usuário do token e guarda o sentido para o desfazer', async () => {
-    const { executor, exclusoes } = montar({ ehBidirecional: true });
+    const { executor, exclusoes } = montar({ bidirecional: true });
     const resultado = await executor.executar({ demandaOrigemId: 3, demandaDestinoId: 4 }, GESTOR);
     assert.deepEqual(exclusoes, [{ dto: { demandaId: 3, conexaoId: 55 }, usuario: GESTOR }]);
-    assert.deepEqual(resultado, { demandaOrigemId: 3, demandaDestinoId: 4, ehBidirecional: true });
+    assert.deepEqual(resultado, { demandaOrigemId: 3, demandaDestinoId: 4, bidirecional: true });
 });
 
 test('executar: desenvolvedor não desconecta (a service recusa) e conexão que já não existe é recusada', async () => {
@@ -84,11 +84,11 @@ test('executar: desenvolvedor não desconecta (a service recusa) e conexão que 
 
 test('desfazer: recria a conexão pela service, no mesmo sentido; repetida ou em ciclo a service recusa e nada é criado', async () => {
     const feito = montar();
-    await feito.executor.desfazer({ demandaOrigemId: 3, demandaDestinoId: 4, ehBidirecional: true }, GESTOR);
-    assert.deepEqual(feito.criacoes, [{ dto: { demandaOrigemId: 3, demandaDestinoId: 4, ehBidirecional: true }, usuario: GESTOR }]);
+    await feito.executor.desfazer({ demandaOrigemId: 3, demandaDestinoId: 4, bidirecional: true }, GESTOR);
+    assert.deepEqual(feito.criacoes, [{ dto: { demandaOrigemId: 3, demandaDestinoId: 4, bidirecional: true }, usuario: GESTOR }]);
 
     const ciclo = montar({ criarFalha: 'Essa conexão criaria um ciclo no grafo de demandas' });
-    await assert.rejects(() => ciclo.executor.desfazer({ demandaOrigemId: 3, demandaDestinoId: 4, ehBidirecional: false }, GESTOR), BusinessException);
+    await assert.rejects(() => ciclo.executor.desfazer({ demandaOrigemId: 3, demandaDestinoId: 4, bidirecional: false }, GESTOR), BusinessException);
     assert.deepEqual(ciclo.criacoes, []);
     await assert.rejects(() => feito.executor.desfazer({}, GESTOR), BusinessException);
 });

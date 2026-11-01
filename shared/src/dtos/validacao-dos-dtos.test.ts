@@ -81,7 +81,7 @@ test('DTOs internos e de saída não recebem o validador de caracteres proibidos
 const CARGAS_VALIDAS: Record<string, Record<string, unknown>> = {
     UsuarioCriarDto: { login: 'maria.silva', senhaNaoEncriptada: 'senhaForte1', nomeCompleto: 'Maria Silva', cargoTitulo: 'Dev', tipo: 'DESENVOLVEDOR', horasDiariasNecessarias: 8 },
     ProjetoCriarDto: { nome: 'Projeto A', codigo: 'PA', cor: '#336699', status: 'ATIVO' },
-    DemandaCriarDto: { projetoId: 1, nome: 'Demanda A', horasEstimadas: 8, status: 'PENDENTE', isEstrutural: false },
+    DemandaCriarDto: { projetoId: 1, nome: 'Demanda A', horasEstimadas: 8, status: 'PENDENTE', estrutural: false },
     AtividadeCriarDto: { demandaId: 1, nome: 'Atividade A', status: 'PENDENTE' },
     ExecucaoRegistrarDto: { atividadeId: 1, inicioData: '2026-01-15T10:00:00-03:00', fimData: '2026-01-15T11:00:00-03:00', descricao: 'Trabalho feito' },
     DiaNaoUtilCriarDto: { diaData: '2026-03-10', descricao: 'Feriado', tipo: 'FERIADO', duracao: 'INTEGRAL', recorrente: false },
@@ -100,7 +100,7 @@ const CARGAS_VALIDAS: Record<string, Record<string, unknown>> = {
 const OBRIGATORIOS: Record<string, string[]> = {
     UsuarioCriarDto: ['login', 'senhaNaoEncriptada', 'nomeCompleto', 'cargoTitulo', 'tipo', 'horasDiariasNecessarias'],
     ProjetoCriarDto: ['nome', 'codigo', 'cor', 'status'],
-    DemandaCriarDto: ['projetoId', 'nome', 'horasEstimadas', 'status', 'isEstrutural'],
+    DemandaCriarDto: ['projetoId', 'nome', 'horasEstimadas', 'status', 'estrutural'],
     AtividadeCriarDto: ['demandaId', 'nome', 'status'],
     ExecucaoRegistrarDto: ['atividadeId', 'inicioData', 'fimData', 'descricao'],
     DiaNaoUtilCriarDto: ['diaData', 'descricao', 'tipo', 'duracao', 'recorrente'],
@@ -140,7 +140,7 @@ const TIPO_ERRADO: Array<[string, string, unknown]> = [
     ['ProjetoCriarDto', 'status', 'EM_ABERTO'],
     ['ProjetoCriarDto', 'cor', 'azul'],
     ['ProjetoCriarDto', 'inicioData', 'ontem'],
-    ['DemandaCriarDto', 'isEstrutural', 'sim'],
+    ['DemandaCriarDto', 'estrutural', 'sim'],
     ['DemandaCriarDto', 'horasEstimadas', 'muitas'],
     ['DemandaCriarDto', 'projetoId', 0],
     ['AtividadeCriarDto', 'status', 'FEITA'],

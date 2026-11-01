@@ -18,7 +18,7 @@ const ADMINISTRADOR = { sub: 4, login: 'admin', tipo: TipoUsuarioEnum.ADMINISTRA
 function planoBase(sobrescrita: Record<string, unknown> = {}) {
     return {
         id: 7, titulo: 'Plano', projetoId: 10, projetoNome: 'Projeto', demandaId: null, demandaNome: null, publicacaoData: null,
-        criadorId: 1, criadorNome: 'Criador', isSolo: false, isArquivado: false,
+        criadorId: 1, criadorNome: 'Criador', solo: false, arquivado: false,
         descricaoTecnica: null, descricaoCliente: 'Texto do cliente', documentacao: null,
         versao: 3, createdDate: 'a', updatedDate: 'b', ...sobrescrita,
     };
@@ -54,8 +54,8 @@ function criarServico(cenario: Cenario = {}) {
             chamadas.push({ metodo: 'alterar', argumento });
             return 'alterarDevolve' in cenario ? cenario.alterarDevolve : { id: 7, titulo: 'Plano', versao: 4, updatedDate: 'c' };
         },
-        marcarSolo:      registrar('marcarSolo', { id: 7, isSolo: true }),
-        arquivar:        registrar('arquivar', { id: 7, isArquivado: true }),
+        marcarSolo:      registrar('marcarSolo', { id: 7, solo: true }),
+        arquivar:        registrar('arquivar', { id: 7, arquivado: true }),
         atribuirProjeto: registrar('atribuirProjeto', true),
         ligarDemanda:    registrar('ligarDemanda'),
         excluir:         registrar('excluir'),
@@ -88,7 +88,7 @@ test('recuperar: plano de projeto — desenvolvedor sem acesso ao projeto recebe
 });
 
 test('recuperar: plano solo é só do criador — nem gestor, nem administrador, nem colega com acesso', async () => {
-    const { servico } = criarServico({ plano: planoBase({ isSolo: true }), comAcessoAoProjeto: [1, 2] });
+    const { servico } = criarServico({ plano: planoBase({ solo: true }), comAcessoAoProjeto: [1, 2] });
     for (const outro of [COLEGA_DEV, GESTOR, ADMINISTRADOR]) {
         await assert.rejects(() => servico.recuperar({ id: 7 }, outro), ResourceNotFoundException);
     }
@@ -163,22 +163,22 @@ test('alterar: sem nenhum campo é recusado; quem não acessa o plano não grava
 
 test('marcarSolo: só o criador marca e desmarca', async () => {
     const { servico, chamadas } = criarServico({ comAcessoAoProjeto: [1, 2] });
-    await assert.rejects(() => servico.marcarSolo({ id: 7, isSolo: true }, COLEGA_DEV), UnauthorizedAccessException);
-    await assert.rejects(() => servico.marcarSolo({ id: 7, isSolo: true }, GESTOR), UnauthorizedAccessException);
+    await assert.rejects(() => servico.marcarSolo({ id: 7, solo: true }, COLEGA_DEV), UnauthorizedAccessException);
+    await assert.rejects(() => servico.marcarSolo({ id: 7, solo: true }, GESTOR), UnauthorizedAccessException);
     assert.deepEqual(metodos(chamadas), []);
 
-    const resposta = await servico.marcarSolo({ id: 7, isSolo: true }, CRIADOR_DEV);
-    assert.equal(resposta.dados.isSolo, true);
-    assert.deepEqual(chamadas[0].argumento, { id: 7, isSolo: true });
+    const resposta = await servico.marcarSolo({ id: 7, solo: true }, CRIADOR_DEV);
+    assert.equal(resposta.dados.solo, true);
+    assert.deepEqual(chamadas[0].argumento, { id: 7, solo: true });
 });
 
 test('arquivar e excluir: criador, gestor e administrador; colega desenvolvedor não', async () => {
     const { servico, chamadas } = criarServico({ comAcessoAoProjeto: [1, 2] });
-    await assert.rejects(() => servico.arquivar({ id: 7, isArquivado: true }, COLEGA_DEV), UnauthorizedAccessException);
+    await assert.rejects(() => servico.arquivar({ id: 7, arquivado: true }, COLEGA_DEV), UnauthorizedAccessException);
     await assert.rejects(() => servico.excluir({ id: 7 }, COLEGA_DEV), UnauthorizedAccessException);
 
     for (const autorizado of [CRIADOR_DEV, GESTOR, ADMINISTRADOR]) {
-        await servico.arquivar({ id: 7, isArquivado: true }, autorizado);
+        await servico.arquivar({ id: 7, arquivado: true }, autorizado);
         await servico.excluir({ id: 7 }, autorizado);
     }
     assert.deepEqual(metodos(chamadas), ['arquivar', 'excluir', 'arquivar', 'excluir', 'arquivar', 'excluir']);
@@ -192,7 +192,7 @@ test('criar: plano amplo (sem projeto nem demanda) usa o título padrão e é do
     const { servico, chamadas } = criarServico();
     const resposta = await servico.criar({}, CRIADOR_DEV);
     assert.deepEqual(chamadas[0], { metodo: 'inserir', argumento: { titulo: 'Plano sem título', projetoId: null, usuarioId: 1 } });
-    assert.deepEqual(resposta.dados, { id: 7, titulo: 'Plano sem título', projetoId: null, demandaId: null, isSolo: false, versao: 1 });
+    assert.deepEqual(resposta.dados, { id: 7, titulo: 'Plano sem título', projetoId: null, demandaId: null, solo: false, versao: 1 });
 });
 
 test('criar: plano de projeto exige acesso ao projeto do desenvolvedor, e o projeto precisa existir', async () => {

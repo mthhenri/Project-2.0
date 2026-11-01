@@ -5,7 +5,7 @@ export type CampoDescricaoDemanda = 'descricaoTecnica' | 'descricaoCliente' | 'd
 /** Dados mínimos de uma demanda para montar o menu de contexto (árvore ou planejamento). */
 export interface DemandaMenuAlvo {
     id: number;
-    isEstrutural: boolean;
+    estrutural: boolean;
     temDescricaoTecnica: boolean;
     temDescricaoCliente: boolean;
     temDocumentacao: boolean;
@@ -64,7 +64,7 @@ export function construirMenuDemanda(
         });
     }
 
-    if (alvo.isEstrutural) {
+    if (alvo.estrutural) {
         itens.push({
             label: 'Nova Sub-demanda',
             icon: 'pi pi-plus',

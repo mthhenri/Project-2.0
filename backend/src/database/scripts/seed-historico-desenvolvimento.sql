@@ -171,7 +171,7 @@ BEGIN
                 documentacao,
                 horas_estimadas,
                 tipo_demanda_status_id,
-                is_estrutural,
+                estrutural,
                 previsao_fim_data,
                 versao
             )
@@ -217,7 +217,7 @@ BEGIN
                     documentacao,
                     horas_estimadas,
                     tipo_demanda_status_id,
-                    is_estrutural,
+                    estrutural,
                     previsao_fim_data,
                     versao
                 )
@@ -261,7 +261,7 @@ BEGIN
                         deleted_date,
                         demanda_origem_id,
                         demanda_destino_id,
-                        eh_bidirecional
+                        bidirecional
                     )
                 SELECT
                     criacao,

@@ -12,14 +12,14 @@ type Montado = ComponenteMontado<PlanoPublicarDialogComponent>;
 function plano(sobrescrita: Record<string, unknown> = {}) {
     return {
         id: 7, titulo: 'Plano', projetoId: 10, projetoNome: 'Projeto', demandaId: 20, demandaNome: 'Demanda de exportação', publicacaoData: null,
-        criadorId: 1, criadorNome: 'Eu', isSolo: false, isArquivado: false, descricaoTecnica: 'Técnica nova', descricaoCliente: 'Cliente nova',
+        criadorId: 1, criadorNome: 'Eu', solo: false, arquivado: false, descricaoTecnica: 'Técnica nova', descricaoCliente: 'Cliente nova',
         documentacao: '', versao: 3, createdDate: 'a', updatedDate: 'b', ...sobrescrita,
     };
 }
 
 const DEMANDA = {
     id: 20, projetoId: 10, demandaPaiId: null, nome: 'Demanda de exportação', descricaoTecnica: 'Técnica velha', descricaoCliente: null, documentacao: 'Doc da demanda',
-    horasEstimadas: 0, status: TipoDemandaStatusEnum.PLANEJADA, isEstrutural: false, previsaoFimData: null, createdDate: 'a', podeEditar: true,
+    horasEstimadas: 0, status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false, previsaoFimData: null, createdDate: 'a', podeEditar: true,
 };
 
 async function abrir(usuario: TipoUsuarioEnum, dadosDoPlano = plano(), pontos: unknown[] = []): Promise<Montado> {

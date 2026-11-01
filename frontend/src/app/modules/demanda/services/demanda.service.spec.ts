@@ -19,11 +19,11 @@ const pedido = (metodo: string, sufixo: string) => http.expectOne((registroSegui
 
 describe('DemandaService (frontend)', () => {
     it('listar monta a query só com os filtros informados', () => {
-        servico.listar({ projetoId: 7, pagina: 2, itensPorPagina: 50, status: TipoDemandaStatusEnum.PLANEJADA, isEstrutural: false }).subscribe();
+        servico.listar({ projetoId: 7, pagina: 2, itensPorPagina: 50, status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false }).subscribe();
         const requisicao = http.expectOne((registroAtual) => registroAtual.url.endsWith('/demanda'));
         expect(requisicao.request.method).toBe('GET');
         expect(Object.fromEntries(requisicao.request.params.keys().map((chave) => [chave, requisicao.request.params.get(chave)]))).toEqual({
-            projetoId: '7', pagina: '2', itensPorPagina: '50', status: 'PLANEJADA', isEstrutural: 'false',
+            projetoId: '7', pagina: '2', itensPorPagina: '50', status: 'PLANEJADA', estrutural: 'false',
         });
     });
 
@@ -40,7 +40,7 @@ describe('DemandaService (frontend)', () => {
     });
 
     it('CRUD: verbo, URL e corpo certos', () => {
-        servico.criar({ projetoId: 7, nome: 'N', horasEstimadas: 1, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false }).subscribe();
+        servico.criar({ projetoId: 7, nome: 'N', horasEstimadas: 1, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false }).subscribe();
         expect(pedido('POST', '/demanda').request.body.nome).toBe('N');
         servico.recuperar(3).subscribe();
         pedido('GET', '/demanda/3');
@@ -62,12 +62,12 @@ describe('DemandaService (frontend)', () => {
     });
 
     it('conexões: criar (com e sem erro tratado pela tela), listar e excluir', () => {
-        servico.criarConexao(3, { demandaDestinoId: 4, ehBidirecional: true }).subscribe();
+        servico.criarConexao(3, { demandaDestinoId: 4, bidirecional: true }).subscribe();
         const comum = pedido('POST', '/demanda/3/conexao');
-        expect(comum.request.body).toEqual({ demandaDestinoId: 4, ehBidirecional: true });
+        expect(comum.request.body).toEqual({ demandaDestinoId: 4, bidirecional: true });
         expect(comum.request.context.get(ERRO_TRATADO_PELA_TELA)).toBe(false);
 
-        servico.criarConexao(3, { demandaDestinoId: 4, ehBidirecional: false }, true).subscribe();
+        servico.criarConexao(3, { demandaDestinoId: 4, bidirecional: false }, true).subscribe();
         expect(pedido('POST', '/demanda/3/conexao').request.context.get(ERRO_TRATADO_PELA_TELA)).toBe(true);
 
         servico.listarConexoes(3).subscribe();

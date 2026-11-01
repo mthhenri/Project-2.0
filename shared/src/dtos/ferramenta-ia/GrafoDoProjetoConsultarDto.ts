@@ -14,7 +14,7 @@ export interface DemandaDoGrafoDto {
     id: number;
     nome: string;
     status: string;
-    isEstrutural: boolean;
+    estrutural: boolean;
     paiId: number | null;
     horasEstimadas: number;
     horasExecutadas: number;

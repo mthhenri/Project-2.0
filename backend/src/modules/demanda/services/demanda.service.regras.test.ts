@@ -16,9 +16,9 @@ const AUXILIAR = { sub: 6, login: 'x', tipo: TipoUsuarioEnum.AUXILIAR } as never
 
 const DEMANDA = {
     id: 10, projetoId: 7, demandaPaiId: null as number | null, nome: 'Demanda', descricaoTecnica: null, descricaoCliente: null, documentacao: null,
-    horasEstimadas: 8, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, previsaoFimData: null, createdDate: new Date('2026-01-01'),
+    horasEstimadas: 8, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, previsaoFimData: null, createdDate: new Date('2026-01-01'),
 };
-const PAI_ESTRUTURAL = { ...DEMANDA, id: 5, nome: 'Pai', isEstrutural: true };
+const PAI_ESTRUTURAL = { ...DEMANDA, id: 5, nome: 'Pai', estrutural: true };
 
 type Dublê = Record<string, unknown>;
 
@@ -59,7 +59,7 @@ function repositorio(sobrescrita: Dublê = {}) {
 const usuarioExistente = { recuperar: async ({ id }: { id: number }) => ({ id, nomeCompleto: `Pessoa ${id}`, login: `p${id}`, tipo: TipoUsuarioEnum.DESENVOLVEDOR }) };
 const tagExistente = { recuperar: async ({ id }: { id: number }) => ({ id, nome: `Tag ${id}`, cor: '#000000' }) };
 
-const DADOS_CRIAR = { projetoId: 7, nome: 'Nova', horasEstimadas: 4, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false };
+const DADOS_CRIAR = { projetoId: 7, nome: 'Nova', horasEstimadas: 4, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false };
 
 const gravou = (repo: ReturnType<typeof repositorio>) => repo.gravacoes.length > 0;
 const mensagem = (erro: { getResponse(): unknown }) => (erro.getResponse() as { mensagem: string }).mensagem;
@@ -148,7 +148,7 @@ test('criar: o pai precisa existir, ser do mesmo projeto e ser estrutural', asyn
     const outroProjeto = repositorio({ recuperar: async () => ({ ...PAI_ESTRUTURAL, projetoId: 999 }) });
     await assert.rejects(() => criarServico(outroProjeto, tagExistente, usuarioExistente).criar({ ...DADOS_CRIAR, demandaPaiId: 5 }, GESTOR), BusinessException);
 
-    const naoEstrutural = repositorio({ recuperar: async () => ({ ...PAI_ESTRUTURAL, isEstrutural: false }) });
+    const naoEstrutural = repositorio({ recuperar: async () => ({ ...PAI_ESTRUTURAL, estrutural: false }) });
     await assert.rejects(() => criarServico(naoEstrutural, tagExistente, usuarioExistente).criar({ ...DADOS_CRIAR, demandaPaiId: 5 }, GESTOR), BusinessException);
 
     for (const repo of [inexistente, outroProjeto, naoEstrutural]) assert.equal(gravou(repo), false);
@@ -282,7 +282,7 @@ test('alterar: o novo pai precisa existir e ser do mesmo projeto da demanda', as
 });
 
 test('alterar: uma demanda não pode virar filha de si mesma', async () => {
-    const repo = repositorio({ recuperar: async () => ({ ...DEMANDA, isEstrutural: true }) });
+    const repo = repositorio({ recuperar: async () => ({ ...DEMANDA, estrutural: true }) });
     await assert.rejects(() => criarServico(repo).alterar({ id: 10, demandaPaiId: 10 }, GESTOR), BusinessException);
     assert.equal(gravou(repo), false);
 });
@@ -290,7 +290,7 @@ test('alterar: uma demanda não pode virar filha de si mesma', async () => {
 test('alterar: uma demanda não pode ser movida para dentro de uma descendente (ciclo na árvore)', async () => {
     const filha = { ...PAI_ESTRUTURAL, id: 11 };
     const repo = repositorio({
-        recuperar: async ({ id }: { id: number }) => (id === 10 ? { ...DEMANDA, isEstrutural: true } : filha),
+        recuperar: async ({ id }: { id: number }) => (id === 10 ? { ...DEMANDA, estrutural: true } : filha),
         listarDescendentes: async () => [{ id: 10, demandaPaiId: null, nivel: 0 }, { id: 11, demandaPaiId: 10, nivel: 1 }],
     });
     await assert.rejects(() => criarServico(repo).alterar({ id: 10, demandaPaiId: 11 }, GESTOR), BusinessException);
@@ -303,7 +303,7 @@ test('alterar: uma demanda não pode ser movida para dentro de uma descendente (
 
 test('recuperarArvore: monta a árvore aninhada a partir da lista plana', async () => {
     const plano = (id: number, demandaPaiId: number | null, nivel: number) => ({
-        id, demandaPaiId, nome: `D${id}`, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: true, horasEstimadas: 1, minutosExecutados: 0,
+        id, demandaPaiId, nome: `D${id}`, status: TipoDemandaStatusEnum.PENDENTE, estrutural: true, horasEstimadas: 1, minutosExecutados: 0,
         temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], nivel,
     });
     const servico = criarServico(repositorio({ listarDescendentes: async () => [plano(1, null, 0), plano(2, 1, 1), plano(3, 1, 1), plano(4, 2, 2)] }));
@@ -327,7 +327,7 @@ test('leituras da demanda passam o filtro de acesso ao desenvolvedor e nenhum ao
     const filtros: unknown[] = [];
     const repo = repositorio({
         recuperar: async (_dto: unknown, filtro: unknown) => { filtros.push(filtro); return DEMANDA; },
-        listarDescendentes: async () => [{ id: 10, demandaPaiId: null, nome: 'D', status: 'PENDENTE', isEstrutural: false, horasEstimadas: 0, minutosExecutados: 0, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], nivel: 0 }],
+        listarDescendentes: async () => [{ id: 10, demandaPaiId: null, nome: 'D', status: 'PENDENTE', estrutural: false, horasEstimadas: 0, minutosExecutados: 0, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], nivel: 0 }],
         listarAncestral: async () => [], listarConexoes: async () => [], listarMembrosDemanda: async () => [],
     });
     const servico = criarServico(repo);
@@ -365,23 +365,23 @@ test('listarPlanejamento: devolve o que o repository calcula (a restrição ao g
 
 test('criarConexao: origem e destino precisam existir', async () => {
     const semOrigem = repositorio({ recuperar: async () => null });
-    await assert.rejects(() => criarServico(semOrigem).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, GESTOR), ResourceNotFoundException);
+    await assert.rejects(() => criarServico(semOrigem).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, bidirecional: false }, GESTOR), ResourceNotFoundException);
     const semDestino = repositorio({ recuperar: async ({ id }: { id: number }) => (id === 1 ? DEMANDA : null) });
-    await assert.rejects(() => criarServico(semDestino).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, GESTOR), ResourceNotFoundException);
+    await assert.rejects(() => criarServico(semDestino).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, bidirecional: false }, GESTOR), ResourceNotFoundException);
     assert.equal(gravou(semOrigem) || gravou(semDestino), false);
 });
 
 test('criarConexao: auto-conexão e conexão repetida no mesmo sentido são recusadas', async () => {
     const repo = repositorio();
-    await assert.rejects(() => criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 1, ehBidirecional: false }, GESTOR), BusinessException);
+    await assert.rejects(() => criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 1, bidirecional: false }, GESTOR), BusinessException);
     const repetida = repositorio({ validarConexao: async () => true });
-    await assert.rejects(() => criarServico(repetida).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, GESTOR), BusinessException);
+    await assert.rejects(() => criarServico(repetida).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, bidirecional: false }, GESTOR), BusinessException);
     assert.equal(gravou(repo) || gravou(repetida), false);
 });
 
 test('criarConexao: ciclo é recusado com BusinessException explicativa e nada é gravado', async () => {
     const repo = repositorio({ verificarCriariaCiclo: async () => true });
-    await assert.rejects(() => criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, GESTOR), (erro: BusinessException) => {
+    await assert.rejects(() => criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, bidirecional: false }, GESTOR), (erro: BusinessException) => {
         assert.ok(erro instanceof BusinessException);
         assert.match(mensagem(erro), /ciclo/i);
         return true;
@@ -391,8 +391,8 @@ test('criarConexao: ciclo é recusado com BusinessException explicativa e nada �
 
 test('criarConexao: conexão válida é gravada com origem, destino e bidirecionalidade', async () => {
     const repo = repositorio();
-    const resposta = await criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: true }, GESTOR);
-    assert.deepEqual(repo.gravacoes, [{ metodo: 'inserirConexao', argumento: { demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: true } }]);
+    const resposta = await criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, bidirecional: true }, GESTOR);
+    assert.deepEqual(repo.gravacoes, [{ metodo: 'inserirConexao', argumento: { demandaOrigemId: 1, demandaDestinoId: 2, bidirecional: true } }]);
     assert.equal(resposta.sucesso, true);
 });
 
@@ -411,11 +411,11 @@ test('excluirConexao: a conexão precisa pertencer à demanda; senão 404 e nada
 test('conexões do grafo: só o gestor conecta e desconecta (a regra é da service, não só da rota), e nada é gravado', async () => {
     const repo = repositorio();
     const desenvolvedor = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
-    await assert.rejects(() => criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, desenvolvedor), UnauthorizedAccessException);
+    await assert.rejects(() => criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, bidirecional: false }, desenvolvedor), UnauthorizedAccessException);
     await assert.rejects(() => criarServico(repo).excluirConexao({ demandaId: 1, conexaoId: 9 }, desenvolvedor), UnauthorizedAccessException);
     assert.equal(gravou(repo), false);
 
-    await criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, ADMINISTRADOR);
+    await criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, bidirecional: false }, ADMINISTRADOR);
     await criarServico(repo).excluirConexao({ demandaId: 1, conexaoId: 9 }, ADMINISTRADOR);
     assert.deepEqual(repo.gravacoes.map((gravacao) => gravacao.metodo), ['inserirConexao', 'excluirConexao']);
 });
@@ -571,7 +571,7 @@ test('criar: só o gestor grava a descrição do cliente; o auxiliar e o desenvo
 });
 
 test('conectar e desconectar demandas: o auxiliar chega até a regra do grafo; o desenvolvedor é recusado antes', async () => {
-    const dto = { demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false };
+    const dto = { demandaOrigemId: 1, demandaDestinoId: 2, bidirecional: false };
     // O dublê não tem a demanda de origem: quem passa pela permissão esbarra no 404 (a recusa de permissão é outra exceção).
     const semOrigem = repositorio({ recuperar: async () => null });
     await assert.rejects(() => criarServico(semOrigem).criarConexao(dto, AUXILIAR), ResourceNotFoundException);

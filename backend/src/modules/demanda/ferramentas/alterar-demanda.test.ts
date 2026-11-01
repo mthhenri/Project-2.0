@@ -21,11 +21,11 @@ const INICIAL = {
 };
 
 /** Demandas que servem de pai nos testes: 20 estrutural do mesmo projeto, 21 não estrutural, 22 de outro projeto, 30 filha da demanda 4. */
-const OUTRAS: Record<number, { id: number; nome: string; projetoId: number; isEstrutural: boolean }> = {
-    20: { id: 20, nome: 'Autenticação', projetoId: 1, isEstrutural: true },
-    21: { id: 21, nome: 'Ajustes', projetoId: 1, isEstrutural: false },
-    22: { id: 22, nome: 'Outro projeto', projetoId: 2, isEstrutural: true },
-    30: { id: 30, nome: 'Filha da 4', projetoId: 1, isEstrutural: true },
+const OUTRAS: Record<number, { id: number; nome: string; projetoId: number; estrutural: boolean }> = {
+    20: { id: 20, nome: 'Autenticação', projetoId: 1, estrutural: true },
+    21: { id: 21, nome: 'Ajustes', projetoId: 1, estrutural: false },
+    22: { id: 22, nome: 'Outro projeto', projetoId: 2, estrutural: true },
+    30: { id: 30, nome: 'Filha da 4', projetoId: 1, estrutural: true },
 };
 
 /** O repositório: a subárvore da demanda 4 é ela mesma e a 30. */

@@ -82,7 +82,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                         documentacao,
                         horas_estimadas,
                         tipo_demanda_status_id,
-                        is_estrutural,
+                        estrutural,
                         previsao_fim_data,
                         versao,
                         created_date,
@@ -106,7 +106,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                             tipo_demanda_status.codigo = :status
                             AND tipo_demanda_status.is_deleted = false
                     ),
-                    :isEstrutural,
+                    :estrutural,
                     :previsaoFimData,
                     1,
                     NOW(),
@@ -126,7 +126,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                         WHERE
                             tipo_demanda_status.id = demanda.tipo_demanda_status_id
                     ) AS status,
-                    is_estrutural AS "isEstrutural",
+                    estrutural AS "estrutural",
                     previsao_fim_data AS "previsaoFimData",
                     created_date AS "createdDate"
             `,
@@ -139,7 +139,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                 documentacao:     dados.documentacao ?? null,
                 horasEstimadas:   dados.horasEstimadas,
                 status:           dados.status,
-                isEstrutural:     dados.isEstrutural,
+                estrutural:     dados.estrutural,
                 previsaoFimData:  dados.previsaoFimData ?? null,
             },
             transacao,
@@ -285,7 +285,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     demanda.versao,
                     demanda.horas_estimadas AS "horasEstimadas",
                     tipo_demanda_status.codigo AS status,
-                    demanda.is_estrutural AS "isEstrutural",
+                    demanda.estrutural AS "estrutural",
                     demanda.previsao_fim_data AS "previsaoFimData",
                     demanda.created_date AS "createdDate"
                 FROM
@@ -338,9 +338,9 @@ export class DemandaRepository extends BaseRepository<Demanda> {
             parametros.status = filtros.status;
         }
 
-        if (filtros.isEstrutural !== undefined) {
-            condicoes.push('demanda.is_estrutural = :isEstrutural');
-            parametros.isEstrutural = filtros.isEstrutural;
+        if (filtros.estrutural !== undefined) {
+            condicoes.push('demanda.estrutural = :estrutural');
+            parametros.estrutural = filtros.estrutural;
         }
 
         if (filtros.demandaPaiId !== undefined) {
@@ -402,7 +402,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     demanda.nome,
                     COALESCE(caminho_demanda.caminho, demanda.nome) AS "caminho",
                     tipo_demanda_status.codigo AS status,
-                    demanda.is_estrutural AS "isEstrutural",
+                    demanda.estrutural AS "estrutural",
                     demanda.horas_estimadas AS "horasEstimadas"
                 FROM
                     demanda ${joinStatus} ${joinDemandaUsuario}
@@ -610,7 +610,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                         SELECT
                             demanda.id,
                             demanda.nome::text AS caminho,
-                            demanda.is_estrutural,
+                            demanda.estrutural,
                             demanda.tipo_demanda_status_id,
                             demanda.horas_estimadas
                         FROM
@@ -625,7 +625,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                             (
                                 caminho_demanda.caminho || :separadorCaminho || demanda_filho.nome
                             )::text,
-                            demanda_filho.is_estrutural,
+                            demanda_filho.estrutural,
                             demanda_filho.tipo_demanda_status_id,
                             demanda_filho.horas_estimadas
                         FROM
@@ -638,7 +638,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                 SELECT
                     caminho_demanda.id AS "demandaId",
                     caminho_demanda.caminho AS "caminho",
-                    caminho_demanda.is_estrutural AS "isEstrutural",
+                    caminho_demanda.estrutural AS "estrutural",
                     tipo_demanda_status.codigo AS status,
                     caminho_demanda.horas_estimadas AS "horasEstimadas",
                     COALESCE(
@@ -766,9 +766,9 @@ export class DemandaRepository extends BaseRepository<Demanda> {
             );
             parametros.status = dto.status;
         }
-        if (dto.isEstrutural !== undefined) {
-            setClauses.push('is_estrutural = :isEstrutural');
-            parametros.isEstrutural = dto.isEstrutural;
+        if (dto.estrutural !== undefined) {
+            setClauses.push('estrutural = :estrutural');
+            parametros.estrutural = dto.estrutural;
         }
         if (dto.previsaoFimData !== undefined) {
             setClauses.push('previsao_fim_data = :previsaoFimData');
@@ -806,7 +806,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                         WHERE
                             tipo_demanda_status.id = demanda.tipo_demanda_status_id
                     ) AS status,
-                    is_estrutural AS "isEstrutural",
+                    estrutural AS "estrutural",
                     previsao_fim_data AS "previsaoFimData",
                     created_date AS "createdDate"
             `,
@@ -824,7 +824,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
         demandaPaiId: number | null;
         nome: string;
         status: TipoDemandaStatusEnum;
-        isEstrutural: boolean;
+        estrutural: boolean;
         horasEstimadas: number;
         minutosExecutados: number;
         nivel: number;
@@ -838,7 +838,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
             demandaPaiId: number | null;
             nome: string;
             status: TipoDemandaStatusEnum;
-            isEstrutural: boolean;
+            estrutural: boolean;
             horasEstimadas: number;
             minutosExecutados: number;
             nivel: number;
@@ -854,7 +854,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                             id,
                             demanda_pai_id,
                             nome,
-                            is_estrutural,
+                            estrutural,
                             horas_estimadas,
                             0 AS nivel
                         FROM
@@ -867,7 +867,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                             demanda_filho.id,
                             demanda_filho.demanda_pai_id,
                             demanda_filho.nome,
-                            demanda_filho.is_estrutural,
+                            demanda_filho.estrutural,
                             demanda_filho.horas_estimadas,
                             arvore_demanda.nivel + 1
                         FROM
@@ -881,7 +881,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     arvore_demanda.demanda_pai_id AS "demandaPaiId",
                     arvore_demanda.nome,
                     tipo_demanda_status.codigo AS status,
-                    arvore_demanda.is_estrutural AS "isEstrutural",
+                    arvore_demanda.estrutural AS "estrutural",
                     arvore_demanda.horas_estimadas AS "horasEstimadas",
                     COALESCE(
                         (
@@ -1294,7 +1294,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     demanda.id,
                     demanda.nome,
                     tipo_demanda_status.codigo AS status,
-                    demanda.is_estrutural AS "isEstrutural",
+                    demanda.estrutural AS "estrutural",
                     demanda.horas_estimadas AS "horasEstimadas",
                     COALESCE(
                         (
@@ -1358,7 +1358,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     demanda_conexao.demanda_origem_id AS "origemId",
                     demanda_conexao.demanda_destino_id AS "destinoId",
                     'conexao' AS "tipo",
-                    demanda_conexao.eh_bidirecional AS "ehBidirecional"
+                    demanda_conexao.bidirecional AS "bidirecional"
                 FROM
                     demanda_conexao
                     INNER JOIN demanda AS demanda_origem ON demanda_origem.id = demanda_conexao.demanda_origem_id
@@ -1375,7 +1375,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     demanda_filho.demanda_pai_id AS "origemId",
                     demanda_filho.id AS "destinoId",
                     'hierarquia' AS "tipo",
-                    false AS "ehBidirecional"
+                    false AS "bidirecional"
                 FROM
                     demanda AS demanda_filho
                 WHERE
@@ -1461,7 +1461,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     demanda_conexao.id,
                     demanda_conexao.demanda_origem_id AS "demandaOrigemId",
                     demanda_conexao.demanda_destino_id AS "demandaDestinoId",
-                    demanda_conexao.eh_bidirecional AS "ehBidirecional",
+                    demanda_conexao.bidirecional AS "bidirecional",
                     demanda_conexao.created_date AS "createdDate"
                 FROM
                     demanda_conexao
@@ -1483,7 +1483,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     async inserirConexao(dados: {
         demandaOrigemId: number;
         demandaDestinoId: number;
-        ehBidirecional: boolean;
+        bidirecional: boolean;
     }): Promise<DemandaConexaoCriadaDto> {
         const resultado = await this.executarConsulta<DemandaConexaoCriadaDto>(
             `
@@ -1491,7 +1491,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     demanda_conexao (
                         demanda_origem_id,
                         demanda_destino_id,
-                        eh_bidirecional,
+                        bidirecional,
                         created_date,
                         updated_date,
                         is_deleted
@@ -1499,7 +1499,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                 SELECT
                     :demandaOrigemId,
                     :demandaDestinoId,
-                    :ehBidirecional,
+                    :bidirecional,
                     NOW(),
                     NOW(),
                     false
@@ -1507,13 +1507,13 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     id,
                     demanda_origem_id AS "demandaOrigemId",
                     demanda_destino_id AS "demandaDestinoId",
-                    eh_bidirecional AS "ehBidirecional",
+                    bidirecional AS "bidirecional",
                     created_date AS "createdDate"
             `,
             {
                 demandaOrigemId:  dados.demandaOrigemId,
                 demandaDestinoId: dados.demandaDestinoId,
-                ehBidirecional:   dados.ehBidirecional,
+                bidirecional:   dados.bidirecional,
             },
         );
         return resultado[0];
@@ -1533,7 +1533,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     END AS "demandaConectadaId",
                     demanda_conectada.nome AS "nomeDemandaConectada",
                     CASE
-                        WHEN demanda_conexao.eh_bidirecional = true THEN 'bidirecional'
+                        WHEN demanda_conexao.bidirecional = true THEN 'bidirecional'
                         WHEN demanda_conexao.demanda_origem_id = :demandaId THEN 'saida'
                         ELSE 'entrada'
                     END AS direcao
@@ -1550,7 +1550,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                         demanda_conexao.demanda_origem_id = :demandaId
                         OR (
                             demanda_conexao.demanda_destino_id = :demandaId
-                            AND demanda_conexao.eh_bidirecional = true
+                            AND demanda_conexao.bidirecional = true
                         )
                     )
             `,
@@ -1595,7 +1595,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                                 demanda_origem_id = :demandaId
                                 OR (
                                     demanda_destino_id = :demandaId
-                                    AND eh_bidirecional = true
+                                    AND bidirecional = true
                                 )
                             )
                     ) AS existe

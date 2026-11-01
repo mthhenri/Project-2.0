@@ -12,7 +12,7 @@ type Montado = ComponenteMontado<DemandaAbertaComponent>;
 
 const DEMANDA = {
     id: 10, projetoId: 7, demandaPaiId: null, nome: 'Demanda de teste', descricaoTecnica: 'texto tecnico', descricaoCliente: 'texto do cliente', documentacao: '',
-    horasEstimadas: 8, status: TipoDemandaStatusEnum.PLANEJADA, isEstrutural: false, previsaoFimData: null, createdDate: '2026-01-01T00:00:00Z', podeEditar: true,
+    horasEstimadas: 8, status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false, previsaoFimData: null, createdDate: '2026-01-01T00:00:00Z', podeEditar: true,
 };
 const PAGINA = (itens: unknown[]) => ({ itens, totalItens: itens.length, paginaAtual: 1, itensPorPagina: 100, totalPaginas: 1 });
 

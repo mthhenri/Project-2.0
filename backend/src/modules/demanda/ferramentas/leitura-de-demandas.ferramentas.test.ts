@@ -10,7 +10,7 @@ const DESENVOLVEDOR = { sub: 3, login: 'd', tipo: TipoUsuarioEnum.DESENVOLVEDOR 
 
 function no(id: number, sobrescrita: Record<string, unknown> = {}) {
     return {
-        id, nome: `D${id}`, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, horasEstimadas: 4, minutosExecutados: 90, demandaPaiId: null,
+        id, nome: `D${id}`, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 4, minutosExecutados: 90, demandaPaiId: null,
         temDescricaoTecnica: true, temDescricaoCliente: false, temDocumentacao: false, tags: [{ id: 1, nome: 'Backend', cor: '#112233' }], ...sobrescrita,
     };
 }
@@ -26,7 +26,7 @@ test('consultar grafo: pede à service com o usuário do token e resume cada dem
 
     assert.deepEqual(chamadas, [{ dto: { projetoId: 7 }, usuario: GESTOR }]);
     assert.deepEqual(resultado.demandas[0], {
-        id: 1, nome: 'D1', status: 'PENDENTE', isEstrutural: false, paiId: 9, horasEstimadas: 4, horasExecutadas: 1.5,
+        id: 1, nome: 'D1', status: 'PENDENTE', estrutural: false, paiId: 9, horasEstimadas: 4, horasExecutadas: 1.5,
         temDescricaoTecnica: true, temDescricaoCliente: false, tags: ['Backend'],
     });
     assert.equal(resultado.projetoId, 7);
@@ -34,9 +34,9 @@ test('consultar grafo: pede à service com o usuário do token e resume cada dem
 
 test('consultar grafo: devolve só as conexões (a hierarquia já está no paiId), com bidirecional', async () => {
     const arestas = [
-        { id: 1, origemId: 1, destinoId: 2, tipo: 'conexao', ehBidirecional: true },
-        { id: 2, origemId: 3, destinoId: 4, tipo: 'conexao', ehBidirecional: false },
-        { id: 3, origemId: 1, destinoId: 5, tipo: 'hierarquia', ehBidirecional: false },
+        { id: 1, origemId: 1, destinoId: 2, tipo: 'conexao', bidirecional: true },
+        { id: 2, origemId: 3, destinoId: 4, tipo: 'conexao', bidirecional: false },
+        { id: 3, origemId: 1, destinoId: 5, tipo: 'hierarquia', bidirecional: false },
     ];
     const servico = { recuperarGrafo: async () => ({ dados: { nos: [no(1)], arestas } }) };
     const resultado = await new ConsultarGrafoDoProjetoFerramenta(servico as unknown as DemandaService).executar({ projetoId: 7 }, GESTOR);
@@ -80,7 +80,7 @@ test('listar demandas do projeto: o desenvolvedor recebe o projeto inteiro (pelo
             chamadas.push('grafo');
             assert.deepEqual([dto, usuario], [{ projetoId: 7 }, DESENVOLVEDOR]);
             return { dados: { nos: [
-                no(1, { nome: 'Estrutura', isEstrutural: true }),
+                no(1, { nome: 'Estrutura', estrutural: true }),
                 no(2, { nome: 'Login', demandaPaiId: 1 }),
                 no(3, { nome: 'Integracao com ERP', demandaPaiId: 1 }),
             ], arestas: [] } };
@@ -94,9 +94,9 @@ test('listar demandas do projeto: o desenvolvedor recebe o projeto inteiro (pelo
     const resultado = await new ListarDemandasDoProjetoFerramenta(servico as unknown as DemandaService).executar({ projetoId: 7 }, DESENVOLVEDOR);
     assert.deepEqual(chamadas, ['grafo', 'listar']);
     assert.deepEqual(resultado.demandas, [
-        { id: 1, nome: 'Estrutura', caminho: 'Estrutura', isEstrutural: true, status: 'PENDENTE', participa: false },
-        { id: 2, nome: 'Login', caminho: 'Estrutura > Login', isEstrutural: false, status: 'PENDENTE', participa: true },
-        { id: 3, nome: 'Integracao com ERP', caminho: 'Estrutura > Integracao com ERP', isEstrutural: false, status: 'PENDENTE', participa: false },
+        { id: 1, nome: 'Estrutura', caminho: 'Estrutura', estrutural: true, status: 'PENDENTE', participa: false },
+        { id: 2, nome: 'Login', caminho: 'Estrutura > Login', estrutural: false, status: 'PENDENTE', participa: true },
+        { id: 3, nome: 'Integracao com ERP', caminho: 'Estrutura > Integracao com ERP', estrutural: false, status: 'PENDENTE', participa: false },
     ]);
     assert.equal(resultado.total, 3);
 });
@@ -116,14 +116,14 @@ test('listar demandas do projeto: caminho resiste a pai que se repete ou que nã
 });
 
 test('listar demandas do projeto: devolve só id, nome, caminho, estrutural e status', async () => {
-    const itens = [{ id: 1, nome: 'Folha', caminho: 'Raiz > Folha', isEstrutural: false, status: 'PENDENTE', horasEstimadas: 8 }];
+    const itens = [{ id: 1, nome: 'Folha', caminho: 'Raiz > Folha', estrutural: false, status: 'PENDENTE', horasEstimadas: 8 }];
     const servico = { listar: async () => ({ dados: { itens } }) };
     const resultado = await new ListarDemandasDoProjetoFerramenta(servico as unknown as DemandaService).executar({ projetoId: 7 }, GESTOR);
-    assert.deepEqual(resultado.demandas, [{ id: 1, nome: 'Folha', caminho: 'Raiz > Folha', isEstrutural: false, status: 'PENDENTE' }]);
+    assert.deepEqual(resultado.demandas, [{ id: 1, nome: 'Folha', caminho: 'Raiz > Folha', estrutural: false, status: 'PENDENTE' }]);
 });
 
 test('listar demandas do projeto: limita a resposta e avisa que há mais', async () => {
-    const itens = Array.from({ length: LIMITE_DEMANDAS_DO_PROJETO_DA_FERRAMENTA + 3 }, (_, indice) => ({ id: indice + 1, nome: `D${indice}`, caminho: `D${indice}`, isEstrutural: false, status: 'PENDENTE' }));
+    const itens = Array.from({ length: LIMITE_DEMANDAS_DO_PROJETO_DA_FERRAMENTA + 3 }, (_, indice) => ({ id: indice + 1, nome: `D${indice}`, caminho: `D${indice}`, estrutural: false, status: 'PENDENTE' }));
     const servico = { listar: async () => ({ dados: { itens } }) };
     const resultado = await new ListarDemandasDoProjetoFerramenta(servico as unknown as DemandaService).executar({ projetoId: 7 }, GESTOR);
     assert.equal(resultado.demandas.length, LIMITE_DEMANDAS_DO_PROJETO_DA_FERRAMENTA);

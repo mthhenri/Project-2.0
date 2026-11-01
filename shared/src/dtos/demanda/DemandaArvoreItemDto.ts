@@ -13,7 +13,7 @@ export class DemandaArvoreItemDto {
     status: TipoDemandaStatusEnum;
 
     @ApiProperty({ example: false })
-    isEstrutural: boolean;
+    estrutural: boolean;
 
     @ApiProperty({ example: 8 })
     horasEstimadas: number;

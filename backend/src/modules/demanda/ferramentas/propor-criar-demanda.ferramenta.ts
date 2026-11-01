@@ -19,7 +19,7 @@ import { DemandaRepository } from '../repositories/demanda.repository';
 export class ProporCriarDemandaFerramenta extends FerramentaPropostaIa<ProporCriarDemandaDto> {
     readonly nome = 'propor_criar_demanda';
     readonly descricao =
-        'Propõe criar UMA demanda. isEstrutural=true cria uma demanda de estrutura (agrupa outras demandas e não recebe atividades); sem ele é uma demanda de trabalho. ' +
+        'Propõe criar UMA demanda. estrutural=true cria uma demanda de estrutura (agrupa outras demandas e não recebe atividades); sem ele é uma demanda de trabalho. ' +
     'Informe o projeto por projetoId (de listar_projetos) ou, se o projeto ainda será criado, por projetoPropostaId (o propostaId devolvido por propor_criar_projeto). ' +
     'Para uma demanda filha, informe a pai por demandaPaiId (de listar_demandas_do_projeto; a pai precisa ser de estrutura) ou, se a pai ainda será criada, ' +
     'por demandaPaiPropostaId (o propostaId devolvido por esta ferramenta). Sem pai, é uma demanda de topo (só o gestor cria). ' +
@@ -61,11 +61,11 @@ export class ProporCriarDemandaFerramenta extends FerramentaPropostaIa<ProporCri
             const pai = await this.demandaRepositorio.recuperar({ id: entrada.demandaPaiId });
             if (!pai) throw new ResourceNotFoundException('Demanda pai');
             if (entrada.projetoId && pai.projetoId !== entrada.projetoId) throw new BusinessException('A demanda pai deve pertencer ao mesmo projeto');
-            if (!pai.isEstrutural) throw new BusinessException('Apenas demandas de estrutura podem ter sub-demandas');
+            if (!pai.estrutural) throw new BusinessException('Apenas demandas de estrutura podem ter sub-demandas');
             dados.demandaPaiNome = pai.nome;
         } else if (entrada.demandaPaiPropostaId) {
             const proposta = await recuperarPropostaReferenciada(this.propostas, entrada.demandaPaiPropostaId, TipoPropostaIaEnum.CRIAR_DEMANDA, usuarioAtivo);
-            if (proposta.dados['isEstrutural'] !== true) throw new BusinessException('Apenas demandas de estrutura podem ter sub-demandas');
+            if (proposta.dados['estrutural'] !== true) throw new BusinessException('Apenas demandas de estrutura podem ter sub-demandas');
             dados.demandaPaiNome = String(proposta.dados['nome'] ?? '');
         }
         return { ...dados };

@@ -8,7 +8,7 @@ import { DemandaArvorePainelComponent } from './demanda-arvore-painel/demanda-ar
 
 function criarItem(id: number, sobrescritas: Partial<DemandaArvoreItemDto> = {}): DemandaArvoreItemDto {
     return {
-        id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, horasEstimadas: 10, minutosExecutados: 0,
+        id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 10, minutosExecutados: 0,
         nivel: 0, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], filhos: [], ...sobrescritas,
     };
 }

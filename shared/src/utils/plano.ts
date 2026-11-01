@@ -23,7 +23,7 @@ export interface PlanoAcessoEntrada {
     criadorId: number;
     /** `null` no plano amplo. */
     projetoId: number | null;
-    isSolo: boolean;
+    solo: boolean;
     /** Desenvolvedor com ao menos uma linha em `demanda_usuario` no projeto do plano; ignorado para gestor e administrador. */
     temAcessoAoProjeto: boolean;
 }
@@ -34,7 +34,7 @@ export interface PlanoAcessoEntrada {
  * Ver e editar são a mesma regra.
  */
 export function podeAcessarPlano(entrada: PlanoAcessoEntrada): boolean {
-    if (entrada.projetoId === null || entrada.isSolo) return entrada.usuarioId === entrada.criadorId;
+    if (entrada.projetoId === null || entrada.solo) return entrada.usuarioId === entrada.criadorId;
     return temVisibilidadeTotal(entrada.tipoUsuario) || entrada.temAcessoAoProjeto;
 }
 

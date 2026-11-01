@@ -309,7 +309,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             .style('fill', (no: DemandaGrafoNoDto) => corPreenchimentoNo(no.status))
             .style('stroke', (no: DemandaGrafoNoDto) => COR_NO_BORDA[no.status])
             .attr('stroke-width', 3)
-            .attr('stroke-dasharray', (no: DemandaGrafoNoDto) => no.isEstrutural ? '6,3' : null);
+            .attr('stroke-dasharray', (no: DemandaGrafoNoDto) => no.estrutural ? '6,3' : null);
 
         this.desenharMarca(gruposNo);
 
@@ -378,6 +378,6 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
 
     private calcularRaioNo(no: DemandaGrafoNoDto): number {
         const raioEstrutural = 28;
-        return no.isEstrutural ? raioEstrutural : raioEstrutural * 0.6; // 16.8 (40% menor)
+        return no.estrutural ? raioEstrutural : raioEstrutural * 0.6; // 16.8 (40% menor)
     }
 }

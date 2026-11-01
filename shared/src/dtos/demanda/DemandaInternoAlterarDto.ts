@@ -15,6 +15,6 @@ export class DemandaInternoAlterarDto {
     documentacao?: string | null;
     horasEstimadas?: number;
     status?: TipoDemandaStatusEnum;
-    isEstrutural?: boolean;
+    estrutural?: boolean;
     previsaoFimData?: string | null;
 }

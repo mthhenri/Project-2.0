@@ -26,7 +26,7 @@ export class ConectarDemandaExecutor implements ExecutorPropostaIa {
         const criada = await this.demandaService.criarConexao({
             demandaOrigemId: entrada.demandaOrigemId,
             demandaDestinoId: entrada.demandaDestinoId,
-            ehBidirecional: entrada.ehBidirecional ?? false,
+            bidirecional: entrada.bidirecional ?? false,
         }, usuarioAtivo);
         return { conexaoId: criada.dados?.id, demandaOrigemId: entrada.demandaOrigemId, demandaDestinoId: entrada.demandaDestinoId };
     }

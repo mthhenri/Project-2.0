@@ -32,7 +32,7 @@ export class ListarDemandasDoProjetoFerramenta extends FerramentaIa<DemandasDoPr
             !temVisibilidadeTotal(usuarioAtivo.tipo)
                 ? await this.listarDoProjetoInteiro(entrada.projetoId, usuarioAtivo)
                 : ((await this.demandaService.listar({ projetoId: entrada.projetoId, allRows: true }, usuarioAtivo)).dados?.itens ?? []).map(
-                    (demanda): DemandaDaFerramentaDto => ({ id: demanda.id, nome: demanda.nome, caminho: demanda.caminho, isEstrutural: demanda.isEstrutural, status: demanda.status }),
+                    (demanda): DemandaDaFerramentaDto => ({ id: demanda.id, nome: demanda.nome, caminho: demanda.caminho, estrutural: demanda.estrutural, status: demanda.status }),
                 );
         return {
             demandas: listadas.slice(0, LIMITE_DEMANDAS_DO_PROJETO_DA_FERRAMENTA),
@@ -51,7 +51,7 @@ export class ListarDemandasDoProjetoFerramenta extends FerramentaIa<DemandasDoPr
             id: no.id,
             nome: no.nome,
             caminho: caminhoDoNo(no, nosPorId),
-            isEstrutural: no.isEstrutural,
+            estrutural: no.estrutural,
             status: no.status,
             participa: minhasIds.has(no.id),
         }));

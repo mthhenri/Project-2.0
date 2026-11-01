@@ -4,7 +4,7 @@ export interface DemandaVisualizacao {
     id: number;
     nome: string;
     status: TipoDemandaStatusEnum;
-    isEstrutural: boolean;
+    estrutural: boolean;
     horasEstimadas: number;
     demandaPaiId: number | null;
     projetoId: number;

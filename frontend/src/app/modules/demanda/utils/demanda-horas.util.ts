@@ -89,7 +89,7 @@ export interface NoHoras {
     filhos: NoHoras[];
 }
 
-const pastasPrimeiro = (demandaGrafoNoDto: DemandaGrafoNoDto, segundo: DemandaGrafoNoDto): number => Number(segundo.isEstrutural) - Number(demandaGrafoNoDto.isEstrutural);
+const pastasPrimeiro = (demandaGrafoNoDto: DemandaGrafoNoDto, segundo: DemandaGrafoNoDto): number => Number(segundo.estrutural) - Number(demandaGrafoNoDto.estrutural);
 
 /**
  * A árvore do projeto com o total de cada pasta (horas próprias mais as dos descendentes). Demanda cancelada fica de fora, com o que está dentro

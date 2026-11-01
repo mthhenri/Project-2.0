@@ -14,5 +14,5 @@ export class DemandaGrafoArestaDto {
     tipo: 'hierarquia' | 'conexao';
 
     @ApiProperty({ example: false })
-    ehBidirecional: boolean;
+    bidirecional: boolean;
 }

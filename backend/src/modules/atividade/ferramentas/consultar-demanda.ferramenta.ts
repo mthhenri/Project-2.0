@@ -48,7 +48,7 @@ export class ConsultarDemandaFerramenta extends FerramentaIa<DemandaConsultarDto
             nome: demanda.nome,
             projetoId: demanda.projetoId,
             demandaPaiId: demanda.demandaPaiId,
-            isEstrutural: demanda.isEstrutural,
+            estrutural: demanda.estrutural,
             status: demanda.status,
             horasEstimadas: demanda.horasEstimadas,
             previsaoFimData: demanda.previsaoFimData,

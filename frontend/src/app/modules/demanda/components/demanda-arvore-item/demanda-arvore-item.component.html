@@ -34,7 +34,7 @@
             } @else {
                 <span class="demanda-arvore-item__chevron-vazio"></span>
             }
-            @if (arvoreItem.isEstrutural) {
+            @if (arvoreItem.estrutural) {
                 <i class="pi pi-folder demanda-arvore-item__icone-estrutural"></i>
             }
             <span class="demanda-arvore-item__nome">
@@ -162,7 +162,7 @@
             </span>
 
             <span class="demanda-arvore-item__acoes">
-                @if (podeEditarDemanda && arvoreItem.isEstrutural) {
+                @if (podeEditarDemanda && arvoreItem.estrutural) {
                     <p-button
                         icon="pi pi-plus"
                         [text]="true"

@@ -64,7 +64,7 @@ export class DemandaAlterarDto {
     @ApiPropertyOptional({ example: false })
     @IsOptional()
     @IsBoolean()
-    isEstrutural?: boolean;
+    estrutural?: boolean;
 
     @ApiPropertyOptional({ example: '2026-12-31' })
     @IsOptional()

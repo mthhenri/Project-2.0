@@ -156,14 +156,14 @@ export async function criarDemanda(
     sobrescrita: Partial<{
         projetoId: number; demandaPaiId: number | null; nome: string; descricaoTecnica: string | null;
         descricaoCliente: string | null; documentacao: string | null; horasEstimadas: number;
-        statusCodigo: string; isEstrutural: boolean; previsaoFimData: string | null; dataBase: string;
+        statusCodigo: string; estrutural: boolean; previsaoFimData: string | null; dataBase: string;
     }> = {},
 ): Promise<DemandaFabricada> {
     const sufixo = proximoSufixo();
     const projetoId = sobrescrita.projetoId ?? (await criarProjeto(conexao)).id;
     const dados = {
         nome: `Demanda de Teste ${sufixo}`, demandaPaiId: null, descricaoTecnica: null, descricaoCliente: null,
-        documentacao: null, horasEstimadas: 8, statusCodigo: 'PENDENTE', isEstrutural: false,
+        documentacao: null, horasEstimadas: 8, statusCodigo: 'PENDENTE', estrutural: false,
         previsaoFimData: null, dataBase: DATA_BASE_TESTE, ...sobrescrita, projetoId,
     };
     return inserirLinha<DemandaFabricada>(conexao,
@@ -178,7 +178,7 @@ export async function criarDemanda(
                     documentacao,
                     horas_estimadas,
                     tipo_demanda_status_id,
-                    is_estrutural,
+                    estrutural,
                     previsao_fim_data,
                     versao,
                     created_date,
@@ -201,7 +201,7 @@ export async function criarDemanda(
                     WHERE
                         tipo_demanda_status.codigo = :statusCodigo
                 ),
-                :isEstrutural,
+                :estrutural,
                 :previsaoFimData,
                 1,
                 :dataBase::timestamptz,
@@ -443,10 +443,10 @@ export async function criarPontoJustificativa(
         { nome: `Justificativa de teste ${sufixo}`, descricao: 'Descrição de teste', horasCobertas: 2, dataBase: DATA_BASE_TESTE, ...dados });
 }
 
-/** Conexão do grafo (origem → destino; `ehBidirecional` liga também no sentido inverso). */
+/** Conexão do grafo (origem → destino; `bidirecional` liga também no sentido inverso). */
 export async function criarDemandaConexao(
     conexao: ConexaoTeste,
-    dados: { demandaOrigemId: number; demandaDestinoId: number; ehBidirecional?: boolean; dataBase?: string },
+    dados: { demandaOrigemId: number; demandaDestinoId: number; bidirecional?: boolean; dataBase?: string },
 ): Promise<{ id: number }> {
     return inserirLinha<{ id: number }>(conexao,
         `
@@ -454,7 +454,7 @@ export async function criarDemandaConexao(
                 demanda_conexao (
                     demanda_origem_id,
                     demanda_destino_id,
-                    eh_bidirecional,
+                    bidirecional,
                     created_date,
                     updated_date,
                     is_deleted
@@ -462,14 +462,14 @@ export async function criarDemandaConexao(
             SELECT
                 :demandaOrigemId,
                 :demandaDestinoId,
-                :ehBidirecional,
+                :bidirecional,
                 :dataBase::timestamptz,
                 :dataBase::timestamptz,
                 false
             RETURNING
                 id
         `,
-        { ehBidirecional: false, dataBase: DATA_BASE_TESTE, ...dados });
+        { bidirecional: false, dataBase: DATA_BASE_TESTE, ...dados });
 }
 
 export async function criarDemandaTag(

@@ -53,7 +53,7 @@ export class DemandaConexaoListaComponent {
     ];
 
     readonly destinoId = signal<number | null>(null);
-    readonly ehBidirecional = signal<boolean>(false);
+    readonly bidirecional = signal<boolean>(false);
     readonly salvando = signal<boolean>(false);
     readonly erroInline = signal<string | null>(null);
 
@@ -96,12 +96,12 @@ export class DemandaConexaoListaComponent {
         this.salvando.set(true);
         this.erroInline.set(null);
         this.demandaService
-            .criarConexao(this.demandaId(), { demandaDestinoId: destino, ehBidirecional: this.ehBidirecional() }, true)
+            .criarConexao(this.demandaId(), { demandaDestinoId: destino, bidirecional: this.bidirecional() }, true)
             .subscribe({
                 next: () => {
                     this.salvando.set(false);
                     this.destinoId.set(null);
-                    this.ehBidirecional.set(false);
+                    this.bidirecional.set(false);
                     this.recarregar();
                 },
                 error: (erro: HttpErrorResponse) => {
@@ -131,12 +131,12 @@ export class DemandaConexaoListaComponent {
         if (conexao.direcao === 'entrada') {
             return this.demandaService.criarConexao(conexao.demandaConectadaId, {
                 demandaDestinoId: this.demandaId(),
-                ehBidirecional: false,
+                bidirecional: false,
             });
         }
         return this.demandaService.criarConexao(this.demandaId(), {
             demandaDestinoId: conexao.demandaConectadaId,
-            ehBidirecional: conexao.direcao === 'bidirecional',
+            bidirecional: conexao.direcao === 'bidirecional',
         });
     }
 

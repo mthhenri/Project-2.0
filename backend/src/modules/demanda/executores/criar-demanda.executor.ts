@@ -51,7 +51,7 @@ export class CriarDemandaExecutor implements ExecutorPropostaIa {
                 descricaoCliente: entrada.descricaoCliente,
                 horasEstimadas: entrada.horasEstimadas ?? 0,
                 status: TipoDemandaStatusEnum.PLANEJADA,
-                isEstrutural: entrada.isEstrutural ?? false,
+                estrutural: entrada.estrutural ?? false,
                 previsaoFimData: entrada.previsaoFimData,
             },
             usuarioAtivo,

@@ -118,7 +118,7 @@ monta o `PaginatedResult<T>` de forma coerente (`totalItens = itensPorPagina = i
 `paginaAtual = totalPaginas = 1`). A **estrutura da resposta não muda** — quem consome só lê `itens`.
 
 - Como query params chegam como **string**, o campo precisa do mesmo `@Transform` de boolean já
-  usado em `DemandaListarDto.isEstrutural` (converte `'true'`/`'false'`), senão `@IsBoolean()` rejeita:
+  usado em `DemandaListarDto.estrutural` (converte `'true'`/`'false'`), senão `@IsBoolean()` rejeita:
 
   ```typescript
   @IsOptional()
@@ -214,6 +214,7 @@ cor VARCHAR(7) NOT NULL DEFAULT '#6366f1'       -- DEFAULT proibido
 **Nomes:**
 - Tabelas: singular português — `usuario`, `demanda`, `dia_nao_util`
 - Colunas de negócio: snake_case português — `nome_completo`, `horas_estimadas`
+- Colunas e campos booleanos de negócio: sem prefixo `is_`/`eh_`, no adjetivo ou particípio — `ativo`, `estrutural`, `bidirecional`, `solo`, `arquivado`. `is_deleted` é a exceção (genérico, da BaseEntity)
 - Colunas BaseEntity: snake_case inglês — `is_deleted`, `created_date`, `updated_date`, `deleted_date`
 - Hierarquias e grafos: CTEs recursivos do PostgreSQL
 

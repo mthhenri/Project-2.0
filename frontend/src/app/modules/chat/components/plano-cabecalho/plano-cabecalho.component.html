@@ -41,15 +41,15 @@
                 />
             }
             <p-button
-                [icon]="plano().isArquivado ? 'pi pi-inbox' : 'pi pi-box'"
+                [icon]="plano().arquivado ? 'pi pi-inbox' : 'pi pi-box'"
                 [text]="true"
                 severity="secondary"
                 size="small"
                 [disabled]="ocupado()"
-                [ariaLabel]="plano().isArquivado ? 'Desarquivar o plano' : 'Arquivar o plano'"
-                [pTooltip]="plano().isArquivado ? 'Desarquivar' : 'Arquivar'"
+                [ariaLabel]="plano().arquivado ? 'Desarquivar o plano' : 'Arquivar o plano'"
+                [pTooltip]="plano().arquivado ? 'Desarquivar' : 'Arquivar'"
                 tooltipPosition="bottom"
-                (onClick)="arquivadoAlterado.emit(!plano().isArquivado)"
+                (onClick)="arquivadoAlterado.emit(!plano().arquivado)"
             />
             <p-button
                 icon="pi pi-trash"
@@ -122,9 +122,9 @@
                 <label class="plano-cabecalho__solo">
                     <input
                         type="checkbox"
-                        [checked]="plano().isSolo"
+                        [checked]="plano().solo"
                         [disabled]="ocupado()"
-                        (change)="soloAlterado.emit(!plano().isSolo)"
+                        (change)="soloAlterado.emit(!plano().solo)"
                     />
                     <span>Solo</span>
                     <i
@@ -134,13 +134,13 @@
                         tooltipPosition="bottom"
                     ></i>
                 </label>
-            } @else if (plano().isSolo) {
+            } @else if (plano().solo) {
                 <span class="plano-cabecalho__chip"
                     ><i class="pi pi-lock" aria-hidden="true"></i>Solo</span
                 >
             }
         }
-        @if (plano().isArquivado) {
+        @if (plano().arquivado) {
             <span class="plano-cabecalho__chip plano-cabecalho__chip--aviso"
                 ><i class="pi pi-box" aria-hidden="true"></i>Arquivado</span
             >

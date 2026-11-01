@@ -22,7 +22,7 @@
             <span class="demanda-pasta-linha__caminho">{{ caminho() }}</span>
         }
         <span class="demanda-pasta-linha__nome">
-            @if (no().isEstrutural) {
+            @if (no().estrutural) {
                 <i class="pi pi-folder demanda-pasta-linha__icone-pasta"></i>
             }
             @for (parte of nomeEmPartes; track $index) {

@@ -251,18 +251,18 @@ export class PlanoDocumentoComponent {
         );
     }
 
-    alterarSolo(isSolo: boolean): void {
+    alterarSolo(solo: boolean): void {
         const plano = this.plano();
         if (!plano) return;
-        this.executar(this.planoService.marcarSolo(plano.id, isSolo), () => this.plano.update((atual) => atual && { ...atual, isSolo }), 'solo', 'Não foi possível alterar o plano');
+        this.executar(this.planoService.marcarSolo(plano.id, solo), () => this.plano.update((atual) => atual && { ...atual, solo }), 'solo', 'Não foi possível alterar o plano');
     }
 
-    alterarArquivo(isArquivado: boolean): void {
+    alterarArquivo(arquivado: boolean): void {
         const plano = this.plano();
         if (!plano) return;
         this.executar(
-            this.planoService.arquivar(plano.id, isArquivado),
-            () => this.plano.update((atual) => atual && { ...atual, isArquivado }),
+            this.planoService.arquivar(plano.id, arquivado),
+            () => this.plano.update((atual) => atual && { ...atual, arquivado }),
             'arquivo',
             'Não foi possível arquivar o plano',
         );

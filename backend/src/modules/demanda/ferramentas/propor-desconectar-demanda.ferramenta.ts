@@ -43,7 +43,7 @@ export class ProporDesconectarDemandaFerramenta extends FerramentaPropostaIa<Pro
             ...entrada,
             demandaOrigemNome: origem.nome,
             demandaDestinoNome: destino.nome,
-            ehBidirecional: conexao.ehBidirecional,
+            bidirecional: conexao.bidirecional,
         };
         return { ...dados };
     }

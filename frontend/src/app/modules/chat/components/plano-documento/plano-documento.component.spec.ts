@@ -12,7 +12,7 @@ type Montado = ComponenteMontado<PlanoDocumentoComponent>;
 function plano(sobrescrita: Record<string, unknown> = {}) {
     return {
         id: 7, titulo: 'Plano da semana', projetoId: 10, projetoNome: 'Projeto Demo', demandaId: null, demandaNome: null, publicacaoData: null,
-        criadorId: 1, criadorNome: 'Eu', isSolo: false, isArquivado: false, descricaoTecnica: 'Texto técnico', documentacao: null,
+        criadorId: 1, criadorNome: 'Eu', solo: false, arquivado: false, descricaoTecnica: 'Texto técnico', documentacao: null,
         versao: 3, createdDate: '2026-10-20T12:00:00.000Z', updatedDate: '2026-10-21T12:00:00.000Z', ...sobrescrita,
     };
 }
@@ -197,18 +197,18 @@ describe('PlanoDocumentoComponent — cabeçalho', () => {
         const montado = await montarDocumento(TipoUsuarioEnum.DESENVOLVEDOR);
         montado.elemento.querySelector<HTMLInputElement>('.plano-cabecalho__solo input')!.click();
         const requisicao = esperarRequisicao(montado.http, 'PATCH', '/plano/7/solo');
-        expect(requisicao.request.body).toEqual({ isSolo: true });
-        responderSucesso(requisicao, { id: 7, isSolo: true });
+        expect(requisicao.request.body).toEqual({ solo: true });
+        responderSucesso(requisicao, { id: 7, solo: true });
         await montado.atualizar();
-        expect(montado.componente.plano()?.isSolo).toBe(true);
+        expect(montado.componente.plano()?.solo).toBe(true);
     });
 
     it('arquivar chama a API e o plano passa a mostrar a marca de arquivado', async () => {
         const montado = await montarDocumento(TipoUsuarioEnum.GESTOR);
         montado.elemento.querySelector<HTMLButtonElement>('[aria-label="Arquivar o plano"]')!.click();
         const requisicao = esperarRequisicao(montado.http, 'PATCH', '/plano/7/arquivo');
-        expect(requisicao.request.body).toEqual({ isArquivado: true });
-        responderSucesso(requisicao, { id: 7, isArquivado: true });
+        expect(requisicao.request.body).toEqual({ arquivado: true });
+        responderSucesso(requisicao, { id: 7, arquivado: true });
         await montado.atualizar();
 
         expect(texto(montado)).toContain('Arquivado');

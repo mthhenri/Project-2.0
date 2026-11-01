@@ -26,8 +26,8 @@ testarComBanco('inserir grava o plano na versão 1, sem textos, compartilhado e 
     assert.equal(plano?.projetoNome, projeto.nome);
     assert.equal(plano?.criadorId, criador.id);
     assert.equal(plano?.versao, 1);
-    assert.equal(plano?.isSolo, false);
-    assert.equal(plano?.isArquivado, false);
+    assert.equal(plano?.solo, false);
+    assert.equal(plano?.arquivado, false);
     assert.equal(plano?.descricaoTecnica, null);
     assert.equal(plano?.demandaId, null);
 });
@@ -68,7 +68,7 @@ testarComBanco('listar: plano amplo e plano solo só do criador; plano de projet
 
     const { id: planoCompartilhado } = await repositorio.inserir({ titulo: 'Compartilhado', projetoId: projeto.id, usuarioId: criador.id });
     const { id: planoSolo } = await repositorio.inserir({ titulo: 'Solo', projetoId: projeto.id, usuarioId: criador.id });
-    await repositorio.marcarSolo({ id: planoSolo, isSolo: true });
+    await repositorio.marcarSolo({ id: planoSolo, solo: true });
     const { id: planoAmplo } = await repositorio.inserir({ titulo: 'Amplo', projetoId: null, usuarioId: criador.id });
 
     const ids = async (usuarioId: number, ehGestor: boolean) =>
@@ -86,7 +86,7 @@ testarComBanco('listar: arquivado some do seletor, volta com incluirArquivados o
     const projeto = await criarProjeto(conexao);
     const { id: ativo } = await repositorio.inserir({ titulo: 'Relatório mensal', projetoId: projeto.id, usuarioId: criador.id });
     const { id: arquivado } = await repositorio.inserir({ titulo: 'Relatório antigo', projetoId: null, usuarioId: criador.id });
-    await repositorio.arquivar({ id: arquivado, isArquivado: true });
+    await repositorio.arquivar({ id: arquivado, arquivado: true });
     const base = { usuarioId: criador.id, ehGestor: true };
 
     assert.deepEqual((await repositorio.listar(base)).map((plano) => plano.id), [ativo]);

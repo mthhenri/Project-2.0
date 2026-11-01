@@ -9,7 +9,7 @@ export function construirArvoreDemandas(nos: DemandaGrafoNoDto[]): DemandaArvore
             id:                  no.id,
             nome:                no.nome,
             status:              no.status,
-            isEstrutural:        no.isEstrutural,
+            estrutural:        no.estrutural,
             horasEstimadas:      no.horasEstimadas,
             minutosExecutados:   no.minutosExecutados,
             temDescricaoTecnica: no.temDescricaoTecnica,

@@ -9,8 +9,8 @@ export interface PlanoRecuperadoDto {
     publicacaoData: string | null;
     criadorId: number;
     criadorNome: string;
-    isSolo: boolean;
-    isArquivado: boolean;
+    solo: boolean;
+    arquivado: boolean;
     descricaoTecnica: string | null;
     /** Ausente para quem não é gestor ou administrador: a aba é exclusiva deles (`SYSTEM.SPEC.md` §14). */
     descricaoCliente?: string | null;

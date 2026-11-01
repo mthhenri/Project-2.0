@@ -8,7 +8,7 @@ export interface PlanoResumoDto {
     demandaNome: string | null;
     criadorId: number;
     criadorNome: string;
-    isSolo: boolean;
-    isArquivado: boolean;
+    solo: boolean;
+    arquivado: boolean;
     updatedDate: string;
 }

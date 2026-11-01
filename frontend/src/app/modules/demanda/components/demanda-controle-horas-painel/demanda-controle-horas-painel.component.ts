@@ -119,7 +119,7 @@ export class DemandaControleHorasPainelComponent {
         const ids = new Set<number>();
         if (!this.apenasAbertas()) return ids;
         for (const no of this.nos()) {
-            if (!no.isEstrutural && (no.status === TipoDemandaStatusEnum.PENDENTE || no.status === TipoDemandaStatusEnum.PLANEJADA)) {
+            if (!no.estrutural && (no.status === TipoDemandaStatusEnum.PENDENTE || no.status === TipoDemandaStatusEnum.PLANEJADA)) {
                 ids.add(no.id);
                 for (const id of ancestraisDe(this.raizes(), no.id)) ids.add(id);
             }
@@ -145,7 +145,7 @@ export class DemandaControleHorasPainelComponent {
     readonly semEstimativa = computed<CartaoSemEstimativa[]>(() => {
         const nomePorId = new Map(this.nos().map((no) => [no.id, no.nome]));
         return this.nos()
-            .filter((no) => !no.isEstrutural && (no.status === TipoDemandaStatusEnum.PENDENTE || no.status === TipoDemandaStatusEnum.PLANEJADA) && !(no.horasEstimadas > 0))
+            .filter((no) => !no.estrutural && (no.status === TipoDemandaStatusEnum.PENDENTE || no.status === TipoDemandaStatusEnum.PLANEJADA) && !(no.horasEstimadas > 0))
             .map((no) => ({ no, pasta: no.demandaPaiId ? (nomePorId.get(no.demandaPaiId) ?? '') : '', controle: this.controleDeEstimativa(no.id) }));
     });
 
@@ -153,7 +153,7 @@ export class DemandaControleHorasPainelComponent {
     readonly paradas = computed<CartaoParada[]>(() => {
         const agora = new Date();
         return this.itens()
-            .filter((item) => !item.isEstrutural && demandaEstaParada(item, agora))
+            .filter((item) => !item.estrutural && demandaEstaParada(item, agora))
             .sort((primeira, segunda) => new Date(primeira.ultimaExecucaoData ?? primeira.criadaData).getTime() - new Date(segunda.ultimaExecucaoData ?? segunda.criadaData).getTime())
             .map((linha) => ({
                 linha,
@@ -192,7 +192,7 @@ export class DemandaControleHorasPainelComponent {
 
     /** A pasta abre e fecha; a demanda abre na Árvore. */
     aoClicarLinha(linha: LinhaHoras): void {
-        if (linha.noHoras.no.isEstrutural && linha.noHoras.filhos.length > 0) this.alternarPasta(linha.noHoras);
+        if (linha.noHoras.no.estrutural && linha.noHoras.filhos.length > 0) this.alternarPasta(linha.noHoras);
         else this.demandaVisualizarSolicitada.emit(linha.noHoras.no.id);
     }
 
@@ -203,7 +203,7 @@ export class DemandaControleHorasPainelComponent {
     abrirMenu(evento: MouseEvent, no: DemandaGrafoNoDto, menu: ContextMenu): void {
         const alvo: DemandaMenuAlvo = {
             id: no.id,
-            isEstrutural: no.isEstrutural,
+            estrutural: no.estrutural,
             temDescricaoTecnica: no.temDescricaoTecnica,
             temDescricaoCliente: no.temDescricaoCliente,
             temDocumentacao: no.temDocumentacao,

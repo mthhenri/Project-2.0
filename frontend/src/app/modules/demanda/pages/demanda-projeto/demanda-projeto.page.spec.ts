@@ -16,7 +16,7 @@ const PROJETOS = [
 
 function criarNo(id: number, sobrescritas: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
-        id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, horasEstimadas: 4, minutosExecutados: 0,
+        id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 4, minutosExecutados: 0,
         demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...sobrescritas,
     };
 }
@@ -319,7 +319,7 @@ describe('DemandaProjetoPage', () => {
         });
 
         it('a pasta de partida: a da URL se existe; senão Sem pasta; cai na primeira pasta quando não há demandas soltas', async () => {
-            const pastas = { nos: [criarNo(1, { isEstrutural: true }), criarNo(2, { demandaPaiId: 1 }), criarNo(3)], arestas: [] };
+            const pastas = { nos: [criarNo(1, { estrutural: true }), criarNo(2, { demandaPaiId: 1 }), criarNo(3)], arestas: [] };
             const daUrl = await montarPagina({ consulta: { projetoId: '5', pasta: '1' } });
             await carregarProjetos(daUrl.montado);
             responderSucesso(esperarRequisicao(daUrl.montado.http, 'GET', '/demanda/grafo'), pastas);
@@ -342,7 +342,7 @@ describe('DemandaProjetoPage', () => {
         });
 
         it('escolher a pasta vai para a URL; abrir uma demanda do Grafo ou do Controle de horas troca para a Árvore com o pedido', async () => {
-            const { montado, irPara } = await comGrafo({ nos: [criarNo(1, { isEstrutural: true }), criarNo(2, { demandaPaiId: 1 })], arestas: [] });
+            const { montado, irPara } = await comGrafo({ nos: [criarNo(1, { estrutural: true }), criarNo(2, { demandaPaiId: 1 })], arestas: [] });
             montado.componente.aoEscolherPasta(1);
             expect(montado.componente.pastaId()).toBe(1);
             expect(irPara).toHaveBeenLastCalledWith([], { queryParams: { modo: 'arvore', projetoId: 5, pasta: '1' }, replaceUrl: true });

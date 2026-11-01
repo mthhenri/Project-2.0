@@ -9,7 +9,7 @@ export interface DemandaParaContexto {
     id: number;
     nome: string;
     paiId: number | null;
-    isEstrutural: boolean;
+    estrutural: boolean;
     status: string;
     descricao: string | null;
 }
@@ -28,10 +28,10 @@ export function montarContextoDaAnalise(entrada: {
     conexoesDoAlvo: { origemId: number; destinoId: number }[];
 }): string {
     const linhas = entrada.outras.map(
-        (demanda) => `- #${demanda.id} "${demanda.nome}" (${demanda.isEstrutural ? 'estrutura' : 'trabalho'}, ${demanda.status}, pai: ${demanda.paiId ?? 'nenhum'}): ${cortar(demanda.descricao)}`,
+        (demanda) => `- #${demanda.id} "${demanda.nome}" (${demanda.estrutural ? 'estrutura' : 'trabalho'}, ${demanda.status}, pai: ${demanda.paiId ?? 'nenhum'}): ${cortar(demanda.descricao)}`,
     );
     return [
-        `Projeto "${entrada.projeto}". Demanda a analisar: #${entrada.alvo.id} "${entrada.alvo.nome}" (${entrada.alvo.isEstrutural ? 'estrutura' : 'trabalho'}, pai: ${entrada.alvo.paiId ?? 'nenhum'}).`,
+        `Projeto "${entrada.projeto}". Demanda a analisar: #${entrada.alvo.id} "${entrada.alvo.nome}" (${entrada.alvo.estrutural ? 'estrutura' : 'trabalho'}, pai: ${entrada.alvo.paiId ?? 'nenhum'}).`,
         `Descrição do cliente: ${cortar(entrada.alvo.descricaoCliente)}`,
         `Descrição técnica: ${cortar(entrada.alvo.descricaoTecnica)}`,
         entrada.conexoesDoAlvo.length > 0 ? `Conexões que ela já tem: ${entrada.conexoesDoAlvo.map((conexao) => `#${conexao.origemId}→#${conexao.destinoId}`).join(', ')}.` : 'Ela ainda não tem conexões.',
@@ -47,14 +47,14 @@ export function montarInstrucoesDaAnalise(): string {
         'ou mover a demanda para baixo de uma demanda de estrutura que combine melhor (tipo LUGAR).',
         'Use só ids das outras demandas listadas; nunca invente demanda nem sugira ligar a demanda a ela mesma. Cada item explica o motivo em uma frase, apoiada no que está escrito.',
         'Se não houver sugestão boa, devolva uma lista vazia: é uma resposta válida.',
-        'Responda somente com um array JSON de objetos {"tipo": "CONEXAO" ou "LUGAR", "demandaRelacionadaId": número, "ehBidirecional": booleano, "motivo": texto}, sem cercas de código nem comentário.',
+        'Responda somente com um array JSON de objetos {"tipo": "CONEXAO" ou "LUGAR", "demandaRelacionadaId": número, "bidirecional": booleano, "motivo": texto}, sem cercas de código nem comentário.',
     ].join(' ');
 }
 
 interface SugestaoBruta {
     tipo: unknown;
     demandaRelacionadaId: unknown;
-    ehBidirecional?: unknown;
+    bidirecional?: unknown;
     motivo: unknown;
 }
 
@@ -110,11 +110,11 @@ export function filtrarSugestoes(entrada: {
         if (bruta.tipo === 'CONEXAO') {
             const jaLigadas = entrada.conexoesExistentes.some((conexao) => (conexao.origemId === entrada.demandaId && conexao.destinoId === id) || (conexao.origemId === id && conexao.destinoId === entrada.demandaId));
             if (jaLigadas) continue;
-        } else if (!relacionada.isEstrutural || alvo?.paiId === id || abaixoDoAlvo.has(id)) {
+        } else if (!relacionada.estrutural || alvo?.paiId === id || abaixoDoAlvo.has(id)) {
             continue;
         }
         vistas.add(chave);
-        validas.push({ tipo: bruta.tipo, demandaRelacionadaId: id, demandaRelacionadaNome: relacionada.nome, ehBidirecional: bruta.tipo === 'CONEXAO' && bruta.ehBidirecional === true, motivo: motivo.slice(0, 300) });
+        validas.push({ tipo: bruta.tipo, demandaRelacionadaId: id, demandaRelacionadaNome: relacionada.nome, bidirecional: bruta.tipo === 'CONEXAO' && bruta.bidirecional === true, motivo: motivo.slice(0, 300) });
         if (validas.length === MAXIMO_DE_SUGESTOES_DE_CONEXAO) break;
     }
     return validas;

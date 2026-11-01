@@ -10,7 +10,7 @@ import { AtividadeDemandaPainelComponent } from './atividade-demanda-painel.comp
 
 const DEMANDA = {
     id: 10, projetoId: 7, demandaPaiId: null, nome: 'Demanda de teste', descricaoTecnica: '# Texto tecnico', descricaoCliente: 'Texto do cliente',
-    documentacao: '', horasEstimadas: 8, status: TipoDemandaStatusEnum.PLANEJADA, isEstrutural: false, previsaoFimData: null, createdDate: '2026-01-01T00:00:00Z', podeEditar: true,
+    documentacao: '', horasEstimadas: 8, status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false, previsaoFimData: null, createdDate: '2026-01-01T00:00:00Z', podeEditar: true,
 };
 
 async function abrir(opcoes: { campo?: CampoDocumentoDaDemanda; usuario?: TipoUsuarioEnum; podeEditar?: boolean } = {}) {

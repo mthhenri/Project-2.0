@@ -10,6 +10,6 @@ export class Demanda extends BaseEntity {
     documentacao: string | null;
     horasEstimadas: number;
     status: TipoDemandaStatusEnum;
-    isEstrutural: boolean;
+    estrutural: boolean;
     previsaoFimData: Date | null;
 }

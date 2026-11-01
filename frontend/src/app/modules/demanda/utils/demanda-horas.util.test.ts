@@ -15,7 +15,7 @@ import {
 
 function no(id: number, sobrescritas: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
-        id, nome: `D${id}`, status: TipoDemandaStatusEnum.PLANEJADA, isEstrutural: false, horasEstimadas: 0, minutosExecutados: 0,
+        id, nome: `D${id}`, status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false, horasEstimadas: 0, minutosExecutados: 0,
         demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...sobrescritas,
     };
 }
@@ -86,9 +86,9 @@ describe('calcularBarraHoras', () => {
 
 describe('montarArvoreDeHoras', () => {
     const nos = [
-        no(1, { isEstrutural: true, horasEstimadas: 2, minutosExecutados: 30 }),
+        no(1, { estrutural: true, horasEstimadas: 2, minutosExecutados: 30 }),
         no(2, { demandaPaiId: 1, horasEstimadas: 4, minutosExecutados: 120 }),
-        no(3, { isEstrutural: true, demandaPaiId: 1 }),
+        no(3, { estrutural: true, demandaPaiId: 1 }),
         no(4, { demandaPaiId: 3, horasEstimadas: 6, minutosExecutados: 60, status: TipoDemandaStatusEnum.CONCLUIDA }),
         no(5, { demandaPaiId: 3, horasEstimadas: 9, minutosExecutados: 600, status: TipoDemandaStatusEnum.CANCELADA }),
         no(6, { horasEstimadas: 1, minutosExecutados: 10 }),

@@ -29,7 +29,7 @@ export class DemandaListarDto {
         if (value === 'false') return false;
         return value;
     })
-    isEstrutural?: boolean;
+    estrutural?: boolean;
 
     @ApiPropertyOptional({ example: 1 })
     @IsOptional()

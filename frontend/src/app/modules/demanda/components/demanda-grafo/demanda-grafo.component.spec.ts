@@ -21,17 +21,17 @@ afterAll(() => {
 
 function criarNo(id: number, sobrescritas: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
-        id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, horasEstimadas: 2, minutosExecutados: 0,
+        id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 2, minutosExecutados: 0,
         demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...sobrescritas,
     };
 }
 
 const GRAFO: DemandaGrafoDto = {
-    nos: [criarNo(1, { isEstrutural: true }), criarNo(2, { demandaPaiId: 1 }), criarNo(3, { status: TipoDemandaStatusEnum.CANCELADA })],
+    nos: [criarNo(1, { estrutural: true }), criarNo(2, { demandaPaiId: 1 }), criarNo(3, { status: TipoDemandaStatusEnum.CANCELADA })],
     arestas: [
-        { id: 1, origemId: 1, destinoId: 2, tipo: 'hierarquia', ehBidirecional: false },
-        { id: 2, origemId: 2, destinoId: 3, tipo: 'conexao', ehBidirecional: true },
-        { id: 3, origemId: 3, destinoId: 99, tipo: 'conexao', ehBidirecional: false },
+        { id: 1, origemId: 1, destinoId: 2, tipo: 'hierarquia', bidirecional: false },
+        { id: 2, origemId: 2, destinoId: 3, tipo: 'conexao', bidirecional: true },
+        { id: 3, origemId: 3, destinoId: 99, tipo: 'conexao', bidirecional: false },
     ],
 };
 
@@ -149,7 +149,7 @@ describe('DemandaGrafoComponent', () => {
     });
 
     it('sempre mostra o projeto todo: sem foco por pasta, e clicar numa pasta ou numa demanda abre na Árvore', async () => {
-        const nos = [criarNo(1, { isEstrutural: true }), criarNo(2, { demandaPaiId: 1 }), criarNo(3)];
+        const nos = [criarNo(1, { estrutural: true }), criarNo(2, { demandaPaiId: 1 }), criarNo(3)];
         const { montado, selecionadas } = await montar({ nos, arestas: [] });
         const grupos = Array.from(svg(montado.elemento).querySelectorAll('g > g > g')) as SVGGElement[];
         expect(new Set(grupos.map((grupo) => grupo.style.opacity || '1'))).toEqual(new Set(['1']));

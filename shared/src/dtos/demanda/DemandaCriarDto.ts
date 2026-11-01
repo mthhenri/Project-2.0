@@ -67,7 +67,7 @@ export class DemandaCriarDto {
 
     @ApiProperty({ example: false })
     @IsBoolean()
-    isEstrutural: boolean;
+    estrutural: boolean;
 
     @ApiPropertyOptional({ example: '2026-12-31' })
     @IsOptional()

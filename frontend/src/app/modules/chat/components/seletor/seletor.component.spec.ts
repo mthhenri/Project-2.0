@@ -22,7 +22,7 @@ function conversa(data: string, sobrescrita: Record<string, unknown> = {}) {
 function plano(id: number, sobrescrita: Record<string, unknown> = {}) {
     return {
         id, titulo: `Plano ${id}`, projetoId: 10, projetoNome: 'Projeto Demo', demandaId: null, demandaNome: null, criadorId: 1, criadorNome: 'Eu',
-        isSolo: false, isArquivado: false, updatedDate: '2026-10-18T12:00:00.000Z', ...sobrescrita,
+        solo: false, arquivado: false, updatedDate: '2026-10-18T12:00:00.000Z', ...sobrescrita,
     };
 }
 
@@ -35,7 +35,7 @@ function resultadoDeBusca(id: string) {
 }
 
 const CONVERSAS = [conversa(HOJE, { titulo: 'Planejando a semana' }), conversa('2026-10-18')];
-const PLANOS = [plano(1, { titulo: 'Relatório mensal', demandaNome: 'Exportação em PDF' }), plano(2, { titulo: 'Ideias soltas', projetoId: null, projetoNome: null, isSolo: true })];
+const PLANOS = [plano(1, { titulo: 'Relatório mensal', demandaNome: 'Exportação em PDF' }), plano(2, { titulo: 'Ideias soltas', projetoId: null, projetoNome: null, solo: true })];
 
 async function montar(entradas: Record<string, unknown> = {}, conversas: unknown[] = CONVERSAS, planos: unknown[] = PLANOS): Promise<Montado> {
     const montado = await montarComponente(SeletorComponent, {
@@ -181,7 +181,7 @@ describe('SeletorComponent — busca', () => {
         expect(busca.request.params.get('texto')).toBe('prazo');
         responderSucesso(busca, { mensagens: [resultadoDeBusca('m-1')] });
         const planos = montado.http.expectOne((requisicao) => requisicao.method === 'GET' && requisicao.url.endsWith('/plano') && requisicao.params.get('busca') === 'prazo');
-        responderSucesso(planos, [plano(3, { titulo: 'Prazo do cliente', isArquivado: true })]);
+        responderSucesso(planos, [plano(3, { titulo: 'Prazo do cliente', arquivado: true })]);
         await montado.atualizar();
 
         expect(itensDe(painel, 'Planos')[0].textContent).toContain('Prazo do cliente');

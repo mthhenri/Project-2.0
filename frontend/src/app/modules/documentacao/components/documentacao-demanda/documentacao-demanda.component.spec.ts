@@ -13,7 +13,7 @@ type Montado = ComponenteMontado<DocumentacaoDemandaComponent>;
 function demanda(sobrescrita: Record<string, unknown> = {}) {
     return {
         id: 9, projetoId: 3, demandaPaiId: null, nome: 'Cadastro de usuário', descricaoTecnica: 'Texto técnico', descricaoCliente: 'Texto do cliente', documentacao: null,
-        versao: 4, horasEstimadas: 8, status: TipoDemandaStatusEnum.PLANEJADA, isEstrutural: false, previsaoFimData: null, createdDate: '2026-01-15T12:00:00.000Z',
+        versao: 4, horasEstimadas: 8, status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false, previsaoFimData: null, createdDate: '2026-01-15T12:00:00.000Z',
         podeEditar: true, ...sobrescrita,
     };
 }

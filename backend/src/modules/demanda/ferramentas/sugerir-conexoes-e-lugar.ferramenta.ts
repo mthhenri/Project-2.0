@@ -53,7 +53,7 @@ export class SugerirConexoesELugarFerramenta extends FerramentaIa<SugerirConexoe
             id: no.id,
             nome: no.nome,
             status: no.status,
-            isEstrutural: no.isEstrutural,
+            estrutural: no.estrutural,
             paiId: no.demandaPaiId,
             horasEstimadas: no.horasEstimadas,
             horasExecutadas: Math.round((no.minutosExecutados / 60) * 10) / 10,
@@ -69,11 +69,11 @@ export class SugerirConexoesELugarFerramenta extends FerramentaIa<SugerirConexoe
         const paraContexto = [];
         for (const demanda of outras.slice(0, MAXIMO_DE_DEMANDAS_NO_CONTEXTO)) {
             const completa = (await this.demandaService.recuperar({ id: demanda.id }, usuarioAtivo)).dados;
-            paraContexto.push({ id: demanda.id, nome: demanda.nome, paiId: demanda.paiId, isEstrutural: demanda.isEstrutural, status: demanda.status, descricao: completa?.descricaoCliente || completa?.descricaoTecnica || null });
+            paraContexto.push({ id: demanda.id, nome: demanda.nome, paiId: demanda.paiId, estrutural: demanda.estrutural, status: demanda.status, descricao: completa?.descricaoCliente || completa?.descricaoTecnica || null });
         }
         const contexto = montarContextoDaAnalise({
             projeto: projeto?.nome ?? '',
-            alvo: { id: alvo.id, nome: alvo.nome, paiId: alvo.demandaPaiId, isEstrutural: alvo.isEstrutural, status: alvo.status, descricao: null, descricaoCliente: alvo.descricaoCliente, descricaoTecnica: alvo.descricaoTecnica },
+            alvo: { id: alvo.id, nome: alvo.nome, paiId: alvo.demandaPaiId, estrutural: alvo.estrutural, status: alvo.status, descricao: null, descricaoCliente: alvo.descricaoCliente, descricaoTecnica: alvo.descricaoTecnica },
             outras: paraContexto,
             conexoesDoAlvo: conexoes.filter((conexao) => conexao.origemId === alvo.id || conexao.destinoId === alvo.id),
         });

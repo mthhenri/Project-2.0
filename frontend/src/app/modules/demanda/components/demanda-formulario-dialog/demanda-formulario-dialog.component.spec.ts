@@ -15,7 +15,7 @@ const USUARIOS = [
     { id: 2, nomeCompleto: 'Ana', login: 'ana', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true },
     { id: 3, nomeCompleto: 'Gestora', login: 'g', cargoTitulo: 'Gestora', tipo: TipoUsuarioEnum.GESTOR, ativo: true },
 ];
-const PAIS = [{ id: 5, nome: 'Estrutura', caminho: 'Estrutura', isEstrutural: true, status: 'PLANEJADA', horasEstimadas: 0 }];
+const PAIS = [{ id: 5, nome: 'Estrutura', caminho: 'Estrutura', estrutural: true, status: 'PLANEJADA', horasEstimadas: 0 }];
 const PAGINA = (itens: unknown[]) => ({ itens, totalItens: itens.length, paginaAtual: 1, itensPorPagina: 200, totalPaginas: 1 });
 
 async function abrir(tipo: TipoUsuarioEnum, entradas: Record<string, unknown> = {}): Promise<{ montado: Montado; criadas: unknown[]; alteradas: number[]; visibilidade: boolean[] }> {
@@ -41,7 +41,7 @@ describe('DemandaFormularioDialogComponent — abrir', () => {
     it('gestor: carrega tags, usuários (sem gestores) e as demandas estruturais candidatas a pai', async () => {
         const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
         const consultaPais = esperarRequisicao(montado.http, 'GET', '/demanda');
-        expect(consultaPais.request.params.get('isEstrutural')).toBe('true');
+        expect(consultaPais.request.params.get('estrutural')).toBe('true');
         expect(consultaPais.request.params.get('projetoId')).toBe('7');
         consultaPais.flush({ sucesso: true, dados: PAGINA(PAIS), mensagem: '' });
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/tag'), TAGS);
@@ -64,7 +64,7 @@ describe('DemandaFormularioDialogComponent — abrir', () => {
     it('abre limpo: status Planejada, não estrutural, estimativa zero', async () => {
         const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
         await responderAbertura(montado, true);
-        expect(montado.componente.formulario.getRawValue()).toMatchObject({ nome: '', status: TipoDemandaStatusEnum.PLANEJADA, isEstrutural: false, horasEstimadas: 0, tagIds: [], usuarioIds: [] });
+        expect(montado.componente.formulario.getRawValue()).toMatchObject({ nome: '', status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false, horasEstimadas: 0, tagIds: [], usuarioIds: [] });
         expect(montado.componente.eEdicao()).toBe(false);
     });
 });
@@ -98,7 +98,7 @@ describe('DemandaFormularioDialogComponent — criar', () => {
         montado.componente.salvar();
         const requisicao = esperarRequisicao(montado.http, 'POST', '/demanda');
         expect(requisicao.request.body).toEqual({
-            projetoId: 7, nome: 'Nova demanda', status: 'PLANEJADA', isEstrutural: false, horasEstimadas: 6, previsaoFimData: '2026-06-30', tagIds: [1], usuarioIds: [2],
+            projetoId: 7, nome: 'Nova demanda', status: 'PLANEJADA', estrutural: false, horasEstimadas: 6, previsaoFimData: '2026-06-30', tagIds: [1], usuarioIds: [2],
         });
         responderSucesso(requisicao, { id: 40, projetoId: 7, nome: 'Nova demanda' }, 201);
         await montado.atualizar();
@@ -120,13 +120,13 @@ describe('DemandaFormularioDialogComponent — criar', () => {
     it('estrutural zera a estimativa e a previsão (agregam os filhos) e esconde os campos', async () => {
         const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
         await responderAbertura(montado, true);
-        montado.componente.formulario.patchValue({ nome: 'Estrutura', isEstrutural: true, horasEstimadas: 40, previsaoFimData: new Date(2026, 5, 30) });
+        montado.componente.formulario.patchValue({ nome: 'Estrutura', estrutural: true, horasEstimadas: 40, previsaoFimData: new Date(2026, 5, 30) });
         expect(montado.componente.ocultaEstimativa).toBe(true);
         montado.componente.salvar();
         const corpo = esperarRequisicao(montado.http, 'POST', '/demanda').request.body;
         expect(corpo.horasEstimadas).toBe(0);
         expect('previsaoFimData' in corpo && corpo.previsaoFimData !== undefined).toBe(false);
-        expect(corpo.isEstrutural).toBe(true);
+        expect(corpo.estrutural).toBe(true);
     });
 
     it('em modo dias, o valor digitado é convertido em horas antes de enviar (1 dia = 8 h)', async () => {
@@ -167,7 +167,7 @@ describe('DemandaFormularioDialogComponent — criar', () => {
 
 describe('DemandaFormularioDialogComponent — editar', () => {
     const DEMANDA = {
-        id: 10, projetoId: 7, demandaPaiId: 5, nome: 'Existente', status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, horasEstimadas: 8, previsaoFimData: '2026-06-30',
+        id: 10, projetoId: 7, demandaPaiId: 5, nome: 'Existente', status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 8, previsaoFimData: '2026-06-30',
         descricaoTecnica: null, descricaoCliente: null, documentacao: null, createdDate: '2026-01-01T00:00:00Z', podeEditar: true,
     };
 
@@ -200,7 +200,7 @@ describe('DemandaFormularioDialogComponent — editar', () => {
         montado.componente.formulario.patchValue({ nome: 'Renomeada', tagIds: [2], usuarioIds: [] });
         montado.componente.salvar();
         const alteracao = esperarRequisicao(montado.http, 'PUT', '/demanda/10');
-        expect(alteracao.request.body).toMatchObject({ nome: 'Renomeada', demandaPaiId: 5, isEstrutural: false, horasEstimadas: 8 });
+        expect(alteracao.request.body).toMatchObject({ nome: 'Renomeada', demandaPaiId: 5, estrutural: false, horasEstimadas: 8 });
         responderSucesso(alteracao, DEMANDA);
         await montado.atualizar();
         expect(esperarRequisicao(montado.http, 'PUT', '/demanda/10/tag').request.body).toEqual({ tagIds: [2] });
@@ -219,12 +219,12 @@ describe('DemandaFormularioDialogComponent — editar', () => {
 
     it('estrutural na edição não manda estimativa nem previsão (os valores existentes ficam como estão)', async () => {
         const { montado } = await abrirEdicao(TipoUsuarioEnum.DESENVOLVEDOR);
-        montado.componente.formulario.patchValue({ isEstrutural: true });
+        montado.componente.formulario.patchValue({ estrutural: true });
         montado.componente.salvar();
         const corpo = esperarRequisicao(montado.http, 'PUT', '/demanda/10').request.body;
         expect('horasEstimadas' in corpo).toBe(false);
         expect('previsaoFimData' in corpo).toBe(false);
-        expect(corpo.isEstrutural).toBe(true);
+        expect(corpo.estrutural).toBe(true);
     });
 });
 

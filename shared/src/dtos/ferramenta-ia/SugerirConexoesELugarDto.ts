@@ -18,7 +18,7 @@ export interface SugestaoDeConexaoOuLugarDto {
     demandaRelacionadaId: number;
     demandaRelacionadaNome: string;
     /** Só em `CONEXAO`: a ligação vale nos dois sentidos. */
-    ehBidirecional: boolean;
+    bidirecional: boolean;
     motivo: string;
 }
 

@@ -107,7 +107,7 @@ async function inserirDemanda(
                     descricao_tecnica,
                     horas_estimadas,
                     tipo_demanda_status_id,
-                    is_estrutural,
+                    estrutural,
                     versao
                 )
             SELECT
@@ -320,7 +320,7 @@ export async function semearDesenvolvimento(conexao: Knex): Promise<ResultadoSee
                             is_deleted,
                             demanda_origem_id,
                             demanda_destino_id,
-                            eh_bidirecional
+                            bidirecional
                         )
                     SELECT
                         NOW(),

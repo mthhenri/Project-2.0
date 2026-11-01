@@ -9,7 +9,7 @@ import { construirMenuDemanda, DemandaMenuAcoes } from './demanda-context-menu.f
 
 function no(id: number, nome: string, demandaPaiId: number | null = null, extra: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
-        id, nome, demandaPaiId, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, horasEstimadas: 1, minutosExecutados: 0,
+        id, nome, demandaPaiId, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 1, minutosExecutados: 0,
         temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...extra,
     } as DemandaGrafoNoDto;
 }
@@ -128,7 +128,7 @@ describe('demanda-filtro', () => {
 });
 
 describe('construirMenuDemanda', () => {
-    const alvo = (sobrescrita = {}) => ({ id: 9, isEstrutural: false, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, ...sobrescrita });
+    const alvo = (sobrescrita = {}) => ({ id: 9, estrutural: false, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, ...sobrescrita });
     const rotulos = (itens: ReturnType<typeof construirMenuDemanda>) => itens.filter((item) => !item.separator).map((item) => item.label);
     const acoesRegistradas = () => {
         const chamadas: Array<[string, ...unknown[]]> = [];
@@ -149,14 +149,14 @@ describe('construirMenuDemanda', () => {
     });
 
     it('"Nova Sub-demanda" só aparece em demanda estrutural, para gestor e desenvolvedor', () => {
-        expect(rotulos(construirMenuDemanda(alvo({ isEstrutural: true }), acoesRegistradas().acoes, false))).toContain('Nova Sub-demanda');
-        expect(rotulos(construirMenuDemanda(alvo({ isEstrutural: true }), acoesRegistradas().acoes, true))).toContain('Nova Sub-demanda');
+        expect(rotulos(construirMenuDemanda(alvo({ estrutural: true }), acoesRegistradas().acoes, false))).toContain('Nova Sub-demanda');
+        expect(rotulos(construirMenuDemanda(alvo({ estrutural: true }), acoesRegistradas().acoes, true))).toContain('Nova Sub-demanda');
         expect(rotulos(construirMenuDemanda(alvo(), acoesRegistradas().acoes, true))).not.toContain('Nova Sub-demanda');
     });
 
     it('cada item dispara a ação certa com o id da demanda', () => {
         const { acoes, chamadas } = acoesRegistradas();
-        const itens = construirMenuDemanda(alvo({ isEstrutural: true }), acoes, true);
+        const itens = construirMenuDemanda(alvo({ estrutural: true }), acoes, true);
         for (const item of itens) item.command?.({ originalEvent: new Event('click'), item });
         expect(chamadas).toEqual([
             ['visualizar', 9], ['editar', 9], ['filha', 9], ['tags', 9], ['membros', 9],
@@ -172,7 +172,7 @@ describe('construirMenuDemanda', () => {
     });
 
     it('os itens são dados (propriedade), nunca getter: o PrimeNG relê o modelo a cada ciclo e um getter recriaria o menu', () => {
-        const itens = construirMenuDemanda(alvo({ isEstrutural: true }), acoesRegistradas().acoes, true);
+        const itens = construirMenuDemanda(alvo({ estrutural: true }), acoesRegistradas().acoes, true);
         expect(Array.isArray(itens)).toBe(true);
         for (const item of itens) {
             for (const chave of Object.keys(item)) {

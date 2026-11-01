@@ -15,7 +15,7 @@ const GESTOR = { sub: 3, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as neve
 function planoBase(sobrescrita: Record<string, unknown> = {}) {
     return {
         id: 7, titulo: 'Plano', projetoId: 10, projetoNome: 'Projeto', demandaId: 20, demandaNome: 'Demanda', publicacaoData: null,
-        criadorId: 1, criadorNome: 'Criador', isSolo: false, isArquivado: false,
+        criadorId: 1, criadorNome: 'Criador', solo: false, arquivado: false,
         descricaoTecnica: 'Técnica nova', descricaoCliente: 'Cliente nova', documentacao: 'Doc nova',
         versao: 3, createdDate: 'a', updatedDate: 'b', ...sobrescrita,
     };

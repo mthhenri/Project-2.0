@@ -10,14 +10,14 @@ const haDias = (dias: number) => new Date(Date.now() - dias * DIA);
 
 function criarNo(id: number, sobrescritas: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
-        id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PLANEJADA, isEstrutural: false, horasEstimadas: 10, minutosExecutados: 0,
+        id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false, horasEstimadas: 10, minutosExecutados: 0,
         demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...sobrescritas,
     };
 }
 
 function criarLinha(demandaId: number, sobrescritas: Partial<DemandaPlanejamentoDto> = {}): DemandaPlanejamentoDto {
     return {
-        demandaId, caminho: `Raiz › Demanda ${demandaId}`, isEstrutural: false, status: TipoDemandaStatusEnum.PLANEJADA, horasEstimadas: 10,
+        demandaId, caminho: `Raiz › Demanda ${demandaId}`, estrutural: false, status: TipoDemandaStatusEnum.PLANEJADA, horasEstimadas: 10,
         minutosExecutados: 0, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, ultimaExecucaoData: haDias(1),
         criadaData: haDias(30), executoresAtivos: [], ...sobrescritas,
     };
@@ -25,9 +25,9 @@ function criarLinha(demandaId: number, sobrescritas: Partial<DemandaPlanejamento
 
 // Pasta 1 (2h + 4h dentro, 1h executada de 2h) com uma subpasta 3 (6h concluída); a 6 solta, sem estimativa.
 const NOS = [
-    criarNo(1, { nome: 'Pasta', isEstrutural: true, horasEstimadas: 2, minutosExecutados: 60 }),
+    criarNo(1, { nome: 'Pasta', estrutural: true, horasEstimadas: 2, minutosExecutados: 60 }),
     criarNo(2, { demandaPaiId: 1, horasEstimadas: 4, minutosExecutados: 120 }),
-    criarNo(3, { nome: 'Sub', demandaPaiId: 1, isEstrutural: true, horasEstimadas: 0 }),
+    criarNo(3, { nome: 'Sub', demandaPaiId: 1, estrutural: true, horasEstimadas: 0 }),
     criarNo(4, { demandaPaiId: 3, horasEstimadas: 6, minutosExecutados: 60, status: TipoDemandaStatusEnum.CONCLUIDA }),
     criarNo(6, { nome: 'Solta', horasEstimadas: 0, status: TipoDemandaStatusEnum.PENDENTE }),
 ];
@@ -166,7 +166,7 @@ describe('DemandaControleHorasPainelComponent', () => {
                 criarLinha(7, { ultimaExecucaoData: haDias(3) }),
                 criarLinha(8, { ultimaExecucaoData: null, criadaData: haDias(9) }),
                 criarLinha(9, { ultimaExecucaoData: haDias(40), horasEstimadas: 0 }),
-                criarLinha(10, { ultimaExecucaoData: haDias(40), isEstrutural: true }),
+                criarLinha(10, { ultimaExecucaoData: haDias(40), estrutural: true }),
             ],
         });
         const paradas = montado.componente.paradas();

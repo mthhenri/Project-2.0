@@ -40,7 +40,7 @@ function executorComServico(opcoes: { falhaAoCriar?: string; conexaoJaRemovida?:
 test('cria a conexão pela service (sentido único por padrão) e guarda o que desfaz', async () => {
     const { executor, criadas } = executorComServico();
     const resultado = await executor.executar({ demandaOrigemId: 3, demandaDestinoId: 5, motivo: 'Uma depende da outra' }, GESTOR);
-    assert.deepEqual(criadas, [{ demandaOrigemId: 3, demandaDestinoId: 5, ehBidirecional: false }]);
+    assert.deepEqual(criadas, [{ demandaOrigemId: 3, demandaDestinoId: 5, bidirecional: false }]);
     assert.deepEqual(resultado, { conexaoId: 44, demandaOrigemId: 3, demandaDestinoId: 5 });
 });
 
@@ -94,7 +94,7 @@ test('propor conectar só cria a proposta, com os nomes e o sentido único por p
     const resultado = (await ferramenta.executar({ demandaOrigemId: 3, demandaDestinoId: 5, motivo: 'O relatório lê o cadastro' }, GESTOR)) as { propostaId: number };
     assert.equal(resultado.propostaId, 80);
     assert.equal(propostas[0].tipo, TipoPropostaIaEnum.CONECTAR_DEMANDA);
-    assert.deepEqual(propostas[0].dados, { demandaOrigemId: 3, demandaDestinoId: 5, motivo: 'O relatório lê o cadastro', ehBidirecional: false, demandaOrigemNome: 'Novo cadastro', demandaDestinoNome: 'Relatório' });
+    assert.deepEqual(propostas[0].dados, { demandaOrigemId: 3, demandaDestinoId: 5, motivo: 'O relatório lê o cadastro', bidirecional: false, demandaOrigemNome: 'Novo cadastro', demandaDestinoNome: 'Relatório' });
 });
 
 test('propor conectar recusa cedo: mesma demanda, inexistente, conexão repetida e ciclo, sem criar cartão', async () => {
@@ -114,11 +114,11 @@ function ferramentaDeSugestao(resposta: string, nos: { id: number; nome: string;
     const geradas: { nivel: NivelIaEnum; instrucoes: string; mensagens: { conteudo: unknown }[] }[] = [];
     const tipos: TipoPromptEnum[] = [];
     const demandaService = {
-        recuperar: async ({ id }: { id: number }) => ({ dados: { id, nome: `D${id}`, projetoId: 5, demandaPaiId: null, isEstrutural: false, status: 'PLANEJADA', descricaoCliente: `Cliente ${id}`, descricaoTecnica: null } }),
+        recuperar: async ({ id }: { id: number }) => ({ dados: { id, nome: `D${id}`, projetoId: 5, demandaPaiId: null, estrutural: false, status: 'PLANEJADA', descricaoCliente: `Cliente ${id}`, descricaoTecnica: null } }),
         recuperarGrafo: async () => ({
             dados: {
-                nos: nos.map((no) => ({ id: no.id, nome: no.nome, status: 'PLANEJADA', isEstrutural: no.estrutural ?? false, horasEstimadas: 0, minutosExecutados: 0, demandaPaiId: no.pai ?? null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [] })),
-                arestas: [{ id: 1, origemId: 3, destinoId: 6, tipo: 'conexao', ehBidirecional: false }],
+                nos: nos.map((no) => ({ id: no.id, nome: no.nome, status: 'PLANEJADA', estrutural: no.estrutural ?? false, horasEstimadas: 0, minutosExecutados: 0, demandaPaiId: no.pai ?? null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [] })),
+                arestas: [{ id: 1, origemId: 3, destinoId: 6, tipo: 'conexao', bidirecional: false }],
             },
         }),
     };
@@ -135,7 +135,7 @@ function ferramentaDeSugestao(resposta: string, nos: { id: number; nome: string;
 
 test('sugerir é leitura de gestor: analítico, prompt da conexão, só sugestões válidas e nada vira proposta', async () => {
     const resposta = JSON.stringify([
-        { tipo: 'CONEXAO', demandaRelacionadaId: 5, ehBidirecional: true, motivo: 'As duas tratam do cadastro de parceiros' },
+        { tipo: 'CONEXAO', demandaRelacionadaId: 5, bidirecional: true, motivo: 'As duas tratam do cadastro de parceiros' },
         { tipo: 'CONEXAO', demandaRelacionadaId: 6, motivo: 'já existe esta conexão' },
         { tipo: 'CONEXAO', demandaRelacionadaId: 77, motivo: 'demanda que não existe' },
         { tipo: 'LUGAR', demandaRelacionadaId: 4, motivo: 'Combina com a estrutura de cadastros' },
@@ -146,7 +146,7 @@ test('sugerir é leitura de gestor: analítico, prompt da conexão, só sugestõ
     const resultado = await ferramenta.executar({ demandaId: 3 }, GESTOR);
     assert.equal(geradas[0].nivel, NivelIaEnum.ANALITICO);
     assert.deepEqual(tipos, [TipoPromptEnum.CONEXAO_DEMANDA]);
-    assert.deepEqual(resultado.sugestoes.map((sugestao) => [sugestao.tipo, sugestao.demandaRelacionadaId, sugestao.ehBidirecional]), [['CONEXAO', 5, true], ['LUGAR', 4, false]]);
+    assert.deepEqual(resultado.sugestoes.map((sugestao) => [sugestao.tipo, sugestao.demandaRelacionadaId, sugestao.bidirecional]), [['CONEXAO', 5, true], ['LUGAR', 4, false]]);
     assert.equal(resultado.semSugestoes, false);
     assert.match(String(geradas[0].mensagens[0].conteudo), /#3→#6/);
 });

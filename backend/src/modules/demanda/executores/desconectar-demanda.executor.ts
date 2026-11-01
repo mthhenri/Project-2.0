@@ -30,14 +30,14 @@ export class DesconectarDemandaExecutor implements ExecutorPropostaIa {
         const conexao = await this.demandaRepositorio.recuperarConexaoPorPar({ demandaOrigemId: entrada.demandaOrigemId, demandaDestinoId: entrada.demandaDestinoId });
         if (!conexao) throw new BusinessException('A conexão entre essas demandas já não existe');
         await this.demandaService.excluirConexao({ demandaId: entrada.demandaOrigemId, conexaoId: conexao.id }, usuarioAtivo);
-        return { demandaOrigemId: entrada.demandaOrigemId, demandaDestinoId: entrada.demandaDestinoId, ehBidirecional: conexao.ehBidirecional };
+        return { demandaOrigemId: entrada.demandaOrigemId, demandaDestinoId: entrada.demandaDestinoId, bidirecional: conexao.bidirecional };
     }
 
     async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
         const demandaOrigemId = Number(resultado['demandaOrigemId']);
         const demandaDestinoId = Number(resultado['demandaDestinoId']);
         if (!Number.isInteger(demandaOrigemId) || !Number.isInteger(demandaDestinoId)) throw new BusinessException('Não há conexão a desfazer nesta proposta');
-        await this.demandaService.criarConexao({ demandaOrigemId, demandaDestinoId, ehBidirecional: resultado['ehBidirecional'] === true }, usuarioAtivo);
+        await this.demandaService.criarConexao({ demandaOrigemId, demandaDestinoId, bidirecional: resultado['bidirecional'] === true }, usuarioAtivo);
     }
 
     /** Obsoleta quando a conexão já não existe (alguém a removeu à mão). */

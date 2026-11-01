@@ -12,6 +12,22 @@
 
 ---
 
+## 2026-11-01 — Task 301: booleanos de negócio sem prefixo
+
+Última parte do I-036: `demanda.is_estrutural` virou `estrutural`, `demanda_conexao.eh_bidirecional` virou `bidirecional`, `plano.is_solo` virou `solo` e `plano.is_arquivado` virou `arquivado` (campos de DTO `isEstrutural`, `ehBidirecional`, `isSolo` e `isArquivado` idem). `is_deleted` fica (genérico, da `BaseEntity`) e `knex_migrations_lock.is_locked` é do Knex. A regra passou a constar em `CONVENTIONS.md`. Na avaliação com o autor, `tipo_dia_nao_util_duracao` e `tipo_plano_fonte_origem` ficam como tabela de referência, e as demais `tipo_*` também.
+
+- **Migration `0076`:** só `RENAME COLUMN` (nenhum índice, constraint, função ou view dependia dos nomes; conferido no catálogo do banco); `DOWN` desfaz. Aplicada, revertida e reaplicada no banco de teste; aplicada no de desenvolvimento.
+- **Código:** 116 arquivos de `shared`, backend e frontend, por substituição com fronteira de palavra e conferência pelo compilador e pelos testes (nenhuma colisão com variável local). Nenhuma proposta guardada em `proposta_ia.dados` usa as chaves antigas (conferido no banco de desenvolvimento: 4 propostas); o schema das ferramentas da IA muda junto com o DTO, porque sai dele.
+- **Documentação:** `SCHEMA.md`, `SYSTEM.SPEC.md`, `CONVENTIONS.md` (regra nova) e `CONTEXT.md`.
+
+**Testes:** `shared` 308, `backend` unitários 1610, integração 367 e `frontend` 2423, todos passando; builds do backend e do frontend passam; `npm run repo:verificar` passa. O projeto não tem lint (P-001).
+
+**Ao vivo:** com o backend de desenvolvimento no ar, a tela de Demandas carregou com as 7 pastas e todas as chamadas em 200; por API, criei uma demanda estrutural e uma folha (`estrutural` true e false), uma conexão bidirecional (`bidirecional` true, direção `bidirecional` na lista), o filtro `estrutural=true`, e um plano marcado como solo e arquivado (`solo` e `arquivado` true na leitura); tudo apagado em seguida. As capturas nos tamanhos 1366×768 e 1080×1920 não saíram (a captura expirou com a janela do app oculta); a mudança é só de nome de campo, sem tela nova, e só o desktop 1920×1080 foi visto. Cabeçalho do plano e cartão de proposta ficaram cobertos pelos testes de componente, sem verificação visual própria.
+
+**Achado:** o backend de desenvolvimento reergue sozinho a cada salvamento (`node --watch`), então entre salvar o código e aplicar a migration a tela dá 500: aplique a migration logo depois de renomear.
+
+---
+
 ## 2026-11-01 — Task 302: usuário `ativo` no lugar do status
 
 O status do usuário só tinha `ATIVO` e `INATIVO` e não há outro estado previsto (afastado, férias): `tipo_usuario_status` saiu e entrou a coluna booleana `usuario.ativo` (I-036, primeira parte; a task 301, nomes dos booleanos, segue no backlog). A spec nasceu como 300, mas esse número já era dos esqueletos de carregamento (commit `17dbd2b`); foi renumerada para 302. A avaliação das demais tabelas `tipo_*` ficou registrada com o autor: `tipo_projeto_status`, `tipo_demanda_status`, `tipo_atividade_status`, `tipo_proposta_ia_status` e `tipo_plano_ponto_situacao` são ciclos de vida reais, e `tipo_dia_nao_util_duracao` e `tipo_plano_fonte_origem` são enums que podem crescer; todas ficam como tabela de referência.

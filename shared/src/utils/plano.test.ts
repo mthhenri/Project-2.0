@@ -17,7 +17,7 @@ import {
     textoInicialDaAba,
 } from './plano';
 
-const base = { usuarioId: 2, criadorId: 1, projetoId: 10, isSolo: false, temAcessoAoProjeto: false };
+const base = { usuarioId: 2, criadorId: 1, projetoId: 10, solo: false, temAcessoAoProjeto: false };
 
 test('todas as abas, a do cliente inclusive, são vistas por todos os tipos', () => {
     for (const aba of Object.values(PlanoAbaEnum)) {
@@ -44,7 +44,7 @@ test('plano de projeto: gestor e administrador por tipo, desenvolvedor só com a
 });
 
 test('plano solo: só o criador, mesmo para gestor e administrador', () => {
-    const solo = { ...base, isSolo: true, temAcessoAoProjeto: true };
+    const solo = { ...base, solo: true, temAcessoAoProjeto: true };
     assert.equal(podeAcessarPlano({ ...solo, tipoUsuario: TipoUsuarioEnum.GESTOR }), false);
     assert.equal(podeAcessarPlano({ ...solo, tipoUsuario: TipoUsuarioEnum.ADMINISTRADOR }), false);
     assert.equal(podeAcessarPlano({ ...solo, tipoUsuario: TipoUsuarioEnum.DESENVOLVEDOR }), false);

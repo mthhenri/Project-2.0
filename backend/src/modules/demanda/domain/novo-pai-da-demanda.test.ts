@@ -5,7 +5,7 @@ import { validarNovoPaiDaDemanda } from './novo-pai-da-demanda';
 
 // Mover uma demanda para dentro de outra: a service só confere o projeto; estas três regras (mais o pai estrutural) valem na ferramenta e no executor da IA.
 
-const PAI = { id: 5, nome: 'Estrutura', projetoId: 7, isEstrutural: true };
+const PAI = { id: 5, nome: 'Estrutura', projetoId: 7, estrutural: true };
 const BASE = { demandaId: 10, demandaProjetoId: 7, novoPai: PAI, idsDaSubarvore: [10, 11, 12] };
 
 const mensagem = (erro: unknown) => ((erro as BusinessException).getResponse() as { mensagem: string }).mensagem;
@@ -40,15 +40,15 @@ test('o novo pai precisa ser do mesmo projeto da demanda', () => {
 });
 
 test('só demanda estrutural agrupa outras: pai não estrutural é recusado', () => {
-    assert.throws(() => validarNovoPaiDaDemanda({ ...BASE, novoPai: { ...PAI, isEstrutural: false } }), (erro) => {
+    assert.throws(() => validarNovoPaiDaDemanda({ ...BASE, novoPai: { ...PAI, estrutural: false } }), (erro) => {
         assert.match(mensagem(erro), /estrutural/);
         return true;
     });
 });
 
 test('a ordem das regras: a própria demanda vence a subárvore, e a subárvore vence projeto e estrutura', () => {
-    const comTudoErrado = { ...PAI, id: 10, projetoId: 99, isEstrutural: false };
+    const comTudoErrado = { ...PAI, id: 10, projetoId: 99, estrutural: false };
     assert.match(mensagem((() => { try { validarNovoPaiDaDemanda({ ...BASE, novoPai: comTudoErrado }); } catch (erro) { return erro; } })()), /si mesma/);
-    const naSubarvoreEOutroProjeto = { ...PAI, id: 11, projetoId: 99, isEstrutural: false };
+    const naSubarvoreEOutroProjeto = { ...PAI, id: 11, projetoId: 99, estrutural: false };
     assert.match(mensagem((() => { try { validarNovoPaiDaDemanda({ ...BASE, novoPai: naSubarvoreEOutroProjeto }); } catch (erro) { return erro; } })()), /ciclo/);
 });

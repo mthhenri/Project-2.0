@@ -8,7 +8,7 @@ import { ConsultarDemandaFerramenta, LIMITE_ATIVIDADES_DA_DEMANDA, LIMITE_DE_TEX
 const GESTOR = { sub: 1, login: 'g', tipo: TipoUsuarioEnum.GESTOR } as never;
 
 const DEMANDA = {
-    id: 9, nome: 'Autenticação', projetoId: 3, demandaPaiId: null, isEstrutural: false, status: TipoDemandaStatusEnum.PENDENTE, horasEstimadas: 8,
+    id: 9, nome: 'Autenticação', projetoId: 3, demandaPaiId: null, estrutural: false, status: TipoDemandaStatusEnum.PENDENTE, horasEstimadas: 8,
     previsaoFimData: null, descricaoTecnica: 'Técnica', descricaoCliente: null, documentacao: 'Docs',
 };
 

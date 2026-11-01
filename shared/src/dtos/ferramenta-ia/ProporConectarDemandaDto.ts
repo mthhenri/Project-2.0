@@ -20,7 +20,7 @@ export class ProporConectarDemandaDto {
     /** Sem informar, a conexão vale só no sentido origem → destino. */
     @IsOptional()
     @IsBoolean()
-    ehBidirecional?: boolean;
+    bidirecional?: boolean;
 
     /** Por que ligar as duas (aparece no cartão). */
     @IsString()

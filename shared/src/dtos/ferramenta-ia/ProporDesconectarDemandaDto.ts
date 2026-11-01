@@ -29,5 +29,5 @@ export class PropostaDesconectarDemandaDadosDto extends ProporDesconectarDemanda
 
     @IsOptional()
     @IsBoolean()
-    ehBidirecional?: boolean;
+    bidirecional?: boolean;
 }

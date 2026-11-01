@@ -115,14 +115,14 @@ test('atividades paradas: limita o que devolve', async () => {
 
 test('grafo do projeto: demandas com o pai e as horas, só as conexões (a hierarquia vai em paiId) e limite', async () => {
     const nos = Array.from({ length: LIMITE_DEMANDAS_DO_GRAFO + 3 }, (_, indice) => ({
-        id: indice + 1, nome: `D${indice + 1}`, status: 'PLANEJADA', isEstrutural: indice === 0, horasEstimadas: 8, minutosExecutados: 90, demandaPaiId: indice === 0 ? null : 1,
+        id: indice + 1, nome: `D${indice + 1}`, status: 'PLANEJADA', estrutural: indice === 0, horasEstimadas: 8, minutosExecutados: 90, demandaPaiId: indice === 0 ? null : 1,
         temDescricaoTecnica: true, temDescricaoCliente: false, temDocumentacao: false, tags: [{ id: 1, nome: 'api', cor: '#000000' }],
     }));
     const chamadas: unknown[] = [];
     const servico = {
         recuperarGrafo: async (dto: unknown, usuario: unknown) => {
             chamadas.push([dto, usuario]);
-            return { dados: { nos, arestas: [{ id: 1, origemId: 1, destinoId: 2, tipo: 'hierarquia', ehBidirecional: false }, { id: 2, origemId: 2, destinoId: 3, tipo: 'conexao', ehBidirecional: true }] } };
+            return { dados: { nos, arestas: [{ id: 1, origemId: 1, destinoId: 2, tipo: 'hierarquia', bidirecional: false }, { id: 2, origemId: 2, destinoId: 3, tipo: 'conexao', bidirecional: true }] } };
         },
     };
     const resultado = await new ConsultarGrafoDoProjetoFerramenta(servico as unknown as DemandaService).executar({ projetoId: 5 }, GESTOR);
@@ -136,7 +136,7 @@ test('grafo do projeto: demandas com o pai e as horas, só as conexões (a hiera
 });
 
 test('consultar demanda: descrições, tags e atividades, com os textos longos cortados', async () => {
-    const demanda = { id: 3, nome: 'Autenticação', projetoId: 5, demandaPaiId: null, isEstrutural: false, status: 'PLANEJADA', horasEstimadas: 16, previsaoFimData: null, descricaoTecnica: 'x'.repeat(LIMITE_DE_TEXTO_DA_DEMANDA + 50), descricaoCliente: 'Login com e-mail', documentacao: null };
+    const demanda = { id: 3, nome: 'Autenticação', projetoId: 5, demandaPaiId: null, estrutural: false, status: 'PLANEJADA', horasEstimadas: 16, previsaoFimData: null, descricaoTecnica: 'x'.repeat(LIMITE_DE_TEXTO_DA_DEMANDA + 50), descricaoCliente: 'Login com e-mail', documentacao: null };
     const demandaService = {
         recuperar: async () => ({ dados: demanda }),
         listarTagsDemanda: async () => ({ dados: [{ id: 1, nome: 'api', cor: '#000000' }] }),

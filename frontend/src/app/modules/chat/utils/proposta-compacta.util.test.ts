@@ -25,7 +25,7 @@ const TIPICAS: [TipoPropostaIaEnum, Record<string, unknown>, boolean][] = [
     [Tipo.CONECTAR_DEMANDA, { demandaOrigemNome: 'API de relatórios', demandaDestinoNome: 'Exportar PDF', motivo: 'o PDF usa os dados da API' }, true],
     [Tipo.CONCLUIR_DEMANDA, { demandaNome: 'Tela de login', projetoNome: 'Portal', statusAnterior: 'PLANEJADA', atividadesEmAberto: 0 }, true],
     [Tipo.MOVER_ATIVIDADE, { atividadeNome: 'Montar o formulário', demandaOrigemNome: 'Login', demandaDestinoNome: 'Relatórios' }, true],
-    [Tipo.DESCONECTAR_DEMANDA, { demandaOrigemNome: 'API de relatórios', demandaDestinoNome: 'Exportar PDF', ehBidirecional: false }, true],
+    [Tipo.DESCONECTAR_DEMANDA, { demandaOrigemNome: 'API de relatórios', demandaDestinoNome: 'Exportar PDF', bidirecional: false }, true],
     [Tipo.EXCLUIR_ATIVIDADE, { atividadeNome: 'Montar o formulário', demandaNome: 'Login' }, true],
     [Tipo.ALTERAR_TRECHO_PLANO, { planoId: 7, planoTitulo: 'Relatório mensal', aba: 'DESCRICAO_TECNICA', trechoAntigo: 'Texto velho.', trechoNovo: 'Texto novo.', versao: 3 }, false],
     [Tipo.JUSTIFICAR_PONTO, { usuarioNome: 'Ana', diaData: '2026-10-20', nome: 'Consulta médica', descricao: 'Combinado com o gestor', horasCobertas: 4 }, true],
@@ -107,7 +107,7 @@ test('em nome de outra pessoa a ação diz para quem', () => {
 
 test('conectar demandas mostra o sentido da conexão no nome', () => {
     assert.equal(resumirProposta(Tipo.CONECTAR_DEMANDA, { demandaOrigemNome: 'A', demandaDestinoNome: 'B' }).nome, 'A → B');
-    assert.equal(resumirProposta(Tipo.CONECTAR_DEMANDA, { demandaOrigemNome: 'A', demandaDestinoNome: 'B', ehBidirecional: true }).nome, 'A ↔ B');
+    assert.equal(resumirProposta(Tipo.CONECTAR_DEMANDA, { demandaOrigemNome: 'A', demandaDestinoNome: 'B', bidirecional: true }).nome, 'A ↔ B');
 });
 
 test('trocar trecho do pad vira um diff em uma linha; trecho longo vai para o cartão grande', () => {
@@ -149,10 +149,10 @@ test('mover atividade mostra de onde para onde e que as execuções vão junto (
 });
 
 test('desconectar mostra as duas demandas com a seta do sentido e que elas ficam onde estão (task 230)', () => {
-    const unica = resumirProposta(Tipo.DESCONECTAR_DEMANDA, { demandaOrigemNome: 'API', demandaDestinoNome: 'Tela', ehBidirecional: false });
+    const unica = resumirProposta(Tipo.DESCONECTAR_DEMANDA, { demandaOrigemNome: 'API', demandaDestinoNome: 'Tela', bidirecional: false });
     assert.equal(unica.nome, 'API → Tela');
     assert.deepEqual(unica.campos, [{ tipo: 'chip', texto: 'As demandas ficam onde estão' }]);
-    assert.equal(resumirProposta(Tipo.DESCONECTAR_DEMANDA, { demandaOrigemNome: 'API', demandaDestinoNome: 'Tela', ehBidirecional: true }).nome, 'API ↔ Tela');
+    assert.equal(resumirProposta(Tipo.DESCONECTAR_DEMANDA, { demandaOrigemNome: 'API', demandaDestinoNome: 'Tela', bidirecional: true }).nome, 'API ↔ Tela');
 });
 
 test('excluir atividade mostra o nome, a demanda e que ela não tem execuções (task 230)', () => {

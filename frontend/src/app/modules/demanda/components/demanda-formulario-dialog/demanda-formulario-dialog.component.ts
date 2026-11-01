@@ -110,7 +110,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
         nome:            ['', [Validators.required, Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
         demandaPaiId:    [null as number | null],
         status:          [TipoDemandaStatusEnum.PLANEJADA as TipoDemandaStatusEnum, [Validators.required]],
-        isEstrutural:    [false],
+        estrutural:    [false],
         horasEstimadas:  [0, [Validators.required, Validators.min(0)]],
         previsaoFimData: [null as Date | null],
         tagIds:          [[] as number[]],
@@ -134,7 +134,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
             nome:           this.nomeInicial ?? '',
             demandaPaiId:   this.demandaPaiIdInicial ?? null,
             status:         TipoDemandaStatusEnum.PLANEJADA,
-            isEstrutural:   false,
+            estrutural:   false,
             horasEstimadas: 0,
             tagIds:         [],
             usuarioIds:     [],
@@ -186,7 +186,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
 
     /** Demandas estruturais agregam os filhos: sem Estimativa nem Previsão próprias. */
     get ocultaEstimativa(): boolean {
-        return !!this.formulario.value.isEstrutural;
+        return !!this.formulario.value.estrutural;
     }
 
     aplicarAtalhoPrevisao(atalho: AtalhoPrevisao): void {
@@ -208,14 +208,14 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     private salvarCriacao(criarOutra: boolean): void {
         this.carregando.set(true);
         const valor = this.formulario.value;
-        const estrutural = valor.isEstrutural ?? false;
+        const estrutural = valor.estrutural ?? false;
 
         const dto: DemandaCriarDto = {
             projetoId:       this.projetoId,
             nome:            valor.nome!.trim(),
             demandaPaiId:    valor.demandaPaiId ?? undefined,
             status:          valor.status!,
-            isEstrutural:    estrutural,
+            estrutural:    estrutural,
             horasEstimadas:  estrutural ? 0 : this.paraHorasEstimadas(valor.horasEstimadas),
             previsaoFimData: !estrutural && valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined,
         };
@@ -235,7 +235,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
                             nome:           '',
                             demandaPaiId:   valor.demandaPaiId ?? null,
                             status:         valor.status,
-                            isEstrutural:   false,
+                            estrutural:   false,
                             horasEstimadas: 0,
                             tagIds:         valor.tagIds,
                             usuarioIds:     valor.usuarioIds,
@@ -251,14 +251,14 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     private salvarEdicao(): void {
         const idEditando = this.demandaId!;
         const valor = this.formulario.value;
-        const estrutural = valor.isEstrutural ?? false;
+        const estrutural = valor.estrutural ?? false;
 
         // Estrutural não tem estimativa/previsão próprias: os valores existentes ficam como estão.
         const dto: DemandaAlterarDto = {
             nome:         valor.nome!.trim(),
             demandaPaiId: valor.demandaPaiId ?? undefined,
             status:       valor.status ?? undefined,
-            isEstrutural: estrutural,
+            estrutural: estrutural,
         };
         if (!estrutural) {
             dto.horasEstimadas = valor.horasEstimadas == null ? undefined : this.paraHorasEstimadas(valor.horasEstimadas);
@@ -351,7 +351,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
                         nome:            dados.nome,
                         demandaPaiId:    dados.demandaPaiId ?? null,
                         status:          dados.status,
-                        isEstrutural:    dados.isEstrutural,
+                        estrutural:    dados.estrutural,
                         horasEstimadas:  this.unidadeTempo.emDias() ? dados.horasEstimadas / HORAS_POR_DIA : dados.horasEstimadas,
                         previsaoFimData: dados.previsaoFimData ? lerDataIso(dados.previsaoFimData) : null,
                         tagIds:          this.tagIdsOriginais,
@@ -394,7 +394,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     /** Candidatas a pai: as estruturais do projeto (na edição, sem a própria demanda). */
     private carregarDemandasPai(): void {
         this.demandaService
-            .listar({ projetoId: this.projetoId, isEstrutural: true, itensPorPagina: 200 })
+            .listar({ projetoId: this.projetoId, estrutural: true, itensPorPagina: 200 })
             .subscribe({
                 next: (resposta) => {
                     if (resposta.sucesso && resposta.dados) {

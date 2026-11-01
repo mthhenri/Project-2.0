@@ -218,15 +218,15 @@ describe('DemandaConexaoListaComponent', () => {
     it('adicionar manda o destino e a bidirecionalidade, limpa o formulário e recarrega as conexões', async () => {
         const montado = await montar();
         montado.componente.destinoId.set(23);
-        montado.componente.ehBidirecional.set(true);
+        montado.componente.bidirecional.set(true);
         montado.componente.adicionar();
         expect(montado.componente.salvando()).toBe(true);
         const requisicao = esperarRequisicao(montado.http, 'POST', '/demanda/10/conexao');
-        expect(requisicao.request.body).toEqual({ demandaDestinoId: 23, ehBidirecional: true });
+        expect(requisicao.request.body).toEqual({ demandaDestinoId: 23, bidirecional: true });
         responderSucesso(requisicao, { id: 9 }, 201);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/10/conexao'), [...CONEXOES, { id: 9, demandaConectadaId: 23, nomeDemandaConectada: 'D23', direcao: 'bidirecional' }]);
         expect(montado.componente.salvando()).toBe(false);
-        expect([montado.componente.destinoId(), montado.componente.ehBidirecional()]).toEqual([null, false]);
+        expect([montado.componente.destinoId(), montado.componente.bidirecional()]).toEqual([null, false]);
         expect(montado.componente.conexoes()).toHaveLength(4);
     });
 
@@ -267,9 +267,9 @@ describe('DemandaConexaoListaComponent', () => {
 
     it('desfazer recria a conexão no sentido original: saída e bidirecional partem desta demanda; entrada parte da outra', async () => {
         const casos: Array<[DemandaConexaoResumoDto, string, unknown]> = [
-            [CONEXOES[0], '/demanda/10/conexao', { demandaDestinoId: 20, ehBidirecional: false }],
-            [CONEXOES[1], '/demanda/21/conexao', { demandaDestinoId: 10, ehBidirecional: false }],
-            [CONEXOES[2], '/demanda/10/conexao', { demandaDestinoId: 22, ehBidirecional: true }],
+            [CONEXOES[0], '/demanda/10/conexao', { demandaDestinoId: 20, bidirecional: false }],
+            [CONEXOES[1], '/demanda/21/conexao', { demandaDestinoId: 10, bidirecional: false }],
+            [CONEXOES[2], '/demanda/10/conexao', { demandaDestinoId: 22, bidirecional: true }],
         ];
         for (const [conexao, caminho, corpo] of casos) {
             const montado = await montar();

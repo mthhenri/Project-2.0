@@ -34,7 +34,7 @@ export class ConsultarGrafoDoProjetoFerramenta extends FerramentaIa<GrafoDoProje
                 id: no.id,
                 nome: no.nome,
                 status: no.status,
-                isEstrutural: no.isEstrutural,
+                estrutural: no.estrutural,
                 paiId: no.demandaPaiId,
                 horasEstimadas: no.horasEstimadas,
                 horasExecutadas: Math.round((no.minutosExecutados / 60) * 10) / 10,
@@ -42,7 +42,7 @@ export class ConsultarGrafoDoProjetoFerramenta extends FerramentaIa<GrafoDoProje
                 temDescricaoCliente: no.temDescricaoCliente,
                 tags: no.tags.map((tag) => tag.nome),
             })),
-            conexoes: (grafo?.arestas ?? []).filter((aresta) => aresta.tipo === 'conexao').map((aresta) => ({ origemId: aresta.origemId, destinoId: aresta.destinoId, bidirecional: aresta.ehBidirecional })),
+            conexoes: (grafo?.arestas ?? []).filter((aresta) => aresta.tipo === 'conexao').map((aresta) => ({ origemId: aresta.origemId, destinoId: aresta.destinoId, bidirecional: aresta.bidirecional })),
             totalDemandas: nos.length,
             haMaisDemandas: nos.length > LIMITE_DEMANDAS_DO_GRAFO,
         };

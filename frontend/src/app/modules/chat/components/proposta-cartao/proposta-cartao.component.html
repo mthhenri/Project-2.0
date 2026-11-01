@@ -278,7 +278,7 @@
                     }}</strong>
                     <span class="proposta-cartao__linha"
                         >{{
-                            propostaAtual.dados["ehBidirecional"] === true
+                            propostaAtual.dados["bidirecional"] === true
                                 ? "Conectada nos dois sentidos a"
                                 : "Conectada a"
                         }}:
@@ -390,7 +390,7 @@
                     <span class="proposta-cartao__linha">
                         <span>Projeto: {{ texto("projetoNome") }}</span>
                         <span>{{
-                            propostaAtual.dados["isEstrutural"] === true
+                            propostaAtual.dados["estrutural"] === true
                                 ? "Demanda de estrutura"
                                 : "Demanda de trabalho"
                         }}</span>
@@ -516,8 +516,8 @@
                         }}
                         <i
                             class="pi"
-                            [class.pi-arrow-right]="propostaAtual.dados['ehBidirecional'] !== true"
-                            [class.pi-arrows-h]="propostaAtual.dados['ehBidirecional'] === true"
+                            [class.pi-arrow-right]="propostaAtual.dados['bidirecional'] !== true"
+                            [class.pi-arrows-h]="propostaAtual.dados['bidirecional'] === true"
                             aria-hidden="true"
                         ></i>
                         {{
@@ -526,7 +526,7 @@
                         }}
                     </strong>
                     <span class="proposta-cartao__linha">{{
-                        propostaAtual.dados["ehBidirecional"] === true
+                        propostaAtual.dados["bidirecional"] === true
                             ? "Conexão nos dois sentidos"
                             : "Conexão do primeiro para o segundo"
                     }}</span>

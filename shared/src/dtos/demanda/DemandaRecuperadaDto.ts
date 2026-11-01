@@ -33,7 +33,7 @@ export class DemandaRecuperadaDto {
     status: TipoDemandaStatusEnum;
 
     @ApiProperty({ example: false })
-    isEstrutural: boolean;
+    estrutural: boolean;
 
     @ApiPropertyOptional({ example: '2026-12-31' })
     previsaoFimData: string | null;

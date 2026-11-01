@@ -99,21 +99,21 @@
                 @let no = linha.noHoras.no;
                 <div
                     class="controle-horas__linha"
-                    [class.controle-horas__linha--pasta]="no.isEstrutural"
+                    [class.controle-horas__linha--pasta]="no.estrutural"
                     [class.controle-horas__linha--escolhida]="no.id === pastaId()"
                     [attr.id]="'horas-linha-' + no.id"
                     [style.--nivel]="linha.noHoras.nivel"
                     role="button"
                     tabindex="0"
                     [attr.aria-expanded]="
-                        no.isEstrutural && linha.noHoras.filhos.length ? !linha.recolhida : null
+                        no.estrutural && linha.noHoras.filhos.length ? !linha.recolhida : null
                     "
                     (click)="aoClicarLinha(linha)"
                     (keydown.enter)="aoClicarLinha(linha)"
                     (contextmenu)="abrirMenu($event, no, menuContexto)"
                 >
                     <span class="controle-horas__demanda">
-                        @if (no.isEstrutural && linha.noHoras.filhos.length) {
+                        @if (no.estrutural && linha.noHoras.filhos.length) {
                             <button
                                 type="button"
                                 class="controle-horas__chevron"
@@ -136,7 +136,7 @@
                             [editavel]="sessao.podeEditarDemanda()"
                             (statusEscolhido)="alterarStatus(no, $event)"
                         />
-                        @if (no.isEstrutural) {
+                        @if (no.estrutural) {
                             <i class="pi pi-folder controle-horas__icone-pasta"></i>
                         }
                         <span class="controle-horas__nome">{{ no.nome }}</span>

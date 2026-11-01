@@ -14,7 +14,7 @@ export interface DemandaDaFerramentaDto {
     id: number;
     nome: string;
     caminho: string;
-    isEstrutural: boolean;
+    estrutural: boolean;
     status: string;
     /** Só para o desenvolvedor: ele é membro desta demanda (a lista dele traz as do projeto inteiro). Ausente para o gestor. */
     participa?: boolean;

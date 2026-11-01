@@ -104,7 +104,7 @@ export class DemandaService {
                 );
             }
 
-            if (!demandaPaiEncontrada.isEstrutural) {
+            if (!demandaPaiEncontrada.estrutural) {
                 throw new BusinessException(
                     'Apenas demandas estruturais podem ter sub-demandas',
                 );
@@ -158,7 +158,7 @@ export class DemandaService {
                 documentacao:     dto.documentacao ?? null,
                 horasEstimadas:   dto.horasEstimadas,
                 status:           dto.status,
-                isEstrutural:     dto.isEstrutural,
+                estrutural:     dto.estrutural,
                 previsaoFimData:  dto.previsaoFimData ? new Date(dto.previsaoFimData) : null,
             },
             { usuarioIds },
@@ -359,7 +359,7 @@ export class DemandaService {
             documentacao:     dto.documentacao,
             horasEstimadas:   dto.horasEstimadas,
             status:           dto.status,
-            isEstrutural:     dto.isEstrutural,
+            estrutural:     dto.estrutural,
             previsaoFimData:  dto.previsaoFimData,
         });
 
@@ -475,7 +475,7 @@ export class DemandaService {
                 id:                  item.id,
                 nome:                item.nome,
                 status:              item.status,
-                isEstrutural:        item.isEstrutural,
+                estrutural:        item.estrutural,
                 horasEstimadas:      item.horasEstimadas,
                 minutosExecutados:   item.minutosExecutados,
                 temDescricaoTecnica: item.temDescricaoTecnica,
@@ -583,7 +583,7 @@ export class DemandaService {
         const conexaoCriada = await this.demandaRepositorio.inserirConexao({
             demandaOrigemId,
             demandaDestinoId: dto.demandaDestinoId,
-            ehBidirecional:   dto.ehBidirecional,
+            bidirecional:   dto.bidirecional,
         });
 
         return {

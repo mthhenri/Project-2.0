@@ -42,7 +42,7 @@ export class ProporCriarDemandaDto {
     /** Demanda de estrutura: agrupa outras demandas e não recebe atividades. Sem o campo, é uma demanda de trabalho. */
     @IsOptional()
     @IsBoolean()
-    isEstrutural?: boolean;
+    estrutural?: boolean;
 
     @IsOptional()
     @IsNumber()

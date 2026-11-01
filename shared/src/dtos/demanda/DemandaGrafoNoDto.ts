@@ -13,7 +13,7 @@ export class DemandaGrafoNoDto {
     status: TipoDemandaStatusEnum;
 
     @ApiProperty({ example: false })
-    isEstrutural: boolean;
+    estrutural: boolean;
 
     @ApiProperty({ example: 8 })
     horasEstimadas: number;

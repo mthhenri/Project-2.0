@@ -40,7 +40,7 @@ function criar(opcoes: { possuiFilhas?: boolean; projeto?: Record<string, unknow
 
 test('cria planejada pelo usuário do token, com os padrões da tela', async () => {
     const { executor, criadas } = criar();
-    const resultado = await executor.executar({ projetoId: 2, nome: 'Cadastro', isEstrutural: true, projetoNome: 'Loja' }, GESTOR);
+    const resultado = await executor.executar({ projetoId: 2, nome: 'Cadastro', estrutural: true, projetoNome: 'Loja' }, GESTOR);
     assert.deepEqual(criadas[0], {
         projetoId: 2,
         demandaPaiId: undefined,
@@ -49,7 +49,7 @@ test('cria planejada pelo usuário do token, com os padrões da tela', async () 
         descricaoCliente: undefined,
         horasEstimadas: 0,
         status: TipoDemandaStatusEnum.PLANEJADA,
-        isEstrutural: true,
+        estrutural: true,
         previsaoFimData: undefined,
     });
     assert.equal(resultado['demandaId'], 31);
@@ -60,7 +60,7 @@ test('o projeto e a pai vêm do resultado das propostas confirmadas', async () =
     await executor.executar({ projetoPropostaId: 50, demandaPaiPropostaId: 51, nome: 'Novo cadastro' }, GESTOR);
     assert.equal(criadas[0].projetoId, 8);
     assert.equal(criadas[0].demandaPaiId, 20);
-    assert.equal(criadas[0].isEstrutural, false);
+    assert.equal(criadas[0].estrutural, false);
 });
 
 test('proposta da qual depende ainda pendente manda confirmar antes', async () => {
