@@ -13,6 +13,7 @@ import { UnauthorizedAccessException } from '../../../core/exceptions/unauthoriz
 const GESTOR = { sub: 1, login: 'g', tipo: TipoUsuarioEnum.GESTOR } as never;
 const ADMINISTRADOR = { sub: 2, login: 'a', tipo: TipoUsuarioEnum.ADMINISTRADOR } as never;
 const DESENVOLVEDOR = { sub: 3, login: 'd', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+const AUXILIAR = { sub: 6, login: 'x', tipo: TipoUsuarioEnum.AUXILIAR } as never;
 
 type Dublê = Record<string, unknown>;
 
@@ -87,8 +88,8 @@ test('iniciar: desenvolvedor só inicia atividade própria; a de outro é recusa
     naoGravou(repo);
 });
 
-test('iniciar: gestor e administrador iniciam a atividade de qualquer um, sem consultar demanda_usuario', async () => {
-    for (const usuario of [GESTOR, ADMINISTRADOR]) {
+test('iniciar: auxiliar, gestor e administrador iniciam a atividade de qualquer um, sem consultar demanda_usuario', async () => {
+    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) {
         const repo = repositorio();
         // O dublê da atividade não tem `validarAcessoDemanda`: se a service o chamasse, o teste quebraria.
         const servico = criarServico(repo, { recuperar: async () => ({ ...ATIVIDADE, usuarioId: 99 }) });
@@ -123,6 +124,12 @@ test('iniciar: descrição é obrigatória quando o dono é desenvolvedor, inclu
     const repo = repositorio();
     await assert.rejects(() => criarServico(repo).iniciar({ atividadeId: 10, descricao: '   ' }, DESENVOLVEDOR), recusa(/descrição é obrigatória/));
     await assert.rejects(() => criarServico(repo).iniciar({ atividadeId: 10 } as never, DESENVOLVEDOR), recusa(/descrição é obrigatória/));
+    naoGravou(repo);
+});
+
+test('iniciar: dono auxiliar (que atua como desenvolvedor) precisa de descrição, mesmo iniciada por um gestor', async () => {
+    const repo = repositorio({ recuperarTipoUsuarioDaAtividade: async () => TipoUsuarioEnum.AUXILIAR });
+    await assert.rejects(() => criarServico(repo).iniciar({ atividadeId: 10, descricao: '' }, GESTOR), recusa(/descrição é obrigatória/));
     naoGravou(repo);
 });
 
@@ -214,7 +221,7 @@ test('encerrar: desenvolvedor encerra só a própria; gestor e administrador enc
     const alheia = repositorio({ recuperarUsuario: async () => 99 });
     await assert.rejects(() => criarServico(alheia).encerrar({ id: 50, descricao: 'x' }, DESENVOLVEDOR), UnauthorizedAccessException);
     naoGravou(alheia);
-    for (const usuario of [GESTOR, ADMINISTRADOR]) {
+    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) {
         const repo = repositorio({ recuperarUsuario: async () => 99 });
         await criarServico(repo).encerrar({ id: 50, descricao: 'feito' }, usuario);
         assert.equal(repo.gravacoes[0].metodo, 'encerrar');
@@ -249,7 +256,7 @@ test('alterar: inexistente é 404; desenvolvedor só edita a própria; gestor ed
     const alheia = repositorio({ recuperarUsuario: async () => 99 });
     await assert.rejects(() => criarServico(alheia).alterar({ id: 50, descricao: 'x' }, DESENVOLVEDOR), UnauthorizedAccessException);
     naoGravou(alheia);
-    for (const usuario of [GESTOR, ADMINISTRADOR]) {
+    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) {
         const repo = repositorio({ recuperarUsuario: async () => 99 });
         await criarServico(repo).alterar({ id: 50, descricao: 'x' }, usuario);
         assert.equal(repo.gravacoes[0].metodo, 'alterar');
@@ -336,15 +343,15 @@ test('recuperarAtivaDoUsuario: o desenvolvedor lê só a própria; gestor e admi
     const repo = repositorio({ recuperarAtiva: async () => EXECUCAO_ABERTA });
     await assert.rejects(() => criarServico(repo).recuperarAtivaDoUsuario({ usuarioId: 99 }, DESENVOLVEDOR), UnauthorizedAccessException);
     assert.equal((await criarServico(repo).recuperarAtivaDoUsuario({ usuarioId: 3 }, DESENVOLVEDOR)).dados, EXECUCAO_ABERTA);
-    for (const usuario of [GESTOR, ADMINISTRADOR]) {
+    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) {
         assert.equal((await criarServico(repo).recuperarAtivaDoUsuario({ usuarioId: 99 }, usuario)).dados, EXECUCAO_ABERTA);
     }
 });
 
-test('listarUltimaPorAtividade: só gestor e administrador consultam', async () => {
+test('listarUltimaPorAtividade: só auxiliar, gestor e administrador consultam', async () => {
     const repo = repositorio({ listarUltimaPorAtividade: async () => [] });
     await assert.rejects(() => criarServico(repo).listarUltimaPorAtividade({ atividadeIds: [1] }, DESENVOLVEDOR), UnauthorizedAccessException);
-    for (const usuario of [GESTOR, ADMINISTRADOR]) {
+    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) {
         assert.deepEqual((await criarServico(repo).listarUltimaPorAtividade({ atividadeIds: [1] }, usuario)).dados, []);
     }
 });

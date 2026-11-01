@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProporCriarDemandaDto, PropostaCriarDemandaDadosDto, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { ProporCriarDemandaDto, PropostaCriarDemandaDadosDto, TipoPropostaIaEnum, temVisibilidadeTotal } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
@@ -44,7 +44,7 @@ export class ProporCriarDemandaFerramenta extends FerramentaPropostaIa<ProporCri
         if (entrada.demandaPaiId && entrada.demandaPaiPropostaId) {
             throw new BusinessException('Informe a demanda pai por demandaPaiId ou por demandaPaiPropostaId, não os dois');
         }
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR && !entrada.demandaPaiId && !entrada.demandaPaiPropostaId) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo) && !entrada.demandaPaiId && !entrada.demandaPaiPropostaId) {
             throw new BusinessException('O desenvolvedor só cria sub-demandas: informe a demanda de estrutura pai');
         }
 

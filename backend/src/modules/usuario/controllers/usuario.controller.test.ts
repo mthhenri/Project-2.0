@@ -3,6 +3,7 @@ import * as assert from 'node:assert/strict';
 import { rotasPorNome } from '../../../testes/rotas-do-controller';
 import { UsuarioController } from './usuario.controller';
 import { AutenticacaoController } from '../../autenticacao/controllers/autenticacao.controller';
+import { temVisibilidadeTotal } from '@project20/shared';
 
 // SYSTEM.SPEC.md §12 (`usuario`) e §14: gerenciar usuários é de gestor/administrador. As regras finas (administrador mexe em
 // administrador, permanência do último) ficam na service; aqui só o que o decorator declara.
@@ -15,9 +16,14 @@ test('autenticação: só o login é público', () => {
     assert.equal(rotas['login'].caminho, 'login');
 });
 
-test('usuário: criar, listar, excluir, restaurar e trocar senha são @GestorOnly', () => {
+test('usuário: listar exige temVisibilidadeTotal (alimenta os seletores de quem conduz o trabalho)', () => {
+    assert.equal(rotasPorNome(UsuarioController)['listar'].permissao, temVisibilidadeTotal);
+    assert.equal(rotasPorNome(UsuarioController)['listar'].gestorOnly, false);
+});
+
+test('usuário: criar, excluir, restaurar e trocar senha são @GestorOnly', () => {
     const rotas = rotasPorNome(UsuarioController);
-    for (const nome of ['criar', 'listar', 'excluir', 'restaurar', 'alterarSenha']) {
+    for (const nome of ['criar', 'excluir', 'restaurar', 'alterarSenha']) {
         assert.equal(rotas[nome].gestorOnly, true, `${nome} deveria ser @GestorOnly`);
     }
 });

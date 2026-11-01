@@ -7,7 +7,7 @@ import {
     ConversasDoDesenvolvedorListadasDto,
     ConversasDoDesenvolvedorListarDto,
     temPermissaoDeGestor,
-    TipoUsuarioEnum,
+    atuaComoDesenvolvedor,
 } from '@project20/shared';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
@@ -97,7 +97,7 @@ export class ChatDesenvolvedorService {
         if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Apenas o gestor lê as conversas dos desenvolvedores');
         const dono = await this.usuarioRepositorio.recuperar({ id: usuarioId });
         if (!dono) throw new ResourceNotFoundException('Usuário');
-        if (dono.tipo !== TipoUsuarioEnum.DESENVOLVEDOR) throw new UnauthorizedAccessException('Só as conversas dos desenvolvedores podem ser lidas');
+        if (!atuaComoDesenvolvedor(dono.tipo)) throw new UnauthorizedAccessException('Só as conversas dos desenvolvedores podem ser lidas');
         return { id: dono.id, nomeCompleto: dono.nomeCompleto };
     }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProporAtribuirMembroDto, PropostaAtribuirMembroDadosDto, TipoPropostaIaEnum, TipoUsuarioStatusEnum, temPermissaoDeGestor } from '@project20/shared';
+import { ProporAtribuirMembroDto, PropostaAtribuirMembroDadosDto, TipoPropostaIaEnum, TipoUsuarioStatusEnum, podeAtribuirMembroOuTag, podeSerMembroDeDemanda } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { FerramentaPropostaIa } from '../../ferramenta-ia/ferramentas/ferramenta-proposta-ia';
@@ -40,13 +40,13 @@ export class ProporAtribuirMembroFerramenta extends FerramentaPropostaIa<ProporA
         if (!demanda) throw new BusinessException('Demanda não encontrada');
         // Sem usuarioId é quem conversa; o desenvolvedor só mexe em si mesmo (a service também confere).
         const usuarioId = entrada.usuarioId ?? usuarioAtivo.sub;
-        if (usuarioId !== usuarioAtivo.sub && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+        if (usuarioId !== usuarioAtivo.sub && !podeAtribuirMembroOuTag(usuarioAtivo.tipo)) {
             throw new BusinessException('O desenvolvedor só entra e sai de uma demanda ele mesmo. Só o gestor coloca ou tira outra pessoa.');
         }
         const usuario = (await this.usuarioService.recuperar({ id: usuarioId }, usuarioAtivo)).dados;
         if (!usuario) throw new BusinessException('Usuário não encontrado');
 
-        if (temPermissaoDeGestor(usuario.tipo)) {
+        if (!podeSerMembroDeDemanda(usuario.tipo)) {
             throw new BusinessException(`${usuario.nomeCompleto} é gestor: gestores têm acesso a todas as demandas por tipo e não são atribuídos como membros. Avise o usuário.`);
         }
         if (usuario.status !== TipoUsuarioStatusEnum.ATIVO) throw new BusinessException(`${usuario.nomeCompleto} está inativo e não pode ser atribuído.`);

@@ -50,7 +50,7 @@ function montar(opcoes: { conexaoExiste?: boolean; ehBidirecional?: boolean; cri
 
 test('propor: guarda o par, os nomes e o sentido da conexão, sem remover nada; é ferramenta só do gestor', async () => {
     const { ferramenta, propostas, exclusoes } = montar({ ehBidirecional: true });
-    assert.equal(ferramenta.permissao, 'GESTOR');
+    assert.equal(ferramenta.permissao, 'AUXILIAR');
     assert.equal(ferramenta.tipoProposta, TipoPropostaIaEnum.DESCONECTAR_DEMANDA);
     await ferramenta.executar({ demandaOrigemId: 3, demandaDestinoId: 4 }, GESTOR);
     assert.deepEqual(propostas[0].dados, { demandaOrigemId: 3, demandaDestinoId: 4, demandaOrigemNome: 'API', demandaDestinoNome: 'Tela', ehBidirecional: true });

@@ -21,8 +21,11 @@ import {
     DemandaConexaoCriarDto,
     DemandaTagsAtribuirDto,
     DemandaUsuarioAtribuirDto,
+    temVisibilidadeTotal,
+    podeEditarDemanda,
 } from '@project20/shared';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
+import { ExigePermissao } from '../../autenticacao/decorators/exige-permissao.decorator';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 
@@ -114,8 +117,8 @@ export class DemandaController {
     @ApiOperation({ summary: 'Listar demandas não-concluídas do projeto com horas executadas e execuções ativas (somente gestor)' })
     @ApiResponse({ status: 200, description: 'Planejamento do projeto recuperado com sucesso' })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @GestorOnly()
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ExigePermissao(temVisibilidadeTotal)
     @Get('planejamento')
     listarPlanejamento(
         @Query('projetoId', ParseIntPipe) projetoId: number,
@@ -201,9 +204,9 @@ export class DemandaController {
     @ApiResponse({ status: 201, description: 'Conexão criada com sucesso' })
     @ApiResponse({ status: 400, description: 'Ciclo detectado ou conexão duplicada', schema: { example: { sucesso: false, dados: null, mensagem: 'Essa conexão criaria um ciclo no grafo de demandas', erros: [] } } })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
-    @GestorOnly()
+    @ExigePermissao(podeEditarDemanda)
     @Post(':id/conexao')
     criarConexao(
         @Param('id', ParseIntPipe) id: number,
@@ -228,9 +231,9 @@ export class DemandaController {
     @ApiOperation({ summary: 'Remover conexão entre demandas (somente gestor)' })
     @ApiResponse({ status: 200, description: 'Conexão removida com sucesso' })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ApiResponse({ status: 404, description: 'Conexão não encontrada', schema: { example: { sucesso: false, dados: null, mensagem: 'Conexão não encontrada', erros: [] } } })
-    @GestorOnly()
+    @ExigePermissao(podeEditarDemanda)
     @Delete(':id/conexao/:conexaoId')
     excluirConexao(
         @Param('id', ParseIntPipe) id: number,

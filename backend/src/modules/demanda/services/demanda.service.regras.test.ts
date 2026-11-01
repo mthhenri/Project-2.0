@@ -12,6 +12,7 @@ import { UnauthorizedAccessException } from '../../../core/exceptions/unauthoriz
 const GESTOR = { sub: 1, login: 'g', tipo: TipoUsuarioEnum.GESTOR } as never;
 const ADMINISTRADOR = { sub: 2, login: 'a', tipo: TipoUsuarioEnum.ADMINISTRADOR } as never;
 const DESENVOLVEDOR = { sub: 3, login: 'd', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+const AUXILIAR = { sub: 6, login: 'x', tipo: TipoUsuarioEnum.AUXILIAR } as never;
 
 const DEMANDA = {
     id: 10, projetoId: 7, demandaPaiId: null as number | null, nome: 'Demanda', descricaoTecnica: null, descricaoCliente: null, documentacao: null,
@@ -73,8 +74,8 @@ test('criar: desenvolvedor só cria sub-demanda — sem demandaPaiId é recusado
     assert.equal(gravou(repo), false);
 });
 
-test('criar: gestor e administrador criam demanda raiz', async () => {
-    for (const usuario of [GESTOR, ADMINISTRADOR]) {
+test('criar: auxiliar, gestor e administrador criam demanda raiz', async () => {
+    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) {
         const repo = repositorio();
         const resposta = await criarServico(repo, tagExistente, usuarioExistente).criar(DADOS_CRIAR, usuario);
         assert.equal(resposta.dados?.id, 99);
@@ -87,6 +88,16 @@ test('criar: o gestor criador NÃO é atribuído em demanda_usuario (acesso tota
     await criarServico(repo, tagExistente, usuarioExistente).criar(DADOS_CRIAR, GESTOR);
     const { atribuicao } = repo.gravacoes[0].argumento as { atribuicao: { usuarioIds: number[] } };
     assert.deepEqual(atribuicao.usuarioIds, []);
+});
+
+test('criar: o auxiliar criador NÃO é atribuído sozinho (visão total por tipo), mas pode atribuir quem escolher', async () => {
+    const repo = repositorio();
+    await criarServico(repo, tagExistente, usuarioExistente).criar(DADOS_CRIAR, AUXILIAR);
+    const { atribuicao } = repo.gravacoes[0].argumento as { atribuicao: { usuarioIds: number[] } };
+    assert.deepEqual(atribuicao.usuarioIds, []);
+    const comMembros = repositorio();
+    await criarServico(comMembros, tagExistente, usuarioExistente).criar({ ...DADOS_CRIAR, usuarioIds: [5, 6] }, AUXILIAR);
+    assert.deepEqual((comMembros.gravacoes[0].argumento as { atribuicao: { usuarioIds: number[] } }).atribuicao.usuarioIds, [5, 6]);
 });
 
 test('criar: o desenvolvedor criador é auto-atribuído à sub-demanda', async () => {
@@ -248,6 +259,8 @@ test('alterar: a descricaoCliente é exclusiva do gestor — o desenvolvedor mem
     const repo = repositorio();
     await assert.rejects(() => criarServico(repo).alterar({ id: 10, descricaoCliente: 'x' }, DESENVOLVEDOR), UnauthorizedAccessException);
     assert.equal(gravou(repo), false);
+    await assert.rejects(() => criarServico(repo).alterar({ id: 10, descricaoCliente: 'x' }, AUXILIAR), UnauthorizedAccessException);
+    assert.equal(gravou(repo), false, 'a descrição do cliente segue sendo do gestor');
     for (const usuario of [GESTOR, ADMINISTRADOR]) {
         await criarServico(repo).alterar({ id: 10, descricaoCliente: 'x' }, usuario);
     }
@@ -318,14 +331,14 @@ test('leituras da demanda passam o filtro de acesso ao desenvolvedor e nenhum ao
         listarAncestral: async () => [], listarConexoes: async () => [], listarMembrosDemanda: async () => [],
     });
     const servico = criarServico(repo);
-    for (const usuario of [DESENVOLVEDOR, GESTOR]) {
+    for (const usuario of [DESENVOLVEDOR, GESTOR, AUXILIAR]) {
         await servico.recuperarArvore({ id: 10 }, usuario);
         await servico.recuperarAncestral({ id: 10 }, usuario);
         await servico.listarConexoes({ id: 10 }, usuario);
         await servico.listarTagsDemanda({ id: 10 }, usuario);
         await servico.listarMembros({ id: 10 }, usuario);
     }
-    assert.deepEqual(filtros, [...Array(5).fill({ usuarioId: 3 }), ...Array(5).fill(undefined)]);
+    assert.deepEqual(filtros, [...Array(5).fill({ usuarioId: 3 }), ...Array(10).fill(undefined)]);
 });
 
 test('recuperarGrafo: desenvolvedor só vê o grafo de projeto acessível; gestor não precisa de acesso', async () => {
@@ -437,8 +450,8 @@ test('alterarTagsDemanda: demanda inexistente lança ResourceNotFoundException',
     await assert.rejects(() => criarServico(repo, tagExistente).alterarTagsDemanda({ demandaId: 10, tagIds: [1] }, GESTOR), ResourceNotFoundException);
 });
 
-test('alterarTagsDemanda: gestor e administrador sincronizam as tags e recebem a lista atual', async () => {
-    for (const usuario of [GESTOR, ADMINISTRADOR]) {
+test('alterarTagsDemanda: auxiliar, gestor e administrador sincronizam as tags e recebem a lista atual', async () => {
+    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) {
         const repo = repositorio();
         const resposta = await criarServico(repo, tagExistente).alterarTagsDemanda({ demandaId: 10, tagIds: [1, 2] }, usuario);
         assert.deepEqual(repo.gravacoes, [{ metodo: 'atribuirTagsDemanda', argumento: { demandaId: 10, tagIds: [1, 2] } }]);
@@ -536,4 +549,20 @@ test('listarMembros e listarTagsDemanda devolvem o que o repository lista', asyn
     const servico = criarServico(repo);
     assert.deepEqual((await servico.listarMembros({ id: 10 }, GESTOR)).dados, [{ usuarioId: 3 }]);
     assert.deepEqual((await servico.listarTagsDemanda({ id: 10 }, GESTOR)).dados?.map((tag) => tag.id), [1]);
+});
+
+test('atribuirMembro e removerMembro: o auxiliar mexe em qualquer pessoa, sem ser membro nem ter acesso ao projeto', async () => {
+    const atribui = repositorio({ validarMembro: async ({ usuarioId }: { usuarioId: number }) => usuarioId === 3, validarAcessoProjeto: async () => false, contarMembrosDemanda: async () => 2 });
+    const resposta = await criarServico(atribui, tagExistente, usuarioExistente).atribuirMembro({ demandaId: 10, usuarioId: 8 }, AUXILIAR);
+    assert.equal(resposta.sucesso, true);
+    assert.equal(atribui.gravacoes.length, 1);
+    const remove = repositorio({ contarMembrosDemanda: async () => 2, validarAcessoProjeto: async () => false });
+    await criarServico(remove).removerMembro({ demandaId: 10, usuarioId: 3 }, AUXILIAR);
+    assert.equal(remove.gravacoes.length, 1);
+});
+
+test('conectar e desconectar demandas: o auxiliar pode; o desenvolvedor é recusado', async () => {
+    const dto = { demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false };
+    await assert.rejects(() => criarServico(repositorio()).criarConexao(dto, DESENVOLVEDOR), UnauthorizedAccessException);
+    await assert.rejects(() => criarServico(repositorio()).excluirConexao({ demandaId: 1, conexaoId: 9 }, DESENVOLVEDOR), UnauthorizedAccessException);
 });

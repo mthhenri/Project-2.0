@@ -2,16 +2,19 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { rotasPorNome } from '../../../testes/rotas-do-controller';
 import { AtividadeController } from './atividade.controller';
+import { podeEditarAtividadeDeOutro } from '@project20/shared';
 
-// SYSTEM.SPEC.md §14: excluir e restaurar atividade são do gestor; criar, listar, recuperar, alterar e tags ficam abertos a qualquer
+// SYSTEM.SPEC.md §14: excluir e restaurar atividade são de quem edita atividade de outro (auxiliar, gestor e administrador); criar, listar, recuperar, alterar e tags ficam abertos a qualquer
 // autenticado e a service decide por tipo e vínculo. As ações em massa da listagem (task 102) não têm rota própria: a tela chama estas
 // mesmas rotas uma vez por atividade, então valem as mesmas permissões.
 
 const rotas = () => rotasPorNome(AtividadeController);
 
-test('rotas @GestorOnly: só excluir e restaurar', () => {
-    const somenteGestor = Object.values(rotas()).filter((rota) => rota.gestorOnly).map((rota) => rota.nome).sort();
-    assert.deepEqual(somenteGestor, ['excluir', 'restaurar']);
+test('nenhuma rota é @GestorOnly; excluir e restaurar exigem podeEditarAtividadeDeOutro', () => {
+    assert.deepEqual(Object.values(rotas()).filter((rota) => rota.gestorOnly), []);
+    const comPermissao = Object.values(rotas()).filter((rota) => rota.permissao).map((rota) => rota.nome).sort();
+    assert.deepEqual(comPermissao, ['excluir', 'restaurar']);
+    for (const nome of ['excluir', 'restaurar']) assert.equal(rotas()[nome].permissao, podeEditarAtividadeDeOutro, nome);
 });
 
 test('criar, listar, recuperar, alterar e tags ficam abertos: a service decide por tipo e vínculo', () => {

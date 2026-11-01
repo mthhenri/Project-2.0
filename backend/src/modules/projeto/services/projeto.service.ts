@@ -13,8 +13,7 @@ import {
     ProjetoVolumeResumoDto,
     ProjetoVolumeAnualListarDto,
     ProjetoVolumeAnualResumoDto,
-    TipoUsuarioEnum,
-    temPermissaoDeGestor,
+    temVisibilidadeTotal,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
@@ -70,7 +69,7 @@ export class ProjetoService {
         const itensPorPagina = filtros.itensPorPagina ?? 20;
 
         const { itens, total } =
-            temPermissaoDeGestor(usuarioAtivo.tipo)
+            temVisibilidadeTotal(usuarioAtivo.tipo)
                 ? await this.projetoRepositorio.listarTodos(filtros)
                 : await this.projetoRepositorio.listarPorUsuario({ usuarioId: usuarioAtivo.sub, filtros });
 
@@ -136,7 +135,7 @@ export class ProjetoService {
             throw new ResourceNotFoundException('Projeto');
         }
 
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const temAcesso = await this.projetoRepositorio.validarAcesso({ usuarioId: usuarioAtivo.sub, projetoId: dto.id });
 
             if (!temAcesso) {

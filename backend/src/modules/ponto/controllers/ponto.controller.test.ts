@@ -2,14 +2,16 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { rotasPorNome } from '../../../testes/rotas-do-controller';
 import { PontoController } from './ponto.controller';
+import { podeVerExecucaoEPontoDeOutro } from '@project20/shared';
 
 // SYSTEM.SPEC.md §12 `ponto` e §14: "todos hoje" é exclusivo de gestor; diário e mensal ficam abertos e a service
 // limita o desenvolvedor ao próprio ponto (ponto.service.calculo.test.ts).
 
 const rotas = () => rotasPorNome(PontoController);
 
-test('/ponto/todos é @GestorOnly e as outras duas rotas ficam abertas a qualquer autenticado', () => {
-    assert.equal(rotas().consultarTodos.gestorOnly, true);
+test('/ponto/todos exige podeVerExecucaoEPontoDeOutro e as outras duas rotas ficam abertas a qualquer autenticado', () => {
+    assert.equal(rotas().consultarTodos.permissao, podeVerExecucaoEPontoDeOutro);
+    assert.equal(rotas().consultarTodos.gestorOnly, false);
     assert.equal(rotas().consultarDiario.gestorOnly, false);
     assert.equal(rotas().consultarMensal.gestorOnly, false);
 });

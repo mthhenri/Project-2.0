@@ -1,7 +1,7 @@
 import { PlanoAbaEnum } from '../enums/plano-aba.enum';
 import { SituacaoDaAbaNaPublicacaoEnum } from '../enums/situacao-da-aba-na-publicacao.enum';
 import { TipoUsuarioEnum } from '../enums/tipo-usuario.enum';
-import { temPermissaoDeGestor } from './permissao-usuario';
+import { temPermissaoDeGestor, temVisibilidadeTotal } from './permissao-usuario';
 
 /** Título do plano quando a pessoa não dá um. */
 export const TITULO_PADRAO_DO_PLANO = 'Plano sem título';
@@ -30,12 +30,12 @@ export interface PlanoAcessoEntrada {
 
 /**
  * Quem vê e edita o plano: plano amplo e plano solo, só o criador (nem gestor nem administrador entram);
- * plano de projeto, quem tem acesso ao projeto (gestor e administrador por tipo, desenvolvedor por `demanda_usuario`).
+ * plano de projeto, quem tem acesso ao projeto (auxiliar, gestor e administrador por tipo, desenvolvedor por `demanda_usuario`).
  * Ver e editar são a mesma regra.
  */
 export function podeAcessarPlano(entrada: PlanoAcessoEntrada): boolean {
     if (entrada.projetoId === null || entrada.isSolo) return entrada.usuarioId === entrada.criadorId;
-    return temPermissaoDeGestor(entrada.tipoUsuario) || entrada.temAcessoAoProjeto;
+    return temVisibilidadeTotal(entrada.tipoUsuario) || entrada.temAcessoAoProjeto;
 }
 
 /** Arquivar e excluir: o criador, o gestor e o administrador (quem já acessa o plano). */

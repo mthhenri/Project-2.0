@@ -107,7 +107,7 @@ function montarFerramenta(opcoes: { resposta?: string } = {}) {
 
 test('a ferramenta é do gestor, redige no nível analítico com o prompt da entrevista e só propõe', async () => {
     const { ferramenta, propostas, geradas, tiposDePrompt } = montarFerramenta();
-    assert.equal(ferramenta.permissao, 'GESTOR');
+    assert.equal(ferramenta.permissao, 'AUXILIAR');
     const resultado = (await ferramenta.executar({ demandaId: 3, relatoDoCliente: 'Quer cadastrar parceiros', relatoTecnico: 'Criar tela e API' }, GESTOR)) as { propostaId: number };
     assert.equal(resultado.propostaId, 70);
     assert.equal(geradas[0].nivel, NivelIaEnum.ANALITICO);

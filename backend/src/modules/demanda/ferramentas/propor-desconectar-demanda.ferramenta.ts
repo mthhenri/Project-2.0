@@ -18,7 +18,7 @@ export class ProporDesconectarDemandaFerramenta extends FerramentaPropostaIa<Pro
     readonly descricao =
         'Propõe remover a conexão do grafo entre duas demandas (origem → destino, no sentido em que ela existe em consultar_grafo_do_projeto). As demandas continuam onde estão: só a ligação sai. ' +
     'Só o gestor. Só use quando o gestor pedir para desligar duas demandas.';
-    readonly permissao = 'GESTOR' as const;
+    readonly permissao = 'AUXILIAR' as const;
     readonly classeDeEntrada = ProporDesconectarDemandaDto;
     readonly tipoProposta = TipoPropostaIaEnum.DESCONECTAR_DEMANDA;
 

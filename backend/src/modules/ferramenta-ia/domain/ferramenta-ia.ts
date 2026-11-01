@@ -1,4 +1,4 @@
-import { ContextoChatEnum, temPermissaoDeAdministrador, temPermissaoDeGestor, TipoUsuarioEnum } from '@project20/shared';
+import { ContextoChatEnum, temPermissaoDeAdministrador, temPermissaoDeGestor, TipoUsuarioEnum, temVisibilidadeTotal } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 
 /**
@@ -11,7 +11,7 @@ export type TipoFerramentaIa = 'LEITURA' | 'PROPOSTA' | 'RASCUNHO';
 export type EscopoDaFerramentaIa = 'CHAT' | 'PLANEJAMENTO';
 
 /** Quem pode usar a ferramenta (as mesmas regras de tipo de usuário do resto do sistema). */
-export type PermissaoFerramentaIa = 'QUALQUER' | 'GESTOR' | 'ADMINISTRADOR';
+export type PermissaoFerramentaIa = 'QUALQUER' | 'AUXILIAR' | 'GESTOR' | 'ADMINISTRADOR';
 
 /** O que volta ao modelo depois de uma ferramenta: sempre um texto (JSON) e se foi erro. Nunca uma exceção que derrube o turno. */
 export interface ResultadoFerramentaIa {
@@ -56,6 +56,8 @@ export function usuarioPodeUsar(permissao: PermissaoFerramentaIa, tipo: TipoUsua
     switch (permissao) {
         case 'QUALQUER':
             return true;
+        case 'AUXILIAR':
+            return temVisibilidadeTotal(tipo);
         case 'GESTOR':
             return temPermissaoDeGestor(tipo);
         case 'ADMINISTRADOR':

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MinhasAtividadesListadasDto, MinhasAtividadesListarDto, TipoAtividadeStatusEnum, temPermissaoDeGestor } from '@project20/shared';
+import { MinhasAtividadesListadasDto, MinhasAtividadesListarDto, TipoAtividadeStatusEnum, temVisibilidadeTotal } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { FerramentaIa } from '../../ferramenta-ia/domain/ferramenta-ia';
@@ -31,7 +31,7 @@ export class ListarMinhasAtividadesFerramenta extends FerramentaIa<MinhasAtivida
 
     async executar(entrada: MinhasAtividadesListarDto, usuarioAtivo: JwtPayload): Promise<MinhasAtividadesListadasDto> {
         const donoId = entrada.usuarioId ?? usuarioAtivo.sub;
-        if (donoId !== usuarioAtivo.sub && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+        if (donoId !== usuarioAtivo.sub && !temVisibilidadeTotal(usuarioAtivo.tipo)) {
             throw new BusinessException('Só o gestor lê as atividades de outra pessoa.');
         }
         const resposta = await this.atividadeService.listar(

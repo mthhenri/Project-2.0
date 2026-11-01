@@ -31,7 +31,7 @@ export class SugerirConexoesELugarFerramenta extends FerramentaIa<SugerirConexoe
         'Analisa uma demanda com o contexto do projeto (as outras demandas, as descrições e as conexões) e devolve sugestões fundamentadas de conexão com outra demanda ou de lugar melhor na árvore, ' +
     'cada uma com o motivo. Não propõe nem grava nada: apresente as sugestões ao gestor, pergunte qual aceita e só então chame propor_conectar_demanda. Pode devolver nenhuma sugestão.';
     readonly tipo = 'LEITURA' as const;
-    readonly permissao = 'GESTOR' as const;
+    readonly permissao = 'AUXILIAR' as const;
     readonly classeDeEntrada = SugerirConexoesELugarDto;
 
     constructor(

@@ -25,7 +25,7 @@ export class ProporDescreverDemandaFerramenta extends FerramentaPropostaIa<Propo
         'Propõe a descrição do cliente e/ou a descrição técnica de uma demanda, a partir da ENTREVISTA com o gestor. Antes de chamar, converse: pergunte o que o cliente pediu e o que será feito, ' +
     'uma coisa de cada vez, e peça o que faltar; nunca invente o que o cliente pediu. Passe em relatoDoCliente e relatoTecnico o que o gestor contou, fiel e com as palavras dele ' +
     '(só o que ele disse; um dos dois pode faltar). O sistema redige as descrições em Markdown e o gestor confirma no cartão; nada é gravado antes. O demandaId vem de listar_demandas_do_projeto.';
-    readonly permissao = 'GESTOR' as const;
+    readonly permissao = 'AUXILIAR' as const;
     readonly classeDeEntrada = ProporDescreverDemandaDto;
     readonly tipoProposta = TipoPropostaIaEnum.DESCREVER_DEMANDA;
 

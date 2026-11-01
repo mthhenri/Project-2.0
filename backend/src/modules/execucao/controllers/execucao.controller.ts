@@ -18,8 +18,9 @@ import {
     ExecucaoListarDto,
     ExecucaoAlterarDto,
     ExecucaoRegistrarDto,
+    podeEditarExecucaoDeOutro,
 } from '@project20/shared';
-import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
+import { ExigePermissao } from '../../autenticacao/decorators/exige-permissao.decorator';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 
@@ -50,9 +51,9 @@ export class ExecucaoController {
     @ApiResponse({ status: 201, description: 'Execução registrada com sucesso' })
     @ApiResponse({ status: 400, description: 'Datas inválidas ou sobreposição com outra execução' })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ApiResponse({ status: 404, description: 'Atividade não encontrada', schema: { example: { sucesso: false, dados: null, mensagem: 'Atividade não encontrada', erros: [] } } })
-    @GestorOnly()
+    @ExigePermissao(podeEditarExecucaoDeOutro)
     @Post('registro')
     registrar(
         @Body() dto: ExecucaoRegistrarDto,
@@ -126,9 +127,9 @@ export class ExecucaoController {
     @ApiOperation({ summary: 'Excluir execução via soft delete (somente gestor)' })
     @ApiResponse({ status: 200, description: 'Execução excluída com sucesso' })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ApiResponse({ status: 404, description: 'Execução não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
-    @GestorOnly()
+    @ExigePermissao(podeEditarExecucaoDeOutro)
     @Delete(':id')
     excluir(
         @Param('id', ParseIntPipe) id: number,

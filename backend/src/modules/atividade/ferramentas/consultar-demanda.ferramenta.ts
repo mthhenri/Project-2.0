@@ -25,7 +25,7 @@ export class ConsultarDemandaFerramenta extends FerramentaIa<DemandaConsultarDto
         'Consulta uma demanda: status, hierarquia, horas, previsão, descrição técnica e do cliente, documentação (textos longos vêm cortados), tags e as atividades com responsável e tempo executado. ' +
     'O demandaId vem de listar_demandas_do_projeto ou do grafo do projeto.';
     readonly tipo = 'LEITURA' as const;
-    readonly permissao = 'GESTOR' as const;
+    readonly permissao = 'AUXILIAR' as const;
     readonly classeDeEntrada = DemandaConsultarDto;
 
     constructor(

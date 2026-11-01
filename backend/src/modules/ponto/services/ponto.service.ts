@@ -21,8 +21,8 @@ import {
     PontoDiaResumoDto,
     PontoJustificativaResumoDto,
     UsuarioRecuperarDto,
-    TipoUsuarioEnum,
     dataIsoNoFuso,
+    temVisibilidadeTotal,
 } from '@project20/shared';
 
 /** Motivo dos dias anteriores ao cadastro do usuário: a meta só vale a partir do dia em que ele entrou no sistema. */
@@ -65,7 +65,7 @@ export class PontoService {
     async consultarDiario(dto: PontoConsultarDto, usuarioAtivo: JwtPayload): Promise<PontoDiarioDto> {
         const usuarioId = dto.usuarioId ?? usuarioAtivo.sub;
 
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR && usuarioId !== usuarioAtivo.sub) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo) && usuarioId !== usuarioAtivo.sub) {
             throw new UnauthorizedAccessException();
         }
 
@@ -100,7 +100,7 @@ export class PontoService {
     async consultarMensal(dto: PontoMensalConsultarDto, usuarioAtivo: JwtPayload): Promise<PontoMensalDto> {
         const usuarioId = dto.usuarioId ?? usuarioAtivo.sub;
 
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR && usuarioId !== usuarioAtivo.sub) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo) && usuarioId !== usuarioAtivo.sub) {
             throw new UnauthorizedAccessException();
         }
 

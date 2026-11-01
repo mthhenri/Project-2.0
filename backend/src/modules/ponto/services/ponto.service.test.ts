@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { TipoDiaNaoUtilEnum, ExecucaoItemDto } from '@project20/shared';
+import { TipoDiaNaoUtilEnum, TipoUsuarioEnum, ExecucaoItemDto } from '@project20/shared';
+import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { PontoService } from './ponto.service';
 
 // Helpers puros do PontoService, exercitados sem banco: as dependências nunca são tocadas.
@@ -54,4 +55,16 @@ test('calcularIntervalos conta o gap até a execução em andamento (P-063)', ()
     ];
     assert.deepEqual(privado.calcularIntervalos(execucoes, 15).map((intervalo) => intervalo.duracaoMinutos), [70]);
     assert.deepEqual(privado.calcularIntervalos([execucao('2026-03-02T11:10:00Z', null)], 15), [], 'só a aberta: nada a comparar');
+});
+
+test('ponto de outra pessoa: desenvolvedor é recusado; auxiliar chega a consultar (diário e mensal)', async () => {
+    const usuarioRepositorio = { recuperar: async () => null };
+    const servicoComDublê = new PontoService(null as never, null as never, usuarioRepositorio as never, null as never, null as never);
+    const desenvolvedor = { sub: 3, login: 'd', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+    const auxiliar = { sub: 6, login: 'x', tipo: TipoUsuarioEnum.AUXILIAR } as never;
+    await assert.rejects(() => servicoComDublê.consultarDiario({ usuarioId: 9, data: '2026-03-02' } as never, desenvolvedor), UnauthorizedAccessException);
+    await assert.rejects(() => servicoComDublê.consultarMensal({ usuarioId: 9, ano: 2026, mes: 3 } as never, desenvolvedor), UnauthorizedAccessException);
+    // O auxiliar passa pela guarda e só então esbarra no usuário inexistente do dublê (404), não na recusa de permissão.
+    await assert.rejects(() => servicoComDublê.consultarDiario({ usuarioId: 9, data: '2026-03-02' } as never, auxiliar), (erro: Error) => !(erro instanceof UnauthorizedAccessException));
+    await assert.rejects(() => servicoComDublê.consultarMensal({ usuarioId: 9, ano: 2026, mes: 3 } as never, auxiliar), (erro: Error) => !(erro instanceof UnauthorizedAccessException));
 });

@@ -8,7 +8,7 @@ import {
     podeEditarDemanda,
     podeEditarExecucaoDeOutro,
     podeGerenciarTag,
-    podePublicarPlano,
+    atuaComoDesenvolvedor,
     podeSerMembroDeDemanda,
     podeVerExecucaoEPontoDeOutro,
     temPermissaoDeAdministrador,
@@ -43,7 +43,6 @@ const ACOES_DE_QUEM_CONDUZ = {
     temVisibilidadeTotal,
     podeEditarDemanda,
     podeAtribuirMembroOuTag,
-    podePublicarPlano,
     podeEditarAtividadeDeOutro,
     podeConduzirExecucaoDeOutro,
     podeVerExecucaoEPontoDeOutro,
@@ -59,6 +58,13 @@ for (const [nome, acao] of Object.entries(ACOES_DE_QUEM_CONDUZ)) {
         assert.equal(acao(TipoUsuarioEnum.DESENVOLVEDOR), false);
     });
 }
+
+test('atuaComoDesenvolvedor: desenvolvedor e auxiliar', () => {
+    assert.equal(atuaComoDesenvolvedor(TipoUsuarioEnum.DESENVOLVEDOR), true);
+    assert.equal(atuaComoDesenvolvedor(TipoUsuarioEnum.AUXILIAR), true);
+    assert.equal(atuaComoDesenvolvedor(TipoUsuarioEnum.GESTOR), false);
+    assert.equal(atuaComoDesenvolvedor(TipoUsuarioEnum.ADMINISTRADOR), false);
+});
 
 test('podeSerMembroDeDemanda: desenvolvedor e auxiliar; gestor e administrador têm acesso por tipo', () => {
     assert.equal(podeSerMembroDeDemanda(TipoUsuarioEnum.DESENVOLVEDOR), true);

@@ -50,7 +50,7 @@ test('consultar grafo: limita as demandas e avisa que há mais; a ferramenta é 
     const resultado = await ferramenta.executar({ projetoId: 7 }, GESTOR);
     assert.equal(resultado.demandas.length, LIMITE_DEMANDAS_DO_GRAFO);
     assert.deepEqual([resultado.totalDemandas, resultado.haMaisDemandas], [LIMITE_DEMANDAS_DO_GRAFO + 5, true]);
-    assert.deepEqual([ferramenta.permissao, ferramenta.tipo], ['GESTOR', 'LEITURA']);
+    assert.deepEqual([ferramenta.permissao, ferramenta.tipo], ['AUXILIAR', 'LEITURA']);
 });
 
 test('consultar grafo: projeto sem demandas devolve listas vazias', async () => {

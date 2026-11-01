@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProporPausarExecucaoDto, PropostaPausarExecucaoDadosDto, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
+import { ProporPausarExecucaoDto, PropostaPausarExecucaoDadosDto, TipoPropostaIaEnum, podeConduzirExecucaoDeOutro } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { AtividadeService } from '../../atividade/services/atividade.service';
@@ -34,7 +34,7 @@ export class ProporPausarExecucaoFerramenta extends FerramentaPropostaIa<ProporP
         const { usuarioId, ...semUsuario } = entrada;
         const alvoId = usuarioId ?? usuarioAtivo.sub;
         const deOutro = alvoId !== usuarioAtivo.sub;
-        if (deOutro && !temPermissaoDeGestor(usuarioAtivo.tipo)) throw new BusinessException('Só o gestor pausa a execução de outra pessoa.');
+        if (deOutro && !podeConduzirExecucaoDeOutro(usuarioAtivo.tipo)) throw new BusinessException('Só o gestor pausa a execução de outra pessoa.');
         const ativa = (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: alvoId }, usuarioAtivo)).dados;
         if (!ativa) throw new BusinessException(deOutro ? 'Essa pessoa não tem execução em andamento: não há o que pausar' : 'O usuário não tem execução em andamento: não há o que pausar');
         const atividade = (await this.atividadeService.recuperar({ id: ativa.atividadeId }, usuarioAtivo)).dados;

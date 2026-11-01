@@ -38,9 +38,17 @@ export function temVisibilidadeTotal(tipo: TipoUsuarioEnum): boolean {
     return conduzOTrabalho(tipo);
 }
 
-/** Entra em `demanda_usuario` (é atribuído como membro): desenvolvedor e auxiliar. Gestor e administrador têm acesso por tipo. */
-export function podeSerMembroDeDemanda(tipo: TipoUsuarioEnum): boolean {
+/**
+ * Trabalha como desenvolvedor: tem atividades, ponto, horas diárias e a trava de uma execução ativa, e aparece na equipe como
+ * tal. Desenvolvedor e auxiliar; gestor e administrador não.
+ */
+export function atuaComoDesenvolvedor(tipo: TipoUsuarioEnum): boolean {
     return tipo === TipoUsuarioEnum.DESENVOLVEDOR || tipo === TipoUsuarioEnum.AUXILIAR;
+}
+
+/** Entra em `demanda_usuario` (é atribuído como membro): quem atua como desenvolvedor. Gestor e administrador têm acesso por tipo. */
+export function podeSerMembroDeDemanda(tipo: TipoUsuarioEnum): boolean {
+    return atuaComoDesenvolvedor(tipo);
 }
 
 /** Edita qualquer demanda (nome, horas, previsão, status), cria demanda e sub-demanda, cria e remove conexões, conclui demanda. */
@@ -50,11 +58,6 @@ export function podeEditarDemanda(tipo: TipoUsuarioEnum): boolean {
 
 /** Atribui e remove membros e tags de qualquer pessoa, ele mesmo incluído. */
 export function podeAtribuirMembroOuTag(tipo: TipoUsuarioEnum): boolean {
-    return conduzOTrabalho(tipo);
-}
-
-/** Publica o plano do projeto (e age sobre ele) como quem conduz o trabalho. */
-export function podePublicarPlano(tipo: TipoUsuarioEnum): boolean {
     return conduzOTrabalho(tipo);
 }
 

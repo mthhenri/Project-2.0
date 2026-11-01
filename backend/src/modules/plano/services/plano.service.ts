@@ -28,12 +28,12 @@ import {
     PlanoSoloMarcadoDto,
     StandardResponse,
     TITULO_PADRAO_DO_PLANO,
-    TipoUsuarioEnum,
     podeAcessarPlano,
     podeArquivarOuExcluirPlano,
     podeEditarAbaDoPlano,
-    temPermissaoDeGestor,
     textoInicialDaAba,
+    temVisibilidadeTotal,
+    podeEditarDemanda,
 } from '@project20/shared';
 
 const MENSAGEM_VERSAO_MAIS_NOVA = 'O plano foi alterado por outra pessoa. Recarregue para ver a versão mais nova antes de gravar.';
@@ -83,7 +83,7 @@ export class PlanoService {
     async listar(dto: PlanoListarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<PlanoResumoDto[]>> {
         const planos = await this.planoRepositorio.listar({
             usuarioId:         usuarioAtivo.sub,
-            ehGestor:          temPermissaoDeGestor(usuarioAtivo.tipo),
+            ehGestor:          temVisibilidadeTotal(usuarioAtivo.tipo),
             busca:             dto.busca,
             incluirArquivados: dto.incluirArquivados,
             projetoId:         dto.projetoId,
@@ -236,7 +236,7 @@ export class PlanoService {
     async podeAcessar(plano: PlanoCompletoDto, usuarioAtivo: JwtPayload): Promise<boolean> {
         const temAcessoAoProjeto =
             plano.projetoId !== null &&
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
+      !temVisibilidadeTotal(usuarioAtivo.tipo) &&
       (await this.demandaRepositorio.validarAcessoProjeto({ projetoId: plano.projetoId, usuarioId: usuarioAtivo.sub }));
 
         return podeAcessarPlano({
@@ -254,7 +254,7 @@ export class PlanoService {
         const demanda = await this.demandaRepositorio.recuperar({ id: demandaId });
         if (!demanda) throw new ResourceNotFoundException('Demanda');
 
-        if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
+        if (!podeEditarDemanda(usuarioAtivo.tipo)) {
             const eMembro = await this.demandaRepositorio.validarMembro({ demandaId, usuarioId: usuarioAtivo.sub });
             if (!eMembro) throw new UnauthorizedAccessException('Você só pode ligar o plano a demandas das quais é membro');
         }
@@ -266,7 +266,7 @@ export class PlanoService {
         const projeto = await this.projetoRepositorio.recuperar({ id: projetoId });
         if (!projeto) throw new ResourceNotFoundException('Projeto');
 
-        if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({ projetoId, usuarioId: usuarioAtivo.sub });
             if (!temAcesso) throw new UnauthorizedAccessException('Você não tem acesso a este projeto');
         }

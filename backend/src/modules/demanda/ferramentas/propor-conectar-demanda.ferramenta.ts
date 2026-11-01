@@ -18,7 +18,7 @@ export class ProporConectarDemandaFerramenta extends FerramentaPropostaIa<Propor
     readonly descricao =
         'Propõe ligar duas demandas do grafo (origem → destino; ehBidirecional liga nos dois sentidos), com o motivo. Só chame DEPOIS de apresentar a sugestão ao gestor e ele aceitar; ' +
     'nunca proponha uma conexão que ele não aceitou. Nada é criado até ele confirmar no cartão. Os ids vêm de listar_demandas_do_projeto ou de sugerir_conexoes_e_lugar.';
-    readonly permissao = 'GESTOR' as const;
+    readonly permissao = 'AUXILIAR' as const;
     readonly classeDeEntrada = ProporConectarDemandaDto;
     readonly tipoProposta = TipoPropostaIaEnum.CONECTAR_DEMANDA;
 

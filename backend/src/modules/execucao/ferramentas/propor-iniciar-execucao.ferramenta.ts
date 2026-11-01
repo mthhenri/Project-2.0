@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProporIniciarExecucaoDto, PropostaIniciarExecucaoDadosDto, TipoAtividadeStatusEnum, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
+import { ProporIniciarExecucaoDto, PropostaIniciarExecucaoDadosDto, TipoAtividadeStatusEnum, TipoPropostaIaEnum, podeConduzirExecucaoDeOutro } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { AtividadeService } from '../../atividade/services/atividade.service';
@@ -50,7 +50,7 @@ export class ProporIniciarExecucaoFerramenta extends FerramentaPropostaIa<Propor
         const statusMuda = atividade && entrada.novoStatus && entrada.novoStatus !== atividade.status;
         // A execução é do DONO da atividade (o gestor age por ele): é a execução ativa dele que a regra "uma por usuário" e a pausa olham.
         const donoId = atividade?.usuarioId ?? usuarioAtivo.sub;
-        if (donoId !== usuarioAtivo.sub && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+        if (donoId !== usuarioAtivo.sub && !podeConduzirExecucaoDeOutro(usuarioAtivo.tipo)) {
             throw new BusinessException('Só o gestor inicia a execução de uma atividade de outra pessoa.');
         }
         const ativa = (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: donoId }, usuarioAtivo)).dados;

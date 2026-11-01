@@ -17,8 +17,10 @@ import {
     UsuarioListarDto,
     UsuarioAlterarDto,
     UsuarioSenhaAlterarDto,
+    temVisibilidadeTotal,
 } from '@project20/shared';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
+import { ExigePermissao } from '../../autenticacao/decorators/exige-permissao.decorator';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 
@@ -96,8 +98,8 @@ export class UsuarioController {
         },
     })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @GestorOnly()
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ExigePermissao(temVisibilidadeTotal)
     @Get()
     listar(@Query() dto: UsuarioListarDto) {
         return this.usuarioService.listar(dto);

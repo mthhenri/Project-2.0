@@ -2,13 +2,17 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { rotasPorNome } from '../../../testes/rotas-do-controller';
 import { TagController } from './tag.controller';
+import { podeGerenciarTag } from '@project20/shared';
 
-// SYSTEM.SPEC.md §14 "Criar e atribuir tag": só o gestor cria, altera e exclui; ler as tags é de qualquer autenticado.
+// SYSTEM.SPEC.md §14 "Criar e atribuir tag": auxiliar, gestor e administrador criam, alteram e excluem; ler as tags é de qualquer autenticado.
 
 const rotas = () => rotasPorNome(TagController);
 
-test('criar, alterar, excluir e restaurar são @GestorOnly', () => {
-    for (const nome of ['criar', 'alterar', 'excluir', 'restaurar']) assert.equal(rotas()[nome].gestorOnly, true, nome);
+test('criar, alterar, excluir e restaurar exigem podeGerenciarTag (auxiliar, gestor e administrador)', () => {
+    for (const nome of ['criar', 'alterar', 'excluir', 'restaurar']) {
+        assert.equal(rotas()[nome].permissao, podeGerenciarTag, nome);
+        assert.equal(rotas()[nome].gestorOnly, false, nome);
+    }
 });
 
 test('listar e recuperar ficam abertos a qualquer autenticado', () => {

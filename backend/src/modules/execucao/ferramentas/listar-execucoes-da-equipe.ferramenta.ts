@@ -21,7 +21,7 @@ export class ListarExecucoesDaEquipeFerramenta extends FerramentaIa<ExecucoesDaE
         'Lista o que a equipe executou num dia (hoje, se não informar `data` em yyyy-mm-dd), agrupado por pessoa, com atividade, demanda, projeto, descrição, horário e o total de minutos de cada um. ' +
     'Use para "o que a equipe fez hoje?" e "o que a Fulana fez ontem?". Só descreva o trabalho de outras pessoas ao gestor que perguntou.';
     readonly tipo = 'LEITURA' as const;
-    readonly permissao = 'GESTOR' as const;
+    readonly permissao = 'AUXILIAR' as const;
     readonly classeDeEntrada = ExecucoesDaEquipeListarDto;
 
     constructor(

@@ -19,11 +19,12 @@ import {
     ExecucaoSobreposicaoValidarDto,
     ExecucaoRegistrarDto,
     ExecucaoRegistradaDto,
-    TipoUsuarioEnum,
     temPermissaoDeGestor,
     ExecucaoUltimaPorAtividadeDto,
     ExecucaoUltimaPorAtividadeListarDto,
     TipoAtividadeStatusEnum,
+    temVisibilidadeTotal,
+    podeConduzirExecucaoDeOutro,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
@@ -101,7 +102,7 @@ export class ExecucaoService implements OnModuleInit {
         // O gestor não tem linha em demanda_usuario, então o acesso é por tipo + posse da
         // atividade (execucao → atividade.usuario_id), nunca via validarAcessoDemanda.
         if (
-            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
+            !temVisibilidadeTotal(usuarioAtivo.tipo) &&
       atividadeEncontrada.usuarioId !== usuarioAtivo.sub
         ) {
             throw new UnauthorizedAccessException('Desenvolvedor não pode iniciar execução em atividade de outro usuário');
@@ -201,7 +202,7 @@ export class ExecucaoService implements OnModuleInit {
             throw new BusinessException('Esta execução já foi encerrada');
         }
 
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: dto.id });
             if (usuarioDaExecucao !== usuarioAtivo.sub) {
                 throw new UnauthorizedAccessException('Desenvolvedor não pode encerrar execução de outro usuário');
@@ -227,8 +228,8 @@ export class ExecucaoService implements OnModuleInit {
    * Usada para alternar o estado play/pause na listagem de atividades.
    */
     async listarUltimaPorAtividade(dto: ExecucaoUltimaPorAtividadeListarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<ExecucaoUltimaPorAtividadeDto[]>> {
-        if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
-            throw new UnauthorizedAccessException('Apenas gestores consultam a última execução das atividades da equipe');
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
+            throw new UnauthorizedAccessException('Apenas quem vê toda a equipe consulta a última execução das atividades');
         }
         return { sucesso: true, dados: await this.execucaoRepositorio.listarUltimaPorAtividade(dto), mensagem: 'Últimas execuções listadas com sucesso' };
     }
@@ -261,7 +262,7 @@ export class ExecucaoService implements OnModuleInit {
         dto: ExecucaoAtivaRecuperarDto,
         usuarioAtivo: JwtPayload,
     ): Promise<StandardResponse<ExecucaoAtivaDto | null>> {
-        if (dto.usuarioId !== usuarioAtivo.sub && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+        if (dto.usuarioId !== usuarioAtivo.sub && !podeConduzirExecucaoDeOutro(usuarioAtivo.tipo)) {
             throw new UnauthorizedAccessException('Desenvolvedor só consulta a própria execução ativa');
         }
         const execucaoAtiva = await this.execucaoRepositorio.recuperarAtiva({ usuarioId: dto.usuarioId });
@@ -285,7 +286,7 @@ export class ExecucaoService implements OnModuleInit {
         const itensPorPagina = filtros.itensPorPagina ?? 20;
 
         const restricao =
-            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? { usuarioId: usuarioAtivo.sub } : undefined;
+            !temVisibilidadeTotal(usuarioAtivo.tipo) ? { usuarioId: usuarioAtivo.sub } : undefined;
 
         const { itens, total, totalMinutosDia } = await this.execucaoRepositorio.listar(filtros, restricao);
 
@@ -333,7 +334,7 @@ export class ExecucaoService implements OnModuleInit {
             throw new ResourceNotFoundException('Execução');
         }
 
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: dto.id });
             if (usuarioDaExecucao !== usuarioAtivo.sub) {
                 throw new UnauthorizedAccessException('Desenvolvedor não pode acessar execução de outro usuário');
@@ -360,7 +361,7 @@ export class ExecucaoService implements OnModuleInit {
             throw new ResourceNotFoundException('Execução');
         }
 
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: dto.id });
             if (usuarioDaExecucao !== usuarioAtivo.sub) {
                 throw new UnauthorizedAccessException('Desenvolvedor não pode editar execução de outro usuário');

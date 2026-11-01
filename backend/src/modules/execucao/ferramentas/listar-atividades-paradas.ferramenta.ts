@@ -22,7 +22,7 @@ export class ListarAtividadesParadasFerramenta extends FerramentaIa<AtividadesPa
         'Lista as atividades em desenvolvimento que estão paradas: sem execução em andamento e sem execução há `diasParada` dias ou mais (padrão 3), da mais parada para a menos, ' +
     'podendo filtrar por demanda (`demandaId`) ou pessoa (`usuarioId`). Use para "quem está parado na demanda X?" e "o que está encalhado?".';
     readonly tipo = 'LEITURA' as const;
-    readonly permissao = 'GESTOR' as const;
+    readonly permissao = 'AUXILIAR' as const;
     readonly classeDeEntrada = AtividadesParadasListarDto;
 
     constructor(

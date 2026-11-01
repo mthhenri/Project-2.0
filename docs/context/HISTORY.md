@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-01 — Task 284: backend do tipo Auxiliar (permissão por ação em controllers, services e ferramentas da IA)
+
+Conferidas as ocorrências de checagem de tipo do backend. O escopo do desenvolvedor (`tipo === DESENVOLVEDOR`) virou `!temVisibilidadeTotal`, o que dá ao Auxiliar a visão total sem tocar nos outros tipos. `@ExigePermissao(podeX)` com `PermissaoGuard` global atende às rotas que o Auxiliar também faz (atividade excluir/restaurar, tag, registro e exclusão de execução, ponto de todos, planejamento e conexões de demanda, `GET /usuario`); as ferramentas da IA ganharam a permissão `'AUXILIAR'`. **Achado na revisão:** a troca mecânica abria demais em dois pontos (descrição do cliente e perfil de outro usuário), porque ali "não é desenvolvedor" significava "não é gestor"; os dois voltaram a `temPermissaoDeGestor`, com teste. Decisões do que o Auxiliar pode e não pode estão em `docs/specs/done/284-backend-do-tipo-auxiliar.spec.md`. Verificação: backend 1603 testes, integração 368, build e `eslint` limpos.
+
 ## 2026-11-01 — Task 283: fundação do tipo Auxiliar (enum, migration 0074 e permissões por ação)
 
 `AUXILIAR` entrou em `TipoUsuarioEnum` e na tabela `tipo_usuario` (migration `0074`, com rollback que devolve os auxiliares a desenvolvedor). `shared/src/utils/permissao-usuario.ts` ganhou uma função por ação, todas por **lista positiva** de tipos (nunca `tipo !== DESENVOLVEDOR`); `temPermissaoDeGestor` e `temPermissaoDeAdministrador` seguem iguais e dão `false` para o Auxiliar. Frontend: rótulo ("Auxiliar", curto "Aux") e selo `success`. Nenhum comportamento mudou, pois ninguém é Auxiliar ainda. Verificação: `shared` 309 testes, backend 1590, integração 368 (inclui o auxiliar gravado e lido e fora da lista de permissão de gestor), build do backend, `lint:tudo` e migration aplicada e revertida. Os consumidores antigos migram na 284 (backend) e na 286 (frontend).

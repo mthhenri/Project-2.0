@@ -18,6 +18,7 @@ import {
     TipoPlanoPontoSituacaoEnum,
     TipoPromptEnum,
     TipoUsuarioEnum,
+    temPermissaoDeGestor,
 } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { PlanoFonteService } from '../../plano/services/plano-fonte.service';
@@ -150,7 +151,7 @@ export class ChatPlanoService {
             `O plano aberto: id ${plano.id}, "${plano.titulo}".`,
             plano.projetoNome ? `Projeto: ${plano.projetoNome}.` : 'Plano pessoal, sem projeto.',
             plano.demandaNome ? `Demanda ligada: ${plano.demandaNome}.` : 'Nenhuma demanda ligada.',
-            nomeDeQuemFala ? `Quem está falando agora: ${nomeDeQuemFala} (${usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? 'desenvolvedor' : 'gestor ou administrador'}).` : '',
+            nomeDeQuemFala ? `Quem está falando agora: ${nomeDeQuemFala} (${temPermissaoDeGestor(usuarioAtivo.tipo) ? 'gestor ou administrador' : usuarioAtivo.tipo === TipoUsuarioEnum.AUXILIAR ? 'auxiliar' : 'desenvolvedor'}).` : '',
             `Versão do documento agora: ${plano.versao}. Use-a em escrever_no_plano; depois de escrever, use a versão que o resultado devolver.`,
             `Abas que esta pessoa vê: ${abas.join(', ')}.`,
             `Abas que esta pessoa pode alterar: ${abasEditaveis.join(', ')}. As outras ela só lê: não escreva nelas nem proponha alterar trechos delas nesta conversa.`,

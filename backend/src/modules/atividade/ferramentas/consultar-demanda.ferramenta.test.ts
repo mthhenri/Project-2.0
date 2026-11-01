@@ -25,7 +25,7 @@ function montar(demanda: Record<string, unknown> | null = DEMANDA, atividades: {
 
 test('é ferramenta de leitura só do gestor', () => {
     const { ferramenta } = montar();
-    assert.deepEqual([ferramenta.nome, ferramenta.tipo, ferramenta.permissao], ['consultar_demanda', 'LEITURA', 'GESTOR']);
+    assert.deepEqual([ferramenta.nome, ferramenta.tipo, ferramenta.permissao], ['consultar_demanda', 'LEITURA', 'AUXILIAR']);
 });
 
 test('devolve a demanda com tags por nome e as atividades resumidas, lidas com o usuário do token e o limite da ferramenta', async () => {

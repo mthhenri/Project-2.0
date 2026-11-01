@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PropostaRegistrarExecucaoDadosDto, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
+import { PropostaRegistrarExecucaoDadosDto, TipoPropostaIaEnum, podeEditarExecucaoDeOutro } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
@@ -42,6 +42,6 @@ export class RegistrarExecucaoExecutor implements ExecutorPropostaIa {
     }
 
     private exigirGestor(usuarioAtivo: JwtPayload): void {
-        if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Só o gestor registra execuções passadas');
+        if (!podeEditarExecucaoDeOutro(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Só o auxiliar ou o gestor registra execuções passadas');
     }
 }

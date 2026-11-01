@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProporExcluirAtividadeDto, PropostaExcluirAtividadeDadosDto, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
+import { ProporExcluirAtividadeDto, PropostaExcluirAtividadeDadosDto, TipoPropostaIaEnum, podeEditarAtividadeDeOutro } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { FerramentaPropostaIa } from '../../ferramenta-ia/ferramentas/ferramenta-proposta-ia';
@@ -37,7 +37,7 @@ export class ProporExcluirAtividadeFerramenta extends FerramentaPropostaIa<Propo
     // `recuperar` confere a existência e o acesso do usuário à atividade: erro aqui volta ao modelo, e nenhuma proposta nasce.
         const atividade = (await this.atividadeService.recuperar({ id: entrada.atividadeId }, usuarioAtivo)).dados;
         if (!atividade) throw new BusinessException('Atividade não encontrada');
-        if (!temPermissaoDeGestor(usuarioAtivo.tipo) && atividade.usuarioId !== usuarioAtivo.sub) {
+        if (!podeEditarAtividadeDeOutro(usuarioAtivo.tipo) && atividade.usuarioId !== usuarioAtivo.sub) {
             throw new BusinessException('Só o dono da atividade ou o gestor exclui a atividade.');
         }
         if (await this.atividadeRepositorio.possuiExecucao({ id: atividade.id })) {

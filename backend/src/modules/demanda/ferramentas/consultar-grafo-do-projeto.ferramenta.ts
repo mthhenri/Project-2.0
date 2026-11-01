@@ -18,7 +18,7 @@ export class ConsultarGrafoDoProjetoFerramenta extends FerramentaIa<GrafoDoProje
         'Devolve o grafo de demandas de um projeto, resumido: cada demanda com o pai na hierarquia, se é de estrutura, o status, as horas estimadas e executadas e se já tem descrição, ' +
     'e as conexões entre demandas. Use para entender como o projeto está organizado antes de sugerir um lugar ou uma conexão.';
     readonly tipo = 'LEITURA' as const;
-    readonly permissao = 'GESTOR' as const;
+    readonly permissao = 'AUXILIAR' as const;
     readonly classeDeEntrada = GrafoDoProjetoConsultarDto;
 
     constructor(private readonly demandaService: DemandaService) {

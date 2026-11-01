@@ -2,15 +2,16 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { rotasPorNome } from '../../../testes/rotas-do-controller';
 import { ExecucaoController } from './execucao.controller';
+import { podeEditarExecucaoDeOutro } from '@project20/shared';
 
 // SYSTEM.SPEC.md §14: registrar manualmente e excluir execução são do gestor; iniciar, encerrar, alterar, listar e recuperar ficam abertos a
 // qualquer autenticado e a service decide por tipo e dono da atividade ("ver execuções de todos" e "editar execuções de outros" são do gestor).
 
 const rotas = () => rotasPorNome(ExecucaoController);
 
-test('rotas @GestorOnly: só registrar e excluir', () => {
-    const somenteGestor = Object.values(rotas()).filter((rota) => rota.gestorOnly).map((rota) => rota.nome).sort();
-    assert.deepEqual(somenteGestor, ['excluir', 'registrar']);
+test('nenhuma rota é @GestorOnly; registrar e excluir exigem podeEditarExecucaoDeOutro', () => {
+    assert.deepEqual(Object.values(rotas()).filter((rota) => rota.gestorOnly), []);
+    for (const nome of ['excluir', 'registrar']) assert.equal(rotas()[nome].permissao, podeEditarExecucaoDeOutro, nome);
 });
 
 test('iniciar, encerrar, alterar, listar, recuperar e ativa ficam abertos: a service decide por tipo e dono', () => {

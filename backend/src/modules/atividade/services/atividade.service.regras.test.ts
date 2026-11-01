@@ -11,6 +11,7 @@ import { UnauthorizedAccessException } from '../../../core/exceptions/unauthoriz
 
 const GESTOR = { sub: 1, login: 'g', tipo: TipoUsuarioEnum.GESTOR } as never;
 const ADMINISTRADOR = { sub: 2, login: 'a', tipo: TipoUsuarioEnum.ADMINISTRADOR } as never;
+const AUXILIAR = { sub: 5, login: 'x', tipo: TipoUsuarioEnum.AUXILIAR } as never;
 const DESENVOLVEDOR = { sub: 3, login: 'd', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 const OUTRO_DESENVOLVEDOR = { sub: 4, login: 'o', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
@@ -84,6 +85,12 @@ test('criar: gestor e administrador não precisam de vínculo com a demanda e po
     }
 });
 
+test('criar: auxiliar não precisa de vínculo com a demanda, mas só cria para si (o dono pedido é ignorado)', async () => {
+    const repo = repositorio({ validarAcessoDemanda: async () => false });
+    await criarServico(repo, tagExistente, demandaExistente).criar({ ...DADOS_CRIAR, usuarioId: 55 }, AUXILIAR);
+    assert.equal((repo.gravacoes[0].argumento as { usuarioId: number }).usuarioId, 5);
+});
+
 test('criar: gestor sem dono informado é o dono da atividade', async () => {
     const repo = repositorio();
     await criarServico(repo, tagExistente, demandaExistente).criar(DADOS_CRIAR, GESTOR);
@@ -121,8 +128,8 @@ test('criar: tag inexistente é 404 e as tags não são gravadas', async () => {
 // Listar
 // ---------------------------------------------------------------------------
 
-test('listar: gestor e administrador veem as atividades de todos, com o filtro de executor que pedirem', async () => {
-    for (const usuario of [GESTOR, ADMINISTRADOR]) {
+test('listar: auxiliar, gestor e administrador veem as atividades de todos, com o filtro de executor que pedirem', async () => {
+    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) {
         let recebido: unknown;
         const repo = repositorio({ listar: async (filtros: unknown) => { recebido = filtros; return { itens: [], total: 0 }; } });
         await criarServico(repo).listar({ usuarioId: 55 }, usuario);
@@ -215,8 +222,8 @@ test('alterar: o dono altera mesmo sem vínculo com a demanda; o membro altera a
     assert.equal(membro.gravacoes.length, 1);
 });
 
-test('alterar: gestor e administrador alteram qualquer atividade', async () => {
-    for (const usuario of [GESTOR, ADMINISTRADOR]) {
+test('alterar: auxiliar, gestor e administrador alteram qualquer atividade', async () => {
+    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) {
         const repo = repositorio({ validarAcessoDemanda: async () => false });
         await criarServico(repo).alterar({ id: 10, nome: 'X' }, usuario);
         assert.equal(repo.gravacoes.length, 1);
@@ -279,6 +286,18 @@ test('excluir: o dono (desenvolvedor) exclui a própria atividade; quem não é 
     assert.equal(gravou(outroExclui), false);
 });
 
+test('excluir: o auxiliar exclui a atividade de outra pessoa (menu da linha); o outro desenvolvedor segue recusado', async () => {
+    const repo = repositorio();
+    await criarServico(repo).excluir({ id: 10 }, AUXILIAR);
+    assert.equal(repo.gravacoes.length, 1);
+});
+
+test('recuperar e listarTags: o auxiliar vê atividade de qualquer demanda sem vínculo', async () => {
+    const repo = repositorio({ validarAcessoDemanda: async () => false });
+    await criarServico(repo).recuperar({ id: 10 }, AUXILIAR);
+    await criarServico(repo).listarTags({ id: 10 }, AUXILIAR);
+});
+
 // ---------------------------------------------------------------------------
 // Tags
 // ---------------------------------------------------------------------------
@@ -335,8 +354,8 @@ test('alterar demanda: o dono (desenvolvedor com acesso ao destino) muda a ativi
     assert.deepEqual(repo.gravacoes, [{ metodo: 'alterar', argumento: { id: 10, nome: undefined, status: undefined, prioridade: undefined, demandaId: 20 } }]);
 });
 
-test('alterar demanda: o gestor muda a atividade de outra pessoa, sem precisar de vínculo com o destino', async () => {
-    for (const gestor of [GESTOR, ADMINISTRADOR]) {
+test('alterar demanda: o auxiliar e o gestor mudam a atividade de outra pessoa, sem precisar de vínculo com o destino', async () => {
+    for (const gestor of [AUXILIAR, GESTOR, ADMINISTRADOR]) {
         const repo = repositorio({ validarAcessoDemanda: async () => false });
         await criarServico(repo, {}, demandaDeDestino()).alterar({ id: 10, demandaId: 20 }, gestor);
         assert.equal(repo.gravacoes.length, 1);

@@ -37,6 +37,8 @@ test('a aba do cliente é editada só por gestor e administrador; as outras, por
 test('plano de projeto: gestor e administrador por tipo, desenvolvedor só com acesso ao projeto', () => {
     assert.equal(podeAcessarPlano({ ...base, tipoUsuario: TipoUsuarioEnum.GESTOR }), true);
     assert.equal(podeAcessarPlano({ ...base, tipoUsuario: TipoUsuarioEnum.ADMINISTRADOR }), true);
+    assert.equal(podeAcessarPlano({ ...base, tipoUsuario: TipoUsuarioEnum.AUXILIAR }), true, 'auxiliar acessa o plano do projeto por tipo');
+    assert.equal(podeEditarAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, TipoUsuarioEnum.AUXILIAR), false, 'descrição do cliente segue sendo do gestor');
     assert.equal(podeAcessarPlano({ ...base, tipoUsuario: TipoUsuarioEnum.DESENVOLVEDOR }), false);
     assert.equal(podeAcessarPlano({ ...base, tipoUsuario: TipoUsuarioEnum.DESENVOLVEDOR, temAcessoAoProjeto: true }), true);
 });

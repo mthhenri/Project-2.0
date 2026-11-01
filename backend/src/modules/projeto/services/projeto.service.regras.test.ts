@@ -11,6 +11,7 @@ import { ResourceNotFoundException } from '../../../core/exceptions/resource-not
 const GESTOR = { sub: 1, login: 'g', tipo: TipoUsuarioEnum.GESTOR } as never;
 const ADMINISTRADOR = { sub: 2, login: 'a', tipo: TipoUsuarioEnum.ADMINISTRADOR } as never;
 const DESENVOLVEDOR = { sub: 3, login: 'd', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+const AUXILIAR = { sub: 6, login: 'x', tipo: TipoUsuarioEnum.AUXILIAR } as never;
 
 function criarServico(repositorio: Record<string, unknown>): ProjetoService {
     const servico = Object.create(ProjetoService.prototype) as Record<string, unknown>;
@@ -104,8 +105,8 @@ function repositorioDeListagem() {
     };
 }
 
-test('listar: gestor e administrador veem todos (listarTodos), sem filtrar por usuário', async () => {
-    for (const usuario of [GESTOR, ADMINISTRADOR]) {
+test('listar: auxiliar, gestor e administrador veem todos (listarTodos), sem filtrar por usuário', async () => {
+    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) {
         const repositorio = repositorioDeListagem();
         await criarServico(repositorio).listar({}, usuario);
         assert.deepEqual(repositorio.chamadas.map((chamada) => chamada.metodo), ['listarTodos']);
@@ -140,7 +141,7 @@ test('recuperar: projeto inexistente ou excluído lança ResourceNotFoundExcepti
 test('recuperar: gestor e administrador veem qualquer projeto sem consultar o acesso por demanda', async () => {
     let consultouAcesso = false;
     const servico = criarServico({ recuperar: async () => PROJETO, validarAcesso: async () => { consultouAcesso = true; return false; } });
-    for (const usuario of [GESTOR, ADMINISTRADOR]) assert.equal((await servico.recuperar({ id: 10 }, usuario)).dados?.id, 10);
+    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) assert.equal((await servico.recuperar({ id: 10 }, usuario)).dados?.id, 10);
     assert.equal(consultouAcesso, false);
 });
 

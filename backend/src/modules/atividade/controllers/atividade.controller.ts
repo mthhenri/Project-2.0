@@ -17,8 +17,9 @@ import {
     AtividadeListarDto,
     AtividadeAlterarDto,
     AtividadeTagsAtribuirDto,
+    podeEditarAtividadeDeOutro,
 } from '@project20/shared';
-import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
+import { ExigePermissao } from '../../autenticacao/decorators/exige-permissao.decorator';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 
@@ -87,9 +88,9 @@ export class AtividadeController {
     @ApiOperation({ summary: 'Excluir atividade via soft delete (somente gestor)' })
     @ApiResponse({ status: 200, description: 'Atividade excluída com sucesso' })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ApiResponse({ status: 404, description: 'Atividade não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
-    @GestorOnly()
+    @ExigePermissao(podeEditarAtividadeDeOutro)
     @Delete(':id')
     excluir(
         @Param('id', ParseIntPipe) id: number,
@@ -102,9 +103,9 @@ export class AtividadeController {
     @ApiResponse({ status: 200, description: 'Atividade restaurada com sucesso' })
     @ApiResponse({ status: 400, description: 'Conflito com um registro ativo ou dependência excluída', schema: { example: { sucesso: false, dados: null, mensagem: 'Registro ativo em conflito', erros: [] } } })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ApiResponse({ status: 404, description: 'Atividade não encontrada entre as excluídas', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
-    @GestorOnly()
+    @ExigePermissao(podeEditarAtividadeDeOutro)
     @Patch(':id/restaurar')
     restaurar(
         @Param('id', ParseIntPipe) id: number,

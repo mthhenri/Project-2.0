@@ -29,12 +29,12 @@ import {
     ReferenciaMensagemDiretaEnum,
     ReferenciaMensagemDto,
     StandardResponse,
-    TipoUsuarioEnum,
     TipoUsuarioStatusEnum,
     contemBlocoDeCodigo,
     montarConversaDiretaId,
     outroParticipanteDaConversaDireta,
     trechoDaMensagemDireta,
+    temVisibilidadeTotal,
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -189,7 +189,7 @@ export class MensagemDiretaService {
     /** As sugestões do `#`: demandas e atividades que **quem digita** pode referenciar, pelo nome (a mesma regra de acesso do envio). */
     async buscarReferencias(dto: MensagemDiretaReferenciaBuscarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaReferenciasBuscadasDto>> {
         const texto = dto.texto.trim();
-        const usuarioId = usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : null;
+        const usuarioId = !temVisibilidadeTotal(usuarioAtivo.tipo) ? usuarioAtivo.sub : null;
         const limite = LIMITE_DE_SUGESTOES_DE_REFERENCIA;
         const [demandas, atividades] = await Promise.all([
             this.demandaRepositorio.buscarPorNome({ texto, usuarioId, limite }),
@@ -361,7 +361,7 @@ export class MensagemDiretaService {
         referencia: ReferenciaMensagemDto,
         usuarioAtivo: JwtPayload,
     ): Promise<ReferenciaResolvida | null> {
-        const ehDesenvolvedor = usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR;
+        const ehDesenvolvedor = !temVisibilidadeTotal(usuarioAtivo.tipo);
         if (referencia.tipo === ReferenciaMensagemDiretaEnum.DEMANDA) {
             const demanda = await this.demandaRepositorio.recuperar({ id: referencia.id }, ehDesenvolvedor ? { usuarioId: usuarioAtivo.sub } : undefined);
             return demanda ? { nome: demanda.nome, situacao: demanda.status, projetoId: demanda.projetoId, demandaId: null, demandaNome: null } : null;

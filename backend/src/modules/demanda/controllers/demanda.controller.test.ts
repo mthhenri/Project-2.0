@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { rotasPorNome } from '../../../testes/rotas-do-controller';
 import { DemandaController } from './demanda.controller';
+import { podeEditarDemanda, temVisibilidadeTotal } from '@project20/shared';
 
 // SYSTEM.SPEC.md §14: excluir, restaurar, planejamento e conexões (criar e excluir) são do gestor; as demais rotas são abertas a
 // qualquer autenticado e a service decide pelo tipo e pela participação. A ordem das rotas importa: `atribuidas`, `executadas`, `grafo` e
@@ -9,9 +10,11 @@ import { DemandaController } from './demanda.controller';
 
 const rotas = () => rotasPorNome(DemandaController);
 
-test('rotas @GestorOnly: planejamento, excluir, restaurar, criar conexão e excluir conexão', () => {
+test('rotas @GestorOnly: só excluir e restaurar; planejamento e conexões têm a permissão por ação', () => {
     const somenteGestor = Object.values(rotas()).filter((rota) => rota.gestorOnly).map((rota) => rota.nome).sort();
-    assert.deepEqual(somenteGestor, ['criarConexao', 'excluir', 'excluirConexao', 'listarPlanejamento', 'restaurar'].sort());
+    assert.deepEqual(somenteGestor, ['excluir', 'restaurar']);
+    assert.equal(rotas().listarPlanejamento.permissao, temVisibilidadeTotal);
+    for (const nome of ['criarConexao', 'excluirConexao']) assert.equal(rotas()[nome].permissao, podeEditarDemanda, nome);
 });
 
 test('criar, alterar, tags e membros ficam abertos: a service decide por tipo e participação', () => {

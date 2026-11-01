@@ -15,8 +15,9 @@ import {
     AtividadeTagsAtribuidasDto,
     TagResumoDto,
     TipoDemandaStatusEnum,
-    TipoUsuarioEnum,
     temPermissaoDeGestor,
+    temVisibilidadeTotal,
+    podeEditarAtividadeDeOutro,
 } from '@project20/shared';
 import { StandardResponse, TipoAtividadePrioridadeEnum } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
@@ -54,7 +55,7 @@ export class AtividadeService {
                 ? (dto.usuarioId ?? usuarioAtivo.sub)
                 : usuarioAtivo.sub;
 
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
                 demandaId: dto.demandaId,
                 usuarioId: usuarioAtivo.sub,
@@ -110,7 +111,7 @@ export class AtividadeService {
         const itensPorPagina = filtros.itensPorPagina ?? 20;
 
         let filtrosEfetivos: AtividadeListarDto = filtros;
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const eMembroDaDemanda =
                 filtros.demandaId !== undefined &&
         (await this.atividadeRepositorio.validarAcessoDemanda({
@@ -167,7 +168,7 @@ export class AtividadeService {
             throw new ResourceNotFoundException('Atividade');
         }
 
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
                 demandaId: atividadeEncontrada.demandaId,
                 usuarioId: usuarioAtivo.sub,
@@ -198,7 +199,7 @@ export class AtividadeService {
             throw new ResourceNotFoundException('Atividade');
         }
 
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const eAutor = atividadeEncontrada.usuarioId === usuarioAtivo.sub;
             const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
                 demandaId: atividadeEncontrada.demandaId,
@@ -246,8 +247,8 @@ export class AtividadeService {
    * atividade e vão junto.
    */
     private async validarMudancaDeDemanda(demandaDestinoId: number, donoId: number, usuarioAtivo: JwtPayload): Promise<void> {
-        if (!temPermissaoDeGestor(usuarioAtivo.tipo) && donoId !== usuarioAtivo.sub) {
-            throw new UnauthorizedAccessException('Só o dono da atividade ou o gestor muda a atividade de demanda');
+        if (!podeEditarAtividadeDeOutro(usuarioAtivo.tipo) && donoId !== usuarioAtivo.sub) {
+            throw new UnauthorizedAccessException('Só o dono da atividade, o auxiliar ou o gestor muda a atividade de demanda');
         }
         const demandaDestino = await this.demandaRepositorio.recuperar({ id: demandaDestinoId });
         if (!demandaDestino) {
@@ -256,7 +257,7 @@ export class AtividadeService {
         if (demandaDestino.status === TipoDemandaStatusEnum.CONCLUIDA || demandaDestino.status === TipoDemandaStatusEnum.CANCELADA) {
             throw new BusinessException(`A demanda de destino está ${demandaDestino.status === TipoDemandaStatusEnum.CONCLUIDA ? 'concluída' : 'cancelada'}: escolha uma demanda em aberto`);
         }
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({ demandaId: demandaDestinoId, usuarioId: usuarioAtivo.sub });
             if (!temAcesso) {
                 throw new UnauthorizedAccessException('Usuário não tem acesso à demanda de destino');
@@ -265,7 +266,7 @@ export class AtividadeService {
     }
 
     /**
-   * Realiza soft delete da atividade. A rota é só do gestor (`@GestorOnly`); a regra também mora aqui porque a IA exclui pelo executor (task 230):
+   * Realiza soft delete da atividade. A rota é de quem edita atividade de outro (`@ExigePermissao`); a regra também mora aqui porque a IA exclui pelo executor (task 230):
    * gestor, ou o dono da atividade.
    */
     async excluir(dto: AtividadeRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<void>> {
@@ -273,8 +274,8 @@ export class AtividadeService {
         if (!atividadeEncontrada) {
             throw new ResourceNotFoundException('Atividade');
         }
-        if (!temPermissaoDeGestor(usuarioAtivo.tipo) && atividadeEncontrada.usuarioId !== usuarioAtivo.sub) {
-            throw new UnauthorizedAccessException('Só o dono da atividade ou o gestor exclui a atividade');
+        if (!podeEditarAtividadeDeOutro(usuarioAtivo.tipo) && atividadeEncontrada.usuarioId !== usuarioAtivo.sub) {
+            throw new UnauthorizedAccessException('Só o dono da atividade, o auxiliar ou o gestor exclui a atividade');
         }
 
         await this.atividadeRepositorio.excluir({ id: dto.id });
@@ -292,8 +293,8 @@ export class AtividadeService {
         if (!atividadeExcluida) {
             throw new ResourceNotFoundException('Atividade');
         }
-        if (!temPermissaoDeGestor(usuarioAtivo.tipo) && atividadeExcluida.usuarioId !== usuarioAtivo.sub) {
-            throw new UnauthorizedAccessException('Só o dono da atividade ou o gestor restaura a atividade');
+        if (!podeEditarAtividadeDeOutro(usuarioAtivo.tipo) && atividadeExcluida.usuarioId !== usuarioAtivo.sub) {
+            throw new UnauthorizedAccessException('Só o dono da atividade, o auxiliar ou o gestor restaura a atividade');
         }
 
         if (!atividadeExcluida.demandaAtiva) {
@@ -325,7 +326,7 @@ export class AtividadeService {
             throw new ResourceNotFoundException('Atividade');
         }
 
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const eAutor = atividadeEncontrada.usuarioId === usuarioAtivo.sub;
             const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
                 demandaId: atividadeEncontrada.demandaId,
@@ -369,7 +370,7 @@ export class AtividadeService {
             throw new ResourceNotFoundException('Atividade');
         }
 
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
                 demandaId: atividadeEncontrada.demandaId,
                 usuarioId: usuarioAtivo.sub,

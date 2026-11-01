@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DemandaDaFerramentaDto, DemandaGrafoNoDto, DemandasDoProjetoListadasDto, DemandasDoProjetoListarDto, TipoUsuarioEnum } from '@project20/shared';
+import { DemandaDaFerramentaDto, DemandaGrafoNoDto, DemandasDoProjetoListadasDto, DemandasDoProjetoListarDto, temVisibilidadeTotal } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { FerramentaIa } from '../../ferramenta-ia/domain/ferramenta-ia';
 import { DemandaService } from '../services/demanda.service';
@@ -29,7 +29,7 @@ export class ListarDemandasDoProjetoFerramenta extends FerramentaIa<DemandasDoPr
 
     async executar(entrada: DemandasDoProjetoListarDto, usuarioAtivo: JwtPayload): Promise<DemandasDoProjetoListadasDto> {
         const listadas =
-            usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR
+            !temVisibilidadeTotal(usuarioAtivo.tipo)
                 ? await this.listarDoProjetoInteiro(entrada.projetoId, usuarioAtivo)
                 : ((await this.demandaService.listar({ projetoId: entrada.projetoId, allRows: true }, usuarioAtivo)).dados?.itens ?? []).map(
                     (demanda): DemandaDaFerramentaDto => ({ id: demanda.id, nome: demanda.nome, caminho: demanda.caminho, isEstrutural: demanda.isEstrutural, status: demanda.status }),

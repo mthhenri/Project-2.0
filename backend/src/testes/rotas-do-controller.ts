@@ -1,5 +1,6 @@
 import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { RequestMethod } from '@nestjs/common';
+import { CHAVE_PERMISSAO_EXIGIDA, PermissaoDeAcao } from '../modules/autenticacao/decorators/exige-permissao.decorator';
 
 export interface RotaDoController {
     /** Nome do método da classe (`criar`, `listar`...). */
@@ -11,6 +12,8 @@ export interface RotaDoController {
     publica: boolean;
     gestorOnly: boolean;
     administradorOnly: boolean;
+    /** A permissão por ação de `@ExigePermissao` (a função do `shared`), ou `undefined`. */
+    permissao: PermissaoDeAcao | undefined;
 }
 
 /**
@@ -34,6 +37,7 @@ export function listarRotasDoController(controller: new (...argumentos: never[])
                 publica: marca('isPublic'),
                 gestorOnly: marca('gestorOnly'),
                 administradorOnly: marca('administradorOnly'),
+                permissao: (Reflect.getMetadata(CHAVE_PERMISSAO_EXIGIDA, manipulador) ?? Reflect.getMetadata(CHAVE_PERMISSAO_EXIGIDA, controller)) as PermissaoDeAcao | undefined,
             };
         });
 }

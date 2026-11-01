@@ -1,6 +1,6 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../autenticacao/guards/jwt-auth.guard';
-import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
+import { ExigePermissao } from '../../autenticacao/decorators/exige-permissao.decorator';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { PontoService } from '../services/ponto.service';
@@ -8,6 +8,7 @@ import {
     PontoConsultarDto,
     PontoTodosConsultarDto,
     PontoMensalConsultarDto,
+    podeVerExecucaoEPontoDeOutro,
 } from '@project20/shared';
 
 @Controller('ponto')
@@ -21,7 +22,7 @@ export class PontoController {
     }
 
     @Get('todos')
-    @GestorOnly()
+    @ExigePermissao(podeVerExecucaoEPontoDeOutro)
     consultarTodos(@Query() dto: PontoTodosConsultarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
         return this.pontoService.consultarTodos(dto, usuarioAtivo);
     }

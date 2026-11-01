@@ -90,7 +90,7 @@ function ferramentaDeProposta(opcoes: { jaExiste?: boolean; ciclo?: boolean } = 
 
 test('propor conectar só cria a proposta, com os nomes e o sentido único por padrão (ferramenta de gestor)', async () => {
     const { ferramenta, propostas } = ferramentaDeProposta();
-    assert.equal(ferramenta.permissao, 'GESTOR');
+    assert.equal(ferramenta.permissao, 'AUXILIAR');
     const resultado = (await ferramenta.executar({ demandaOrigemId: 3, demandaDestinoId: 5, motivo: 'O relatório lê o cadastro' }, GESTOR)) as { propostaId: number };
     assert.equal(resultado.propostaId, 80);
     assert.equal(propostas[0].tipo, TipoPropostaIaEnum.CONECTAR_DEMANDA);
@@ -142,7 +142,7 @@ test('sugerir é leitura de gestor: analítico, prompt da conexão, só sugestõ
     ]);
     const { ferramenta, geradas, tipos } = ferramentaDeSugestao(resposta, [{ id: 3, nome: 'D3' }, { id: 4, nome: 'Cadastros', estrutural: true }, { id: 5, nome: 'D5' }, { id: 6, nome: 'D6' }]);
     assert.equal(ferramenta.tipo, 'LEITURA');
-    assert.equal(ferramenta.permissao, 'GESTOR');
+    assert.equal(ferramenta.permissao, 'AUXILIAR');
     const resultado = await ferramenta.executar({ demandaId: 3 }, GESTOR);
     assert.equal(geradas[0].nivel, NivelIaEnum.ANALITICO);
     assert.deepEqual(tipos, [TipoPromptEnum.CONEXAO_DEMANDA]);

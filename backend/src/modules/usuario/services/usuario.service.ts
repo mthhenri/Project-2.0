@@ -97,7 +97,7 @@ export class UsuarioService {
 
     /** Recupera usuário por ID. Desenvolvedor só pode ver o próprio perfil. */
     async recuperar(dto: UsuarioRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioRecuperadoDto>> {
-        if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR && usuarioAtivo.sub !== dto.id) {
+        if (!temPermissaoDeGestor(usuarioAtivo.tipo) && usuarioAtivo.sub !== dto.id) {
             throw new UnauthorizedAccessException('Desenvolvedor pode acessar apenas o próprio perfil');
         }
 
@@ -135,9 +135,12 @@ export class UsuarioService {
             this.validarPermissaoDeAdministrador(usuarioAtivo);
         }
 
+        const eGestorSemSerAdministrador =
+            temPermissaoDeGestor(usuarioEncontrado.tipo) && !temPermissaoDeAdministrador(usuarioEncontrado.tipo);
         const estaRebaixandoGestor =
-            usuarioEncontrado.tipo === TipoUsuarioEnum.GESTOR &&
-      dto.tipo === TipoUsuarioEnum.DESENVOLVEDOR;
+            eGestorSemSerAdministrador &&
+      dto.tipo !== undefined &&
+      !temPermissaoDeGestor(dto.tipo);
 
         if (estaRebaixandoGestor) {
             if (usuarioAtivo.sub === dto.id) {

@@ -117,6 +117,14 @@ test('alterar: gestor não pode rebaixar a si mesmo', async () => {
     );
 });
 
+test('alterar: gestor também não pode se tornar auxiliar (é rebaixar), mas pode tornar um desenvolvedor auxiliar', async () => {
+    const proprio = criarServico(criarRepositorioDeUsuarios({ ...GESTOR_ATIVO, id: 9 }, [1]));
+    await assert.rejects(() => proprio.alterar({ id: 9, tipo: TipoUsuarioEnum.AUXILIAR }, GESTOR_LOGADO), BusinessException);
+    const repositorio = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, []);
+    await criarServico(repositorio).alterar({ id: 3, tipo: TipoUsuarioEnum.AUXILIAR }, GESTOR_LOGADO);
+    assert.deepEqual(repositorio.chamadas, ['alterar']);
+});
+
 test('alterar: inativar um desenvolvedor nunca depende de administradores', async () => {
     const repositorio = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, []);
     const servico = criarServico(repositorio);

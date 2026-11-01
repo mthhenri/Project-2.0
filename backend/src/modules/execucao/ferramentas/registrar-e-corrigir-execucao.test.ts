@@ -59,7 +59,7 @@ test('propor registrar recusa futuro, fim antes do início e sobreposição, sem
     const sobreposta = criarFerramentas({ sobreposicao: true });
     await assert.rejects(sobreposta.registrar.executar({ ...base, horaInicio: '14:00', horaFim: '16:00' }, GESTOR), BusinessException);
     assert.equal(normal.propostas.length + sobreposta.propostas.length, 0);
-    assert.equal(sobreposta.registrar.permissao, 'GESTOR');
+    assert.equal(sobreposta.registrar.permissao, 'AUXILIAR');
 });
 
 test('propor corrigir muda só o fim, no dia da execução, e guarda o período de antes', async () => {
@@ -130,6 +130,9 @@ test('registrar: só o gestor executa e desfaz; o registro passa pela service co
     await executor.desfazer(resultado, GESTOR);
     assert.equal(chamadas[1], 'excluir:100');
     await assert.rejects(executor.desfazer(resultado, DESENVOLVEDOR), UnauthorizedAccessException);
+    const auxiliar = { sub: 6, login: 'x', tipo: TipoUsuarioEnum.AUXILIAR } as never;
+    await executor.executar(dados, auxiliar);
+    assert.equal(chamadas.length, 3, 'o auxiliar registra execução como o gestor');
 });
 
 test('corrigir: altera pela service, guarda o antes e o desfazer devolve período e descrição', async () => {

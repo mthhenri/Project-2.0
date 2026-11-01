@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { TagService } from '../services/tag.service';
-import { TagCriarDto, TagAlterarDto } from '@project20/shared';
-import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
+import { TagCriarDto, TagAlterarDto, podeGerenciarTag } from '@project20/shared';
+import { ExigePermissao } from '../../autenticacao/decorators/exige-permissao.decorator';
 
 const TAG_EXEMPLO = { id: 1, nome: 'Backend', cor: '#6366f1', createdDate: '2026-06-13T12:00:00.000Z' };
 
@@ -30,8 +30,8 @@ export class TagController {
     @ApiResponse({ status: 201, description: 'Tag criada com sucesso', schema: { example: { sucesso: true, dados: TAG_EXEMPLO, mensagem: 'Tag criada com sucesso' } } })
     @ApiResponse({ status: 400, description: 'Nome já em uso ou dados inválidos', schema: { example: { sucesso: false, dados: null, mensagem: 'Já existe uma tag com esse nome', erros: ['Já existe uma tag com esse nome'] } } })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @GestorOnly()
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ExigePermissao(podeGerenciarTag)
     @Post()
     criar(@Body() dto: TagCriarDto) {
         return this.tagService.criar(dto);
@@ -58,9 +58,9 @@ export class TagController {
     @ApiResponse({ status: 200, description: 'Tag alterada com sucesso', schema: { example: { sucesso: true, dados: { ...TAG_EXEMPLO, nome: 'Frontend' }, mensagem: 'Tag alterada com sucesso' } } })
     @ApiResponse({ status: 400, description: 'Dados inválidos ou nome já em uso', schema: { example: { sucesso: false, dados: null, mensagem: 'Já existe uma tag com esse nome', erros: ['Já existe uma tag com esse nome'] } } })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ApiResponse({ status: 404, description: 'Tag não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
-    @GestorOnly()
+    @ExigePermissao(podeGerenciarTag)
     @Put(':id')
     alterar(
         @Param('id', ParseIntPipe) id: number,
@@ -72,9 +72,9 @@ export class TagController {
     @ApiOperation({ summary: 'Excluir tag via soft delete (somente gestor)' })
     @ApiResponse({ status: 200, description: 'Tag excluída com sucesso', schema: { example: { sucesso: true, dados: null, mensagem: 'Tag excluída com sucesso' } } })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ApiResponse({ status: 404, description: 'Tag não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
-    @GestorOnly()
+    @ExigePermissao(podeGerenciarTag)
     @Delete(':id')
     excluir(@Param('id', ParseIntPipe) id: number) {
         return this.tagService.excluir({ id });
@@ -84,9 +84,9 @@ export class TagController {
     @ApiResponse({ status: 200, description: 'Tag restaurada com sucesso' })
     @ApiResponse({ status: 400, description: 'Conflito com um registro ativo ou dependência excluída', schema: { example: { sucesso: false, dados: null, mensagem: 'Registro ativo em conflito', erros: [] } } })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-    @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ApiResponse({ status: 404, description: 'Tag não encontrada entre as excluídas', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
-    @GestorOnly()
+    @ExigePermissao(podeGerenciarTag)
     @Patch(':id/restaurar')
     restaurar(@Param('id', ParseIntPipe) id: number) {
         return this.tagService.restaurar({ id });

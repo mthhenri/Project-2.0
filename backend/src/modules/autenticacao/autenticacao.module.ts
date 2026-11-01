@@ -10,6 +10,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GestorGuard } from './guards/gestor.guard';
 import { AdministradorGuard } from './guards/administrador.guard';
+import { PermissaoGuard } from './guards/permissao.guard';
 
 @Module({
     imports: [
@@ -29,6 +30,7 @@ import { AdministradorGuard } from './guards/administrador.guard';
         JwtStrategy,
         { provide: APP_GUARD, useClass: JwtAuthGuard },
         { provide: APP_GUARD, useClass: GestorGuard },
+        { provide: APP_GUARD, useClass: PermissaoGuard },
         { provide: APP_GUARD, useClass: AdministradorGuard },
     ],
 })
