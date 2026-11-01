@@ -143,9 +143,11 @@ componentes (`docs/context/IDEAS.md` I-001). Para qualquer tela nova ou alterada
 
 1. Escolha e registre uma tela já existente e aprovada como análogo (shell, densidade, hierarquia,
    controles, estados) e reaproveite os componentes dela antes de criar variação.
-2. Rode a aplicação real (skill `verify`) e verifique no mínimo `1920×1080` (desktop), `1366×768` (notebook) e `1080×1920` (desktop vertical);
-   mobile não é verificado neste projeto. Além do que
-   a spec exigir, percorrendo os estados relevantes — vazio, carregando, cheio, erro.
+2. Rode a aplicação real (skill `verify`) em **todos os formatos de desktop** que o autor usa, começando pelo
+   principal: `1920×1080` (desktop), `1366×768` (notebook), `1080×1920` (monitor em pé), `720×1280` (HD vertical)
+   e `960×1080` (tela dividida: metade do desktop). Mobile não é verificado neste projeto. Além do que
+   a spec exigir, percorrendo os estados relevantes — vazio, carregando, cheio, erro — e os temas claro e escuro.
+   Detalhes e armadilhas em `.agents/skills/verify/SKILL.md`.
 3. Compare a tela renderizada com o análogo; corrija divergências **antes** de apresentar ao autor.
 
 Relato ou screenshot de subagente não encerra o gate; o agente principal inspeciona pessoalmente.

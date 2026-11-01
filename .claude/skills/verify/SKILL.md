@@ -45,13 +45,17 @@ npm run frontend:dev              # SPA em http://localhost:4200, com proxy /api
 
 ## Viewports padrão
 
-Nunca a janela padrão do navegador. Tamanhos fixos (sugestão mínima; a spec pode exigir mais):
+Nunca a janela padrão do navegador. O sistema é usado em vários formatos de desktop, e **todos** entram na verificação (a spec pode exigir mais). Comece pelo desktop, que é o principal, e percorra os outros com os mesmos estados e nos dois temas:
 
-| Perfil | Tamanho |
-|---|---|
-| Notebook | `1366×768` |
-| Desktop vertical | `1080×1920` |
-| Desktop | `1920×1080` |
+| Perfil | Tamanho | Observação |
+|---|---|---|
+| Desktop | `1920×1080` | principal; comece por ele |
+| Notebook | `1366×768` | |
+| Monitor em pé (desktop vertical) | `1080×1920` | |
+| HD vertical | `720×1280` | o "HD" em pé; a barra lateral recolhe |
+| Tela dividida | `960×1080` | metade do desktop com duas janelas lado a lado |
+
+Mobile não é verificado.
 
 ```js
 await browser.newContext({ viewport: { width: 1366, height: 768 } });
