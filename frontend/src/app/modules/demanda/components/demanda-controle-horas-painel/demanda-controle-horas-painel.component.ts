@@ -218,7 +218,7 @@ export class DemandaControleHorasPainelComponent {
                 aoMembros:    (id) => this.demandaMembrosSolicitados.emit(id),
                 aoDescricao:  (id, campo) => this.demandaDescricaoSolicitada.emit({ id, campo }),
             },
-            this.sessao.eGestor(),
+            this.sessao.podeEditarDemanda(),
         );
         menu.show(evento);
     }

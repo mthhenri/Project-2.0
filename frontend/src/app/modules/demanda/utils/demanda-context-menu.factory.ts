@@ -37,14 +37,14 @@ function estiloIconeDescricao(tokenCor: string, preenchido: boolean): { [klass: 
 
 /**
  * Monta o menu de contexto de uma demanda, único entre a árvore (lista) e a visão de
- * Planejamento. Editar e Membros são gestor-only; Tags fica para todos (o desenvolvedor só
+ * Planejamento. Editar e Membros são de quem edita demanda (auxiliar, gestor e administrador); Tags fica para todos (o desenvolvedor só
  * grava nas demandas de que é membro: quem recusa é o backend); as descrições ficam sempre
  * disponíveis (a edição em si valida a membresia no dialog).
  */
 export function construirMenuDemanda(
     alvo: DemandaMenuAlvo,
     acoes: DemandaMenuAcoes,
-    eGestor: boolean,
+    podeEditar: boolean,
 ): MenuItem[] {
     const itens: MenuItem[] = [
         {
@@ -54,9 +54,9 @@ export function construirMenuDemanda(
         },
     ];
 
-    // Editar é gestor-only na árvore; o desenvolvedor edita pela dialog de detalhe,
+    // Editar é só de quem edita demanda na árvore; o desenvolvedor edita pela dialog de detalhe,
     // onde a membresia da demanda (podeEditar) é conhecida.
-    if (eGestor) {
+    if (podeEditar) {
         itens.push({
             label: 'Editar',
             icon: 'pi pi-pencil',
@@ -80,8 +80,8 @@ export function construirMenuDemanda(
             command: () => acoes.aoTags(alvo.id),
         },
     );
-    // Membros é gestor-only na árvore (o desenvolvedor entra e sai pelo próprio botão na demanda).
-    if (eGestor) {
+    // Membros é só de quem edita demanda na árvore (o desenvolvedor entra e sai pelo próprio botão na demanda).
+    if (podeEditar) {
         itens.push({
             label: 'Membros',
             icon: 'pi pi-users',

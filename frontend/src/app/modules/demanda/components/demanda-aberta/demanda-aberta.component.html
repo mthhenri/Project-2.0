@@ -29,7 +29,7 @@
                     <span class="demanda-aberta__caminho-raiz">Raiz do projeto</span>
                 }
             </nav>
-            @if (sessao.eGestor()) {
+            @if (sessao.podeEditarDemanda()) {
                 <p-button
                     label="Editar"
                     icon="pi pi-pencil"
@@ -78,7 +78,7 @@
                 }
             } @else {
                 <h2 class="demanda-aberta__titulo">{{ dadosDemanda.nome }}</h2>
-                @if (sessao.eGestor()) {
+                @if (sessao.podeEditarDemanda()) {
                     <button
                         type="button"
                         class="demanda-aberta__lapis"
@@ -97,7 +97,7 @@
             <span class="demanda-aberta__status">
                 <app-demanda-status
                     [status]="dadosDemanda.status"
-                    [editavel]="sessao.eGestor()"
+                    [editavel]="sessao.podeEditarDemanda()"
                     (statusEscolhido)="aoStatusEscolhido($event)"
                 />
                 {{ rotuloStatus[dadosDemanda.status] }}
@@ -112,7 +112,7 @@
                 [demandaId]="dadosDemanda.id"
                 [horasEstimadas]="dadosDemanda.horasEstimadas"
                 [previsaoFimData]="dadosDemanda.previsaoFimData"
-                [editavel]="sessao.eGestor()"
+                [editavel]="sessao.podeEditarDemanda()"
                 (alterada)="aoMetricaAlterada($event)"
             />
         </div>
@@ -145,7 +145,7 @@
             <app-demanda-tags-cabecalho
                 [demandaId]="dadosDemanda.id"
                 [tagsDisponiveis]="tagsDisponiveis()"
-                [editavel]="sessao.eGestor()"
+                [editavel]="sessao.podeEditarDemanda()"
                 [(tags)]="tagsDaDemanda"
                 (tagsAlteradas)="aoTagsAlteradas($event)"
             />

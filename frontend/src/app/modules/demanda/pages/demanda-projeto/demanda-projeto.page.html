@@ -46,7 +46,7 @@
         </div>
 
         <div class="demanda-projeto__header-direita">
-            @if (sessao.eGestor() && projetoId()) {
+            @if (sessao.podeEditarDemanda() && projetoId()) {
                 <p-button
                     label="Nova Demanda"
                     icon="pi pi-plus"
@@ -133,7 +133,7 @@
                             <p class="demanda-projeto__vazio-texto">
                                 Este projeto ainda não tem demandas.
                             </p>
-                            @if (sessao.eGestor()) {
+                            @if (sessao.podeEditarDemanda()) {
                                 <p-button
                                     label="Nova Demanda"
                                     icon="pi pi-plus"

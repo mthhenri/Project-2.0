@@ -16,6 +16,8 @@ export interface ItemNavegacao {
     rotaLink: string;
     tecla: string;
     somenteGestor: boolean;
+    /** Com `somenteGestor`, o auxiliar também vê o item (Projetos, Tags). */
+    visivelAoAuxiliar?: boolean;
     /** Só administrador vê o item (a rota correspondente usa `administradorGuard`). */
     somenteAdministrador?: boolean;
     /** Grupo do item. Sem grupo, o item fica sozinho no fundo da barra (a Modelagem: não é tela do dia a dia). */
@@ -35,10 +37,10 @@ export const ITENS_NAVEGACAO: readonly ItemNavegacao[] = [
     { label: 'Execuções',  icone: 'pi pi-play',         rotaLink: '/execucao',   tecla: 'e', somenteGestor: false, grupo: 'DIA_A_DIA' },
     { label: 'Ponto',      icone: 'pi pi-clock',        rotaLink: '/ponto',      tecla: 'p', somenteGestor: false, grupo: 'DIA_A_DIA' },
     { label: 'Documentações', icone: 'pi pi-book',      rotaLink: '/documentacao', tecla: 'o', somenteGestor: false, grupo: 'DIA_A_DIA' },
-    { label: 'Projetos',   icone: 'pi pi-folder',       rotaLink: '/projeto',    tecla: 'j', somenteGestor: true,  grupo: 'PROJETOS' },
+    { label: 'Projetos',   icone: 'pi pi-folder',       rotaLink: '/projeto',    tecla: 'j', somenteGestor: true, visivelAoAuxiliar: true,  grupo: 'PROJETOS' },
     { label: 'Demandas',   icone: 'pi pi-sitemap',      rotaLink: '/demanda',    tecla: 'd', somenteGestor: false, grupo: 'PROJETOS' },
     { label: 'Calendário', icone: 'pi pi-calendar',     rotaLink: '/calendario', tecla: 'c', somenteGestor: true,  grupo: 'GESTAO' },
-    { label: 'Tags',       icone: 'pi pi-tag',          rotaLink: '/tag',        tecla: 't', somenteGestor: true,  grupo: 'GESTAO' },
+    { label: 'Tags',       icone: 'pi pi-tag',          rotaLink: '/tag',        tecla: 't', somenteGestor: true, visivelAoAuxiliar: true,  grupo: 'GESTAO' },
     { label: 'Usuários',   icone: 'pi pi-users',        rotaLink: '/usuario',    tecla: 'u', somenteGestor: true,  grupo: 'GESTAO' },
     { label: 'Supervisão do chat', icone: 'pi pi-eye', rotaLink: '/supervisao-chat', tecla: 's', somenteGestor: true, grupo: 'IA' },
     { label: 'IA Config.', icone: 'pi pi-sparkles',     rotaLink: '/configuracao-ia', tecla: 'i', somenteGestor: true, somenteAdministrador: true, grupo: 'IA' },

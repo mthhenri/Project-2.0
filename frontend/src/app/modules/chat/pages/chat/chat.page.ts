@@ -198,7 +198,7 @@ export class ChatPage implements OnInit {
     readonly podeSugerir = computed(() => this.modo() === ModoDoChatEnum.PERGUNTAS && !this.enviando() && !this.iaDesligada() && !this.somenteLeitura() && this.textoDigitado().trim() === '');
     /** O usuário resolveu um cartão (confirmou, ajustou, recusou ou desfez): a IA não responde a esse clique, então os botões seguem o que acabou de acontecer. */
     aoResolverProposta(proposta: PropostaIaResumoDto): void {
-        const proximos = sugestoesAposProposta(proposta.tipo, proposta.status, this.sessao.eGestor());
+        const proximos = sugestoesAposProposta(proposta.tipo, proposta.status, this.sessao.podeEditarDemanda());
         // Recusar, desfazer ou expirar não abrem um próximo passo: ficam os botões que já estavam.
         if (proximos.length > 0) this.sugestoesDaIa.set(proximos);
         // Aceitar ou desfazer uma alteração de trecho muda o documento: ele se relê.

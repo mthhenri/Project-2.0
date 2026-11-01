@@ -146,6 +146,15 @@ describe('PontoPage: gestor, modo "todos hoje"', () => {
         expect(montado.componente.usuarios().map((usuario) => usuario.nomeCompleto)).toEqual(['Ana Dev', 'Beto Dev']);
     });
 
+    it('o auxiliar abre na equipe de hoje e escolhe a pessoa, mas não vê Justificar nem Imprimir', async () => {
+        const montado = await montarPagina(TipoUsuarioEnum.AUXILIAR);
+        await carregarTodos(montado, []);
+        expect(montado.elemento.querySelector('p-select')).not.toBeNull();
+        expect(botaoPorTexto(montado, 'Justificar')).toBeUndefined();
+        expect(botaoPorTexto(montado, 'Imprimir')).toBeUndefined();
+        expect(montado.componente.usuarios().map((usuario) => usuario.nomeCompleto)).toEqual(['Ana Dev', 'Beto Dev']);
+    });
+
     it('clicar no nome de uma pessoa abre o mês dela (mensal com o usuarioId)', async () => {
         const montado = await montarPagina(TipoUsuarioEnum.GESTOR);
         await carregarTodos(montado, [pontoDiario(3, 'Ana Dev', [execucao(1)])]);

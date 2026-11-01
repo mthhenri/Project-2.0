@@ -3,7 +3,7 @@
         <h1 class="ponto__titulo">Ponto</h1>
 
         <form [formGroup]="formularioFiltros" class="ponto__filtros">
-            @if (sessao.eGestor()) {
+            @if (sessao.podeVerExecucaoEPontoDeOutro()) {
                 <p-select
                     formControlName="usuarioId"
                     [options]="usuarios()"
@@ -59,16 +59,18 @@
             </div>
 
             <div class="ponto__acoes">
-                <p-button
-                    label="Imprimir"
-                    icon="pi pi-print"
-                    severity="secondary"
-                    [outlined]="true"
-                    [disabled]="modo() !== 'mensal' || !pontoMensal()"
-                    pTooltip="Imprimir espelho do mês"
-                    tooltipPosition="top"
-                    (onClick)="impressao.imprimir()"
-                />
+                @if (!sessao.eAuxiliar()) {
+                    <p-button
+                        label="Imprimir"
+                        icon="pi pi-print"
+                        severity="secondary"
+                        [outlined]="true"
+                        [disabled]="modo() !== 'mensal' || !pontoMensal()"
+                        pTooltip="Imprimir espelho do mês"
+                        tooltipPosition="top"
+                        (onClick)="impressao.imprimir()"
+                    />
+                }
                 @if (sessao.eGestor()) {
                     <p-button
                         label="Justificar"
@@ -165,7 +167,7 @@
                 <div class="ponto__mes-titulo">
                     {{ nomeMes(mensal.mes) }} de {{ mensal.ano }}
                     <span class="ponto__mes-info">· {{ mensal.diasUteisMes }} dias úteis</span>
-                    @if (sessao.eGestor()) {
+                    @if (sessao.podeVerExecucaoEPontoDeOutro()) {
                         <span class="ponto__mes-info">· {{ mensal.nomeUsuario }}</span>
                     }
                 </div>

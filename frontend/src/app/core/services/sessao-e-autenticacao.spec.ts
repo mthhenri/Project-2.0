@@ -46,6 +46,19 @@ describe('UsuarioSessaoService', () => {
         }
     });
 
+    it('auxiliar: não é gestor nem administrador, mas tem as permissões por ação de quem conduz o trabalho', () => {
+        const sessao = TestBed.inject(UsuarioSessaoService);
+        sessao.definirUsuario(criarUsuarioTeste(TipoUsuarioEnum.AUXILIAR));
+        expect([sessao.eAuxiliar(), sessao.eGestor(), sessao.eAdministrador()]).toEqual([true, false, false]);
+        expect([
+            sessao.temVisaoTotal(), sessao.podeEditarDemanda(), sessao.podeAtribuirMembroOuTag(), sessao.podeEditarAtividadeDeOutro(),
+            sessao.podeConduzirExecucaoDeOutro(), sessao.podeVerExecucaoEPontoDeOutro(), sessao.podeEditarExecucaoDeOutro(), sessao.podeGerenciarTag(),
+        ]).toEqual(Array(8).fill(true));
+        sessao.definirUsuario(criarUsuarioTeste(TipoUsuarioEnum.DESENVOLVEDOR));
+        expect(sessao.eAuxiliar()).toBe(false);
+        expect(sessao.temVisaoTotal() || sessao.podeEditarDemanda() || sessao.podeGerenciarTag()).toBe(false);
+    });
+
     it('restaura a sessão salva ao ser criado', () => {
         localStorage.setItem('usuario_sessao', JSON.stringify(criarUsuarioTeste(TipoUsuarioEnum.ADMINISTRADOR)));
         expect(TestBed.inject(UsuarioSessaoService).eAdministrador()).toBe(true);

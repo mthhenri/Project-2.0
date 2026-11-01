@@ -94,13 +94,13 @@ export class ExecucaoHistoricoPage implements OnInit {
     /** Os rótulos e as larguras da tabela real (Usuário e Ações só para o gestor), para o esqueleto não parecer outra tela. */
     readonly esqueleto = computed(() =>
         montarEsqueletoDeTabela([
-            ...(this.sessao.eGestor() ? [{ rotulo: 'Usuário', peso: 103 }] : []),
+            ...(this.sessao.temVisaoTotal() ? [{ rotulo: 'Usuário', peso: 103 }] : []),
             { rotulo: 'Atividade', peso: 260 },
             { rotulo: 'Início', peso: 76 },
             { rotulo: 'Fim', peso: 132 },
             { rotulo: 'Duração', peso: 119 },
             { rotulo: 'Descrição', peso: 300 },
-            ...(this.sessao.eGestor() ? [{ rotulo: 'Ações', peso: 81 }] : []),
+            ...(this.sessao.podeEditarExecucaoDeOutro() ? [{ rotulo: 'Ações', peso: 81 }] : []),
         ]),
     );
 
@@ -144,8 +144,8 @@ export class ExecucaoHistoricoPage implements OnInit {
     readonly totalEncerradas = computed(() => Math.max(0, this.totalRegistros() - this.ativas().length));
     /** O bloco é do "agora": num dia passado sem execução ativa ele não aparece. */
     readonly mostrarAgora = computed(() => this.ativas().length > 0 || this.visualizandoHoje());
-    /** Gestor sem filtro de usuário vê vários donos: o cartão mostra de quem é. */
-    readonly agoraDeVarios = computed(() => this.sessao.eGestor() && !this.usuarioFiltradoId());
+    /** Quem vê toda a equipe, sem filtro de usuário, vê vários donos: o cartão mostra de quem é. */
+    readonly agoraDeVarios = computed(() => this.sessao.temVisaoTotal() && !this.usuarioFiltradoId());
     readonly podeIniciar = computed(() => !this.sessao.eGestor());
 
     // --- Edição inline (gestor): descrição, início e fim direto na célula ---
@@ -168,13 +168,13 @@ export class ExecucaoHistoricoPage implements OnInit {
 
     /** Dia e usuário vêm da URL (`?data=&usuario=`), que é a fonte do estado; cada mudança de URL recarrega. */
     ngOnInit(): void {
-        if (this.sessao.eGestor()) this.carregarUsuarios();
+        if (this.sessao.temVisaoTotal()) this.carregarUsuarios();
         this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((parametros) => {
             const dia = isoParaData(parametros.get('data'));
             const data = dia && dia <= this.hoje ? dia : this.hoje;
             const usuario = Number(parametros.get('usuario'));
             this.formularioFiltros.patchValue(
-                { data, usuarioId: this.sessao.eGestor() && usuario > 0 ? usuario : null },
+                { data, usuarioId: this.sessao.temVisaoTotal() && usuario > 0 ? usuario : null },
                 { emitEvent: false },
             );
             this.dataSelecionada.set(dataParaIso(data));
@@ -241,7 +241,7 @@ export class ExecucaoHistoricoPage implements OnInit {
 
         filtros.data = this.dataSelecionada();
         const usuarioId = this.usuarioFiltradoId();
-        if (this.sessao.eGestor() && usuarioId) filtros.usuarioId = usuarioId;
+        if (this.sessao.temVisaoTotal() && usuarioId) filtros.usuarioId = usuarioId;
 
         this.execucaoService
             .listar(filtros)
@@ -300,7 +300,7 @@ export class ExecucaoHistoricoPage implements OnInit {
         this.router.navigate([], {
             queryParams: {
                 data: mesmoDia(data, this.hoje) ? null : dataParaIso(data),
-                usuario: this.sessao.eGestor() && usuarioId ? usuarioId : null,
+                usuario: this.sessao.temVisaoTotal() && usuarioId ? usuarioId : null,
             },
             queryParamsHandling: 'merge',
             replaceUrl: true,
@@ -349,7 +349,7 @@ export class ExecucaoHistoricoPage implements OnInit {
 
     /** Clique na descrição, no início ou no fim: a célula vira campo de edição já com o foco. */
     iniciarEdicao(execucao: ExecucaoItemDto, campo: CampoEdicao): void {
-        if (!this.sessao.eGestor() || this.salvandoEdicao()) return;
+        if (!this.sessao.podeEditarExecucaoDeOutro() || this.salvandoEdicao()) return;
         if (this.editando(execucao, campo)) return;
         this.encerrarEdicao();
         if (campo === 'descricao') {
@@ -497,7 +497,7 @@ export class ExecucaoHistoricoPage implements OnInit {
     }
 
     confirmarExclusao(evento: Event, execucao: ExecucaoItemDto): void {
-        if (!this.sessao.eGestor()) return;
+        if (!this.sessao.podeEditarExecucaoDeOutro()) return;
         this.confirmationService.confirm({
             target:      evento.currentTarget ?? evento.target ?? undefined,
             message:     'Excluir esta execução? O tempo dela deixa de contar no dia.',

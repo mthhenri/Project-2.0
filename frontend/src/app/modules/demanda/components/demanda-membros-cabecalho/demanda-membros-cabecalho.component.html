@@ -12,7 +12,7 @@
                 @if (comNome()) {
                     <span class="demanda-membros-cabecalho__nome">{{ membro.nomeCompleto }}</span>
                 }
-                @if (sessao.eGestor()) {
+                @if (sessao.podeEditarDemanda()) {
                     <button
                         type="button"
                         class="demanda-membros-cabecalho__remover"
@@ -28,7 +28,7 @@
         }
     </div>
 
-    @if (sessao.eGestor()) {
+    @if (sessao.podeEditarDemanda()) {
         @if (adicionando()) {
             <p-autocomplete
                 [(ngModel)]="termoBusca"

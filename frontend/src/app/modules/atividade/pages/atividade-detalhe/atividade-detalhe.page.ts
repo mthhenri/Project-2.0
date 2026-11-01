@@ -110,10 +110,10 @@ export class AtividadeDetalhePage implements OnInit {
         return nome.split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
     }
 
-    /** Gestor, ou o dono da atividade: quem pode iniciar, pausar, trocar status e mexer nas tags. */
+    /** Auxiliar, gestor ou o dono da atividade: quem pode iniciar, pausar, trocar status e mexer nas tags. */
     readonly podeAgir = computed(() => {
         const atividade = this.atividade();
-        return !!atividade && (this.sessao.eGestor() || atividade.usuarioId === this.sessao.id());
+        return !!atividade && (this.sessao.podeEditarAtividadeDeOutro() || atividade.usuarioId === this.sessao.id());
     });
 
     readonly execucaoAberta = computed(() => this.execucoesRecentes().find((execucao) => execucao.fimData === null) ?? null);

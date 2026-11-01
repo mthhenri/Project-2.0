@@ -161,6 +161,11 @@ describe('DemandaProjetoPage', () => {
             expect((await montarPagina({ consulta: { modo: 'qualquer' } })).montado.componente.modoVisualizacao()).toBe('arvore');
         });
 
+        it('o auxiliar tem Árvore, Grafo e Controle de horas, como o gestor', async () => {
+            const auxiliar = await montarPagina({ usuario: TipoUsuarioEnum.AUXILIAR });
+            expect(auxiliar.montado.componente.opcoesModo().map((opcao) => opcao.valor)).toEqual(['arvore', 'grafo', 'controle-de-horas']);
+        });
+
         it('o desenvolvedor nunca cai no Controle de horas, nem por URL nem por armazenamento', async () => {
             const porUrl = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR, consulta: { modo: 'controle-de-horas' } });
             expect(porUrl.montado.componente.modoVisualizacao()).toBe('arvore');
@@ -232,6 +237,7 @@ describe('DemandaProjetoPage', () => {
 
         it('o gestor vê "Nova Demanda"; o desenvolvedor não', async () => {
             expect(texto(await comProjeto(TipoUsuarioEnum.GESTOR))).toContain('Nova Demanda');
+            expect(texto(await comProjeto(TipoUsuarioEnum.AUXILIAR))).toContain('Nova Demanda');
             expect(texto(await comProjeto(TipoUsuarioEnum.DESENVOLVEDOR))).not.toContain('Nova Demanda');
         });
 

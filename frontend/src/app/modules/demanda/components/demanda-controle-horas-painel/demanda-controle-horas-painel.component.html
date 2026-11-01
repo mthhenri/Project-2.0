@@ -133,7 +133,7 @@
                         }
                         <app-demanda-status
                             [status]="no.status"
-                            [editavel]="sessao.eGestor()"
+                            [editavel]="sessao.podeEditarDemanda()"
                             (statusEscolhido)="alterarStatus(no, $event)"
                         />
                         @if (no.isEstrutural) {
@@ -200,7 +200,7 @@
                                 <small><i class="pi pi-folder"></i> {{ cartao.pasta }}</small>
                             }
                         </button>
-                        @if (sessao.eGestor()) {
+                        @if (sessao.podeEditarDemanda()) {
                             <p-inputnumber
                                 [formControl]="cartao.controle"
                                 [min]="0"

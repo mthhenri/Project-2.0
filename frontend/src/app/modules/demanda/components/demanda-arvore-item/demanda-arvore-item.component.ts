@@ -62,8 +62,8 @@ export class DemandaArvoreItemComponent implements OnChanges {
         this.demandaEditarDescricaoSolicitada.emit({ id: this.arvoreItem.id, campo });
     }
 
-    get eGestor(): boolean {
-        return this.sessao.eGestor();
+    get podeEditarDemanda(): boolean {
+        return this.sessao.podeEditarDemanda();
     }
     readonly unidadeTempo = inject(VisualizacaoTempoService);
 
@@ -89,7 +89,7 @@ export class DemandaArvoreItemComponent implements OnChanges {
                 aoMembros:    (id) => this.demandaMembrosSolicitados.emit(id),
                 aoDescricao:  (id, campo) => this.demandaEditarDescricaoSolicitada.emit({ id, campo }),
             },
-            this.sessao.eGestor(),
+            this.sessao.podeEditarDemanda(),
         );
     }
 

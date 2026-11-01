@@ -127,7 +127,7 @@
             <span class="demanda-arvore-item__coluna-status">
                 <app-demanda-status
                     [status]="arvoreItem.status"
-                    [editavel]="statusEditavel && eGestor"
+                    [editavel]="statusEditavel && podeEditarDemanda"
                     (statusEscolhido)="aoEscolherStatus($event)"
                 />
             </span>
@@ -162,7 +162,7 @@
             </span>
 
             <span class="demanda-arvore-item__acoes">
-                @if (eGestor && arvoreItem.isEstrutural) {
+                @if (podeEditarDemanda && arvoreItem.isEstrutural) {
                     <p-button
                         icon="pi pi-plus"
                         [text]="true"

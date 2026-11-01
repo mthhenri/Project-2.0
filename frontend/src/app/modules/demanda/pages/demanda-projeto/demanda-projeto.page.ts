@@ -128,7 +128,7 @@ export class DemandaProjetoPage implements OnInit {
     readonly opcoesModo = computed(() => [
         { rotulo: 'Árvore', valor: 'arvore' as ModoVisualizacao, icone: 'pi pi-sitemap' },
         { rotulo: 'Grafo', valor: 'grafo' as ModoVisualizacao, icone: 'pi pi-share-alt' },
-        ...(this.sessao.eGestor() ? [{ rotulo: 'Controle de horas', valor: 'controle-de-horas' as ModoVisualizacao, icone: 'pi pi-chart-bar' }] : []),
+        ...(this.sessao.temVisaoTotal() ? [{ rotulo: 'Controle de horas', valor: 'controle-de-horas' as ModoVisualizacao, icone: 'pi pi-chart-bar' }] : []),
     ]);
 
     private readonly nosDoProjeto = computed(() => this.grafo()?.nos ?? []);
@@ -153,7 +153,7 @@ export class DemandaProjetoPage implements OnInit {
     /** Quem está executando cada demanda, quando o planejamento já foi carregado (só gestor). */
     readonly executoresPorDemanda = computed(() => {
         const mapa = new Map<number, string[]>();
-        if (!this.sessao.eGestor()) return mapa;
+        if (!this.sessao.temVisaoTotal()) return mapa;
         for (const linha of this.planejamento()) {
             if (linha.executoresAtivos.length) mapa.set(linha.demandaId, linha.executoresAtivos.map((executor) => executor.nomeCompleto));
         }
@@ -164,7 +164,7 @@ export class DemandaProjetoPage implements OnInit {
     private modoInicial(): ModoVisualizacao {
         const candidato = normalizarModo(this.route.snapshot.queryParamMap.get('modo'));
         if (!candidato) return 'arvore';
-        return candidato === 'controle-de-horas' && !this.sessao.eGestor() ? 'arvore' : candidato;
+        return candidato === 'controle-de-horas' && !this.sessao.temVisaoTotal() ? 'arvore' : candidato;
     }
 
     ngOnInit(): void {
@@ -183,7 +183,7 @@ export class DemandaProjetoPage implements OnInit {
         this.pastaId.set(null);
         this.atualizarUrl();
         this.carregarGrafo();
-        if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.eGestor()) {
+        if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.temVisaoTotal()) {
             this.carregarPlanejamento();
         }
     }
@@ -192,7 +192,7 @@ export class DemandaProjetoPage implements OnInit {
         if (!modo || modo === this.modoVisualizacao()) return;
         this.modoVisualizacao.set(modo);
         this.atualizarUrl();
-        if (modo === 'controle-de-horas' && this.sessao.eGestor() && this.projetoId()) {
+        if (modo === 'controle-de-horas' && this.sessao.temVisaoTotal() && this.projetoId()) {
             this.carregarPlanejamento();
         }
     }
@@ -266,7 +266,7 @@ export class DemandaProjetoPage implements OnInit {
         if (evento.key === '/' && modo !== 'controle-de-horas') {
             evento.preventDefault();
             this.toolbar()?.focarBusca();
-        } else if (evento.key.toLowerCase() === 'c' && this.sessao.eGestor()) {
+        } else if (evento.key.toLowerCase() === 'c' && this.sessao.podeEditarDemanda()) {
             evento.preventDefault();
             this.mostrarDialogNovaDemanda.set(true);
         } else if ((evento.key === 'ArrowDown' || evento.key === 'ArrowUp') && modo === 'arvore' && !(evento.target as HTMLElement)?.closest?.('[role="tree"]')) {
@@ -298,7 +298,7 @@ export class DemandaProjetoPage implements OnInit {
     aoAlteradoPlanejamento(): void {
         this.recarregarGrafo();
         this.arvoreTela()?.recarregar();
-        if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.eGestor()) {
+        if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.temVisaoTotal()) {
             this.carregarPlanejamento();
         }
     }
@@ -386,7 +386,7 @@ export class DemandaProjetoPage implements OnInit {
                             gravarArmazenado(CHAVE_ULTIMO_PROJETO, String(projetoInicial));
                             this.atualizarUrl();
                             this.carregarGrafo();
-                            if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.eGestor()) this.carregarPlanejamento();
+                            if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.temVisaoTotal()) this.carregarPlanejamento();
                         }
                     }
                 },

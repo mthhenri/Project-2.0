@@ -16,7 +16,7 @@
     </div>
 
     <form [formGroup]="formularioFiltros" class="execucao-historico__filtros">
-        @if (sessao.eGestor()) {
+        @if (sessao.temVisaoTotal()) {
             <div class="execucao-historico__filtro-campo execucao-historico__filtro-campo--usuario">
                 <label class="execucao-historico__filtro-label" for="filtro-usuario">Usuário</label>
                 <p-select
@@ -139,7 +139,7 @@
         >
             <ng-template #header>
                 <tr>
-                    @if (sessao.eGestor()) {
+                    @if (sessao.temVisaoTotal()) {
                         <th>Usuário</th>
                     }
                     <th>Atividade</th>
@@ -147,7 +147,7 @@
                     <th>Fim</th>
                     <th>Duração</th>
                     <th>Descrição</th>
-                    @if (sessao.eGestor()) {
+                    @if (sessao.podeEditarExecucaoDeOutro()) {
                         <th class="execucao-historico__coluna-acoes">Ações</th>
                     }
                 </tr>
@@ -155,7 +155,7 @@
 
             <ng-template #body let-execucao>
                 <tr class="execucao-historico__linha">
-                    @if (sessao.eGestor()) {
+                    @if (sessao.temVisaoTotal()) {
                         <td class="execucao-historico__usuario">{{ execucao.nomeUsuario }}</td>
                     }
                     <td>
@@ -222,7 +222,7 @@
                                     <ng-container *ngTemplateOutlet="confirmar" />
                                 }
                             </div>
-                        } @else if (sessao.eGestor()) {
+                        } @else if (sessao.podeEditarExecucaoDeOutro()) {
                             <button
                                 type="button"
                                 class="execucao-historico__descricao-botao"
@@ -242,7 +242,7 @@
                             }}</span>
                         }
                     </td>
-                    @if (sessao.eGestor()) {
+                    @if (sessao.podeEditarExecucaoDeOutro()) {
                         <td class="execucao-historico__coluna-acoes">
                             <p-button
                                 icon="pi pi-trash"
@@ -263,7 +263,7 @@
                 @if (totalRegistros() > 0) {
                     <tr class="execucao-historico__rodape">
                         <td
-                            [attr.colspan]="sessao.eGestor() ? 4 : 3"
+                            [attr.colspan]="sessao.temVisaoTotal() ? 4 : 3"
                             class="execucao-historico__rodape-rotulo"
                         >
                             Total do dia
@@ -271,7 +271,7 @@
                         <td class="execucao-historico__rodape-valor">
                             {{ totalMinutosDia() | minutosParagHoras }}
                         </td>
-                        <td [attr.colspan]="sessao.eGestor() ? 2 : 1"></td>
+                        <td [attr.colspan]="sessao.temVisaoTotal() ? 2 : 1"></td>
                     </tr>
                 }
             </ng-template>
@@ -280,7 +280,7 @@
                 @if (ativas().length > 0) {
                     <tr>
                         <td
-                            [attr.colspan]="sessao.eGestor() ? 7 : 5"
+                            [attr.colspan]="sessao.temVisaoTotal() ? 7 : 5"
                             class="execucao-historico__vazio"
                         >
                             <p class="execucao-historico__vazio-titulo">
@@ -291,7 +291,7 @@
                 } @else {
                     <tr>
                         <td
-                            [attr.colspan]="sessao.eGestor() ? 7 : 5"
+                            [attr.colspan]="sessao.temVisaoTotal() ? 7 : 5"
                             class="execucao-historico__vazio"
                         >
                             <i class="pi pi-clock text-3xl"></i>
@@ -337,7 +337,7 @@
 
 <!-- Horário em cima e dia/mês embaixo, em cinza; para o gestor, clicar abre a edição no lugar. -->
 <ng-template #momento let-instante let-execucao="execucao" let-campo="campo">
-    @if (sessao.eGestor()) {
+    @if (sessao.podeEditarExecucaoDeOutro()) {
         <button
             type="button"
             class="execucao-historico__momento execucao-historico__momento--editavel"

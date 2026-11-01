@@ -18,6 +18,8 @@ const ROTAS = ['/ponto', '/calendario', '/projeto', '/demanda', '/chat', '/ativi
     .map((caminho) => ({ path: caminho.slice(1), component: PaginaFalsaComponent }));
 
 const ITENS_DESENVOLVEDOR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações', 'Demandas', 'Modelagem'];
+// O auxiliar vê Projetos e Tags além dos itens do desenvolvedor; Calendário, Usuários e Supervisão do chat seguem só do gestor.
+const ITENS_AUXILIAR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações', 'Projetos', 'Demandas', 'Tags', 'Modelagem'];
 const ITENS_GESTOR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações', 'Projetos', 'Demandas', 'Calendário', 'Tags', 'Usuários', 'Supervisão do chat', 'Modelagem'];
 // IA Config. é exclusiva do administrador e a Modelagem, de todos: ela fica sempre por último, no fundo.
 const ITENS_ADMINISTRADOR = [...ITENS_GESTOR.slice(0, -1), 'IA Config.', 'Modelagem'];
@@ -62,6 +64,11 @@ describe('SidebarComponent — itens por tipo de usuário', () => {
     it('desenvolvedor vê só Ponto, Documentações, Demandas, Chat, Atividades, Execuções e Modelagem', async () => {
         const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR);
         expect(rotulosNavegacao(montado)).toEqual(ITENS_DESENVOLVEDOR);
+    });
+
+    it('auxiliar vê também Projetos e Tags, mas não Calendário, Usuários, Supervisão nem a IA', async () => {
+        const montado = await montarBarra(TipoUsuarioEnum.AUXILIAR);
+        expect(rotulosNavegacao(montado)).toEqual(ITENS_AUXILIAR);
     });
 
     it('gestor vê também Calendário, Projetos, Tags e Usuários, mas não a IA', async () => {

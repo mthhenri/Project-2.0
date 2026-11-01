@@ -33,7 +33,7 @@ export class SidebarComponent implements OnInit {
     readonly itensNavegacao = computed(() =>
         ITENS_NAVEGACAO.filter(
             (item) =>
-                (!item.somenteGestor || this.sessao.eGestor()) &&
+                (!item.somenteGestor || this.sessao.eGestor() || (!!item.visivelAoAuxiliar && this.sessao.eAuxiliar())) &&
         (!item.somenteAdministrador || this.sessao.eAdministrador()),
         ).map((item) => {
             const semIa = !!item.exigeIa && this.iaDisponibilidade.estadoReal() !== null && this.iaDisponibilidade.estadoReal() !== EstadoIaEnum.NO_AR;

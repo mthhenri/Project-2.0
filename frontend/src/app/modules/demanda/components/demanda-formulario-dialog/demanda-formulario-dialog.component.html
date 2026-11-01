@@ -166,7 +166,7 @@
                 ></i>
                 Mais opções
                 <span class="demanda-dialog__mais-opcoes-resumo"
-                    >Status{{ sessao.eGestor() ? ", membros e tags" : " e tags" }}</span
+                    >Status{{ sessao.podeEditarDemanda() ? ", membros e tags" : " e tags" }}</span
                 >
             </button>
 
@@ -187,7 +187,7 @@
                         />
                     </div>
 
-                    @if (sessao.eGestor()) {
+                    @if (sessao.podeEditarDemanda()) {
                         <div class="demanda-dialog__campo demanda-dialog__campo--full">
                             <label for="demanda-membros" class="demanda-dialog__label"
                                 >Membros</label

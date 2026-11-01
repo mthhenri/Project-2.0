@@ -6,7 +6,7 @@
                 <span class="demanda-membro-lista__contador">{{ membros().length }}</span>
             }
         </span>
-        @if (sessao.eGestor()) {
+        @if (sessao.podeEditarDemanda()) {
             <p-button
                 icon="pi pi-users"
                 label="Gerenciar"
@@ -62,7 +62,7 @@
                         [value]="rotuloTipo(membro.tipo)"
                         [severity]="severidadeTipo(membro.tipo)"
                     />
-                    @if (sessao.eGestor()) {
+                    @if (sessao.podeEditarDemanda()) {
                         <p-button
                             icon="pi pi-times"
                             severity="danger"

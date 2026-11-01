@@ -322,6 +322,18 @@ describe('ExecucaoHistoricoPage: gestor x desenvolvedor', () => {
         expect(texto(montado)).toContain('Descrição 1');
     });
 
+    it('auxiliar vê o filtro de usuário, Minhas, a coluna Usuário e as ações de editar e excluir, mas não o Relatório', async () => {
+        const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.AUXILIAR });
+        await carregar(montado, [criarExecucao(1)], 90);
+        expect(texto(montado)).not.toContain('Relatório');
+        expect(botaoPorTexto(montado, 'Minhas')).toBeDefined();
+        expect(montado.elemento.querySelector('p-select')).not.toBeNull();
+        expect(cabecalhos(montado)).toContain('Usuário');
+        expect(cabecalhos(montado)).toContain('Ações');
+        expect(botaoPorRotulo(montado, 'Excluir execução').length).toBe(1);
+        expect(montado.elemento.querySelector('.execucao-historico__descricao-botao')).not.toBeNull();
+    });
+
     it('desenvolvedor ignora o usuário da URL: a busca não leva usuarioId', async () => {
         const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR, consulta: { usuario: '3' } });
         expect(esperarRequisicao(montado.http, 'GET', '/execucao').request.params.has('usuarioId')).toBe(false);

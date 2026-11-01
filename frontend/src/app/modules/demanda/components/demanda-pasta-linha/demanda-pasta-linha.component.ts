@@ -56,7 +56,7 @@ export class DemandaPastaLinhaComponent implements OnChanges {
     ];
 
     ngOnChanges(mudancas: SimpleChanges): void {
-        if (mudancas['no'] || mudancas['acoes']) this.itensMenu = construirMenuDemanda(this.no(), this.acoes(), this.sessao.eGestor());
+        if (mudancas['no'] || mudancas['acoes']) this.itensMenu = construirMenuDemanda(this.no(), this.acoes(), this.sessao.podeEditarDemanda());
     }
 
     get nomeEmPartes(): { texto: string; destaque: boolean }[] {

@@ -141,14 +141,14 @@ export class AtividadeListagemPage implements OnInit {
     private readonly formBuilder = inject(FormBuilder);
     private readonly destroyRef = inject(DestroyRef);
     readonly sessao = inject(UsuarioSessaoService);
-    /** Os rótulos e as larguras da tabela real (seleção e Usuário só para o gestor), para o esqueleto não parecer outra tela. */
+    /** Os rótulos e as larguras da tabela real (seleção só para o gestor; Usuário para quem vê toda a equipe), para o esqueleto não parecer outra tela. */
     readonly esqueleto = computed(() =>
         montarEsqueletoDeTabela([
             ...(this.sessao.eGestor() ? [{ rotulo: '', peso: 36 }] : []),
             { rotulo: 'Projeto', peso: 71 },
             { rotulo: 'Demanda', peso: 212 },
             { rotulo: 'Atividade', peso: 124 },
-            ...(this.sessao.eGestor() ? [{ rotulo: 'Usuário', peso: 93 }] : []),
+            ...(this.sessao.temVisaoTotal() ? [{ rotulo: 'Usuário', peso: 93 }] : []),
             { rotulo: 'Prioridade', peso: 119 },
             { rotulo: 'Status', peso: 138 },
             { rotulo: 'Tempo executado', peso: 97 },
@@ -252,11 +252,11 @@ export class AtividadeListagemPage implements OnInit {
 
     ngOnInit(): void {
         this.prioridadeService.carregar();
-        if (this.sessao.eGestor()) this.carregarUsuarios();
+        if (this.sessao.temVisaoTotal()) this.carregarUsuarios();
 
         // A URL é a fonte do estado: cada mudança (clique, Voltar, link) passa por aqui e recarrega.
         this.rotaAtiva.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((parametros) => {
-            this.aplicarFiltros(lerFiltrosDaUrl(parametros, this.sessao.eGestor()));
+            this.aplicarFiltros(lerFiltrosDaUrl(parametros, this.sessao.temVisaoTotal()));
             this.paginaAtual.set(1);
             this.buscarAtividades();
         });
@@ -579,7 +579,7 @@ export class AtividadeListagemPage implements OnInit {
     // ---------------------------------------------------------------------------
 
     podeExecutar(atividade: AtividadeResumoDto): boolean {
-        return this.sessao.eGestor() || atividade.usuarioId === this.sessao.id();
+        return this.sessao.podeConduzirExecucaoDeOutro() || atividade.usuarioId === this.sessao.id();
     }
 
     /** Gestor, ou desenvolvedor dono da atividade. Mesma regra de `podeExecutar`. */
@@ -692,7 +692,7 @@ export class AtividadeListagemPage implements OnInit {
     // Menu ⋮ da linha
     // ---------------------------------------------------------------------------
 
-    /** Menu ⋮ do gestor: registrar execução e excluir. Tags são editadas na própria célula da linha. */
+    /** Menu ⋮ do auxiliar e do gestor: registrar execução e excluir. Tags são editadas na própria célula da linha. */
     abrirMenu(evento: Event, atividade: AtividadeResumoDto): void {
         this.itensMenu = [
             { label: 'Registrar execução', icon: 'pi pi-calendar-plus', command: () => this.abrirDialogRegistro(atividade) },
@@ -703,7 +703,7 @@ export class AtividadeListagemPage implements OnInit {
     }
 
     // ---------------------------------------------------------------------------
-    // Ações em massa (gestor)
+    // Ações em massa (só o gestor)
     // ---------------------------------------------------------------------------
 
     aoSelecionar(selecao: AtividadeResumoDto[]): void {

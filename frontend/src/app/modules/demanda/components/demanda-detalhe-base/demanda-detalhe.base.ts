@@ -13,7 +13,7 @@ import {
     REGEX_SEM_CARACTERES_PROIBIDOS,
     MENSAGEM_CARACTERES_PROIBIDOS,
     UsuarioResumoDto,
-    temPermissaoDeGestor,
+    podeSerMembroDeDemanda,
     TipoDemandaStatusEnum,
     AtividadeResumoDto,
     AtividadeListarDto,
@@ -129,7 +129,7 @@ export abstract class DemandaDetalheBase {
    * `podeEditar` do backend). Gate das ações que exigem ser membro: aba Atividades,
    * edição de tags e criação de sub-demanda.
    */
-    readonly eMembro = computed(() => this.sessao.eGestor() || !!this.demanda()?.podeEditar);
+    readonly eMembro = computed(() => this.sessao.podeEditarDemanda() || !!this.demanda()?.podeEditar);
 
     /**
    * Aba inicial das abas de detalhe. Atividades (1) quando membro; para o
@@ -321,7 +321,7 @@ export abstract class DemandaDetalheBase {
 
         // Gestor vê todas as atividades da demanda; desenvolvedor vê apenas as próprias.
         const filtros: AtividadeListarDto = { demandaId, itensPorPagina: 100 };
-        if (!this.sessao.eGestor()) {
+        if (!this.sessao.podeEditarDemanda()) {
             const usuarioId = this.sessao.id();
             if (usuarioId !== undefined) filtros.usuarioId = usuarioId;
         }
@@ -402,7 +402,7 @@ export abstract class DemandaDetalheBase {
             membros:    this.demandaService.listarMembros(identificador),
             conexoes:   this.demandaService.listarConexoes(identificador),
             tags:       this.tagsDisponiveis().length ? of(null) : this.tagService.listar(),
-            usuarios:   this.sessao.eGestor() && this.todosUsuarios().length === 0
+            usuarios:   this.sessao.podeEditarDemanda() && this.todosUsuarios().length === 0
                 ? this.usuarioService.listar({ itensPorPagina: 100 })
                 : of(null),
         })
@@ -423,7 +423,7 @@ export abstract class DemandaDetalheBase {
                     if (tags && tags.sucesso && tags.dados) this.tagsDisponiveis.set(tags.dados);
                     if (usuarios && usuarios.sucesso && usuarios.dados) {
                         // Gestores não entram no autocomplete de membros: têm acesso total por serem gestores (task 71).
-                        this.todosUsuarios.set(usuarios.dados.itens.filter((usuario) => !temPermissaoDeGestor(usuario.tipo)));
+                        this.todosUsuarios.set(usuarios.dados.itens.filter((usuario) => podeSerMembroDeDemanda(usuario.tipo)));
                     }
                 },
             });

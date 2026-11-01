@@ -20,7 +20,7 @@ import {
     TipoDemandaStatusEnum,
     TagResumoDto,
     UsuarioResumoDto,
-    temPermissaoDeGestor,
+    podeSerMembroDeDemanda,
     REGEX_SEM_CARACTERES_PROIBIDOS,
     MENSAGEM_CARACTERES_PROIBIDOS,
     hojeNoFuso,
@@ -140,7 +140,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
             usuarioIds:     [],
         });
         if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
-        if (this.sessao.eGestor() && this.usuariosDisponiveis().length === 0) this.carregarUsuarios();
+        if (this.sessao.podeEditarDemanda() && this.usuariosDisponiveis().length === 0) this.carregarUsuarios();
         if (this.demandaId !== null) this.carregarDemanda(this.demandaId);
         else this.carregarDemandasPai();
     }
@@ -220,7 +220,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
             previsaoFimData: !estrutural && valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined,
         };
         if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
-        if (this.sessao.eGestor() && valor.usuarioIds?.length) dto.usuarioIds = valor.usuarioIds;
+        if (this.sessao.podeEditarDemanda() && valor.usuarioIds?.length) dto.usuarioIds = valor.usuarioIds;
 
         this.demandaService
             .criar(dto)
@@ -296,7 +296,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
             chamadas.push(this.demandaService.alterarTags(demandaId, { tagIds }));
         }
 
-        if (!this.sessao.eGestor()) return chamadas.length ? forkJoin(chamadas) : of(null);
+        if (!this.sessao.podeEditarDemanda()) return chamadas.length ? forkJoin(chamadas) : of(null);
 
         const usuarioIds = valor.usuarioIds ?? [];
         for (const usuarioId of usuarioIds.filter((id) => !this.usuarioIdsOriginais.includes(id))) {
@@ -336,7 +336,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
         forkJoin({
             demanda: this.demandaService.recuperar(identificador),
             tags:    this.demandaService.listarTags(identificador),
-            membros: this.sessao.eGestor() ? this.demandaService.listarMembros(identificador) : of(null),
+            membros: this.sessao.podeEditarDemanda() ? this.demandaService.listarMembros(identificador) : of(null),
         })
             .pipe(finalize(() => this.carregandoDados.set(false)))
             .subscribe({
@@ -384,7 +384,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
             next: (resposta) => {
                 if (resposta.sucesso && resposta.dados) {
                     this.usuariosDisponiveis.set(
-                        resposta.dados.itens.filter((usuario) => !temPermissaoDeGestor(usuario.tipo)),
+                        resposta.dados.itens.filter((usuario) => podeSerMembroDeDemanda(usuario.tipo)),
                     );
                 }
             },

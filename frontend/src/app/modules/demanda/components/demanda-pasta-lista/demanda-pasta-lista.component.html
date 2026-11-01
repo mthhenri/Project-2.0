@@ -18,7 +18,7 @@
                 (onClick)="abrirPastaSolicitada.emit(pastaDemandaId()!)"
             />
         }
-        @if (sessao.eGestor() && permitirDemandaAqui()) {
+        @if (sessao.podeEditarDemanda() && permitirDemandaAqui()) {
             <p-button
                 label="Demanda aqui"
                 icon="pi pi-plus"
@@ -61,7 +61,7 @@
                 } @else {
                     <i class="pi pi-inbox"></i>
                     <p>Nenhuma demanda aqui ainda.</p>
-                    @if (sessao.eGestor() && permitirDemandaAqui()) {
+                    @if (sessao.podeEditarDemanda() && permitirDemandaAqui()) {
                         <p-button
                             label="Demanda aqui"
                             icon="pi pi-plus"

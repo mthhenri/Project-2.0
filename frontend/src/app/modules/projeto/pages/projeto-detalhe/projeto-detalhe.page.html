@@ -85,28 +85,32 @@
                 </div>
 
                 <div class="projeto-detalhe__cabecalho-acoes">
-                    @if (sessao.eGestor()) {
+                    @if (sessao.podeEditarDemanda()) {
                         <div class="projeto-detalhe__botoes">
                             <p-button
                                 label="Nova Demanda"
                                 icon="pi pi-plus"
                                 (onClick)="mostrarDialogNovaDemanda.set(true)"
                             />
-                            <p-button
-                                label="Relatório"
-                                icon="pi pi-file"
-                                severity="secondary"
-                                [outlined]="true"
-                                (onClick)="abrirRelatorio()"
-                            />
-                            <p-button
-                                label="Configurar volume"
-                                icon="pi pi-sliders-h"
-                                severity="secondary"
-                                [outlined]="true"
-                                (onClick)="volumeDialog.abrir(projeto()!.id)"
-                            />
+                            @if (sessao.eGestor()) {
+                                <p-button
+                                    label="Relatório"
+                                    icon="pi pi-file"
+                                    severity="secondary"
+                                    [outlined]="true"
+                                    (onClick)="abrirRelatorio()"
+                                />
+                                <p-button
+                                    label="Configurar volume"
+                                    icon="pi pi-sliders-h"
+                                    severity="secondary"
+                                    [outlined]="true"
+                                    (onClick)="volumeDialog.abrir(projeto()!.id)"
+                                />
+                            }
                         </div>
+                    }
+                    @if (sessao.eGestor()) {
                         <!-- Demandas ou Volume: abaixo dos botões, no próprio cabeçalho (tasks 291 e 292). -->
                         <p-selectbutton
                             class="projeto-detalhe__visao"
@@ -156,7 +160,7 @@
                     <div class="projeto-detalhe__demandas-vazio">
                         <i class="pi pi-inbox text-4xl text-muted-color"></i>
                         <p class="text-muted-color mt-2">Este projeto ainda não tem demandas.</p>
-                        @if (sessao.eGestor()) {
+                        @if (sessao.podeEditarDemanda()) {
                             <p-button
                                 label="Criar primeira demanda"
                                 icon="pi pi-plus"
@@ -197,7 +201,7 @@
                                 tooltipPosition="top"
                                 (onClick)="abrirVisao('grafo')"
                             />
-                            @if (sessao.eGestor()) {
+                            @if (sessao.temVisaoTotal()) {
                                 <p-button
                                     icon="pi pi-chart-bar"
                                     severity="secondary"

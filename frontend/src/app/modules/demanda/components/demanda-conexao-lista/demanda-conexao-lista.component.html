@@ -9,7 +9,7 @@
     </div>
 
     <!-- Criação inline (gestor): escolher o destino e confirmar com Enter ou "Adicionar" -->
-    @if (sessao.eGestor()) {
+    @if (sessao.podeEditarDemanda()) {
         <div class="demanda-conexao-lista__criacao">
             <p-select
                 [options]="candidatos()"
@@ -56,7 +56,11 @@
             <i class="pi pi-share-alt"></i>
             <p>
                 Nenhuma conexão.
-                {{ sessao.eGestor() ? "Escolha uma demanda acima para criar a primeira." : "" }}
+                {{
+                    sessao.podeEditarDemanda()
+                        ? "Escolha uma demanda acima para criar a primeira."
+                        : ""
+                }}
             </p>
         </div>
     }
@@ -89,7 +93,7 @@
                         >
                             {{ conexao.nomeDemandaConectada }}
                         </button>
-                        @if (sessao.eGestor()) {
+                        @if (sessao.podeEditarDemanda()) {
                             <p-button
                                 icon="pi pi-trash"
                                 severity="danger"

@@ -81,8 +81,8 @@ export class PontoPage implements OnInit {
         mesAno:    [this.hoje as Date],
     });
 
-    /** Gestor sem usuário filtrado → "todos hoje"; caso contrário → "mensal". */
-    readonly modo = signal<ModoPonto>(this.sessao.eGestor() ? 'todos' : 'mensal');
+    /** Quem vê o ponto de todos, sem usuário filtrado → "todos hoje"; caso contrário → "mensal". */
+    readonly modo = signal<ModoPonto>(this.sessao.podeVerExecucaoEPontoDeOutro() ? 'todos' : 'mensal');
 
     /** Mês em exibição, espelhado em signal para habilitar/desabilitar a navegação. */
     readonly mesSelecionado = signal<Date>(this.hoje);
@@ -143,7 +143,7 @@ export class PontoPage implements OnInit {
     }
 
     ngOnInit(): void {
-        if (this.sessao.eGestor()) this.carregarUsuarios();
+        if (this.sessao.podeVerExecucaoEPontoDeOutro()) this.carregarUsuarios();
         this.carregar();
     }
 
@@ -162,7 +162,7 @@ export class PontoPage implements OnInit {
     }
 
     aoMudarUsuario(): void {
-        if (!this.sessao.eGestor()) return;
+        if (!this.sessao.podeVerExecucaoEPontoDeOutro()) return;
         const usuarioId = this.formularioFiltros.value.usuarioId ?? null;
         this.modo.set(usuarioId ? 'mensal' : 'todos');
         this.carregar();
@@ -267,7 +267,7 @@ export class PontoPage implements OnInit {
         };
 
         const usuarioId = this.formularioFiltros.value.usuarioId ?? null;
-        if (this.sessao.eGestor() && usuarioId) filtros.usuarioId = usuarioId;
+        if (this.sessao.podeVerExecucaoEPontoDeOutro() && usuarioId) filtros.usuarioId = usuarioId;
 
         this.carregando.set(true);
         this.pontoService

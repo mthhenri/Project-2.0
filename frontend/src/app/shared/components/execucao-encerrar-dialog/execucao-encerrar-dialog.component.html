@@ -14,7 +14,7 @@
         <p class="execucao-encerrar__atividade">
             {{ execucao.nomeProjeto }} · {{ execucao.nomeAtividade }}
         </p>
-        @if (sessao.eGestor()) {
+        @if (sessao.temVisaoTotal()) {
             <div class="execucao-encerrar__executor">
                 <span class="execucao-encerrar__avatar" aria-hidden="true">{{
                     iniciais(execucao.nomeUsuario)

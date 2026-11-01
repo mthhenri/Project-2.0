@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-01 — Task 286: frontend do tipo Auxiliar (sessão por ação, guard, navegação e templates)
+
+`UsuarioSessaoService` ganhou `eAuxiliar` e uma permissão por ação (as mesmas funções do `shared` do backend); `permissaoGuard` protege Tags; a barra lateral mostra Projetos e Tags ao Auxiliar. Cada `eGestor()` dos templates foi decidido (Atividades, Demandas, Execuções, Ponto, Projeto, chat): quem conduz o trabalho usa a permissão da ação; o que é só do gestor (seleção em massa, Relatório, volume, Justificar, descrição do cliente, Calendário, Usuários) ficou como estava. Bug próprio achado no build: um replace deixou `this.this.` em 5 pontos. Decisões da matriz e a pendência sobre o Imprimir do ponto estão em `docs/specs/done/286-frontend-do-tipo-auxiliar.spec.md`. Verificação: frontend 2405 testes, build e `lint:tudo` limpos; **verificação ao vivo pendente até o fecho da 287**.
+
 ## 2026-11-01 — Task 285: visibilidade e atribuição do Auxiliar (regra escrita e coberta por teste)
 
 A visibilidade e a regra de membro já estavam no código da 284; esta task conferiu que nenhuma consulta do Auxiliar leva o filtro de `demanda_usuario`, que ele não é auto-atribuído e que atribui e remove qualquer membro, e levou a regra para `SYSTEM.SPEC.md` §14 (o auxiliar, `@ExigePermissao`, quem pode ser membro). Testes novos em `demanda.service.regras.test.ts`. O Auxiliar segue vendo todas as demandas em aberto na lista de criar atividade (decisão registrada na spec 285).

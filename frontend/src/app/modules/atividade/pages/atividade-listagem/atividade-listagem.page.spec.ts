@@ -389,6 +389,16 @@ describe('AtividadeListagemPage: menu ⋮ e permissões da linha', () => {
         expect(botaoPorRotulo(desenvolvedor.montado, 'Mais ações').length).toBe(0);
     });
 
+    it('o auxiliar vê todas as atividades com a coluna Usuário e o menu ⋮ (sem a seleção em massa, que é do gestor) e executa as de outros', async () => {
+        const auxiliar = await montarPagina({ usuario: TipoUsuarioEnum.AUXILIAR });
+        await carregar(auxiliar.montado, [criarAtividade(1), criarAtividade(2, { usuarioId: 9 })]);
+        expect(texto(auxiliar.montado)).toContain('Usuário');
+        expect(botaoPorRotulo(auxiliar.montado, 'Mais ações').length).toBe(2);
+        expect(auxiliar.montado.elemento.querySelector('p-tablecheckbox')).toBeNull();
+        expect(auxiliar.montado.componente.podeExecutar(criarAtividade(2, { usuarioId: 9 }))).toBe(true);
+        expect(auxiliar.montado.componente.podeEditar(criarAtividade(2, { usuarioId: 9 }))).toBe(true);
+    });
+
     it('o menu traz só "Registrar execução" e "Excluir" (tags se editam na célula)', async () => {
         const { montado } = await montarPagina();
         await carregar(montado, [criarAtividade(1)]);

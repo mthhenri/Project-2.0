@@ -81,6 +81,15 @@ describe('ProjetoDetalhePage', () => {
         expect(montado.elemento.querySelector('[aria-label="Trocar status do projeto"]')).toBeNull();
     });
 
+    it('auxiliar cria demanda a partir do projeto, mas não vê Relatório, Configurar volume, o seletor de volume nem troca o status', async () => {
+        const { montado } = await montarDetalhe(TipoUsuarioEnum.AUXILIAR);
+        await carregar(montado);
+        for (const esperado of ['Nova Demanda', 'Criar primeira demanda']) expect(texto(montado), esperado).toContain(esperado);
+        for (const proibido of ['Relatório', 'Configurar volume']) expect(texto(montado), proibido).not.toContain(proibido);
+        expect(montado.elemento.querySelector('[aria-label="O que ver no projeto"]')).toBeNull();
+        expect(montado.elemento.querySelector('[aria-label="Trocar status do projeto"]')).toBeNull();
+    });
+
     it('com datas mostra início e término em formato brasileiro', async () => {
         const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
         await carregar(montado, { ...PROJETO, inicioData: '2026-03-01', previsaoFimData: '2026-09-30' });

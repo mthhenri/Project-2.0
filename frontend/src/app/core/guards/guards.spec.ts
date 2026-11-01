@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
-import { TipoUsuarioEnum } from '@project20/shared';
+import { TipoUsuarioEnum, podeGerenciarTag } from '@project20/shared';
 import { administradorGuard } from './administrador.guard';
 import { autenticacaoGuard, somentePublicoGuard } from './autenticacao.guard';
 import { gestorGuard } from './gestor.guard';
+import { permissaoGuard } from './permissao.guard';
 import { UsuarioSessaoService } from '../services/usuario-sessao.service';
 import { criarUsuarioTeste } from '../../../testes/usuarios-teste';
 
@@ -64,10 +65,27 @@ describe('gestorGuard', () => {
         }
     });
 
+    it('anônimo, desenvolvedor e auxiliar são redirecionados para a raiz', () => {
+        expect(serializar(executar(gestorGuard))).toBe('/');
+        for (const tipo of [TipoUsuarioEnum.DESENVOLVEDOR, TipoUsuarioEnum.AUXILIAR]) {
+            entrarComo(tipo);
+            expect(serializar(executar(gestorGuard)), tipo).toBe('/');
+        }
+    });
+});
+
+describe('permissaoGuard', () => {
+    it('auxiliar, gestor e administrador passam na permissão de tags', () => {
+        for (const tipo of [TipoUsuarioEnum.AUXILIAR, TipoUsuarioEnum.GESTOR, TipoUsuarioEnum.ADMINISTRADOR]) {
+            entrarComo(tipo);
+            expect(executar(permissaoGuard(podeGerenciarTag)), tipo).toBe(true);
+        }
+    });
+
     it('anônimo e desenvolvedor são redirecionados para a raiz', () => {
-        expect(serializar(executar(gestorGuard))).toBe('/');
+        expect(serializar(executar(permissaoGuard(podeGerenciarTag)))).toBe('/');
         entrarComo(TipoUsuarioEnum.DESENVOLVEDOR);
-        expect(serializar(executar(gestorGuard))).toBe('/');
+        expect(serializar(executar(permissaoGuard(podeGerenciarTag)))).toBe('/');
     });
 });
 

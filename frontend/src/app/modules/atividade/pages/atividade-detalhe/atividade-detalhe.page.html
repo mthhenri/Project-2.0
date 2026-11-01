@@ -264,7 +264,7 @@
             <section class="atividade-detalhe__bloco">
                 <div class="atividade-detalhe__bloco-cabecalho">
                     <h2 class="atividade-detalhe__bloco-titulo">Execuções recentes</h2>
-                    @if (sessao.eGestor()) {
+                    @if (sessao.podeEditarExecucaoDeOutro()) {
                         <p-button
                             icon="pi pi-plus"
                             size="small"

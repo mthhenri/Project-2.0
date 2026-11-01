@@ -21,9 +21,9 @@
         </div>
     </div>
 
-    @if (sessao.eGestor() || demandaId()) {
+    @if (sessao.temVisaoTotal() || demandaId()) {
         <div class="atividade-listagem__contexto">
-            @if (sessao.eGestor()) {
+            @if (sessao.temVisaoTotal()) {
                 <button
                     type="button"
                     class="atividade-listagem__chip-filtro"
@@ -80,7 +80,7 @@
             />
         </div>
 
-        @if (sessao.eGestor()) {
+        @if (sessao.temVisaoTotal()) {
             <div class="atividade-listagem__filtro-campo">
                 <label for="filtro-usuario" class="atividade-listagem__filtro-label">Usuário</label>
                 <p-select
@@ -192,7 +192,7 @@
                         }
                         <th>Atividade</th>
                         @if (!dividido()) {
-                            @if (sessao.eGestor()) {
+                            @if (sessao.temVisaoTotal()) {
                                 <th>Usuário</th>
                             }
                             <th>Prioridade</th>
@@ -269,7 +269,7 @@
                             </div>
                         </td>
                         @if (!dividido()) {
-                            @if (sessao.eGestor()) {
+                            @if (sessao.temVisaoTotal()) {
                                 <td>
                                     <div class="atividade-listagem__executor">
                                         <span class="atividade-listagem__avatar">{{
@@ -456,7 +456,7 @@
                                         aria-hidden="true"
                                     ></span>
                                 }
-                                @if (sessao.eGestor()) {
+                                @if (sessao.podeEditarAtividadeDeOutro()) {
                                     <p-button
                                         icon="pi pi-ellipsis-v"
                                         [text]="true"
@@ -477,7 +477,13 @@
                     <tr>
                         <td
                             [attr.colspan]="
-                                dividido() ? (sessao.eGestor() ? 4 : 3) : sessao.eGestor() ? 10 : 8
+                                dividido()
+                                    ? sessao.eGestor()
+                                        ? 4
+                                        : 3
+                                    : 8 +
+                                      (sessao.eGestor() ? 1 : 0) +
+                                      (sessao.temVisaoTotal() ? 1 : 0)
                             "
                         >
                             <div class="atividade-listagem__vazio">
@@ -576,7 +582,7 @@
         <p class="atividade-listagem__execucao-atividade">
             {{ atividade.nomeProjeto }} · {{ atividade.nome }}
         </p>
-        @if (sessao.eGestor()) {
+        @if (sessao.temVisaoTotal()) {
             <div class="atividade-listagem__executor atividade-listagem__executor--dialog">
                 <span class="atividade-listagem__avatar">{{
                     iniciais(atividade.nomeUsuario)
