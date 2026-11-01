@@ -2,7 +2,7 @@
     <p-contextmenu #menuContexto [model]="itensMenu" appendTo="body" />
 
     @if (carregando() && projetoVazio()) {
-        <app-skeleton-lista variante="linhas" [quantidade]="8" />
+        <app-demanda-controle-horas-esqueleto />
     } @else if (projetoVazio()) {
         <div class="controle-horas__vazio">
             <i class="pi pi-inbox controle-horas__vazio-icone"></i>

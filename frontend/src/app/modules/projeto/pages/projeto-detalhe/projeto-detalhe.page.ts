@@ -25,7 +25,8 @@ import { ProjetoCampoEditavelComponent } from '../../components/projeto-campo-ed
 import { ProjetoVolumeComponent } from '../../components/projeto-volume/projeto-volume.component';
 import { ProjetoVolumeDialogComponent } from '../../components/projeto-volume-dialog/projeto-volume-dialog.component';
 import { ProjetoStatusChipComponent } from '../../components/projeto-status-chip/projeto-status-chip.component';
-import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { SkeletonModule } from 'primeng/skeleton';
+import { DemandaArvoreEsqueletoComponent } from '../../../demanda/components/demanda-arvore-esqueleto/demanda-arvore-esqueleto.component';
 import { PastaId, pastaInicial } from '../../../demanda/utils/demanda-pasta.util';
 import {
     DemandaFiltro,
@@ -45,7 +46,8 @@ export type VisaoDoProjeto = 'DEMANDAS' | 'VOLUME';
     standalone: true,
     imports: [
         FormsModule,
-        SkeletonListaComponent,
+        SkeletonModule,
+        DemandaArvoreEsqueletoComponent,
         ButtonModule,
         SelectButtonModule,
         TooltipModule,

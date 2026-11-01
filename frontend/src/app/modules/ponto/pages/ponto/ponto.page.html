@@ -91,19 +91,23 @@
     @if (primeiraCarga()) {
         <div class="ponto__esqueleto">
             @if (modo() === "mensal") {
+                <p-skeleton height="1.6875rem" width="12rem" />
                 <app-skeleton-lista
                     variante="cartoes"
                     [quantidade]="4"
                     larguraMinima="13rem"
-                    alturaCartao="5.8rem"
+                    espacamento="1rem"
+                    alturaCartao="5.875rem"
                 />
-                <app-skeleton-lista variante="linhas" [quantidade]="12" alturaLinha="1.95rem" />
+                <app-skeleton-lista variante="linhas" [quantidade]="20" alturaLinha="1.9375rem" />
             } @else {
+                <p-skeleton height="3rem" width="16rem" />
                 <app-skeleton-lista
                     variante="cartoes"
-                    [quantidade]="4"
-                    larguraMinima="calc(50% - 1rem)"
-                    alturaCartao="8.6rem"
+                    [quantidade]="6"
+                    larguraMinima="max(24rem, calc((100% - 2rem) / 3))"
+                    espacamento="1rem"
+                    alturaCartao="8.75rem"
                 />
             }
         </div>

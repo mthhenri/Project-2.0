@@ -20,8 +20,9 @@
 
         @if (carregando()) {
             <div class="plano-publicar__esqueleto" aria-busy="true">
-                <p-skeleton height="1.5rem" width="40%" />
-                <p-skeleton height="6rem" />
+                @for (aba of [1, 2, 3]; track aba) {
+                    <p-skeleton height="3.125rem" />
+                }
             </div>
         } @else if (erroAoCarregar()) {
             <div class="plano-publicar__erro" role="alert">

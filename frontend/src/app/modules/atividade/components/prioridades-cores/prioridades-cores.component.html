@@ -6,9 +6,9 @@
 
     @if (prioridades().length === 0) {
         <div class="prioridades-cores__esqueleto" aria-busy="true">
-            <p-skeleton height="3rem" />
-            <p-skeleton height="3rem" />
-            <p-skeleton height="3rem" />
+            @for (prioridade of [1, 2, 3, 4, 5]; track prioridade) {
+                <p-skeleton height="3.4375rem" />
+            }
         </div>
     } @else {
         <ul class="prioridades-cores__lista">

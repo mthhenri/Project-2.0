@@ -105,10 +105,12 @@
     @if (primeiraCarga()) {
         <app-skeleton-lista
             variante="tabela"
-            [quantidade]="4"
+            [quantidade]="8"
             [cabecalhos]="esqueleto().cabecalhos"
             [larguras]="esqueleto().larguras"
-            alturaLinha="4.5rem"
+            [formas]="esqueleto().celulas"
+            larguraMinimaTabela="36.75rem"
+            alturaLinha="4.125rem"
         />
     }
     <div

@@ -1,4 +1,11 @@
-<div class="skeleton-lista" role="status" aria-busy="true" aria-live="polite">
+<div
+    class="skeleton-lista"
+    role="status"
+    aria-busy="true"
+    aria-live="polite"
+    [style.gap]="variante === 'linhas' && alturaLinha ? '0' : null"
+    [style.overflow-x]="variante === 'tabela' && larguraMinimaTabela ? 'auto' : null"
+>
     <span class="skeleton-lista__sr">Carregando…</span>
 
     @switch (variante) {
@@ -6,6 +13,7 @@
             <div
                 class="skeleton-lista__linha skeleton-lista__linha--cabecalho"
                 [style.grid-template-columns]="colunasCss()"
+                [style.min-width]="larguraMinimaTabela || null"
             >
                 @for (celula of celulas(); track celula) {
                     @if (rotulos().length === 0) {
@@ -19,16 +27,68 @@
                 <div
                     class="skeleton-lista__linha"
                     [style.grid-template-columns]="colunasCss()"
+                    [style.min-width]="larguraMinimaTabela || null"
                     [style.min-height]="alturaLinha || null"
                 >
                     @for (celula of celulas(); track celula) {
-                        <p-skeleton height="1rem" [width]="celula === 0 ? '80%' : '60%'" />
+                        @switch (formasDaCelula()[celula]) {
+                            @case ("duplo") {
+                                <div class="skeleton-lista__pilha">
+                                    <p-skeleton height="1rem" width="75%" />
+                                    <p-skeleton height="0.75rem" width="50%" />
+                                </div>
+                            }
+                            @case ("avatar") {
+                                <div class="skeleton-lista__avatar">
+                                    <p-skeleton shape="circle" size="1.75rem" />
+                                    <p-skeleton height="1rem" width="60%" />
+                                </div>
+                            }
+                            @case ("selo") {
+                                <p-skeleton height="1.5rem" width="5.5rem" borderRadius="999px" />
+                            }
+                            @case ("interruptor") {
+                                <p-skeleton height="1.25rem" width="2.25rem" borderRadius="999px" />
+                            }
+                            @case ("icone") {
+                                <p-skeleton
+                                    size="1.75rem"
+                                    borderRadius="var(--p-border-radius-md, 6px)"
+                                />
+                            }
+                            @case ("icones") {
+                                <div class="skeleton-lista__icones">
+                                    <p-skeleton
+                                        size="1.75rem"
+                                        borderRadius="var(--p-border-radius-md, 6px)"
+                                    />
+                                    <p-skeleton
+                                        size="1.75rem"
+                                        borderRadius="var(--p-border-radius-md, 6px)"
+                                    />
+                                    <p-skeleton
+                                        size="1.75rem"
+                                        borderRadius="var(--p-border-radius-md, 6px)"
+                                    />
+                                </div>
+                            }
+                            @case ("caixa") {
+                                <p-skeleton size="1.1rem" borderRadius="4px" />
+                            }
+                            @default {
+                                <p-skeleton height="1rem" [width]="celula === 0 ? '80%' : '60%'" />
+                            }
+                        }
                     }
                 </div>
             }
         }
         @case ("cartoes") {
-            <div class="skeleton-lista__grade" [style.grid-template-columns]="grade()">
+            <div
+                class="skeleton-lista__grade"
+                [style.grid-template-columns]="grade()"
+                [style.gap]="espacamento"
+            >
                 @for (item of itens(); track item) {
                     <p-skeleton
                         [height]="alturaCartao"

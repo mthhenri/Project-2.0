@@ -1,0 +1,45 @@
+<div class="arvore-esqueleto" role="status" aria-busy="true" aria-live="polite">
+    <span class="arvore-esqueleto__sr">Carregando…</span>
+
+    @if (comBarra) {
+        <div class="arvore-esqueleto__barra">
+            <p-skeleton height="2rem" width="16rem" borderRadius="var(--p-border-radius-md, 6px)" />
+            <p-skeleton height="2rem" width="24rem" borderRadius="999px" />
+        </div>
+    }
+
+    <div class="arvore-esqueleto__colunas">
+        <div class="arvore-esqueleto__coluna">
+            <p-skeleton height="0.75rem" width="40%" />
+            @for (pasta of pastas; track pasta) {
+                <p-skeleton height="1.75rem" [width]="pasta === 0 ? '85%' : '70%'" />
+            }
+        </div>
+
+        <div class="arvore-esqueleto__coluna arvore-esqueleto__coluna--lista">
+            <div class="arvore-esqueleto__topo">
+                <p-skeleton height="0.75rem" width="55%" />
+                <p-skeleton height="1.25rem" width="35%" />
+            </div>
+            @for (demanda of demandas; track demanda) {
+                <div class="arvore-esqueleto__demanda">
+                    <p-skeleton height="0.75rem" width="45%" />
+                    <p-skeleton height="1.25rem" width="75%" />
+                    <p-skeleton height="0.75rem" width="55%" />
+                </div>
+            }
+        </div>
+
+        <div class="arvore-esqueleto__coluna arvore-esqueleto__coluna--aberta">
+            <p-skeleton height="0.75rem" width="30%" />
+            <p-skeleton height="2rem" width="55%" />
+            <div class="arvore-esqueleto__pessoas">
+                <p-skeleton height="1.75rem" width="9rem" borderRadius="999px" />
+                <p-skeleton height="1.75rem" width="9rem" borderRadius="999px" />
+                <p-skeleton height="1.75rem" width="9rem" borderRadius="999px" />
+            </div>
+            <p-skeleton height="1.5rem" width="45%" />
+            <p-skeleton height="10rem" />
+        </div>
+    </div>
+</div>

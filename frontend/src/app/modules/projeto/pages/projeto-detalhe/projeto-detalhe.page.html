@@ -1,6 +1,25 @@
 <div class="projeto-detalhe">
     @if (carregando() && !projeto()) {
-        <app-skeleton-lista variante="linhas" [quantidade]="2" />
+        <div
+            class="projeto-detalhe__cabecalho-cartao"
+            role="status"
+            aria-busy="true"
+            aria-live="polite"
+        >
+            <span class="projeto-detalhe__sr">Carregando…</span>
+            <p-skeleton height="8px" borderRadius="0" />
+            <div class="projeto-detalhe__cabecalho">
+                <div class="projeto-detalhe__cabecalho-esquerda">
+                    <p-skeleton height="1.75rem" width="22rem" />
+                    <p-skeleton height="1.25rem" width="30rem" />
+                    <p-skeleton height="1.75rem" width="14rem" borderRadius="999px" />
+                </div>
+                <div class="projeto-detalhe__cabecalho-acoes">
+                    <p-skeleton height="2.25rem" width="24rem" />
+                    <p-skeleton height="2rem" width="12rem" />
+                </div>
+            </div>
+        </div>
     }
 
     @if (projeto()) {
@@ -138,7 +157,12 @@
             [class.projeto-detalhe__demandas--oculto]="visaoAtual() === 'VOLUME'"
         >
             @if (carregandoDemandas()) {
-                <app-skeleton-lista variante="linhas" [quantidade]="6" />
+                <div class="projeto-detalhe__toolbar">
+                    <p-skeleton height="3.6875rem" borderRadius="0" />
+                </div>
+                <div class="projeto-detalhe__demandas-arvore">
+                    <app-demanda-arvore-esqueleto [comBarra]="false" />
+                </div>
             }
 
             @if (!carregandoDemandas()) {

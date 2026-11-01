@@ -7,7 +7,7 @@ import { ContextMenu } from 'primeng/contextmenu';
 import { MenuItem, MessageService } from 'primeng/api';
 import { DemandaGrafoNoDto, DemandaPlanejamentoDto, TipoDemandaStatusEnum, demandaEstaParada } from '@project20/shared';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
-import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { DemandaControleHorasEsqueletoComponent } from '../demanda-controle-horas-esqueleto/demanda-controle-horas-esqueleto.component';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { DemandaService } from '../../services/demanda.service';
@@ -66,7 +66,7 @@ interface CartaoParada {
         ContextMenu,
         DemandaStatusComponent,
         DemandaBarraControleHorasComponent,
-        SkeletonListaComponent,
+        DemandaControleHorasEsqueletoComponent,
         TempoExibicaoPipe,
     ],
     templateUrl: './demanda-controle-horas-painel.component.html',

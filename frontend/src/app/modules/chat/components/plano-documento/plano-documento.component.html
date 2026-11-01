@@ -1,9 +1,9 @@
 <section class="plano-documento" aria-label="Documento do plano">
     @if (carregando() && !plano()) {
         <div class="plano-documento__esqueleto" aria-busy="true">
-            <p-skeleton height="1.75rem" width="55%" />
-            <p-skeleton height="1.25rem" width="35%" />
-            <p-skeleton height="12rem" />
+            <p-skeleton height="4.875rem" />
+            <p-skeleton height="42.625rem" />
+            <p-skeleton height="2.75rem" width="30%" />
         </div>
     } @else if (erro() || !plano()) {
         <div class="plano-documento__erro" role="alert">

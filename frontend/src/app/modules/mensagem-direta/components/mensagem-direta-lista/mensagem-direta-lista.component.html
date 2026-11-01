@@ -60,9 +60,9 @@
         @if (buscaAtiva()) {
             @if (estado.buscando() || digitando()) {
                 <div class="lista-direta__esqueleto" aria-busy="true">
-                    <p-skeleton height="2.75rem" />
-                    <p-skeleton height="2.75rem" />
-                    <p-skeleton height="2.75rem" />
+                    <p-skeleton height="3.25rem" />
+                    <p-skeleton height="3.25rem" />
+                    <p-skeleton height="3.25rem" />
                 </div>
             } @else if (estado.erroNaBusca()) {
                 <div class="lista-direta__estado" role="alert">
@@ -152,10 +152,10 @@
             }
         } @else if (!estado.jaCarregouConversas() && estado.carregandoConversas()) {
             <div class="lista-direta__esqueleto" aria-busy="true">
-                <p-skeleton height="3rem" />
-                <p-skeleton height="3rem" />
-                <p-skeleton height="3rem" />
-                <p-skeleton height="3rem" />
+                <p-skeleton height="3.25rem" />
+                <p-skeleton height="3.25rem" />
+                <p-skeleton height="3.25rem" />
+                <p-skeleton height="3.25rem" />
             </div>
         } @else if (estado.erroNasConversas()) {
             <div class="lista-direta__estado" role="alert">

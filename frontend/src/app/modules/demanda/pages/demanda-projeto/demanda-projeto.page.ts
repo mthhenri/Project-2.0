@@ -36,6 +36,8 @@ import {
     nosCorrespondentes,
     statusVisiveis,
 } from '../../utils/demanda-filtro.util';
+import { DemandaArvoreEsqueletoComponent } from '../../components/demanda-arvore-esqueleto/demanda-arvore-esqueleto.component';
+import { DemandaControleHorasEsqueletoComponent } from '../../components/demanda-controle-horas-esqueleto/demanda-controle-horas-esqueleto.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 
 /** Último projeto usado, lembrado entre visitas (task 106). O modo (aba) não é lembrado: a tela sempre abre na Árvore. */
@@ -70,7 +72,7 @@ function gravarArmazenado(chave: string, valor: string): void {
 @Component({
     selector: 'app-demanda-projeto',
     standalone: true,
-    imports: [SkeletonListaComponent,
+    imports: [SkeletonListaComponent, DemandaArvoreEsqueletoComponent, DemandaControleHorasEsqueletoComponent,
         FormsModule,
         ReactiveFormsModule,
         SelectButtonModule,

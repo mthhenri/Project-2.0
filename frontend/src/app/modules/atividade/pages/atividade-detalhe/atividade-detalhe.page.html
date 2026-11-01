@@ -1,6 +1,41 @@
 <div class="atividade-detalhe">
     @if (carregando() && !atividade()) {
-        <app-skeleton-lista variante="linhas" [quantidade]="6" />
+        <div role="status" aria-busy="true" aria-live="polite">
+            <span class="atividade-detalhe__sr">Carregando…</span>
+            <div class="atividade-detalhe__breadcrumb">
+                <p-skeleton height="1.3125rem" width="24rem" />
+            </div>
+            <div class="atividade-detalhe__cabecalho">
+                <div class="atividade-detalhe__identificacao">
+                    <p-skeleton height="1.75rem" width="26rem" />
+                    <p-skeleton height="1rem" width="16rem" />
+                    <p-skeleton height="1.25rem" width="12rem" />
+                </div>
+                <div class="atividade-detalhe__status-inline">
+                    <p-skeleton height="0.75rem" width="5rem" />
+                    <p-skeleton height="2.25rem" width="11rem" />
+                </div>
+                <div class="atividade-detalhe__status-inline">
+                    <p-skeleton height="0.75rem" width="5rem" />
+                    <p-skeleton height="2.25rem" width="11rem" />
+                </div>
+            </div>
+            <section class="atividade-detalhe__faixa">
+                <p-skeleton height="2.5rem" />
+            </section>
+            <div class="atividade-detalhe__conteudo">
+                <div class="atividade-detalhe__bloco atividade-detalhe__bloco--esqueleto-curto">
+                    <p-skeleton height="1.25rem" width="30%" />
+                    <p-skeleton height="3.5rem" />
+                </div>
+                <div class="atividade-detalhe__bloco atividade-detalhe__bloco--esqueleto-longo">
+                    <p-skeleton height="1.25rem" width="25%" />
+                    <p-skeleton height="2.5rem" />
+                    <p-skeleton height="2.5rem" />
+                    <p-skeleton height="2.5rem" />
+                </div>
+            </div>
+        </div>
     } @else if (atividade(); as atividade) {
         <nav class="atividade-detalhe__breadcrumb" aria-label="Você está em">
             <a routerLink="/atividade">Atividades</a>

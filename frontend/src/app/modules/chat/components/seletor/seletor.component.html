@@ -43,9 +43,11 @@
         <div class="chat-seletor__corpo">
             @if (carregando() && conversas().length === 0 && planos().length === 0) {
                 <div class="chat-seletor__esqueleto" aria-busy="true">
-                    <p-skeleton height="2.5rem" />
-                    <p-skeleton height="2.5rem" />
-                    <p-skeleton height="2.5rem" />
+                    <p-skeleton height="1.25rem" width="30%" />
+                    <p-skeleton height="3.5625rem" />
+                    <p-skeleton height="3.5625rem" />
+                    <p-skeleton height="1.25rem" width="30%" />
+                    <p-skeleton height="3.5625rem" />
                 </div>
             } @else if (erro() && conversas().length === 0 && planos().length === 0) {
                 <div class="chat-seletor__vazio" role="alert">

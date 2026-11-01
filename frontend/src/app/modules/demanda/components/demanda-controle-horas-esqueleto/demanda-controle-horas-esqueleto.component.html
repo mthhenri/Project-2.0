@@ -1,0 +1,38 @@
+<div class="horas-esqueleto" role="status" aria-busy="true" aria-live="polite">
+    <span class="horas-esqueleto__sr">Carregando…</span>
+
+    <div class="horas-esqueleto__resumo">
+        @for (numero of numeros; track numero) {
+            <div class="horas-esqueleto__numero">
+                <p-skeleton height="0.75rem" width="45%" />
+                <p-skeleton height="1.5rem" width="60%" />
+            </div>
+        }
+    </div>
+
+    <p-skeleton height="2.1875rem" width="8.875rem" borderRadius="var(--p-border-radius-md, 6px)" />
+
+    <div class="horas-esqueleto__arvore">
+        <div class="horas-esqueleto__cabecalho">
+            <p-skeleton height="0.75rem" width="6rem" />
+            <p-skeleton height="0.75rem" width="6rem" />
+        </div>
+        @for (linha of linhas; track linha) {
+            <div class="horas-esqueleto__linha">
+                <p-skeleton height="1rem" [width]="linha % 2 === 0 ? '35%' : '28%'" />
+                <p-skeleton height="1.1rem" width="24rem" borderRadius="999px" />
+                <p-skeleton height="1.25rem" width="12rem" />
+            </div>
+        }
+    </div>
+
+    <div class="horas-esqueleto__cartoes">
+        @for (cartao of cartoes; track cartao) {
+            <div class="horas-esqueleto__cartao">
+                <p-skeleton height="1.25rem" width="40%" />
+                <p-skeleton height="2.75rem" />
+                <p-skeleton height="2.75rem" />
+            </div>
+        }
+    </div>
+</div>

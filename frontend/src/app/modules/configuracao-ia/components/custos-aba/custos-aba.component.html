@@ -73,7 +73,18 @@
                     </div>
                 }
             </div>
-            <app-skeleton-lista variante="cartoes" [quantidade]="2" />
+            <app-skeleton-lista
+                variante="cartoes"
+                [quantidade]="1"
+                larguraMinima="100%"
+                alturaCartao="13.125rem"
+            />
+            <app-skeleton-lista
+                variante="cartoes"
+                [quantidade]="1"
+                larguraMinima="100%"
+                alturaCartao="22rem"
+            />
         </div>
     } @else {
         @if (consulta(); as dados) {

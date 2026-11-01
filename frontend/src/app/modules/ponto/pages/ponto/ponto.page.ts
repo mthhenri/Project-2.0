@@ -30,6 +30,7 @@ import { ambiente } from '../../../../../environments/environment';
 import { PontoService } from '../../services/ponto.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { SkeletonModule } from 'primeng/skeleton';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
@@ -56,6 +57,7 @@ type ModoPonto = 'todos' | 'mensal';
         ButtonModule,
         TooltipModule,
         SkeletonListaComponent,
+        SkeletonModule,
         BarraRecargaComponent,
         MinutosParaHorasPipe,
         PontoResumoCardComponent,

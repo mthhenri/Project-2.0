@@ -63,4 +63,48 @@ describe('SkeletonListaComponent', () => {
         expect(grade?.style.gridTemplateColumns).toContain('minmax(28rem, 1fr)');
         expect(montado.elemento.querySelector<HTMLElement>('p-skeleton')?.style.height || montado.elemento.querySelector('p-skeleton')?.getAttribute('height')).toBeTruthy();
     });
+
+    it('formas das células: avatar, selo, interruptor, ícones, caixa e duas linhas mudam a estrutura da linha', async () => {
+        const montado = await montarComponente(SkeletonListaComponent, {
+            entradas: {
+                cabecalhos: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+                formas: ['avatar', 'duplo', 'selo', 'interruptor', 'icones', 'caixa', 'icone'],
+                quantidade: 1,
+            },
+        });
+        const linha = montado.elemento.querySelectorAll('.skeleton-lista__linha')[1];
+        expect(linha.querySelectorAll('.skeleton-lista__avatar p-skeleton').length).toBe(2);
+        expect(linha.querySelectorAll('.skeleton-lista__pilha p-skeleton').length).toBe(2);
+        expect(linha.querySelectorAll('.skeleton-lista__icones p-skeleton').length).toBe(3);
+        // avatar (2) + duplo (2) + selo (1) + interruptor (1) + ícones (3) + caixa (1) + ícone (1)
+        expect(linha.querySelectorAll('p-skeleton').length).toBe(11);
+    });
+
+    it('sem formas, cada célula é um bloco de texto', async () => {
+        const montado = await montarComponente(SkeletonListaComponent, { entradas: { cabecalhos: ['A', 'B'], quantidade: 1 } });
+        expect(montado.elemento.querySelectorAll('.skeleton-lista__linha')[1].querySelectorAll('p-skeleton').length).toBe(2);
+    });
+
+    it('cartões usam o espaçamento informado', async () => {
+        const montado = await montarComponente(SkeletonListaComponent, { entradas: { variante: 'cartoes', quantidade: 2, espacamento: '10px' } });
+        expect(montado.elemento.querySelector<HTMLElement>('.skeleton-lista__grade')?.style.gap).toBe('10px');
+    });
+
+    it('linhas com altura real não têm espaço entre si', async () => {
+        const montado = await montarComponente(SkeletonListaComponent, { entradas: { variante: 'linhas', quantidade: 2, alturaLinha: '2rem' } });
+        expect(montado.elemento.querySelector<HTMLElement>('.skeleton-lista')?.style.gap).toMatch(/^0(px)?$/);
+    });
+
+    it('linhas sem altura real mantêm o espaçamento padrão', async () => {
+        const montado = await montarComponente(SkeletonListaComponent, { entradas: { variante: 'linhas', quantidade: 2 } });
+        expect(montado.elemento.querySelector<HTMLElement>('.skeleton-lista')?.style.gap).toBe('');
+    });
+
+    it('largura mínima da tabela: cabeçalho e linhas têm a largura da tabela real e o esqueleto rola em vez de espremer', async () => {
+        const montado = await montarComponente(SkeletonListaComponent, { entradas: { cabecalhos: ['A', 'B'], quantidade: 1, larguraMinimaTabela: '60rem' } });
+        const linhas = montado.elemento.querySelectorAll<HTMLElement>('.skeleton-lista__linha');
+        expect(linhas[0].style.minWidth).toBe('60rem');
+        expect(linhas[1].style.minWidth).toBe('60rem');
+        expect(montado.elemento.querySelector<HTMLElement>('.skeleton-lista')?.style.overflowX).toBe('auto');
+    });
 });

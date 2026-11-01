@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, computed, signal } from '@angular/core';
 import { SkeletonModule } from 'primeng/skeleton';
+import { CelulaDoEsqueleto } from './esqueleto-tabela';
 
 /**
  * Esqueleto da primeira carga (task 98): reserva o espaço do conteúdo real para a tela não
@@ -30,13 +31,20 @@ export class SkeletonListaComponent {
     }
     /** `grid-template-columns` da tabela real (ex.: `2fr 1fr 1fr 6rem`); sem ele, colunas de largura igual. */
     @Input() set larguras(valor: string) { this.modeloDeColunas.set(valor); }
+    /** Forma de cada célula da tabela real (avatar, selo, interruptor…); sem ela, uma linha de texto em cada coluna. */
+    @Input() set formas(valor: readonly CelulaDoEsqueleto[]) { this.formasDaCelula.set(valor); }
+    /** Largura mínima da tabela real (ex.: `60rem`): abaixo dela a tabela rola na horizontal, e o esqueleto também, em vez de espremer as colunas. */
+    @Input() larguraMinimaTabela = '';
     /** Altura de uma linha da tabela real (ex.: `3.25rem`). */
     @Input() alturaLinha = '';
     /** Largura mínima de cada cartão na grade (ex.: `18rem`); define quantos cabem por linha, como na grade real. */
     @Input() larguraMinima = '14rem';
+    /** Espaço entre os cartões da grade (ex.: `10px`); o padrão é o da maioria das grades. */
+    @Input() espacamento = '0.75rem';
     /** Altura de cada cartão (ex.: `8.5rem`). */
     @Input() alturaCartao = '3.25rem';
 
+    readonly formasDaCelula = signal<readonly CelulaDoEsqueleto[]>([]);
     readonly rotulos = signal<readonly string[]>([]);
     private readonly modeloDeColunas = signal<string>('');
     readonly itens = signal<number[]>(Array.from({ length: 6 }, (_, indiceAtual) => indiceAtual));

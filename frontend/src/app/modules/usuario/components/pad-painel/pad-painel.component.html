@@ -29,11 +29,9 @@
 
     @if (pad.carregando()) {
         <div class="pad-painel__esqueleto" aria-busy="true">
-            <p-skeleton height="2rem" />
-            <p-skeleton height="1rem" width="90%" />
-            <p-skeleton height="1rem" width="75%" />
-            <p-skeleton height="1rem" width="85%" />
-            <p-skeleton height="1rem" width="60%" />
+            @for (secao of [1, 2, 3, 4, 5]; track secao) {
+                <p-skeleton height="3.0625rem" />
+            }
         </div>
     } @else {
         <div class="pad-painel__secoes">

@@ -1,9 +1,10 @@
 <section class="documentacao-demanda" aria-label="Textos da demanda">
     @if (carregando() && !demanda()) {
         <div class="documentacao-demanda__esqueleto" aria-busy="true">
-            <p-skeleton height="1.75rem" width="55%" />
-            <p-skeleton height="1.25rem" width="35%" />
-            <p-skeleton height="12rem" />
+            <p-skeleton height="2.1875rem" width="55%" />
+            <p-skeleton height="3.5625rem" />
+            <p-skeleton height="43.1875rem" />
+            <p-skeleton height="2.75rem" width="30%" />
         </div>
     } @else if (erro() || !demanda()) {
         <div class="documentacao-demanda__erro" role="alert">

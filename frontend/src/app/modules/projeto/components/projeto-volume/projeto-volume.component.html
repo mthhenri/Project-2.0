@@ -84,7 +84,12 @@
     </div>
 
     @if (primeiraCarga()) {
-        <app-skeleton-lista variante="cartoes" [quantidade]="3" />
+        <app-skeleton-lista
+            variante="cartoes"
+            [quantidade]="1"
+            larguraMinima="100%"
+            alturaCartao="23.625rem"
+        />
     } @else {
         <div class="projeto-volume__conteudo" [class.conteudo-recarregando]="recarregando()">
             <app-barra-recarga [ativa]="recarregando()" />

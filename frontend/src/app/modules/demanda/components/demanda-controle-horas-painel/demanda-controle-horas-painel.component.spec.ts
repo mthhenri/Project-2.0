@@ -182,7 +182,7 @@ describe('DemandaControleHorasPainelComponent', () => {
         const vazio = await montar({ nos: [] });
         expect(vazio.montado.elemento.textContent).toContain('ainda não tem demandas');
         const carregando = await montar({ nos: [], carregando: true });
-        expect(carregando.montado.elemento.querySelector('app-skeleton-lista')).not.toBeNull();
+        expect(carregando.montado.elemento.querySelector('app-demanda-controle-horas-esqueleto')).not.toBeNull();
     });
 
     it('o menu de contexto do desenvolvedor não tem Editar/Membros; as ações emitem o id da demanda', async () => {

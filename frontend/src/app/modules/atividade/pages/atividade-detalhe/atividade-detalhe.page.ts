@@ -28,7 +28,7 @@ import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pip
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
-import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { SkeletonModule } from 'primeng/skeleton';
 import { ExecucaoTimerComponent } from '../../../execucao/components/execucao-timer/execucao-timer.component';
 import { AtividadeTagsPopoverComponent } from '../../components/atividade-tags-popover/atividade-tags-popover.component';
 import { ExecucaoRegistroDialogComponent } from '../../components/execucao-registro-dialog/execucao-registro-dialog.component';
@@ -51,7 +51,7 @@ const EXECUCOES_RECENTES = 5;
         AtividadeTagsPopoverComponent,
         ExecucaoRegistroDialogComponent,
         ExecucaoTimerComponent,
-        SkeletonListaComponent,
+        SkeletonModule,
         ReactiveFormsModule,
         RouterLink,
         ButtonModule,

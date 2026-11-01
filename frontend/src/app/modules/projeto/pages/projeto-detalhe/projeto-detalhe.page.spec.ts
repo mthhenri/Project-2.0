@@ -33,7 +33,7 @@ const texto = (montado: Montado) => montado.elemento.textContent ?? '';
 describe('ProjetoDetalhePage', () => {
     it('pede o projeto e o grafo de demandas do id da rota; mostra o esqueleto até o projeto chegar', async () => {
         const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
-        expect(montado.elemento.querySelector('app-skeleton-lista')).not.toBeNull();
+        expect(montado.elemento.querySelector('[role="status"][aria-busy="true"]')).not.toBeNull();
         expect(esperarRequisicao(montado.http, 'GET', '/demanda/grafo').request.params.get('projetoId')).toBe('5');
         esperarRequisicao(montado.http, 'GET', '/projeto/5');
     });

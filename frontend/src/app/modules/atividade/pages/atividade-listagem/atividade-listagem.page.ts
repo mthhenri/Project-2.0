@@ -144,16 +144,14 @@ export class AtividadeListagemPage implements OnInit {
     /** Os rótulos e as larguras da tabela real (seleção só para o gestor; Usuário para quem vê toda a equipe), para o esqueleto não parecer outra tela. */
     readonly esqueleto = computed(() =>
         montarEsqueletoDeTabela([
-            ...(this.sessao.eGestor() ? [{ rotulo: '', peso: 36 }] : []),
-            { rotulo: 'Projeto', peso: 71 },
-            { rotulo: 'Demanda', peso: 212 },
-            { rotulo: 'Atividade', peso: 124 },
-            ...(this.sessao.temVisaoTotal() ? [{ rotulo: 'Usuário', peso: 93 }] : []),
-            { rotulo: 'Prioridade', peso: 119 },
-            { rotulo: 'Status', peso: 138 },
-            { rotulo: 'Tempo executado', peso: 97 },
-            { rotulo: 'Tags', peso: 67 },
-            { rotulo: 'Ações', peso: 124 },
+            ...(this.sessao.eGestor() ? [{ rotulo: '', peso: 44, celula: 'caixa' as const }] : []),
+            { rotulo: 'Atividade', peso: 536, celula: 'duplo' },
+            ...(this.sessao.temVisaoTotal() ? [{ rotulo: 'Usuário', peso: 306, celula: 'avatar' as const }] : []),
+            { rotulo: 'Prioridade', peso: 151, celula: 'selo' },
+            { rotulo: 'Status', peso: 253, celula: 'selo' },
+            { rotulo: 'Tempo executado', peso: 233 },
+            { rotulo: 'Tags', peso: 103, celula: 'icone' },
+            { rotulo: 'Ações', peso: 130, celula: 'icones' },
         ]),
     );
     readonly unidadeTempo = inject(VisualizacaoTempoService);

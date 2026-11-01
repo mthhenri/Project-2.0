@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-11-01 — Task 300: esqueletos fiéis às telas atuais
+
+Os esqueletos de carregamento ficaram para trás quando as telas mudaram (Atividades mostrava 10 colunas, o Ponto da equipe 2 cartões por linha onde a tela tem 3, a Árvore e o Controle de horas só linhas genéricas). Método: banco isolado com o seed de histórico, API atrasada no navegador e **medida no DOM** da tela carregada (colunas, altura e passo de linha, topo e altura de cada bloco), refletida no esqueleto.
+
+- **Componente compartilhado:** `app-skeleton-lista` ganhou `formas` (avatar, selo, interruptor, ícone, ícones, duas linhas, caixa), `espacamento` dos cartões e linhas sem espaço quando há `alturaLinha`; `montarEsqueletoDeTabela` devolve também `celulas`. Dois esqueletos próprios: Árvore (três colunas 20/28/52 e os mesmos pontos de quebra da tela) e Controle de horas.
+- **Telas refeitas ou ajustadas:** Atividades, Usuários, Execuções, Calendário, Tags, Ponto (equipe e mensal), Árvore, Controle de horas, detalhes de projeto e de atividade, Volume, Custos e abas da IA, chat (conversa, seletor, plano: documento, pontos, fontes, publicar), Documentações (demanda e seletor), pad, prioridades em cores, mensagens diretas (lista e nova), supervisão (lista), check-in (rodapé de 172 px reservado), aba Prompts. Mantidos por já fiéis ou de altura variável: Projetos, aba Provedor, conversa das mensagens diretas, cartão de referência (36 px + 18 de moldura = 54 px, igual ao real) e o diálogo de teste de prompts (resultado de IA).
+- **Testes:** frontend 195 arquivos / 2422 testes verdes (testes novos para as formas de célula, o espaçamento e o gap, `montarEsqueletoDeTabela` e os dois esqueletos; três testes antigos passaram a procurar o novo esqueleto); `lint:tudo` sem erros; build concluído.
+- **Ao vivo:** 1920×1080, 1366×768 (escuro e claro), 960×1080, 720×1280 e 1080×1920 (sem estouro horizontal); check-in a 520×640 com a resposta da situação simulada no navegador (a agenda real fica em memória e não dispara com `inicio_data` alterado).
+- **Achado do 720×1280:** as tabelas reais têm largura mínima e rolam na horizontal; o esqueleto as espremia (cabeçalho "Prio rida de"). Entrada `larguraMinimaTabela` no `app-skeleton-lista` (Atividades 60 rem, Usuários 47,25, Execuções 36,75); a rolagem do esqueleto passou a medir 960/756/588 px, como as tabelas reais (959/757/588).
+- **Achados:** no chat o esqueleto fica 9 px mais abaixo (a conversa carregada está rolada ao fim) e o rodapé cresce 42 px com a fileira de sugestões, que só existe com mensagens; no check-in o cabeçalho ganha uma linha de subtítulo (8 px) depois da carga. Nenhum dos dois é do esqueleto. "Minhas demandas" e "demanda aberta" do chat estão importados em `chat.page.ts` mas nenhum template os usa hoje.
+- **Não feito:** nada pendente da spec; o relatório da comparação está em `docs/specs/done/300-skeletons-fieis-as-telas-atuais/RELATORIO.md`.
+
+---
+
 ## 2026-11-01 — Auxiliar: Calendário só do gestor e Imprimir do ponto do próprio
 
 Duas pendências resolvidas pelo autor. A rota `/calendario` ganhou o `gestorGuard`: o desenvolvedor, que antes lia a tela pela URL, e o Auxiliar são levados de volta à raiz (os feriados aparecem no Ponto). O Imprimir do ponto voltou ao Auxiliar só para o próprio espelho: `podeImprimir` (gestor, ou quem não vê o ponto dos outros, ou o espelho aberto é o próprio), no lugar de `eAuxiliar()` na tela. Verificação: frontend 2410 testes (rota do calendário e Imprimir do Auxiliar novos), build e `lint:tudo` limpos; **sem nova verificação ao vivo** (o stack isolado já foi desfeito).

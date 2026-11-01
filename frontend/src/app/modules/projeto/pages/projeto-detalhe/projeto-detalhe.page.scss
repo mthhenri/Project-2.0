@@ -39,6 +39,16 @@
         }
     }
 
+    // Leitores de tela anunciam o carregamento; o visual é só o esqueleto.
+    &__sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
     &__faixa {
         height: 8px;
     }

@@ -61,12 +61,12 @@ export class UsuarioListagemPage implements OnInit {
     /** Os rótulos e as larguras da tabela real (a coluna Anotações só existe para o gestor), para o esqueleto não parecer outra tela. */
     readonly esqueleto = computed(() =>
         montarEsqueletoDeTabela([
-            { rotulo: 'Usuário', peso: 248 },
-            { rotulo: 'Cargo', peso: 218 },
-            { rotulo: 'Tipo', peso: 176 },
-            { rotulo: 'Status', peso: 160 },
-            ...(this.sessao.eGestor() ? [{ rotulo: 'Anotações', peso: 99 }] : []),
-            { rotulo: '', peso: 128 },
+            { rotulo: 'Usuário', peso: 619, celula: 'avatar' },
+            { rotulo: 'Cargo', peso: 409 },
+            { rotulo: 'Tipo', peso: 176, celula: 'selo' },
+            { rotulo: 'Status', peso: 160, celula: 'interruptor' },
+            ...(this.sessao.eGestor() ? [{ rotulo: 'Anotações', peso: 92, celula: 'icone' as const }] : []),
+            { rotulo: '', peso: 128, celula: 'icones' },
         ]),
     );
     private readonly desfazerService = inject(DesfazerService);

@@ -168,6 +168,12 @@
         flex-direction: column;
         gap: 0.75rem;
         padding: 1rem;
+
+        // Itens de 96 px da lista real: barra de 80 px com 16 px de intervalo.
+        &--lista {
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+        }
     }
 
     &__estado {

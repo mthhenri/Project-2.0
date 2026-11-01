@@ -43,6 +43,11 @@
         display: flex;
         flex-direction: column;
         gap: 1rem;
+
+        // Itens de 63 px com 4 px de intervalo, como a lista de tipos real.
+        &--tipos {
+            gap: 0.25rem;
+        }
     }
 
     &__tipos {

@@ -82,12 +82,18 @@
         font-size: 0.8125rem;
     }
 
-    &__esqueleto,
     &__anotacao,
     &__tratamento {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+    }
+
+    // Cartões de ponto de 125 px com 6 px de intervalo, como na lista real.
+    &__esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
     }
 
     &__lista {

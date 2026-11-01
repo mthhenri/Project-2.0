@@ -33,6 +33,19 @@
         color: var(--p-text-color);
     }
 
+    &__pilha {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    &__avatar,
+    &__icones {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
     &__grade {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));

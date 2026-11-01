@@ -85,9 +85,20 @@
                         <div #fluxo class="chat__fluxo">
                             @if (!jaCarregou()) {
                                 <div class="chat__esqueleto" aria-busy="true">
-                                    <p-skeleton height="3rem" width="55%" />
-                                    <p-skeleton height="5rem" width="75%" />
-                                    <p-skeleton height="3rem" width="40%" />
+                                    <div class="chat__linha chat__linha--usuario">
+                                        <p-skeleton height="4.4375rem" width="45%" />
+                                    </div>
+                                    <div class="chat__linha chat__linha--ia">
+                                        <p-skeleton size="1.875rem" borderRadius="8px" />
+                                        <p-skeleton height="8.3125rem" width="70%" />
+                                    </div>
+                                    <div class="chat__linha chat__linha--usuario">
+                                        <p-skeleton height="4.4375rem" width="35%" />
+                                    </div>
+                                    <div class="chat__linha chat__linha--ia">
+                                        <p-skeleton size="1.875rem" borderRadius="8px" />
+                                        <p-skeleton height="8.3125rem" width="70%" />
+                                    </div>
                                 </div>
                             } @else if (mensagensVisiveis().length === 0 && !aoVivo()) {
                                 <div class="chat__vazio">

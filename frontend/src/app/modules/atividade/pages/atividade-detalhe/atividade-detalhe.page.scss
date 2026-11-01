@@ -183,6 +183,25 @@
         }
     }
 
+    // Leitores de tela anunciam o carregamento; o visual é só o esqueleto.
+    &__sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    // Alturas dos dois blocos da tela carregada (123 px e 539 px a 1920×1080), para o conteúdo não empurrar nada na troca.
+    &__bloco--esqueleto-curto {
+        min-height: 7.6875rem;
+    }
+
+    &__bloco--esqueleto-longo {
+        min-height: 33.6875rem;
+    }
+
     &__conteudo {
         display: flex;
         flex-direction: column;

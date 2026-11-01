@@ -104,9 +104,19 @@
                 </div>
             } @else {
                 @if (carregando()) {
-                    <div class="demanda-projeto__carregando">
-                        <app-skeleton-lista variante="linhas" [quantidade]="8" />
-                    </div>
+                    @switch (modoVisualizacao()) {
+                        @case ("arvore") {
+                            <app-demanda-arvore-esqueleto />
+                        }
+                        @case ("controle-de-horas") {
+                            <app-demanda-controle-horas-esqueleto />
+                        }
+                        @default {
+                            <div class="demanda-projeto__carregando">
+                                <app-skeleton-lista variante="linhas" [quantidade]="8" />
+                            </div>
+                        }
+                    }
                 } @else {
                     @if (erroAoCarregarGrafo()) {
                         <div

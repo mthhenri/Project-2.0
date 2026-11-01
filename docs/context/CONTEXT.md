@@ -128,6 +128,7 @@ project-2.0/
   `app-dialog-dica-atalhos` no footer; criar fecha o dialog, e "Criar e adicionar outra" mantém o
   contexto. Leituras de tela usam esqueleto na primeira carga e conteúdo esmaecido + barra nas
   recargas (`comFeedbackProprio()` tira o overlay global); mutações são otimistas com rollback.
+  **[task 300]** O esqueleto imita a tela: `app-skeleton-lista` aceita `formas` (avatar, selo, interruptor, ícones, duas linhas, caixa; `montarEsqueletoDeTabela` com `celula`), `espacamento` e linhas coladas quando há `alturaLinha`; a Árvore e o Controle de horas têm esqueleto próprio (`app-demanda-arvore-esqueleto`, `app-demanda-controle-horas-esqueleto`). Esqueleto novo ou alterado parte das **medidas da tela carregada** (largura de coluna, altura e passo de linha), não de estimativa.
   Exclusões de atividade, projeto, usuário, tag, dia não útil e demanda chamam `PATCH :id/restaurar` no
   "Desfazer" do toast (6 s, `DesfazerService`); associações (membro, conexão) desfazem por re-POST.
   Restaurar não é em cascata e valida unicidade/dependências (`SYSTEM.SPEC.md` §9.2 #11).

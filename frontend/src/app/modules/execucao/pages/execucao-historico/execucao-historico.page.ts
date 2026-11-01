@@ -94,13 +94,13 @@ export class ExecucaoHistoricoPage implements OnInit {
     /** Os rótulos e as larguras da tabela real (Usuário e Ações só para o gestor), para o esqueleto não parecer outra tela. */
     readonly esqueleto = computed(() =>
         montarEsqueletoDeTabela([
-            ...(this.sessao.temVisaoTotal() ? [{ rotulo: 'Usuário', peso: 103 }] : []),
-            { rotulo: 'Atividade', peso: 260 },
-            { rotulo: 'Início', peso: 76 },
-            { rotulo: 'Fim', peso: 132 },
-            { rotulo: 'Duração', peso: 119 },
-            { rotulo: 'Descrição', peso: 300 },
-            ...(this.sessao.podeEditarExecucaoDeOutro() ? [{ rotulo: 'Ações', peso: 81 }] : []),
+            ...(this.sessao.temVisaoTotal() ? [{ rotulo: 'Usuário', peso: 169, celula: 'avatar' as const }] : []),
+            { rotulo: 'Atividade', peso: 320, celula: 'duplo' },
+            { rotulo: 'Início', peso: 71, celula: 'duplo' },
+            { rotulo: 'Fim', peso: 67, celula: 'duplo' },
+            { rotulo: 'Duração', peso: 103 },
+            { rotulo: 'Descrição', peso: 771 },
+            ...(this.sessao.podeEditarExecucaoDeOutro() ? [{ rotulo: 'Ações', peso: 75, celula: 'icone' as const }] : []),
         ]),
     );
 

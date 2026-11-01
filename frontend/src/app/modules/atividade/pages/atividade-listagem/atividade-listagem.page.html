@@ -134,10 +134,12 @@
     @if (primeiraCarga()) {
         <app-skeleton-lista
             variante="tabela"
-            [quantidade]="5"
+            [quantidade]="10"
             [cabecalhos]="esqueleto().cabecalhos"
             [larguras]="esqueleto().larguras"
-            alturaLinha="5.25rem"
+            [formas]="esqueleto().celulas"
+            larguraMinimaTabela="60rem"
+            alturaLinha="3.9375rem"
         />
     }
     <div class="atividade-listagem__area" [class.atividade-listagem__area--dividida]="dividido()">

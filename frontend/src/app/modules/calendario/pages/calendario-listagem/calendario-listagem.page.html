@@ -148,9 +148,10 @@
                 <app-skeleton-lista
                     variante="tabela"
                     [quantidade]="3"
-                    [cabecalhos]="esqueleto.cabecalhos"
-                    [larguras]="esqueleto.larguras"
-                    alturaLinha="3.25rem"
+                    [cabecalhos]="esqueleto().cabecalhos"
+                    [larguras]="esqueleto().larguras"
+                    [formas]="esqueleto().celulas"
+                    alturaLinha="3rem"
                 />
             } @else {
                 <div class="lista-recarga" [class.conteudo-recarregando]="recarregando()">

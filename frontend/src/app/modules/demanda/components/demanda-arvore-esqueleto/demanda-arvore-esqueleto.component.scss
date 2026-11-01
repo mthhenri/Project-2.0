@@ -1,0 +1,102 @@
+:host {
+    display: block;
+    height: 100%;
+    container-type: inline-size;
+}
+
+.arvore-esqueleto {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    background: var(--app-surface-0);
+
+    // Leitores de tela anunciam o carregamento; o visual é só o esqueleto.
+    &__sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    // A faixa da barra de filtros (59 px na tela real), reservada porque a barra só aparece depois da carga.
+    &__barra {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-height: 3.6875rem;
+        padding: 0 1.5rem;
+    }
+
+    &__colunas {
+        display: grid;
+        flex: 1;
+        grid-template-columns: minmax(0, 20fr) minmax(0, 28fr) minmax(0, 52fr);
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    &__coluna {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        min-width: 0;
+        padding: 1rem;
+        border-right: 1px solid var(--p-content-border-color);
+        overflow: hidden;
+
+        &--lista {
+            gap: 0;
+            padding: 0;
+        }
+
+        &--aberta {
+            border-right: 0;
+            padding: 1.25rem;
+        }
+    }
+
+    &__topo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-height: 4.25rem;
+        padding: 0.75rem 1rem;
+    }
+
+    // Uma linha da lista real (5,3 rem): rótulo da pasta, nome e resumo.
+    &__demanda {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        min-height: 5.3125rem;
+        padding: 0.75rem 1rem;
+    }
+
+    &__pessoas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}
+
+// Os mesmos pontos de quebra da tela real (`demanda-arvore-tela`): pastas mais estreitas e, em largura curta, a demanda aberta desce.
+@container (max-width: 1250px) {
+    .arvore-esqueleto__colunas {
+        grid-template-columns: minmax(0, 20fr) minmax(0, 25fr) minmax(0, 55fr);
+    }
+}
+
+@container (max-width: 1000px) {
+    .arvore-esqueleto__colunas {
+        grid-template-columns: 11rem minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) minmax(0, 1.4fr);
+    }
+
+    .arvore-esqueleto__coluna--aberta {
+        grid-column: 1 / -1;
+        border-top: 1px solid var(--app-surface-200);
+    }
+}

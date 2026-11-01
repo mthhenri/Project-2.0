@@ -82,9 +82,9 @@ const botaoPorTexto = (montado: Montado, rotulo: string) =>
 describe('AtividadeDetalhePage: carga e estados', () => {
     it('mostra o esqueleto enquanto carrega e depois o cabeçalho da atividade', async () => {
         const { montado } = await montarPagina();
-        expect(montado.elemento.querySelector('app-skeleton-lista')).not.toBeNull();
+        expect(montado.elemento.querySelector('[role="status"][aria-busy="true"]')).not.toBeNull();
         await carregar(montado);
-        expect(montado.elemento.querySelector('app-skeleton-lista')).toBeNull();
+        expect(montado.elemento.querySelector('[role="status"][aria-busy="true"]')).toBeNull();
         expect(montado.elemento.querySelector('h1')?.textContent).toContain('Implementar login');
         expect(texto(montado)).toContain('Demanda #10 — Demanda dez');
         expect(texto(montado)).toContain('Planejada');
