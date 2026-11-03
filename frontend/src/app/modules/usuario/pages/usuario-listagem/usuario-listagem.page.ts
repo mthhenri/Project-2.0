@@ -10,8 +10,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { Tag } from 'primeng/tag';
+import { PopoverModule } from 'primeng/popover';
 import { TooltipModule } from 'primeng/tooltip';
-import { UsuarioResumoDto, TipoUsuarioEnum, UsuarioListarDto } from '@project20/shared';
+import { UsuarioResumoDto, TipoUsuarioEnum, UsuarioListarDto, DESCRICAO_TIPO_USUARIO, TIPOS_USUARIO_NA_ORDEM_DA_AJUDA } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { rotuloTipoUsuario, severidadeTipoUsuario } from '../../../../core/utils/tipo-usuario';
@@ -19,6 +20,7 @@ import { podeAbrirAnotacoes } from '../../utils/anotacoes-acesso.util';
 import { AnotacoesAlteradasEvento, UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 import { UsuarioFormularioDialogComponent } from '../../components/usuario-formulario-dialog/usuario-formulario-dialog.component';
 import { UsuarioSenhaDialogComponent } from '../../components/usuario-senha-dialog/usuario-senha-dialog.component';
+import { UsuarioTipoDescricaoComponent } from '../../components/usuario-tipo-descricao/usuario-tipo-descricao.component';
 import { UsuarioCartaoComponent } from '../../components/usuario-cartao/usuario-cartao.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
@@ -46,7 +48,9 @@ interface FiltrosPersistidos {
         SelectButtonModule,
         ToggleSwitchModule,
         Tag,
+        PopoverModule,
         TooltipModule,
+        UsuarioTipoDescricaoComponent,
         UsuarioCartaoComponent,
         UsuarioAnotacoesDialogComponent,
         UsuarioFormularioDialogComponent,
@@ -292,6 +296,14 @@ export class UsuarioListagemPage implements OnInit {
     }
 
     readonly rotuloTipo = rotuloTipoUsuario;
+
+    /** Os tipos que a ajuda "Tipos de usuário" explica, do menor para o maior poder. */
+    readonly tiposDaAjuda = TIPOS_USUARIO_NA_ORDEM_DA_AJUDA;
+
+    /** A frase "o que é" do tipo, para o tooltip da tag na tabela. */
+    descricaoDoTipo(tipo: TipoUsuarioEnum): string {
+        return DESCRICAO_TIPO_USUARIO[tipo].queE;
+    }
 
     severidadeTipo(tipo: TipoUsuarioEnum): ReturnType<typeof severidadeTipoUsuario> {
         return severidadeTipoUsuario(tipo);

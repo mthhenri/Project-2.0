@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-11-03 — Task 306: a ajuda "Tipos de usuário" na tela de Usuários
+
+Pedido do autor: um lugar na tela de Usuários que diga o que cada tipo é. Não havia: a coluna `tipo_usuario.descricao` só repete o nome ("Gestor"); a explicação vivia em `SYSTEM.SPEC.md` §14. Decidido com o autor, em cima de um mockup: botão **"Tipos de usuário"** com popover, tooltip na tag da tabela e um bloco no formulário de criar e editar, com "o que é", "Pode" e "Não pode", e as **cores que o app já usa** em cada tipo.
+
+- **O que mudou:** `DESCRICAO_TIPO_USUARIO` e `TIPOS_USUARIO_NA_ORDEM_DA_AJUDA` no `shared` (sem migration e sem tocar a coluna do banco); componente `usuario-tipo-descricao`; popover, tooltip e bloco do formulário. A cor vem de `severidadeTipoUsuario`, para nunca divergir da tabela.
+- **Testes:** shared 310 (2 novos), frontend `usuario` 102 (8 novos) e suíte completa 198 arquivos e 2449 testes, build e `lint:tudo` limpos.
+- **Verificado ao vivo** (Postgres local, backend e frontend reais, Playwright, 5 formatos de desktop, claro e escuro): sem erros de console. **Achado só na verificação:** o popover com limite de 70% da altura cortava Gestor e Administrador até em 1080; agora usa quatro colunas quando cabem.
+- **Pendente:** os textos são rascunho do agente e esperam a revisão do autor; foco por teclado e leitor de tela não foram exercitados. Relatório: `docs/specs/done/306-usuarios-legenda-dos-tipos/verificacao.md`.
+- **No mesmo pedido** (sem código): spec 307 (Minhas demandas do chat inclui as demandas de que o usuário é membro; Participar e Sair para desenvolvedor e auxiliar), 304 e 305 e a guarda-chuva `demanda-atividades-e-conexoes`, todas no backlog.
+
 ## 2026-11-03 — P-073: o Windows Defender barrou o Project Desktop 1.1.2
 
 O autor tentou baixar o 1.1.2 pelo menu do perfil e recebeu "Não foi possível baixar - Erro de download". O servidor entrega o arquivo certo (85.138.992 bytes, conferido pela API); quem barrou foi o Defender, com `Program:Win32/Contebrew.A!ml` (heurística de aprendizado de máquina sobre executável Electron sem assinatura), apagando o download e bloqueando também o arquivo de `desktop/release/`. As versões 1.0.1, 1.1.0 e 1.1.1 passam; o 1.1.2 empacotado de novo passou no `MpCmdRun -Scan` ("found no threats"). Registrado como P-073 (contornado: empacotar de novo e escanear antes de publicar; correção de fato: assinatura, I-049).

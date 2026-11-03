@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { TipoUsuarioEnum, UsuarioResumoDto } from '@project20/shared';
+import { DESCRICAO_TIPO_USUARIO, TipoUsuarioEnum, UsuarioResumoDto } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { responderErro } from '../../../../../testes/http-teste';
 import { criarUsuarioTeste } from '../../../../../testes/usuarios-teste';
@@ -237,5 +237,25 @@ describe('UsuarioListagemPage — status e exclusão', () => {
         await montado.atualizar();
         expect(montado.componente.usuarios().map((usuarioResumoDto) => usuarioResumoDto.id)).toEqual([2, 3]);
         expect(montado.componente.totalRegistros()).toBe(2);
+    });
+});
+
+describe('UsuarioListagemPage — ajuda dos tipos (task 306)', () => {
+    it('o botão "Tipos de usuário" abre a ajuda com os quatro tipos', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+        await carregar(montado, [resumo(2)]);
+        const botao = Array.from(montado.elemento.querySelectorAll<HTMLElement>('button')).find((candidato) => candidato.textContent?.includes('Tipos de usuário'));
+        expect(botao).toBeTruthy();
+        botao!.click();
+        await montado.atualizar();
+        const ajuda = document.body.querySelector('.usuario-listagem__tipos');
+        expect(ajuda).not.toBeNull();
+        expect(ajuda!.querySelectorAll('app-usuario-tipo-descricao')).toHaveLength(4);
+        for (const rotulo of ['Desenvolvedor', 'Auxiliar', 'Gestor', 'Administrador']) expect(ajuda!.textContent).toContain(rotulo);
+    });
+
+    it('a descrição do tipo vira o tooltip da tag da tabela', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+        expect(montado.componente.descricaoDoTipo(TipoUsuarioEnum.AUXILIAR)).toBe(DESCRICAO_TIPO_USUARIO[TipoUsuarioEnum.AUXILIAR].queE);
     });
 });

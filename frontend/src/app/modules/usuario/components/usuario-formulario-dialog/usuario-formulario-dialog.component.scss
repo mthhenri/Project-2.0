@@ -42,6 +42,15 @@
         font-family: var(--font-mono, monospace);
     }
 
+    // O bloco "o que é" do tipo escolhido (task 306), logo abaixo dos botões do tipo.
+    &__tipo-descricao {
+        display: block;
+        padding: 0.75rem;
+        border: 1px solid var(--app-surface-100);
+        border-radius: var(--p-border-radius-md, 0.5rem);
+        background: var(--app-surface-50);
+    }
+
     &__dica {
         font-size: 0.75rem;
         color: var(--p-text-muted-color);

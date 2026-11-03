@@ -114,6 +114,10 @@
                         >O tipo do próprio perfil não pode ser alterado.</small
                     >
                 }
+                <app-usuario-tipo-descricao
+                    class="usuario-formulario-dialog__tipo-descricao"
+                    [tipo]="tipoSelecionado()"
+                />
             </div>
 
             @if (!editando()) {

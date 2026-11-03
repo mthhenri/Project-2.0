@@ -26,6 +26,45 @@
         color: var(--p-text-muted-color);
     }
 
+    &__acoes-cabecalho {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    // A ajuda "Tipos de usuário" (task 306): os quatro lado a lado quando cabem; em tela estreita quebram em menos colunas e rolam.
+    &__tipos {
+        width: min(64rem, calc(100vw - 3rem));
+    }
+
+    &__tipos-titulo {
+        margin: 0 0 0.125rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    &__tipos-subtitulo {
+        margin: 0 0 0.75rem;
+        font-size: 0.8125rem;
+        color: var(--p-text-muted-color);
+    }
+
+    &__tipos-grade {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+        gap: 0.75rem;
+        max-height: calc(100vh - 13rem);
+        overflow-y: auto;
+    }
+
+    &__tipos-cartao {
+        display: block;
+        padding: 0.75rem;
+        border: 1px solid var(--app-surface-100);
+        border-radius: var(--p-border-radius-md, 0.5rem);
+    }
+
     &__toolbar {
         display: flex;
         flex-wrap: wrap;

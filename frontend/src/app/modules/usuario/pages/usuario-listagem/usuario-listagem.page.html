@@ -9,10 +9,41 @@
                 >
             }
         </div>
-        @if (sessao.eGestor()) {
-            <p-button label="Novo Usuário" icon="pi pi-plus" (onClick)="formularioDialog.abrir()" />
-        }
+        <div class="usuario-listagem__acoes-cabecalho">
+            <p-button
+                label="Tipos de usuário"
+                icon="pi pi-question-circle"
+                severity="secondary"
+                [outlined]="true"
+                aria-haspopup="dialog"
+                (onClick)="tiposPopover.toggle($event)"
+            />
+            @if (sessao.eGestor()) {
+                <p-button
+                    label="Novo Usuário"
+                    icon="pi pi-plus"
+                    (onClick)="formularioDialog.abrir()"
+                />
+            }
+        </div>
     </div>
+
+    <p-popover #tiposPopover>
+        <div class="usuario-listagem__tipos" role="dialog" aria-label="Tipos de usuário">
+            <h2 class="usuario-listagem__tipos-titulo">O que é cada tipo de usuário</h2>
+            <p class="usuario-listagem__tipos-subtitulo">
+                O tipo define o que a pessoa vê e o que pode fazer no Project 2.0.
+            </p>
+            <div class="usuario-listagem__tipos-grade">
+                @for (tipo of tiposDaAjuda; track tipo) {
+                    <app-usuario-tipo-descricao
+                        class="usuario-listagem__tipos-cartao"
+                        [tipo]="tipo"
+                    />
+                }
+            </div>
+        </div>
+    </p-popover>
 
     <div class="usuario-listagem__toolbar">
         <form [formGroup]="formularioFiltros" class="usuario-listagem__busca">
@@ -117,6 +148,8 @@
                         <p-tag
                             [value]="rotuloTipo(usuario.tipo)"
                             [severity]="severidadeTipo(usuario.tipo)"
+                            [pTooltip]="descricaoDoTipo(usuario.tipo)"
+                            tooltipPosition="top"
                         />
                     </td>
                     <td class="usuario-listagem__coluna-status">
