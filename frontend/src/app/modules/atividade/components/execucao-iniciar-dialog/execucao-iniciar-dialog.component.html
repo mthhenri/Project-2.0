@@ -1,0 +1,109 @@
+<p-dialog
+    [visible]="visivel()"
+    (visibleChange)="visivel.set($event)"
+    header="Iniciar execução"
+    dialogFormulario
+    [dialogBloqueado]="salvando()"
+    (dialogEnviar)="confirmar()"
+    [modal]="true"
+    [style]="{ width: '42rem' }"
+    [draggable]="false"
+    [dismissableMask]="true"
+>
+    @if (atividade(); as atividadeAberta) {
+        <p class="execucao-iniciar__atividade">
+            {{ atividadeAberta.nomeProjeto }} · {{ atividadeAberta.nome }}
+        </p>
+        @if (sessao.temVisaoTotal()) {
+            <div class="execucao-iniciar__executor">
+                <span class="execucao-iniciar__avatar">{{
+                    iniciais(atividadeAberta.nomeUsuario)
+                }}</span>
+                <span class="text-color">{{ atividadeAberta.nomeUsuario }}</span>
+            </div>
+        }
+    }
+
+    <form [formGroup]="formulario" class="execucao-iniciar__form">
+        <div class="execucao-iniciar__campo">
+            <label for="execucao-iniciar-descricao" class="execucao-iniciar__rotulo">
+                O que você vai desenvolver?{{ descricaoOpcional() ? " (opcional)" : " *" }}
+            </label>
+            <textarea
+                id="execucao-iniciar-descricao"
+                pTextarea
+                spellcheck="true"
+                appBloquearCaracteresProibidos
+                formControlName="descricao"
+                rows="4"
+                placeholder="Descreva a execução..."
+                class="w-full"
+            ></textarea>
+            @if (campoInvalido()) {
+                <small class="execucao-iniciar__erro">
+                    @if (formulario.controls.descricao.hasError("pattern")) {
+                        {{ mensagemCaracteresProibidos }}
+                    } @else {
+                        Informe a descrição da execução
+                    }
+                </small>
+            }
+            <app-assistente-descricao
+                [textoAtual]="formulario.value.descricao || ''"
+                tipoEntidade="execucao"
+                [contextoEntidade]="atividade()?.nome ?? ''"
+                (textoAuxiliadoAceito)="aceitarDescricaoDoAssistente($event)"
+            />
+        </div>
+
+        <div class="execucao-iniciar__campo">
+            <span class="execucao-iniciar__rotulo">Últimas execuções desta atividade</span>
+            @if (carregandoExecucoes()) {
+                <i class="pi pi-spin pi-spinner text-muted-color"></i>
+            } @else if (execucoes().length) {
+                <div class="execucao-iniciar__lista">
+                    @for (execucao of execucoes(); track execucao.id) {
+                        <div class="execucao-iniciar__item">
+                            <span class="execucao-iniciar__data">
+                                {{ execucao.inicioData | dataBrasileira }}
+                                @if (execucao.fimData) {
+                                    · {{ execucao.duracaoMinutos | minutosParagHoras }}
+                                } @else {
+                                    · <span class="text-primary-500">em andamento</span>
+                                }
+                            </span>
+                            <span
+                                class="execucao-iniciar__descricao"
+                                [pTooltip]="execucao.descricao"
+                                tooltipPosition="top"
+                                >{{ execucao.descricao }}</span
+                            >
+                            <button
+                                type="button"
+                                class="execucao-iniciar__usar"
+                                pTooltip="Copiar esta descrição para o campo"
+                                tooltipPosition="left"
+                                (click)="usarDescricao(execucao.descricao)"
+                            >
+                                <i class="pi pi-replay" aria-hidden="true"></i> Usar
+                            </button>
+                        </div>
+                    }
+                </div>
+            } @else {
+                <p class="text-muted-color">Nenhuma execução anterior.</p>
+            }
+        </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <app-dialog-dica-atalhos [comTextarea]="true" />
+        <p-button label="Cancelar" [text]="true" (onClick)="visivel.set(false)" />
+        <p-button
+            label="Iniciar"
+            icon="pi pi-play"
+            [loading]="salvando()"
+            (onClick)="confirmar()"
+        />
+    </ng-template>
+</p-dialog>

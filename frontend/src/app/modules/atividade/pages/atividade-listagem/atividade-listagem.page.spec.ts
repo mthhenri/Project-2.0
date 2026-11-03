@@ -10,6 +10,7 @@ import {
 } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
+import { ExecucaoIniciarDialogComponent } from '../../components/execucao-iniciar-dialog/execucao-iniciar-dialog.component';
 import { ExecucaoEncerrarDialogComponent } from '../../../../shared/components/execucao-encerrar-dialog/execucao-encerrar-dialog.component';
 import { AtividadeListagemPage } from './atividade-listagem.page';
 
@@ -549,40 +550,14 @@ describe('AtividadeListagemPage: play e pausa pela linha', () => {
         expect(pausa.disabled).toBe(false);
     });
 
-    it('iniciar: a descrição é obrigatória para o dono desenvolvedor e opcional para o dono gestor', async () => {
-        const { montado } = await montarPagina();
-        await carregar(montado, [criarAtividade(1), criarAtividade(2, { usuarioTipo: TipoUsuarioEnum.GESTOR })]);
-        const [doDesenvolvedor, doGestor] = montado.componente.atividades();
-        montado.componente.alternarExecucao(doDesenvolvedor);
-        expect(montado.componente.modoExecucao()).toBe('iniciar');
-        expect(montado.componente.descricaoExecucaoOpcional()).toBe(false);
-        expect(montado.componente.formularioExecucao.valid).toBe(false);
-        montado.componente.alternarExecucao(doGestor);
-        expect(montado.componente.descricaoExecucaoOpcional()).toBe(true);
-        expect(montado.componente.formularioExecucao.valid).toBe(true);
-    });
-
-    it('confirmar sem descrição obrigatória não chama a API', async () => {
+    it('iniciar abre o diálogo "Iniciar execução" com a atividade da linha e recarrega a lista quando ela inicia', async () => {
         const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
         await carregar(montado, [criarAtividade(1)]);
+        const abrir = vi.spyOn(ExecucaoIniciarDialogComponent.prototype, 'abrir').mockImplementation(() => {});
         montado.componente.alternarExecucao(montado.componente.atividades()[0]);
-        montado.componente.confirmarExecucao();
-        montado.http.expectNone((registroSeguinte) => registroSeguinte.method === 'POST' && registroSeguinte.url.endsWith('/execucao'));
-        expect(montado.componente.campoInvalidoExecucao('descricao')).toBe(true);
-    });
-
-    it('confirmar o início envia atividade e descrição, fecha o dialog e recarrega a lista', async () => {
-        const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
-        await carregar(montado, [criarAtividade(1)]);
-        montado.componente.alternarExecucao(montado.componente.atividades()[0]);
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/execucao'), pagina([], 0));
-        montado.componente.formularioExecucao.patchValue({ descricao: '  Ajustar login  ' });
-        montado.componente.confirmarExecucao();
-        const requisicao = esperarRequisicao(montado.http, 'POST', '/execucao');
-        expect(requisicao.request.body).toEqual({ atividadeId: 1, descricao: 'Ajustar login' });
-        responderSucesso(requisicao, {});
-        await montado.atualizar();
-        expect(montado.componente.mostrarDialogExecucao()).toBe(false);
+        expect(abrir).toHaveBeenCalledWith(montado.componente.atividades()[0]);
+        vi.restoreAllMocks();
+        (montado.fixture.debugElement.query((elemento) => elemento.name === 'app-execucao-iniciar-dialog').componentInstance as ExecucaoIniciarDialogComponent).iniciada.emit();
         esperarRequisicao(montado.http, 'GET', '/atividade');
     });
 
@@ -600,14 +575,6 @@ describe('AtividadeListagemPage: play e pausa pela linha', () => {
         await carregar(montado, [criarAtividade(1, { execucaoAtivaId: 8 })]);
         montado.componente.aposEncerrarExecucao();
         esperarRequisicao(montado.http, 'GET', '/atividade');
-    });
-
-    it('"Usar" copia a descrição de uma execução anterior para o campo', async () => {
-        const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
-        await carregar(montado, [criarAtividade(1)]);
-        montado.componente.usarDescricaoExecucao('Retomar migração');
-        expect(montado.componente.formularioExecucao.value.descricao).toBe('Retomar migração');
-        expect(montado.componente.formularioExecucao.controls.descricao.dirty).toBe(true);
     });
 
     it('o cronômetro da linha só vale para a execução do próprio usuário', async () => {

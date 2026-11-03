@@ -107,6 +107,31 @@
                                 <app-atividade-em-execucao />
                             }
                             <app-prioridade-selo [prioridade]="atividade.prioridade" />
+                            @if (podeExecutar(atividade)) {
+                                <span
+                                    class="demanda-atividades__gatilho"
+                                    [pTooltip]="rotuloExecucao(atividade)"
+                                    tooltipPosition="left"
+                                >
+                                    <p-button
+                                        styleClass="demanda-atividades__botao-execucao"
+                                        [icon]="
+                                            atividade.execucaoAtivaId !== null
+                                                ? 'pi pi-pause'
+                                                : 'pi pi-play'
+                                        "
+                                        [rounded]="true"
+                                        [text]="true"
+                                        [disabled]="!podeAlternar(atividade)"
+                                        [ariaLabel]="
+                                            atividade.execucaoAtivaId !== null
+                                                ? 'Encerrar execução'
+                                                : 'Iniciar execução'
+                                        "
+                                        (onClick)="alternarExecucao(atividade)"
+                                    />
+                                </span>
+                            }
                         </div>
                         <div class="demanda-atividades__meta">
                             <span class="demanda-atividades__executor">
@@ -150,3 +175,6 @@
         }
     }
 </div>
+
+<app-execucao-iniciar-dialog #dialogoIniciar (iniciada)="execucaoAlterada.emit()" />
+<app-execucao-encerrar-dialog #dialogoEncerrar (encerrada)="execucaoAlterada.emit()" />

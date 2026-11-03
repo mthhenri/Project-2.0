@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-11-03 — Pós-304: play e pause no cartão da atividade da demanda
+
+A pedido do autor, os botões que a 304 deixara de fora. O diálogo "Iniciar execução" estava embutido na `atividade-listagem.page`; virou o componente `execucao-iniciar-dialog` (`abrir(atividade)`, saída `iniciada`), usado agora pela listagem e pelo painel de atividades da demanda aberta. O "Encerrar execução" já era o compartilhado.
+
+- **Painel** (`demanda-atividades-painel`): play/pause redondo em cada cartão, com a regra da listagem (`podeConduzirExecucaoDeOutro` ou dono; play só em Planejada e Desenvolvendo, com o motivo no tooltip); `execucaoAlterada` faz a `demanda-aberta` recarregar as atividades.
+- **Listagem:** perdeu o estado, o formulário, o template e o SCSS do diálogo (−300 linhas); os testes do início foram para o spec do componente novo.
+- **Testes:** diálogo novo 5, painel +4, listagem ajustada; `lint:tudo` limpo; ao vivo como auxiliar (pausar, iniciar, cartão "Em execução").
+
 ## 2026-11-03 — Task 305: a aba Conexões da demanda mostra o recorte do grafo
 
 Segunda do guarda-chuva `demanda-atividades-e-conexoes`. O `demanda-grafo` ganhou o modo `recorte` e a aba passou a desenhar nele a demanda e as ligadas a ela.

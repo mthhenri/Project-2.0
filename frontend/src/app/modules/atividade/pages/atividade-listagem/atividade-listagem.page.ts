@@ -1,9 +1,10 @@
 import { montarEsqueletoDeTabela } from '../../../../shared/components/skeleton-lista/esqueleto-tabela';
 import { Component, inject, signal, DestroyRef, OnInit, HostListener, computed, effect, untracked, viewChild } from '@angular/core';
+import { ExecucaoIniciarDialogComponent } from '../../components/execucao-iniciar-dialog/execucao-iniciar-dialog.component';
 import { ExecucaoRegistroDialogComponent } from '../../components/execucao-registro-dialog/execucao-registro-dialog.component';
 import { ExecucaoEncerrarDialogComponent } from '../../../../shared/components/execucao-encerrar-dialog/execucao-encerrar-dialog.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, debounceTime, distinctUntilChanged, forkJoin, of, catchError, map, Observable } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
@@ -11,7 +12,6 @@ import { ButtonModule } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { InputTextModule } from 'primeng/inputtext';
-import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { Tag } from 'primeng/tag';
@@ -27,11 +27,7 @@ import {
     AtividadeAlterarDto,
     TagResumoDto,
     UsuarioResumoDto,
-    ExecucaoItemDto,
-    ExecucaoIniciarDto,
     temPermissaoDeGestor,
-    REGEX_SEM_CARACTERES_PROIBIDOS,
-    MENSAGEM_CARACTERES_PROIBIDOS,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { AtividadePrioridadeService } from '../../../../core/services/atividade-prioridade.service';
@@ -40,12 +36,8 @@ import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
-import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
-import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
-import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
-import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import {
     ATIVIDADE_STATUS_OPCOES,
     ATIVIDADE_STATUS_NAO_DESENVOLVIDA,
@@ -54,8 +46,6 @@ import {
     rotuloStatusAtividade,
     SeveridadeTag,
 } from '../../models/atividade.model';
-import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
-import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { AtividadePrioridadesDialogComponent } from '../../components/atividade-prioridades-dialog/atividade-prioridades-dialog.component';
 import { AtividadeNovaDialogComponent } from '../../components/atividade-nova-dialog/atividade-nova-dialog.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
@@ -90,8 +80,6 @@ import {
         PrioridadeSeloComponent,
         SkeletonListaComponent,
         BarraRecargaComponent,
-        DialogFormularioDirective,
-        DialogDicaAtalhosComponent,
         AtividadeNovaDialogComponent,
         AtividadePrioridadesDialogComponent,
         ReactiveFormsModule,
@@ -100,7 +88,6 @@ import {
         Select,
         MultiSelectModule,
         InputTextModule,
-        TextareaModule,
         DialogModule,
         DatePickerModule,
         Tag,
@@ -115,13 +102,10 @@ import {
         AlcaDivisaoComponent,
         AtividadePrioridadeBolinhaComponent,
         AtividadeBarraEmMassaComponent,
+        ExecucaoIniciarDialogComponent,
         ExecucaoRegistroDialogComponent,
         ExecucaoEncerrarDialogComponent,
-        AssistenteDescricaoComponent,
-        DataBrasileiraPipe,
-        MinutosParaHorasPipe,
         TempoExibicaoPipe,
-        BloquearCaracteresProibidosDirective,
     ],
     templateUrl: './atividade-listagem.page.html',
     styleUrl: './atividade-listagem.page.scss',
@@ -217,24 +201,11 @@ export class AtividadeListagemPage implements OnInit {
     readonly dividido = computed(() => this.aberta() !== null);
     private readonly painel = viewChild(AtividadeDemandaPainelComponent);
 
-    // --- Dialog: iniciar/encerrar execução ---
-    readonly mostrarDialogExecucao = signal<boolean>(false);
-    readonly salvandoExecucao = signal<boolean>(false);
-    readonly modoExecucao = signal<'iniciar' | 'encerrar'>('iniciar');
-    readonly atividadeExecucao = signal<AtividadeResumoDto | null>(null);
-    readonly execucoesDialogExecucao = signal<ExecucaoItemDto[]>([]);
-    readonly carregandoExecucoesDialog = signal<boolean>(false);
-
-    readonly formularioExecucao = this.formBuilder.group({
-        descricao: ['', [Validators.required, Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
-    });
-    /** Descrição opcional quando o dono da atividade em execução é gestor. */
-    readonly descricaoExecucaoOpcional = signal<boolean>(false);
-
+    // --- Dialogs: iniciar (próprio) e encerrar (compartilhado) execução ---
+    private readonly dialogoIniciar = viewChild.required<ExecucaoIniciarDialogComponent>('dialogoIniciar');
     private readonly registroDialog = viewChild.required<ExecucaoRegistroDialogComponent>('registroDialog');
     private readonly dialogoEncerrar = viewChild.required<ExecucaoEncerrarDialogComponent>('dialogoEncerrar');
 
-    readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
 
     constructor() {
     // Pausar pelo chip da topbar muda a linha da atividade: a lista se atualiza (task 95).
@@ -623,62 +594,13 @@ export class AtividadeListagemPage implements OnInit {
             return;
         }
 
-        this.modoExecucao.set('iniciar');
-        this.atividadeExecucao.set(atividade);
-        this.formularioExecucao.reset({ descricao: '' });
-
-        // Descrição obrigatória apenas quando o dono da atividade é desenvolvedor.
-        const donoEhGestor = !!atividade.usuarioTipo && temPermissaoDeGestor(atividade.usuarioTipo);
-        this.descricaoExecucaoOpcional.set(donoEhGestor);
-        const controleDescricao = this.formularioExecucao.get('descricao')!;
-        controleDescricao.setValidators(
-            donoEhGestor
-                ? [Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]
-                : [Validators.required, Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)],
-        );
-        controleDescricao.updateValueAndValidity();
-
-        this.carregarExecucoesDialog(atividade.id);
-        this.mostrarDialogExecucao.set(true);
-    }
-
-    confirmarExecucao(): void {
-        if (this.formularioExecucao.invalid) {
-            this.formularioExecucao.markAllAsTouched();
-            return;
-        }
-
-        const atividade = this.atividadeExecucao();
-        if (!atividade) return;
-
-        const descricao = this.formularioExecucao.value.descricao!.trim();
-        this.salvandoExecucao.set(true);
-        const dto: ExecucaoIniciarDto = { atividadeId: atividade.id, descricao };
-        this.atividadeService
-            .iniciarExecucao(dto)
-            .pipe(finalize(() => this.salvandoExecucao.set(false)))
-            .subscribe({ next: (resposta) => this.aposExecucao(resposta.sucesso, 'Execução iniciada com sucesso') });
+        this.dialogoIniciar().abrir(atividade);
     }
 
     /** Execução encerrada pelo diálogo compartilhado: a listagem se atualiza e a linha volta a mostrar o play. */
     aposEncerrarExecucao(): void {
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Execução encerrada com sucesso' });
         this.buscarAtividades();
-    }
-
-    /** Copia a descrição de uma execução anterior para o campo, para retomar o trabalho sem digitar. */
-    usarDescricaoExecucao(descricao: string): void {
-        this.formularioExecucao.patchValue({ descricao });
-        this.formularioExecucao.controls.descricao.markAsDirty();
-    }
-
-    aceitarDescricaoAssistenteExecucao(texto: string): void {
-        this.formularioExecucao.patchValue({ descricao: texto });
-    }
-
-    campoInvalidoExecucao(nomeCampo: string): boolean {
-        const controle = this.formularioExecucao.get(nomeCampo);
-        return !!(controle?.invalid && controle?.touched);
     }
 
     abrirDialogRegistro(atividade: AtividadeResumoDto): void {
@@ -827,26 +749,6 @@ export class AtividadeListagemPage implements OnInit {
     // ---------------------------------------------------------------------------
     // Privados
     // ---------------------------------------------------------------------------
-
-    private aposExecucao(sucesso: boolean, mensagem: string): void {
-        if (!sucesso) return;
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: mensagem });
-        this.mostrarDialogExecucao.set(false);
-        this.buscarAtividades();
-    }
-
-    private carregarExecucoesDialog(atividadeId: number): void {
-        this.carregandoExecucoesDialog.set(true);
-        this.execucoesDialogExecucao.set([]);
-        this.atividadeService
-            .listarExecucoesPorAtividade(atividadeId)
-            .pipe(finalize(() => this.carregandoExecucoesDialog.set(false)))
-            .subscribe({
-                next: (resposta) => {
-                    if (resposta.sucesso && resposta.dados) this.execucoesDialogExecucao.set(resposta.dados.itens);
-                },
-            });
-    }
 
     private carregarUsuarios(): void {
         this.usuarioService.listar({ ativo: true, itensPorPagina: 100 }).subscribe({

@@ -7,4 +7,6 @@
 
 **Limites:** não vistos ao vivo os estados vazio, carregando e erro (cobertos por teste de componente; erro é do host); só um usuário (auxiliar) em cada tema.
 
-**Fora desta task (decisão de escopo):** os botões **iniciar/pausar** do cartão (decisão 5 da spec) e o cronômetro ao vivo. O diálogo de iniciar execução vive dentro da página de listagem de atividades (`atividade-listagem.page`), não num componente reaproveitável; pausar já tem o diálogo compartilhado (`ExecucaoEncerrarDialog`). Extrair o de iniciar para componente próprio é refatoração à parte — fica para uma task nova, a decidir com o autor.
+**Depois (2026-11-03, a pedido do autor): play e pause no cartão.** O diálogo "Iniciar execução" saiu da `atividade-listagem.page` para o componente `execucao-iniciar-dialog` (a listagem passou a usá-lo); o cartão da atividade ganhou o play e o pause com a mesma regra da listagem (§14: auxiliar, gestor e administrador em qualquer atividade, desenvolvedor só nas suas; play só em Planejada e Desenvolvendo). Ao vivo, como auxiliar: pausar a que rodava (diálogo compartilhado "Encerrar execução"), depois iniciar a planejada ("Iniciar execução" com a descrição) e o cartão passou a "Em execução" com o pause; os botões de Pendente e Desenvolvida ficam desligados. Capturas: `.artifacts/304/exec-*.png`.
+
+**Ainda fora:** o cronômetro ao vivo (o DTO não traz o início da execução ativa); a verificação ao vivo desta parte foi só em 1920×1080, tema claro.

@@ -183,3 +183,30 @@
         white-space: nowrap;
     }
 }
+
+// O play e o pause do cartão: o mesmo desenho do botão da listagem de atividades.
+.demanda-atividades__gatilho {
+    display: inline-flex;
+}
+
+:host ::ng-deep .demanda-atividades__botao-execucao {
+    width: 2rem;
+    height: 2rem;
+    background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+    color: var(--p-primary-color);
+
+    .p-button-icon {
+        font-size: 0.9rem;
+        color: inherit;
+    }
+
+    &:enabled:hover {
+        background: color-mix(in srgb, var(--p-primary-color) 24%, transparent);
+    }
+
+    &:disabled {
+        background: transparent;
+        color: var(--p-text-muted-color);
+        opacity: 0.5;
+    }
+}

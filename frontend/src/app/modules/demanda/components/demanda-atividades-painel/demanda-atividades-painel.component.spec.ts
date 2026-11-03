@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { AtividadeResumoDto, TipoAtividadeStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente } from '../../../../../testes/montar-componente';
+import { ExecucaoIniciarDialogComponent } from '../../../atividade/components/execucao-iniciar-dialog/execucao-iniciar-dialog.component';
+import { ExecucaoEncerrarDialogComponent } from '../../../../shared/components/execucao-encerrar-dialog/execucao-encerrar-dialog.component';
 import { DemandaAtividadesPainelComponent } from './demanda-atividades-painel.component';
 
 // Task 304: o consumo da demanda por atividade (a atividade não tem horas esperadas), o que está em execução agora, os filtros e os estados.
@@ -13,9 +15,11 @@ function atividade(id: number, sobrescrita: Partial<AtividadeResumoDto> = {}): A
     } as unknown as AtividadeResumoDto;
 }
 
-async function montar(atividades: AtividadeResumoDto[], carregando = false) {
-    return montarComponente(DemandaAtividadesPainelComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR, entradas: { atividades, carregando } });
+async function montar(atividades: AtividadeResumoDto[], carregando = false, usuario = TipoUsuarioEnum.DESENVOLVEDOR) {
+    return montarComponente(DemandaAtividadesPainelComponent, { usuario, entradas: { atividades, carregando } });
 }
+
+const botao = (elemento: HTMLElement, rotulo: string) => elemento.querySelector<HTMLButtonElement>(`button[aria-label="${rotulo}"]`);
 
 describe('DemandaAtividadesPainelComponent', () => {
     it('carregando: só o indicador, sem cartões', async () => {
@@ -55,5 +59,47 @@ describe('DemandaAtividadesPainelComponent', () => {
         montado.componente.filtro.set('minhas');
         await montado.atualizar();
         expect(montado.elemento.textContent).toContain('Nenhuma atividade neste filtro');
+    });
+
+    it('play e pause no cartão: o desenvolvedor só nas atividades dele; gestor em qualquer uma', async () => {
+        const atividades = [atividade(1, { usuarioId: 99 }), atividade(2, { usuarioId: 55 })];
+        const desenvolvedor = await montar(atividades);
+        const idDoUsuario = desenvolvedor.componente['sessao'].id();
+        desenvolvedor.fixture.componentRef.setInput('atividades', [atividade(1, { usuarioId: idDoUsuario }), atividade(2, { usuarioId: 55 })]);
+        await desenvolvedor.atualizar();
+        expect(desenvolvedor.elemento.querySelectorAll('button[aria-label="Iniciar execução"]')).toHaveLength(1);
+    });
+
+    it('gestor vê o play em todas as atividades', async () => {
+        const montado = await montar([atividade(1, { usuarioId: 55 }), atividade(2, { usuarioId: 56 })], false, TipoUsuarioEnum.GESTOR);
+        expect(montado.elemento.querySelectorAll('button[aria-label="Iniciar execução"]')).toHaveLength(2);
+    });
+
+    it('o play fica desligado fora de Planejada e Desenvolvendo; o pause vale mesmo assim', async () => {
+        const montado = await montar(
+            [atividade(1, { status: TipoAtividadeStatusEnum.PENDENTE }), atividade(2, { status: TipoAtividadeStatusEnum.DESENVOLVIDA, execucaoAtivaId: 9 })],
+            false,
+            TipoUsuarioEnum.GESTOR,
+        );
+        expect(botao(montado.elemento, 'Iniciar execução')!.disabled).toBe(true);
+        expect(botao(montado.elemento, 'Encerrar execução')!.disabled).toBe(false);
+    });
+
+    it('iniciar abre o diálogo próprio; encerrar abre o compartilhado com a execução ativa; ambos pedem a recarga ao terminar', async () => {
+        const montado = await montar([atividade(1), atividade(2, { status: TipoAtividadeStatusEnum.DESENVOLVENDO, execucaoAtivaId: 9, execucaoAtivaDescricao: 'Em andamento' })], false, TipoUsuarioEnum.GESTOR);
+        const abrirIniciar = vi.spyOn(ExecucaoIniciarDialogComponent.prototype, 'abrir').mockImplementation(() => {});
+        const abrirEncerrar = vi.spyOn(ExecucaoEncerrarDialogComponent.prototype, 'abrir').mockImplementation(() => {});
+        botao(montado.elemento, 'Iniciar execução')!.click();
+        expect(abrirIniciar).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+        botao(montado.elemento, 'Encerrar execução')!.click();
+        expect(abrirEncerrar).toHaveBeenCalledWith({ execucaoId: 9, atividadeId: 2, descricao: 'Em andamento', descricaoOpcional: false });
+        vi.restoreAllMocks();
+        let recargas = 0;
+        montado.componente.execucaoAlterada.subscribe(() => recargas++);
+        const iniciar = montado.fixture.debugElement.query((elemento) => elemento.name === 'app-execucao-iniciar-dialog').componentInstance as ExecucaoIniciarDialogComponent;
+        const encerrar = montado.fixture.debugElement.query((elemento) => elemento.name === 'app-execucao-encerrar-dialog').componentInstance as ExecucaoEncerrarDialogComponent;
+        iniciar.iniciada.emit();
+        encerrar.encerrada.emit({} as never);
+        expect(recargas).toBe(2);
     });
 });
