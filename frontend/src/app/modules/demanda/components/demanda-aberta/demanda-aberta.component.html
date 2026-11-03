@@ -230,6 +230,7 @@
                     [atividades]="atividades()"
                     [carregando]="carregandoAtividades()"
                     (nova)="criarAtividade()"
+                    (execucaoAlterada)="aoAtividadeCriada()"
                     (verTodas)="verTodasAtividades()"
                 />
             }
@@ -237,6 +238,9 @@
                 <app-demanda-conexao-lista
                     [demandaId]="dadosDemanda.id"
                     [todasDemandas]="destinosConexao()"
+                    [grafo]="grafo()"
+                    [nomeDemanda]="dadosDemanda.nome"
+                    (conexoesAlteradas)="demandaAlterada.emit()"
                     [(conexoes)]="conexoes"
                     (demandaAbrir)="navegarParaSubDemanda($event)"
                 />

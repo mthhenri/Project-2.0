@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TipoUsuarioEnum } from '@project20/shared';
+import { DESCRICAO_TIPO_USUARIO, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { criarUsuarioTeste } from '../../../../../testes/usuarios-teste';
@@ -189,5 +189,19 @@ describe('UsuarioFormularioDialogComponent — editar', () => {
         responderErro(esperarRequisicao(montado.http, 'GET', '/usuario/50'), 404, 'Usuário não encontrado');
         await montado.atualizar();
         expect(montado.componente.mostrarDialog()).toBe(false);
+    });
+});
+
+describe('UsuarioFormularioDialogComponent — ajuda do tipo (task 306)', () => {
+    it('mostra o que o tipo escolhido é e pode, e troca quando o tipo muda', async () => {
+        const { montado } = await montar(TipoUsuarioEnum.GESTOR);
+        montado.componente.abrir();
+        await montado.atualizar();
+        const bloco = () => document.body.querySelector('app-usuario-tipo-descricao')?.textContent ?? '';
+        expect(bloco()).toContain(DESCRICAO_TIPO_USUARIO[TipoUsuarioEnum.DESENVOLVEDOR].split('\n')[0]);
+        montado.componente.formulario.controls.tipo.setValue(TipoUsuarioEnum.AUXILIAR);
+        await montado.atualizar();
+        expect(bloco()).toContain(DESCRICAO_TIPO_USUARIO[TipoUsuarioEnum.AUXILIAR].split('\n')[0]);
+        expect(bloco()).not.toContain(DESCRICAO_TIPO_USUARIO[TipoUsuarioEnum.DESENVOLVEDOR].split('\n')[0]);
     });
 });

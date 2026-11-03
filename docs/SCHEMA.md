@@ -797,11 +797,15 @@ CREATE TRIGGER trg_tipo_usuario_updated_date
   FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
+Em `tipo_usuario`, a `descricao` guarda o **texto de ajuda do tipo** (migration `0078`, task 308): `VARCHAR(2000)` em Markdown, com linhas `✓ ...` (pode) e
+`✕ ...` (não pode), semeada com `DESCRICAO_TIPO_USUARIO` (`shared`) e editada só pelo administrador (`PUT /tipo-usuario-ajuda/:tipo`). O nome de exibição
+("Gestor", "Auxiliar"…) **não** vive no banco: é `rotuloTipoUsuario`, no frontend. As outras tabelas `tipo_*` seguem com `descricao VARCHAR(100)`.
+
 Seeds (`codigo` → `descricao`):
 
 | Tabela | Seeds |
 |---|---|
-| `tipo_usuario` | DESENVOLVEDOR→"Desenvolvedor", GESTOR→"Gestor", ADMINISTRADOR→"Administrador" (migration `0029`), AUXILIAR→"Auxiliar" (migration `0074`) |
+| `tipo_usuario` | DESENVOLVEDOR, GESTOR, ADMINISTRADOR (migration `0029`) e AUXILIAR (migration `0074`); a `descricao` é o texto de ajuda (migration `0078`), não o nome |
 | `tipo_projeto_status` | ATIVO→"Ativo", PAUSADO→"Pausado", CONCLUIDO→"Concluído", CANCELADO→"Cancelado" |
 | `tipo_demanda_status` | PENDENTE→"Pendente", PLANEJADA→"Planejada", CONCLUIDA→"Concluída" |
 | `tipo_atividade_status` | PLANEJADA→"Planejada", PENDENTE→"Pendente", DESENVOLVENDO→"Desenvolvendo", DESENVOLVIDA→"Desenvolvida" |

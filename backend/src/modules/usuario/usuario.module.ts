@@ -1,5 +1,8 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { UsuarioController } from './controllers/usuario.controller';
+import { TipoUsuarioAjudaController } from './controllers/tipo-usuario-ajuda.controller';
+import { TipoUsuarioAjudaService } from './services/tipo-usuario-ajuda.service';
+import { TipoUsuarioAjudaRepository } from './repositories/tipo-usuario-ajuda.repository';
 import { UsuarioService } from './services/usuario.service';
 import { UsuarioRepository } from './repositories/usuario.repository';
 import { FerramentaIaModule } from '../ferramenta-ia/ferramenta-ia.module';
@@ -8,8 +11,8 @@ import { ListarUsuariosFerramenta } from './ferramentas/listar-usuarios.ferramen
 
 @Module({
     imports:     [FerramentaIaModule],
-    controllers: [UsuarioController],
-    providers:   [UsuarioService, UsuarioRepository, ListarUsuariosFerramenta],
+    controllers: [UsuarioController, TipoUsuarioAjudaController],
+    providers:   [UsuarioService, UsuarioRepository, TipoUsuarioAjudaService, TipoUsuarioAjudaRepository, ListarUsuariosFerramenta],
     exports:     [UsuarioService, UsuarioRepository],
 })
 export class UsuarioModule implements OnModuleInit {

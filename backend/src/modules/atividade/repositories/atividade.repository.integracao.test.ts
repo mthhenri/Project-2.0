@@ -248,6 +248,7 @@ testarComBanco('listar: soma só os minutos das execuções encerradas e traz a 
     assert.equal(item.totalExecucoes, 3, 'conta as encerradas e a ativa, não a excluída');
     assert.equal(item.execucaoAtivaId, ativa.id);
     assert.equal(item.execucaoAtivaDescricao, 'Em andamento');
+    assert.equal(new Date(item.execucaoAtivaInicioData!).toISOString(), '2026-01-15T17:00:00.000Z', 'o início da execução ativa');
 });
 
 testarComBanco('listar: sem execuções os minutos são 0 e não há execução ativa', async (conexao) => {

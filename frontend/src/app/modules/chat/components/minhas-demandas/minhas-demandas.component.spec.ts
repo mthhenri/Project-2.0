@@ -10,7 +10,7 @@ import { MinhasDemandasComponent } from './minhas-demandas.component';
 function demanda(id: number, sobrescrita: Record<string, unknown> = {}) {
     return {
         demandaId: id, nome: `Demanda ${id}`, caminho: `Raiz › Demanda ${id}`, projetoId: 3, nomeProjeto: 'Portal', status: TipoDemandaStatusEnum.PENDENTE,
-        horasEstimadas: 8, minutosExecutados: 120, totalAtividades: 4, atividadesDesenvolvidas: 1, executando: false, ultimaExecucaoData: '2026-10-25T12:00:00.000Z',
+        horasEstimadas: 8, minutosExecutados: 120, totalAtividades: 4, atividadesDesenvolvidas: 1, souMembro: true, executando: false, ultimaExecucaoData: '2026-10-25T12:00:00.000Z',
         ...sobrescrita,
     };
 }
@@ -37,7 +37,7 @@ describe('MinhasDemandasComponent', () => {
 
     it('cheio: cada demanda mostra o projeto e o caminho, a barra de horas e quantas atividades estão desenvolvidas', async () => {
         const montado = await montar();
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1), demanda(2, { totalAtividades: 0, atividadesDesenvolvidas: 0 })]);
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1), demanda(2, { totalAtividades: 0, atividadesDesenvolvidas: 0, minutosExecutados: 0, ultimaExecucaoData: null })]);
         await montado.atualizar();
         const texto = montado.elemento.textContent ?? '';
         expect(texto).toContain('Demanda 1');
@@ -45,6 +45,16 @@ describe('MinhasDemandasComponent', () => {
         expect(texto).toContain('1 de 4 desenvolvidas');
         expect(texto).toContain('Sem atividades');
         expect(montado.elemento.querySelectorAll('app-demanda-barra-horas').length).toBe(2);
+    });
+
+    it('membro sem execução (task 307): a demanda sem atividades e sem última execução aparece, sem dividir por zero', async () => {
+        const montado = await montar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(5, { totalAtividades: 0, atividadesDesenvolvidas: 0, minutosExecutados: 0, horasEstimadas: 0, ultimaExecucaoData: null })]);
+        await montado.atualizar();
+        const texto = montado.elemento.textContent ?? '';
+        expect(texto).toContain('Demanda 5');
+        expect(texto).toContain('Sem atividades');
+        expect(texto).not.toContain('NaN');
     });
 
     it('erro: avisa e oferece tentar de novo', async () => {
@@ -163,9 +173,9 @@ describe('MinhasDemandasComponent', () => {
             responderSucesso(montado.http.expectOne((requisicao) => requisicao.method === 'DELETE' && requisicao.url.includes('/demanda/1/membro/')), null);
         });
 
-        it('gestor não tem Sair da demanda (não é membro)', async () => {
-            const montado = await montarComponente(MinhasDemandasComponent, { usuario: TipoUsuarioEnum.GESTOR });
-            responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1)]);
+        it('quem não é membro da demanda (gestor, ou auxiliar que só executou) não tem Sair da demanda', async () => {
+            const montado = await montarComponente(MinhasDemandasComponent, { usuario: TipoUsuarioEnum.AUXILIAR });
+            responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1, { souMembro: false })]);
             await montado.atualizar();
             montado.elemento.querySelector('li')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
             expect(opcoes(montado).map((item) => item.label).filter(Boolean)).toEqual(['Alterar status']);

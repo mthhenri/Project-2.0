@@ -17,6 +17,12 @@
         &:active {
             cursor: grabbing;
         }
+
+        // Recorte (task 305): a vista não se arrasta nem aproxima.
+        &--recorte,
+        &--recorte:active {
+            cursor: default;
+        }
     }
 
     // O filtro da toolbar só troca a opacidade (nó e aresta), então a mudança pode ser suave.

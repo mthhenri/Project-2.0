@@ -1,50 +1,57 @@
-<svg class="demanda-grafo__svg" role="img" aria-label="Grafo de demandas"></svg>
+<svg
+    class="demanda-grafo__svg"
+    [class.demanda-grafo__svg--recorte]="modo === 'recorte'"
+    role="img"
+    [attr.aria-label]="modo === 'recorte' ? 'Conexões da demanda' : 'Grafo de demandas'"
+></svg>
 
 <!-- Controles flutuantes: legenda (ⓘ) e zoom -->
-<div class="demanda-grafo__controles">
-    <p-button
-        icon="pi pi-info-circle"
-        severity="secondary"
-        [outlined]="true"
-        size="small"
-        ariaLabel="Legenda"
-        pTooltip="Legenda e filtro de status"
-        tooltipPosition="left"
-        (onClick)="alternarLegenda($event, legenda)"
-    />
-    <div class="demanda-grafo__zoom" role="group" aria-label="Zoom">
+@if (modo === "projeto") {
+    <div class="demanda-grafo__controles">
         <p-button
-            icon="pi pi-plus"
+            icon="pi pi-info-circle"
             severity="secondary"
             [outlined]="true"
             size="small"
-            ariaLabel="Aproximar"
-            pTooltip="Aproximar"
+            ariaLabel="Legenda"
+            pTooltip="Legenda e filtro de status"
             tooltipPosition="left"
-            (onClick)="aproximar()"
+            (onClick)="alternarLegenda($event, legenda)"
         />
-        <p-button
-            icon="pi pi-minus"
-            severity="secondary"
-            [outlined]="true"
-            size="small"
-            ariaLabel="Afastar"
-            pTooltip="Afastar"
-            tooltipPosition="left"
-            (onClick)="afastar()"
-        />
-        <p-button
-            icon="pi pi-home"
-            severity="secondary"
-            [outlined]="true"
-            size="small"
-            ariaLabel="Centralizar"
-            pTooltip="Centralizar"
-            tooltipPosition="left"
-            (onClick)="centralizar()"
-        />
+        <div class="demanda-grafo__zoom" role="group" aria-label="Zoom">
+            <p-button
+                icon="pi pi-plus"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                ariaLabel="Aproximar"
+                pTooltip="Aproximar"
+                tooltipPosition="left"
+                (onClick)="aproximar()"
+            />
+            <p-button
+                icon="pi pi-minus"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                ariaLabel="Afastar"
+                pTooltip="Afastar"
+                tooltipPosition="left"
+                (onClick)="afastar()"
+            />
+            <p-button
+                icon="pi pi-home"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                ariaLabel="Centralizar"
+                pTooltip="Centralizar"
+                tooltipPosition="left"
+                (onClick)="centralizar()"
+            />
+        </div>
     </div>
-</div>
+}
 
 <!-- Cartão do nó sob o mouse -->
 @if (cartao(); as c) {

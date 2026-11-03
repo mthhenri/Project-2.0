@@ -216,7 +216,7 @@ export class DemandaController {
         return this.demandaService.criarConexao({ ...dto, demandaOrigemId: id }, usuarioAtivo);
     }
 
-    @ApiOperation({ summary: 'Listar conexões de uma demanda (saída, entrada bidirecional)' })
+    @ApiOperation({ summary: 'Listar conexões de uma demanda (saída, entrada e mútuas)' })
     @ApiResponse({ status: 200, description: 'Conexões listadas com sucesso' })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })

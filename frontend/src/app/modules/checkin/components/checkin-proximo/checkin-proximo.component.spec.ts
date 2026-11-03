@@ -2,6 +2,7 @@ import { afterEach, describe, it, expect, vi } from 'vitest';
 import { CheckinSituacaoConsultadaDto, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 import { CheckinProximoComponent } from './checkin-proximo.component';
 
 // Próximo check-in no menu do perfil (task 303): consulta a situação ao nascer e a contagem anda com o relógio.
@@ -58,5 +59,18 @@ describe('CheckinProximoComponent', () => {
         responderErro(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), 500, 'Falha de teste');
         await montado.atualizar();
         expect(texto(montado)).toBe('Próximo check-in: indisponível');
+    });
+
+    it('refaz a consulta quando a execução ativa muda, sem precisar recarregar a página', async () => {
+        const montado = await montar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), { ...situacao(null), haCheckin: false, execucao: null });
+        await montado.atualizar();
+        expect(texto(montado)).toBe('Sem check-in: nenhuma execução em andamento');
+
+        montado.fixture.debugElement.injector.get(ExecucaoAtivaService).definir({ id: 9, atividadeId: 1, descricao: 'x', inicioData: AGORA });
+        await montado.atualizar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao(new Date(AGORA.getTime() + 10 * 60_000)));
+        await montado.atualizar();
+        expect(texto(montado)).toBe('Próximo check-in em 10:00');
     });
 });

@@ -1,0 +1,400 @@
+<title>Atividades e Conexões</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Mockup da 3ª coluna da Árvore: abas Atividades e Conexões. Tokens espelham o app (surface, sky/green/red do status). */
+:root{
+  --bg:#f4f5f7; --surface:#ffffff; --surface-2:#f0f2f5; --line:#dfe3e9; --line-2:#c9cfd8;
+  --fg:#1b2230; --fg-2:#5a6475; --fg-3:#8892a2;
+  --primary:#4f6df5; --primary-soft:#e8ecff;
+  --st-pendente:#8b95a5; --st-planejada:#0ea5e9; --st-concluida:#22c55e; --st-cancelada:#f87171;
+  --warn:#d97706; --warn-soft:#fff3df;
+  --shadow:0 1px 2px rgba(20,28,45,.06),0 4px 14px rgba(20,28,45,.05);
+  --f-ui:"Inter Tight",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#171c26; --surface-2:#1e2430; --line:#2a3140; --line-2:#3a4357;
+  --fg:#e8ebf2; --fg-2:#a3adbf; --fg-3:#6f7a8e; --primary:#8ea2ff; --primary-soft:#232b4d;
+  --warn:#f5b04a; --warn-soft:#3a2c14; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#171c26; --surface-2:#1e2430; --line:#2a3140; --line-2:#3a4357;
+  --fg:#e8ebf2; --fg-2:#a3adbf; --fg-3:#6f7a8e; --primary:#8ea2ff; --primary-soft:#232b4d;
+  --warn:#f5b04a; --warn-soft:#3a2c14; --shadow:none; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.4;
+  padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.topo{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;max-width:1280px;margin:0 auto 16px}
+.topo h1{font-size:18px;margin:0;font-weight:600}
+.topo p{margin:2px 0 0;color:var(--fg-2);font-size:13px}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--fg-2)}
+.chip[aria-pressed="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary)}
+.grade{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:20px;max-width:1280px;margin:0 auto;align-items:start}
+@media (max-width:900px){.grade{grid-template-columns:minmax(0,1fr)}}
+.painel{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+.painel__aba{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);font-weight:600}
+.painel__aba small{font-weight:400;color:var(--fg-3);font-size:12px}
+.painel__corpo{padding:16px;display:flex;flex-direction:column;gap:14px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.btn{border:1px solid var(--line-2);background:var(--surface);border-radius:7px;padding:5px 11px;font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.btn--p{background:var(--primary);border-color:var(--primary);color:#fff}
+:root[data-theme="dark"] .btn--p{color:#0f131b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn--p{color:#0f131b}}
+.btn--g{border-color:transparent;background:transparent;color:var(--fg-2)}
+.btn:hover{background:var(--surface-2)} .btn--p:hover{background:var(--primary);filter:brightness(1.08)}
+
+/* ---------- Atividades ---------- */
+.resumo{display:grid;grid-template-columns:1fr auto;gap:6px 16px;align-items:end}
+.resumo__h{font-size:22px;font-weight:600;line-height:1}
+.resumo__h span{font-size:13px;color:var(--fg-3);font-weight:400}
+.resumo__st{display:flex;gap:10px;font-size:12px;color:var(--fg-2);justify-content:flex-end;flex-wrap:wrap}
+.pt{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:var(--c)}
+.barra{grid-column:1/-1;height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;position:relative}
+.barra i{position:absolute;inset:0 auto 0 0;background:var(--primary);border-radius:99px}
+.barra b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--fg-2)}
+.seg--alto{height:10px!important}
+.seg{display:flex;height:6px;gap:2px;border-radius:99px;overflow:hidden;grid-column:1/-1}
+.seg i{background:var(--c);flex:var(--n)}
+.filtros{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.filtros .esp{flex:1}
+.lista{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.at{border:1px solid var(--line);border-radius:9px;padding:11px 12px 11px 14px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;background:var(--surface);position:relative}
+.at:hover{border-color:var(--line-2);background:var(--surface-2)}
+.at--vivo{border-color:color-mix(in srgb,var(--st-concluida) 55%,var(--line));background:color-mix(in srgb,var(--st-concluida) 6%,var(--surface))}
+.at__ic{width:18px;height:18px;margin-top:1px}
+.at__nome{font-weight:500;min-width:0;overflow-wrap:anywhere}
+.at__sub{grid-column:2;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;color:var(--fg-2);font-size:12.5px}
+.av{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--primary-soft);color:var(--primary);font-size:10px;font-weight:600;margin-right:5px}
+.pri{font-size:11.5px;padding:1px 7px;border-radius:99px;border:1px solid var(--line-2);color:var(--fg-2)}
+.pri--alta{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.at__acao{grid-column:3;grid-row:1/3;align-self:center}
+.rnd{width:32px;height:32px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface);display:grid;place-items:center}
+.rnd:hover{background:var(--primary-soft);border-color:var(--primary)}
+.at--vivo .rnd{background:var(--st-concluida);border-color:var(--st-concluida);color:#fff}
+.hrs{grid-column:2/4;display:flex;align-items:center;gap:10px;margin-top:4px}
+.hrs .barra{flex:1;height:5px;grid-column:auto}
+.hrs span{font-size:12px;color:var(--fg-2);white-space:nowrap}
+.hrs .estourou i{background:var(--warn)}
+.vivo{display:inline-flex;align-items:center;gap:5px;color:var(--st-concluida);font-weight:500;font-size:12.5px}
+.vivo::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;animation:p 1.6s ease-in-out infinite}
+@keyframes p{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.vivo::before{animation:none}}
+.add{border:1px dashed var(--line-2);border-radius:9px;padding:9px;text-align:center;color:var(--fg-2);background:transparent;width:100%}
+.add:hover{border-color:var(--primary);color:var(--primary)}
+.vazio{border:1px dashed var(--line-2);border-radius:10px;padding:30px 16px;text-align:center;color:var(--fg-2);display:flex;flex-direction:column;gap:10px;align-items:center}
+.vazio svg{opacity:.5}
+.vazio[hidden],.painel__corpo[hidden],.novo[hidden]{display:none!important}
+
+/* ---------- Conexões ---------- */
+.mini{border:1px solid var(--line);border-radius:10px;background:
+  radial-gradient(circle,var(--line) 1px,transparent 1.2px) 0 0/18px 18px,var(--surface-2);padding:6px;position:relative}
+.mini svg{display:block;width:100%;height:auto}
+.mini__leg{position:absolute;left:12px;bottom:10px;display:flex;gap:10px;font-size:11px;color:var(--fg-2);flex-wrap:wrap}
+.no rect.cx{fill:color-mix(in srgb,var(--c) 18%,var(--surface));stroke:var(--c);stroke-width:1.6}
+.no text{fill:var(--fg);font-family:var(--f-ui);font-size:12.5px;font-weight:500}
+.no text.sub{fill:var(--fg-2);font-size:10.5px;font-weight:400}
+.no{cursor:pointer}
+.no:hover rect.cx,.no:focus-visible rect.cx{stroke-width:2.6}
+.no:focus-visible{outline:none}
+.no--este rect.cx{stroke-width:2.6;fill:color-mix(in srgb,var(--c) 26%,var(--surface))}
+.no .x{opacity:0}
+.no:hover .x,.no:focus-visible .x{opacity:1}
+.no .x circle{fill:var(--surface);stroke:var(--line-2)}
+.no .x path{stroke:var(--fg-2);stroke-width:1.6;stroke-linecap:round}
+.ar{fill:none;stroke:var(--line-2);stroke-width:1.8}
+.ar--alerta{stroke:var(--warn);stroke-dasharray:5 4}
+.ar-t{fill:var(--fg-2);font-size:11px;font-family:var(--f-ui);letter-spacing:.01em}
+.ar-t--alerta{fill:var(--warn)}
+.seta{fill:var(--line-2)} .seta--alerta{fill:var(--warn)}
+.conta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.novo{border:1px solid var(--primary);background:var(--primary-soft);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.novo[hidden]{display:none}
+.novo__linha{display:flex;gap:8px;flex-wrap:wrap}
+.seletor{flex:1;min-width:180px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--fg);padding:6px 10px;font:inherit}
+.dir{display:inline-flex;border:1px solid var(--line-2);border-radius:8px;overflow:hidden;background:var(--surface)}
+.dir button{border:0;background:transparent;padding:6px 11px;font-size:13px;color:var(--fg-2)}
+.dir button[aria-pressed="true"]{background:var(--primary);color:#fff}
+:root[data-theme="dark"] .dir button[aria-pressed="true"]{color:#0f131b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dir button[aria-pressed="true"]{color:#0f131b}}
+.frase{font-size:13px;color:var(--fg-2)}
+.frase b{color:var(--fg);font-weight:600}
+.alerta{display:flex;gap:8px;align-items:flex-start;background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 11px;font-size:12.5px}
+.alerta span{color:var(--fg)}
+.lista-det summary{cursor:pointer;color:var(--fg-2);font-size:13px;padding:4px 0}
+.pill rect{fill:var(--surface);stroke:var(--line-2);stroke-dasharray:4 3;stroke-width:1.4}
+.pill text{fill:var(--fg-2);font-size:12px;font-family:var(--f-ui)}
+.pill{cursor:pointer}
+.pill:hover rect,.pill:focus-visible rect{stroke:var(--primary)}
+.pill:focus-visible{outline:none}
+.leitura{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
+.leitura li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 8px;border-radius:7px;font-size:13px}
+.leitura li:hover{background:var(--surface-2)}
+.leitura em{font-style:normal;color:var(--fg-3);font-size:12px}
+.nota{font-size:12px;color:var(--fg-3)}
+</style>
+
+<div class="topo">
+  <div>
+    <h1>3ª coluna da Árvore · abas Atividades e Conexões</h1>
+    <p>Mockup para discussão. Dados de exemplo, não são do banco.</p>
+  </div>
+  <div class="ctrl" role="group" aria-label="Controles do mockup">
+    <button class="chip" id="tema" aria-pressed="false">Tema escuro</button>
+    <button class="chip" id="vaz-at" aria-pressed="false">Atividades vazio</button>
+    <button class="chip" id="vaz-cx" aria-pressed="false">Conexões vazio</button>
+    <button class="chip" id="cx-muitas" aria-pressed="false">Conexões: muitas (13)</button>
+  </div>
+</div>
+
+<div class="grade">
+
+<!-- ================= ATIVIDADES ================= -->
+<section class="painel" aria-label="Aba Atividades">
+  <div class="painel__aba">Atividades <small id="at-cont">5 nesta demanda</small>
+    <span style="flex:1"></span>
+    <button class="btn btn--g" title="Abre a lista completa em outra aba">Ver todas ↗</button>
+  </div>
+  <div class="painel__corpo" id="at-corpo">
+
+    <div class="resumo" id="at-resumo">
+      <div class="resumo__h mono">38h <span>consumidas pela demanda</span></div>
+      <div class="resumo__st">
+        <span><i class="pt" style="--c:var(--st-concluida)"></i>1 em execução</span>
+        <span><i class="pt" style="--c:var(--st-planejada)"></i>1 planejada</span>
+        <span><i class="pt" style="--c:var(--st-pendente)"></i>1 pendente</span>
+        <span><i class="pt" style="--c:var(--primary)"></i>2 desenvolvidas</span>
+      </div>
+      <div class="seg seg--alto" role="img" aria-label="Divisão das 38 horas: 16 modelo de dados, 14 endpoint, 8 levantamento">
+        <i style="--c:var(--primary);--n:16" title="Modelo de dados · 16h"></i><i style="--c:var(--st-concluida);--n:14" title="Endpoint · 14h"></i><i style="--c:var(--primary);--n:8;opacity:.6" title="Levantamento · 8h"></i>
+      </div>
+      <div class="nota" style="grid-column:1/-1">Cada trecho é uma atividade, do tamanho do que ela consumiu.</div>
+    </div>
+
+    <div class="filtros" id="at-filtros" role="group" aria-label="Filtrar atividades">
+      <button class="chip" aria-pressed="true" data-f="todas">Todas</button>
+      <button class="chip" aria-pressed="false" data-f="minhas">Minhas</button>
+      <button class="chip" aria-pressed="false" data-f="abertas">Em aberto</button>
+      <span class="esp"></span>
+      <button class="btn btn--p">+ Nova atividade</button>
+    </div>
+
+    <ul class="lista" id="at-lista">
+      <li class="at at--vivo" data-dono="eu" data-aberta="1">
+        <svg class="at__ic" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7" fill="none" stroke="var(--st-concluida)" stroke-width="2"/><path d="M9 9 V4.5" stroke="var(--st-concluida)" stroke-width="2" stroke-linecap="round"/><path d="M9 9 L12.2 11" stroke="var(--st-concluida)" stroke-width="2" stroke-linecap="round"/></svg>
+        <div class="at__nome">Endpoint de fechamento mensal</div>
+        <div class="at__acao"><button class="rnd" aria-label="Pausar execução" title="Pausar">❚❚</button></div>
+        <div class="at__sub"><span class="vivo mono">em execução · 00:47:12</span><span><i class="av">MH</i>Matheus</span><span class="pri pri--alta">Alta</span></div>
+        <div class="hrs"><div class="barra"><i style="width:37%"></i></div><span class="mono">14h · 37% da demanda</span></div>
+      </li>
+      <li class="at" data-dono="outro" data-aberta="1">
+        <svg class="at__ic" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7" fill="none" stroke="var(--st-planejada)" stroke-width="2"/></svg>
+        <div class="at__nome">Tela de filtros do relatório</div>
+        <div class="at__acao"><button class="rnd" aria-label="Iniciar execução" title="Iniciar (só o dono ou o gestor)">▶</button></div>
+        <div class="at__sub"><span>Planejada</span><span><i class="av">AC</i>Ana Costa</span><span class="pri">Média</span></div>
+        <div class="hrs"><div class="barra"><i style="width:0%"></i></div><span class="mono">sem execução ainda</span></div>
+      </li>
+      <li class="at" data-dono="outro" data-aberta="1">
+        <svg class="at__ic" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7" fill="none" stroke="var(--st-pendente)" stroke-width="2" stroke-dasharray="3 3"/></svg>
+        <div class="at__nome">Validar regra de dias não úteis</div>
+        <div class="at__acao"><button class="rnd" aria-label="Iniciar execução">▶</button></div>
+        <div class="at__sub"><span>Pendente</span><span><i class="av">RP</i>Rafael Prado</span><span class="pri">Baixa</span></div>
+        <div class="hrs"><div class="barra"><i style="width:0%"></i></div><span class="mono">sem execução ainda</span></div>
+      </li>
+      <li class="at" data-dono="eu" data-aberta="0">
+        <svg class="at__ic" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="var(--primary)"/><path d="M5.5 9.3l2.4 2.4 4.6-4.9" fill="none" stroke="var(--surface)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="at__nome">Modelo de dados do fechamento</div>
+        <div class="at__sub"><span>Desenvolvida</span><span><i class="av">MH</i>Matheus</span><span class="pri">Média</span></div>
+        <div class="hrs"><div class="barra"><i style="width:42%"></i></div><span class="mono">16h · 42% da demanda</span></div>
+      </li>
+      <li class="at" data-dono="outro" data-aberta="0">
+        <svg class="at__ic" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="var(--primary)"/><path d="M5.5 9.3l2.4 2.4 4.6-4.9" fill="none" stroke="var(--surface)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="at__nome">Levantamento com o cliente</div>
+        <div class="at__sub"><span>Desenvolvida</span><span><i class="av">AC</i>Ana Costa</span><span class="pri">Média</span></div>
+        <div class="hrs"><div class="barra"><i style="width:21%"></i></div><span class="mono">8h · 21% da demanda</span></div>
+      </li>
+    </ul>
+    <p class="nota">Atividade não tem horas esperadas: a barra mostra quanto ela consumiu das horas da demanda. O botão redondo respeita a regra: gestor inicia qualquer uma, desenvolvedor só as suas.</p>
+  </div>
+</section>
+
+<!-- ================= CONEXÕES ================= -->
+<section class="painel" aria-label="Aba Conexões">
+  <div class="painel__aba">Conexões <small id="cx-cont">5 demandas ligadas</small></div>
+  <div class="painel__corpo" id="cx-corpo">
+
+    <div class="conta">
+      <div class="frase">Recorte do grafo: só o que toca em <b>Relatório de fechamento</b>.</div>
+      <button class="btn btn--p" id="cx-novo-btn" aria-expanded="false">+ Conectar</button>
+    </div>
+
+    <div class="novo" id="cx-novo" hidden>
+      <div class="novo__linha">
+        <select class="seletor" id="cx-dest" aria-label="Demanda de destino">
+          <option>Escolha uma demanda…</option><option>Carga inicial de clientes</option><option>Painel do gestor</option>
+        </select>
+      </div>
+      <div class="novo__linha" style="align-items:center">
+        <div class="dir" role="group" aria-label="Tipo de conexão" id="cx-dir">
+          <button aria-pressed="true" data-t="Esta depende dela">Esta depende dela</button>
+          <button aria-pressed="false" data-t="Ela depende desta">Ela depende desta</button>
+          <button aria-pressed="false" data-t="Dependência mútua">Mútua</button>
+        </div>
+        <span class="frase" id="cx-previa">Prévia: <b>Relatório de fechamento</b> depende de <b>a escolhida</b></span>
+        <span style="flex:1"></span>
+        <button class="btn btn--g" id="cx-cancela">Cancelar</button>
+        <button class="btn btn--p">Adicionar</button>
+      </div>
+    </div>
+
+    <div id="cx-mini">
+    <div class="mini" id="cx-grafo"></div>
+    <div class="alerta" id="cx-alerta" style="margin-top:12px" role="status" hidden></div>
+    <details class="lista-det" style="margin-top:10px">
+      <summary id="cx-resumo-lista">Ver as conexões em lista</summary>
+      <ul class="leitura" id="cx-lista" aria-label="Mesmas conexões em lista"></ul>
+    </details>
+    <p class="nota" style="margin-top:8px">Passar o mouse num nó mostra o × de remover (só gestor). Clicar abre a demanda. O grafo mostra poucas por lado; a lista tem todas, também para teclado e leitor de tela.</p>
+    </div>
+
+    <div class="vazio" id="cx-vazio" hidden>
+      <svg width="120" height="48" viewBox="0 0 120 48" aria-hidden="true"><rect x="2" y="14" width="34" height="20" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/><rect x="84" y="14" width="34" height="20" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/><path d="M38 24 H82" stroke="currentColor" stroke-dasharray="4 3"/></svg>
+      <strong>Nenhuma conexão ainda</strong>
+      <span>Conecte esta demanda a outra para ver o que ela destrava ou o que a bloqueia.</span>
+      <button class="btn btn--p" id="cx-novo-vazio">+ Conectar</button>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+  var raiz=document.documentElement, t=document.getElementById('tema');
+  t.addEventListener('click',function(){
+    var escuro=raiz.getAttribute('data-theme')==='dark';
+    raiz.setAttribute('data-theme',escuro?'light':'dark');
+    t.setAttribute('aria-pressed',String(!escuro)); t.textContent=escuro?'Tema escuro':'Tema claro';
+  });
+  // filtros de atividades
+  var fs=document.querySelectorAll('#at-filtros [data-f]');
+  fs.forEach(function(b){b.addEventListener('click',function(){
+    fs.forEach(function(o){o.setAttribute('aria-pressed',String(o===b))});
+    document.querySelectorAll('#at-lista .at').forEach(function(li){
+      var f=b.dataset.f, ok=f==='todas'||(f==='minhas'&&li.dataset.dono==='eu')||(f==='abertas'&&li.dataset.aberta==='1');
+      li.hidden=!ok;
+    });
+  })});
+  // vazio de atividades
+  var vA=document.getElementById('vaz-at'), corpo=document.getElementById('at-corpo');
+  var vazioA=document.createElement('div'); vazioA.className='painel__corpo'; vazioA.hidden=true;
+  vazioA.innerHTML='<div class="vazio"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/></svg><strong>Nenhuma atividade nesta demanda</strong><span>Atividades dividem o trabalho e registram as horas.</span><button class="btn btn--p">+ Criar a primeira atividade</button></div>';
+  corpo.after(vazioA);
+  vA.addEventListener('click',function(){
+    var on=vA.getAttribute('aria-pressed')!=='true'; vA.setAttribute('aria-pressed',String(on));
+    corpo.hidden=on; vazioA.hidden=!on;
+    document.getElementById('at-cont').textContent=on?'nenhuma ainda':'5 nesta demanda';
+  });
+  // ---- conexões: dados de exemplo e render do recorte
+  var COR={PENDENTE:'var(--st-pendente)',PLANEJADA:'var(--st-planejada)',CONCLUIDA:'var(--st-concluida)',CANCELADA:'var(--st-cancelada)'};
+  var ROT={PENDENTE:'Pendente',PLANEJADA:'Planejada',CONCLUIDA:'Concluída',CANCELADA:'Cancelada'};
+  function c(n,s,pj,d){return {nome:n,st:s,proj:pj,dir:d}}
+  var FEW=[c('Modelagem do esquema','CONCLUIDA','Fechamento','saida'),c('Aprovação do cliente','PENDENTE','Fechamento','saida'),
+    c('Relatório mensal','PLANEJADA','Gestão','entrada'),c('Exportação para ERP','CANCELADA','Gestão','entrada'),c('Revisão de permissões','PLANEJADA','Fechamento','bi')];
+  var MANY=FEW.slice(0,2).concat([c('Regras de dias não úteis','CONCLUIDA','Ponto','saida'),c('Contrato de dados com o ERP','PLANEJADA','Gestão','saida'),c('Ambiente de homologação','PENDENTE','Infra','saida')],
+    FEW.slice(2,4),[c('Painel do gestor','PENDENTE','Gestão','entrada'),c('Envio automático por e-mail','PENDENTE','Gestão','entrada'),c('Fechamento anual','PLANEJADA','Fechamento','entrada'),c('Auditoria trimestral','PENDENTE','Gestão','entrada')],
+    [FEW[4],c('Migração de históricos','PENDENTE','Infra','bi')]);
+  var dados=FEW, expand={saida:false,entrada:false,bi:false}, CAP={saida:3,entrada:3,bi:3};
+  var LBL={saida:'depende de',entrada:'depende desta',bi:'mútua'};
+  function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+  function cort(t,n){return t.length>n?t.slice(0,n-1)+'…':t}
+  function lado(d){
+    var todos=dados.filter(function(x){return x.dir===d}), cap=CAP[d];
+    var vis=expand[d]||todos.length<=cap+1?todos:todos.slice(0,cap);
+    return {vis:vis,resto:todos.length-vis.length,todos:todos};
+  }
+  function no(x,X,Y,W){
+    var cor=COR[x.st];
+    return '<g class="no" tabindex="0" style="--c:'+cor+'" role="link" aria-label="'+esc(x.nome)+', '+ROT[x.st].toLowerCase()+'"><title>'+esc(x.nome)+' · '+ROT[x.st]+' · '+esc(x.proj)+'</title>'+
+     '<rect class="cx" x="'+X+'" y="'+Y+'" width="'+W+'" height="48" rx="9"/>'+
+     '<text x="'+(X+14)+'" y="'+(Y+20)+'">'+esc(cort(x.nome,22))+'</text><text class="sub" x="'+(X+14)+'" y="'+(Y+37)+'">'+ROT[x.st]+' · '+esc(cort(x.proj,14))+'</text>'+
+     '<g class="x" transform="translate('+(X+W-10)+','+Y+')"><circle r="9"/><path d="M-3 -3 L3 3 M3 -3 L-3 3"/></g></g>';
+  }
+  function pill(X,Y,W,n,d){
+    return '<g class="pill" tabindex="0" role="button" data-exp="'+d+'" aria-label="Mostrar mais '+n+' conexões"><rect x="'+X+'" y="'+(Y+8)+'" width="'+W+'" height="32" rx="16"/><text x="'+(X+W/2)+'" y="'+(Y+28)+'" text-anchor="middle">+ '+n+' mais</text></g>';
+  }
+  var uid=0;
+  function render(){
+    var L=lado('saida'),R=lado('entrada'),B=lado('bi'),P=64,topo=24;
+    var nL=L.vis.length+(L.resto?1:0), nR=R.vis.length+(R.resto?1:0), nb=Math.max(nL,nR,1), bloco=nb*P;
+    var cy=topo+bloco/2, W=160, h=topo+bloco;
+    var nB=B.vis.length+(B.resto?1:0), baixo=nB?(h+36):h, H=baixo+(nB?48+30:30), out='', arestas='', nos='', defs='';
+    defs='<defs><marker id="m-seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9z" class="seta"/></marker><marker id="m-seta-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9z" class="seta seta--alerta"/></marker></defs>';
+    function coluna(arr,resto,d,X,esq){
+      var n=arr.length+(resto?1:0), y0=topo+(bloco-n*P)/2;
+      arr.forEach(function(x,i){
+        var Y=y0+i*P, my=Y+24, id='e'+(uid++), al=x.st==='CANCELADA';
+        var pa,lp;
+        if(esq){pa='M'+(X+W)+' '+my+' H 270 C 305 '+my+', 300 '+cy+', 330 '+cy; lp='M'+(X+W)+' '+my+' H 270';}
+        else{pa='M490 '+cy+' C 520 '+cy+', 525 '+my+', 560 '+my+' H '+X; lp='M560 '+my+' H '+X;}
+        var lid=id+'l';
+        arestas+='<path id="'+id+'" class="ar'+(al?' ar--alerta':'')+'" d="'+pa+'" marker-start="url(#'+(al?'m-seta-a':'m-seta')+')"/>'+
+          '<path id="'+lid+'" d="'+lp+'" fill="none"/>'+
+          '<text class="ar-t'+(al?' ar-t--alerta':'')+'"><textPath href="#'+lid+'" startOffset="50%" text-anchor="middle" dy="-6">'+LBL[d]+'</textPath></text>';
+        nos+=no(x,X,Y,W);
+      });
+      if(resto) nos+=pill(X,y0+arr.length*P,W,resto,d);
+    }
+    coluna(L.vis,L.resto,'saida',10,true); coluna(R.vis,R.resto,'entrada',650,false);
+    // inferior (mútuas): linhas retas do centro para cada nó
+    var by=h+36, gap=14, tot=nB*W+(nB-1)*gap, bx0=410-tot/2;
+    B.vis.forEach(function(x,i){
+      var X=bx0+i*(W+gap), id='e'+(uid++), al=x.st==='CANCELADA', mx=X+W/2;
+      arestas+='<path id="'+id+'" class="ar'+(al?' ar--alerta':'')+'" d="M'+(410+(mx-410)*0.25)+' '+(cy+28)+' L'+mx+' '+by+'" marker-start="url(#m-seta)" marker-end="url(#m-seta)"/>';
+      nos+=no(x,X,by,W);
+    });
+    if(B.resto) nos+=pill(bx0+B.vis.length*(W+gap),by,W,B.resto,'bi');
+    if(nB) arestas+='<text class="ar-t" x="'+(410+6)+'" y="'+(cy+28+ (by-cy-28)/2 +4)+'">mútua</text>';
+    var centro='<g class="no no--este" style="--c:var(--st-planejada)" aria-label="Esta demanda"><rect class="cx" x="330" y="'+(cy-28)+'" width="160" height="56" rx="10"/><text x="344" y="'+(cy-5)+'">Relatório de fechamento</text><text class="sub" x="344" y="'+(cy+13)+'">Esta demanda · Planejada</text></g>';
+    var leg='<g class="ar-t" transform="translate(12,'+(H-12)+')">'+['PENDENTE','PLANEJADA','CONCLUIDA','CANCELADA'].map(function(k,i){return '<circle cx="'+(i*92+4)+'" cy="-4" r="4" fill="'+COR[k]+'"/><text x="'+(i*92+12)+'">'+ROT[k]+'</text>'}).join('')+'</g>';
+    document.getElementById('cx-grafo').innerHTML='<svg viewBox="0 0 820 '+H+'" role="group" aria-label="Grafo das conexões da demanda">'+defs+arestas+nos+centro+leg+'</svg>';
+    document.querySelectorAll('#cx-grafo [data-exp]').forEach(function(g){
+      var f=function(){expand[g.dataset.exp]=true;render()};
+      g.addEventListener('click',f); g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();f()}});
+    });
+    // alerta, lista e contagem
+    var canc=dados.filter(function(x){return x.st==='CANCELADA'}), al=document.getElementById('cx-alerta');
+    al.hidden=!canc.length;
+    if(canc.length) al.innerHTML='<b>!</b><span><b>'+esc(canc.map(function(x){return x.nome}).join(', '))+'</b> '+(canc.length>1?'estão canceladas':'está cancelada')+' e ainda '+(canc.length>1?'ligadas':'ligada')+' a esta demanda. Vale rever.</span>';
+    var rot={saida:'esta depende dela',entrada:'depende desta',bi:'mútua'};
+    document.getElementById('cx-lista').innerHTML=dados.map(function(x){return '<li><i class="pt" style="--c:'+COR[x.st]+'"></i><span>'+esc(x.nome)+' <em>· '+rot[x.dir]+'</em></span><em>'+ROT[x.st].toLowerCase()+'</em></li>'}).join('');
+    document.getElementById('cx-resumo-lista').textContent='Ver as '+dados.length+' conexões em lista';
+    document.getElementById('cx-cont').textContent=dados.length+' demandas ligadas';
+    var ocultas=['saida','entrada','bi'].reduce(function(a,d){return a+lado(d).resto},0);
+    document.getElementById('cx-resumo-lista').textContent+= ocultas?' ('+ocultas+' fora do desenho)':'';
+  }
+  render();
+  var bm=document.getElementById('cx-muitas');
+  bm.addEventListener('click',function(){
+    var on=bm.getAttribute('aria-pressed')!=='true'; bm.setAttribute('aria-pressed',String(on));
+    dados=on?MANY:FEW; expand={saida:false,entrada:false,bi:false}; render();
+  });
+  // ---- conexões: criar e vazio
+  var nb=document.getElementById('cx-novo-btn'), nv=document.getElementById('cx-novo');
+  function abre(v){nv.hidden=!v;nb.setAttribute('aria-expanded',String(v))}
+  nb.addEventListener('click',function(){abre(nv.hidden)});
+  document.getElementById('cx-cancela').addEventListener('click',function(){abre(false)});
+  var dirs=document.querySelectorAll('#cx-dir button'), pre=document.getElementById('cx-previa');
+  var txt={'Esta depende dela':'<b>Relatório de fechamento</b> depende de <b>a escolhida</b>','Ela depende desta':'<b>A escolhida</b> depende de <b>Relatório de fechamento</b>','Dependência mútua':'<b>Relatório de fechamento</b> e <b>a escolhida</b> dependem uma da outra'};
+  dirs.forEach(function(b){b.addEventListener('click',function(){
+    dirs.forEach(function(o){o.setAttribute('aria-pressed',String(o===b))}); pre.innerHTML='Prévia: '+txt[b.dataset.t];
+  })});
+  var vC=document.getElementById('vaz-cx');
+  function vazio(on){
+    document.getElementById('cx-mini').hidden=on; document.getElementById('cx-vazio').hidden=!on;
+    vC.setAttribute('aria-pressed',String(on)); document.getElementById('cx-cont').textContent=on?'nenhuma ainda':dados.length+' demandas ligadas';
+  }
+  vC.addEventListener('click',function(){vazio(vC.getAttribute('aria-pressed')!=='true')});
+  document.getElementById('cx-novo-vazio').addEventListener('click',function(){abre(true)});
+})();
+</script>

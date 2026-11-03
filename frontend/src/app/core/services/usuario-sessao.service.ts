@@ -8,6 +8,7 @@ import {
     podeEditarDemanda,
     podeEditarExecucaoDeOutro,
     podeGerenciarTag,
+    podeSerMembroDeDemanda,
     podeVerExecucaoEPontoDeOutro,
     temPermissaoDeAdministrador,
     temPermissaoDeGestor,
@@ -53,6 +54,7 @@ export class UsuarioSessaoService {
     readonly podeVerExecucaoEPontoDeOutro = this.permissaoPorAcao(podeVerExecucaoEPontoDeOutro);
     readonly podeEditarExecucaoDeOutro = this.permissaoPorAcao(podeEditarExecucaoDeOutro);
     readonly podeGerenciarTag          = this.permissaoPorAcao(podeGerenciarTag);
+    readonly podeSerMembroDeDemanda    = this.permissaoPorAcao(podeSerMembroDeDemanda);
 
     constructor() {
         this.restaurarSessao();

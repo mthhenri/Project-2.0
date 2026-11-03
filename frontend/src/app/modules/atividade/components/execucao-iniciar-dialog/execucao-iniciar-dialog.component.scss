@@ -1,0 +1,109 @@
+.execucao-iniciar {
+    &__atividade {
+        margin: 0 0 0.5rem;
+        font-weight: 600;
+        color: var(--p-primary-600);
+    }
+
+    &__executor {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        white-space: nowrap;
+    }
+
+    &__avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--app-avatar-fundo);
+        color: var(--app-avatar-cor);
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding-top: 0.25rem;
+    }
+
+    &__campo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    &__rotulo {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--p-text-color);
+    }
+
+    &__erro {
+        font-size: 0.75rem;
+        color: var(--p-red-500);
+    }
+
+    &__lista {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        max-height: 16rem;
+        overflow-y: auto;
+        padding-right: 0.25rem;
+    }
+
+    &__item {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+
+        &:hover {
+            background: var(--app-surface-50);
+        }
+    }
+
+    &__data {
+        flex-shrink: 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+        color: var(--p-text-muted-color);
+    }
+
+    &__descricao {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.875rem;
+        line-height: 1.4;
+        color: var(--p-text-color);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__usar {
+        flex-shrink: 0;
+        padding: 0 0.375rem;
+        border: none;
+        border-radius: 0.375rem;
+        background: transparent;
+        color: var(--p-primary-color);
+        font-size: 0.75rem;
+        cursor: pointer;
+
+        &:hover {
+            background: var(--app-surface-100);
+        }
+    }
+}

@@ -219,3 +219,54 @@ describe('DemandaGrafoComponent', () => {
         });
     });
 });
+
+// Task 305: o mesmo desenho no modo recorte (aba Conexões da demanda aberta).
+describe('DemandaGrafoComponent no modo recorte', () => {
+    const RECORTE: DemandaGrafoDto = {
+        nos: [criarNo(1), criarNo(2), criarNo(3), criarNo(4, { status: TipoDemandaStatusEnum.CANCELADA })],
+        arestas: [
+            { id: 1, origemId: 1, destinoId: 2, tipo: 'conexao', bidirecional: false },
+            { id: 2, origemId: 3, destinoId: 1, tipo: 'conexao', bidirecional: false },
+            { id: 3, origemId: 1, destinoId: 4, tipo: 'conexao', bidirecional: true },
+        ],
+    };
+    const entradas = { modo: 'recorte', focoId: 1 };
+
+    it('escreve o tipo ao longo de cada linha: depende de, depende desta e mútua', async () => {
+        const { montado } = await montar(RECORTE, entradas);
+        const textos = Array.from(svg(montado.elemento).querySelectorAll('text.demanda-grafo__rotulo-aresta')).map((texto) => texto.textContent);
+        expect(textos).toEqual(['depende de', 'depende desta', 'mútua']);
+    });
+
+    it('seta no destino; a mútua tem seta nas duas pontas; a ligada a cancelada é laranja', async () => {
+        const { montado } = await montar(RECORTE, entradas);
+        const [saida, entrada, mutua] = Array.from(svg(montado.elemento).querySelectorAll('line'));
+        expect([saida.getAttribute('marker-end'), saida.getAttribute('marker-start')]).toEqual(['url(#seta-conexao)', null]);
+        expect(entrada.getAttribute('marker-start')).toBeNull();
+        expect([mutua.getAttribute('marker-end'), mutua.getAttribute('marker-start')]).toEqual(['url(#seta-conexao-cancelada)', 'url(#seta-conexao-cancelada)']);
+        expect(mutua.style.stroke).toContain('orange');
+    });
+
+    it('a demanda aberta ganha o anel, fica fixa no centro, e não há legenda nem zoom', async () => {
+        const { montado } = await montar(RECORTE, entradas);
+        expect(svg(montado.elemento).querySelectorAll('.demanda-grafo__anel-foco')).toHaveLength(1);
+        expect(montado.elemento.querySelector('.demanda-grafo__controles')).toBeNull();
+        expect(svg(montado.elemento).classList.contains('demanda-grafo__svg--recorte')).toBe(true);
+    });
+
+    it('o × aparece só nos nós ligados, quando removível, e pede a remoção sem abrir a demanda', async () => {
+        const { montado, selecionadas } = await montar(RECORTE, { ...entradas, removivel: true });
+        const removidos: number[] = [];
+        montado.componente.noRemovido.subscribe((id) => removidos.push(id));
+        const botoes = svg(montado.elemento).querySelectorAll<SVGGElement>('.demanda-grafo__remover');
+        expect(botoes).toHaveLength(3);
+        botoes[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(removidos).toEqual([2]);
+        expect(selecionadas).toEqual([]);
+    });
+
+    it('sem removível não há ×', async () => {
+        const { montado } = await montar(RECORTE, entradas);
+        expect(svg(montado.elemento).querySelectorAll('.demanda-grafo__remover')).toHaveLength(0);
+    });
+});

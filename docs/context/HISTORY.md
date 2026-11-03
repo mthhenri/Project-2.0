@@ -12,6 +12,94 @@
 
 ---
 
+## 2026-11-03 — Check-in no perfil acompanha a execução e balão do check-in cinza
+
+**Mudou.** (1) `CheckinProximoComponent` (linha "Próximo check-in" do menu do perfil) só consultava `GET /checkin/situacao` ao nascer; iniciar uma atividade, pelo usuário ou pela IA, não a atualizava até o F5. Agora um `effect` observa o `id` da execução em `ExecucaoAtivaService.ativa()` (que o `execucaoAtivaInterceptor` já ressincroniza após iniciar, encerrar e confirmar/desfazer proposta da IA) e refaz a consulta quando ele muda. (2) O balão da mensagem do usuário na janela do check-in (`checkin__balao`) passou do azul cheio para o cinza do chat (`--app-surface-200`, I-032).
+
+**Testes.** Novo teste de componente (refaz a consulta quando a execução muda); checkin 63 passam; frontend completo 205 arquivos / 2516 testes; backend unitário 1615; `lint:tudo` limpo.
+
+**Verificado ao vivo** (1920×1080, claro, como `dev.teste`): menu aberto em "Sem check-in: nenhuma execução em andamento"; ao iniciar a atividade o texto passou a "Próximo check-in em 56:13" sem recarregar. A tela de planejamento usa o mesmo `chat__balao` do chat (já cinza); sem plano com mensagens no banco, não vi um balão dela ao vivo.
+
+## 2026-11-03 — Cronômetro no cartão da atividade e "Sair da demanda" só para membro
+
+Os dois pendentes que sobraram das 304 e 307, a pedido do autor.
+
+- **Cronômetro:** `AtividadeResumoDto.execucaoAtivaInicioData` (`execucao.inicio_data` da execução em andamento, no LATERAL JOIN da listagem). O selo "Em execução" do cartão da atividade na demanda aberta mostra o tempo correndo, inclusive de execução de outra pessoa (a listagem de atividades segue com o início só da própria, sem mudança).
+- **Sair da demanda:** `DemandaExecutadaResumoDto.souMembro` (EXISTS em `demanda_usuario`). O menu de "Minhas demandas" mostra "Sair da demanda" só quando o usuário é membro daquela demanda; antes aparecia para qualquer um que não fosse gestor, e para o auxiliar que só executou a API recusaria.
+- **Testes:** integração das duas listagens (371), frontend das pastas `demanda`, `chat` e `atividade` (707), `lint:tudo`, build do backend. Ao vivo: gestor vê o cronômetro de uma execução da auxiliar (00:48:16); a auxiliar membro vê "Sair da demanda" e, na demanda em que só executou, não.
+
+## 2026-11-03 — P-074 corrigido: a lista de conexões da demanda traz as "depende desta"
+
+A pedido do autor (achado na verificação da 305). `DemandaRepository.listarConexoes` passou a listar toda conexão em que a demanda é origem ou destino: `saida`, `entrada` (outra demanda depende desta) e `bidirecional`. Antes só vinham as que saem e as mútuas, então a lista, o contador "Conexões N" e o grupo "Dependem desta demanda" nunca mostravam a "depende desta".
+
+- **Remoção:** a conexão pertence à origem; a lixeira e o × do recorte removem por ela (`DELETE /demanda/{origem}/conexao/{id}`), sem mudar a permissão do backend (`validarConexaoDemanda` segue aceitando a origem e, se mútua, o destino). O "Desfazer" já recriava a entrada partindo da outra demanda.
+- **Recorte:** o caso especial de remover "depende desta" pela aresta saiu; tudo passa pela lista.
+- **Testes:** integração `listarConexoes` atualizado (entrada agora aparece; 371 passam); frontend da pasta `demanda` 256 (remoção de entrada pela origem, desfazer); `lint:tudo` limpo; build do backend. Ao vivo (gestor): contador 4, grupo "Dependem desta demanda 1", remover pela lixeira (3, linha some) e desfazer (4, linha volta).
+
+## 2026-11-03 — Pós-304: play e pause no cartão da atividade da demanda
+
+A pedido do autor, os botões que a 304 deixara de fora. O diálogo "Iniciar execução" estava embutido na `atividade-listagem.page`; virou o componente `execucao-iniciar-dialog` (`abrir(atividade)`, saída `iniciada`), usado agora pela listagem e pelo painel de atividades da demanda aberta. O "Encerrar execução" já era o compartilhado.
+
+- **Painel** (`demanda-atividades-painel`): play/pause redondo em cada cartão, com a regra da listagem (`podeConduzirExecucaoDeOutro` ou dono; play só em Planejada e Desenvolvendo, com o motivo no tooltip); `execucaoAlterada` faz a `demanda-aberta` recarregar as atividades.
+- **Listagem:** perdeu o estado, o formulário, o template e o SCSS do diálogo (−300 linhas); os testes do início foram para o spec do componente novo.
+- **Testes:** diálogo novo 5, painel +4, listagem ajustada; `lint:tudo` limpo; ao vivo como auxiliar (pausar, iniciar, cartão "Em execução").
+
+## 2026-11-03 — Task 305: a aba Conexões da demanda mostra o recorte do grafo
+
+Segunda do guarda-chuva `demanda-atividades-e-conexoes`. O `demanda-grafo` ganhou o modo `recorte` e a aba passou a desenhar nele a demanda e as ligadas a ela.
+
+- **`demanda-grafo` (modo `recorte`):** a demanda em `focoId` fica fixa no centro, com anel; seta no destino da conexão (nas duas pontas na mútua); texto "depende de" / "depende desta" / "mútua" ao longo da linha, sempre de pé; linha laranja para ligada cancelada; sem zoom nem legenda; × opcional nos nós ligados (`removivel`, `noRemovido`). Repulsão e distância menores e enquadramento até 1,4× só no recorte; o grafo do projeto não mudou.
+- **Regra pura** `demanda-recorte-conexoes.util.ts`: `montarRecorteDeConexoes` (a demanda, as ligadas e as conexões entre elas; sem hierarquia; ignora o que está fora do grafo), `sentidoDaConexao`, `textoDaConexao`, lista das canceladas.
+- **`demanda-conexao-lista`:** recebe o `grafo` do projeto (passado pela página → `demanda-arvore-tela` → `demanda-aberta`; sem endpoint novo), "Conectar" abre a criação com o sentido em três botões ("Esta depende dela", "Ela depende desta", "Mútua") e a frase de prévia; faixa de aviso de cancelada; lista agrupada recolhida ("Ver as N conexões em lista"); vazio com "Conectar". Criar, remover e desfazer avisam o hospedeiro (`conexoesAlteradas` → `demandaAlterada`), que recarrega o grafo.
+- **Achado na verificação:** a API de conexões só lista como "entrada" as mútuas, então o recorte por ela escondia as "depende desta"; o recorte sai do grafo do projeto e o × remove pela demanda de origem. Registrado o **P-074** (lista e contador sem elas).
+- **Testes:** util 7, grafo +5 (modo recorte), lista de conexões +8 (recorte, remover, prévia, "Ela depende desta"); pasta `demanda` do frontend 252; `lint:tudo` limpo. Ao vivo nos 5 formatos, claro e escuro (`verificacao.md`).
+
+## 2026-11-03 — Task 304: a aba Atividades da demanda mostra o consumo de cada atividade
+
+Primeira das duas tasks do guarda-chuva `demanda-atividades-e-conexoes`. A atividade não tem horas esperadas, então a barra de cada cartão é a **fatia que ela consumiu do total consumido pela demanda**.
+
+- **Regra pura** (`demanda-atividades-consumo.util.ts`): `calcularConsumoDaDemanda` (maior resto, os percentuais somam 100), `filtrarAtividadesDaDemanda` (Todas, Minhas, Em aberto) e `contarAtividadesPorSituacao`.
+- **Painel** (`demanda-atividades-painel`): resumo com o total e a barra dividida por atividade (cor do status), contadores, filtros em `p-selectbutton`, cartão com ícone de status, executor, prioridade, barra da fatia e "14h · 37% da demanda" ou "sem execução ainda"; a atividade em execução (`execucaoAtivaId`) ganha destaque e o selo `app-atividade-em-execucao` (ponto pulsante já com `prefers-reduced-motion`). Sem DTO novo.
+- **Fora, de propósito:** botões iniciar/pausar do cartão e cronômetro. O diálogo de iniciar está embutido na `atividade-listagem.page`; extrair é refatoração separada (pausar já usa o diálogo compartilhado). Aguarda decisão do autor.
+- **Testes:** util 7, painel 5, pasta `demanda` do frontend 270 passando, `lint:tudo` limpo. Ao vivo nos 5 formatos, claro e escuro (ver `verificacao.md`).
+
+## 2026-11-03 — Task 307: "Minhas demandas" inclui as demandas em que o usuário é membro
+
+Relato do autor: auxiliar e membro de uma demanda planejada e sem atividades, ela não aparecia em "Minhas demandas" do chat. A lista partia só de `execucao`.
+
+- **Repository** (`listarExecutadas`): nova CTE `demanda_listada` = as executadas (com `INNER JOIN demanda_usuario` para o desenvolvedor, como antes) `UNION ALL` as de que o usuário é membro e não executou (`incluirMembro`). Ordem: `ultima_execucao_data DESC NULLS LAST, demanda.id DESC`; o caminho da árvore passou a olhar a lista nova. `DemandaExecutadaInternoListarDto` ganhou `incluirMembro`; `DemandaExecutadaResumoDto.ultimaExecucaoData` virou `Date | null`.
+- **Service:** `incluirMembro = podeSerMembroDeDemanda(tipo)` (desenvolvedor e auxiliar). Gestor e administrador seguem só com as executadas, sem listar todas as planejadas.
+- **Frontend:** `Participar`/`Sair` do cabeçalho de membros agora aparecem para `podeSerMembroDeDemanda` (novo sinal `UsuarioSessaoService.podeSerMembroDeDemanda`), junto da busca e do × que o auxiliar já tinha; gestor e administrador não veem nenhum dos dois. Texto de vazio da lateral cita "é membro".
+- **Fora do escopo, visto no caminho:** a ferramenta da IA `listar_minhas_demandas` usa `listarAtribuidas`, não este método; não mudou. No menu da lateral, "Sair da demanda" aparece para o auxiliar também em demanda que ele executou sem ser membro (a API recusaria); não tratado nesta task.
+- **Testes:** integração do repository +1 (membro sem execução entra depois das executadas, por id decrescente, sem repetir; auxiliar vê executada sem ser membro, desenvolvedor não; gestor não lista planejadas; concluída fora) — 371 de integração; service +1 caso (auxiliar); frontend +1 em `minhas-demandas` (item sem execução e sem atividades, sem NaN) e spec novo do cabeçalho de membros (5).
+
+## 2026-11-03 — Task 308: o administrador edita os textos dos tipos de usuário
+
+Pedido do autor, ao revisar a 306: um lugar para o administrador editar os textos que explicam cada tipo, **igual ao "Alterar prioridades"** das atividades, mantendo os ícones ✓ e ✕ coloridos. A primeira versão (frase e duas listas estruturadas, com tabela `ajuda_tipo_usuario_item`) foi **trocada no meio da task** por proposta do autor: texto livre em Markdown, com as linhas `✓` e `✕` pintadas só na tela. Resultado, mais simples: uma coluna só, sem tabela nem estrutura.
+
+- **Banco:** migration `0078` alarga `tipo_usuario.descricao` para `VARCHAR(2000)` e a semeia (coluna nova só existiu numa primeira versão, antes de o autor lembrar que a `descricao` já existia e ninguém a lia; a 0078 ainda não tinha sido aplicada fora do ambiente de teste, então foi editada no lugar). Semeada com o padrão do `shared`; rollback testado: aplicar, reverter, aplicar). Um tropeço no caminho: o teste guardião de tabelas `tipo_*` tratou a tabela de itens (nome `tipo_usuario_ajuda_item`) como tabela de referência; sumiu com a troca de desenho.
+- **Backend:** `GET /tipo-usuario-ajuda` (`@GestorOnly`) e `PUT /tipo-usuario-ajuda/:tipo` (`@AdministradorOnly`, mais a checagem na service); texto aparado, vazio e acima de 2000 recusados. DTOs `TipoUsuarioAjuda*` no `shared`.
+- **Frontend:** `TipoUsuarioAjudaService` (cache em sinal, padrão do `shared` até a API responder), `dividirTextoDaAjuda` e `inserirMarcaNaLinha` (puras), `usuario-tipo-descricao` (agora lê do serviço), `usuario-tipos-dialog` e `usuario-tipos-textos` (uma linha por tipo: campo, botões ✓ Pode e ✕ Não pode, Descartar, Restaurar padrão, Salvar texto). Botão "Alterar textos dos tipos" só para o administrador.
+- **Testes:** shared 311; backend 1615 unitários e 370 de integração (incluem a semente igual ao padrão do `shared`); frontend suíte completa 200 arquivos e 2469 testes, build e `lint:tudo` limpos.
+- **Verificado ao vivo** (Postgres, backend e frontend reais; administrador e gestor; 5 formatos, claro e escuro): editar o Auxiliar com o botão ✕, salvar (toast), ver no popover, **recarregar a página** (veio do banco), ver no formulário, Restaurar padrão; gestor recebe 403 na API e não vê o botão. Relatório: `docs/specs/done/308-usuarios-editor-dos-textos-dos-tipos/verificacao.md`.
+
+## 2026-11-03 — Pós-306: ordem do formulário de usuário, tooltip retirado, acento perdido nos nomes e spec 308
+
+- **Formulário de criar e editar usuário:** os campos passaram a **Nome | Cargo | Horas Diárias**, **Login | Senha** (só ao criar), **Tipo** e o bloco "o que é / pode / não pode" do tipo. A ordem do DOM é a do Tab. Conferido ao vivo em 1920, 1366 e 720 (claro e escuro): as posições dos campos batem com a ordem pedida. **Não verificado:** o formulário em modo edição (sem a Senha) só nos testes.
+- **Tooltip da tag do tipo na tabela retirado** (decisão do autor): popover e bloco do formulário ficam.
+- **Acento perdido em nomes de demanda e atividade e na descrição da execução** ("Homologação 1.2" virava "Homologaçao 1.2"). **Causa (por leitura do código):** `BloquearCaracteresProibidosDirective` remove `~ ^ ´ \`` a cada `input`, inclusive no meio da composição; no teclado ABNT2 esses são as teclas mortas de "ã", "á", "ê", "à", e limpar o campo nesse instante cancela a composição (o "ç" tem tecla própria e nunca foi afetado). **Correção:** a diretiva ignora o `input` com `isComposing` e limpa de novo no `compositionend` (o acento solto, de tecla morta + espaço, ainda sai). Testes: 4 novos na diretiva (9 no arquivo). **Limite:** o IME simulado do Chromium (CDP) não reproduziu o bug nem com a diretiva antiga, então a causa e a correção **não foram provadas num teclado real**; o autor precisa confirmar digitando "ã" num nome.
+- **Spec 308** (backlog): editor dos textos dos tipos de usuário para o administrador, no molde do "Alterar prioridades" das atividades, com o texto em Markdown.
+
+## 2026-11-03 — Task 306: a ajuda "Tipos de usuário" na tela de Usuários
+
+Pedido do autor: um lugar na tela de Usuários que diga o que cada tipo é. Não havia: a coluna `tipo_usuario.descricao` só repete o nome ("Gestor"); a explicação vivia em `SYSTEM.SPEC.md` §14. Decidido com o autor, em cima de um mockup: botão **"Tipos de usuário"** com popover, tooltip na tag da tabela e um bloco no formulário de criar e editar, com "o que é", "Pode" e "Não pode", e as **cores que o app já usa** em cada tipo.
+
+- **O que mudou:** `DESCRICAO_TIPO_USUARIO` e `TIPOS_USUARIO_NA_ORDEM_DA_AJUDA` no `shared` (sem migration e sem tocar a coluna do banco); componente `usuario-tipo-descricao`; popover, tooltip e bloco do formulário. A cor vem de `severidadeTipoUsuario`, para nunca divergir da tabela.
+- **Testes:** shared 310 (2 novos), frontend `usuario` 102 (8 novos) e suíte completa 198 arquivos e 2449 testes, build e `lint:tudo` limpos.
+- **Verificado ao vivo** (Postgres local, backend e frontend reais, Playwright, 5 formatos de desktop, claro e escuro): sem erros de console. **Achado só na verificação:** o popover com limite de 70% da altura cortava Gestor e Administrador até em 1080; agora usa quatro colunas quando cabem.
+- **Pendente:** os textos são rascunho do agente e esperam a revisão do autor; foco por teclado e leitor de tela não foram exercitados. Relatório: `docs/specs/done/306-usuarios-legenda-dos-tipos/verificacao.md`.
+- **No mesmo pedido** (sem código): spec 307 (Minhas demandas do chat inclui as demandas de que o usuário é membro; Participar e Sair para desenvolvedor e auxiliar), 304 e 305 e a guarda-chuva `demanda-atividades-e-conexoes`, todas no backlog.
+
 ## 2026-11-03 — P-073: o Windows Defender barrou o Project Desktop 1.1.2
 
 O autor tentou baixar o 1.1.2 pelo menu do perfil e recebeu "Não foi possível baixar - Erro de download". O servidor entrega o arquivo certo (85.138.992 bytes, conferido pela API); quem barrou foi o Defender, com `Program:Win32/Contebrew.A!ml` (heurística de aprendizado de máquina sobre executável Electron sem assinatura), apagando o download e bloqueando também o arquivo de `desktop/release/`. As versões 1.0.1, 1.1.0 e 1.1.1 passam; o 1.1.2 empacotado de novo passou no `MpCmdRun -Scan` ("found no threats"). Registrado como P-073 (contornado: empacotar de novo e escanear antes de publicar; correção de fato: assinatura, I-049).

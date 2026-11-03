@@ -6,10 +6,20 @@
                 <span class="demanda-conexao-lista__contador">{{ conexoes().length }}</span>
             }
         </span>
+        @if (sessao.podeEditarDemanda() && !conectando()) {
+            <p-button label="Conectar" icon="pi pi-plus" size="small" (onClick)="abrirConexao()" />
+        }
     </div>
 
-    <!-- Criação inline (gestor): escolher o destino e confirmar com Enter ou "Adicionar" -->
-    @if (sessao.podeEditarDemanda()) {
+    @if (recorte()?.canceladas?.length) {
+        <p class="demanda-conexao-lista__aviso" role="status">
+            <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+            Conectada a demanda cancelada: {{ recorte()!.canceladas.join(", ") }}.
+        </p>
+    }
+
+    <!-- Criação (quem edita a demanda): o destino, o sentido em três botões e a frase que diz o que será criado -->
+    @if (sessao.podeEditarDemanda() && conectando()) {
         <div class="demanda-conexao-lista__criacao">
             <p-select
                 [options]="candidatos()"
@@ -19,16 +29,16 @@
                 optionValue="demandaConectadaId"
                 [filter]="true"
                 filterPlaceholder="Digite para buscar…"
-                placeholder="Conectar a outra demanda…"
+                placeholder="Conectar a qual demanda…"
                 emptyFilterMessage="Nenhuma demanda encontrada"
                 [showClear]="true"
                 appendTo="body"
                 class="demanda-conexao-lista__destino"
             />
             <p-selectbutton
-                [options]="opcoesDirecao"
-                [ngModel]="bidirecional()"
-                (ngModelChange)="bidirecional.set($event)"
+                [options]="opcoesSentido"
+                [ngModel]="sentido()"
+                (ngModelChange)="sentido.set($event)"
                 optionLabel="rotulo"
                 optionValue="valor"
                 [allowEmpty]="false"
@@ -43,7 +53,17 @@
                 [loading]="salvando()"
                 (onClick)="adicionar()"
             />
+            <p-button
+                label="Cancelar"
+                severity="secondary"
+                [text]="true"
+                size="small"
+                (onClick)="fecharConexao()"
+            />
         </div>
+        @if (previa()) {
+            <p class="demanda-conexao-lista__previa">{{ previa() }}</p>
+        }
         @if (erroInline()) {
             <p class="demanda-conexao-lista__erro" role="alert">
                 <i class="pi pi-exclamation-circle"></i> {{ erroInline() }}
@@ -55,59 +75,87 @@
         <div class="demanda-conexao-lista__vazio">
             <i class="pi pi-share-alt"></i>
             <p>
-                Nenhuma conexão.
-                {{
-                    sessao.podeEditarDemanda()
-                        ? "Escolha uma demanda acima para criar a primeira."
-                        : ""
-                }}
+                Nenhuma conexão. Conectar mostra de quais demandas esta depende e quais dependem
+                dela.
             </p>
+            @if (sessao.podeEditarDemanda() && !conectando()) {
+                <p-button
+                    label="Conectar"
+                    icon="pi pi-plus"
+                    severity="secondary"
+                    [outlined]="true"
+                    size="small"
+                    (onClick)="abrirConexao()"
+                />
+            }
         </div>
-    }
+    } @else {
+        @if (mostrarGrafo()) {
+            <div class="demanda-conexao-lista__grafo">
+                <app-demanda-grafo
+                    [grafo]="recorte()!.grafo"
+                    modo="recorte"
+                    [focoId]="demandaId()"
+                    [removivel]="sessao.podeEditarDemanda()"
+                    (demandaSelecionada)="demandaAbrir.emit($event)"
+                    (noRemovido)="removerPorDemanda($event)"
+                />
+            </div>
+        }
 
-    @for (grupo of grupos(); track grupo.direcao) {
-        <section class="demanda-conexao-lista__grupo" [attr.aria-label]="grupo.titulo">
-            <h4 class="demanda-conexao-lista__grupo-titulo">
-                <span
-                    class="demanda-conexao-lista__direcao"
-                    [class.demanda-conexao-lista__direcao--saida]="grupo.direcao === 'saida'"
-                    [class.demanda-conexao-lista__direcao--entrada]="grupo.direcao === 'entrada'"
-                    [class.demanda-conexao-lista__direcao--bidirecional]="
-                        grupo.direcao === 'bidirecional'
-                    "
-                    aria-hidden="true"
-                    ><i [class]="'pi ' + grupo.icone"></i
-                ></span>
-                {{ grupo.titulo }}
-                <span class="demanda-conexao-lista__grupo-contador">{{ grupo.itens.length }}</span>
-            </h4>
-            <ul class="demanda-conexao-lista__lista">
-                @for (conexao of grupo.itens; track conexao.id) {
-                    <li class="demanda-conexao-lista__item">
-                        <button
-                            type="button"
-                            class="demanda-conexao-lista__nome"
-                            [pTooltip]="tooltipDirecao(conexao)"
-                            tooltipPosition="top"
-                            (click)="demandaAbrir.emit(conexao.demandaConectadaId)"
-                        >
-                            {{ conexao.nomeDemandaConectada }}
-                        </button>
-                        @if (sessao.podeEditarDemanda()) {
-                            <p-button
-                                icon="pi pi-trash"
-                                severity="danger"
-                                [text]="true"
-                                size="small"
-                                ariaLabel="Remover conexão"
-                                pTooltip="Remover conexão"
-                                tooltipPosition="top"
-                                (onClick)="excluir(conexao)"
-                            />
+        <details class="demanda-conexao-lista__lista-recolhida" [open]="!mostrarGrafo()">
+            <summary>Ver as {{ conexoes().length }} conexões em lista</summary>
+            @for (grupo of grupos(); track grupo.direcao) {
+                <section class="demanda-conexao-lista__grupo" [attr.aria-label]="grupo.titulo">
+                    <h4 class="demanda-conexao-lista__grupo-titulo">
+                        <span
+                            class="demanda-conexao-lista__direcao"
+                            [class.demanda-conexao-lista__direcao--saida]="
+                                grupo.direcao === 'saida'
+                            "
+                            [class.demanda-conexao-lista__direcao--entrada]="
+                                grupo.direcao === 'entrada'
+                            "
+                            [class.demanda-conexao-lista__direcao--bidirecional]="
+                                grupo.direcao === 'bidirecional'
+                            "
+                            aria-hidden="true"
+                            ><i [class]="'pi ' + grupo.icone"></i
+                        ></span>
+                        {{ grupo.titulo }}
+                        <span class="demanda-conexao-lista__grupo-contador">{{
+                            grupo.itens.length
+                        }}</span>
+                    </h4>
+                    <ul class="demanda-conexao-lista__lista">
+                        @for (conexao of grupo.itens; track conexao.id) {
+                            <li class="demanda-conexao-lista__item">
+                                <button
+                                    type="button"
+                                    class="demanda-conexao-lista__nome"
+                                    [pTooltip]="tooltipDirecao(conexao)"
+                                    tooltipPosition="top"
+                                    (click)="demandaAbrir.emit(conexao.demandaConectadaId)"
+                                >
+                                    {{ conexao.nomeDemandaConectada }}
+                                </button>
+                                @if (sessao.podeEditarDemanda()) {
+                                    <p-button
+                                        icon="pi pi-trash"
+                                        severity="danger"
+                                        [text]="true"
+                                        size="small"
+                                        ariaLabel="Remover conexão"
+                                        pTooltip="Remover conexão"
+                                        tooltipPosition="top"
+                                        (onClick)="excluir(conexao)"
+                                    />
+                                }
+                            </li>
                         }
-                    </li>
-                }
-            </ul>
-        </section>
+                    </ul>
+                </section>
+            }
+        </details>
     }
 </div>

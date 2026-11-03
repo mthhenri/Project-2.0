@@ -84,4 +84,59 @@ describe('BloquearCaracteresProibidosDirective', () => {
             if (esperado !== caso) expect(componente.controle.value, caso).toBe(esperado);
         }
     });
+
+    // Teclado ABNT2: ~ ´ ^ ` são teclas mortas. Limpar o acento solto no meio da composição cancela o "ã" (bug "Homologaçao").
+    describe('teclas mortas', () => {
+        it('não limpa o campo enquanto a composição está aberta (o ~ solto não é removido ainda)', async () => {
+            const { elemento, componente, atualizar } = await montarComponente(HostBloqueioComponent);
+            const campo = elemento.querySelector<HTMLInputElement>('[aria-label="com-controle"]')!;
+
+            campo.value = 'Homologa~';
+            campo.setSelectionRange(9, 9);
+            campo.dispatchEvent(new InputEvent('input', { isComposing: true }));
+            await atualizar();
+
+            expect(campo.value).toBe('Homologa~');
+            expect(componente.controle.value).not.toBe('Homologa');
+        });
+
+        it('ao fim da composição a letra acentuada fica ("ã" não é proibido)', async () => {
+            const { elemento, componente, atualizar } = await montarComponente(HostBloqueioComponent);
+            const campo = elemento.querySelector<HTMLInputElement>('[aria-label="com-controle"]')!;
+
+            campo.value = 'Homologaçã';
+            campo.setSelectionRange(10, 10);
+            campo.dispatchEvent(new InputEvent('input', { isComposing: true }));
+            campo.dispatchEvent(new CompositionEvent('compositionend', { data: 'ã' }));
+            await atualizar();
+
+            expect(campo.value).toBe('Homologaçã');
+            expect(componente.controle.value).toBe('Homologaçã');
+        });
+
+        it('tecla morta + espaço deixa o acento solto: ele sai no fim da composição', async () => {
+            const { elemento, componente, atualizar } = await montarComponente(HostBloqueioComponent);
+            const campo = elemento.querySelector<HTMLInputElement>('[aria-label="com-controle"]')!;
+
+            campo.value = 'Nome ~';
+            campo.setSelectionRange(6, 6);
+            campo.dispatchEvent(new InputEvent('input', { isComposing: true }));
+            campo.dispatchEvent(new CompositionEvent('compositionend', { data: '~' }));
+            await atualizar();
+
+            expect(campo.value).toBe('Nome ');
+            expect(componente.controle.value).toBe('Nome ');
+        });
+
+        it('fora da composição o acento digitado continua sendo removido', async () => {
+            const { elemento } = await montarComponente(HostBloqueioComponent);
+            const campo = elemento.querySelector<HTMLInputElement>('[aria-label="com-controle"]')!;
+
+            campo.value = 'a~b';
+            campo.setSelectionRange(3, 3);
+            campo.dispatchEvent(new InputEvent('input', { isComposing: false }));
+
+            expect(campo.value).toBe('ab');
+        });
+    });
 });

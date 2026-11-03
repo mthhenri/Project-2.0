@@ -1,7 +1,16 @@
 <div class="demanda-atividades">
     <div class="demanda-atividades__header">
         @if (atividades().length > 0) {
-            <span class="demanda-atividades__contador">{{ atividades().length }} atividade(s)</span>
+            <p-selectbutton
+                [options]="opcoesFiltro"
+                optionLabel="rotulo"
+                optionValue="valor"
+                [allowEmpty]="false"
+                size="small"
+                [ngModel]="filtro()"
+                (ngModelChange)="filtro.set($event)"
+                class="demanda-atividades__filtros"
+            />
         }
         <p-button label="Nova Atividade" icon="pi pi-plus" size="small" (onClick)="nova.emit()" />
         <p-button
@@ -35,42 +44,137 @@
             />
         </div>
     } @else {
-        <div class="demanda-atividades__lista">
-            @for (atividade of atividades(); track atividade.id) {
-                <div class="demanda-atividades__item">
-                    <div class="demanda-atividades__principal">
-                        <span class="demanda-atividades__nome">{{ atividade.nome }}</span>
-                        <p-tag
-                            [value]="rotuloStatusAtividade(atividade.status)"
-                            [severity]="severidadeStatusAtividade(atividade.status)"
-                        />
-                        <app-prioridade-selo [prioridade]="atividade.prioridade" />
-                    </div>
-                    <div class="demanda-atividades__meta">
-                        <span class="demanda-atividades__executor">
-                            <span class="demanda-atividades__avatar">{{
-                                iniciaisUsuario(atividade.nomeUsuario)
-                            }}</span>
-                            {{ atividade.nomeUsuario }}
-                        </span>
+        <section class="demanda-atividades__resumo" aria-label="Consumo da demanda">
+            <div class="demanda-atividades__total">
+                <strong>{{
+                    consumo().totalMinutos | tempoExibicao: unidadeTempo.emDias() : "minutos"
+                }}</strong>
+                <span>consumidas pela demanda</span>
+            </div>
+            <div class="demanda-atividades__barra-dividida" aria-hidden="true">
+                @for (atividade of atividades(); track atividade.id) {
+                    @if (fatiaDe(atividade.id).minutos > 0) {
                         <span
-                            class="demanda-atividades__tempo"
+                            class="demanda-atividades__trecho"
+                            [style.flex-grow]="fatiaDe(atividade.id).minutos"
+                            [style.background]="visualStatusAtividade(atividade.status).cor"
                             [pTooltip]="
-                                unidadeTempo.emDias()
-                                    ? (atividade.totalMinutosExecutados
-                                      | tempoExibicao: false : 'minutos')
-                                    : ''
+                                atividade.nome + ' · ' + fatiaDe(atividade.id).percentual + '%'
                             "
-                        >
-                            <i class="pi pi-clock"></i>
-                            {{
-                                atividade.totalMinutosExecutados
-                                    | tempoExibicao: unidadeTempo.emDias() : "minutos"
-                            }}
-                        </span>
+                            tooltipPosition="top"
+                        ></span>
+                    }
+                }
+            </div>
+            <ul class="demanda-atividades__contadores">
+                @if (contagem().EM_EXECUCAO > 0) {
+                    <li>{{ contagem().EM_EXECUCAO }} em execução</li>
+                }
+                @if (contagem().PLANEJADA > 0) {
+                    <li>{{ contagem().PLANEJADA }} planejada(s)</li>
+                }
+                @if (contagem().PENDENTE > 0) {
+                    <li>{{ contagem().PENDENTE }} pendente(s)</li>
+                }
+                @if (contagem().DESENVOLVENDO > 0) {
+                    <li>{{ contagem().DESENVOLVENDO }} desenvolvendo</li>
+                }
+                @if (contagem().DESENVOLVIDA > 0) {
+                    <li>{{ contagem().DESENVOLVIDA }} desenvolvida(s)</li>
+                }
+            </ul>
+        </section>
+
+        @if (visiveis().length === 0) {
+            <p class="demanda-atividades__sem-resultado">Nenhuma atividade neste filtro.</p>
+        } @else {
+            <div class="demanda-atividades__lista">
+                @for (atividade of visiveis(); track atividade.id) {
+                    <div
+                        class="demanda-atividades__item"
+                        [class.demanda-atividades__item--em-execucao]="
+                            atividade.execucaoAtivaId !== null
+                        "
+                    >
+                        <div class="demanda-atividades__principal">
+                            <app-atividade-status-icone
+                                [status]="atividade.status"
+                                [pTooltip]="rotuloStatusAtividade(atividade.status)"
+                                tooltipPosition="top"
+                            />
+                            <span class="demanda-atividades__nome">{{ atividade.nome }}</span>
+                            @if (atividade.execucaoAtivaId !== null) {
+                                <app-atividade-em-execucao [inicio]="inicioDaExecucao(atividade)" />
+                            }
+                            <app-prioridade-selo [prioridade]="atividade.prioridade" />
+                            @if (podeExecutar(atividade)) {
+                                <span
+                                    class="demanda-atividades__gatilho"
+                                    [pTooltip]="rotuloExecucao(atividade)"
+                                    tooltipPosition="left"
+                                >
+                                    <p-button
+                                        styleClass="demanda-atividades__botao-execucao"
+                                        [icon]="
+                                            atividade.execucaoAtivaId !== null
+                                                ? 'pi pi-pause'
+                                                : 'pi pi-play'
+                                        "
+                                        [rounded]="true"
+                                        [text]="true"
+                                        [disabled]="!podeAlternar(atividade)"
+                                        [ariaLabel]="
+                                            atividade.execucaoAtivaId !== null
+                                                ? 'Encerrar execução'
+                                                : 'Iniciar execução'
+                                        "
+                                        (onClick)="alternarExecucao(atividade)"
+                                    />
+                                </span>
+                            }
+                        </div>
+                        <div class="demanda-atividades__meta">
+                            <span class="demanda-atividades__executor">
+                                <span class="demanda-atividades__avatar">{{
+                                    iniciaisUsuario(atividade.nomeUsuario)
+                                }}</span>
+                                {{ atividade.nomeUsuario }}
+                            </span>
+                        </div>
+                        <div class="demanda-atividades__consumo">
+                            <span class="demanda-atividades__barra" aria-hidden="true">
+                                <span
+                                    class="demanda-atividades__preenchimento"
+                                    [style.width.%]="fatiaDe(atividade.id).percentual"
+                                    [style.background]="visualStatusAtividade(atividade.status).cor"
+                                ></span>
+                            </span>
+                            <span
+                                class="demanda-atividades__tempo"
+                                [pTooltip]="
+                                    unidadeTempo.emDias()
+                                        ? (atividade.totalMinutosExecutados
+                                          | tempoExibicao: false : 'minutos')
+                                        : ''
+                                "
+                            >
+                                @if (atividade.totalMinutosExecutados > 0) {
+                                    {{
+                                        atividade.totalMinutosExecutados
+                                            | tempoExibicao: unidadeTempo.emDias() : "minutos"
+                                    }}
+                                    · {{ fatiaDe(atividade.id).percentual }}% da demanda
+                                } @else {
+                                    sem execução ainda
+                                }
+                            </span>
+                        </div>
                     </div>
-                </div>
-            }
-        </div>
+                }
+            </div>
+        }
     }
 </div>
+
+<app-execucao-iniciar-dialog #dialogoIniciar (iniciada)="execucaoAlterada.emit()" />
+<app-execucao-encerrar-dialog #dialogoEncerrar (encerrada)="execucaoAlterada.emit()" />

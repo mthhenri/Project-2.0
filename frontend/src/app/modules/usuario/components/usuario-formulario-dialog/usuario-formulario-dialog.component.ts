@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, output } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs/operators';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { finalize, startWith } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -12,6 +12,7 @@ import { MessageService } from 'primeng/api';
 import { UsuarioCriarDto, UsuarioAlterarDto, UsuarioRecuperadoDto, TipoUsuarioEnum } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { UsuarioTipoDescricaoComponent } from '../usuario-tipo-descricao/usuario-tipo-descricao.component';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { sugerirLogin, sugerirSenha } from '../../utils/usuario-credenciais.util';
@@ -24,7 +25,7 @@ import { sugerirLogin, sugerirSenha } from '../../utils/usuario-credenciais.util
 @Component({
     selector: 'app-usuario-formulario-dialog',
     standalone: true,
-    imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, SelectButtonModule, InputNumberModule, TooltipModule, DialogModule],
+    imports: [UsuarioTipoDescricaoComponent, DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, SelectButtonModule, InputNumberModule, TooltipModule, DialogModule],
     templateUrl: './usuario-formulario-dialog.component.html',
     styleUrl: './usuario-formulario-dialog.component.scss',
 })
@@ -47,6 +48,12 @@ export class UsuarioFormularioDialogComponent {
         tipo: [TipoUsuarioEnum.DESENVOLVEDOR as TipoUsuarioEnum, [Validators.required]],
         horasDiariasNecessarias: [8, [Validators.required]],
     });
+
+    /** O tipo escolhido agora, para o bloco que explica o que ele é e pode (task 306). */
+    readonly tipoSelecionado = toSignal(
+        this.formulario.controls.tipo.valueChanges.pipe(startWith(this.formulario.controls.tipo.value)),
+        { requireSync: true },
+    );
 
     readonly carregando = signal<boolean>(false);
     readonly mostrarDialog = signal<boolean>(false);

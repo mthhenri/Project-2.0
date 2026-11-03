@@ -1,0 +1,39 @@
+<section class="usuario-tipo-descricao" [attr.aria-label]="'Tipo ' + rotulo()">
+    <p-tag [value]="rotulo()" [severity]="severidade()" />
+
+    @for (trecho of trechos(); track $index) {
+        @switch (trecho.tipo) {
+            @case ("titulo") {
+                <h3 class="usuario-tipo-descricao__secao">{{ trecho.texto }}</h3>
+            }
+            @case ("itens") {
+                <ul class="usuario-tipo-descricao__lista">
+                    @for (item of trecho.itens; track $index) {
+                        <li class="usuario-tipo-descricao__item">
+                            <i
+                                class="pi usuario-tipo-descricao__marca"
+                                [class.pi-check]="item.pode"
+                                [class.usuario-tipo-descricao__marca--pode]="item.pode"
+                                [class.pi-times]="!item.pode"
+                                [class.usuario-tipo-descricao__marca--nao-pode]="!item.pode"
+                                aria-hidden="true"
+                            ></i>
+                            <span>
+                                <span class="sr-only">{{
+                                    item.pode ? "Pode: " : "Não pode: "
+                                }}</span
+                                >{{ item.texto }}
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+            @default {
+                <app-markdown-visualizador
+                    class="usuario-tipo-descricao__que"
+                    [texto]="trecho.texto"
+                />
+            }
+        }
+    }
+</section>

@@ -36,6 +36,7 @@ import {
     TagResumoDto,
     temPermissaoDeGestor,
     temVisibilidadeTotal,
+    podeSerMembroDeDemanda,
     podeEditarDemanda,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
@@ -243,8 +244,9 @@ export class DemandaService {
     }
 
     /**
-   * As últimas demandas que o próprio usuário executou (a lateral "Minhas demandas" do chat, task 245), da execução mais recente para a mais
-   * antiga. Sempre as do token: o desenvolvedor só vê as de que é membro, o gestor e o administrador veem as que executaram, sem esse filtro.
+   * As últimas demandas que o próprio usuário executou ou de que é membro (a lateral "Minhas demandas" do chat, tasks 245 e 307), da execução mais
+   * recente para a mais antiga; as de que é só membro vêm depois. Sempre as do token: o desenvolvedor só vê as de que é membro, o auxiliar vê as que
+   * executou (de qualquer demanda) mais as de que é membro, o gestor e o administrador veem as que executaram (não são membros por regra).
    */
     async listarExecutadas(
         filtros: DemandaExecutadaListarDto,
@@ -253,6 +255,7 @@ export class DemandaService {
         const demandas = await this.demandaRepositorio.listarExecutadas({
             usuarioId: usuarioAtivo.sub,
             apenasMembro: !temVisibilidadeTotal(usuarioAtivo.tipo),
+            incluirMembro: podeSerMembroDeDemanda(usuarioAtivo.tipo),
             limite: filtros.limite ?? LIMITE_PADRAO_DEMANDAS_EXECUTADAS,
         });
 
@@ -594,7 +597,7 @@ export class DemandaService {
     }
 
     /**
-   * Lista todas as conexões de uma demanda (saída, entrada bidirecional).
+   * Lista todas as conexões de uma demanda: as que saem dela (`saida`), as que chegam nela (`entrada`: outra demanda depende desta) e as mútuas.
    * Desenvolvedor só pode listar conexões de demandas às quais está atribuído.
    */
     async listarConexoes(

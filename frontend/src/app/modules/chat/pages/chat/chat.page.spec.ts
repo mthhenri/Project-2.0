@@ -1155,7 +1155,7 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
 describe('ChatPage: minhas demandas', () => {
     const RESUMO_DA_DEMANDA = {
         demandaId: 9, nome: 'Cadastro de usuário', caminho: 'Segurança › Cadastro de usuário', projetoId: 3, nomeProjeto: 'Portal', status: 'PENDENTE',
-        horasEstimadas: 8, minutosExecutados: 120, totalAtividades: 4, atividadesDesenvolvidas: 1, executando: false, ultimaExecucaoData: '2026-10-25T12:00:00.000Z',
+        horasEstimadas: 8, minutosExecutados: 120, totalAtividades: 4, atividadesDesenvolvidas: 1, souMembro: true, executando: false, ultimaExecucaoData: '2026-10-25T12:00:00.000Z',
     };
     const DEMANDA_ABERTA = {
         id: 9, nome: 'Cadastro de usuário', projetoId: 3, status: 'PENDENTE', horasEstimadas: 8, descricaoTecnica: 'Técnica', descricaoCliente: null, documentacao: null, podeEditar: true,

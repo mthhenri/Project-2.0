@@ -8,6 +8,11 @@
 
     &__linha {
         @include form-dialog-linha;
+
+        // Nome, Cargo e Horas Diárias na mesma linha: o nome fica com a folga maior.
+        &--tres {
+            grid-template-columns: 1.2fr 1.2fr 0.8fr;
+        }
     }
 
     &__campo {
@@ -40,6 +45,15 @@
         flex: 1;
         min-width: 0;
         font-family: var(--font-mono, monospace);
+    }
+
+    // O bloco "o que é" do tipo escolhido (task 306), logo abaixo dos botões do tipo.
+    &__tipo-descricao {
+        display: block;
+        padding: 0.75rem;
+        border: 1px solid var(--app-surface-100);
+        border-radius: var(--p-border-radius-md, 0.5rem);
+        background: var(--app-surface-50);
     }
 
     &__dica {
