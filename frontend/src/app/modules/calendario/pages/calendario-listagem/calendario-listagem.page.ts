@@ -115,6 +115,10 @@ export class CalendarioListagemPage implements OnInit {
     );
     /** Id do dia destacado na tabela após clique no calendário. */
     readonly diaDestacadoId = signal<number | null>(null);
+    /** O dia selecionado no calendário: sai ao fechar o diálogo e ao clicar de novo no mesmo dia (P-072). */
+    readonly selecaoDoCalendario = this.formBuilder.control<Date | null>(null);
+    /** O clique foi no dia já selecionado: o PrimeNG o seleciona de novo logo depois, e o `onSelect` desfaz. */
+    private desmarcarAoSelecionar = false;
 
     readonly mostrarDialog = signal<boolean>(false);
     readonly carregandoSalvar = signal<boolean>(false);
@@ -235,6 +239,8 @@ export class CalendarioListagemPage implements OnInit {
     onMudancaMes(evento: { month?: number; year?: number }): void {
         if (evento.month == null || evento.year == null) return;
         this.mesExibido.set({ ano: evento.year, mes: evento.month });
+        // Sem seleção o PrimeNG volta ao `defaultDate`: ele acompanha o mês à vista para limpar a seleção não pular de mês.
+        this.dataDeReferencia.set(new Date(evento.year, evento.month - 1, 1));
         this.diaDestacadoId.set(null);
     }
 
@@ -261,6 +267,12 @@ export class CalendarioListagemPage implements OnInit {
    * gestor) e linha destacada na tabela; vazio → gestor abre a criação com a data preenchida.
    */
     aoClicarDia(evento: Event, date: { day: number; month: number; year: number }): void {
+        const selecionado = this.selecaoDoCalendario.value;
+        if (selecionado && selecionado.getFullYear() === date.year && selecionado.getMonth() === date.month && selecionado.getDate() === date.day) {
+            // Só dia vazio chega a ficar selecionado: no cadastrado o popover segura o clique antes do PrimeNG.
+            this.desmarcarAoSelecionar = true;
+            return;
+        }
         const marcado = this.diaMarcado(date.year, date.month + 1, date.day);
         if (marcado) {
             this.diaDestacadoId.set(marcado.id);
@@ -272,6 +284,18 @@ export class CalendarioListagemPage implements OnInit {
             this.popover?.hide();
             if (this.eGestor()) this.abrirDialogNovo(new Date(date.year, date.month, date.day));
         }
+    }
+
+    /** Depois do clique no dia já selecionado o PrimeNG o seleciona de novo; aqui ele sai. */
+    aoSelecionarDia(): void {
+        if (!this.desmarcarAoSelecionar) return;
+        this.desmarcarAoSelecionar = false;
+        this.selecaoDoCalendario.setValue(null);
+    }
+
+    /** Diálogo fechado (Cancelar, Esc, X ou salvo): o dia que o abriu deixa de ficar selecionado. */
+    aoFecharDialog(): void {
+        this.selecaoDoCalendario.setValue(null);
     }
 
     editarDoPopover(dia: DiaNaoUtilResumoDto): void {

@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-11-03 — P-072: o calendário solta o dia ao cancelar e ao clicar de novo nele
+
+Relato do autor: no Calendário, clicar num dia abre o cadastro de dia não útil; cancelar deixava o dia selecionado, e clicar duas vezes no mesmo dia também não o desmarcava. Causa: o `p-datepicker` inline não tinha valor ligado a nada (a seleção era estado interno do PrimeNG, que só alterna no modo múltiplo).
+
+- **Correção:** o datepicker ganha um `FormControl` próprio (`selecaoDoCalendario`); fechar o diálogo por qualquer caminho (Cancelar, Esc, X ou salvar) o zera; clicar no dia já selecionado marca para desmarcar, e o `onSelect` do PrimeNG, que vem logo depois, o zera. Para limpar a seleção não pular de mês (sem valor o PrimeNG volta ao `defaultDate`), a troca de mês pelas setas também atualiza a data de referência.
+- **Achado no teste:** num dia já cadastrado o popover segura o clique (`stopPropagation`) antes do PrimeNG, então esses dias nunca ficam selecionados; a seleção que "grudava" era só a dos dias vazios.
+- **Testes:** 3 novos com o clique de verdade na célula: cancelar tira a seleção; clicar de novo desmarca e um terceiro clique seleciona outra vez; limpar não tira o calendário do mês à vista. Módulo `calendario`: 34.
+- **Verificado ao vivo** (stack isolado, tema escuro, 1920×1080): clicar no dia 11 abriu o cadastro e Cancelar deixou nenhum dia selecionado; avançar para dezembro, clicar num dia e fechar com Esc deixou o calendário em dezembro sem seleção. O desmarcar por clique duplo, que só ocorre sem o diálogo (desenvolvedor), ficou com o teste de componente.
+
 ## 2026-11-03 — P-071: volume do projeto recarrega ao gravar ou excluir uma vigência
 
 Relato do autor: na tela do projeto, com a visão Volume aberta, cadastrar o volume não atualizava a barra do limite por mês. Causa: `ProjetoVolumeVigenciasComponent` só atualizava a própria lista e `ProjetoVolumeComponent` só carrega ao nascer e ao trocar de período.

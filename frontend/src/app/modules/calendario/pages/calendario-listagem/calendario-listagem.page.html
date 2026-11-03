@@ -71,8 +71,10 @@
             <div class="calendario-listagem__calendario">
                 <p-datepicker
                     [inline]="true"
+                    [formControl]="selecaoDoCalendario"
                     [defaultDate]="dataDeReferencia()"
                     (onMonthChange)="onMudancaMes($event)"
+                    (onSelect)="aoSelecionarDia()"
                 >
                     <ng-template pTemplate="date" let-date>
                         @let marcado = diaMarcado(date.year, date.month + 1, date.day);
@@ -305,6 +307,7 @@
     [dialogBloqueado]="carregandoSalvar()"
     (dialogEnviar)="salvar()"
     [(visible)]="mostrarDialog"
+    (onHide)="aoFecharDialog()"
     [modal]="true"
     [style]="{ width: '34rem' }"
     [draggable]="false"

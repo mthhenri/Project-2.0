@@ -133,6 +133,59 @@ describe('CalendarioListagemPage: permissão por tipo de usuário', () => {
     });
 });
 
+describe('CalendarioListagemPage: seleção do dia no calendário (P-072)', () => {
+    /** O clique de verdade na célula do dia: passa pela página e depois pelo PrimeNG, que seleciona o dia. */
+    function clicarNoDia(montado: Montado, numero: number): void {
+        const celula = Array.from(montado.elemento.querySelectorAll<HTMLElement>('.calendario-listagem__dia-celula'))
+            .find((candidata) => !candidata.closest('.p-datepicker-other-month') && texto(candidata).startsWith(String(numero)))!;
+        celula.click();
+    }
+    const diaSelecionado = (montado: Montado) => montado.elemento.querySelector('.p-datepicker-day-selected');
+
+    it('cancelar o cadastro tira a seleção do dia que o abriu', async () => {
+        const montado = await montarPagina(TipoUsuarioEnum.GESTOR);
+        clicarNoDia(montado, 12);
+        await montado.atualizar();
+        expect(montado.componente.mostrarDialog()).toBe(true);
+        expect(montado.componente.selecaoDoCalendario.value).toEqual(new Date(2026, 2, 12));
+        expect(diaSelecionado(montado)).not.toBeNull();
+
+        botaoPorTexto('Cancelar')!.click();
+        await montado.atualizar();
+        expect(montado.componente.mostrarDialog()).toBe(false);
+        expect(montado.componente.selecaoDoCalendario.value).toBeNull();
+        expect(diaSelecionado(montado)).toBeNull();
+    });
+
+    it('clicar de novo no dia selecionado só o desmarca, sem abrir nada', async () => {
+        // Dia vazio para o desenvolvedor: nada abre, e o PrimeNG seleciona (no dia cadastrado o popover segura o clique e nada fica selecionado).
+        const montado = await montarPagina(TipoUsuarioEnum.DESENVOLVEDOR);
+        clicarNoDia(montado, 12);
+        await montado.atualizar();
+        expect(montado.componente.selecaoDoCalendario.value).toEqual(new Date(2026, 2, 12));
+
+        clicarNoDia(montado, 12);
+        await montado.atualizar();
+        expect(montado.componente.selecaoDoCalendario.value).toBeNull();
+        expect(montado.componente.mostrarDialog()).toBe(false);
+        expect(diaSelecionado(montado)).toBeNull();
+
+        clicarNoDia(montado, 12);
+        await montado.atualizar();
+        expect(montado.componente.selecaoDoCalendario.value).toEqual(new Date(2026, 2, 12));
+    });
+
+    it('limpar a seleção não tira o calendário do mês à vista', async () => {
+        const montado = await montarPagina(TipoUsuarioEnum.GESTOR);
+        montado.componente.onMudancaMes({ month: 5, year: 2026 });
+        await montado.atualizar();
+        montado.componente.selecaoDoCalendario.setValue(new Date(2026, 4, 20));
+        montado.componente.aoFecharDialog();
+        await montado.atualizar();
+        expect(texto(montado.elemento.querySelector('.p-datepicker-select-month')!)).toMatch(/^(maio|may)/i);
+    });
+});
+
 describe('CalendarioListagemPage: formulário de cadastro', () => {
     it('abre limpo: feriado, integral, não recorrente, e o título de criação', async () => {
         const montado = await montarPagina(TipoUsuarioEnum.GESTOR);
