@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-03 — P-073: o Windows Defender barrou o Project Desktop 1.1.2
+
+O autor tentou baixar o 1.1.2 pelo menu do perfil e recebeu "Não foi possível baixar - Erro de download". O servidor entrega o arquivo certo (85.138.992 bytes, conferido pela API); quem barrou foi o Defender, com `Program:Win32/Contebrew.A!ml` (heurística de aprendizado de máquina sobre executável Electron sem assinatura), apagando o download e bloqueando também o arquivo de `desktop/release/`. As versões 1.0.1, 1.1.0 e 1.1.1 passam; o 1.1.2 empacotado de novo passou no `MpCmdRun -Scan` ("found no threats"). Registrado como P-073 (contornado: empacotar de novo e escanear antes de publicar; correção de fato: assinatura, I-049).
+
 ## 2026-11-03 — Aviso NG8107 do build na linha de demanda da pasta
 
 O autor viu no `ng serve` o aviso NG8107 em `demanda-pasta-linha.component.html` (`no().tags?.length`). `tags` é obrigatório em `DemandaGrafoNoDto` e o SQL do grafo sempre o devolve como lista (`COALESCE(..., '[]'::json)`), então o `?.` e o `!` sobravam: viraram `no().tags.length` e `no().tags`. Testes de `demanda` e `projeto`: 379; o aviso sumiu do build.

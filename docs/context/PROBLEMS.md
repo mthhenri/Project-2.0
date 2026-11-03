@@ -29,6 +29,14 @@
 
 ## Ativos
 
+### P-073 — Windows Defender barra o executável do Project Desktop como ameaça · `CONTORNADO` · desktop
+
+- **Sintoma:** baixar o `Project-Desktop-1.1.2.exe` pelo menu do perfil terminava em "Não foi possível baixar - Erro de download"; o Defender também bloqueou a leitura do arquivo em `desktop/release/`. Detecção `Program:Win32/Contebrew.A!ml` (ThreatID 251873), em 2026-11-03.
+- **Causa:** heurística de aprendizado de máquina do Defender (`!ml`) sobre um executável Electron portátil **sem assinatura**; não é assinatura de vírus. Atinge um binário específico: 1.0.1, 1.1.0 e 1.1.1 passaram, e o mesmo 1.1.2 empacotado de novo (bytes diferentes) passou no `MpCmdRun -Scan`. O servidor entrega o arquivo inteiro e certo (tamanho conferido).
+- **Contorno:** empacotar de novo e escanear o arquivo (`MpCmdRun.exe -Scan -ScanType 3 -File <exe> -DisableRemediation`) antes de publicar; se ainda for barrado, enviar o arquivo como falso positivo à Microsoft (envio do autor, pelo portal de envio de arquivos do Microsoft Security Intelligence).
+- **Correção:** assinar o executável (I-049); assinado, a reputação do editor reduz esse tipo de detecção.
+- **Desde:** 2026-11-03, versão 1.1.2.
+
 ### P-068 — Falha ao carregar lista aparece como lista vazia · `ABERTO` · frontend
 
 - **Sintoma:** com a API respondendo erro (simulado no navegador trocando a rota por uma inexistente), Projetos mostra "Nenhum projeto ainda. Criar o primeiro projeto" e Tags mostra "Nenhuma tag ainda", além do aviso de erro; Demandas mostra "Selecione um projeto". A tela some com o erro e oferece o caminho de quem não tem dados.
