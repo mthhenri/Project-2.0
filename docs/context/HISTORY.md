@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-03 — Aviso NG8107 do build na linha de demanda da pasta
+
+O autor viu no `ng serve` o aviso NG8107 em `demanda-pasta-linha.component.html` (`no().tags?.length`). `tags` é obrigatório em `DemandaGrafoNoDto` e o SQL do grafo sempre o devolve como lista (`COALESCE(..., '[]'::json)`), então o `?.` e o `!` sobravam: viraram `no().tags.length` e `no().tags`. Testes de `demanda` e `projeto`: 379; o aviso sumiu do build.
+
 ## 2026-11-03 — Project Desktop 1.1.2: o clique na bandeja abre e fecha
 
 Pedido do autor: clicar de novo no ícone da bandeja "reabria" o Project; o clique deveria alternar, abrindo e fechando.

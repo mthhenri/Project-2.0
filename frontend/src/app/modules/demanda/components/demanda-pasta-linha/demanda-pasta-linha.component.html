@@ -38,8 +38,8 @@
                 [minutosExecutados]="no().minutosExecutados"
                 [horasEstimadas]="no().horasEstimadas"
             />
-            @if (no().tags?.length) {
-                <app-tag-lista [tags]="no().tags!" />
+            @if (no().tags.length) {
+                <app-tag-lista [tags]="no().tags" />
             }
             @if (nomeDaPasta()) {
                 <span class="demanda-pasta-linha__pasta"
