@@ -1,6 +1,6 @@
 {
   "name": "desktop",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "private": true,
   "description": "Project Desktop: abre o front do Project numa janela própria, fixa e com ícone na bandeja",
   "main": "dist/main.js",

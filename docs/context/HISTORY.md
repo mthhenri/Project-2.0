@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-11-03 — Project Desktop 1.1.2: o clique na bandeja abre e fecha
+
+Pedido do autor: clicar de novo no ícone da bandeja "reabria" o Project; o clique deveria alternar, abrindo e fechando.
+
+- **O que mudou:** `decidirCliqueNaBandeja` (pura, em `politica-da-janela.ts`): com o Project à vista (visível e não minimizado) o clique o oculta, como o fechar; oculto ou minimizado, ele volta à frente pelo `trazerParaAFrente` de sempre. O item "Abrir o Project" do menu continua só trazendo. Versão **1.1.2**; README atualizado.
+- **Testes:** desktop 45 (1 novo).
+- **Verificado no Electron real** (cópia do `dist` com pasta de dados própria e um roteiro que dispara o mesmo evento `click` da bandeja): aberto → oculto → visível → oculto; minimizado pelo usuário, o clique o trouxe visível. **Não verificado:** o clique físico do mouse no ícone (o roteiro emite o evento do Electron que o clique emite). Com o Project aberto em outra área de trabalho do Windows, ele conta como "à vista" e o clique o oculta (o Electron não informa a área de trabalho).
+
 ## 2026-11-03 — Task 303: próximo check-in no menu do perfil
 
 Pedido do autor (era o I-046): no Project Web não havia nenhuma indicação de quando é o próximo check-in; só a bandeja do Project Desktop mostrava. Spec `docs/specs/done/303-proximo-checkin-no-menu-do-perfil.spec.md`.

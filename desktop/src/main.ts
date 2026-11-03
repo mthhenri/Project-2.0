@@ -6,7 +6,7 @@ import {
     BOTAO_PADRAO_DO_AVISO_NATIVO, BOTOES_DO_AVISO_NATIVO, montarPaginaDoDialogoDeSaida, RespostaDaSaida, respostaDaNavegacao, respostaDoAvisoNativo, TEXTO_DO_AVISO, TITULO_DO_AVISO,
 } from './dialogo-de-saida';
 import {
-    decidirFechamento, decidirSemPintura, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, janelinhaPodeFechar, limitarAoMonitor, PRAZO_DA_PRIMEIRA_PINTURA_MS,
+    decidirCliqueNaBandeja, decidirFechamento, decidirSemPintura, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, janelinhaPodeFechar, limitarAoMonitor, PRAZO_DA_PRIMEIRA_PINTURA_MS,
     resolverUrlDoProject, textoDoProximoCheckin,
 } from './politica-da-janela';
 import {
@@ -422,10 +422,19 @@ function perguntarSaida(): Promise<RespostaDaSaida> {
     });
 }
 
+/** O clique no ícone da bandeja: abre o Project, e o clique seguinte o oculta de novo (o item "Abrir o Project" do menu só traz). */
+function alternarPelaBandeja(): void {
+    if (decidirCliqueNaBandeja(principalAVista() !== undefined) === 'OCULTAR') {
+        ocultarJanela();
+        return;
+    }
+    trazerParaAFrente();
+}
+
 function criarBandeja(): void {
     bandeja = new Tray(nativeImage.createFromPath(caminhoDoIcone).resize({ width: 16, height: 16 }));
     bandeja.setToolTip(NOME_DO_APP);
-    bandeja.on('click', trazerParaAFrente);
+    bandeja.on('click', alternarPelaBandeja);
     // O menu é montado na hora de abrir, para o tempo até o check-in estar sempre atual.
     bandeja.on('right-click', () => bandeja?.popUpContextMenu(montarMenuDaBandeja()));
 }

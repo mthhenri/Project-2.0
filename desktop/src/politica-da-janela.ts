@@ -62,6 +62,13 @@ export function decidirSemPintura(tentativasRefeitas: number, limiteDeTentativas
     return tentativasRefeitas < limiteDeTentativas ? 'RECRIAR' : 'DESISTIR';
 }
 
+export type AcaoDoCliqueNaBandeja = 'OCULTAR' | 'TRAZER';
+
+/** Clicar no ícone da bandeja alterna: com o Project à vista ele some (como o fechar); oculto ou minimizado, ele volta à frente. */
+export function decidirCliqueNaBandeja(principalAVista: boolean): AcaoDoCliqueNaBandeja {
+    return principalAVista ? 'OCULTAR' : 'TRAZER';
+}
+
 export type DestinoDaNavegacao = 'dentro' | 'navegador';
 
 /** Links do próprio Project abrem na janela; qualquer outro endereço vai para o navegador do sistema. */

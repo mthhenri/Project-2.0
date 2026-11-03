@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { decidirFechamento, decidirSemPintura, destinoDaNavegacao, janelaForaDoLugar, janelinhaPodeFechar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
+import { decidirCliqueNaBandeja, decidirFechamento, decidirSemPintura, destinoDaNavegacao, janelaForaDoLugar, janelinhaPodeFechar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
 
 test('fechar, Alt+F4 e afins só ocultam a janela (ela some da barra de tarefas e o app segue na bandeja)', () => {
     assert.equal(decidirFechamento({ saidaConfirmada: false, encerramentoDoSistema: false }), 'ocultar');
@@ -64,4 +64,9 @@ test('janela que não pintou no prazo é recriada uma vez; na segunda falha o ap
     assert.equal(decidirSemPintura(0), 'RECRIAR');
     assert.equal(decidirSemPintura(1), 'DESISTIR');
     assert.equal(decidirSemPintura(2, 3), 'RECRIAR');
+});
+
+test('o clique no ícone da bandeja alterna: à vista oculta, oculto ou minimizado traz de volta', () => {
+    assert.equal(decidirCliqueNaBandeja(true), 'OCULTAR');
+    assert.equal(decidirCliqueNaBandeja(false), 'TRAZER');
 });
