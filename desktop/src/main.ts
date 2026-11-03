@@ -273,6 +273,8 @@ function montarMenuDaBandeja(): Menu {
         { label: textoDoItemDoChat(atalhoDesejado, atalhoRegistrado !== null), enabled: atalhoDesejado !== null, click: acionarChat },
         // Há executável mais novo no servidor (task 198): abre o Project no navegador, que inicia o download com o login do usuário.
         ...(atualizacao ? [{ label: atualizacao, click: () => void shell.openExternal(enderecoParaBaixar(urlDoProject)) }] : []),
+        // Só em desenvolvimento (app não empacotado): abre a janelinha do check-in à força, para testar a tela sem esperar o backend.
+        ...(app.isPackaged ? [] : [{ label: '[Dev] Abrir o check-in', click: forcarJanelinha }]),
         { type: 'separator' },
         { label: 'Fechar completamente', click: () => void pedirSaida() },
     ]);
@@ -471,7 +473,7 @@ async function chamarApi(rota: string, token: string): Promise<unknown> {
 function abrirJanelinha(): void {
     janelinhaLiberada = false;
     janelinha = new BrowserWindow({
-        width: 480,
+        width: 960,
         height: 560,
         title: 'Hora do check-in',
         icon: caminhoDoIcone,
@@ -523,6 +525,15 @@ function abrirJanelinha(): void {
 }
 
 /** Libera e fecha a janelinha (o check-in terminou, ou o Project voltou à tela). */
+function forcarJanelinha(): void {
+    if (janelinha && !janelinha.isDestroyed()) {
+        janelinha.show();
+        janelinha.focus();
+        return;
+    }
+    abrirJanelinha();
+}
+
 function fecharJanelinha(): void {
     if (!janelinha || janelinha.isDestroyed()) return;
     janelinhaLiberada = true;
