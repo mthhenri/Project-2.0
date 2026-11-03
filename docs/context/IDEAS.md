@@ -188,3 +188,9 @@
 - **Origem:** o autor, em 2026-11-03: queria "a visão de atividades dentro da visão de árvore"; decidido na mesma conversa que é liberar a aba para o gestor, não pôr atividades como itens da árvore. O visual da aba fica para depois.
 - **Por quê:** hoje a aba só aparece para membro (`eMembro()` em `demanda-aberta.component.html`), e o gestor, que tem acesso total por tipo e não entra em `demanda_usuario`, nunca a vê.
 - **Custo aparente:** pequeno no front (trocar a condição da aba para membro ou visão total); conferir se o que a aba carrega e as ações dela (marcar, criar, iniciar) respeitam a permissão do gestor no backend. Não fazer até o autor pedir.
+
+### I-049 — Executável do Project Desktop sem o aviso de "inseguro" ao baixar · desktop
+- **Ideia:** o `Project-Desktop-<versão>.exe` deixar de ser tratado como inseguro ao baixar e ao abrir.
+- **Origem:** o autor, em 2026-11-03: "toda vez que eu vou baixar ele, ele dá como inseguro".
+- **Por quê:** o executável não é assinado (README do desktop), então o navegador (reputação do download) e o SmartScreen do Windows ("editor desconhecido") o barram; cada colega precisa forçar o download e o "Executar assim mesmo".
+- **Custo aparente:** depende do caminho, a decidir com o autor. (a) Certificado de assinatura de código OV de uma autoridade certificadora (≈ US$ 150–300/ano, chave em token ou HSM), configurado no `electron-builder`; o aviso some aos poucos, conforme o arquivo ganha reputação. (b) O Azure Artifact Signing (≈ US$ 10/mês) não atende pessoa nem empresa no Brasil hoje. (c) Uso só interno: certificado próprio instalado como confiável nas máquinas da equipe; resolve o "editor desconhecido" do Windows, mas não o aviso do navegador. Antes, confirmar qual aviso aparece: se o site for servido em HTTP, o Chrome também barra o download como "inseguro" por isso, e aí a correção é HTTPS.
