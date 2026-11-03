@@ -43,6 +43,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Volume de projeto por vigência (251) | `backend/src/modules/projeto/{services,repositories}/projeto-volume-vigencia.*`, `domain/volume-vigencia.ts`, migration `0068`; `frontend/src/app/modules/projeto/components/projeto-volume-vigencias/`; verificação junto da spec 251 |
 | Telas e serviços HTTP do frontend | `frontend/src/app/modules/<modulo>/` |
 | Project Desktop (Electron): janela, bandeja, travas e funções puras (task 152); aviso de versão nova (task 198); prazo de pintura e registro em arquivo (P-069) | `desktop/src/` (`main.ts`, `politica-da-janela.ts`, `politica-da-versao.ts`, `registro.ts`, `config.ts`); `registro.log` em `%APPDATA%\desktop\`; README em `desktop/README.md` |
+| Próximo check-in no menu do perfil da barra superior (task 303) | `frontend/src/app/modules/checkin/components/checkin-proximo/`; regra `textoDoProximoCheckin` em `modules/checkin/utils/checkin.util.ts`; entra no popover de `shared/layout/topbar/` |
 | Download do Project Desktop (versão publicada, arquivo, botão da topbar) (task 198) | `backend/src/modules/desktop/` (`DESKTOP_PASTA_EXECUTAVEIS`), `frontend/src/app/core/services/desktop-download.service.ts`, `shared/src/utils/versao.ts` |
 | Prazo para desfazer uma proposta da IA (task 194) | `shared/src/utils/prazo-para-desfazer-proposta.ts`; `PropostaIaService.desfazer`; `proposta-cartao.component` |
 | Interceptors, guards e estado global | `frontend/src/app/core/` |

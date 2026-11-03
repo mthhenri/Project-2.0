@@ -1,7 +1,7 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { CheckinSituacaoConsultadaDto, EstadoIaEnum } from '@project20/shared';
-import { decidirEstado, deveMostrarJanelinha, esperaAteOCheckin } from './checkin.util';
+import { decidirEstado, deveMostrarJanelinha, esperaAteOCheckin, textoDoProximoCheckin } from './checkin.util';
 
 function situacao(parcial: Partial<CheckinSituacaoConsultadaDto> & { execucaoId?: number | null; suspenso?: boolean; disparado?: boolean } = {}): CheckinSituacaoConsultadaDto {
     const execucaoId = parcial.execucaoId === undefined ? 5 : parcial.execucaoId;
@@ -62,4 +62,22 @@ test('a espera até o check-in vem do horário sorteado e some quando já dispar
     assert.equal(esperaAteOCheckin(situacao({ proximoCheckinData: proximo, disparado: true }), agora), null);
     assert.equal(esperaAteOCheckin(situacao(), agora), null);
     assert.equal(esperaAteOCheckin(situacao({ proximoCheckinData: new Date('2026-10-19T11:00:00Z') }), agora), 0);
+});
+
+test('próximo check-in no menu do perfil: consultando, indisponível, suspenso e sem execução', () => {
+    const agora = new Date('2026-11-03T12:00:00Z').getTime();
+    assert.equal(textoDoProximoCheckin(undefined, agora), 'Próximo check-in: consultando…');
+    assert.equal(textoDoProximoCheckin(null, agora), 'Próximo check-in: indisponível');
+    assert.equal(textoDoProximoCheckin(situacao({ suspenso: true, proximoCheckinData: new Date(agora + 60_000) }), agora), 'Check-ins suspensos');
+    assert.equal(textoDoProximoCheckin(situacao({ execucaoId: null }), agora), 'Sem check-in: nenhuma execução em andamento');
+    assert.equal(textoDoProximoCheckin(situacao(), agora), 'Próximo check-in: indisponível');
+});
+
+test('próximo check-in no menu do perfil: contagem em MM:SS ou H:MM:SS e "agora" no horário', () => {
+    const agora = new Date('2026-11-03T12:00:00Z').getTime();
+    assert.equal(textoDoProximoCheckin(situacao({ proximoCheckinData: new Date(agora + (12 * 60 + 5) * 1000) }), agora), 'Próximo check-in em 12:05');
+    assert.equal(textoDoProximoCheckin(situacao({ proximoCheckinData: new Date(agora + 1500) }), agora), 'Próximo check-in em 00:02');
+    assert.equal(textoDoProximoCheckin(situacao({ proximoCheckinData: new Date(agora + (3600 + 2 * 60 + 3) * 1000) }), agora), 'Próximo check-in em 1:02:03');
+    assert.equal(textoDoProximoCheckin(situacao({ proximoCheckinData: new Date(agora - 1000) }), agora), 'Check-in agora');
+    assert.equal(textoDoProximoCheckin(situacao({ proximoCheckinData: new Date(agora + 60_000), disparado: true }), agora), 'Check-in agora');
 });

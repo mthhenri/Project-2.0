@@ -27,6 +27,7 @@ import { IaDisponibilidadeService } from '../../../core/services/ia-disponibilid
 import { MensagemDiretaEstadoService } from '../../../modules/mensagem-direta/services/mensagem-direta-estado.service';
 import { ChipExecucaoAtivaComponent } from './chip-execucao-ativa/chip-execucao-ativa.component';
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
+import { CheckinProximoComponent } from '../../../modules/checkin/components/checkin-proximo/checkin-proximo.component';
 
 @Component({
     selector: 'app-topbar',
@@ -42,6 +43,7 @@ import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/compon
         ColorPickerModule,
         UsuarioAnotacoesDialogComponent,
         ChipExecucaoAtivaComponent,
+        CheckinProximoComponent,
     ],
     templateUrl: './topbar.component.html',
     styleUrl: './topbar.component.scss',

@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-11-03 — Task 303: próximo check-in no menu do perfil
+
+Pedido do autor (era o I-046): no Project Web não havia nenhuma indicação de quando é o próximo check-in; só a bandeja do Project Desktop mostrava. Spec `docs/specs/done/303-proximo-checkin-no-menu-do-perfil.spec.md`.
+
+- **O que mudou:** componente `app-checkin-proximo` (módulo `checkin`) no popover do perfil, logo abaixo da linha do tipo do usuário e no mesmo estilo dela (o análogo): consulta `GET /checkin/situacao` ao abrir o menu e conta os segundos enquanto ele está aberto (o popover só monta o conteúdo aberto, então não há consulta periódica nova). Regra pura `textoDoProximoCheckin` em `checkin.util.ts`: consultando, indisponível (falha ou execução sem horário), "Check-ins suspensos", "Sem check-in: nenhuma execução em andamento", "Check-in agora" (disparado ou contagem zerada) e "Próximo check-in em MM:SS" (ou H:MM:SS), o mesmo formato da bandeja. Backend e `shared` não mudaram. O topbar (201 linhas) só ganhou o componente, sem responsabilidade nova; impacto: só o layout o usa. I-046 saiu do `IDEAS.md`.
+- **Testes:** regra pura (2 novos, todos os casos), componente (3: consulta ao nascer, contagem andando, falha) e topbar (1: a linha aparece no menu e consulta a situação).
+- **Verificado ao vivo** (stack isolado: banco `project20_verify`, API 3001, front 4201): com execução em andamento, tema claro, "Próximo check-in em 54:45" abaixo de "Administrador", contando; sem execução, tema escuro, "Sem check-in: nenhuma execução em andamento", com o menu um pouco mais largo e inteiro na tela; em 720×1280 o menu ocupa de 323 a 688 px. **Não verificado ao vivo:** check-ins suspensos (a suspensão só nasce pela IA, "Estou em reunião"); coberto pelo teste da regra.
+
 ## 2026-11-03 — P-069: Project Desktop 1.1.1, janelas que não pintam e registro em arquivo
 
 Relato do autor (na 1.1.0): com o Project minimizado, o atalho não mostrava o chat (de novo, depois da 296); e o "Fechar completamente" abriu duas vezes uma caixa toda preta, sem botões, que só saiu pelo Gerenciador de Tarefas.

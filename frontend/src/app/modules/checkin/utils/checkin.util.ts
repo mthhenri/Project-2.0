@@ -30,3 +30,24 @@ export function esperaAteOCheckin(situacao: CheckinSituacaoConsultadaDto | null,
     const alvo = new Date(situacao.proximoCheckinData).getTime();
     return Math.max(0, alvo - agora);
 }
+
+/**
+ * A linha do próximo check-in no menu do perfil (task 303): `situacao` é `undefined` enquanto a consulta não chegou e `null` quando ela
+ * falhou. A contagem usa o mesmo formato da bandeja do Project Desktop (MM:SS, ou H:MM:SS a partir de uma hora).
+ */
+export function textoDoProximoCheckin(situacao: CheckinSituacaoConsultadaDto | null | undefined, agora: number): string {
+    if (situacao === undefined) return 'Próximo check-in: consultando…';
+    if (situacao === null) return 'Próximo check-in: indisponível';
+    if (situacao.suspensao.suspenso) return 'Check-ins suspensos';
+    if (!situacao.haCheckin) return 'Sem check-in: nenhuma execução em andamento';
+    if (situacao.disparado) return 'Check-in agora';
+    const espera = esperaAteOCheckin(situacao, agora);
+    if (espera === null) return 'Próximo check-in: indisponível';
+    const total = Math.ceil(espera / 1000);
+    if (total <= 0) return 'Check-in agora';
+    const horas = Math.floor(total / 3600);
+    const minutos = Math.floor((total % 3600) / 60);
+    const segundos = total % 60;
+    const dois = (valor: number) => String(valor).padStart(2, '0');
+    return horas > 0 ? `Próximo check-in em ${horas}:${dois(minutos)}:${dois(segundos)}` : `Próximo check-in em ${dois(minutos)}:${dois(segundos)}`;
+}

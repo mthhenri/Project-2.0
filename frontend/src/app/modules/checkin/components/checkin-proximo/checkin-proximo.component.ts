@@ -1,0 +1,37 @@
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { CheckinSituacaoConsultadaDto } from '@project20/shared';
+import { CheckinService } from '../../services/checkin.service';
+import { textoDoProximoCheckin } from '../../utils/checkin.util';
+
+/**
+ * Quanto falta para o próximo check-in, no menu do perfil da barra superior (task 303). Consulta a situação ao nascer e conta os segundos
+ * enquanto está na tela; o popover só monta o conteúdo aberto, então fechar o menu encerra a contagem e reabrir consulta de novo.
+ */
+@Component({
+    selector: 'app-checkin-proximo',
+    standalone: true,
+    templateUrl: './checkin-proximo.component.html',
+    styleUrl: './checkin-proximo.component.scss',
+})
+export class CheckinProximoComponent implements OnInit {
+    private readonly checkinService = inject(CheckinService);
+    private readonly destroyRef = inject(DestroyRef);
+
+    /** `undefined` até a consulta responder; `null` se ela falhou. */
+    private readonly situacao = signal<CheckinSituacaoConsultadaDto | null | undefined>(undefined);
+    private readonly agora = signal<number>(Date.now());
+
+    readonly texto = computed(() => textoDoProximoCheckin(this.situacao(), this.agora()));
+
+    constructor() {
+        const relogio = setInterval(() => this.agora.set(Date.now()), 1000);
+        this.destroyRef.onDestroy(() => clearInterval(relogio));
+    }
+
+    ngOnInit(): void {
+        this.checkinService.consultarSituacao().subscribe({
+            next: (resposta) => this.situacao.set(resposta.sucesso ? (resposta.dados ?? null) : null),
+            error: () => this.situacao.set(null),
+        });
+    }
+}

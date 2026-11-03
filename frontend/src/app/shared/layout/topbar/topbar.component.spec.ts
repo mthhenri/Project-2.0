@@ -147,6 +147,14 @@ describe('TopbarComponent — menu do perfil', () => {
         expect(corpo).toContain('Administrador');
     });
 
+    it('mostra quanto falta para o próximo check-in, abaixo do tipo (task 303)', async () => {
+        const montado = await montarBarra();
+        await abrirPerfil(montado);
+        const linha = document.body.querySelector('app-checkin-proximo [role="timer"]');
+        expect(linha?.textContent).toContain('Próximo check-in');
+        esperarRequisicao(montado.http, 'GET', '/checkin/situacao');
+    });
+
     it('"Baixar Project Desktop" aparece com a versão e o tamanho quando há executável publicado, e o clique baixa o arquivo (task 198)', async () => {
         const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR, null, [], COM_DESKTOP);
         await abrirPerfil(montado);

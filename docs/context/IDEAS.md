@@ -177,12 +177,6 @@
 - **Por quê:** o gestor enxerga a carga e a entrega de cada pessoa sem abrir o ponto de cada uma.
 - **Custo aparente:** só gestor; uma consulta por usuário e mês (horas executadas e atividades), uma visão nova (talvez ao lado do Volume em Projetos ou em Usuários) e a decisão de como isso convive com o Ponto da equipe, que já mostra horas por pessoa no dia. Definir com o autor o que é "fez": horas, atividades concluídas ou os dois.
 
-### I-046 — Ver no Project Web quando é o próximo check-in · frontend/checkin
-- **Ideia:** mostrar no Project Web (hoje só o Project Desktop mostra, no menu da bandeja) em quanto tempo será o próximo check-in. O lugar sugerido pelo autor é o menu do perfil (o que abre ao clicar no usuário, onde já ficam o tipo e o tempo de sessão), entre a configuração do tempo e o perfil: algo como "próximo check-in em 12 min".
-- **Origem:** o autor, em 2026-10-31: "eu acho que a gente não tem isso" e queria a visualização também na web, não só no desktop.
-- **Por quê:** quem trabalha pelo navegador não tem como saber quando a janelinha do check-in vai aparecer.
-- **Custo aparente:** baixo. O backend já calcula a agenda por usuário (`checkin-agenda.service.ts`) e o desktop já lê `checkin/situacao` para montar o texto da bandeja; falta mostrar o mesmo dado no menu do perfil do frontend, com contagem que se atualiza e o caso "sem check-in agendado" (sem execução ativa, suspenso).
-
 ### I-047 — Revisar o visual da aba Conexões (grafo) na Árvore · frontend/demanda
 - **Ideia:** revisar o visual do grafo de conexões da aba Conexões da demanda aberta (`demanda-aberta.component.html`), na Árvore das telas de Demandas e do detalhe do projeto.
 - **Origem:** o autor, em 2026-11-03: "a gente tem que revisar a tela do grafo das conexões". Ainda sem o que exatamente incomoda.
