@@ -20,6 +20,9 @@ Na tela de Usuários, um lugar que explica **o que cada tipo de usuário é e o 
    usuário, um **bloco que muda conforme o tipo escolhido**.
 2. **Quem vê:** só quem tem acesso à tela de Usuários (a ajuda mora nela e no formulário dela). Não há versão em Perfil nem em Configurações.
 3. **Conteúdo de cada tipo:** "O que é" em uma frase e as listas curtas **Pode** e **Não pode**.
+4. **Cores dos tipos:** as que o app já usa na tag do tipo, **sem cor nova**: Desenvolvedor azul (`info`), Auxiliar verde (`success`), Gestor
+   âmbar (`warn`) e Administrador escuro (`contrast`), de `severidadeTipoUsuario` (`core/utils/tipo-usuario.ts`). O popover, o tooltip e o bloco do
+   formulário usam essa função, para a cor nunca divergir da tabela.
 
 ## Decisões do agente
 
