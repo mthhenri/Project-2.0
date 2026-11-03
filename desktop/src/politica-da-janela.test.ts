@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { decidirFechamento, destinoDaNavegacao, janelaForaDoLugar, janelinhaPodeFechar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
+import { decidirFechamento, decidirSemPintura, destinoDaNavegacao, janelaForaDoLugar, janelinhaPodeFechar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
 
 test('fechar, Alt+F4 e afins só ocultam a janela (ela some da barra de tarefas e o app segue na bandeja)', () => {
     assert.equal(decidirFechamento({ saidaConfirmada: false, encerramentoDoSistema: false }), 'ocultar');
@@ -58,4 +58,10 @@ test('a janelinha do check-in só fecha liberada, mas nunca trava a saída confi
     assert.equal(janelinhaPodeFechar(true, emUso), true);
     assert.equal(janelinhaPodeFechar(false, { ...emUso, saidaConfirmada: true }), true);
     assert.equal(janelinhaPodeFechar(false, { ...emUso, encerramentoDoSistema: true }), true);
+});
+
+test('janela que não pintou no prazo é recriada uma vez; na segunda falha o app desiste', () => {
+    assert.equal(decidirSemPintura(0), 'RECRIAR');
+    assert.equal(decidirSemPintura(1), 'DESISTIR');
+    assert.equal(decidirSemPintura(2, 3), 'RECRIAR');
 });

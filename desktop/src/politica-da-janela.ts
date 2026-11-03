@@ -49,6 +49,19 @@ export function limitarAoMonitor(janela: AreaDeTrabalho, area: AreaDeTrabalho): 
     return { x, y, width: janela.width, height: janela.height };
 }
 
+/**
+ * Quanto uma janela nova (chat, aviso de saída, janelinha do check-in) espera a primeira pintura (`ready-to-show`) antes de ser tida por
+ * perdida (P-069): sem pintura ela ficaria invisível, ou preta se mostrada à força.
+ */
+export const PRAZO_DA_PRIMEIRA_PINTURA_MS = 3000;
+
+export type DecisaoSemPintura = 'RECRIAR' | 'DESISTIR';
+
+/** A janela não pintou no prazo: é destruída e criada de novo até o limite de novas tentativas; depois disso o app desiste e registra. */
+export function decidirSemPintura(tentativasRefeitas: number, limiteDeTentativas = 1): DecisaoSemPintura {
+    return tentativasRefeitas < limiteDeTentativas ? 'RECRIAR' : 'DESISTIR';
+}
+
 export type DestinoDaNavegacao = 'dentro' | 'navegador';
 
 /** Links do próprio Project abrem na janela; qualquer outro endereço vai para o navegador do sistema. */

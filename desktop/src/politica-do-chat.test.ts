@@ -19,10 +19,10 @@ test('lê a preferência da API e recusa o que não tem o formato ou traz atalho
 });
 
 test('o atalho abre a janela só com o Project fora da tela, o popup interno com ele visível e fecha a janela aberta', () => {
-    assert.equal(decidirAtalho({ janelaDeChatAberta: false, principalVisivel: false }), 'ABRIR_JANELA');
-    assert.equal(decidirAtalho({ janelaDeChatAberta: false, principalVisivel: true }), 'ABRIR_POPUP_INTERNO');
-    assert.equal(decidirAtalho({ janelaDeChatAberta: true, principalVisivel: false }), 'FECHAR_JANELA');
-    assert.equal(decidirAtalho({ janelaDeChatAberta: true, principalVisivel: true }), 'FECHAR_JANELA');
+    assert.equal(decidirAtalho({ janelaDeChatVisivel: false, principalVisivel: false }), 'ABRIR_JANELA');
+    assert.equal(decidirAtalho({ janelaDeChatVisivel: false, principalVisivel: true }), 'ABRIR_POPUP_INTERNO');
+    assert.equal(decidirAtalho({ janelaDeChatVisivel: true, principalVisivel: false }), 'FECHAR_JANELA');
+    assert.equal(decidirAtalho({ janelaDeChatVisivel: true, principalVisivel: true }), 'FECHAR_JANELA');
 });
 
 test('o texto copiado vai sem as pontas em branco, e vazio ou grande demais não vai', () => {

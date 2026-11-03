@@ -32,9 +32,12 @@ export function lerPreferenciaDoChat(corpo: unknown): PreferenciaDoChat | null {
 
 export type AcaoDoAtalho = 'FECHAR_JANELA' | 'ABRIR_POPUP_INTERNO' | 'ABRIR_JANELA';
 
-/** Project visível → o popup interno; Project minimizado ou oculto → a janela do Desktop; com a janela aberta o atalho a fecha. Nunca as duas. */
-export function decidirAtalho(entrada: { janelaDeChatAberta: boolean; principalVisivel: boolean }): AcaoDoAtalho {
-    if (entrada.janelaDeChatAberta) return 'FECHAR_JANELA';
+/**
+ * Project visível → o popup interno; Project minimizado ou oculto → a janela do Desktop; com a janela à vista o atalho a fecha. Nunca as duas.
+ * Só conta a janela **visível**: uma que ainda não pintou (ou nunca pintou) não pode transformar o atalho em "fechar" (P-069).
+ */
+export function decidirAtalho(entrada: { janelaDeChatVisivel: boolean; principalVisivel: boolean }): AcaoDoAtalho {
+    if (entrada.janelaDeChatVisivel) return 'FECHAR_JANELA';
     return entrada.principalVisivel ? 'ABRIR_POPUP_INTERNO' : 'ABRIR_JANELA';
 }
 

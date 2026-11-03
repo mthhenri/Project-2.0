@@ -4,6 +4,22 @@ export const ENDERECO_DE_CONTINUAR = 'project-desktop://continuar';
 
 export type RespostaDaSaida = 'sair' | 'continuar';
 
+/** Os textos do aviso, os mesmos na janelinha própria e no diálogo nativo do Windows. */
+export const TITULO_DO_AVISO = 'Fechar o Project Desktop?';
+export const TEXTO_DO_AVISO = 'Isso desativa o check-in. Ele só volta quando você abrir o aplicativo de novo.';
+/** Os botões do diálogo nativo, na ordem em que aparecem; o índice escolhido vira a resposta. */
+export const BOTOES_DO_AVISO_NATIVO = ['Fechar completamente', 'Continuar usando'] as const;
+/** Enter e Esc no diálogo nativo ficam com "Continuar usando", o caminho seguro. */
+export const BOTAO_PADRAO_DO_AVISO_NATIVO = 1;
+
+/**
+ * A resposta do diálogo nativo (`dialog.showMessageBox`), usado quando a janelinha própria não pinta no prazo (P-069): uma janela sem
+ * moldura e sem pintura fica preta, sem botões, e prende o Project. Qualquer índice que não seja o de sair é "continuar".
+ */
+export function respostaDoAvisoNativo(indice: number): RespostaDaSaida {
+    return BOTOES_DO_AVISO_NATIVO[indice] === 'Fechar completamente' ? 'sair' : 'continuar';
+}
+
 /** Traduz a navegação da página do aviso na resposta do usuário; qualquer outra navegação é ignorada. */
 export function respostaDaNavegacao(endereco: string): RespostaDaSaida | null {
     if (endereco === ENDERECO_DE_SAIR) return 'sair';
@@ -43,8 +59,8 @@ export function montarPaginaDoDialogoDeSaida(nomeDoApp: string): string {
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
     </div>
     <div>
-      <h1>Fechar o Project Desktop?</h1>
-      <p>Isso desativa o check-in. Ele só volta quando você abrir o aplicativo de novo.</p>
+      <h1>${TITULO_DO_AVISO}</h1>
+      <p>${TEXTO_DO_AVISO}</p>
     </div>
   </div>
   <div class="acoes">

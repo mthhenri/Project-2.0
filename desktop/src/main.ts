@@ -1,9 +1,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { app, BrowserWindow, clipboard, globalShortcut, ipcMain, IpcMainEvent, IpcMainInvokeEvent, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, globalShortcut, ipcMain, IpcMainEvent, IpcMainInvokeEvent, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from 'electron';
 import { NOME_DO_APP, URL_DO_PROJECT } from './config';
-import { montarPaginaDoDialogoDeSaida, RespostaDaSaida, respostaDaNavegacao } from './dialogo-de-saida';
-import { decidirFechamento, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, janelinhaPodeFechar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
+import {
+    BOTAO_PADRAO_DO_AVISO_NATIVO, BOTOES_DO_AVISO_NATIVO, montarPaginaDoDialogoDeSaida, RespostaDaSaida, respostaDaNavegacao, respostaDoAvisoNativo, TEXTO_DO_AVISO, TITULO_DO_AVISO,
+} from './dialogo-de-saida';
+import {
+    decidirFechamento, decidirSemPintura, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, janelinhaPodeFechar, limitarAoMonitor, PRAZO_DA_PRIMEIRA_PINTURA_MS,
+    resolverUrlDoProject, textoDoProximoCheckin,
+} from './politica-da-janela';
 import {
     ARQUIVO_DA_ULTIMA_VERSAO, deveAvisarQueAtualizou, deveConferirVersao, enderecoParaBaixar, lerUltimaVersaoGravada, lerVersaoPublicada, textoDaAtualizacao, textoDaVersaoNoMenu,
     textoDoAvisoDeAtualizacao, VersaoPublicada, versaoARegistrar,
@@ -13,6 +18,7 @@ import {
     posicaoDaJanelaDeChat, prepararAreaDeTransferencia, textoDoItemDoChat,
 } from './politica-do-chat';
 import { deveAbrirJanelinha, deveFecharJanelinha, enderecoDaApi, lerEstadoDaIa, lerSituacao, segundosAteOCheckin, SituacaoDoCheckin } from './politica-do-checkin';
+import { ARQUIVO_DO_REGISTRO, deveRenovarRegistro, linhaDoRegistro } from './registro';
 
 const urlDoProject = resolverUrlDoProject(URL_DO_PROJECT, process.env);
 const caminhoDoIcone = path.join(__dirname, '..', 'assets', 'icone.png');
@@ -35,6 +41,10 @@ let conferencia: NodeJS.Timeout | null = null;
 
 let janela: BrowserWindow | null = null;
 let dialogoDeSaida: BrowserWindow | null = null;
+/** O aviso de saída está aberto, na janelinha própria ou no diálogo nativo que a substitui: um segundo pedido não abre outro. */
+let perguntandoSaida = false;
+/** As janelas que já pintaram (`ready-to-show`): só uma janela de chat pintada pode ser mostrada de novo (P-069). */
+const janelasPintadas = new WeakSet<BrowserWindow>();
 let bandeja: Tray | null = null;
 let reajustando = false;
 /** Trazer o Project para a frente minimiza e restaura de propósito; enquanto isso, o minimizar não pode ocultar a janela. */
@@ -61,6 +71,46 @@ const notificacoesNaTela = new Set<Notification>();
 if (!app.requestSingleInstanceLock()) {
     // Já existe um Project Desktop aberto: ele é quem vai para a frente (evento `second-instance`).
     app.quit();
+}
+
+/** Grava uma linha no registro do app, na pasta de dados do usuário (P-069); falhar ao gravar nunca atrapalha o app. */
+function registrar(evento: string, detalhes: Record<string, unknown> = {}): void {
+    try {
+        const arquivo = path.join(app.getPath('userData'), ARQUIVO_DO_REGISTRO);
+        let tamanho = 0;
+        try {
+            tamanho = fs.statSync(arquivo).size;
+        } catch {
+        // Sem arquivo ainda.
+        }
+        if (deveRenovarRegistro(tamanho)) fs.renameSync(arquivo, `${arquivo}.1`);
+        fs.appendFileSync(arquivo, linhaDoRegistro(new Date(), evento, detalhes), 'utf8');
+    } catch {
+    // O registro é só rastro: disco cheio ou pasta travada não podem derrubar o app.
+    }
+}
+
+/** Registra o que acontece a uma janela: quanto ela levou para pintar, a página que caiu ou travou e a carga que falhou. */
+function observarJanela(nome: string, alvo: BrowserWindow): void {
+    const criadaEm = Date.now();
+    alvo.once('ready-to-show', () => registrar(`${nome}:pintou`, { ms: Date.now() - criadaEm }));
+    alvo.on('unresponsive', () => registrar(`${nome}:sem-resposta`));
+    alvo.webContents.on('render-process-gone', (_evento, detalhes) => registrar(`${nome}:pagina-caiu`, { motivo: detalhes.reason, codigo: detalhes.exitCode }));
+    alvo.webContents.on('did-fail-load', (_evento, codigo, descricao, _url, principal) => {
+        if (principal) registrar(`${nome}:falhou-ao-carregar`, { codigo, descricao });
+    });
+}
+
+/**
+ * Janela nova nasce escondida e só aparece no `ready-to-show` (a primeira pintura). Se ela não vem no prazo, `semPintura` decide o que
+ * fazer: mostrar à força daria uma janela preta, e não mostrar deixaria uma janela invisível tida como aberta (P-069).
+ */
+function vigiarPrimeiraPintura(alvo: BrowserWindow, semPintura: () => void): void {
+    alvo.once('ready-to-show', () => janelasPintadas.add(alvo));
+    const prazo = setTimeout(() => {
+        if (!alvo.isDestroyed() && !janelasPintadas.has(alvo)) semPintura();
+    }, PRAZO_DA_PRIMEIRA_PINTURA_MS);
+    alvo.once('closed', () => clearTimeout(prazo));
 }
 
 function areaDoMonitorPrincipal() {
@@ -138,6 +188,7 @@ function criarJanela(): void {
         autoHideMenuBar: true,
         webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: !app.isPackaged },
     });
+    observarJanela('principal', janela);
 
     janela.once('ready-to-show', () => {
         janela?.show();
@@ -260,7 +311,15 @@ async function pedirSaida(): Promise<void> {
         dialogoDeSaida.focus();
         return;
     }
-    const resposta = await perguntarSaida();
+    if (perguntandoSaida) return;
+    perguntandoSaida = true;
+    let resposta: RespostaDaSaida;
+    try {
+        resposta = await perguntarSaida();
+    } finally {
+        perguntandoSaida = false;
+    }
+    registrar('saida:respondida', { resposta });
     if (resposta !== 'sair') return;
     encerramento.saidaConfirmada = true;
     app.quit();
@@ -268,9 +327,34 @@ async function pedirSaida(): Promise<void> {
     setTimeout(() => app.exit(0), 4000);
 }
 
-/** O aviso de saída: uma janelinha própria no estilo do Project (modal sobre o Project quando ele está na tela), e fechá-la é "continuar". */
+/** O Project principal à vista, para ser o dono dos avisos (eles ficam por cima dele); oculto ou minimizado, os avisos ficam soltos. */
+function principalAVista(): BrowserWindow | undefined {
+    return janela && !janela.isDestroyed() && janela.isVisible() && !janela.isMinimized() ? janela : undefined;
+}
+
+/** O aviso de saída no diálogo nativo do Windows, que o próprio sistema pinta: o substituto da janelinha que não pintou (P-069). */
+async function perguntarSaidaNativa(): Promise<RespostaDaSaida> {
+    const opcoes = {
+        type: 'warning' as const,
+        title: NOME_DO_APP,
+        message: TITULO_DO_AVISO,
+        detail: TEXTO_DO_AVISO,
+        buttons: [...BOTOES_DO_AVISO_NATIVO],
+        defaultId: BOTAO_PADRAO_DO_AVISO_NATIVO,
+        cancelId: BOTAO_PADRAO_DO_AVISO_NATIVO,
+        noLink: true,
+    };
+    const pai = principalAVista();
+    const { response } = pai ? await dialog.showMessageBox(pai, opcoes) : await dialog.showMessageBox(opcoes);
+    return respostaDoAvisoNativo(response);
+}
+
+/**
+ * O aviso de saída: uma janelinha própria no estilo do Project (modal sobre o Project quando ele está na tela), e fechá-la é "continuar".
+ * Se ela não pinta no prazo, trava ou a página dela cai, é destruída e a pergunta passa ao diálogo nativo: nunca fica uma caixa preta sem botões.
+ */
 function perguntarSaida(): Promise<RespostaDaSaida> {
-    const pai = janela && !janela.isDestroyed() && janela.isVisible() && !janela.isMinimized() ? janela : undefined;
+    const pai = principalAVista();
     const aviso = new BrowserWindow({
         width: 460,
         height: 190,
@@ -291,9 +375,16 @@ function perguntarSaida(): Promise<RespostaDaSaida> {
         webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: false },
     });
     dialogoDeSaida = aviso;
+    observarJanela('saida', aviso);
     aviso.setAlwaysOnTop(true, 'screen-saver');
     return new Promise<RespostaDaSaida>((resolver) => {
         let resposta: RespostaDaSaida = 'continuar';
+        let trocarPeloNativo = false;
+        const desistirDaJanelinha = (motivo: string) => {
+            registrar('saida:troca-pelo-nativo', { motivo });
+            trocarPeloNativo = true;
+            if (!aviso.isDestroyed()) aviso.destroy();
+        };
         const responder = (valor: RespostaDaSaida) => {
             resposta = valor;
             if (!aviso.isDestroyed()) aviso.close();
@@ -310,17 +401,22 @@ function perguntarSaida(): Promise<RespostaDaSaida> {
                 responder('continuar');
             }
         });
-        const mostrar = () => {
-            if (aviso.isDestroyed() || aviso.isVisible()) return;
+        aviso.once('ready-to-show', () => {
+            if (aviso.isDestroyed()) return;
             aviso.show();
             aviso.focus();
-        };
-        aviso.once('ready-to-show', mostrar);
-        // Sem o `ready-to-show` o aviso ficaria invisível e "Fechar completamente" pareceria não fazer nada (o clique seguinte só o focaria).
-        setTimeout(mostrar, 2000);
+        });
+        // Mostrar à força sem pintura dava a caixa preta e sem botões, que travava o Project por ser modal (P-069).
+        vigiarPrimeiraPintura(aviso, () => desistirDaJanelinha('sem-pintura'));
+        aviso.webContents.on('render-process-gone', () => desistirDaJanelinha('pagina-caiu'));
+        aviso.on('unresponsive', () => desistirDaJanelinha('sem-resposta'));
         aviso.on('closed', () => {
             dialogoDeSaida = null;
-            resolver(resposta);
+            if (!trocarPeloNativo) {
+                resolver(resposta);
+                return;
+            }
+            perguntarSaidaNativa().then(resolver, () => resolver('continuar'));
         });
         void aviso.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(montarPaginaDoDialogoDeSaida(NOME_DO_APP))}`);
     });
@@ -381,6 +477,14 @@ function abrirJanelinha(): void {
         closable: true,
         autoHideMenuBar: true,
         webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: !app.isPackaged },
+    });
+    const nova = janelinha;
+    observarJanela('checkin', nova);
+    // Sem pintura no prazo a janelinha sai; a conferência seguinte abre outra se o check-in ainda estiver pendente (P-069).
+    vigiarPrimeiraPintura(nova, () => {
+        registrar('checkin:sem-pintura');
+        janelinhaLiberada = true;
+        nova.destroy();
     });
     // Acima de qualquer outra janela, inclusive de programas em tela cheia.
     janelinha.setAlwaysOnTop(true, 'screen-saver');
@@ -470,7 +574,9 @@ function veioDe(evento: IpcMainEvent | IpcMainInvokeEvent, alvo: BrowserWindow |
  * aberta a fecha. A área de transferência é lida aqui, no instante do atalho, e só vai à página; quem decide se é código é o front.
  */
 function acionarChat(): void {
-    const acao = decidirAtalho({ janelaDeChatAberta: janelaDeChatViva() !== null, principalVisivel: !principalMinimizada() });
+    const janelaAtual = janelaDeChatViva();
+    const acao = decidirAtalho({ janelaDeChatVisivel: janelaAtual !== null && janelaAtual.isVisible(), principalVisivel: !principalMinimizada() });
+    registrar('chat:atalho', { acao });
     if (acao === 'FECHAR_JANELA') {
         fecharJanelaDeChat();
         return;
@@ -486,9 +592,11 @@ function acionarChat(): void {
 }
 
 /** A janela flutuante do chat: pequena, sem moldura, sempre por cima, no canto do monitor onde está o cursor; carrega a rota `/chat-popup`. */
-function abrirJanelaDeChat(conversa: ConversaDoChat | null): void {
+function abrirJanelaDeChat(conversa: ConversaDoChat | null, tentativa = 0): void {
     const existente = janelaDeChatViva();
     if (existente) {
+        // Ainda não pintou: o prazo da primeira pintura decide (mostrar agora daria uma janela preta).
+        if (!janelasPintadas.has(existente)) return;
         if (conversa) existente.webContents.send('chat:abrir-conversa', conversa);
         existente.show();
         existente.focus();
@@ -513,6 +621,17 @@ function abrirJanelaDeChat(conversa: ConversaDoChat | null): void {
         webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: !app.isPackaged },
     });
     janelaDeChat = nova;
+    observarJanela('chat', nova);
+    // Sem pintura no prazo: destrói e tenta uma vez mais, levando o rascunho; senão o atalho seguinte "fecharia" uma janela invisível (P-069).
+    vigiarPrimeiraPintura(nova, () => {
+        const decisao = decidirSemPintura(tentativa);
+        registrar('chat:sem-pintura', { tentativa, decisao });
+        const rascunho = rascunhoPendente;
+        fecharJanelaDeChat();
+        if (decisao === 'DESISTIR') return;
+        rascunhoPendente = rascunho;
+        abrirJanelaDeChat(conversa, tentativa + 1);
+    });
     // Acima de qualquer outra janela, inclusive de programas em tela cheia.
     nova.setAlwaysOnTop(true, 'screen-saver');
     nova.once('ready-to-show', () => {
@@ -662,12 +781,15 @@ ipcMain.on('checkin:encerrar', (evento) => {
 });
 
 app.on('second-instance', trazerParaAFrente);
+// O processo da GPU (ou outro auxiliar) que cai pode deixar as janelas novas sem pintura: fica no registro (P-069).
+app.on('child-process-gone', (_evento, detalhes) => registrar('app:processo-caiu', { tipo: detalhes.type, motivo: detalhes.reason, codigo: detalhes.exitCode }));
 app.on('will-quit', () => globalShortcut.unregisterAll());
 
 app.setAppUserModelId('br.com.project20.desktop');
 
 app.whenReady().then(() => {
     Menu.setApplicationMenu(null);
+    registrar('app:iniciado', { versao: app.getVersion() });
     criarJanela();
     criarBandeja();
     avisarSeAtualizou();
