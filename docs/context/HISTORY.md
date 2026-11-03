@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-11-03 — Check-in no perfil acompanha a execução e balão do check-in cinza
+
+**Mudou.** (1) `CheckinProximoComponent` (linha "Próximo check-in" do menu do perfil) só consultava `GET /checkin/situacao` ao nascer; iniciar uma atividade, pelo usuário ou pela IA, não a atualizava até o F5. Agora um `effect` observa o `id` da execução em `ExecucaoAtivaService.ativa()` (que o `execucaoAtivaInterceptor` já ressincroniza após iniciar, encerrar e confirmar/desfazer proposta da IA) e refaz a consulta quando ele muda. (2) O balão da mensagem do usuário na janela do check-in (`checkin__balao`) passou do azul cheio para o cinza do chat (`--app-surface-200`, I-032).
+
+**Testes.** Novo teste de componente (refaz a consulta quando a execução muda); checkin 63 passam; frontend completo 205 arquivos / 2516 testes; backend unitário 1615; `lint:tudo` limpo.
+
+**Verificado ao vivo** (1920×1080, claro, como `dev.teste`): menu aberto em "Sem check-in: nenhuma execução em andamento"; ao iniciar a atividade o texto passou a "Próximo check-in em 56:13" sem recarregar. A tela de planejamento usa o mesmo `chat__balao` do chat (já cinza); sem plano com mensagens no banco, não vi um balão dela ao vivo.
+
 ## 2026-11-03 — Cronômetro no cartão da atividade e "Sair da demanda" só para membro
 
 Os dois pendentes que sobraram das 304 e 307, a pedido do autor.
