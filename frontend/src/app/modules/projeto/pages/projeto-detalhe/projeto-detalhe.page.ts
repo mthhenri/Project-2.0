@@ -74,6 +74,7 @@ export class ProjetoDetalhePage implements OnInit {
 
     private readonly toolbar = viewChild<DemandaToolbarComponent>('toolbar');
     private readonly arvoreTela = viewChild<DemandaArvoreTelaComponent>('arvoreTela');
+    private readonly volume = viewChild(ProjetoVolumeComponent);
 
     readonly projeto = signal<ProjetoRecuperadoDto | null>(null);
     /** Selo do cabeçalho: sigla do nome e texto legível sobre a cor do projeto. */
@@ -199,6 +200,11 @@ export class ProjetoDetalhePage implements OnInit {
 
     voltarParaListagem(): void {
         this.router.navigate(['/projeto']);
+    }
+
+    /** Vigência gravada ou excluída em "Configurar volume": o volume à vista (se estiver) mostra o limite novo. */
+    recarregarVolume(): void {
+        this.volume()?.recarregar();
     }
 
     // ---------------------------------------------------------------------------

@@ -247,6 +247,27 @@ describe('ProjetoDetalhePage: demandas ou volume (tasks 290 e 291)', () => {
         expect(montado.elemento.querySelector('.projeto-detalhe__demandas')).not.toBeNull();
     });
 
+    it('vigência gravada em "Configurar volume" recarrega o volume à vista, com o limite novo (P-071)', async () => {
+        const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+        await carregar(montado);
+        montado.componente.escolherVisao('VOLUME');
+        await montado.atualizar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual'), [anual]);
+        await montado.atualizar();
+
+        montado.componente.recarregarVolume();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual'), [{ ...anual, volumeEsperadoHorasPorMes: new Array(12).fill(80) }]);
+        await montado.atualizar();
+        expect(montado.elemento.querySelector('app-projeto-volume app-grafico-barras')).not.toBeNull();
+    });
+
+    it('com as demandas à vista, a vigência gravada não pede o volume', async () => {
+        const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+        await carregar(montado);
+        montado.componente.recarregarVolume();
+        montado.http.expectNone((requisicao) => requisicao.url.includes('/projeto/volume'));
+    });
+
     it('a escolha fica lembrada neste navegador', async () => {
         const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
         await carregar(montado);

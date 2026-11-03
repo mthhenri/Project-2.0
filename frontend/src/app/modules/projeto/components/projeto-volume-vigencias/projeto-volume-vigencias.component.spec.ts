@@ -62,4 +62,22 @@ describe('volume por vigência', () => {
         responderSucesso(antiga, [abril]);
         expect(montado.componente.vigencias()).toEqual([]);
     });
+
+    it('avisa a tela só quando a vigência é gravada ou excluída de fato (P-071)', async () => {
+        const montado = await montar();
+        let avisos = 0;
+        montado.componente.alterado.subscribe(() => avisos++);
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/12/volume-vigencia'), [abril]);
+        await montado.atualizar();
+        montado.componente.formulario.patchValue({ mes: new Date(2026, 3, 1), horas: 80 });
+        montado.componente.salvar();
+        responderErro(esperarRequisicao(montado.http, 'POST', '/projeto/12/volume-vigencia'), 500, 'Falha de teste');
+        expect(avisos).toBe(0);
+        montado.componente.salvar();
+        responderSucesso(esperarRequisicao(montado.http, 'POST', '/projeto/12/volume-vigencia'), { ...abril, volumeEsperadoHoras: 80 });
+        expect(avisos).toBe(1);
+        montado.componente.excluir(abril);
+        responderSucesso(esperarRequisicao(montado.http, 'DELETE', '/projeto/12/volume-vigencia/2'), null);
+        expect(avisos).toBe(2);
+    });
 });

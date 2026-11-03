@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-11-03 — P-071: volume do projeto recarrega ao gravar ou excluir uma vigência
+
+Relato do autor: na tela do projeto, com a visão Volume aberta, cadastrar o volume não atualizava a barra do limite por mês. Causa: `ProjetoVolumeVigenciasComponent` só atualizava a própria lista e `ProjetoVolumeComponent` só carrega ao nascer e ao trocar de período.
+
+- **Correção:** a vigência emite `alterado` quando grava ou exclui de fato (falha não emite); `ProjetoVolumeDialogComponent` repassa como `volumeAlterado`; o detalhe do projeto chama `recarregar()` do volume à vista (com as demandas à vista nada é pedido). Na listagem de Projetos não muda nada: a vigência só se edita no formulário aberto da lista, e a aba Volume remonta e carrega ao ser aberta.
+- **Testes:** vigência (1 novo: avisa só nos sucessos de gravar e excluir) e detalhe do projeto (2 novos: recarrega o anual com o volume à vista; não pede nada com as demandas à vista). Módulo `projeto`: 126 testes.
+- **Verificado ao vivo** (stack isolado, tema escuro, 1920×1080): com a visão Volume, gravar 80 h a partir de novembro já mudou o gráfico por trás do diálogo (escala a 80 h, tracejado subindo em novembro); excluir a vigência o devolveu a 40 h; uma sentinela na página continuou viva (sem recarga). O layout da tela não mudou.
+
 ## 2026-11-03 — P-070: o "Encerrar execução" volta a ter Cancelar e Encerrar
 
 Relato do autor: o "confirmar" do pausar execução sumiu, e ele achou que fosse por estar logado com um usuário no Project Desktop e com o gestor no navegador. **Não era:** em `4cfb1c9` (2026-10-31) o diálogo virou o componente compartilhado `ExecucaoEncerrarDialogComponent` (usado pelo chip da barra superior, por Atividades e pelo "Em andamento agora") e o rodapé da tela de Atividades não foi levado junto. Desde então o diálogo abria só com a descrição; encerrar só pelo Ctrl+Enter no campo.

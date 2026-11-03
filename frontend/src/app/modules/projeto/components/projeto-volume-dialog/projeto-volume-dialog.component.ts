@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, output, signal } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
 import { ProjetoVolumeVigenciasComponent } from '../projeto-volume-vigencias/projeto-volume-vigencias.component';
 
@@ -13,6 +13,8 @@ import { ProjetoVolumeVigenciasComponent } from '../projeto-volume-vigencias/pro
 export class ProjetoVolumeDialogComponent {
     readonly mostrar = signal<boolean>(false);
     readonly projetoId = signal<number | null>(null);
+    /** Repassa a vigência gravada ou excluída, para a tela recarregar o volume que está mostrando. */
+    readonly volumeAlterado = output<void>();
 
     abrir(projetoId: number): void {
         this.projetoId.set(projetoId);

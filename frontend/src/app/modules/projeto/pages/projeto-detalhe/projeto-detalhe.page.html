@@ -281,7 +281,7 @@
 </div>
 
 <!-- Volume esperado por vigência (o resto do projeto se edita no próprio cabeçalho) -->
-<app-projeto-volume-dialog #volumeDialog />
+<app-projeto-volume-dialog #volumeDialog (volumeAlterado)="recarregarVolume()" />
 
 <!-- Dialog de nova demanda (raiz) -->
 @if (projeto()) {

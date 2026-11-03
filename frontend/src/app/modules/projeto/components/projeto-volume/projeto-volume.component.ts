@@ -143,6 +143,11 @@ export class ProjetoVolumeComponent implements OnInit {
         this.escolherAno(this.hoje.getFullYear());
     }
 
+    /** Busca de novo o período à vista (o volume esperado mudou no cadastro de vigências). */
+    recarregar(): void {
+        this.carregar();
+    }
+
     private encerrarCarga(): void {
         this.carregando.set(false);
         this.jaCarregou.set(true);

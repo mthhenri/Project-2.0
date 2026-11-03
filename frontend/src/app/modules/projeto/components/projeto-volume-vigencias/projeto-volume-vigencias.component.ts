@@ -1,4 +1,4 @@
-import { Component, HostListener, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, HostListener, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
@@ -24,6 +24,8 @@ export class ProjetoVolumeVigenciasComponent {
     private readonly unidadeTempo = inject(VisualizacaoTempoService);
     private readonly formBuilder = inject(FormBuilder);
     readonly projetoId = input.required<number>();
+    /** Uma vigência foi gravada ou excluída: quem mostra o volume do projeto recarrega. */
+    readonly alterado = output<void>();
     readonly hoje = hojeNoFuso(ambiente.fusoHorario);
     readonly vigencias = signal<ProjetoVolumeVigenciaResumoDto[]>([]);
     readonly carregando = signal(false);
@@ -86,6 +88,7 @@ export class ProjetoVolumeVigenciasComponent {
                     const gravada = resposta.dados;
                     this.vigencias.update(atuais => [...atuais.filter(vigencia => vigencia.vigenciaInicioData !== gravada.vigenciaInicioData), gravada]
                         .sort((primeira, segunda) => segunda.vigenciaInicioData.localeCompare(primeira.vigenciaInicioData)));
+                    this.alterado.emit();
                 },
                 error: () => { if (this.projetoId() === projetoId) this.erro.set('Não foi possível salvar o volume. Tente novamente.'); },
             });
@@ -97,7 +100,11 @@ export class ProjetoVolumeVigenciasComponent {
         this.salvando.set(true);
         this.erro.set('');
         this.servico.excluirVigencia({ projetoId, vigenciaId: vigencia.id }).pipe(finalize(() => this.salvando.set(false))).subscribe({
-            next: () => { if (this.projetoId() === projetoId) this.vigencias.update(atuais => atuais.filter(atual => atual.id !== vigencia.id)); },
+            next: () => {
+                if (this.projetoId() !== projetoId) return;
+                this.vigencias.update(atuais => atuais.filter(atual => atual.id !== vigencia.id));
+                this.alterado.emit();
+            },
             error: () => { if (this.projetoId() === projetoId) this.erro.set('Não foi possível excluir a vigência. Tente novamente.'); },
         });
     }
