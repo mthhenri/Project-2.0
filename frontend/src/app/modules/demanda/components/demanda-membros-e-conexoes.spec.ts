@@ -234,7 +234,7 @@ describe('DemandaConexaoListaComponent', () => {
             expect(montado.elemento.querySelector('details')?.textContent).toContain('Ver as 3 conexões em lista');
         });
 
-        it('o recorte sai do grafo do projeto, inclusive as "depende desta" que a lista da API não traz', async () => {
+        it('o recorte sai do grafo do projeto, inclusive as "depende desta"', async () => {
             const grafo = { nos: NOS, arestas: [{ id: 60, origemId: 21, destinoId: 10, tipo: 'conexao', bidirecional: false }] };
             const montado = await montarComGrafo({ grafo, conexoes: [] });
             expect(montado.componente.recorte()!.grafo.nos.map((no) => no.id).sort()).toEqual([10, 21]);
@@ -242,7 +242,7 @@ describe('DemandaConexaoListaComponent', () => {
 
         it('remover pelo × tira a linha na hora e avisa o hospedeiro; a "depende desta" se remove pela demanda de origem', async () => {
             const grafo = { nos: NOS, arestas: [{ id: 60, origemId: 21, destinoId: 10, tipo: 'conexao', bidirecional: false }] };
-            const montado = await montarComGrafo({ grafo, conexoes: [] });
+            const montado = await montarComGrafo({ grafo, conexoes: [{ id: 60, demandaConectadaId: 21, nomeDemandaConectada: 'D21', direcao: 'entrada' }] });
             let avisos = 0;
             montado.componente.conexoesAlteradas.subscribe(() => avisos++);
             montado.componente.removerPorDemanda(21);
@@ -281,7 +281,7 @@ describe('DemandaConexaoListaComponent', () => {
             const montado = await montarComGrafo();
             montado.componente.removerPorDemanda(21);
             expect(montado.componente.conexoes().map((conexao) => conexao.id)).toEqual([1, 3]);
-            responderSucesso(esperarRequisicao(montado.http, 'DELETE', '/demanda/10/conexao/2'), null);
+            responderSucesso(esperarRequisicao(montado.http, 'DELETE', '/demanda/21/conexao/2'), null);
         });
     });
 
@@ -355,7 +355,7 @@ describe('DemandaConexaoListaComponent', () => {
         expect(TestBed.inject(DesfazerService).oferta()?.mensagem).toBe('Conexão com "Saída" removida');
 
         montado.componente.excluir(CONEXOES[1]);
-        responderErro(esperarRequisicao(montado.http, 'DELETE', '/demanda/10/conexao/2'), 400, 'recusado');
+        responderErro(esperarRequisicao(montado.http, 'DELETE', '/demanda/21/conexao/2'), 400, 'recusado');
         await montado.atualizar();
         expect(montado.componente.conexoes().map((c) => c.id)).toEqual([2, 3]);
     });
@@ -369,7 +369,7 @@ describe('DemandaConexaoListaComponent', () => {
         for (const [conexao, caminho, corpo] of casos) {
             const montado = await montar();
             montado.componente.excluir(conexao);
-            responderSucesso(esperarRequisicao(montado.http, 'DELETE', `/demanda/10/conexao/${conexao.id}`), null);
+            responderSucesso(esperarRequisicao(montado.http, 'DELETE', conexao.direcao === 'entrada' ? `/demanda/${conexao.demandaConectadaId}/conexao/${conexao.id}` : `/demanda/10/conexao/${conexao.id}`), null);
             TestBed.inject(DesfazerService).executar();
             expect(esperarRequisicao(montado.http, 'POST', caminho).request.body).toEqual(corpo);
             TestBed.resetTestingModule();

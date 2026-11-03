@@ -82,12 +82,12 @@ export class DemandaConexaoListaComponent {
         GRUPOS_DE_DIRECAO.map((grupo) => ({ ...grupo, itens: this.conexoes().filter((conexao) => conexao.direcao === grupo.direcao) })).filter((grupo) => grupo.itens.length > 0),
     );
 
-    /** Conexões que o × do nó acabou de remover e o grafo do projeto ainda não reflete (a lista não traz as "depende desta"). */
+    /** Conexões removidas agora que o grafo do projeto ainda não reflete (a linha some na hora). */
     private readonly removidasAgora = signal<ReadonlySet<number>>(new Set());
 
     /**
-     * O recorte, tirado do grafo do projeto: é ele que conhece as conexões "depende desta" (a lista da API só traz as que saem desta demanda e as
-     * mútuas). Remover pelo × tira a linha na hora, sem esperar o grafo recarregar.
+     * O recorte, tirado do grafo do projeto (que traz também as conexões entre as demandas ligadas). Remover pelo × ou pela lixeira tira a linha
+     * na hora, sem esperar o grafo recarregar.
      */
     readonly recorte = computed(() => {
         const grafo = this.grafo();
@@ -126,31 +126,10 @@ export class DemandaConexaoListaComponent {
         this.erroInline.set(null);
     }
 
-    /**
-     * O × do nó no recorte: remove a conexão com aquela demanda (a mesma ação da lixeira da lista). A "depende desta" não está na lista: pertence à
-     * outra demanda (a origem), que é por onde ela se remove, e o "Desfazer" a recria nesse sentido.
-     */
+    /** O × do nó no recorte: remove a conexão com aquela demanda (a mesma ação da lixeira da lista). */
     removerPorDemanda(demandaConectadaId: number): void {
         const conexao = this.conexoes().find((item) => item.demandaConectadaId === demandaConectadaId);
-        if (conexao) {
-            this.excluir(conexao);
-            return;
-        }
-        const aresta = this.recorte()?.grafo.arestas.find((item) => item.origemId === demandaConectadaId && item.destinoId === this.demandaId());
-        if (!aresta) return;
-        const nome = this.todasDemandas().find((demanda) => demanda.demandaConectadaId === demandaConectadaId)?.nomeDemandaConectada ?? 'a outra demanda';
-        this.removidasAgora.update((ids) => new Set(ids).add(aresta.id));
-        this.demandaService.excluirConexao(demandaConectadaId, aresta.id).subscribe({
-            next: () => {
-                this.conexoesAlteradas.emit();
-                this.desfazerService.oferecer({
-                    mensagem: `Conexão com "${nome}" removida`,
-                    desfazer: () => this.demandaService.criarConexao(demandaConectadaId, { demandaDestinoId: this.demandaId(), bidirecional: false }),
-                    aposDesfazer: () => this.conexoesAlteradas.emit(),
-                });
-            },
-            error: () => this.removidasAgora.update((ids) => new Set([...ids].filter((id) => id !== aresta.id))),
-        });
+        if (conexao) this.excluir(conexao);
     }
 
     tooltipDirecao(conexao: DemandaConexaoResumoDto): string {
@@ -209,7 +188,9 @@ export class DemandaConexaoListaComponent {
         this.conexoes.set(anteriores.filter((item) => item.id !== conexao.id));
         this.removidasAgora.update((ids) => new Set(ids).add(conexao.id));
 
-        this.demandaService.excluirConexao(this.demandaId(), conexao.id).subscribe({
+        // A "depende desta" pertence à outra demanda (a origem): é por ela que se remove.
+        const donaDaConexao = conexao.direcao === 'entrada' ? conexao.demandaConectadaId : this.demandaId();
+        this.demandaService.excluirConexao(donaDaConexao, conexao.id).subscribe({
             next: () => {
                 this.conexoesAlteradas.emit();
                 this.desfazerService.oferecer({

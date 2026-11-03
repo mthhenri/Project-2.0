@@ -99,7 +99,7 @@ testarComBanco('conexões: validarConexao vale por sentido; validarConexaoDemand
     assert.equal(await repositorio.validarConexaoDemanda({ conexaoId: simples.id, demandaId: c.id }), false);
 });
 
-testarComBanco('listarConexoes: direção saída, entrada (bidirecional) e bidirecional; sem a demanda excluída', async (conexao) => {
+testarComBanco('listarConexoes: direção saída, entrada e bidirecional; sem a demanda excluída', async (conexao) => {
     const repositorio = criarRepositorio(DemandaRepository, conexao);
     const [itemParcial, outroPrincipal, c, dataAtual] = await tresDemandas(conexao, 4);
     await criarDemandaConexao(conexao, { demandaOrigemId: itemParcial.id, demandaDestinoId: outroPrincipal.id });
@@ -111,8 +111,8 @@ testarComBanco('listarConexoes: direção saída, entrada (bidirecional) e bidir
 
     const conexoes = await repositorio.listarConexoes({ demandaId: itemParcial.id });
     const porDemanda = Object.fromEntries(conexoes.map((item) => [item.demandaConectadaId, item.direcao]));
-    assert.deepEqual(porDemanda, { [outroPrincipal.id]: 'saida', [c.id]: 'bidirecional' });
-    assert.ok(!(dataAtual.id in porDemanda), 'conexão unidirecional que chega em A não aparece em A');
+    assert.deepEqual(porDemanda, { [outroPrincipal.id]: 'saida', [c.id]: 'bidirecional', [dataAtual.id]: 'entrada' });
+    assert.ok(!(comExcluida.id in porDemanda), 'a demanda excluída não aparece');
 });
 
 // ---------------------------------------------------------------------------

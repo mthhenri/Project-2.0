@@ -1549,7 +1549,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     }
 
     /**
-   * Lista todas as conexões de uma demanda (saída, entrada bidirecional).
+   * Lista todas as conexões de uma demanda: as que saem dela (saída), as que chegam nela (entrada: outra demanda depende desta) e as mútuas.
    */
     async listarConexoes(dto: DemandaConexaoListarDto): Promise<DemandaConexaoResumoDto[]> {
         return this.executarConsulta<DemandaConexaoResumoDto>(
@@ -1577,10 +1577,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     demanda_conexao.is_deleted = false
                     AND (
                         demanda_conexao.demanda_origem_id = :demandaId
-                        OR (
-                            demanda_conexao.demanda_destino_id = :demandaId
-                            AND demanda_conexao.bidirecional = true
-                        )
+                        OR demanda_conexao.demanda_destino_id = :demandaId
                     )
             `,
             { demandaId: dto.demandaId },

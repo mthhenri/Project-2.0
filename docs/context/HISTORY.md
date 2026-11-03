@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-11-03 — P-074 corrigido: a lista de conexões da demanda traz as "depende desta"
+
+A pedido do autor (achado na verificação da 305). `DemandaRepository.listarConexoes` passou a listar toda conexão em que a demanda é origem ou destino: `saida`, `entrada` (outra demanda depende desta) e `bidirecional`. Antes só vinham as que saem e as mútuas, então a lista, o contador "Conexões N" e o grupo "Dependem desta demanda" nunca mostravam a "depende desta".
+
+- **Remoção:** a conexão pertence à origem; a lixeira e o × do recorte removem por ela (`DELETE /demanda/{origem}/conexao/{id}`), sem mudar a permissão do backend (`validarConexaoDemanda` segue aceitando a origem e, se mútua, o destino). O "Desfazer" já recriava a entrada partindo da outra demanda.
+- **Recorte:** o caso especial de remover "depende desta" pela aresta saiu; tudo passa pela lista.
+- **Testes:** integração `listarConexoes` atualizado (entrada agora aparece; 371 passam); frontend da pasta `demanda` 256 (remoção de entrada pela origem, desfazer); `lint:tudo` limpo; build do backend. Ao vivo (gestor): contador 4, grupo "Dependem desta demanda 1", remover pela lixeira (3, linha some) e desfazer (4, linha volta).
+
 ## 2026-11-03 — Pós-304: play e pause no cartão da atividade da demanda
 
 A pedido do autor, os botões que a 304 deixara de fora. O diálogo "Iniciar execução" estava embutido na `atividade-listagem.page`; virou o componente `execucao-iniciar-dialog` (`abrir(atividade)`, saída `iniciada`), usado agora pela listagem e pelo painel de atividades da demanda aberta. O "Encerrar execução" já era o compartilhado.

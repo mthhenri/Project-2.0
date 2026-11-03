@@ -597,7 +597,7 @@ export class DemandaService {
     }
 
     /**
-   * Lista todas as conexões de uma demanda (saída, entrada bidirecional).
+   * Lista todas as conexões de uma demanda: as que saem dela (`saida`), as que chegam nela (`entrada`: outra demanda depende desta) e as mútuas.
    * Desenvolvedor só pode listar conexões de demandas às quais está atribuído.
    */
     async listarConexoes(
