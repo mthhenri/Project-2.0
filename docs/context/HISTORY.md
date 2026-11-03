@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-11-03 — Task 305: a aba Conexões da demanda mostra o recorte do grafo
+
+Segunda do guarda-chuva `demanda-atividades-e-conexoes`. O `demanda-grafo` ganhou o modo `recorte` e a aba passou a desenhar nele a demanda e as ligadas a ela.
+
+- **`demanda-grafo` (modo `recorte`):** a demanda em `focoId` fica fixa no centro, com anel; seta no destino da conexão (nas duas pontas na mútua); texto "depende de" / "depende desta" / "mútua" ao longo da linha, sempre de pé; linha laranja para ligada cancelada; sem zoom nem legenda; × opcional nos nós ligados (`removivel`, `noRemovido`). Repulsão e distância menores e enquadramento até 1,4× só no recorte; o grafo do projeto não mudou.
+- **Regra pura** `demanda-recorte-conexoes.util.ts`: `montarRecorteDeConexoes` (a demanda, as ligadas e as conexões entre elas; sem hierarquia; ignora o que está fora do grafo), `sentidoDaConexao`, `textoDaConexao`, lista das canceladas.
+- **`demanda-conexao-lista`:** recebe o `grafo` do projeto (passado pela página → `demanda-arvore-tela` → `demanda-aberta`; sem endpoint novo), "Conectar" abre a criação com o sentido em três botões ("Esta depende dela", "Ela depende desta", "Mútua") e a frase de prévia; faixa de aviso de cancelada; lista agrupada recolhida ("Ver as N conexões em lista"); vazio com "Conectar". Criar, remover e desfazer avisam o hospedeiro (`conexoesAlteradas` → `demandaAlterada`), que recarrega o grafo.
+- **Achado na verificação:** a API de conexões só lista como "entrada" as mútuas, então o recorte por ela escondia as "depende desta"; o recorte sai do grafo do projeto e o × remove pela demanda de origem. Registrado o **P-074** (lista e contador sem elas).
+- **Testes:** util 7, grafo +5 (modo recorte), lista de conexões +8 (recorte, remover, prévia, "Ela depende desta"); pasta `demanda` do frontend 252; `lint:tudo` limpo. Ao vivo nos 5 formatos, claro e escuro (`verificacao.md`).
+
 ## 2026-11-03 — Task 304: a aba Atividades da demanda mostra o consumo de cada atividade
 
 Primeira das duas tasks do guarda-chuva `demanda-atividades-e-conexoes`. A atividade não tem horas esperadas, então a barra de cada cartão é a **fatia que ela consumiu do total consumido pela demanda**.

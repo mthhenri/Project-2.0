@@ -5,6 +5,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TabsModule } from 'primeng/tabs';
 import { TooltipModule } from 'primeng/tooltip';
+import { DemandaGrafoDto } from '@project20/shared';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { ROTULO_STATUS_DEMANDA } from '../../constants/demanda-cores.constants';
 import { AtividadeNovaDialogComponent } from '../../../atividade/components/atividade-nova-dialog/atividade-nova-dialog.component';
@@ -53,6 +54,8 @@ export type AbaDemandaAberta = 'tecnica' | 'cliente' | 'doc' | 'atividades' | 'c
 export class DemandaAbertaComponent extends DemandaDetalheBase implements OnChanges {
     /** Minutos executados na demanda (vêm do nó do grafo; a demanda recuperada não os traz), para a barra de horas. */
     readonly minutosExecutados = input<number>(0);
+    /** O grafo do projeto, de onde a aba Conexões tira o recorte (task 305). */
+    readonly grafo = input<DemandaGrafoDto | null>(null);
     /** A aba mostrada: a Técnica ao abrir; clicar num ícone de descrição da linha abre a aba dela. */
     readonly aba = model<AbaDemandaAberta>('tecnica');
     /** A demanda mostrada mudou por dentro (caminho, conexão, "Voltar"): a página acompanha a pasta e a seleção. */

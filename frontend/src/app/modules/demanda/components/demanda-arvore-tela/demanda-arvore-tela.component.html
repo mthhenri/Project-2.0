@@ -57,6 +57,7 @@
                 <app-demanda-aberta
                     [demandaId]="idAberto"
                     [minutosExecutados]="noAberto()?.minutosExecutados ?? 0"
+                    [grafo]="grafoDoProjeto()"
                     [(aba)]="aba"
                     (navegou)="aoNavegar($event)"
                     (demandaAlterada)="alterado.emit()"

@@ -120,3 +120,11 @@
 - **Correção:** achar o temporizador que não termina (suspeita: transição do d3, no diagrama da Modelagem e no grafo, que roda dentro da zona) e tirá-lo da zona ou pará-lo; só então remover o teto. Observação: com a CPU três vezes sobrecarregada o arquivo passou (3 s viraram 11 s), então não é só lentidão.
 - **Desde:** 2026-10-30 (visto nos fechos dos P-035/P-038/P-041/P-055 e dos P-050/P-051/P-058; 10 rodadas completas, 4 falhas dele; depois mais 3 rodadas com falha e uma no CI do PR 27).
 
+
+### P-074 — A lista de conexões da demanda não traz as "depende desta" · `ABERTO` · demanda/backend
+
+- **Sintoma:** a demanda A tem uma conexão "B depende de A" (B é a origem) e ela só aparece no recorte do grafo da aba Conexões (task 305), não na lista nem no contador "Conexões N"; o grupo "Dependem desta demanda" da lista nunca recebe itens.
+- **Causa:** `DemandaRepository.listarConexoes` só traz as conexões em que a demanda é a origem e as bidirecionais em que é o destino (decisão da task 108/teste de integração "entrada (bidirecional)").
+- **Contorno:** o recorte do grafo sai do grafo do projeto e mostra todas, com o × (que remove pela demanda de origem). O contador e a lista seguem sem elas.
+- **Correção:** decidir com o autor se a lista passa a trazer as entradas (`direcao = 'entrada'`), com o contador e a remoção a partir da demanda de destino.
+- **Desde:** 2026-11-03 (visto na verificação da task 305).

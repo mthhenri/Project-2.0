@@ -209,6 +209,82 @@ describe('DemandaConexaoListaComponent', () => {
         expect(titulos()).toEqual(['Esta demanda depende de 1']);
     });
 
+    describe('recorte do grafo (task 305)', () => {
+        const NOS = [10, 20, 21, 22].map((id) => ({ id, nome: `D${id}`, status: 'PENDENTE', estrutural: false, horasEstimadas: 0, minutosExecutados: 0, demandaPaiId: null, tags: [] }));
+        const GRAFO = {
+            nos: NOS,
+            arestas: [
+                { id: 1, origemId: 10, destinoId: 20, tipo: 'conexao', bidirecional: false },
+                { id: 2, origemId: 21, destinoId: 10, tipo: 'conexao', bidirecional: false },
+                { id: 3, origemId: 10, destinoId: 22, tipo: 'conexao', bidirecional: true },
+                { id: 50, origemId: 20, destinoId: 22, tipo: 'conexao', bidirecional: false },
+            ],
+        };
+
+        async function montarComGrafo(sobrescrita: Record<string, unknown> = {}) {
+            return montarComponente(DemandaConexaoListaComponent, {
+                usuario: TipoUsuarioEnum.GESTOR, entradas: { demandaId: 10, nomeDemanda: 'Esta', todasDemandas: TODAS, conexoes: CONEXOES, grafo: GRAFO, ...sobrescrita },
+            });
+        }
+
+        it('mostra o grafo com a demanda e as ligadas, mais a lista recolhida', async () => {
+            const montado = await montarComGrafo();
+            expect(montado.elemento.querySelector('app-demanda-grafo')).not.toBeNull();
+            expect(montado.componente.recorte()!.grafo.nos.map((no) => no.id).sort()).toEqual([10, 20, 21, 22]);
+            expect(montado.elemento.querySelector('details')?.textContent).toContain('Ver as 3 conexões em lista');
+        });
+
+        it('o recorte sai do grafo do projeto, inclusive as "depende desta" que a lista da API não traz', async () => {
+            const grafo = { nos: NOS, arestas: [{ id: 60, origemId: 21, destinoId: 10, tipo: 'conexao', bidirecional: false }] };
+            const montado = await montarComGrafo({ grafo, conexoes: [] });
+            expect(montado.componente.recorte()!.grafo.nos.map((no) => no.id).sort()).toEqual([10, 21]);
+        });
+
+        it('remover pelo × tira a linha na hora e avisa o hospedeiro; a "depende desta" se remove pela demanda de origem', async () => {
+            const grafo = { nos: NOS, arestas: [{ id: 60, origemId: 21, destinoId: 10, tipo: 'conexao', bidirecional: false }] };
+            const montado = await montarComGrafo({ grafo, conexoes: [] });
+            let avisos = 0;
+            montado.componente.conexoesAlteradas.subscribe(() => avisos++);
+            montado.componente.removerPorDemanda(21);
+            expect(montado.componente.recorte()!.grafo.nos.map((no) => no.id)).toEqual([10]);
+            responderSucesso(esperarRequisicao(montado.http, 'DELETE', '/demanda/21/conexao/60'), null);
+            expect(avisos).toBe(1);
+            expect(TestBed.inject(DesfazerService).oferta()?.mensagem).toBe('Conexão com "D21" removida');
+        });
+
+        it('sem conexões: vazio explicativo com "Conectar", sem grafo', async () => {
+            const montado = await montarComGrafo({ conexoes: [] });
+            expect(montado.elemento.querySelector('app-demanda-grafo')).toBeNull();
+            expect(montado.elemento.querySelector('.demanda-conexao-lista__vazio')?.textContent).toContain('Nenhuma conexão');
+            expect(montado.elemento.querySelector('.demanda-conexao-lista__vazio button')?.textContent).toContain('Conectar');
+        });
+
+        it('avisa quando uma demanda ligada está cancelada', async () => {
+            const nos = NOS.map((no) => (no.id === 20 ? { ...no, status: 'CANCELADA' } : no));
+            const montado = await montarComGrafo({ grafo: { ...GRAFO, nos } });
+            expect(montado.elemento.querySelector('.demanda-conexao-lista__aviso')?.textContent).toContain('D20');
+        });
+
+        it('"Conectar" abre a criação e "Cancelar" fecha sem criar nada', async () => {
+            const montado = await montarComGrafo();
+            expect(montado.elemento.querySelector('.demanda-conexao-lista__criacao')).toBeNull();
+            montado.componente.abrirConexao();
+            await montado.atualizar();
+            expect(montado.elemento.querySelector('.demanda-conexao-lista__criacao')).not.toBeNull();
+            montado.componente.fecharConexao();
+            await montado.atualizar();
+            expect(montado.elemento.querySelector('.demanda-conexao-lista__criacao')).toBeNull();
+            montado.http.expectNone(() => true);
+        });
+
+        it('o × do nó remove a conexão desta demanda com aquela', async () => {
+            const montado = await montarComGrafo();
+            montado.componente.removerPorDemanda(21);
+            expect(montado.componente.conexoes().map((conexao) => conexao.id)).toEqual([1, 3]);
+            responderSucesso(esperarRequisicao(montado.http, 'DELETE', '/demanda/10/conexao/2'), null);
+        });
+    });
+
     it('adicionar sem destino escolhido não chama a API', async () => {
         const montado = await montar();
         montado.componente.adicionar();
@@ -218,7 +294,7 @@ describe('DemandaConexaoListaComponent', () => {
     it('adicionar manda o destino e a bidirecionalidade, limpa o formulário e recarrega as conexões', async () => {
         const montado = await montar();
         montado.componente.destinoId.set(23);
-        montado.componente.bidirecional.set(true);
+        montado.componente.sentido.set('mutua');
         montado.componente.adicionar();
         expect(montado.componente.salvando()).toBe(true);
         const requisicao = esperarRequisicao(montado.http, 'POST', '/demanda/10/conexao');
@@ -226,8 +302,27 @@ describe('DemandaConexaoListaComponent', () => {
         responderSucesso(requisicao, { id: 9 }, 201);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/10/conexao'), [...CONEXOES, { id: 9, demandaConectadaId: 23, nomeDemandaConectada: 'D23', direcao: 'bidirecional' }]);
         expect(montado.componente.salvando()).toBe(false);
-        expect([montado.componente.destinoId(), montado.componente.bidirecional()]).toEqual([null, false]);
+        expect([montado.componente.destinoId(), montado.componente.sentido()]).toEqual([null, 'saida']);
         expect(montado.componente.conexoes()).toHaveLength(4);
+    });
+
+    it('"Ela depende desta" parte da outra demanda (ela vira a origem)', async () => {
+        const montado = await montar();
+        montado.componente.destinoId.set(23);
+        montado.componente.sentido.set('entrada');
+        montado.componente.adicionar();
+        const requisicao = esperarRequisicao(montado.http, 'POST', '/demanda/23/conexao');
+        expect(requisicao.request.body).toEqual({ demandaDestinoId: 10, bidirecional: false });
+    });
+
+    it('a prévia diz o que será criado em cada sentido', async () => {
+        const montado = await montar();
+        montado.componente.destinoId.set(23);
+        expect(montado.componente.previa()).toBe('"Esta" depende de "D23"');
+        montado.componente.sentido.set('entrada');
+        expect(montado.componente.previa()).toBe('"D23" depende de "Esta"');
+        montado.componente.sentido.set('mutua');
+        expect(montado.componente.previa()).toBe('"Esta" e "D23" dependem uma da outra');
     });
 
     it('ciclo: o erro aparece na própria linha (sem toast) e o formulário continua preenchido', async () => {

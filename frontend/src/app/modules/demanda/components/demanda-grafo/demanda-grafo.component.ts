@@ -25,6 +25,7 @@ import { COR_NO_BORDA, OPCOES_STATUS_DEMANDA, ROTULO_STATUS_DEMANDA, corPreenchi
 import { DemandaBarraControleHorasComponent } from '../demanda-barra-controle-horas/demanda-barra-controle-horas.component';
 import { DemandaStatusComponent } from '../demanda-status/demanda-status.component';
 import { DemandaStatusMarcaComponent } from '../demanda-status-marca/demanda-status-marca.component';
+import { textoDaConexao } from '../../utils/demanda-recorte-conexoes.util';
 
 /** Nó sob o mouse: posição do cartão flutuante em coordenadas do componente. */
 interface CartaoNo {
@@ -46,6 +47,9 @@ const OPACIDADE_FORA_DO_FILTRO = 0.25;
  * Grafo de demandas (d3) integrado ao tema (task 107): cores por tokens, cartão no hover, legenda em popover
  * cujos status filtram o grafo e controles de zoom. O filtro da toolbar não tira nós do grafo: `idsEmDestaque` esmaece os demais.
  *
+ * Task 305: no modo `recorte` o mesmo desenho serve à aba Conexões da demanda aberta: a demanda em `focoId` fica fixa no centro, as conexões ganham
+ * seta (nas duas pontas quando mútua) e o texto do tipo ao longo da linha, não há zoom nem legenda e os nós ligados podem ter o × de remover.
+ *
  * Task 241: o nó leva a marca do status, o cartão usa a barra do Controle de horas e o clique abre a demanda (ou a pasta) na Árvore. O grafo sempre
  * mostra o projeto todo: não há foco por pasta.
  */
@@ -58,6 +62,13 @@ const OPACIDADE_FORA_DO_FILTRO = 0.25;
 })
 export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     @Input({ required: true }) grafo!: DemandaGrafoDto;
+    /** `projeto`: o grafo do projeto todo, com zoom e legenda. `recorte`: a demanda e suas conexões, sem zoom nem legenda (task 305). */
+    @Input() modo: 'projeto' | 'recorte' = 'projeto';
+    /** No modo recorte, a demanda aberta: fica no centro, com um anel, e dá o sentido do texto de cada linha. */
+    @Input() focoId: number | null = null;
+    /** No modo recorte, os nós ligados mostram o × de remover a conexão (quem pode editar a demanda). */
+    @Input() removivel = false;
+    @Output() noRemovido = new EventEmitter<number>();
     /** Status exibidos (a legenda mostra os demais como desligados). */
     @Input() statusVisiveis: TipoDemandaStatusEnum[] = TODOS_OS_STATUS;
     /** Demandas que atendem ao filtro da toolbar; `null` quando não há filtro (nenhuma esmaece). Mudar isto só troca a opacidade: o layout não recomeça. */
@@ -109,7 +120,8 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnChanges(mudancas: SimpleChanges): void {
-        if (!mudancas['grafo']?.firstChange && mudancas['grafo']?.currentValue) {
+        const recomecar = ['grafo', 'focoId', 'removivel'].some((chave) => mudancas[chave] && !mudancas[chave].firstChange && (chave !== 'grafo' || mudancas[chave].currentValue));
+        if (recomecar) {
             this.destruirGrafo();
             this.inicializarGrafo();
         } else if (mudancas['idsEmDestaque'] && !mudancas['idsEmDestaque'].firstChange) {
@@ -139,12 +151,12 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
         const largura = this.elementRef.nativeElement.clientWidth;
         const altura = this.elementRef.nativeElement.clientHeight;
         if (!largura || !altura) return; // oculto ou sem layout: não há o que enquadrar
-        const margem = 90;
+        const margem = this.modo === 'recorte' ? 60 : 90;
         const minX = Math.min(...dentro.map((no) => no.x!)) - margem;
         const maxX = Math.max(...dentro.map((no) => no.x!)) + margem;
         const minY = Math.min(...dentro.map((no) => no.y!)) - margem;
         const maxY = Math.max(...dentro.map((no) => no.y!)) + margem;
-        const escala = Math.min(1.2, Math.max(0.1, Math.min(largura / (maxX - minX), altura / (maxY - minY))));
+        const escala = Math.min(this.modo === 'recorte' ? 1.4 : 1.2, Math.max(0.1, Math.min(largura / (maxX - minX), altura / (maxY - minY))));
         const transformacao = d3.zoomIdentity
             .translate(largura / 2, altura / 2)
             .scale(escala)
@@ -226,6 +238,22 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             .style('fill', 'var(--p-primary-500)')
             .attr('fill-opacity', '0.7');
 
+        if (this.modo === 'recorte') {
+            for (const [id, cor] of [['seta-conexao', 'var(--app-surface-500)'], ['seta-conexao-cancelada', 'var(--p-orange-500)']]) {
+                defs.append('marker')
+                    .attr('id', id)
+                    .attr('viewBox', '0 -4 8 8')
+                    .attr('refX', 0)
+                    .attr('refY', 0)
+                    .attr('markerWidth', 6)
+                    .attr('markerHeight', 6)
+                    .attr('orient', 'auto-start-reverse')
+                    .append('path')
+                    .attr('d', 'M0,-4L8,0L0,4Z')
+                    .style('fill', cor);
+            }
+        }
+
         const grupoZoom = svg.append('g');
         this.comportamentoZoom = d3.zoom<SVGSVGElement, unknown>()
             .scaleExtent([0.1, 4])
@@ -235,6 +263,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
                 this.cartao.set(null);
             });
         svg.call(this.comportamentoZoom);
+        if (this.modo === 'recorte') svg.on('.zoom', null); // sem zoom nem arrasto da vista: o recorte só se enquadra
 
         const nosFiltrados = this.grafo.nos;
         const idsNosFiltrados = new Set(nosFiltrados.map((no) => no.id));
@@ -243,7 +272,14 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             (aresta) => idsNosFiltrados.has(aresta.origemId) && idsNosFiltrados.has(aresta.destinoId),
         );
 
-        const nos = nosFiltrados.map((no) => ({ ...no } as DemandaGrafoNoDto & d3.SimulationNodeDatum));
+        const nos = nosFiltrados.map((no) => {
+            const simulado = { ...no } as DemandaGrafoNoDto & d3.SimulationNodeDatum;
+            if (this.modo === 'recorte' && no.id === this.focoId) {
+                simulado.fx = largura / 2;
+                simulado.fy = altura / 2;
+            }
+            return simulado;
+        });
         this.nosSimulados = nos;
         const arestas = arestasFiltraras.map((aresta) => ({
             ...aresta,
@@ -256,9 +292,9 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
                 'aresta',
                 d3.forceLink<NoSimulado, ArestaSimulada>(arestas)
                     .id((no) => no.id)
-                    .distance(160),
+                    .distance(this.modo === 'recorte' ? 200 : 160),
             )
-            .force('repulsao', d3.forceManyBody().strength(-700))
+            .force('repulsao', d3.forceManyBody().strength(this.modo === 'recorte' ? -250 : -700))
             .force('centro', d3.forceCenter(largura / 2, altura / 2))
             .force('colisao', d3.forceCollide(60));
 
@@ -268,14 +304,38 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             .enter()
             .append('line')
             .attr('class', 'demanda-grafo__aresta')
-            .style('stroke', (aresta: ArestaSimulada) => aresta.tipo === 'hierarquia' ? 'var(--p-primary-500)' : 'var(--app-surface-400)')
+            .style('stroke', (aresta: ArestaSimulada) => aresta.tipo === 'hierarquia' ? 'var(--p-primary-500)' : this.arestaLigadaACancelada(aresta) ? 'var(--p-orange-500)' : 'var(--app-surface-400)')
             .attr('stroke-width', (aresta: ArestaSimulada) => aresta.tipo === 'hierarquia' ? 2 : 1.5)
             .attr('stroke-opacity', (aresta: ArestaSimulada) => aresta.tipo === 'hierarquia' ? 0.6 : 0.5)
             .attr('stroke-dasharray', (aresta: ArestaSimulada) => aresta.tipo === 'conexao' ? '5,3' : null)
             .attr('fill', 'none')
             .attr('marker-end', (aresta: ArestaSimulada) =>
-                aresta.tipo === 'hierarquia' ? 'url(#seta-hierarquia)' : null,
+                aresta.tipo === 'hierarquia' ? 'url(#seta-hierarquia)' : this.modo === 'recorte' ? `url(#${this.marcadorDaConexao(aresta)})` : null,
+            )
+            .attr('marker-start', (aresta: ArestaSimulada) =>
+                this.modo === 'recorte' && aresta.bidirecional ? `url(#${this.marcadorDaConexao(aresta)})` : null,
             );
+
+        const rotulosAresta = this.modo === 'recorte'
+            ? grupoZoom.append('g')
+                .selectAll('text')
+                .data(arestas)
+                .enter()
+                .append('text')
+                .attr('class', 'demanda-grafo__rotulo-aresta')
+                .attr('text-anchor', 'middle')
+                .attr('dy', -6)
+                .attr('font-size', '11px')
+                .attr('font-weight', 600)
+                .style('fill', (aresta: ArestaSimulada) => this.arestaLigadaACancelada(aresta) ? 'var(--p-orange-600)' : 'var(--app-surface-600)')
+                .style('stroke', 'var(--app-surface-50)')
+                .attr('stroke-width', 4)
+                .attr('stroke-linejoin', 'round')
+                .attr('paint-order', 'stroke fill')
+                .style('pointer-events', 'none')
+                .style('user-select', 'none')
+                .text((aresta: ArestaSimulada) => textoDaConexao(aresta, this.focoId ?? -1))
+            : null;
 
         const gruposNo = this.gruposNo = grupoZoom.append('g')
             .selectAll('g')
@@ -312,6 +372,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             .attr('stroke-dasharray', (no: DemandaGrafoNoDto) => no.estrutural ? '6,3' : null);
 
         this.desenharMarca(gruposNo);
+        if (this.modo === 'recorte') this.desenharAnelEBotaoRemover(gruposNo);
 
         gruposNo.append('text')
             .attr('dy', (no: DemandaGrafoNoDto) => this.calcularRaioNo(no) + 15)
@@ -334,7 +395,9 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             // Depois que a simulação roda, `source` e `target` deixam de ser ids e passam a ser os próprios nós.
             const origem = (aresta: ArestaSimulada) => aresta.source as NoSimulado;
             const destino = (aresta: ArestaSimulada) => aresta.target as NoSimulado;
-            const deslocamentoDaPonta = (aresta: ArestaSimulada) => this.calcularRaioNo(destino(aresta)) + (aresta.tipo === 'hierarquia' ? 11 : 5);
+            const comSeta = (aresta: ArestaSimulada) => aresta.tipo === 'hierarquia' || this.modo === 'recorte';
+            const deslocamentoDaPonta = (aresta: ArestaSimulada) => this.calcularRaioNo(destino(aresta)) + (comSeta(aresta) ? 11 : 5);
+            const deslocamentoDaOrigem = (aresta: ArestaSimulada) => (this.modo === 'recorte' && aresta.bidirecional ? this.calcularRaioNo(origem(aresta)) + 11 : 0);
             const vetor = (aresta: ArestaSimulada) => {
                 const dx = (destino(aresta).x ?? 0) - (origem(aresta).x ?? 0);
                 const dy = (destino(aresta).y ?? 0) - (origem(aresta).y ?? 0);
@@ -342,10 +405,19 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             };
 
             linhasAresta
-                .attr('x1', (aresta) => origem(aresta).x ?? 0)
-                .attr('y1', (aresta) => origem(aresta).y ?? 0)
+                .attr('x1', (aresta) => (origem(aresta).x ?? 0) + (vetor(aresta).dx / vetor(aresta).distancia) * deslocamentoDaOrigem(aresta))
+                .attr('y1', (aresta) => (origem(aresta).y ?? 0) + (vetor(aresta).dy / vetor(aresta).distancia) * deslocamentoDaOrigem(aresta))
                 .attr('x2', (aresta) => (destino(aresta).x ?? 0) - (vetor(aresta).dx / vetor(aresta).distancia) * deslocamentoDaPonta(aresta))
                 .attr('y2', (aresta) => (destino(aresta).y ?? 0) - (vetor(aresta).dy / vetor(aresta).distancia) * deslocamentoDaPonta(aresta));
+
+            // O texto fica no meio da linha, na direção dela, sempre de pé (nunca de cabeça para baixo).
+            rotulosAresta?.attr('transform', (aresta: ArestaSimulada) => {
+                const meioX = ((origem(aresta).x ?? 0) + (destino(aresta).x ?? 0)) / 2;
+                const meioY = ((origem(aresta).y ?? 0) + (destino(aresta).y ?? 0)) / 2;
+                let graus = (Math.atan2(vetor(aresta).dy, vetor(aresta).dx) * 180) / Math.PI;
+                if (graus > 90 || graus < -90) graus += 180;
+                return `translate(${meioX},${meioY}) rotate(${graus})`;
+            });
 
             gruposNo.attr('transform', (no) => `translate(${no.x},${no.y})`);
             // Com o layout já quase assentado, enquadra o projeto uma vez; depois a pessoa mexe no zoom à vontade.
@@ -362,6 +434,49 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             if (!this.zoomManual) this.ajustarAoGrafo();
         });
 
+    }
+
+    /** No recorte, a conexão que toca uma demanda cancelada é laranja (aviso). */
+    private arestaLigadaACancelada(aresta: DemandaGrafoArestaDto): boolean {
+        if (this.modo !== 'recorte' || aresta.tipo !== 'conexao') return false;
+        const cancelada = (id: number) => id !== this.focoId && this.grafo.nos.find((no) => no.id === id)?.status === TipoDemandaStatusEnum.CANCELADA;
+        return cancelada(aresta.origemId) || cancelada(aresta.destinoId);
+    }
+
+    private marcadorDaConexao(aresta: DemandaGrafoArestaDto): string {
+        return this.arestaLigadaACancelada(aresta) ? 'seta-conexao-cancelada' : 'seta-conexao';
+    }
+
+    /** No recorte: o anel em volta da demanda aberta e o × (remover a conexão) nos nós ligados. */
+    private desenharAnelEBotaoRemover(grupo: d3.Selection<SVGGElement, DemandaGrafoNoDto & d3.SimulationNodeDatum, SVGGElement, unknown>): void {
+        grupo.filter((no) => no.id === this.focoId).insert('circle', ':first-child')
+            .attr('class', 'demanda-grafo__anel-foco')
+            .attr('r', (no) => this.calcularRaioNo(no) + 7)
+            .style('fill', 'none')
+            .style('stroke', 'var(--p-primary-500)')
+            .attr('stroke-width', 2)
+            .attr('stroke-opacity', 0.55)
+            .style('pointer-events', 'none');
+
+        if (!this.removivel) return;
+        const botao = grupo.filter((no) => no.id !== this.focoId).append('g')
+            .attr('class', 'demanda-grafo__remover')
+            .attr('role', 'button')
+            .attr('aria-label', 'Remover conexão')
+            .attr('transform', (no) => `translate(${this.calcularRaioNo(no) * 0.85},${-this.calcularRaioNo(no) * 0.85})`)
+            .style('cursor', 'pointer')
+            .on('click', (evento: MouseEvent, no: DemandaGrafoNoDto) => {
+                evento.stopPropagation();
+                this.noRemovido.emit(no.id);
+            })
+            .on('mouseover', () => this.cartao.set(null));
+        botao.append('circle').attr('r', 8).style('fill', 'var(--app-surface-0)').style('stroke', 'var(--p-red-500)').attr('stroke-width', 1.5);
+        botao.append('path')
+            .attr('d', 'M-3,-3L3,3M3,-3L-3,3')
+            .style('stroke', 'var(--p-red-500)')
+            .attr('stroke-width', 1.8)
+            .attr('stroke-linecap', 'round')
+            .style('fill', 'none');
     }
 
     /** Posiciona o cartão ao lado do cursor, virando para o outro lado perto das bordas do canvas. */

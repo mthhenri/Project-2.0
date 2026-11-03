@@ -2,7 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, inject, input, OnInit, output, signal, untracked, viewChild } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { DemandaGrafoNoDto, TagResumoDto, TipoDemandaStatusEnum } from '@project20/shared';
+import { DemandaGrafoArestaDto, DemandaGrafoDto, DemandaGrafoNoDto, TagResumoDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { CampoDescricaoDemanda, DemandaMenuAcoes } from '../../utils/demanda-context-menu.factory';
 import { DemandaFiltro, filtroAtivo, nosCorrespondentes } from '../../utils/demanda-filtro.util';
@@ -56,6 +56,9 @@ export class DemandaArvoreTelaComponent implements OnInit {
     private readonly confirmationService = inject(ConfirmationService);
 
     readonly nos = input.required<DemandaGrafoNoDto[]>();
+    /** As arestas do grafo do projeto (hierarquia e conexão): a aba Conexões da demanda aberta monta o recorte delas (task 305). */
+    readonly arestas = input<DemandaGrafoArestaDto[]>([]);
+    readonly grafoDoProjeto = computed<DemandaGrafoDto>(() => ({ nos: this.nos(), arestas: this.arestas() }));
     readonly filtro = input.required<DemandaFiltro>();
     readonly projetoId = input.required<number>();
     /** A pasta escolhida (da página): um id, ou `null` para "Sem pasta". */
