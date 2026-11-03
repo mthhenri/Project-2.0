@@ -7,7 +7,7 @@ export const MARCA_AJUDA_NAO_PODE = '✕';
 /**
  * Texto de ajuda de cada tipo de usuário (task 306/308), em Markdown: uma frase do que o tipo é e as seções "Pode" e "Não pode", uma linha por
  * item começando por `✓` (pode) ou `✕` (não pode). É o **padrão**: o administrador edita o texto na tela e o que vale é o gravado em
- * `tipo_usuario.ajuda_markdown` (semeado pela migration 0078 com estes mesmos textos); "Restaurar padrão" volta a este. A regra de verdade é
+ * `tipo_usuario.descricao` (semeado pela migration 0078 com estes mesmos textos); "Restaurar padrão" volta a este. A regra de verdade é
  * `docs/SYSTEM.SPEC.md` §14 e as funções de `permissao-usuario.ts`: **mudar uma permissão obriga rever o texto daqui**.
  */
 export const DESCRICAO_TIPO_USUARIO: Readonly<Record<TipoUsuarioEnum, string>> = {

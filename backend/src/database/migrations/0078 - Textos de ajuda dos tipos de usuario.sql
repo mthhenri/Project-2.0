@@ -1,11 +1,12 @@
 -- UP
 
--- Texto de ajuda de cada tipo de usuário (task 308): Markdown com linhas "✓ ..." (pode) e "✕ ..." (não pode), que o administrador edita na
--- tela de Usuários. Os valores semeados são os mesmos de DESCRICAO_TIPO_USUARIO (shared), que a tela usa também como padrão do
+-- A descricao de tipo_usuario passa a guardar o texto de ajuda de cada tipo (task 308): Markdown com linhas "✓ ..." (pode) e "✕ ..." (não pode),
+-- que o administrador edita na tela de Usuários. Nenhum código lia a descricao (o nome de exibição vive em rotuloTipoUsuario, no frontend), então
+-- ela deixa de repetir o nome. Os valores semeados são os mesmos de DESCRICAO_TIPO_USUARIO (shared), que a tela usa também como padrão do
 -- "Restaurar padrão". Texto livre, sem estrutura em tabela: a tela só pinta as linhas com as marcas.
-ALTER TABLE tipo_usuario ADD COLUMN ajuda_markdown VARCHAR(2000);
+ALTER TABLE tipo_usuario ALTER COLUMN descricao TYPE VARCHAR(2000);
 
-UPDATE tipo_usuario SET ajuda_markdown = 'Quem executa o trabalho: registra as próprias atividades, o tempo e o ponto.
+UPDATE tipo_usuario SET descricao = 'Quem executa o trabalho: registra as próprias atividades, o tempo e o ponto.
 
 ### Pode
 ✓ Executar as próprias atividades e bater o próprio ponto
@@ -17,7 +18,7 @@ UPDATE tipo_usuario SET ajuda_markdown = 'Quem executa o trabalho: registra as p
 ✕ Ver ou editar execuções e ponto de outras pessoas
 ✕ Gerenciar usuários' WHERE tipo_usuario.codigo = 'DESENVOLVEDOR' AND tipo_usuario.is_deleted = false;
 
-UPDATE tipo_usuario SET ajuda_markdown = 'Um desenvolvedor que também conduz o trabalho: enxerga tudo e organiza a equipe.
+UPDATE tipo_usuario SET descricao = 'Um desenvolvedor que também conduz o trabalho: enxerga tudo e organiza a equipe.
 
 ### Pode
 ✓ Tudo o que o desenvolvedor faz
@@ -30,7 +31,7 @@ UPDATE tipo_usuario SET ajuda_markdown = 'Um desenvolvedor que também conduz o 
 ✕ Escrever a descrição para o cliente
 ✕ Gerenciar usuários, calendário e relatórios' WHERE tipo_usuario.codigo = 'AUXILIAR' AND tipo_usuario.is_deleted = false;
 
-UPDATE tipo_usuario SET ajuda_markdown = 'Quem conduz projetos e equipe, com acesso total ao trabalho.
+UPDATE tipo_usuario SET descricao = 'Quem conduz projetos e equipe, com acesso total ao trabalho.
 
 ### Pode
 ✓ Tudo o que o auxiliar faz
@@ -42,7 +43,7 @@ UPDATE tipo_usuario SET ajuda_markdown = 'Quem conduz projetos e equipe, com ace
 ✕ Criar, promover ou excluir administradores
 ✕ Participar de demandas como membro (o acesso é total)' WHERE tipo_usuario.codigo = 'GESTOR' AND tipo_usuario.is_deleted = false;
 
-UPDATE tipo_usuario SET ajuda_markdown = 'Um gestor com mais poder: cuida de quem administra o sistema.
+UPDATE tipo_usuario SET descricao = 'Um gestor com mais poder: cuida de quem administra o sistema.
 
 ### Pode
 ✓ Tudo o que o gestor faz
@@ -52,8 +53,12 @@ UPDATE tipo_usuario SET ajuda_markdown = 'Um gestor com mais poder: cuida de que
 ### Não pode
 ✕ Deixar o sistema sem administrador: o último não pode ser rebaixado, inativado nem excluído' WHERE tipo_usuario.codigo = 'ADMINISTRADOR' AND tipo_usuario.is_deleted = false;
 
-ALTER TABLE tipo_usuario ALTER COLUMN ajuda_markdown SET NOT NULL;
-
 -- DOWN
 
-ALTER TABLE tipo_usuario DROP COLUMN ajuda_markdown;
+-- Os nomes curtos voltam antes de a coluna encolher (o texto de ajuda não cabe em 100 caracteres).
+UPDATE tipo_usuario SET descricao = 'Desenvolvedor' WHERE tipo_usuario.codigo = 'DESENVOLVEDOR' AND tipo_usuario.is_deleted = false;
+UPDATE tipo_usuario SET descricao = 'Gestor' WHERE tipo_usuario.codigo = 'GESTOR' AND tipo_usuario.is_deleted = false;
+UPDATE tipo_usuario SET descricao = 'Administrador' WHERE tipo_usuario.codigo = 'ADMINISTRADOR' AND tipo_usuario.is_deleted = false;
+UPDATE tipo_usuario SET descricao = 'Auxiliar' WHERE tipo_usuario.codigo = 'AUXILIAR' AND tipo_usuario.is_deleted = false;
+
+ALTER TABLE tipo_usuario ALTER COLUMN descricao TYPE VARCHAR(100);

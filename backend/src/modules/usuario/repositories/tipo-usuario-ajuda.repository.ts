@@ -4,7 +4,7 @@ import { TipoUsuarioAjudaInternoAlterarDto, TipoUsuarioAjudaResumoDto } from '@p
 import { BaseRepository } from '../../../core/base/base.repository';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 
-/** O texto de ajuda de cada tipo de usuário (task 308): Markdown na coluna `tipo_usuario.ajuda_markdown`. */
+/** O texto de ajuda de cada tipo de usuário (task 308): Markdown na coluna `tipo_usuario.descricao`. */
 @Injectable()
 export class TipoUsuarioAjudaRepository extends BaseRepository<TipoUsuarioAjudaResumoDto> {
     constructor(@Inject(DATABASE_CONNECTION) conexao: Knex) {
@@ -16,7 +16,7 @@ export class TipoUsuarioAjudaRepository extends BaseRepository<TipoUsuarioAjudaR
         return this.executarConsulta<TipoUsuarioAjudaResumoDto>(`
             SELECT
                 tipo_usuario.codigo AS tipo,
-                tipo_usuario.ajuda_markdown AS texto
+                tipo_usuario.descricao AS texto
             FROM
                 tipo_usuario
             WHERE
@@ -32,7 +32,7 @@ export class TipoUsuarioAjudaRepository extends BaseRepository<TipoUsuarioAjudaR
             `
                 UPDATE tipo_usuario
                 SET
-                    ajuda_markdown = :texto,
+                    descricao = :texto,
                     updated_date = NOW()
                 WHERE
                     tipo_usuario.codigo = :tipo
