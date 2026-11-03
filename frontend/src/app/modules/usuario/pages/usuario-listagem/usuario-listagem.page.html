@@ -10,6 +10,15 @@
             }
         </div>
         <div class="usuario-listagem__acoes-cabecalho">
+            @if (sessao.eAdministrador()) {
+                <p-button
+                    label="Alterar textos dos tipos"
+                    icon="pi pi-pencil"
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="tiposDialog.abrir()"
+                />
+            }
             <p-button
                 label="Tipos de usuário"
                 icon="pi pi-question-circle"
@@ -287,3 +296,4 @@
     (aoAlterar)="buscarUsuarios()"
 />
 <app-usuario-senha-dialog #senhaDialog />
+<app-usuario-tipos-dialog #tiposDialog />

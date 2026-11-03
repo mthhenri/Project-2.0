@@ -20,6 +20,8 @@ import { podeAbrirAnotacoes } from '../../utils/anotacoes-acesso.util';
 import { AnotacoesAlteradasEvento, UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 import { UsuarioFormularioDialogComponent } from '../../components/usuario-formulario-dialog/usuario-formulario-dialog.component';
 import { UsuarioSenhaDialogComponent } from '../../components/usuario-senha-dialog/usuario-senha-dialog.component';
+import { UsuarioTiposDialogComponent } from '../../components/usuario-tipos-dialog/usuario-tipos-dialog.component';
+import { TipoUsuarioAjudaService } from '../../services/tipo-usuario-ajuda.service';
 import { UsuarioTipoDescricaoComponent } from '../../components/usuario-tipo-descricao/usuario-tipo-descricao.component';
 import { UsuarioCartaoComponent } from '../../components/usuario-cartao/usuario-cartao.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
@@ -51,6 +53,7 @@ interface FiltrosPersistidos {
         PopoverModule,
         TooltipModule,
         UsuarioTipoDescricaoComponent,
+        UsuarioTiposDialogComponent,
         UsuarioCartaoComponent,
         UsuarioAnotacoesDialogComponent,
         UsuarioFormularioDialogComponent,
@@ -61,6 +64,7 @@ interface FiltrosPersistidos {
 })
 export class UsuarioListagemPage implements OnInit {
     private readonly usuarioService = inject(UsuarioService);
+    private readonly tiposAjuda = inject(TipoUsuarioAjudaService);
     readonly sessao = inject(UsuarioSessaoService);
     /** Os rótulos e as larguras da tabela real (a coluna Anotações só existe para o gestor), para o esqueleto não parecer outra tela. */
     readonly esqueleto = computed(() =>
@@ -112,6 +116,7 @@ export class UsuarioListagemPage implements OnInit {
     ];
 
     ngOnInit(): void {
+        this.tiposAjuda.carregar();
         const filtrosSalvos = this.lerFiltrosPersistidos();
         this.tipoFiltro.set(filtrosSalvos.tipo);
         this.ativoFiltro.set(filtrosSalvos.ativo);

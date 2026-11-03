@@ -1,0 +1,89 @@
+<section class="usuario-tipos-textos">
+    <p class="usuario-tipos-textos__explicacao">
+        O texto explica cada tipo na ajuda "Tipos de usuário" e no formulário. É Markdown: use
+        <code>###</code> para os títulos; linhas que começam com {{ marcaPode }} (pode) ou
+        {{ marcaNaoPode }} (não pode) ganham o ícone colorido. É só ajuda: o que cada tipo realmente
+        pode fazer não muda por aqui.
+    </p>
+
+    <ul class="usuario-tipos-textos__lista">
+        @for (linha of linhas; track linha.tipo) {
+            <li class="usuario-tipos-textos__linha">
+                <p-tag
+                    class="usuario-tipos-textos__tag"
+                    [value]="linha.rotulo"
+                    [severity]="linha.severidade"
+                />
+                <div class="usuario-tipos-textos__campo">
+                    <div class="usuario-tipos-textos__barra">
+                        <p-button
+                            [label]="marcaPode + ' Pode'"
+                            severity="secondary"
+                            [text]="true"
+                            size="small"
+                            [ariaLabel]="'Inserir marca de pode no texto de ' + linha.rotulo"
+                            (onClick)="inserirMarca(linha, marcaPode, campo)"
+                        />
+                        <p-button
+                            [label]="marcaNaoPode + ' Não pode'"
+                            severity="secondary"
+                            [text]="true"
+                            size="small"
+                            [ariaLabel]="'Inserir marca de não pode no texto de ' + linha.rotulo"
+                            (onClick)="inserirMarca(linha, marcaNaoPode, campo)"
+                        />
+                        <span class="usuario-tipos-textos__contador"
+                            >{{ linha.controle.value.length }}/{{ limite }}</span
+                        >
+                    </div>
+                    <textarea
+                        #campo
+                        pTextarea
+                        class="usuario-tipos-textos__texto"
+                        rows="12"
+                        spellcheck="true"
+                        [formControl]="linha.controle"
+                        [class.ng-invalid]="linha.controle.invalid"
+                        [attr.aria-label]="'Texto de ajuda do tipo ' + linha.rotulo"
+                    ></textarea>
+                    @if (linha.controle.invalid) {
+                        <small class="usuario-tipos-textos__erro" role="alert">
+                            Escreva um texto de até {{ limite }} caracteres.
+                        </small>
+                    }
+                </div>
+                <span class="usuario-tipos-textos__acoes">
+                    @if (mudou(linha)) {
+                        <p-button
+                            label="Descartar"
+                            severity="secondary"
+                            [text]="true"
+                            size="small"
+                            [disabled]="algoSalvando()"
+                            (onClick)="descartar(linha)"
+                        />
+                    }
+                    @if (!ehPadrao(linha)) {
+                        <p-button
+                            label="Restaurar padrão"
+                            severity="secondary"
+                            [text]="true"
+                            size="small"
+                            [disabled]="algoSalvando()"
+                            (onClick)="restaurarPadrao(linha)"
+                        />
+                    }
+                    <p-button
+                        label="Salvar texto"
+                        icon="pi pi-check"
+                        size="small"
+                        [outlined]="true"
+                        [loading]="salvando() === linha.tipo"
+                        [disabled]="!mudou(linha) || linha.controle.invalid || algoSalvando()"
+                        (onClick)="salvar(linha)"
+                    />
+                </span>
+            </li>
+        }
+    </ul>
+</section>

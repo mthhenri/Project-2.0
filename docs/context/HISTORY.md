@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-11-03 — Task 308: o administrador edita os textos dos tipos de usuário
+
+Pedido do autor, ao revisar a 306: um lugar para o administrador editar os textos que explicam cada tipo, **igual ao "Alterar prioridades"** das atividades, mantendo os ícones ✓ e ✕ coloridos. A primeira versão (frase e duas listas estruturadas, com tabela `ajuda_tipo_usuario_item`) foi **trocada no meio da task** por proposta do autor: texto livre em Markdown, com as linhas `✓` e `✕` pintadas só na tela. Resultado, mais simples: uma coluna só, sem tabela nem estrutura.
+
+- **Banco:** migration `0078` (`tipo_usuario.ajuda_markdown`, `VARCHAR(2000) NOT NULL`, semeada com o padrão do `shared`; rollback testado: aplicar, reverter, aplicar). Um tropeço no caminho: o teste guardião de tabelas `tipo_*` tratou a tabela de itens (nome `tipo_usuario_ajuda_item`) como tabela de referência; sumiu com a troca de desenho.
+- **Backend:** `GET /tipo-usuario-ajuda` (`@GestorOnly`) e `PUT /tipo-usuario-ajuda/:tipo` (`@AdministradorOnly`, mais a checagem na service); texto aparado, vazio e acima de 2000 recusados. DTOs `TipoUsuarioAjuda*` no `shared`.
+- **Frontend:** `TipoUsuarioAjudaService` (cache em sinal, padrão do `shared` até a API responder), `dividirTextoDaAjuda` e `inserirMarcaNaLinha` (puras), `usuario-tipo-descricao` (agora lê do serviço), `usuario-tipos-dialog` e `usuario-tipos-textos` (uma linha por tipo: campo, botões ✓ Pode e ✕ Não pode, Descartar, Restaurar padrão, Salvar texto). Botão "Alterar textos dos tipos" só para o administrador.
+- **Testes:** shared 311; backend 1615 unitários e 370 de integração (incluem a semente igual ao padrão do `shared` e o soft delete); frontend suíte completa 200 arquivos e 2469 testes, build e `lint:tudo` limpos.
+- **Verificado ao vivo** (Postgres, backend e frontend reais; administrador e gestor; 5 formatos, claro e escuro): editar o Auxiliar com o botão ✕, salvar (toast), ver no popover, **recarregar a página** (veio do banco), ver no formulário, Restaurar padrão; gestor recebe 403 na API e não vê o botão. Relatório: `docs/specs/done/308-usuarios-editor-dos-textos-dos-tipos/verificacao.md`.
+
 ## 2026-11-03 — Pós-306: ordem do formulário de usuário, tooltip retirado, acento perdido nos nomes e spec 308
 
 - **Formulário de criar e editar usuário:** os campos passaram a **Nome | Cargo | Horas Diárias**, **Login | Senha** (só ao criar), **Tipo** e o bloco "o que é / pode / não pode" do tipo. A ordem do DOM é a do Tab. Conferido ao vivo em 1920, 1366 e 720 (claro e escuro): as posições dos campos batem com a ordem pedida. **Não verificado:** o formulário em modo edição (sem a Senha) só nos testes.

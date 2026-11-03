@@ -1,16 +1,19 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { TipoUsuarioEnum } from '../enums/tipo-usuario.enum';
-import { DESCRICAO_TIPO_USUARIO, TIPOS_USUARIO_NA_ORDEM_DA_AJUDA } from './tipo-usuario-descricao';
+import { DESCRICAO_TIPO_USUARIO, MARCA_AJUDA_NAO_PODE, MARCA_AJUDA_PODE, TIPOS_USUARIO_NA_ORDEM_DA_AJUDA } from './tipo-usuario-descricao';
 
-test('todo tipo de usuário tem frase, "pode" e "não pode" preenchidos', () => {
+test('todo tipo de usuário tem texto, com ao menos um item de "pode" e um de "não pode"', () => {
     for (const tipo of Object.values(TipoUsuarioEnum)) {
-        const descricao = DESCRICAO_TIPO_USUARIO[tipo];
-        assert.ok(descricao, `falta a descrição de ${tipo}`);
-        assert.ok(descricao.queE.trim().length > 0, `${tipo} sem "o que é"`);
-        assert.ok(descricao.pode.length > 0, `${tipo} sem "pode"`);
-        assert.ok(descricao.naoPode.length > 0, `${tipo} sem "não pode"`);
+        const texto = DESCRICAO_TIPO_USUARIO[tipo];
+        assert.ok(texto?.trim().length > 0, `falta o texto de ${tipo}`);
+        assert.ok(texto.split('\n').some((linha) => linha.startsWith(`${MARCA_AJUDA_PODE} `)), `${tipo} sem item de "pode"`);
+        assert.ok(texto.split('\n').some((linha) => linha.startsWith(`${MARCA_AJUDA_NAO_PODE} `)), `${tipo} sem item de "não pode"`);
     }
+});
+
+test('o texto padrão cabe no limite do banco (2000 caracteres)', () => {
+    for (const tipo of Object.values(TipoUsuarioEnum)) assert.ok(DESCRICAO_TIPO_USUARIO[tipo].length <= 2000, `${tipo} passa do limite`);
 });
 
 test('a ordem da ajuda tem cada tipo uma vez só, sem esquecer nenhum', () => {

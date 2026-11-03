@@ -797,6 +797,10 @@ CREATE TRIGGER trg_tipo_usuario_updated_date
   FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
+`tipo_usuario` tem ainda a coluna `ajuda_markdown VARCHAR(2000) NOT NULL` (migration `0078`, task 308): o texto de ajuda do tipo, em Markdown, com linhas
+`✓ ...` (pode) e `✕ ...` (não pode); semeada com `DESCRICAO_TIPO_USUARIO` (`shared`) e editada só pelo administrador (`PUT /tipo-usuario-ajuda/:tipo`).
+Nenhuma outra tabela de referência tem essa coluna.
+
 Seeds (`codigo` → `descricao`):
 
 | Tabela | Seeds |

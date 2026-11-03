@@ -198,10 +198,10 @@ describe('UsuarioFormularioDialogComponent — ajuda do tipo (task 306)', () => 
         montado.componente.abrir();
         await montado.atualizar();
         const bloco = () => document.body.querySelector('app-usuario-tipo-descricao')?.textContent ?? '';
-        expect(bloco()).toContain(DESCRICAO_TIPO_USUARIO[TipoUsuarioEnum.DESENVOLVEDOR].queE);
+        expect(bloco()).toContain(DESCRICAO_TIPO_USUARIO[TipoUsuarioEnum.DESENVOLVEDOR].split('\n')[0]);
         montado.componente.formulario.controls.tipo.setValue(TipoUsuarioEnum.AUXILIAR);
         await montado.atualizar();
-        expect(bloco()).toContain(DESCRICAO_TIPO_USUARIO[TipoUsuarioEnum.AUXILIAR].queE);
-        expect(bloco()).not.toContain(DESCRICAO_TIPO_USUARIO[TipoUsuarioEnum.DESENVOLVEDOR].queE);
+        expect(bloco()).toContain(DESCRICAO_TIPO_USUARIO[TipoUsuarioEnum.AUXILIAR].split('\n')[0]);
+        expect(bloco()).not.toContain(DESCRICAO_TIPO_USUARIO[TipoUsuarioEnum.DESENVOLVEDOR].split('\n')[0]);
     });
 });

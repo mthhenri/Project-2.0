@@ -1,5 +1,6 @@
 export * from './autenticacao/index';
 export * from './usuario/index';
+export * from './tipo-usuario-ajuda/index';
 export * from './projeto/index';
 export * from './demanda/index';
 export * from './atividade/index';

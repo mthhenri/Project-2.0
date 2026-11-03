@@ -1,0 +1,86 @@
+.usuario-tipos-textos {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    &__explicacao {
+        margin: 0;
+        color: var(--p-text-muted-color);
+        font-size: 0.875rem;
+    }
+
+    &__lista {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
+        border: 1px solid var(--app-surface-200);
+        border-radius: 12px;
+        background: var(--app-surface-0);
+        list-style: none;
+        overflow: hidden;
+    }
+
+    &__linha {
+        display: grid;
+        grid-template-columns: 8rem minmax(0, 1fr);
+        align-items: start;
+        gap: 0.75rem 1rem;
+        padding: 0.75rem 1rem;
+
+        & + & {
+            border-top: 1px solid var(--app-surface-200);
+        }
+
+        @media (max-width: 720px) {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    &__tag {
+        justify-self: start;
+    }
+
+    &__campo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        min-width: 0;
+    }
+
+    &__barra {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    &__contador {
+        margin-left: auto;
+        color: var(--p-text-muted-color);
+        font-size: 0.75rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__texto {
+        width: 100%;
+        font-family: var(--font-mono, monospace);
+        font-size: 0.8125rem;
+        resize: vertical;
+    }
+
+    &__erro {
+        color: var(--p-red-500);
+    }
+
+    &__acoes {
+        grid-column: 2;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.25rem;
+
+        @media (max-width: 720px) {
+            grid-column: 1;
+        }
+    }
+}

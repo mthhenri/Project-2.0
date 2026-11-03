@@ -253,4 +253,24 @@ describe('UsuarioListagemPage — ajuda dos tipos (task 306)', () => {
         expect(ajuda!.querySelectorAll('app-usuario-tipo-descricao')).toHaveLength(4);
         for (const rotulo of ['Desenvolvedor', 'Auxiliar', 'Gestor', 'Administrador']) expect(ajuda!.textContent).toContain(rotulo);
     });
+
+    it('o botão "Alterar textos dos tipos" é só do administrador', async () => {
+        const administrador = await montarListagem(TipoUsuarioEnum.ADMINISTRADOR);
+        await carregar(administrador, [resumo(2)]);
+        expect(texto(administrador)).toContain('Alterar textos dos tipos');
+    });
+
+    it('o gestor não vê "Alterar textos dos tipos" e ainda vê "Tipos de usuário"', async () => {
+        const gestor = await montarListagem(TipoUsuarioEnum.GESTOR);
+        await carregar(gestor, [resumo(2)]);
+        expect(texto(gestor)).not.toContain('Alterar textos dos tipos');
+        expect(texto(gestor)).toContain('Tipos de usuário');
+    });
+
+    it('ao abrir a tela pede os textos dos tipos à API', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+        await carregar(montado, [resumo(2)]);
+        expect(montado.http.match((requisicao) => requisicao.method === 'GET' && requisicao.url.endsWith('/tipo-usuario-ajuda'))).toHaveLength(1);
+    });
 });
+
