@@ -57,7 +57,9 @@
                 <i class="pi pi-plus"></i>
             </button>
         }
-    } @else {
+    }
+
+    @if (sessao.podeSerMembroDeDemanda()) {
         @if (souMembro()) {
             <button type="button" class="demanda-membros-cabecalho__participacao" (click)="sair()">
                 <i class="pi pi-sign-out"></i> Sair

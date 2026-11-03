@@ -36,6 +36,6 @@ export class DemandaExecutadaResumoDto {
     @ApiProperty({ example: true, description: 'O usuário tem uma execução em andamento nesta demanda' })
     executando: boolean;
 
-    @ApiProperty({ description: 'Início da execução mais recente do usuário na demanda' })
-    ultimaExecucaoData: Date;
+    @ApiProperty({ nullable: true, description: 'Início da execução mais recente do usuário na demanda; nula para a demanda em que ele é só membro' })
+    ultimaExecucaoData: Date | null;
 }

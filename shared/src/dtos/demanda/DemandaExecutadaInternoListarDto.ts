@@ -6,5 +6,7 @@ export class DemandaExecutadaInternoListarDto {
     usuarioId: number;
     /** true → desenvolvedor: só as demandas em que ele tem linha em `demanda_usuario`. false → gestor e administrador: sem esse filtro. */
     apenasMembro: boolean;
+    /** true → desenvolvedor e auxiliar: entram também as demandas de que é membro sem execução sua (task 307). */
+    incluirMembro: boolean;
     limite: number;
 }

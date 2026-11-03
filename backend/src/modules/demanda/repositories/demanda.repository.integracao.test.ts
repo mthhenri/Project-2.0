@@ -4,7 +4,7 @@ import { testarComBanco } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import {
     criarAtividade, criarDemanda, criarDemandaConexao, criarDemandaTag, criarDemandaUsuario, criarDesenvolvedor, criarExecucao,
-    criarGestor, criarProjeto, criarTag, excluirLinha,
+    criarAuxiliar, criarGestor, criarProjeto, criarTag, excluirLinha,
 } from '../../../testes/fabricas';
 import { DemandaRepository } from './demanda.repository';
 
@@ -310,7 +310,7 @@ testarComBanco('listarExecutadas: só as demandas das atividades do usuário, da
     await criarExecucao(conexao, { atividadeId: atividadeRecente.id, inicioData: '2026-01-12T09:00:00-03:00', fimData: '2026-01-12T11:00:00-03:00' });
     await criarExecucao(conexao, { atividadeId: atividadeDoColega.id, inicioData: '2026-01-13T09:00:00-03:00', fimData: '2026-01-13T10:00:00-03:00' });
 
-    const executadas = await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 });
+    const executadas = await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, incluirMembro: false, limite: 20 });
     assert.deepEqual(executadas.map((item) => item.demandaId), [recente.id, antiga.id]);
     assert.equal(executadas[1].minutosExecutados, 90, 'soma as execuções das duas atividades');
     assert.equal(executadas[1].totalAtividades, 2);
@@ -318,7 +318,7 @@ testarComBanco('listarExecutadas: só as demandas das atividades do usuário, da
     assert.equal(executadas[1].executando, false);
     assert.equal(executadas[0].nomeProjeto, projeto.nome);
 
-    assert.deepEqual((await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 1 })).map((item) => item.demandaId), [recente.id]);
+    assert.deepEqual((await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, incluirMembro: false, limite: 1 })).map((item) => item.demandaId), [recente.id]);
 });
 
 testarComBanco('listarExecutadas: demandas CONCLUIDA e CANCELADA não entram', async (conexao) => {
@@ -334,7 +334,7 @@ testarComBanco('listarExecutadas: demandas CONCLUIDA e CANCELADA não entram', a
         await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-01-10T09:00:00-03:00', fimData: '2026-01-10T10:00:00-03:00' });
     }
 
-    const executadas = await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 });
+    const executadas = await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, incluirMembro: false, limite: 20 });
     assert.deepEqual(executadas.map((item) => item.demandaId), [emAberto.id]);
 });
 
@@ -348,15 +348,15 @@ testarComBanco('listarExecutadas: caminho da árvore, atividades desenvolvidas, 
     await criarExecucao(conexao, { atividadeId: desenvolvida.id, inicioData: '2026-01-10T09:00:00-03:00', fimData: '2026-01-10T10:00:00-03:00' });
     await criarExecucao(conexao, { atividadeId: rodando.id, inicioData: '2026-01-11T09:00:00-03:00', fimData: null });
 
-    const [item] = await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 });
+    const [item] = await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, incluirMembro: false, limite: 20 });
     assert.equal(item.caminho, 'Raiz › A › A1');
     assert.equal(item.projetoId, projeto.id);
     assert.deepEqual([item.totalAtividades, item.atividadesDesenvolvidas, item.executando], [2, 1, true]);
 
     await excluirLinha(conexao, 'atividade', rodando.id);
-    assert.equal((await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 }))[0].executando, false, 'atividade excluída não conta');
+    assert.equal((await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, incluirMembro: false, limite: 20 }))[0].executando, false, 'atividade excluída não conta');
     await excluirLinha(conexao, 'demanda', a1.id);
-    assert.deepEqual(await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 }), []);
+    assert.deepEqual(await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, incluirMembro: false, limite: 20 }), []);
 });
 
 testarComBanco('listarExecutadas: o desenvolvedor sem linha em demanda_usuario não vê a demanda; o gestor vê o que ele mesmo executou', async (conexao) => {
@@ -370,8 +370,51 @@ testarComBanco('listarExecutadas: o desenvolvedor sem linha em demanda_usuario n
     await criarExecucao(conexao, { atividadeId: atividadeDoDesenvolvedor.id, inicioData: '2026-01-10T09:00:00-03:00', fimData: '2026-01-10T10:00:00-03:00' });
     await criarExecucao(conexao, { atividadeId: atividadeDoGestor.id, inicioData: '2026-01-11T09:00:00-03:00', fimData: '2026-01-11T10:00:00-03:00' });
 
-    assert.deepEqual(await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 }), []);
-    assert.deepEqual((await repositorio.listarExecutadas({ usuarioId: gestor.id, apenasMembro: false, limite: 20 })).map((item) => item.demandaId), [demanda.id]);
+    assert.deepEqual(await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, incluirMembro: false, limite: 20 }), []);
+    assert.deepEqual((await repositorio.listarExecutadas({ usuarioId: gestor.id, apenasMembro: false, incluirMembro: false, limite: 20 })).map((item) => item.demandaId), [demanda.id]);
+});
+
+testarComBanco('listarExecutadas (task 307): o membro sem execução entra depois das executadas, por id decrescente, sem repetir; o auxiliar vê executada sem ser membro; o desenvolvedor não; o gestor não lista planejadas', async (conexao) => {
+    const repositorio = criarRepositorio(DemandaRepository, conexao);
+    const auxiliar = await criarAuxiliar(conexao);
+    const desenvolvedor = await criarDesenvolvedor(conexao);
+    const gestor = await criarGestor(conexao);
+    const projeto = await criarProjeto(conexao);
+    const executadaEMembro = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Executada e membro' });
+    const executadaSemSerMembro = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Executada sem ser membro' });
+    const planejadaMembroAntiga = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Planejada antiga', statusCodigo: 'PLANEJADA' });
+    const planejadaMembroNova = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Planejada nova', statusCodigo: 'PLANEJADA' });
+    const concluidaMembro = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Concluída', statusCodigo: 'CONCLUIDA' });
+    const naoMembro = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Alheia', statusCodigo: 'PLANEJADA' });
+    for (const demanda of [executadaEMembro, planejadaMembroAntiga, planejadaMembroNova, concluidaMembro]) {
+        await criarDemandaUsuario(conexao, { demandaId: demanda.id, usuarioId: auxiliar.id });
+        await criarDemandaUsuario(conexao, { demandaId: demanda.id, usuarioId: desenvolvedor.id });
+    }
+    for (const demanda of [executadaEMembro, executadaSemSerMembro]) {
+        const atividade = await criarAtividade(conexao, { demandaId: demanda.id, usuarioId: auxiliar.id });
+        await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-01-10T09:00:00-03:00', fimData: '2026-01-10T10:00:00-03:00' });
+    }
+    const atividadeDoDesenvolvedor = await criarAtividade(conexao, { demandaId: executadaEMembro.id, usuarioId: desenvolvedor.id });
+    await criarExecucao(conexao, { atividadeId: atividadeDoDesenvolvedor.id, inicioData: '2026-01-11T09:00:00-03:00', fimData: '2026-01-11T10:00:00-03:00' });
+    const atividadeDoGestor = await criarAtividade(conexao, { demandaId: executadaSemSerMembro.id, usuarioId: gestor.id });
+    await criarExecucao(conexao, { atividadeId: atividadeDoGestor.id, inicioData: '2026-01-12T09:00:00-03:00', fimData: '2026-01-12T10:00:00-03:00' });
+    const ids = (itens: { demandaId: number }[]) => itens.map((item) => item.demandaId);
+
+    const doAuxiliar = await repositorio.listarExecutadas({ usuarioId: auxiliar.id, apenasMembro: false, incluirMembro: true, limite: 20 });
+    assert.deepEqual(ids(doAuxiliar), [executadaSemSerMembro.id, executadaEMembro.id, planejadaMembroNova.id, planejadaMembroAntiga.id], 'empate de data desempata por id decrescente');
+    assert.equal(new Set(ids(doAuxiliar)).size, ids(doAuxiliar).length, 'sem repetir');
+    assert.ok(!ids(doAuxiliar).includes(naoMembro.id) && !ids(doAuxiliar).includes(concluidaMembro.id));
+    const semExecucao = doAuxiliar.filter((item) => item.ultimaExecucaoData === null);
+    assert.deepEqual(ids(semExecucao), [planejadaMembroNova.id, planejadaMembroAntiga.id], 'por id decrescente');
+    assert.ok(doAuxiliar.slice(2).every((item) => item.ultimaExecucaoData === null), 'as sem execução vêm por último');
+    const [planejada] = semExecucao;
+    assert.deepEqual([planejada.totalAtividades, planejada.minutosExecutados, planejada.executando], [0, 0, false]);
+
+    const doDesenvolvedor = await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, incluirMembro: true, limite: 20 });
+    assert.deepEqual(ids(doDesenvolvedor), [executadaEMembro.id, planejadaMembroNova.id, planejadaMembroAntiga.id]);
+
+    const doGestor = await repositorio.listarExecutadas({ usuarioId: gestor.id, apenasMembro: false, incluirMembro: false, limite: 20 });
+    assert.deepEqual(ids(doGestor), [executadaSemSerMembro.id]);
 });
 
 // ---------------------------------------------------------------------------

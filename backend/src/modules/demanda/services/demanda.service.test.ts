@@ -46,18 +46,20 @@ test('restaurar: com projeto e pai ativos reativa somente a demanda', async () =
     assert.equal(chamadas, 1);
 });
 
-test('listarExecutadas: sempre as do token; o desenvolvedor só as de que é membro, o gestor sem esse filtro; limite padrão quando o pedido não diz', async () => {
+test('listarExecutadas: sempre as do token; o desenvolvedor só as de que é membro, o auxiliar também as de que é membro, o gestor só as executadas; limite padrão quando o pedido não diz', async () => {
     const chamadas: unknown[] = [];
     const servico = criarServico({ listarExecutadas: async (dto: unknown) => { chamadas.push(dto); return []; } });
 
     await servico.listarExecutadas({}, { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never);
+    await servico.listarExecutadas({}, { sub: 3, login: 'x', tipo: TipoUsuarioEnum.AUXILIAR } as never);
     await servico.listarExecutadas({ limite: 5 }, { sub: 1, login: 'g', tipo: TipoUsuarioEnum.GESTOR } as never);
     await servico.listarExecutadas({}, { sub: 2, login: 'a', tipo: TipoUsuarioEnum.ADMINISTRADOR } as never);
 
     assert.deepEqual(chamadas, [
-        { usuarioId: 7, apenasMembro: true, limite: LIMITE_PADRAO_DEMANDAS_EXECUTADAS },
-        { usuarioId: 1, apenasMembro: false, limite: 5 },
-        { usuarioId: 2, apenasMembro: false, limite: LIMITE_PADRAO_DEMANDAS_EXECUTADAS },
+        { usuarioId: 7, apenasMembro: true, incluirMembro: true, limite: LIMITE_PADRAO_DEMANDAS_EXECUTADAS },
+        { usuarioId: 3, apenasMembro: false, incluirMembro: true, limite: LIMITE_PADRAO_DEMANDAS_EXECUTADAS },
+        { usuarioId: 1, apenasMembro: false, incluirMembro: false, limite: 5 },
+        { usuarioId: 2, apenasMembro: false, incluirMembro: false, limite: LIMITE_PADRAO_DEMANDAS_EXECUTADAS },
     ]);
 });
 

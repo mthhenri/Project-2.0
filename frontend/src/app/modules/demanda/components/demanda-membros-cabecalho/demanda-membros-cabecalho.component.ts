@@ -10,7 +10,7 @@ import { normalizarTexto } from '../../utils/demanda-filtro.util';
 
 /**
  * Membros da demanda no cabeçalho do detalhe (task 108): pilha de avatares, `+` com autocomplete inline
- * (gestor), remover no hover com "Desfazer" e "Participar"/"Sair" para o desenvolvedor. Substitui a aba
+ * (gestor), remover no hover com "Desfazer" e "Participar"/"Sair" para quem pode ser membro (desenvolvedor e auxiliar, task 307). Substitui a aba
  * "Membros" no detalhe (o dialog "Membros" do menu de contexto da árvore segue existindo).
  */
 @Component({

@@ -37,7 +37,7 @@ describe('MinhasDemandasComponent', () => {
 
     it('cheio: cada demanda mostra o projeto e o caminho, a barra de horas e quantas atividades estão desenvolvidas', async () => {
         const montado = await montar();
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1), demanda(2, { totalAtividades: 0, atividadesDesenvolvidas: 0 })]);
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1), demanda(2, { totalAtividades: 0, atividadesDesenvolvidas: 0, minutosExecutados: 0, ultimaExecucaoData: null })]);
         await montado.atualizar();
         const texto = montado.elemento.textContent ?? '';
         expect(texto).toContain('Demanda 1');
@@ -45,6 +45,16 @@ describe('MinhasDemandasComponent', () => {
         expect(texto).toContain('1 de 4 desenvolvidas');
         expect(texto).toContain('Sem atividades');
         expect(montado.elemento.querySelectorAll('app-demanda-barra-horas').length).toBe(2);
+    });
+
+    it('membro sem execução (task 307): a demanda sem atividades e sem última execução aparece, sem dividir por zero', async () => {
+        const montado = await montar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(5, { totalAtividades: 0, atividadesDesenvolvidas: 0, minutosExecutados: 0, horasEstimadas: 0, ultimaExecucaoData: null })]);
+        await montado.atualizar();
+        const texto = montado.elemento.textContent ?? '';
+        expect(texto).toContain('Demanda 5');
+        expect(texto).toContain('Sem atividades');
+        expect(texto).not.toContain('NaN');
     });
 
     it('erro: avisa e oferece tentar de novo', async () => {

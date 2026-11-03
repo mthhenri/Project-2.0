@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-11-03 — Task 307: "Minhas demandas" inclui as demandas em que o usuário é membro
+
+Relato do autor: auxiliar e membro de uma demanda planejada e sem atividades, ela não aparecia em "Minhas demandas" do chat. A lista partia só de `execucao`.
+
+- **Repository** (`listarExecutadas`): nova CTE `demanda_listada` = as executadas (com `INNER JOIN demanda_usuario` para o desenvolvedor, como antes) `UNION ALL` as de que o usuário é membro e não executou (`incluirMembro`). Ordem: `ultima_execucao_data DESC NULLS LAST, demanda.id DESC`; o caminho da árvore passou a olhar a lista nova. `DemandaExecutadaInternoListarDto` ganhou `incluirMembro`; `DemandaExecutadaResumoDto.ultimaExecucaoData` virou `Date | null`.
+- **Service:** `incluirMembro = podeSerMembroDeDemanda(tipo)` (desenvolvedor e auxiliar). Gestor e administrador seguem só com as executadas, sem listar todas as planejadas.
+- **Frontend:** `Participar`/`Sair` do cabeçalho de membros agora aparecem para `podeSerMembroDeDemanda` (novo sinal `UsuarioSessaoService.podeSerMembroDeDemanda`), junto da busca e do × que o auxiliar já tinha; gestor e administrador não veem nenhum dos dois. Texto de vazio da lateral cita "é membro".
+- **Fora do escopo, visto no caminho:** a ferramenta da IA `listar_minhas_demandas` usa `listarAtribuidas`, não este método; não mudou. No menu da lateral, "Sair da demanda" aparece para o auxiliar também em demanda que ele executou sem ser membro (a API recusaria); não tratado nesta task.
+- **Testes:** integração do repository +1 (membro sem execução entra depois das executadas, por id decrescente, sem repetir; auxiliar vê executada sem ser membro, desenvolvedor não; gestor não lista planejadas; concluída fora) — 371 de integração; service +1 caso (auxiliar); frontend +1 em `minhas-demandas` (item sem execução e sem atividades, sem NaN) e spec novo do cabeçalho de membros (5).
+
 ## 2026-11-03 — Task 308: o administrador edita os textos dos tipos de usuário
 
 Pedido do autor, ao revisar a 306: um lugar para o administrador editar os textos que explicam cada tipo, **igual ao "Alterar prioridades"** das atividades, mantendo os ícones ✓ e ✕ coloridos. A primeira versão (frase e duas listas estruturadas, com tabela `ajuda_tipo_usuario_item`) foi **trocada no meio da task** por proposta do autor: texto livre em Markdown, com as linhas `✓` e `✕` pintadas só na tela. Resultado, mais simples: uma coluna só, sem tabela nem estrutura.

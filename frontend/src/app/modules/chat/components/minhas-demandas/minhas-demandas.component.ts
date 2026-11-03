@@ -20,7 +20,7 @@ const QUANTIDADE_DE_DEMANDAS = 20;
 /**
  * "Minhas demandas" (task 245): a lateral à direita do chat, com as últimas demandas que o usuário executou — caminho, barra de horas e quantas
  * atividades estão desenvolvidas. Só entram as que estão em aberto (sem CONCLUIDA nem CANCELADA). Clicar numa abre a demanda ao lado da conversa (a página
- * do chat decide); o botão direito troca o status dela ou, para o desenvolvedor, sai da demanda (com "Desfazer"). Análogo: o seletor do chat para o
+ * do chat decide); o botão direito troca o status dela ou, para quem pode ser membro (desenvolvedor e auxiliar), sai da demanda (com "Desfazer"). Análogo: o seletor do chat para o
  * desenho dos itens e a Árvore de demandas (task 239) para a barra de horas e a bolinha de status.
  */
 @Component({

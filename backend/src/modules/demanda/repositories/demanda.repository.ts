@@ -458,7 +458,8 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     }
 
     /**
-   * As demandas das atividades do usuário em que há execução (a execução não tem coluna de usuário: o dono é o da atividade), da execução
+   * As demandas das atividades do usuário em que há execução (a execução não tem coluna de usuário: o dono é o da atividade) e, com
+   * `incluirMembro`, também as de que ele é membro sem execução (task 307; `ultimaExecucaoData` nula, depois das executadas, por id decrescente), da execução
    * mais recente para a mais antiga e sem repetir demanda; as CONCLUIDA e CANCELADA não entram. Traz o caminho (CTE recursiva dos projetos envolvidos), as horas estimadas e executadas
    * (a execução aberta conta até agora), quantas atividades a demanda tem e quantas estão DESENVOLVIDA, e se o usuário está executando nela agora.
    * Com `apenasMembro` (desenvolvedor) só entram as demandas em que ele tem linha em `demanda_usuario`.
@@ -469,6 +470,26 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                 INNER JOIN demanda_usuario ON demanda_usuario.demanda_id = demanda_executada.demanda_id
                 AND demanda_usuario.usuario_id = :usuarioId
                 AND demanda_usuario.is_deleted = false
+            `
+            : '';
+        const uniaoMembro = dto.incluirMembro
+            ? `
+                UNION ALL
+                SELECT
+                    demanda_usuario.demanda_id,
+                    NULL::timestamptz,
+                    false
+                FROM
+                    demanda_usuario
+                WHERE
+                    demanda_usuario.usuario_id = :usuarioId
+                    AND demanda_usuario.is_deleted = false
+                    AND demanda_usuario.demanda_id NOT IN (
+                        SELECT
+                            demanda_executada.demanda_id
+                        FROM
+                            demanda_executada
+                    )
             `
             : '';
         return this.executarConsulta<DemandaExecutadaResumoDto>(
@@ -489,6 +510,14 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                         GROUP BY
                             atividade.demanda_id
                     ),
+                    demanda_listada AS (
+                        SELECT
+                            demanda_executada.demanda_id,
+                            demanda_executada.ultima_execucao_data,
+                            demanda_executada.executando
+                        FROM
+                            demanda_executada ${juncaoMembro} ${uniaoMembro}
+                    ),
                     caminho_demanda AS (
                         SELECT
                             demanda_raiz.id,
@@ -503,7 +532,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                                     demanda_do_projeto.projeto_id
                                 FROM
                                     demanda AS demanda_do_projeto
-                                    INNER JOIN demanda_executada ON demanda_executada.demanda_id = demanda_do_projeto.id
+                                    INNER JOIN demanda_listada ON demanda_listada.demanda_id = demanda_do_projeto.id
                             )
                         UNION ALL
                         SELECT
@@ -568,11 +597,11 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                             AND atividade.is_deleted = false
                             AND tipo_atividade_status.codigo = 'DESENVOLVIDA'
                     ) AS "atividadesDesenvolvidas",
-                    demanda_executada.executando,
-                    demanda_executada.ultima_execucao_data AS "ultimaExecucaoData"
+                    demanda_listada.executando,
+                    demanda_listada.ultima_execucao_data AS "ultimaExecucaoData"
                 FROM
-                    demanda_executada ${juncaoMembro}
-                    INNER JOIN demanda ON demanda.id = demanda_executada.demanda_id
+                    demanda_listada
+                    INNER JOIN demanda ON demanda.id = demanda_listada.demanda_id
                     AND demanda.is_deleted = false
                     INNER JOIN projeto ON projeto.id = demanda.projeto_id
                     AND projeto.is_deleted = false
@@ -582,7 +611,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                 WHERE
                     tipo_demanda_status.codigo NOT IN ('CONCLUIDA', 'CANCELADA')
                 ORDER BY
-                    demanda_executada.ultima_execucao_data DESC,
+                    demanda_listada.ultima_execucao_data DESC NULLS LAST,
                     demanda.id DESC
                 LIMIT
                     :limite
