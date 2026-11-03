@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-11-03 — Task 304: a aba Atividades da demanda mostra o consumo de cada atividade
+
+Primeira das duas tasks do guarda-chuva `demanda-atividades-e-conexoes`. A atividade não tem horas esperadas, então a barra de cada cartão é a **fatia que ela consumiu do total consumido pela demanda**.
+
+- **Regra pura** (`demanda-atividades-consumo.util.ts`): `calcularConsumoDaDemanda` (maior resto, os percentuais somam 100), `filtrarAtividadesDaDemanda` (Todas, Minhas, Em aberto) e `contarAtividadesPorSituacao`.
+- **Painel** (`demanda-atividades-painel`): resumo com o total e a barra dividida por atividade (cor do status), contadores, filtros em `p-selectbutton`, cartão com ícone de status, executor, prioridade, barra da fatia e "14h · 37% da demanda" ou "sem execução ainda"; a atividade em execução (`execucaoAtivaId`) ganha destaque e o selo `app-atividade-em-execucao` (ponto pulsante já com `prefers-reduced-motion`). Sem DTO novo.
+- **Fora, de propósito:** botões iniciar/pausar do cartão e cronômetro. O diálogo de iniciar está embutido na `atividade-listagem.page`; extrair é refatoração separada (pausar já usa o diálogo compartilhado). Aguarda decisão do autor.
+- **Testes:** util 7, painel 5, pasta `demanda` do frontend 270 passando, `lint:tudo` limpo. Ao vivo nos 5 formatos, claro e escuro (ver `verificacao.md`).
+
 ## 2026-11-03 — Task 307: "Minhas demandas" inclui as demandas em que o usuário é membro
 
 Relato do autor: auxiliar e membro de uma demanda planejada e sem atividades, ela não aparecia em "Minhas demandas" do chat. A lista partia só de `execucao`.
