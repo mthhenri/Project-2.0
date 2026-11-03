@@ -12,6 +12,13 @@
 
 ---
 
+## 2026-11-03 — Pós-306: ordem do formulário de usuário, tooltip retirado, acento perdido nos nomes e spec 308
+
+- **Formulário de criar e editar usuário:** os campos passaram a **Nome | Cargo | Horas Diárias**, **Login | Senha** (só ao criar), **Tipo** e o bloco "o que é / pode / não pode" do tipo. A ordem do DOM é a do Tab. Conferido ao vivo em 1920, 1366 e 720 (claro e escuro): as posições dos campos batem com a ordem pedida. **Não verificado:** o formulário em modo edição (sem a Senha) só nos testes.
+- **Tooltip da tag do tipo na tabela retirado** (decisão do autor): popover e bloco do formulário ficam.
+- **Acento perdido em nomes de demanda e atividade e na descrição da execução** ("Homologação 1.2" virava "Homologaçao 1.2"). **Causa (por leitura do código):** `BloquearCaracteresProibidosDirective` remove `~ ^ ´ \`` a cada `input`, inclusive no meio da composição; no teclado ABNT2 esses são as teclas mortas de "ã", "á", "ê", "à", e limpar o campo nesse instante cancela a composição (o "ç" tem tecla própria e nunca foi afetado). **Correção:** a diretiva ignora o `input` com `isComposing` e limpa de novo no `compositionend` (o acento solto, de tecla morta + espaço, ainda sai). Testes: 4 novos na diretiva (9 no arquivo). **Limite:** o IME simulado do Chromium (CDP) não reproduziu o bug nem com a diretiva antiga, então a causa e a correção **não foram provadas num teclado real**; o autor precisa confirmar digitando "ã" num nome.
+- **Spec 308** (backlog): editor dos textos dos tipos de usuário para o administrador, no molde do "Alterar prioridades" das atividades, com o texto em Markdown.
+
 ## 2026-11-03 — Task 306: a ajuda "Tipos de usuário" na tela de Usuários
 
 Pedido do autor: um lugar na tela de Usuários que diga o que cada tipo é. Não havia: a coluna `tipo_usuario.descricao` só repete o nome ("Gestor"); a explicação vivia em `SYSTEM.SPEC.md` §14. Decidido com o autor, em cima de um mockup: botão **"Tipos de usuário"** com popover, tooltip na tag da tabela e um bloco no formulário de criar e editar, com "o que é", "Pode" e "Não pode", e as **cores que o app já usa** em cada tipo.

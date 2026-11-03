@@ -12,7 +12,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { Tag } from 'primeng/tag';
 import { PopoverModule } from 'primeng/popover';
 import { TooltipModule } from 'primeng/tooltip';
-import { UsuarioResumoDto, TipoUsuarioEnum, UsuarioListarDto, DESCRICAO_TIPO_USUARIO, TIPOS_USUARIO_NA_ORDEM_DA_AJUDA } from '@project20/shared';
+import { UsuarioResumoDto, TipoUsuarioEnum, UsuarioListarDto, TIPOS_USUARIO_NA_ORDEM_DA_AJUDA } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { rotuloTipoUsuario, severidadeTipoUsuario } from '../../../../core/utils/tipo-usuario';
@@ -299,11 +299,6 @@ export class UsuarioListagemPage implements OnInit {
 
     /** Os tipos que a ajuda "Tipos de usuário" explica, do menor para o maior poder. */
     readonly tiposDaAjuda = TIPOS_USUARIO_NA_ORDEM_DA_AJUDA;
-
-    /** A frase "o que é" do tipo, para o tooltip da tag na tabela. */
-    descricaoDoTipo(tipo: TipoUsuarioEnum): string {
-        return DESCRICAO_TIPO_USUARIO[tipo].queE;
-    }
 
     severidadeTipo(tipo: TipoUsuarioEnum): ReturnType<typeof severidadeTipoUsuario> {
         return severidadeTipoUsuario(tipo);

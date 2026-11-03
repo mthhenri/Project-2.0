@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { DESCRICAO_TIPO_USUARIO, TipoUsuarioEnum, UsuarioResumoDto } from '@project20/shared';
+import { TipoUsuarioEnum, UsuarioResumoDto } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { responderErro } from '../../../../../testes/http-teste';
 import { criarUsuarioTeste } from '../../../../../testes/usuarios-teste';
@@ -252,10 +252,5 @@ describe('UsuarioListagemPage — ajuda dos tipos (task 306)', () => {
         expect(ajuda).not.toBeNull();
         expect(ajuda!.querySelectorAll('app-usuario-tipo-descricao')).toHaveLength(4);
         for (const rotulo of ['Desenvolvedor', 'Auxiliar', 'Gestor', 'Administrador']) expect(ajuda!.textContent).toContain(rotulo);
-    });
-
-    it('a descrição do tipo vira o tooltip da tag da tabela', async () => {
-        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
-        expect(montado.componente.descricaoDoTipo(TipoUsuarioEnum.AUXILIAR)).toBe(DESCRICAO_TIPO_USUARIO[TipoUsuarioEnum.AUXILIAR].queE);
     });
 });

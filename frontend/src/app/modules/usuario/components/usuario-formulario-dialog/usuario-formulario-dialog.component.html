@@ -9,7 +9,7 @@
     [draggable]="false"
 >
     <form [formGroup]="formulario" class="usuario-formulario-dialog__form">
-        <div class="usuario-formulario-dialog__linha">
+        <div class="usuario-formulario-dialog__linha usuario-formulario-dialog__linha--tres">
             <div class="usuario-formulario-dialog__campo">
                 <label for="nomeCompleto" class="usuario-formulario-dialog__label"
                     >Nome Completo
@@ -34,7 +34,6 @@
                     }
                 }
             </div>
-
             <div class="usuario-formulario-dialog__campo">
                 <label for="cargoTitulo" class="usuario-formulario-dialog__label"
                     >Cargo <span class="usuario-formulario-dialog__obrigatorio">*</span></label
@@ -50,6 +49,20 @@
                 @if (campoInvalido("cargoTitulo")) {
                     <small class="usuario-formulario-dialog__erro">Cargo é obrigatório</small>
                 }
+            </div>
+            <div class="usuario-formulario-dialog__campo">
+                <label for="horasDiariasNecessarias" class="usuario-formulario-dialog__label"
+                    >Horas Diárias</label
+                >
+                <p-inputnumber
+                    inputId="horasDiariasNecessarias"
+                    formControlName="horasDiariasNecessarias"
+                    [min]="1"
+                    [max]="24"
+                    [showButtons]="true"
+                    class="w-full"
+                    inputStyleClass="w-full"
+                />
             </div>
         </div>
 
@@ -78,48 +91,6 @@
                     }
                 }
             </div>
-
-            <div class="usuario-formulario-dialog__campo">
-                <label for="horasDiariasNecessarias" class="usuario-formulario-dialog__label"
-                    >Horas Diárias</label
-                >
-                <p-inputnumber
-                    inputId="horasDiariasNecessarias"
-                    formControlName="horasDiariasNecessarias"
-                    [min]="1"
-                    [max]="24"
-                    [showButtons]="true"
-                    class="w-full"
-                    inputStyleClass="w-full"
-                />
-            </div>
-        </div>
-
-        <div class="usuario-formulario-dialog__linha">
-            <div
-                class="usuario-formulario-dialog__campo usuario-formulario-dialog__campo--linha-inteira"
-            >
-                <span class="usuario-formulario-dialog__label" id="rotulo-tipo">Tipo</span>
-                <p-selectbutton
-                    formControlName="tipo"
-                    [options]="tiposOpcoes()"
-                    optionLabel="label"
-                    optionValue="value"
-                    [allowEmpty]="false"
-                    [disabled]="!podeEditarTipo()"
-                    ariaLabelledBy="rotulo-tipo"
-                />
-                @if (!podeEditarTipo()) {
-                    <small class="usuario-formulario-dialog__dica"
-                        >O tipo do próprio perfil não pode ser alterado.</small
-                    >
-                }
-                <app-usuario-tipo-descricao
-                    class="usuario-formulario-dialog__tipo-descricao"
-                    [tipo]="tipoSelecionado()"
-                />
-            </div>
-
             @if (!editando()) {
                 <div class="usuario-formulario-dialog__campo">
                     <label for="senhaNaoEncriptada" class="usuario-formulario-dialog__label"
@@ -158,6 +129,32 @@
                     }
                 </div>
             }
+        </div>
+
+        <div class="usuario-formulario-dialog__linha">
+            <div
+                class="usuario-formulario-dialog__campo usuario-formulario-dialog__campo--linha-inteira"
+            >
+                <span class="usuario-formulario-dialog__label" id="rotulo-tipo">Tipo</span>
+                <p-selectbutton
+                    formControlName="tipo"
+                    [options]="tiposOpcoes()"
+                    optionLabel="label"
+                    optionValue="value"
+                    [allowEmpty]="false"
+                    [disabled]="!podeEditarTipo()"
+                    ariaLabelledBy="rotulo-tipo"
+                />
+                @if (!podeEditarTipo()) {
+                    <small class="usuario-formulario-dialog__dica"
+                        >O tipo do próprio perfil não pode ser alterado.</small
+                    >
+                }
+                <app-usuario-tipo-descricao
+                    class="usuario-formulario-dialog__tipo-descricao"
+                    [tipo]="tipoSelecionado()"
+                />
+            </div>
         </div>
     </form>
 
