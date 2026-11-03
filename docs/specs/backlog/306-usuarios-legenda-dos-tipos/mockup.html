@@ -1,0 +1,185 @@
+<title>Tipos de Usuário</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&display=swap">
+<style>
+/* Mockup da tela de Usuários: botão "Tipos de usuário" (popover) e o bloco pode / não pode no formulário. Tokens espelham o app. */
+:root{
+  --bg:#f4f5f7; --surface:#fff; --surface-2:#f0f2f5; --line:#dfe3e9; --line-2:#c9cfd8;
+  --fg:#1b2230; --fg-2:#5a6475; --fg-3:#8892a2; --primary:#4f6df5; --primary-soft:#e8ecff; --on-primary:#fff;
+  --ok:#17803d; --ok-soft:#e3f6ea; --no:#b4432f; --no-soft:#fdebe7;
+  --t-dev:#0ea5e9; --t-aux:#8b5cf6; --t-ges:#f59e0b; --t-adm:#ef4444;
+  --shadow:0 1px 2px rgba(20,28,45,.06),0 8px 28px rgba(20,28,45,.12);
+  --f:"Inter Tight",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#171c26; --surface-2:#1e2430; --line:#2a3140; --line-2:#3a4357;
+  --fg:#e8ebf2; --fg-2:#a3adbf; --fg-3:#6f7a8e; --primary:#8ea2ff; --primary-soft:#232b4d; --on-primary:#0f131b;
+  --ok:#5bd68a; --ok-soft:#173326; --no:#ff9a86; --no-soft:#3a1f1a; --shadow:0 8px 28px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#171c26; --surface-2:#1e2430; --line:#2a3140; --line-2:#3a4357;
+  --fg:#e8ebf2; --fg-2:#a3adbf; --fg-3:#6f7a8e; --primary:#8ea2ff; --primary-soft:#232b4d; --on-primary:#0f131b;
+  --ok:#5bd68a; --ok-soft:#173326; --no:#ff9a86; --no-soft:#3a1f1a; --shadow:0 8px 28px rgba(0,0,0,.5); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:14px;line-height:1.4;margin:0;
+  padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.nota-topo{max-width:1180px;margin:0 auto 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.nota-topo p{margin:0;color:var(--fg-2);font-size:13px}
+.chip{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--fg-2)}
+.chip[aria-pressed="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary)}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap}
+.pagina{max-width:1180px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;position:relative}
+.cab{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cab h1{font-size:20px;margin:0;font-weight:600}
+.cont{color:var(--fg-3);font-size:13px}
+.esp{flex:1}
+.btn{border:1px solid var(--line-2);background:var(--surface);border-radius:7px;padding:6px 12px;font-size:13.5px;display:inline-flex;gap:7px;align-items:center}
+.btn:hover{background:var(--surface-2)}
+.btn--p{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.btn--p:hover{filter:brightness(1.08);background:var(--primary)}
+.ajuda{width:auto}
+.ajuda[aria-expanded="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary)}
+.q{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;font-size:11px;font-weight:700}
+.barra{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 10px}
+.busca{flex:1;min-width:200px;border:1px solid var(--line-2);border-radius:7px;padding:7px 10px;color:var(--fg-3);background:var(--surface)}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:8px;overflow:hidden}
+.seg span{padding:7px 12px;font-size:13px;color:var(--fg-2);border-left:1px solid var(--line)}
+.seg span:first-child{border-left:0}
+.seg .on{background:var(--primary);color:var(--on-primary)}
+.tab{width:100%;border-collapse:collapse;font-size:13.5px}
+.tab th{text-align:left;color:var(--fg-3);font-weight:500;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.tab td{padding:10px;border-bottom:1px solid var(--line)}
+.tab tr:hover td{background:var(--surface-2)}
+.tab .scroll{overflow-x:auto}
+.escroll{overflow-x:auto}
+.tag{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:500;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);background:color-mix(in srgb,var(--c) 14%,var(--surface));color:var(--fg)}
+.tag i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+.av{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--primary-soft);color:var(--primary);font-size:11px;font-weight:600;margin-right:8px;vertical-align:middle}
+.dica{position:relative}
+.dica:hover::after,.dica:focus::after{content:attr(data-d);position:absolute;left:0;top:calc(100% + 6px);z-index:5;width:230px;background:var(--fg);color:var(--bg);padding:7px 10px;border-radius:7px;font-size:12px;font-weight:400;line-height:1.35}
+/* popover */
+.pop{position:absolute;right:20px;top:60px;z-index:20;width:min(760px,calc(100% - 40px));background:var(--surface);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--shadow);padding:16px}
+.pop[hidden]{display:none!important}
+.pop::before{content:"";position:absolute;top:-7px;right:130px;width:12px;height:12px;background:var(--surface);border-left:1px solid var(--line-2);border-top:1px solid var(--line-2);transform:rotate(45deg)}
+.pop h2{margin:0 0 2px;font-size:15px}
+.pop > p{margin:0 0 12px;color:var(--fg-2);font-size:13px}
+.tipos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:700px){.tipos{grid-template-columns:minmax(0,1fr)}.pop{right:12px;left:12px;width:auto}.pop::before{right:60px}}
+.tp{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface);display:flex;flex-direction:column;gap:8px;min-width:0}
+.tp__nome{display:flex;gap:8px;align-items:center}
+.tp__que{margin:0;color:var(--fg);font-size:13px}
+.ls{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--fg-2)}
+.ls li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:6px}
+.ls b{font-weight:600}
+.ls .ok{color:var(--ok)} .ls .no{color:var(--no)}
+.sub{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--fg-3);margin:2px 0 0;font-weight:600}
+.rod{margin:12px 0 0;font-size:12px;color:var(--fg-3)}
+/* dialog */
+.veu{position:fixed;inset:0;background:rgba(10,14,22,.5);z-index:30;display:grid;place-items:center;padding:16px}
+.veu[hidden]{display:none!important}
+.dlg{background:var(--surface);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--shadow);width:min(520px,100%);max-height:calc(100% - 16px);overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+.dlg h2{margin:0;font-size:17px}
+.campo{display:flex;flex-direction:column;gap:4px}
+.campo label{font-size:12.5px;color:var(--fg-2)}
+.campo input,.campo select{border:1px solid var(--line-2);border-radius:7px;padding:8px 10px;background:var(--surface);color:var(--fg);font:inherit}
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.dupla{grid-template-columns:1fr}}
+.bloco{border:1px solid var(--line);border-radius:9px;background:var(--surface-2);padding:10px 12px;display:flex;flex-direction:column;gap:7px}
+.bloco .tp__que{font-size:13px}
+.acoes{display:flex;gap:8px;justify-content:flex-end}
+</style>
+
+<div class="nota-topo">
+  <p>Mockup para discussão (spec 306). Dados e textos de exemplo; os textos finais saem de SYSTEM.SPEC §14.</p>
+  <div class="ctrl" role="group" aria-label="Controles do mockup">
+    <button class="chip" id="tema" aria-pressed="false">Tema escuro</button>
+    <button class="chip" id="ver-form" aria-pressed="false">Ver formulário (D)</button>
+  </div>
+</div>
+
+<div class="pagina" id="pagina">
+  <div class="cab">
+    <h1>Usuários</h1><span class="cont">6 usuários</span>
+    <span class="esp"></span>
+    <button class="btn ajuda" id="ajuda" aria-expanded="true" aria-controls="pop"><span class="q" aria-hidden="true">?</span>Tipos de usuário</button>
+    <button class="btn btn--p">+ Novo Usuário</button>
+  </div>
+
+  <div class="pop" id="pop" role="dialog" aria-label="Tipos de usuário">
+    <h2>O que é cada tipo de usuário</h2>
+    <p>O tipo define o que a pessoa vê e o que pode fazer no Project 2.0.</p>
+    <div class="tipos" id="tipos"></div>
+    <p class="rod">Quem tem acesso a esta tela vê esta ajuda. A lista completa de regras está na documentação do sistema.</p>
+  </div>
+
+  <div class="barra">
+    <div class="busca">Buscar por nome ou login…  ( / )</div>
+    <div class="seg"><span class="on">Todos</span><span>Desenvolvedores</span><span>Auxiliares</span><span>Gestores</span><span>Administradores</span></div>
+  </div>
+
+  <div class="escroll">
+  <table class="tab">
+    <thead><tr><th>Nome</th><th>Login</th><th>Tipo</th><th>Cargo</th><th>Situação</th></tr></thead>
+    <tbody id="linhas"></tbody>
+  </table>
+  </div>
+</div>
+
+<div class="veu" id="veu" hidden>
+  <div class="dlg" role="dialog" aria-label="Novo usuário">
+    <h2>Novo usuário</h2>
+    <div class="dupla">
+      <div class="campo"><label for="f-nome">Nome completo</label><input id="f-nome" value="Camila Ribeiro"></div>
+      <div class="campo"><label for="f-login">Login</label><input id="f-login" value="camila.ribeiro"></div>
+    </div>
+    <div class="campo"><label for="f-tipo">Tipo de usuário</label>
+      <select id="f-tipo"></select></div>
+    <div class="bloco" id="f-bloco" aria-live="polite"></div>
+    <div class="acoes"><button class="btn" id="f-cancela">Cancelar</button><button class="btn btn--p">Criar usuário</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var T=[
+    {k:'DESENVOLVEDOR',n:'Desenvolvedor',c:'var(--t-dev)',que:'Quem executa o trabalho: registra as próprias atividades, o tempo e o ponto.',
+     ok:['Executar as próprias atividades e bater o próprio ponto','Ver os projetos em que tem demanda e editar as demandas de que é membro','Entrar e sair de demandas por conta própria e criar sub-demanda'],
+     no:['Criar projeto ou demanda raiz','Ver ou editar execuções e ponto de outras pessoas','Gerenciar usuários']},
+    {k:'AUXILIAR',n:'Auxiliar',c:'var(--t-aux)',que:'Um desenvolvedor que também conduz o trabalho: enxerga tudo e organiza a equipe.',
+     ok:['Tudo o que o desenvolvedor faz','Ver todos os projetos, demandas e atividades','Editar qualquer demanda, conectar demandas e atribuir membros e tags','Iniciar e pausar a execução de qualquer atividade'],
+     no:['Criar ou editar projeto e excluir demanda','Escrever a descrição para o cliente','Gerenciar usuários, calendário e relatórios']},
+    {k:'GESTOR',n:'Gestor',c:'var(--t-ges)',que:'Quem conduz projetos e equipe, com acesso total ao trabalho.',
+     ok:['Tudo o que o auxiliar faz','Criar e editar projetos; excluir e restaurar demandas','Gerenciar usuários, calendário e relatórios','Justificar e imprimir o ponto da equipe'],
+     no:['Criar, promover ou excluir administradores','Participar de demandas como membro (o acesso é total)']},
+    {k:'ADMINISTRADOR',n:'Administrador',c:'var(--t-adm)',que:'Um gestor com mais poder: cuida de quem administra o sistema.',
+     ok:['Tudo o que o gestor faz','Criar, promover, alterar, inativar e excluir administradores','Configurações da IA'],
+     no:['Ser o último: sempre precisa existir ao menos um administrador ativo']}
+  ];
+  function tipo(k){return T.filter(function(t){return t.k===k})[0]}
+  function lista(a,cl,sim){return '<ul class="ls">'+a.map(function(x){return '<li><span class="'+cl+'" aria-hidden="true">'+(sim?'✓':'✕')+'</span><span>'+x+'</span></li>'}).join('')+'</ul>'}
+  function corpo(t){return '<p class="tp__que">'+t.que+'</p><p class="sub">Pode</p>'+lista(t.ok,'ok',true)+'<p class="sub">Não pode</p>'+lista(t.no,'no',false)}
+  document.getElementById('tipos').innerHTML=T.map(function(t){
+    return '<section class="tp" style="--c:'+t.c+'"><div class="tp__nome"><span class="tag"><i></i>'+t.n+'</span></div>'+corpo(t)+'</section>'}).join('');
+  var U=[['Matheus Henri','matheus.henri','ADMINISTRADOR','Tech Lead'],['Ana Costa','ana.costa','GESTOR','Gerente de projetos'],['Rafael Prado','rafael.prado','AUXILIAR','Analista'],
+    ['Julia Matos','julia.matos','DESENVOLVEDOR','Desenvolvedora pleno'],['Bruno Alves','bruno.alves','DESENVOLVEDOR','Desenvolvedor júnior'],['Lívia Nunes','livia.nunes','DESENVOLVEDOR','Desenvolvedora sênior']];
+  document.getElementById('linhas').innerHTML=U.map(function(u){var t=tipo(u[2]);
+    return '<tr><td><span class="av">'+u[0].split(' ').map(function(p){return p[0]}).slice(0,2).join('')+'</span>'+u[0]+'</td><td>'+u[1]+'</td>'+
+    '<td><span class="tag dica" tabindex="0" style="--c:'+t.c+'" data-d="'+t.que.replace(/"/g,'&quot;')+'"><i></i>'+t.n+'</span></td><td>'+u[3]+'</td><td>Ativo</td></tr>'}).join('');
+  var sel=document.getElementById('f-tipo'), bl=document.getElementById('f-bloco');
+  sel.innerHTML=T.map(function(t){return '<option value="'+t.k+'">'+t.n+'</option>'}).join('');
+  function pinta(){var t=tipo(sel.value);bl.innerHTML='<span class="tag" style="--c:'+t.c+';align-self:flex-start"><i></i>'+t.n+'</span>'+corpo(t)}
+  sel.addEventListener('change',pinta); pinta();
+  // controles
+  var raiz=document.documentElement, bt=document.getElementById('tema');
+  bt.addEventListener('click',function(){var e=raiz.getAttribute('data-theme')==='dark';raiz.setAttribute('data-theme',e?'light':'dark');bt.setAttribute('aria-pressed',String(!e));bt.textContent=e?'Tema escuro':'Tema claro'});
+  var aj=document.getElementById('ajuda'), pop=document.getElementById('pop');
+  aj.addEventListener('click',function(){var a=pop.hidden;pop.hidden=!a;aj.setAttribute('aria-expanded',String(a))});
+  var vf=document.getElementById('ver-form'), veu=document.getElementById('veu');
+  function form(a){if(a){pop.hidden=true;aj.setAttribute('aria-expanded','false')}veu.hidden=!a;vf.setAttribute('aria-pressed',String(a))}
+  vf.addEventListener('click',function(){form(veu.hidden)});
+  document.getElementById('f-cancela').addEventListener('click',function(){form(false)});
+  veu.addEventListener('click',function(e){if(e.target===veu)form(false)});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){form(false);pop.hidden=true;aj.setAttribute('aria-expanded','false')}});
+})();
+</script>

@@ -36,6 +36,18 @@ Opção "incluir as demandas em que sou membro": vale para **todos os tipos**, d
 6. Rever o texto da ferramenta da IA `listar_minhas_demandas` (usa o mesmo método do service) e do guarda-chuva `chat-execucao-por-demanda`, que
    descrevem a lista como "o que o usuário executou".
 
+## Ponto em aberto: "Participar" e "Sair" da demanda (a confirmar com o autor)
+
+Hoje o botão **Participar / Sair** do cabeçalho de membros (`demanda-membros-cabecalho`) só aparece para quem **não** edita a demanda, ou seja, o
+desenvolvedor. O auxiliar e o gestor veem a busca de membros e o × em cada membro, e não têm "Participar". Como "Minhas demandas" passa a depender
+de ser membro, o auxiliar precisa de um jeito claro de entrar e sair:
+
+- **Padrão proposto:** "Participar" e "Sair" aparecem para quem `podeSerMembroDeDemanda` (desenvolvedor e auxiliar), **em conjunto** com a busca
+  e o × que o auxiliar já tem. Gestor e administrador não são membros por regra: **nenhum dos dois botões** para eles.
+- Sair continua imediato com "Desfazer", e o **último membro** da demanda não sai (regra de §14), com a mensagem clara.
+- Alternativa, se o autor quiser que gestor e administrador **acompanhem** demandas: seria mudança de regra (§14 diz que não entram em
+  `demanda_usuario`) e fica fora desta task.
+
 ## Verificação
 
 Teste de integração do repository (membro sem execução entra; executada sem ser membro não entra para o desenvolvedor, entra para o auxiliar;
