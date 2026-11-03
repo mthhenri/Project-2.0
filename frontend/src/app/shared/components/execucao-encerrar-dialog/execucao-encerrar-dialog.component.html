@@ -85,4 +85,15 @@
             }
         </div>
     </form>
+
+    <ng-template pTemplate="footer">
+        <app-dialog-dica-atalhos [comTextarea]="true" />
+        <p-button label="Cancelar" [text]="true" (onClick)="visivel.set(false)" />
+        <p-button
+            label="Encerrar"
+            icon="pi pi-stop"
+            [loading]="salvando()"
+            (onClick)="confirmar()"
+        />
+    </ng-template>
 </p-dialog>

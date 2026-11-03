@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-11-03 — P-070: o "Encerrar execução" volta a ter Cancelar e Encerrar
+
+Relato do autor: o "confirmar" do pausar execução sumiu, e ele achou que fosse por estar logado com um usuário no Project Desktop e com o gestor no navegador. **Não era:** em `4cfb1c9` (2026-10-31) o diálogo virou o componente compartilhado `ExecucaoEncerrarDialogComponent` (usado pelo chip da barra superior, por Atividades e pelo "Em andamento agora") e o rodapé da tela de Atividades não foi levado junto. Desde então o diálogo abria só com a descrição; encerrar só pelo Ctrl+Enter no campo.
+
+- **Correção:** o rodapé volta ao componente, igual ao do diálogo de iniciar em Atividades (o análogo): dica de atalhos, Cancelar e Encerrar com `loading` enquanto salva. Impacto (`npm run impacto`): os três consumidores ganham o mesmo rodapé, que é o efeito pedido.
+- **Testes:** `execucao-encerrar-dialog.component.spec.ts` novo (3): os dois botões existem; Encerrar faz `PATCH /execucao/9/encerrar` com a descrição e avisa quem abriu; Cancelar fecha sem requisição.
+- **Verificado ao vivo** (stack isolado: banco `project20_verify`, API 3001, front 4201): pelo chip, com o gestor, o diálogo mostra o rodapé nos temas claro e escuro; Cancelar fecha sem encerrar; Encerrar fecha e o chip vira "Sem execução ativa". Nos cinco formatos (1920×1080, 1366×768, 1080×1920, 720×1280 e 960×1080) os dois botões ficam dentro da tela; em 1366×768 a lista de execuções rola dentro do diálogo.
+
 ## 2026-11-01 — Task 301 (complemento): gate visual e chaves das propostas da IA
 
 O gate visual que ficou aberto no fecho da 301 foi feito, e a verificação achou um defeito real: o cartão da proposta (`bidirecional`), a regra de criar demanda (`dados['estrutural']`) e o desfazer de uma desconexão (`resultado.bidirecional`) leem pela chave o JSON guardado em `proposta_ia.dados` e `proposta_ia.resultado`. Com o renome, as propostas já gravadas em outro banco ficariam com a chave antiga: seta errada no cartão e desfazer que recriaria a conexão como unidirecional. A busca anterior só olhou o banco de desenvolvimento (4 propostas, nenhuma com a chave antiga) e não o efeito da leitura por chave.

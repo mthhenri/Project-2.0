@@ -16,6 +16,7 @@ import { AtividadeService } from '../../../modules/atividade/services/atividade.
 import { ExecucaoService } from '../../../modules/execucao/services/execucao.service';
 import { iniciaisDoNome } from '../../../modules/execucao/utils/execucao.util';
 import { AssistenteDescricaoComponent } from '../assistente-descricao/assistente-descricao.component';
+import { DialogDicaAtalhosComponent } from '../dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { BloquearCaracteresProibidosDirective } from '../../directives/bloquear-caracteres-proibidos.directive';
 import { DialogFormularioDirective } from '../../directives/dialog-formulario.directive';
 import { DataBrasileiraPipe } from '../../pipes/data-brasileira.pipe';
@@ -44,6 +45,7 @@ export interface ExecucaoEncerrarAbertura {
         DialogModule,
         TextareaModule,
         AssistenteDescricaoComponent,
+        DialogDicaAtalhosComponent,
         BloquearCaracteresProibidosDirective,
         DialogFormularioDirective,
         DataBrasileiraPipe,
