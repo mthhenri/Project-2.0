@@ -597,6 +597,16 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                             AND atividade.is_deleted = false
                             AND tipo_atividade_status.codigo = 'DESENVOLVIDA'
                     ) AS "atividadesDesenvolvidas",
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            demanda_usuario AS vinculo_membro
+                        WHERE
+                            vinculo_membro.demanda_id = demanda.id
+                            AND vinculo_membro.usuario_id = :usuarioId
+                            AND vinculo_membro.is_deleted = false
+                    ) AS "souMembro",
                     demanda_listada.executando,
                     demanda_listada.ultima_execucao_data AS "ultimaExecucaoData"
                 FROM

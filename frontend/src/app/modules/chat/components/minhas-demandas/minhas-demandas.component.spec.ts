@@ -10,7 +10,7 @@ import { MinhasDemandasComponent } from './minhas-demandas.component';
 function demanda(id: number, sobrescrita: Record<string, unknown> = {}) {
     return {
         demandaId: id, nome: `Demanda ${id}`, caminho: `Raiz › Demanda ${id}`, projetoId: 3, nomeProjeto: 'Portal', status: TipoDemandaStatusEnum.PENDENTE,
-        horasEstimadas: 8, minutosExecutados: 120, totalAtividades: 4, atividadesDesenvolvidas: 1, executando: false, ultimaExecucaoData: '2026-10-25T12:00:00.000Z',
+        horasEstimadas: 8, minutosExecutados: 120, totalAtividades: 4, atividadesDesenvolvidas: 1, souMembro: true, executando: false, ultimaExecucaoData: '2026-10-25T12:00:00.000Z',
         ...sobrescrita,
     };
 }
@@ -173,9 +173,9 @@ describe('MinhasDemandasComponent', () => {
             responderSucesso(montado.http.expectOne((requisicao) => requisicao.method === 'DELETE' && requisicao.url.includes('/demanda/1/membro/')), null);
         });
 
-        it('gestor não tem Sair da demanda (não é membro)', async () => {
-            const montado = await montarComponente(MinhasDemandasComponent, { usuario: TipoUsuarioEnum.GESTOR });
-            responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1)]);
+        it('quem não é membro da demanda (gestor, ou auxiliar que só executou) não tem Sair da demanda', async () => {
+            const montado = await montarComponente(MinhasDemandasComponent, { usuario: TipoUsuarioEnum.AUXILIAR });
+            responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1, { souMembro: false })]);
             await montado.atualizar();
             montado.elemento.querySelector('li')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
             expect(opcoes(montado).map((item) => item.label).filter(Boolean)).toEqual(['Alterar status']);

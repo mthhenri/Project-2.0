@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-11-03 — Cronômetro no cartão da atividade e "Sair da demanda" só para membro
+
+Os dois pendentes que sobraram das 304 e 307, a pedido do autor.
+
+- **Cronômetro:** `AtividadeResumoDto.execucaoAtivaInicioData` (`execucao.inicio_data` da execução em andamento, no LATERAL JOIN da listagem). O selo "Em execução" do cartão da atividade na demanda aberta mostra o tempo correndo, inclusive de execução de outra pessoa (a listagem de atividades segue com o início só da própria, sem mudança).
+- **Sair da demanda:** `DemandaExecutadaResumoDto.souMembro` (EXISTS em `demanda_usuario`). O menu de "Minhas demandas" mostra "Sair da demanda" só quando o usuário é membro daquela demanda; antes aparecia para qualquer um que não fosse gestor, e para o auxiliar que só executou a API recusaria.
+- **Testes:** integração das duas listagens (371), frontend das pastas `demanda`, `chat` e `atividade` (707), `lint:tudo`, build do backend. Ao vivo: gestor vê o cronômetro de uma execução da auxiliar (00:48:16); a auxiliar membro vê "Sair da demanda" e, na demanda em que só executou, não.
+
 ## 2026-11-03 — P-074 corrigido: a lista de conexões da demanda traz as "depende desta"
 
 A pedido do autor (achado na verificação da 305). `DemandaRepository.listarConexoes` passou a listar toda conexão em que a demanda é origem ou destino: `saida`, `entrada` (outra demanda depende desta) e `bidirecional`. Antes só vinham as que saem e as mútuas, então a lista, o contador "Conexões N" e o grupo "Dependem desta demanda" nunca mostravam a "depende desta".

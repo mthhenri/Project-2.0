@@ -9,4 +9,4 @@
 
 **Depois (2026-11-03, a pedido do autor): play e pause no cartão.** O diálogo "Iniciar execução" saiu da `atividade-listagem.page` para o componente `execucao-iniciar-dialog` (a listagem passou a usá-lo); o cartão da atividade ganhou o play e o pause com a mesma regra da listagem (§14: auxiliar, gestor e administrador em qualquer atividade, desenvolvedor só nas suas; play só em Planejada e Desenvolvendo). Ao vivo, como auxiliar: pausar a que rodava (diálogo compartilhado "Encerrar execução"), depois iniciar a planejada ("Iniciar execução" com a descrição) e o cartão passou a "Em execução" com o pause; os botões de Pendente e Desenvolvida ficam desligados. Capturas: `.artifacts/304/exec-*.png`.
 
-**Ainda fora:** o cronômetro ao vivo (o DTO não traz o início da execução ativa); a verificação ao vivo desta parte foi só em 1920×1080, tema claro.
+**Cronômetro (depois):** o DTO ganhou `execucaoAtivaInicioData`; o selo "Em execução" mostra o tempo correndo (visto como gestor numa execução da auxiliar: 00:48:16). A verificação ao vivo do play/pause e do cronômetro foi só em 1920×1080, tema claro.

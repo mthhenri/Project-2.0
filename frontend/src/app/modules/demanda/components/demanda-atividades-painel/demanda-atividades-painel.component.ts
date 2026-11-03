@@ -69,6 +69,11 @@ export class DemandaAtividadesPainelComponent {
         return atividade.execucaoAtivaId !== null || ATIVIDADE_STATUS_EXECUTAVEL.includes(atividade.status);
     }
 
+    /** Quando a execução em andamento começou, para o cronômetro do selo "Em execução"; sem ela, o selo fica sem o tempo. */
+    inicioDaExecucao(atividade: AtividadeResumoDto): Date | null {
+        return atividade.execucaoAtivaInicioData ? new Date(atividade.execucaoAtivaInicioData) : null;
+    }
+
     rotuloExecucao(atividade: AtividadeResumoDto): string {
         if (atividade.execucaoAtivaId !== null) return 'Encerrar execução';
         return this.podeAlternar(atividade) ? 'Iniciar execução' : 'Mude o status para Planejada ou Desenvolvendo';

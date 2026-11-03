@@ -367,6 +367,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
                     ) AS "totalExecucoes",
                     execucao_ativa.id AS "execucaoAtivaId",
                     execucao_ativa.descricao AS "execucaoAtivaDescricao",
+                    execucao_ativa.inicio_data AS "execucaoAtivaInicioData",
                     (
                         SELECT
                             COALESCE(
@@ -391,7 +392,8 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
                     LEFT JOIN LATERAL (
                         SELECT
                             execucao.id,
-                            execucao.descricao
+                            execucao.descricao,
+                            execucao.inicio_data
                         FROM
                             execucao
                         WHERE

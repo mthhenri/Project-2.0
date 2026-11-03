@@ -51,6 +51,13 @@ describe('DemandaAtividadesPainelComponent', () => {
         expect(montado.elemento.textContent).toContain('1 em execução');
     });
 
+    it('o selo "Em execução" mostra o cronômetro a partir do início da execução, de quem for', async () => {
+        const inicio = new Date(Date.now() - 90_000).toISOString();
+        const montado = await montar([atividade(1, { status: TipoAtividadeStatusEnum.DESENVOLVENDO, execucaoAtivaId: 7, execucaoAtivaInicioData: inicio as never })]);
+        expect(montado.elemento.querySelector('app-atividade-em-execucao app-execucao-timer')).not.toBeNull();
+        expect(montado.elemento.querySelector('app-atividade-em-execucao')?.textContent).toMatch(/00:01:\d\d/);
+    });
+
     it('filtros: "Em aberto" esconde as desenvolvidas e um filtro vazio explica', async () => {
         const montado = await montar([atividade(1, { status: TipoAtividadeStatusEnum.DESENVOLVIDA }), atividade(2)]);
         montado.componente.filtro.set('abertas');

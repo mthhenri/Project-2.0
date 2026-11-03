@@ -33,6 +33,9 @@ export class DemandaExecutadaResumoDto {
     @ApiProperty({ example: 2, description: 'Quantas atividades estão DESENVOLVIDA' })
     atividadesDesenvolvidas: number;
 
+    @ApiProperty({ example: true, description: 'O usuário é membro da demanda (tem linha em demanda_usuario); só quem é membro pode sair dela' })
+    souMembro: boolean;
+
     @ApiProperty({ example: true, description: 'O usuário tem uma execução em andamento nesta demanda' })
     executando: boolean;
 

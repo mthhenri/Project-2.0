@@ -20,7 +20,7 @@ const QUANTIDADE_DE_DEMANDAS = 20;
 /**
  * "Minhas demandas" (task 245): a lateral à direita do chat, com as últimas demandas que o usuário executou — caminho, barra de horas e quantas
  * atividades estão desenvolvidas. Só entram as que estão em aberto (sem CONCLUIDA nem CANCELADA). Clicar numa abre a demanda ao lado da conversa (a página
- * do chat decide); o botão direito troca o status dela ou, para quem pode ser membro (desenvolvedor e auxiliar), sai da demanda (com "Desfazer"). Análogo: o seletor do chat para o
+ * do chat decide); o botão direito troca o status dela ou, quando o usuário é membro dela, sai da demanda (com "Desfazer"). Análogo: o seletor do chat para o
  * desenho dos itens e a Árvore de demandas (task 239) para a barra de horas e a bolinha de status.
  */
 @Component({
@@ -79,7 +79,7 @@ export class MinhasDemandasComponent implements OnInit {
         });
     }
 
-    /** Abre o menu da demanda: trocar o status e, para o desenvolvedor (gestor não é membro), sair dela. */
+    /** Abre o menu da demanda: trocar o status e, se o usuário é membro dela (`souMembro`), sair dela. */
     abrirMenu(evento: MouseEvent, menu: ContextMenu, demanda: DemandaExecutadaResumoDto): void {
         evento.preventDefault();
         this.menuParaCima.set(evento.clientY > (this.documento.defaultView?.innerHeight ?? 0) / 2);
@@ -95,7 +95,7 @@ export class MinhasDemandasComponent implements OnInit {
                 })),
             },
         ];
-        if (!this.sessao.eGestor()) {
+        if (demanda.souMembro) {
             itens.push({ separator: true }, { label: 'Sair da demanda', icon: 'pi pi-sign-out', command: () => this.sair(demanda) });
         }
         this.itensMenu.set(itens);

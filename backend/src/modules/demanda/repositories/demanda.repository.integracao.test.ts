@@ -407,6 +407,9 @@ testarComBanco('listarExecutadas (task 307): o membro sem execução entra depoi
     const semExecucao = doAuxiliar.filter((item) => item.ultimaExecucaoData === null);
     assert.deepEqual(ids(semExecucao), [planejadaMembroNova.id, planejadaMembroAntiga.id], 'por id decrescente');
     assert.ok(doAuxiliar.slice(2).every((item) => item.ultimaExecucaoData === null), 'as sem execução vêm por último');
+    assert.deepEqual(Object.fromEntries(doAuxiliar.map((item) => [item.demandaId, item.souMembro])), {
+        [executadaSemSerMembro.id]: false, [executadaEMembro.id]: true, [planejadaMembroNova.id]: true, [planejadaMembroAntiga.id]: true,
+    });
     const [planejada] = semExecucao;
     assert.deepEqual([planejada.totalAtividades, planejada.minutosExecutados, planejada.executando], [0, 0, false]);
 

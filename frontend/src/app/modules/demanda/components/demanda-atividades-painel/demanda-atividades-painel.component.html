@@ -104,7 +104,7 @@
                             />
                             <span class="demanda-atividades__nome">{{ atividade.nome }}</span>
                             @if (atividade.execucaoAtivaId !== null) {
-                                <app-atividade-em-execucao />
+                                <app-atividade-em-execucao [inicio]="inicioDaExecucao(atividade)" />
                             }
                             <app-prioridade-selo [prioridade]="atividade.prioridade" />
                             @if (podeExecutar(atividade)) {

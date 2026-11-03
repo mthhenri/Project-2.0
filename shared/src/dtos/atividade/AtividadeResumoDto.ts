@@ -26,6 +26,8 @@ export class AtividadeResumoDto {
     execucaoAtivaId: number | null;
     /** Descrição da execução em andamento, para revisão ao encerrar. */
     execucaoAtivaDescricao: string | null;
+    /** Quando a execução em andamento começou (alimenta o cronômetro do cartão), ou null. */
+    execucaoAtivaInicioData: Date | null;
     /** Tags ativas atribuídas à atividade, agregadas na própria listagem. */
     tags: TagResumoDto[];
     createdDate: Date;
