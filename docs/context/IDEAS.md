@@ -182,3 +182,15 @@
 - **Origem:** o autor, em 2026-10-31: "eu acho que a gente não tem isso" e queria a visualização também na web, não só no desktop.
 - **Por quê:** quem trabalha pelo navegador não tem como saber quando a janelinha do check-in vai aparecer.
 - **Custo aparente:** baixo. O backend já calcula a agenda por usuário (`checkin-agenda.service.ts`) e o desktop já lê `checkin/situacao` para montar o texto da bandeja; falta mostrar o mesmo dado no menu do perfil do frontend, com contagem que se atualiza e o caso "sem check-in agendado" (sem execução ativa, suspenso).
+
+### I-047 — Revisar o visual da aba Conexões (grafo) na Árvore · frontend/demanda
+- **Ideia:** revisar o visual do grafo de conexões da aba Conexões da demanda aberta (`demanda-aberta.component.html`), na Árvore das telas de Demandas e do detalhe do projeto.
+- **Origem:** o autor, em 2026-11-03: "a gente tem que revisar a tela do grafo das conexões". Ainda sem o que exatamente incomoda.
+- **Por quê:** a aba destoa do resto da Árvore, reorganizada nas tasks 238–241.
+- **Custo aparente:** antes de especificar, abrir a aba ao vivo com o autor (dois temas, os cinco formatos de desktop) e listar o que muda.
+
+### I-048 — Aba Atividades da demanda aberta também para o gestor · frontend/demanda
+- **Ideia:** liberar a aba Atividades da demanda aberta (na Árvore das telas de Demandas e do detalhe do projeto) para o gestor, mesmo sem ele ser membro da demanda.
+- **Origem:** o autor, em 2026-11-03: queria "a visão de atividades dentro da visão de árvore"; decidido na mesma conversa que é liberar a aba para o gestor, não pôr atividades como itens da árvore. O visual da aba fica para depois.
+- **Por quê:** hoje a aba só aparece para membro (`eMembro()` em `demanda-aberta.component.html`), e o gestor, que tem acesso total por tipo e não entra em `demanda_usuario`, nunca a vê.
+- **Custo aparente:** pequeno no front (trocar a condição da aba para membro ou visão total); conferir se o que a aba carrega e as ações dela (marcar, criar, iniciar) respeitam a permissão do gestor no backend. Não fazer até o autor pedir.
