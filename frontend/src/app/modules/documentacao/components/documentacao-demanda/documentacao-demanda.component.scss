@@ -91,6 +91,25 @@
         flex-shrink: 0;
     }
 
+    // Ícone da aba: cinza enquanto o texto está vazio; colorido pelo tipo quando preenchido (como na demanda aberta).
+    &__aba-icone {
+        color: var(--app-surface-400);
+        margin-right: 0.4rem;
+        font-size: 0.9rem;
+        line-height: 1;
+        vertical-align: middle;
+
+        &--preenchida.documentacao-demanda__aba-icone--tecnica {
+            color: var(--app-icone-tecnica);
+        }
+        &--preenchida.documentacao-demanda__aba-icone--cliente {
+            color: var(--app-icone-cliente);
+        }
+        &--preenchida.documentacao-demanda__aba-icone--doc {
+            color: var(--app-icone-doc);
+        }
+    }
+
     &__ponto {
         display: inline-block;
         width: 0.5rem;

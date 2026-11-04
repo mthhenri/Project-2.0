@@ -48,6 +48,20 @@ const ICONE_DA_ABA: Record<PlanoAbaEnum, string> = {
     [PlanoAbaEnum.DOCUMENTACAO]: 'icone-descricao icone-descricao--doc',
 };
 
+/** A cor de cada aba (`--app-icone-*`), a mesma da árvore e da demanda aberta: colorida quando o texto está preenchido. */
+const COR_DA_ABA: Record<PlanoAbaEnum, 'tecnica' | 'cliente' | 'doc'> = {
+    [PlanoAbaEnum.DESCRICAO_TECNICA]: 'tecnica',
+    [PlanoAbaEnum.DESCRICAO_CLIENTE]: 'cliente',
+    [PlanoAbaEnum.DOCUMENTACAO]: 'doc',
+};
+
+/** O campo da demanda que cada aba mostra. */
+const CAMPO_DA_ABA: Record<PlanoAbaEnum, 'descricaoTecnica' | 'descricaoCliente' | 'documentacao'> = {
+    [PlanoAbaEnum.DESCRICAO_TECNICA]: 'descricaoTecnica',
+    [PlanoAbaEnum.DESCRICAO_CLIENTE]: 'descricaoCliente',
+    [PlanoAbaEnum.DOCUMENTACAO]: 'documentacao',
+};
+
 /** O pedido de alteração de um trecho e a resposta da IA (task 260): fica na aba em que foi pedido, até aceitar ou descartar. */
 interface PropostaDoTrecho {
     aba: PlanoAbaEnum;
@@ -100,7 +114,13 @@ export class DocumentacaoDemandaComponent {
     readonly abas = ABAS;
     readonly rotuloDaAba = ROTULO_DA_ABA;
     readonly iconeDaAba = ICONE_DA_ABA;
+    readonly corDaAba = COR_DA_ABA;
     readonly rotuloStatus = ROTULO_STATUS_DEMANDA;
+
+    /** Se a aba tem texto: o ícone dela ganha a cor do tipo, como na demanda aberta. */
+    preenchidaDaAba(aba: PlanoAbaEnum): boolean {
+        return !!this.demanda()?.[CAMPO_DA_ABA[aba]];
+    }
     readonly Status = TipoDemandaStatusEnum;
 
     readonly demanda = signal<DemandaRecuperadaDto | null>(null);

@@ -174,8 +174,11 @@
                         [class.demanda-aberta__aba-icone--preenchida]="
                             descricaoPreenchida('descricaoCliente')
                         "
-                    ></i
-                    >Cliente
+                    ></i>
+                    @if (!podeEditarDescricao("descricaoCliente")) {
+                        <i class="pi pi-lock icone-cadeado" aria-hidden="true"></i>
+                    }
+                    Cliente
                 </p-tab>
                 <p-tab value="doc">
                     <i
@@ -228,6 +231,7 @@
             @case ("atividades") {
                 <app-demanda-atividades-painel
                     [atividades]="atividades()"
+                    [horasEstimadas]="dadosDemanda.horasEstimadas"
                     [carregando]="carregandoAtividades()"
                     (nova)="criarAtividade()"
                     (execucaoAlterada)="aoAtividadeCriada()"

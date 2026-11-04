@@ -51,6 +51,11 @@
                 }}</strong>
                 <span>consumidas pela demanda</span>
             </div>
+            <app-demanda-barra-horas
+                [minutosExecutados]="consumo().totalMinutos"
+                [horasEstimadas]="horasEstimadas()"
+                [larga]="true"
+            />
             <div class="demanda-atividades__barra-dividida" aria-hidden="true">
                 @for (atividade of atividades(); track atividade.id) {
                     @if (fatiaDe(atividade.id).minutos > 0) {

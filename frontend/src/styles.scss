@@ -284,6 +284,15 @@ body:has(.anotacoes-drawer) .toast-desfazer {
     }
 }
 
+// Cadeado de uma descrição só de leitura (a do cliente para quem não a edita): pequeno e discreto, depois do ícone da aba.
+.icone-cadeado {
+    margin-left: 0.35rem;
+    font-size: 0.65rem;
+    color: var(--app-surface-400);
+    opacity: 0.8;
+    vertical-align: middle;
+}
+
 // O menu de Minhas demandas é anexado ao body; perto do rodapé o submenu abre para cima.
 .minhas-demandas-menu--para-cima .p-contextmenu-submenu {
     top: auto !important; // PrimeNG posiciona o submenu em top: 0 por estilo inline.

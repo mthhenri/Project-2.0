@@ -202,8 +202,15 @@
         color: var(--app-surface-300);
         font-size: 0.8rem;
 
-        .documentacao-seletor__marca--cheia {
-            color: var(--p-primary-500);
+        // Marca preenchida na cor do tipo, a mesma da árvore e da demanda aberta.
+        .documentacao-seletor__marca--tecnica.documentacao-seletor__marca--cheia {
+            color: var(--app-icone-tecnica);
+        }
+        .documentacao-seletor__marca--cliente.documentacao-seletor__marca--cheia {
+            color: var(--app-icone-cliente);
+        }
+        .documentacao-seletor__marca--doc.documentacao-seletor__marca--cheia {
+            color: var(--app-icone-doc);
         }
     }
 }

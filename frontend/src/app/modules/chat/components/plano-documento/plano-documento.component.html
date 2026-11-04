@@ -68,7 +68,7 @@
                             <p-tab [value]="opcao">
                                 <i [class]="iconeAba[opcao]" aria-hidden="true"></i>
                                 @if (opcao === Aba.DESCRICAO_CLIENTE && !podeEditarCliente()) {
-                                    <i class="pi pi-lock" aria-hidden="true"></i>
+                                    <i class="pi pi-lock icone-cadeado" aria-hidden="true"></i>
                                 }
                                 {{ rotuloAba[opcao] }}
                                 @if (

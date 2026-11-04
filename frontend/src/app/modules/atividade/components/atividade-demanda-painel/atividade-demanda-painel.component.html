@@ -47,6 +47,9 @@
                 (click)="escolherAba(aba.campo)"
             >
                 <i class="{{ aba.icone }}" aria-hidden="true"></i>
+                @if (aba.campo === "descricaoCliente") {
+                    <i class="pi pi-lock icone-cadeado" aria-hidden="true"></i>
+                }
                 {{ aba.curto }}
             </button>
         }

@@ -66,6 +66,9 @@
                 (click)="abrirDescricao($event, descricao.campo)"
             >
                 <i [class]="descricao.icone"></i>
+                @if (descricao.campo === "descricaoCliente" && !sessao.eGestor()) {
+                    <i class="pi pi-lock icone-cadeado" aria-hidden="true"></i>
+                }
             </button>
         }
     </span>

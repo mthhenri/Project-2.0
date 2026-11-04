@@ -14,6 +14,7 @@ import { calcularConsumoDaDemanda, contarAtividadesPorSituacao, filtrarAtividade
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
+import { DemandaBarraHorasComponent } from '../demanda-barra-horas/demanda-barra-horas.component';
 
 /**
  * As atividades de uma demanda (a aba Atividades do diálogo de detalhe e da demanda aberta da Árvore, tasks 239 e 304): o total consumido pela
@@ -25,7 +26,7 @@ import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe'
 @Component({
     selector: 'app-demanda-atividades-painel',
     standalone: true,
-    imports: [FormsModule, ButtonModule, SelectButtonModule, TooltipModule, AtividadeEmExecucaoComponent, AtividadeStatusIconeComponent, ExecucaoEncerrarDialogComponent, ExecucaoIniciarDialogComponent, PrioridadeSeloComponent, TempoExibicaoPipe],
+    imports: [FormsModule, ButtonModule, SelectButtonModule, TooltipModule, AtividadeEmExecucaoComponent, AtividadeStatusIconeComponent, DemandaBarraHorasComponent, ExecucaoEncerrarDialogComponent, ExecucaoIniciarDialogComponent, PrioridadeSeloComponent, TempoExibicaoPipe],
     templateUrl: './demanda-atividades-painel.component.html',
     styleUrl: './demanda-atividades-painel.component.scss',
 })
@@ -33,6 +34,8 @@ export class DemandaAtividadesPainelComponent {
     readonly unidadeTempo = inject(VisualizacaoTempoService);
 
     readonly atividades = input.required<AtividadeResumoDto[]>();
+    /** Horas estimadas da demanda: a barra do total mostra o estouro (executado acima do estimado) em vermelho. */
+    readonly horasEstimadas = input<number>(0);
     readonly carregando = input<boolean>(false);
     readonly nova = output<void>();
     readonly verTodas = output<void>();
