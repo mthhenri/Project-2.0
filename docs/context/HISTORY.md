@@ -12,6 +12,22 @@
 
 ---
 
+## 2026-11-04 — Task 275: excluir usuário só se ele não tiver execução
+
+Relato do autor: usuário com Y horas executadas foi excluído (soft delete); a demanda e o volume do projeto mostravam as Y horas, mas a lista de atividades da demanda não, porque `AtividadeRepository.listar`/`recuperar` e o `ExecucaoRepository` fazem `INNER JOIN usuario ... is_deleted = false` e as somas de demanda/volume não passam por `usuario`.
+
+**Decisão do autor:** `is_deleted = true` é morto, toda query filtra, sempre; **não** se afrouxa o filtro. Em vez disso, quem tem execução não pode ser excluído, só inativado; quem não tem pode (atividade sem execução não bloqueia). Usuários que já estavam excluídos com execução o autor ajusta à mão.
+
+**Mudou.** `UsuarioRepository.validarExecucoes` (existe execução não excluída, incluindo a ativa, em atividade não excluída de que o usuário é dono) e, em `UsuarioService.excluir`, uma `BusinessException` quando houver, depois das guardas de administrador e antes do `excluir`. Regra em `SYSTEM.SPEC.md` §14. Nenhuma query de leitura mudou; a tela de Usuários também não (a recusa volta como toast e a linha é restaurada pelo `error` do `excluir`).
+
+**Testes.** Unitários da service: backend 39 passando nos dois arquivos do usuário (+2: recusa com execução sem gravar e a guarda do último administrador antes da checagem). Integração: 372 passando (+1: sem atividade, atividade sem execução, execução encerrada, de outro usuário, excluída, ativa, atividade excluída). `build --workspace=backend` e `lint:tudo` limpos.
+
+**Ao vivo** (backend real, PostgreSQL 16 local): `DELETE /usuario/2` com uma execução devolveu 400 com a mensagem e o usuário seguiu ativo; com a execução excluída (soft delete) devolveu 200 e o usuário ficou `is_deleted`. **Não verificado:** a tela de Usuários no navegador (não mudou); frontend e desktop não rodados (não tocados).
+
+**Consequência aceita:** o usuário excluído sem execução leva as atividades dele para fora das listagens (o `JOIN` já filtra), como previsto pelo autor.
+
+---
+
 ## 2026-11-04 — P-068, P-064, P-065, rótulo "undefined" do chat e pacotes de IA (I-043)
 
 Pedido do autor, fora de spec (itens do bloco "Agora" do `PRIORITIES.md` mais dois defeitos do chat).

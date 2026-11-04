@@ -1425,6 +1425,8 @@ O **auxiliar** é um desenvolvedor com permissões a mais (task `tipo-auxiliar`,
 | Ver ponto de todos | ✅ | ❌ ver apenas próprio |
 | Gerenciar usuários | ✅ | ❌ |
 
+**Excluir usuário (task 275):** só é permitido a quem **não tem execução** (não excluída, em atividade não excluída de que ele é dono; a ativa conta). Quem tem só pode ser inativado: `UsuarioService.excluir` recusa com `BusinessException` (`UsuarioRepository.validarExecucoes`), depois das guardas de administrador. Usuário excluído é tratado como inexistente em toda leitura (`is_deleted = false`), então o histórico nunca fica sob um dono morto; o inativo segue existindo e aparece nas listagens, que decidem por `ativo` se o mostram.
+
 ### Demandas
 
 - Ao criar uma demanda, o sistema **auto-atribui apenas o criador desenvolvedor** via `demanda_usuario` (além de quaisquer membros explicitamente selecionados na criação). O **gestor não é atribuído** — tem acesso total a qualquer demanda/projeto por ser gestor, independentemente de `demanda_usuario`
