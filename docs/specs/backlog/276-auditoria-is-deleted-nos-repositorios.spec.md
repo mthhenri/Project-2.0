@@ -30,8 +30,8 @@ que essa regra está escrita nas regras de padrão do projeto de forma completa 
    `docs/SYSTEM.SPEC.md` §9.2 #1 e §16 #4, mas diz só "todo SELECT inclui `WHERE [tabela].is_deleted = false`".
    Reescrever (nos três pontos, sem divergir) para cobrir: toda tabela de negócio em `JOIN`/subconsulta/`EXISTS`/CTE,
    `UPDATE` e soft delete que não reabrem registro morto, o princípio "excluído é morto" e a lista fechada de
-   exceções do entregável 3. Acrescentar o princípio e o pedido de conferência às skills `sql-migrations` e
-   `conventions-check` (nas duas cópias, `.claude/skills/` e `.agents/skills/`, idênticas).
+   exceções do entregável 3. `CLAUDE.md`/`AGENTS.md` e as skills `sql-migrations` e `conventions-check` já trazem o princípio
+   (alinhamento de 2026-11-04); conferir que o texto final da regra e o das skills não divergem (cópias idênticas).
 5. **Trava mecânica.** Um verificador estático de SQL (script da raiz, no mesmo molde de
    `scripts/verificar-estilo-inline.mjs`, com teste em `*.test.mjs`) que reprova consulta de tabela de negócio sem o
    filtro, respeitando a lista fechada de exceções, ligado ao `npm run lint:tudo` para que a regra deixe de depender

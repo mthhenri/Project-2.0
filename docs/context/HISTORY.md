@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-11-04 — Instruções do agente: `is_deleted` é morto e o banco não carrega lógica (specs 276 e 277)
+
+Pedido do autor, fora de spec. Duas decisões viraram regra de trabalho em `CLAUDE.md`/`AGENTS.md` (idênticos) e nas skills `sql-migrations` e `conventions-check` (cópias em `.claude/` e `.agents/`, idênticas):
+- **`is_deleted = true` é morto:** toda tabela de negócio lida ou alterada (`FROM`, `JOIN`, subconsulta, `EXISTS`, CTE, `UPDATE`) filtra `is_deleted = false`; se a listagem mostra o inativo é por `ativo`. Usuário com execução só é inativado (task 275).
+- **Sem lógica no banco:** nada de trigger nem função de negócio; `created_date`, `updated_date`, `is_deleted` e `deleted_date` são da aplicação, e todo `UPDATE` grava `updated_date = NOW()`.
+
+Specs novas, só no backlog: **276** (auditoria do `is_deleted` em todo o SQL, com regra de padrão completa e verificador estático) e **277** (remover os 43 triggers `trg_<tabela>_updated_date` e a `fn_set_updated_date()`, migration 0079, auditoria dos ~47 `UPDATE`s). Levantamento: o banco migrado tem 43 triggers, todos desse tipo; `created_date`, `deleted_date` e `is_deleted` já eram da aplicação e nenhuma das quatro colunas tem `DEFAULT`.
+
+**Pendência declarada:** `SYSTEM.SPEC.md` §9.2 e §16, `CONVENTIONS.md` e `SCHEMA.md` ainda descrevem o trigger e a regra curta do `SELECT`; as instruções dizem que, nesses dois pontos, vale a decisão do autor até as specs 276 e 277 alinharem os documentos. Verificado: `repo:verificar` e `diff` das cópias; nenhum código mudou.
+
+---
+
 ## 2026-11-04 — Task 275: excluir usuário só se ele não tiver execução
 
 Relato do autor: usuário com Y horas executadas foi excluído (soft delete); a demanda e o volume do projeto mostravam as Y horas, mas a lista de atividades da demanda não, porque `AtividadeRepository.listar`/`recuperar` e o `ExecucaoRepository` fazem `INNER JOIN usuario ... is_deleted = false` e as somas de demanda/volume não passam por `usuario`.

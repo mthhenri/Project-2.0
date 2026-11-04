@@ -228,9 +228,18 @@ import { StandardResponse } from '@project20/shared/interfaces';
   `ResourceNotFoundException` ou `UnauthorizedAccessException`.
 - **Repository** só SQL, estende `BaseRepository`; use `executarConsulta<T>()`,
   `executarComando()` e `executarSoftDelete(id)`. Nunca DELETE físico.
-- Todo `SELECT` filtra `is_deleted = false`. Parâmetros nomeados (`:nomeParametro`), nunca `?` nem
+- Todo `SELECT` filtra `is_deleted = false`. **Registro `is_deleted = true` é morto**, equivale a apagado
+  fisicamente: toda tabela de negócio lida ou alterada (`FROM`, `JOIN`, subconsulta, `EXISTS`, CTE, `UPDATE`) filtra
+  `is_deleted = false`, sempre. Se uma listagem mostra o inativo (`ativo = false`) é decisão dela; o excluído nunca
+  entra. A única exceção é a leitura de restauração (`recuperarExcluid[oa]`) e o catálogo do banco. Parâmetros nomeados (`:nomeParametro`), nunca `?` nem
   interpolação. INSERT é `INSERT ... SELECT :campo ... RETURNING`, nunca `VALUES`. Nenhuma coluna
   tem `DEFAULT`: a aplicação fornece todos os valores.
+- **O banco não carrega lógica.** Sem trigger, sem função de negócio: `created_date`, `updated_date`, `is_deleted` e
+  `deleted_date` são gravados pela aplicação. Todo `UPDATE` novo grava `updated_date = NOW()`, também o `SET`
+  montado dinamicamente, e migration nova **não cria trigger**. Os 43 triggers `trg_<tabela>_updated_date`
+  existentes saem pela spec 277; a auditoria do filtro de exclusão é a spec 276. Até lá, `SYSTEM.SPEC.md` §9.2,
+  `CONVENTIONS.md` e `SCHEMA.md` ainda descrevem o trigger e a regra curta do `SELECT`: nesses dois pontos vale esta
+  decisão do autor (2026-11-04), e a documentação é alinhada por essas specs.
 - Aliases descritivos, sem abreviar (`demanda_filho`, não `d`). Tabelas no singular, em português
   snake_case. Datas genéricas `_date`, de negócio `_data` — nunca `_at`/`_em`.
 - Hierarquias e grafos: CTEs recursivas do PostgreSQL.
@@ -253,7 +262,8 @@ Regras de negócio que mais são violadas:
   entram em `demanda_usuario`: o acesso deles é por tipo (total). Não existe `projeto_usuario`.
 - Conexões do grafo de demandas (`DemandaConexao`) são validadas contra ciclos por CTE recursiva
   antes do INSERT.
-- Exclusões são sempre soft delete.
+- Exclusões são sempre soft delete. **Usuário com execução registrada não é excluído, só inativado**
+  (`UsuarioService.excluir`, task 275); quem não tem execução pode ser excluído.
 
 ## Comandos úteis
 
