@@ -34,8 +34,8 @@ colunas de negócio permanecem em português.
 | Unique index | `uix_` | `uix_usuario_login_ativo` |
 | Index | `ix_` | `ix_demanda_status` |
 | Check constraint | `chk_` | `chk_execucao_periodo_valido` |
-| Trigger | `trg_` | `trg_usuario_updated_date` |
-| Function | `fn_` | `fn_set_updated_date` |
+| Trigger | `trg_` | `trg_usuario_updated_date` (legado: não se criam novos) |
+| Function | `fn_` | `fn_set_updated_date` (legado: não se criam novas) |
 
 **Sem DEFAULT em nenhuma coluna.** Todo valor deve ser fornecido explicitamente pela aplicação.
 Defaults implícitos escondem validações e permitem que dados inválidos entrem no banco sem passar pela service.
@@ -52,7 +52,8 @@ Exemplos: `created_date`, `updated_date`, `deleted_date`, `inicio_data`, `fim_da
 ## Campos BaseEntity
 
 Presentes em todas as tabelas. Nomes em inglês por serem genéricos/arquiteturais.
-Sem DEFAULT — a aplicação fornece todos os valores explicitamente no INSERT.
+Sem DEFAULT — a aplicação fornece todos os valores explicitamente no INSERT, e `updated_date = NOW()` em todo UPDATE
+(o banco não carrega lógica: sem trigger novo; `is_deleted = true` é registro morto, filtrado em toda leitura).
 
 ```sql
 id            SERIAL        PRIMARY KEY,
@@ -92,7 +93,11 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 
 ---
 
-## Função de Trigger — updated_date
+## Função de Trigger — updated_date (legado, removido pela spec 277)
+
+> **Decisão do autor (2026-11-04): o banco não carrega lógica.** Tabela nova **não ganha** trigger; a aplicação grava
+> `updated_date = NOW()` em todo UPDATE (`SYSTEM.SPEC.md` §9.2 #14). Esta seção e os blocos `CREATE TRIGGER` de cada tabela
+> descrevem o banco **como está hoje** (43 triggers, migrations `0001` em diante) até a migration 0079 da spec 277 removê-los.
 
 Uma função de trigger no PostgreSQL é um bloco de código executado automaticamente
 pelo banco antes ou depois de um evento (INSERT, UPDATE, DELETE). Aqui usamos uma
