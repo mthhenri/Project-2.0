@@ -26,12 +26,10 @@ que essa regra está escrita nas regras de padrão do projeto de forma completa 
    motivo: leituras de restauração (`recuperarExcluid[oa]`, §9.2 #11), tabelas do catálogo do PostgreSQL e
    `knex_migrations` (Modelagem), funções de conjunto (`generate_series`, `jsonb_each`) e CTEs que só reorganizam
    linhas já filtradas. Qualquer outra isenção é defeito.
-4. **Regra de padrão completa.** Hoje a regra existe em `docs/CONVENTIONS.md` (§Proibições e exemplos SQL),
-   `docs/SYSTEM.SPEC.md` §9.2 #1 e §16 #4, mas diz só "todo SELECT inclui `WHERE [tabela].is_deleted = false`".
-   Reescrever (nos três pontos, sem divergir) para cobrir: toda tabela de negócio em `JOIN`/subconsulta/`EXISTS`/CTE,
-   `UPDATE` e soft delete que não reabrem registro morto, o princípio "excluído é morto" e a lista fechada de
-   exceções do entregável 3. `CLAUDE.md`/`AGENTS.md` e as skills `sql-migrations` e `conventions-check` já trazem o princípio
-   (alinhamento de 2026-11-04); conferir que o texto final da regra e o das skills não divergem (cópias idênticas).
+4. **Regra de padrão completa.** Já reescrita em 2026-11-04 (`docs/CONVENTIONS.md`, `docs/SYSTEM.SPEC.md` §9.2 #1 e
+   §16 #4, `CLAUDE.md`/`AGENTS.md` e skills) para cobrir toda tabela de negócio em `JOIN`/subconsulta/`EXISTS`/CTE e
+   `UPDATE`, o princípio "excluído é morto" e a lista fechada de exceções. Esta spec **confere** que o texto ficou
+   completo e sem divergência entre esses pontos (cópias idênticas) e o corrige se o inventário achar lacuna.
 5. **Trava mecânica.** Um verificador estático de SQL (script da raiz, no mesmo molde de
    `scripts/verificar-estilo-inline.mjs`, com teste em `*.test.mjs`) que reprova consulta de tabela de negócio sem o
    filtro, respeitando a lista fechada de exceções, ligado ao `npm run lint:tudo` para que a regra deixe de depender

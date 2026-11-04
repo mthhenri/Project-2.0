@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-11-04 — Documentos de padrão alinhados: `is_deleted` é morto e o banco não carrega lógica
+
+Pedido do autor, sequência do bloco abaixo: "a spec só vai corrigir o que já está; atualizar os docs garante que os próximos venham certos". Só documentação, nenhum código.
+
+**Mudou.** `SYSTEM.SPEC.md`: §9.2 #1 reescrita (toda tabela lida ou alterada filtra `is_deleted = false`, em `FROM`, `JOIN`, subconsulta, `EXISTS`, CTE e `UPDATE`; lista fechada de isenções; entidade com histórico dependente só é inativada), #12 passa a descrever os objetos genéricos legados, **#14 nova** (o banco não carrega lógica; `updated_date = NOW()` em todo `UPDATE`; migration nova sem trigger), exemplo de migration em §9.5 sem o `CREATE/DROP TRIGGER`, §16 #4 ampliada e **§16 #27 nova**. `CONVENTIONS.md`: exemplos de SQL (`UPDATE` com `updated_date`, `JOIN` com `is_deleted`), proibições e a seção de objetos genéricos de banco (trigger e função marcados como legado). `SCHEMA.md`: nota na seção BaseEntity e a seção "Função de Trigger" marcada como legado até a migration 0079. `CLAUDE.md`/`AGENTS.md`: removida a ressalva de que os documentos divergiam. Specs 276 e 277: o texto da regra deixou de ser entregável de escrita e virou conferência (276) e retirada do legado (277).
+
+**O que não mudou de propósito.** Os blocos `CREATE TRIGGER` por tabela em `SCHEMA.md` descrevem o banco real (43 triggers) e saem junto com a migration 0079.
+
+**Verificado:** `repo:verificar` e `diff` de `CLAUDE.md` com `AGENTS.md`. Nada rodou contra o banco ou o código.
+
+---
+
 ## 2026-11-04 — Instruções do agente: `is_deleted` é morto e o banco não carrega lógica (specs 276 e 277)
 
 Pedido do autor, fora de spec. Duas decisões viraram regra de trabalho em `CLAUDE.md`/`AGENTS.md` (idênticos) e nas skills `sql-migrations` e `conventions-check` (cópias em `.claude/` e `.agents/`, idênticas):

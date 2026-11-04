@@ -29,10 +29,10 @@ grave `updated_date = NOW()` explicitamente, sem nenhuma coluna ou data mudar de
    `mensagem-direta-provisoria.integracao.test.ts` ("atualizam `updated_date` no UPDATE (trigger)") passam a
    provar que o repository grava a data; um teste de esquema confirma que não sobrou nenhum trigger de negócio
    no banco migrado.
-5. **Documentação.** `SYSTEM.SPEC.md` (§ de nomes de objetos de banco, §9.2 #12 e o modelo de migration em §9.5),
-   `CONVENTIONS.md` (objetos genéricos de banco, prefixo `trg_`) e `SCHEMA.md` (seção "Função de Trigger" e o bloco
-   de trigger de cada tabela) deixam de descrever o trigger e passam a dizer que a aplicação grava a data. Os
-   textos de `CLAUDE.md`/`AGENTS.md` e das skills já trazem a regra (task 277 as cita); conferir que não divergem.
+5. **Documentação.** A regra nova já está escrita (2026-11-04) em `SYSTEM.SPEC.md` §9.2 #14 e §16 #27, `CONVENTIONS.md`,
+   `SCHEMA.md`, `CLAUDE.md`/`AGENTS.md` e nas skills. Esta spec retira o **legado**: a seção "Função de Trigger" e os
+   blocos `CREATE TRIGGER` de cada tabela em `SCHEMA.md`, as menções a `fn_set_updated_date`/`trg_*` em `SYSTEM.SPEC.md`
+   (§ de nomes, §9.2 #12) e `CONVENTIONS.md`, e as marcas "(legado)" dos prefixos `trg_`/`fn_`.
 6. **Trava mecânica.** O verificador estático de SQL da 276 ganha a regra: `UPDATE` de tabela de negócio sem
    `updated_date` é reprovado (exceto o soft delete e a restauração do `BaseRepository`, que já gravam), ligado ao
    `npm run lint:tudo`. Se a 276 ainda não estiver pronta, esta spec cria o verificador e a 276 o estende.
