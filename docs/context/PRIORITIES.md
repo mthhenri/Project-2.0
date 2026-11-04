@@ -22,12 +22,13 @@ Triagem de 2026-10-31, com o autor.
 Resolver primeiro; o autor considera simples ou próximo.
 
 - **I-043** — atualizar os pacotes dos provedores de IA para poder usar sempre os modelos mais novos. Perto de "Agora" por ser concreto (2026-10-31).
+- **P-068** — falha ao carregar lista aparece como lista vazia (Projetos, Tags e outras telas). Estado de erro com "Tentar de novo" nas listas principais (2026-11-03).
+- **P-073** — Defender barra o executável do Project Desktop; a correção de fundo é assinar o `.exe` (I-049). Bloqueia a distribuição (2026-11-03).
 
 ## 2. Specs já escritas no backlog
 
 Ainda **sem ordem decidida** entre si nem em relação ao bloco "Agora". O autor define.
 
-- `chat-grupos.spec.md` (tasks 246–250)
 - `chat-proposta-no-documento.spec.md` (tasks 273–277)
 - `261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md`
 - `222-modelagem-em-arquivo-json.spec.md`
@@ -40,6 +41,8 @@ Resolver depois do bloco "Agora", sem ordem entre si.
 - **P-023** — desfazer a entrada numa demanda sem outros membros é recusado. "Temos que resolver"; decidir antes se a recusa é o certo (2026-10-31).
 - **P-025** — conversas dos desenvolvedores: período e busca olham só uma janela do histórico. "Temos que ver, depois" (2026-10-31).
 - **P-043** — chat da IA: pergunta sem resposta, mas com custo registrado. "Temos que ver" (2026-10-31).
+- **P-064** — chat da IA sem feedback ao criar ou trocar conversas e planos. Entrou na triagem sem decisão de ordem (2026-11-03).
+- **P-065** — histórico somente leitura mostra o seletor Perguntas/Planejamento. Entrou na triagem sem decisão de ordem (2026-11-03).
 
 ## 4. A pensar
 
@@ -72,4 +75,4 @@ Sem urgência; o autor quer conversar antes de especificar.
 - **I-045** — volume por usuário (horas e atividades por pessoa no mês). "Isso não é nem um pouco prioridade agora" (2026-10-31).
 - **P-049** — campo `codigo` do modelo do projeto sem uso. Segue aberto por enquanto (2026-10-31).
 - **P-059** — `modelagem.page.spec` instável na suíte inteira. "Instável mesmo, é complexo" (2026-10-31).
-- **P-029** e **P-030** — ficam `ACEITO`, não vale o esforço (2026-10-31).
+- **Grupos** (`chat-grupos.spec.md`, tasks 246–250) — bacana, mas não é o caso fazer agora (2026-11-03).

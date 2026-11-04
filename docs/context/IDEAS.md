@@ -43,19 +43,6 @@
 - **Custo aparente:** migração tela a tela (10 módulos de frontend), definição de tema e tokens
   antes de qualquer tela, decisão do autor sobre cada primitivo. Precisa de milestone próprio.
 
-### I-002 — Lint e testes de service · repositório
-
-- **Ideia:** adicionar lint (ESLint/Prettier) aos três workspaces e testes de service com
-  repositórios falsos; ver `PROBLEMS.md` P-001, itens 1 e 2.
-- **Origem:** adoção do kit (2026-10-16). Os primeiros testes (validadores, migrations, helpers de
-  ponto) já existem.
-- **Por quê:** o gate de qualidade do `CLAUDE.md` pede lint e testes focados; hoje a regra de
-  permissão e de execução só é verificada ao vivo.
-- **Custo aparente:** configuração por workspace e um passo de CI; services estendem
-  `BaseRepository` com injeção do Knex, então os falsos precisam de um ponto de injeção.
-- **Situação (2026-11-01):** a parte de **testes** foi entregue nas tasks 171–187
-  (`docs/specs/done/testes-automatizados.spec.md`, concluída em 2026-10-19); o **lint** virou as specs 297–299 (padronização e lint) e já roda no CI (concluídas em `done/`).
-
 ### I-005 — IA lê o código dos projetos · chat IA/backend
 
 - **Ideia:** dar à IA acesso de leitura ao código-fonte dos projetos cadastrados, para responder dúvidas e relacionar
@@ -176,18 +163,6 @@
 - **Origem:** o autor lembrou, em 2026-10-31, de ter visto algo assim numa tela planejada ("tal usuário fez tantas coisas esse mês, tantas horas") e não achou. Não encontrei nada disso implementado: o Ponto mostra o saldo de horas por usuário contra a meta, e o volume (tasks 197, 199 e 251) é só por projeto.
 - **Por quê:** o gestor enxerga a carga e a entrega de cada pessoa sem abrir o ponto de cada uma.
 - **Custo aparente:** só gestor; uma consulta por usuário e mês (horas executadas e atividades), uma visão nova (talvez ao lado do Volume em Projetos ou em Usuários) e a decisão de como isso convive com o Ponto da equipe, que já mostra horas por pessoa no dia. Definir com o autor o que é "fez": horas, atividades concluídas ou os dois.
-
-### I-047 — Revisar o visual da aba Conexões (grafo) na Árvore · frontend/demanda
-- **Ideia:** revisar o visual do grafo de conexões da aba Conexões da demanda aberta (`demanda-aberta.component.html`), na Árvore das telas de Demandas e do detalhe do projeto.
-- **Origem:** o autor, em 2026-11-03: "a gente tem que revisar a tela do grafo das conexões". Ainda sem o que exatamente incomoda.
-- **Por quê:** a aba destoa do resto da Árvore, reorganizada nas tasks 238–241.
-- **Custo aparente:** antes de especificar, abrir a aba ao vivo com o autor (dois temas, os cinco formatos de desktop) e listar o que muda.
-
-### I-048 — Aba Atividades da demanda aberta também para o gestor · frontend/demanda
-- **Ideia:** liberar a aba Atividades da demanda aberta (na Árvore das telas de Demandas e do detalhe do projeto) para o gestor, mesmo sem ele ser membro da demanda.
-- **Origem:** o autor, em 2026-11-03: queria "a visão de atividades dentro da visão de árvore"; decidido na mesma conversa que é liberar a aba para o gestor, não pôr atividades como itens da árvore. O visual da aba fica para depois.
-- **Por quê:** hoje a aba só aparece para membro (`eMembro()` em `demanda-aberta.component.html`), e o gestor, que tem acesso total por tipo e não entra em `demanda_usuario`, nunca a vê.
-- **Custo aparente:** pequeno no front (trocar a condição da aba para membro ou visão total); conferir se o que a aba carrega e as ações dela (marcar, criar, iniciar) respeitam a permissão do gestor no backend. Não fazer até o autor pedir.
 
 ### I-049 — Executável do Project Desktop sem o aviso de "inseguro" ao baixar · desktop
 - **Ideia:** o `Project-Desktop-<versão>.exe` deixar de ser tratado como inseguro ao baixar e ao abrir.
