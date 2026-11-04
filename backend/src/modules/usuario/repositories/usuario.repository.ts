@@ -396,6 +396,31 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     }
 
     /**
+   * Confere se o usuário já tem execução registrada (inclui a ativa, sem `fim_data`): execução não excluída em atividade
+   * não excluída cujo dono é ele. Quem tem não pode ser excluído, só inativado.
+   */
+    async validarExecucoes(dto: UsuarioExcluirDto): Promise<boolean> {
+        const resultado = await this.executarConsulta<{ existe: boolean }>(
+            `
+                SELECT
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            atividade
+                            INNER JOIN execucao ON execucao.atividade_id = atividade.id
+                            AND execucao.is_deleted = false
+                        WHERE
+                            atividade.usuario_id = :id
+                            AND atividade.is_deleted = false
+                    ) AS existe
+            `,
+            { id: dto.id },
+        );
+        return resultado[0].existe;
+    }
+
+    /**
    * Recupera o usuário **excluído**. É a única leitura que filtra `is_deleted = true`: a restauração
    * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
    */

@@ -34,7 +34,7 @@ test('restaurar: recusa quando o login foi reutilizado por um usuário ativo', a
 
 // Permanência do último administrador ativo (substitui a guarda de gestor, P-002): rebaixar, inativar e
 // excluir passam pela mesma guarda.
-function criarRepositorioDeUsuarios(alvo: { id: number; tipo: TipoUsuarioEnum; ativo: boolean }, administradoresAtivos: number[]) {
+function criarRepositorioDeUsuarios(alvo: { id: number; tipo: TipoUsuarioEnum; ativo: boolean }, administradoresAtivos: number[], possuiExecucoes = false) {
     const chamadas: string[] = [];
     return {
         chamadas,
@@ -43,6 +43,7 @@ function criarRepositorioDeUsuarios(alvo: { id: number; tipo: TipoUsuarioEnum; a
         validarLogin: async () => false,
         listarAdministradoresAtivos: async () => administradoresAtivos.map((id) => ({ id })),
         alterar: async () => { chamadas.push('alterar'); return {}; },
+        validarExecucoes: async () => possuiExecucoes,
         excluir: async () => { chamadas.push('excluir'); },
         restaurar: async () => { chamadas.push('restaurar'); return {}; },
         alterarSenha: async () => { chamadas.push('alterarSenha'); },
@@ -151,6 +152,25 @@ test('excluir: administrador com outro administrador ativo, gestor e desenvolved
     const desenvolvedor = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, []);
     await criarServico(desenvolvedor).excluir({ id: 3 }, GESTOR_LOGADO);
     assert.deepEqual(desenvolvedor.chamadas, ['excluir']);
+});
+
+test('excluir: usuário com execução registrada é recusado e nada é gravado; só inativar resolve', async () => {
+    const desenvolvedor = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, [], true);
+    await assert.rejects(() => criarServico(desenvolvedor).excluir({ id: 3 }, GESTOR_LOGADO), BusinessException);
+    assert.deepEqual(desenvolvedor.chamadas, []);
+
+    await criarServico(desenvolvedor).alterar({ id: 3, ativo: false }, GESTOR_LOGADO);
+    assert.deepEqual(desenvolvedor.chamadas, ['alterar']);
+});
+
+test('excluir: a guarda do último administrador vem antes da checagem de execuções', async () => {
+    let consultouExecucoes = false;
+    const repositorio = {
+        ...criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [2], true),
+        validarExecucoes: async () => { consultouExecucoes = true; return true; },
+    };
+    await assert.rejects(() => criarServico(repositorio).excluir({ id: 2 }, ADMINISTRADOR_LOGADO), BusinessException);
+    assert.equal(consultouExecucoes, false);
 });
 
 // Gestor não gerencia administrador (criar, promover, alterar, excluir, restaurar, trocar senha).

@@ -2,7 +2,9 @@ import * as assert from 'node:assert/strict';
 import { TipoUsuarioEnum } from '@project20/shared';
 import { testarComBanco } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
-import { criarAdministrador, criarAuxiliar, criarDesenvolvedor, criarGestor, criarUsuario } from '../../../testes/fabricas';
+import {
+    criarAdministrador, criarAtividade, criarAuxiliar, criarDesenvolvedor, criarExecucao, criarGestor, criarUsuario, excluirLinha,
+} from '../../../testes/fabricas';
 import { UsuarioRepository } from './usuario.repository';
 
 const DADOS_INSERIR = {
@@ -325,4 +327,31 @@ testarComBanco('alterar troca o login e o devolve', async (conexao) => {
     const alterado = await repositorio.alterar({ id: usuario.id, login: 'login.trocado' });
     assert.equal(alterado.login, 'login.trocado');
     assert.equal(await repositorio.validarLogin({ login: 'login.trocado' }), true);
+});
+
+testarComBanco('validarExecucoes: só execução não excluída, em atividade não excluída e do próprio usuário', async (conexao) => {
+    const repositorio = criarRepositorio(UsuarioRepository, conexao);
+    const semAtividade = await criarDesenvolvedor(conexao);
+    assert.equal(await repositorio.validarExecucoes({ id: semAtividade.id }), false, 'sem atividade');
+
+    const semExecucao = await criarDesenvolvedor(conexao);
+    await criarAtividade(conexao, { usuarioId: semExecucao.id });
+    assert.equal(await repositorio.validarExecucoes({ id: semExecucao.id }), false, 'atividade sem execução');
+
+    const comExecucao = await criarDesenvolvedor(conexao);
+    const atividade = await criarAtividade(conexao, { usuarioId: comExecucao.id });
+    const execucao = await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-01-05T09:00:00Z', fimData: '2026-01-05T10:00:00Z' });
+    assert.equal(await repositorio.validarExecucoes({ id: comExecucao.id }), true, 'execução encerrada');
+    assert.equal(await repositorio.validarExecucoes({ id: semExecucao.id }), false, 'execução de outro usuário não conta');
+
+    await excluirLinha(conexao, 'execucao', execucao.id);
+    assert.equal(await repositorio.validarExecucoes({ id: comExecucao.id }), false, 'execução excluída');
+
+    const ativa = await criarDesenvolvedor(conexao);
+    const atividadeAtiva = await criarAtividade(conexao, { usuarioId: ativa.id });
+    await criarExecucao(conexao, { atividadeId: atividadeAtiva.id, inicioData: '2026-01-05T09:00:00Z', fimData: null });
+    assert.equal(await repositorio.validarExecucoes({ id: ativa.id }), true, 'execução ativa, sem fim');
+
+    await excluirLinha(conexao, 'atividade', atividadeAtiva.id);
+    assert.equal(await repositorio.validarExecucoes({ id: ativa.id }), false, 'atividade excluída');
 });

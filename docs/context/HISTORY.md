@@ -12,6 +12,46 @@
 
 ---
 
+## 2026-11-04 — Documentos de padrão alinhados: `is_deleted` é morto e o banco não carrega lógica
+
+Pedido do autor, sequência do bloco abaixo: "a spec só vai corrigir o que já está; atualizar os docs garante que os próximos venham certos". Só documentação, nenhum código.
+
+**Mudou.** `SYSTEM.SPEC.md`: §9.2 #1 reescrita (toda tabela lida ou alterada filtra `is_deleted = false`, em `FROM`, `JOIN`, subconsulta, `EXISTS`, CTE e `UPDATE`; lista fechada de isenções; entidade com histórico dependente só é inativada), #12 passa a descrever os objetos genéricos legados, **#14 nova** (o banco não carrega lógica; `updated_date = NOW()` em todo `UPDATE`; migration nova sem trigger), exemplo de migration em §9.5 sem o `CREATE/DROP TRIGGER`, §16 #4 ampliada e **§16 #27 nova**. `CONVENTIONS.md`: exemplos de SQL (`UPDATE` com `updated_date`, `JOIN` com `is_deleted`), proibições e a seção de objetos genéricos de banco (trigger e função marcados como legado). `SCHEMA.md`: nota na seção BaseEntity e a seção "Função de Trigger" marcada como legado até a migration 0079. `CLAUDE.md`/`AGENTS.md`: removida a ressalva de que os documentos divergiam. Specs 276 e 277: o texto da regra deixou de ser entregável de escrita e virou conferência (276) e retirada do legado (277).
+
+**O que não mudou de propósito.** Os blocos `CREATE TRIGGER` por tabela em `SCHEMA.md` descrevem o banco real (43 triggers) e saem junto com a migration 0079.
+
+**Verificado:** `repo:verificar` e `diff` de `CLAUDE.md` com `AGENTS.md`. Nada rodou contra o banco ou o código.
+
+---
+
+## 2026-11-04 — Instruções do agente: `is_deleted` é morto e o banco não carrega lógica (specs 276 e 277)
+
+Pedido do autor, fora de spec. Duas decisões viraram regra de trabalho em `CLAUDE.md`/`AGENTS.md` (idênticos) e nas skills `sql-migrations` e `conventions-check` (cópias em `.claude/` e `.agents/`, idênticas):
+- **`is_deleted = true` é morto:** toda tabela de negócio lida ou alterada (`FROM`, `JOIN`, subconsulta, `EXISTS`, CTE, `UPDATE`) filtra `is_deleted = false`; se a listagem mostra o inativo é por `ativo`. Usuário com execução só é inativado (task 275).
+- **Sem lógica no banco:** nada de trigger nem função de negócio; `created_date`, `updated_date`, `is_deleted` e `deleted_date` são da aplicação, e todo `UPDATE` grava `updated_date = NOW()`.
+
+Specs novas, só no backlog: **276** (auditoria do `is_deleted` em todo o SQL, com regra de padrão completa e verificador estático) e **277** (remover os 43 triggers `trg_<tabela>_updated_date` e a `fn_set_updated_date()`, migration 0079, auditoria dos ~47 `UPDATE`s). Levantamento: o banco migrado tem 43 triggers, todos desse tipo; `created_date`, `deleted_date` e `is_deleted` já eram da aplicação e nenhuma das quatro colunas tem `DEFAULT`.
+
+**Pendência declarada:** `SYSTEM.SPEC.md` §9.2 e §16, `CONVENTIONS.md` e `SCHEMA.md` ainda descrevem o trigger e a regra curta do `SELECT`; as instruções dizem que, nesses dois pontos, vale a decisão do autor até as specs 276 e 277 alinharem os documentos. Verificado: `repo:verificar` e `diff` das cópias; nenhum código mudou.
+
+---
+
+## 2026-11-04 — Task 275: excluir usuário só se ele não tiver execução
+
+Relato do autor: usuário com Y horas executadas foi excluído (soft delete); a demanda e o volume do projeto mostravam as Y horas, mas a lista de atividades da demanda não, porque `AtividadeRepository.listar`/`recuperar` e o `ExecucaoRepository` fazem `INNER JOIN usuario ... is_deleted = false` e as somas de demanda/volume não passam por `usuario`.
+
+**Decisão do autor:** `is_deleted = true` é morto, toda query filtra, sempre; **não** se afrouxa o filtro. Em vez disso, quem tem execução não pode ser excluído, só inativado; quem não tem pode (atividade sem execução não bloqueia). Usuários que já estavam excluídos com execução o autor ajusta à mão.
+
+**Mudou.** `UsuarioRepository.validarExecucoes` (existe execução não excluída, incluindo a ativa, em atividade não excluída de que o usuário é dono) e, em `UsuarioService.excluir`, uma `BusinessException` quando houver, depois das guardas de administrador e antes do `excluir`. Regra em `SYSTEM.SPEC.md` §14. Nenhuma query de leitura mudou; a tela de Usuários também não (a recusa volta como toast e a linha é restaurada pelo `error` do `excluir`).
+
+**Testes.** Unitários da service: backend 39 passando nos dois arquivos do usuário (+2: recusa com execução sem gravar e a guarda do último administrador antes da checagem). Integração: 372 passando (+1: sem atividade, atividade sem execução, execução encerrada, de outro usuário, excluída, ativa, atividade excluída). `build --workspace=backend` e `lint:tudo` limpos.
+
+**Ao vivo** (backend real, PostgreSQL 16 local): `DELETE /usuario/2` com uma execução devolveu 400 com a mensagem e o usuário seguiu ativo; com a execução excluída (soft delete) devolveu 200 e o usuário ficou `is_deleted`. **Não verificado:** a tela de Usuários no navegador (não mudou); frontend e desktop não rodados (não tocados).
+
+**Consequência aceita:** o usuário excluído sem execução leva as atividades dele para fora das listagens (o `JOIN` já filtra), como previsto pelo autor.
+
+---
+
 ## 2026-11-04 — P-068, P-064, P-065, rótulo "undefined" do chat e pacotes de IA (I-043)
 
 Pedido do autor, fora de spec (itens do bloco "Agora" do `PRIORITIES.md` mais dois defeitos do chat).

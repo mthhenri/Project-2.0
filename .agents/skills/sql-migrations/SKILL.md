@@ -39,6 +39,8 @@ ls "backend/src/database/migrations/" | sort | tail -1
   que não roda em transação (ex.: `CREATE INDEX CONCURRENTLY`) leva `-- NO TRANSACTION`.
 - Campos da BaseEntity sempre explícitos (`created_date`/`updated_date`/`is_deleted`/
   `deleted_date`), nunca com `DEFAULT` (`SYSTEM.SPEC.md` §9.1–§9.2). Datas como `timestamptz`.
+- **Sem trigger nem função de negócio no banco** (decisão do autor, 2026-11-04; os existentes saem pela spec
+  277): migration nova não cria `trg_*_updated_date`; a aplicação grava `updated_date = NOW()` em todo `UPDATE`.
 - Ambiente que já existia antes da troca de empacotamento (task 90) precisa ter rodado
   `backend/src/database/realinhar-knex-migrations.sql` uma vez; migration nova não depende disso.
 
@@ -65,7 +67,9 @@ com sufixo consistente — nunca dois padrões (`_date` e `_at`) convivendo.
 Só SQL, estendendo o repositório base do projeto. Parâmetro nomeado sempre — nunca posicional,
 nunca interpolação. `INSERT ... SELECT :campo ... RETURNING` no lugar de `VALUES`, se essa for a
 convenção adotada (evita que um `DEFAULT` de coluna produza valor implícito não visível no código).
-Todo `SELECT` filtra a exclusão lógica, se o projeto usa soft delete. Alias descritivo (nunca
+Toda tabela lida ou alterada filtra a exclusão lógica (`is_deleted = false`) — no `FROM`, no `JOIN`, na
+subconsulta, no `EXISTS`, na CTE e no `UPDATE`; registro excluído é morto, nunca aparece nem soma. Todo `UPDATE`
+grava `updated_date = NOW()`. Alias descritivo (nunca
 abreviado). DTO interno no parâmetro, nunca primitivo solto nem objeto parcial genérico. Query do
 módulo A nunca no repositório do módulo B.
 

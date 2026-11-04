@@ -186,6 +186,15 @@ SELECT :login, :nomeCompleto, :ativo, NOW(), NOW(), false
 RETURNING id, login, nome_completo, created_date
 { login, nomeCompleto, ativo }
 
+-- ✅ UPDATE sempre grava updated_date (o banco não tem trigger) e filtra o excluído
+UPDATE usuario SET nome_completo = :nomeCompleto, updated_date = NOW()
+WHERE usuario.id = :id AND usuario.is_deleted = false
+
+-- ✅ Excluído é morto em TODA tabela lida: FROM, JOIN, subconsulta, EXISTS, CTE e UPDATE
+FROM atividade
+INNER JOIN execucao ON execucao.atividade_id = atividade.id AND execucao.is_deleted = false
+WHERE atividade.is_deleted = false
+
 -- ✅ Soft delete via BaseRepository
 executarSoftDelete(identificador)  -- nunca DELETE físico
 
@@ -198,6 +207,9 @@ SELECT * FROM usuario WHERE login = ?            -- posicional proibido
 INSERT INTO usuario VALUES (...)                 -- VALUES proibido
 WHERE login = '${login}'                        -- interpolação proibida
 SELECT * FROM usuario                           -- sem filtro is_deleted proibido
+INNER JOIN execucao ON execucao.atividade_id = atividade.id  -- sem execucao.is_deleted = false: proibido
+UPDATE usuario SET nome_completo = :nome        -- sem updated_date = NOW(): proibido
+CREATE TRIGGER ...                              -- sem lógica no banco: proibido
 INNER JOIN atividade a ON a.id = e.atividade_id -- alias abreviado proibido
 cor VARCHAR(7) NOT NULL DEFAULT '#6366f1'       -- DEFAULT proibido
 ```
@@ -218,12 +230,12 @@ cor VARCHAR(7) NOT NULL DEFAULT '#6366f1'       -- DEFAULT proibido
 - Colunas BaseEntity: snake_case inglês — `is_deleted`, `created_date`, `updated_date`, `deleted_date`
 - Hierarquias e grafos: CTEs recursivos do PostgreSQL
 
-**Objetos genéricos de banco (funções, triggers de infraestrutura): inglês.**
-Mecanismos que existiriam em qualquer projeto (manutenção de BaseEntity, etc.) seguem a regra de linguagem genérica → inglês. Objetos de **negócio** (tabelas/colunas) permanecem em português.
+**Objetos genéricos de banco: inglês — e o banco não carrega lógica.**
+O que existiria em qualquer projeto segue a regra de linguagem genérica → inglês; objetos de **negócio** (tabelas/colunas) permanecem em português. Decisão do autor (2026-11-04): **sem trigger nem função de negócio novos**; `created_date`, `updated_date`, `is_deleted` e `deleted_date` são gravados pela aplicação (todo `UPDATE` grava `updated_date = NOW()`). Os `trg_<tabela>_updated_date` e a `fn_set_updated_date()` abaixo são **legado**, removidos pela spec 277.
 
 ```sql
--- ✅ Função/trigger genérico de infraestrutura → inglês
-CREATE FUNCTION fn_set_updated_date() ...      -- mantém updated_date da BaseEntity
+-- Legado (spec 277 remove): o nome já segue o padrão em inglês
+CREATE FUNCTION fn_set_updated_date() ...      -- mantinha updated_date da BaseEntity
 CREATE TRIGGER trg_usuario_updated_date ...
 
 -- ❌ Verbo português em objeto genérico
@@ -244,8 +256,8 @@ auto-gerar — sempre nomear explicitamente):
 | Unique index | `uix_` | `uix_usuario_login_ativo` |
 | Index | `ix_` | `ix_demanda_status` |
 | Check constraint | `chk_` | `chk_execucao_periodo_valido` |
-| Trigger | `trg_` | `trg_usuario_updated_date` |
-| Function | `fn_` | `fn_set_updated_date` |
+| Trigger | `trg_` | `trg_usuario_updated_date` (legado: não se criam novos) |
+| Function | `fn_` | `fn_set_updated_date` (legado: não se criam novas) |
 
 ```sql
 -- ✅ Constraint nomeada com prefixo chk_
@@ -511,7 +523,9 @@ Um comando só confere tudo: `npm run lint:tudo` (zero erros; nunca desligue reg
 | Abreviar nomes | Nome completo sempre |
 | Lógica na controller | Mover para a service |
 | ORM / query builder | `knex.raw()` com SQL bruto |
-| `SELECT` sem `is_deleted = false` | Sempre filtrar registros deletados |
+| `SELECT`, `JOIN`, subconsulta, CTE ou `UPDATE` sem `is_deleted = false` | Toda tabela lida ou alterada filtra; excluído é morto (exceção: `recuperarExcluid[oa]`) |
+| `UPDATE` sem `updated_date = NOW()` | A aplicação grava as datas genéricas |
+| Trigger ou função de negócio no banco | O banco não carrega lógica |
 | `?` posicional em SQL | `:nomeParametro` com objeto |
 | `VALUES` no INSERT | `INSERT ... SELECT ... RETURNING` |
 | `DEFAULT` em coluna SQL | Aplicação sempre fornece todos os valores |
