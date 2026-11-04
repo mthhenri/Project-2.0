@@ -83,7 +83,7 @@
                         (keydown)="aoInteragirComARolagem()"
                     >
                         <div #fluxo class="chat__fluxo">
-                            @if (!jaCarregou()) {
+                            @if (carregandoConversa()) {
                                 <div class="chat__esqueleto" aria-busy="true">
                                     <div class="chat__linha chat__linha--usuario">
                                         <p-skeleton height="4.4375rem" width="45%" />
@@ -475,9 +475,6 @@
                                 (onClick)="voltarParaHoje()"
                             />
                         </p>
-                        <div class="chat__base">
-                            <ng-container [ngTemplateOutlet]="chaveDeModo" />
-                        </div>
                     </div>
                 }
             }

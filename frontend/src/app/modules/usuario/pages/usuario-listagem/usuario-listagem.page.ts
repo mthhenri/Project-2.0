@@ -95,6 +95,8 @@ export class UsuarioListagemPage implements OnInit {
     readonly usuarios = signal<UsuarioResumoDto[]>([]);
     readonly totalRegistros = signal<number>(0);
     readonly carregando = signal<boolean>(false);
+    /** A última carga falhou: sem itens na tela, a página mostra o erro com "Tentar de novo" no lugar do vazio. */
+    readonly erroAoCarregar = signal<boolean>(false);
     readonly jaCarregou = signal<boolean>(false);
     readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
     readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
@@ -176,6 +178,7 @@ export class UsuarioListagemPage implements OnInit {
 
     buscarUsuarios(): void {
         this.carregando.set(true);
+        this.erroAoCarregar.set(false);
 
         const filtros: UsuarioListarDto = {
             pagina: this.paginaAtual(),
@@ -201,6 +204,7 @@ export class UsuarioListagemPage implements OnInit {
                         this.totalRegistros.set(resposta.dados.totalItens);
                     }
                 },
+                error: () => this.erroAoCarregar.set(true),
             });
     }
 

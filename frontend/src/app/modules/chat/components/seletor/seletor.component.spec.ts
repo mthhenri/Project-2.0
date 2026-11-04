@@ -72,6 +72,13 @@ describe('SeletorComponent — botão', () => {
         expect(montado.elemento.querySelector('.chat-seletor__gatilho-etiqueta')?.textContent).toBe('conversa do dia');
     });
 
+    it('antes da primeira carga (dia ainda vazio) mostra "Carregando…" e nunca "undefined"', async () => {
+        const montado = await montar({ diaAtual: '', hoje: '' }, []);
+        const rotulo = montado.elemento.querySelector('.chat-seletor__gatilho-texto')?.textContent;
+        expect(rotulo).toBe('Carregando…');
+        expect(rotulo).not.toContain('undefined');
+    });
+
     it('a etiqueta "conversa do dia" some ao abrir um dia antigo', async () => {
         const montado = await montar({ diaAtual: '2026-10-18' });
         expect(montado.elemento.querySelector('.chat-seletor__gatilho-etiqueta')).toBeNull();

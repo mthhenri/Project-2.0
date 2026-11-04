@@ -256,7 +256,22 @@
                 <tr>
                     <td [attr.colspan]="sessao.eGestor() ? 6 : 5">
                         <div class="usuario-listagem__vazio">
-                            @if (filtroAtivo()) {
+                            @if (erroAoCarregar()) {
+                                <i
+                                    class="pi pi-exclamation-triangle text-4xl text-muted-color"
+                                    aria-hidden="true"
+                                ></i>
+                                <p class="text-muted-color mt-3" role="alert">
+                                    Não foi possível carregar os usuários.
+                                </p>
+                                <p-button
+                                    label="Tentar de novo"
+                                    icon="pi pi-refresh"
+                                    [outlined]="true"
+                                    class="mt-2"
+                                    (onClick)="buscarUsuarios()"
+                                />
+                            } @else if (filtroAtivo()) {
                                 <i class="pi pi-search text-4xl text-muted-color"></i>
                                 <p class="text-muted-color mt-3">
                                     Nenhum usuário corresponde aos filtros.

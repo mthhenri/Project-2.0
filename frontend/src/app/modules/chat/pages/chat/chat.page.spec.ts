@@ -830,6 +830,34 @@ describe('ChatPage — histórico: abrir um dia anterior', () => {
         expect(sugestoesVisiveis(montado)).toEqual([]);
     });
 
+    it('na conversa antiga somente leitura não aparece o seletor Perguntas/Planejamento (P-065)', async () => {
+        const montado = await montarChat({ mensagens: [DELA('Oi de hoje'), DA_IA('Olá de hoje!')], conversas: CONVERSAS });
+        expect(montado.elemento.querySelector('.chat__modo')).not.toBeNull();
+
+        const painel = await abrirSeletor(montado);
+        Array.from(painel.querySelectorAll<HTMLButtonElement>('button')).find((item) => item.textContent?.includes('Conversa de ontem'))!.click();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', `/chat/conversa/${ONTEM}`), { conversaId: `1-${ONTEM}`, mensagens: [DELA('Falei ontem', { conversaId: `1-${ONTEM}` })] });
+        await montado.atualizar();
+
+        expect(texto(montado)).toContain('só para leitura');
+        expect(montado.elemento.querySelector('.chat__modo')).toBeNull();
+    });
+
+    it('ao trocar de dia mostra o esqueleto no lugar da conversa até a nova chegar (P-064)', async () => {
+        const montado = await montarChat({ mensagens: [DELA('Oi de hoje'), DA_IA('Olá de hoje!')], conversas: CONVERSAS });
+        expect(montado.elemento.querySelector('.chat__esqueleto')).toBeNull();
+
+        const painel = await abrirSeletor(montado);
+        Array.from(painel.querySelectorAll<HTMLButtonElement>('button')).find((item) => item.textContent?.includes('Conversa de ontem'))!.click();
+        await montado.atualizar();
+        expect(montado.elemento.querySelector('.chat__esqueleto')).not.toBeNull();
+
+        responderSucesso(esperarRequisicao(montado.http, 'GET', `/chat/conversa/${ONTEM}`), { conversaId: `1-${ONTEM}`, mensagens: [DELA('Falei ontem', { conversaId: `1-${ONTEM}` })] });
+        await montado.atualizar();
+        expect(montado.elemento.querySelector('.chat__esqueleto')).toBeNull();
+        expect(conversaDa(montado)).toContain('Falei ontem');
+    });
+
     it('"Voltar para hoje" reabre a conversa de hoje com o campo de envio', async () => {
         const montado = await abrirOntem();
 
@@ -983,11 +1011,16 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
         Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.chat__sem-plano button')).find((item) => item.textContent?.includes('Novo plano'))!.click();
         const criacao = esperarRequisicao(montado.http, 'POST', '/plano');
         expect(criacao.request.body).toEqual({});
+        // P-064: enquanto o plano é criado e a conversa dele não chega, a conversa mostra o esqueleto (e não "Nenhuma mensagem").
+        await montado.atualizar();
+        expect(montado.elemento.querySelector('.chat__esqueleto')).not.toBeNull();
         responderSucesso(criacao, { id: 8, titulo: 'Plano sem título', projetoId: null, demandaId: null, solo: false, versao: 1 });
         await montado.atualizar();
+        expect(montado.elemento.querySelector('.chat__esqueleto')).not.toBeNull();
         responderSucesso(pedidoDoPlano(montado, 8), { ...PLANO, id: 8, titulo: 'Plano sem título', projetoId: null, projetoNome: null });
         responderSucesso(pedidoDaConversa(montado, 8), { conversaId: 'plano-8', planoId: 8, mensagens: [], autores: {} });
         await responderListas(montado, []);
+        expect(montado.elemento.querySelector('.chat__esqueleto')).toBeNull();
 
         expect(texto(montado)).toContain('Pessoal');
         expect(montado.elemento.querySelector('.chat-seletor__gatilho-texto')?.textContent).toBe('Plano sem título');

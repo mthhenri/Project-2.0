@@ -100,7 +100,24 @@
     } @else {
         <div class="tag-listagem__conteudo" [class.conteudo-recarregando]="recarregando()">
             <app-barra-recarga [ativa]="recarregando()" />
-            @if (tags().length === 0) {
+            @if (erroAoCarregar() && tags().length === 0) {
+                <div class="tag-listagem__vazio">
+                    <i
+                        class="pi pi-exclamation-triangle text-4xl text-muted-color"
+                        aria-hidden="true"
+                    ></i>
+                    <p class="text-muted-color mt-3" role="alert">
+                        Não foi possível carregar as tags.
+                    </p>
+                    <p-button
+                        label="Tentar de novo"
+                        icon="pi pi-refresh"
+                        [outlined]="true"
+                        class="mt-2"
+                        (onClick)="buscarTags()"
+                    />
+                </div>
+            } @else if (tags().length === 0) {
                 <div class="tag-listagem__vazio">
                     <i class="pi pi-tags text-4xl text-muted-color"></i>
                     <p class="text-muted-color mt-3">

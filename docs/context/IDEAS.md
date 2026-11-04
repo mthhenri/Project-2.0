@@ -148,6 +148,7 @@
 - **Origem:** conversa de 2026-10-31 com o autor, ao triar as ideias.
 - **Por quê:** um modelo novo pode exigir uma versão recente do pacote, e o nome do modelo é texto livre na configuração da IA; sem pacote em dia, o administrador não consegue trocar para o modelo mais novo.
 - **Custo aparente:** baixo a médio: subir as versões, conferir mudanças que quebram (tipos, nomes de campo, a ferramenta de busca de cada provedor, ver spec 294), rodar os testes da IA e conferir ao vivo um provedor de cada. Decidir se a atualização vira rotina.
+- **Andamento (2026-11-04):** versões subidas (`@anthropic-ai/sdk` 0.135→1.4, `@google/genai` 2.30→2.32, `openai` 7.39→7.50); build e testes do backend passam. **Falta** a chamada real a um provedor de cada (sem chave no ambiente de verificação) e decidir se a atualização vira rotina.
 
 ### I-044 — Comando do usuário para pedir pesquisa na internet · chat IA
 

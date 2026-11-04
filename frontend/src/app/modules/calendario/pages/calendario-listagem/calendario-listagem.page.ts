@@ -100,6 +100,8 @@ export class CalendarioListagemPage implements OnInit {
 
     readonly diasNaoUteis = signal<DiaNaoUtilResumoDto[]>([]);
     readonly carregando = signal<boolean>(false);
+    /** A última carga falhou: sem dias carregados, a tabela mostra o erro com "Tentar de novo" no lugar do vazio. */
+    readonly erroAoCarregar = signal<boolean>(false);
     private readonly jaCarregou = signal<boolean>(false);
     readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
     readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
@@ -194,6 +196,7 @@ export class CalendarioListagemPage implements OnInit {
 
     buscarDias(): void {
         this.carregando.set(true);
+        this.erroAoCarregar.set(false);
         this.calendarioService
             .listar()
             .pipe(finalize(() => {
@@ -206,6 +209,7 @@ export class CalendarioListagemPage implements OnInit {
                         this.diasNaoUteis.set(resposta.dados);
                     }
                 },
+                error: () => this.erroAoCarregar.set(true),
             });
     }
 

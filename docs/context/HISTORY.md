@@ -12,6 +12,23 @@
 
 ---
 
+## 2026-11-04 — P-068, P-064, P-065, rótulo "undefined" do chat e pacotes de IA (I-043)
+
+Pedido do autor, fora de spec (itens do bloco "Agora" do `PRIORITIES.md` mais dois defeitos do chat).
+
+**Mudou.**
+- **P-068:** Projetos, Tags, Usuários, Calendário e Demandas (lista de projetos) ganharam `erroAoCarregar*` e mostram "Não foi possível carregar…" com "Tentar de novo" no lugar do estado vazio, no padrão de Atividades. Antes a falha aparecia como "Nenhum projeto ainda" / "Nenhuma tag ainda".
+- **Chat — rótulo "undefined":** `hoje` e `diaExibido` são vazios até a primeira carga e o botão do seletor montava `undefined/undefined`; agora mostra "Carregando…" (`SeletorComponent.rotuloDoBotao`).
+- **P-064:** `carregandoConversa` (primeira carga, troca de dia, volta para hoje, leitura da conversa do plano, criação de plano e abertura do último plano) põe o esqueleto no lugar da conversa; as sugestões somem durante a troca. Falha restaura o estado anterior (criar plano com erro volta ao modo anterior).
+- **P-065:** o rodapé da conversa antiga só para leitura não mostra mais o seletor Perguntas/Planejamento; "Voltar para hoje" continua.
+- **I-043:** `@anthropic-ai/sdk` 0.135→1.4 (major), `@google/genai` 2.30→2.32, `openai` 7.39→7.50. Só o `ia.module.ts` e o `google.provedor.ts` importam os SDKs; compilou sem mudança de código.
+
+**Testes.** Frontend completo 205 arquivos / 2520 testes (3 testes que descreviam o vazio indevido foram corrigidos e há casos novos de erro + nova tentativa, rótulo, seletor de modo e esqueleto); backend unitário 1615; shared 311; `lint:tudo` limpo; builds do backend e do frontend.
+
+**Verificado ao vivo** (Postgres local, backend e frontend reais, Playwright, 1920×1080, 1366×768, 1080×1920, 720×1280 e 960×1080; claro e, em 1920×1080, escuro): erro simulado na API de projeto, tag, usuário e calendário mostra a mensagem e o botão, e "Tentar de novo" recupera; rótulo "Carregando…" durante a carga do chat; esqueleto ao trocar para o dia anterior; conversa antiga sem o seletor de modo.
+
+**Pendente / limites.** I-043: nenhuma chamada real a provedor (sem chave de IA no ambiente) — a major do SDK da Anthropic só foi coberta por build e testes com dublê; decidir se atualizar vira rotina. O esqueleto de plano (criar/abrir) tem teste de componente, mas não foi visto ao vivo. Demandas: o erro da lista de projetos tem código, mas não teste próprio nem captura.
+
 ## 2026-11-03 — Check-in no perfil acompanha a execução e balão do check-in cinza
 
 **Mudou.** (1) `CheckinProximoComponent` (linha "Próximo check-in" do menu do perfil) só consultava `GET /checkin/situacao` ao nascer; iniciar uma atividade, pelo usuário ou pela IA, não a atualizava até o F5. Agora um `effect` observa o `id` da execução em `ExecucaoAtivaService.ativa()` (que o `execucaoAtivaInterceptor` já ressincroniza após iniciar, encerrar e confirmar/desfazer proposta da IA) e refaz a consulta quando ele muda. (2) O balão da mensagem do usuário na janela do check-in (`checkin__balao`) passou do azul cheio para o cinza do chat (`--app-surface-200`, I-032).
