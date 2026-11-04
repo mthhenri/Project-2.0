@@ -74,7 +74,7 @@ describe('CalendarioListagemPage: estados da lista', () => {
         expect(texto(desenvolvedor.elemento)).not.toContain('Cadastrar dia não útil');
     });
 
-    it('erro ao carregar tira o esqueleto e deixa a lista vazia (a falha é do interceptor)', async () => {
+    it('erro ao carregar tira o esqueleto e mostra o erro com "Tentar de novo" (P-068; o aviso é do interceptor)', async () => {
         const montado = await montarPagina(TipoUsuarioEnum.GESTOR, null);
         responderErro(esperarRequisicao(montado.http, 'GET', '/calendario'), 500, 'Erro interno');
         await montado.atualizar();
@@ -82,7 +82,14 @@ describe('CalendarioListagemPage: estados da lista', () => {
         expect(montado.componente.carregando()).toBe(false);
         expect(montado.elemento.querySelector('app-skeleton-lista')).toBeNull();
         expect(linhas(montado)).toHaveLength(0);
-        expect(montado.errosHttpNaoTratados).toHaveLength(1);
+        expect(montado.elemento.textContent).toContain('Não foi possível carregar o calendário');
+        expect(montado.errosHttpNaoTratados).toHaveLength(0);
+
+        montado.elemento.querySelector<HTMLElement>('.calendario-listagem__vazio button')?.click();
+        await montado.atualizar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/calendario'), []);
+        await montado.atualizar();
+        expect(montado.elemento.textContent).not.toContain('Não foi possível carregar');
     });
 
     it('trocar de mês (ano ‹ ›, mês, Hoje) muda o conteúdo da tabela e o botão Hoje só vale fora do mês de hoje', async () => {

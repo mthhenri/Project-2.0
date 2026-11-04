@@ -59,6 +59,8 @@ export class ProjetoListagemPage implements OnInit {
     /** Todos os projetos carregados; busca e filtro de status são aplicados no cliente. */
     readonly projetos = signal<ProjetoResumoDto[]>([]);
     readonly carregando = signal<boolean>(false);
+    /** A última carga falhou: sem projetos na tela, a página mostra o erro com "Tentar de novo" no lugar do vazio. */
+    readonly erroAoCarregar = signal<boolean>(false);
     private readonly jaCarregou = signal<boolean>(false);
     readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
     readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
@@ -127,6 +129,7 @@ export class ProjetoListagemPage implements OnInit {
 
     buscarProjetos(): void {
         this.carregando.set(true);
+        this.erroAoCarregar.set(false);
         this.projetoService
             .listar({ pagina: 1, itensPorPagina: LIMITE_PROJETOS })
             .pipe(finalize(() => {
@@ -137,6 +140,7 @@ export class ProjetoListagemPage implements OnInit {
                 next: (resposta) => {
                     if (resposta.sucesso && resposta.dados) this.projetos.set(resposta.dados.itens);
                 },
+                error: () => this.erroAoCarregar.set(true),
             });
     }
 

@@ -234,20 +234,41 @@
                                     [attr.colspan]="eGestor() ? 4 : 3"
                                     class="calendario-listagem__vazio"
                                 >
-                                    <i class="pi pi-calendar-times text-3xl text-muted-color"></i>
-                                    <p class="text-muted-color mt-2">
-                                        Nenhum dia não útil em {{ rotuloMes() }}
-                                    </p>
-                                    @if (eGestor()) {
-                                        <p-button
-                                            label="Cadastrar dia não útil"
-                                            icon="pi pi-plus"
-                                            size="small"
-                                            (onClick)="abrirDialogNovo()"
-                                        />
-                                        <p class="text-muted-color calendario-listagem__vazio-dica">
-                                            ou clique em um dia no calendário
+                                    @if (erroAoCarregar() && diasNaoUteis().length === 0) {
+                                        <i
+                                            class="pi pi-exclamation-triangle text-3xl text-muted-color"
+                                            aria-hidden="true"
+                                        ></i>
+                                        <p class="text-muted-color mt-2" role="alert">
+                                            Não foi possível carregar o calendário.
                                         </p>
+                                        <p-button
+                                            label="Tentar de novo"
+                                            icon="pi pi-refresh"
+                                            size="small"
+                                            [outlined]="true"
+                                            (onClick)="buscarDias()"
+                                        />
+                                    } @else {
+                                        <i
+                                            class="pi pi-calendar-times text-3xl text-muted-color"
+                                        ></i>
+                                        <p class="text-muted-color mt-2">
+                                            Nenhum dia não útil em {{ rotuloMes() }}
+                                        </p>
+                                        @if (eGestor()) {
+                                            <p-button
+                                                label="Cadastrar dia não útil"
+                                                icon="pi pi-plus"
+                                                size="small"
+                                                (onClick)="abrirDialogNovo()"
+                                            />
+                                            <p
+                                                class="text-muted-color calendario-listagem__vazio-dica"
+                                            >
+                                                ou clique em um dia no calendário
+                                            </p>
+                                        }
                                     }
                                 </td>
                             </tr>

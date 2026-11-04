@@ -55,15 +55,22 @@ describe('ProjetoListagemPage — estados', () => {
         expect(texto(montado)).not.toContain('Criar o primeiro projeto');
     });
 
-    it('erro da API: sai do carregamento, avisa por toast e fica no vazio', async () => {
+    it('erro da API: sai do carregamento, avisa por toast e mostra o erro com "Tentar de novo" (P-068)', async () => {
         const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
         const avisos: unknown[] = [];
         montado.mensagens.messageObserver.subscribe((mensagem) => avisos.push(mensagem));
         responderErro(esperarRequisicao(montado.http, 'GET', '/projeto'), 500, 'falha');
         await montado.atualizar();
         expect(montado.elemento.querySelector('app-skeleton-lista')).toBeNull();
-        expect(texto(montado)).toContain('Nenhum projeto ainda');
+        expect(texto(montado)).toContain('Não foi possível carregar os projetos');
+        expect(texto(montado)).not.toContain('Nenhum projeto ainda');
         expect(avisos).toHaveLength(1);
+
+        montado.elemento.querySelector<HTMLElement>('.projeto-listagem__vazio button')?.click();
+        await montado.atualizar();
+        await carregar(montado, [projeto(1, 'Alfa')]);
+        expect(texto(montado)).not.toContain('Não foi possível carregar');
+        expect(texto(montado)).toContain('Alfa');
     });
 });
 

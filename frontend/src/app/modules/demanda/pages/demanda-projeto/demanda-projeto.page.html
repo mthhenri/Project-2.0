@@ -81,7 +81,21 @@
     <div class="demanda-projeto__corpo">
         <!-- Área do grafo / lista -->
         <div class="demanda-projeto__visualizacao">
-            @if (!projetoId()) {
+            @if (!projetoId() && erroAoCarregarProjetos() && !carregandoProjetos()) {
+                <div class="demanda-projeto__vazio" role="alert">
+                    <i class="pi pi-exclamation-triangle demanda-projeto__vazio-icone"></i>
+                    <p class="demanda-projeto__vazio-texto">
+                        Não foi possível carregar os projetos.
+                    </p>
+                    <p-button
+                        label="Tentar de novo"
+                        icon="pi pi-refresh"
+                        severity="secondary"
+                        [outlined]="true"
+                        (onClick)="carregarProjetos()"
+                    />
+                </div>
+            } @else if (!projetoId()) {
                 <div class="demanda-projeto__vazio">
                     <i class="pi pi-folder-open demanda-projeto__vazio-icone"></i>
                     <p class="demanda-projeto__vazio-texto">

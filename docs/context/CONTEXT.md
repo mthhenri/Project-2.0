@@ -128,6 +128,7 @@ project-2.0/
   `app-dialog-dica-atalhos` no footer; criar fecha o dialog, e "Criar e adicionar outra" mantém o
   contexto. Leituras de tela usam esqueleto na primeira carga e conteúdo esmaecido + barra nas
   recargas (`comFeedbackProprio()` tira o overlay global); mutações são otimistas com rollback.
+  **[P-068, 2026-11-04]** Falha na carga de uma lista **não** vira vazio: Projetos, Tags, Usuários, Calendário e Demandas (lista de projetos) têm `erroAoCarregar*` e mostram "Não foi possível carregar…" com "Tentar de novo" no lugar do estado vazio (análogo: Atividades). No chat, `carregandoConversa` (primeira carga, troca de dia, leitura/criação de plano) põe o esqueleto no lugar da conversa; a conversa antiga só para leitura não mostra o seletor Perguntas/Planejamento; o botão do seletor mostra "Carregando…" até o dia chegar.
   **[task 300]** O esqueleto imita a tela: `app-skeleton-lista` aceita `formas` (avatar, selo, interruptor, ícones, duas linhas, caixa; `montarEsqueletoDeTabela` com `celula`), `espacamento` e linhas coladas quando há `alturaLinha`; a Árvore e o Controle de horas têm esqueleto próprio (`app-demanda-arvore-esqueleto`, `app-demanda-controle-horas-esqueleto`). Esqueleto novo ou alterado parte das **medidas da tela carregada** (largura de coluna, altura e passo de linha), não de estimativa.
   Exclusões de atividade, projeto, usuário, tag, dia não útil e demanda chamam `PATCH :id/restaurar` no
   "Desfazer" do toast (6 s, `DesfazerService`); associações (membro, conexão) desfazem por re-POST.
@@ -243,7 +244,7 @@ project-2.0/
   exclusivo de administrador (listar tipos e versões, salvar/ativar/descartar rascunho, restaurar padrão), com `PromptService.obterAtivo(tipo)` em cache. Regra de uma ativa e um rascunho por tipo na
   service (transação que trava a linha do tipo). Os textos-base dos seeds são curtos; os blocos 5 a 9 os refinam. A tela é a aba "Prompts" (task 133).
 - **[task 130]** Módulo `ia` (`backend/src/modules/ia/`): `IaService` (níveis → modelo da configuração ativa, `gerar` e `transmitir` com streaming, estado em memória),
-  interface `IaProvedor` e `AnthropicProvedor` (SDK `@anthropic-ai/sdk` agora em `^0.135`, importado **só** em `ia.module.ts`), `IaException` e `traduzirFalhaDeIa`.
+  interface `IaProvedor` e `AnthropicProvedor` (SDK `@anthropic-ai/sdk` agora em `^1.4`, importado **só** em `ia.module.ts`), `IaException` e `traduzirFalhaDeIa`.
   `AssistenteService` e `RelatorioService` usam o nível padrão pelo `IaService` (contratos HTTP e prompts iguais; a IA desligada ou sem chave dá `BusinessException` com a mensagem
   do motivo). `ANTHROPIC_MODELO` e `ANTHROPIC_MAXIMO_TOKENS` deixaram de valer (o modelo vem da configuração; o teto de tokens é parâmetro de cada chamada).
 - **[task 129]** Configuração da IA: migration `0033` (`tipo_provedor_ia`, `configuracao_ia`, versão 1 por seed com a IA **desligada**), módulo `configuracao-ia`

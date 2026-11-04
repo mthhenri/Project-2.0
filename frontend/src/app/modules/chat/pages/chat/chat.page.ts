@@ -133,6 +133,16 @@ export class ChatPage implements OnInit {
     readonly arrastandoDivisor = signal(false);
     readonly carregando = signal(true);
     readonly jaCarregou = signal(false);
+    /** Trocando de conversa (outro dia ou volta para hoje): as mensagens antigas saem e entra o esqueleto até a nova chegar. */
+    readonly trocandoConversa = signal(false);
+    /** Lendo a conversa do plano aberto. */
+    readonly carregandoPlano = signal(false);
+    /** Criando um plano ou procurando o último para abrir: o efeito do plano aberto não mexe nele. */
+    readonly abrindoPlano = signal(false);
+    /** A conversa mostrada ainda não chegou: primeira carga, troca de dia, leitura do plano ou criação de plano. */
+    readonly carregandoConversa = computed(() =>
+        this.modo() === ModoDoChatEnum.PLANEJAMENTO ? this.carregandoPlano() || this.abrindoPlano() : !this.jaCarregou() || this.trocandoConversa(),
+    );
     readonly erro = signal(false);
     readonly enviando = signal(false);
     readonly mensagens = signal<MensagemNaTela[]>([]);
@@ -195,7 +205,7 @@ export class ChatPage implements OnInit {
     /** As sugestões que a IA trouxe junto da última resposta; somem quando o usuário manda outra mensagem. */
     readonly sugestoesDaIa = signal<string[]>([]);
     readonly sugestoes = computed(() => (this.sugestoesDaIa().length > 0 ? this.sugestoesDaIa() : this.sugestoesIniciais()));
-    readonly podeSugerir = computed(() => this.modo() === ModoDoChatEnum.PERGUNTAS && !this.enviando() && !this.iaDesligada() && !this.somenteLeitura() && this.textoDigitado().trim() === '');
+    readonly podeSugerir = computed(() => this.modo() === ModoDoChatEnum.PERGUNTAS && !this.enviando() && !this.iaDesligada() && !this.somenteLeitura() && !this.trocandoConversa() && this.textoDigitado().trim() === '');
     /** O usuário resolveu um cartão (confirmou, ajustou, recusou ou desfez): a IA não responde a esse clique, então os botões seguem o que acabou de acontecer. */
     aoResolverProposta(proposta: PropostaIaResumoDto): void {
         const proximos = sugestoesAposProposta(proposta.tipo, proposta.status, this.sessao.podeEditarDemanda());
@@ -274,7 +284,10 @@ export class ChatPage implements OnInit {
             const emPlanejamento = this.modo() === ModoDoChatEnum.PLANEJAMENTO;
             untracked(() => {
                 if (emPlanejamento && planoId !== null) this.carregarConversaDoPlano(planoId);
-                else this.mensagensDoPlano.set([]);
+                else {
+                    this.carregandoPlano.set(false);
+                    this.mensagensDoPlano.set([]);
+                }
             });
         });
     }
@@ -306,18 +319,21 @@ export class ChatPage implements OnInit {
                 if (!hoje.dados) {
                     this.erro.set(true);
                     this.carregando.set(false);
+                    this.trocandoConversa.set(false);
                     return;
                 }
                 this.conversaId.set(hoje.dados.conversaId);
                 this.hoje.set(dataDaConversa(hoje.dados.conversaId));
                 this.mensagens.set(hoje.dados.mensagens.map((mensagem) => this.paraTela(mensagem)));
                 this.carregando.set(false);
+                this.trocandoConversa.set(false);
                 this.jaCarregou.set(true);
                 this.irParaMensagemOuFim(mensagemId);
             },
             error: () => {
                 this.erro.set(true);
                 this.carregando.set(false);
+                this.trocandoConversa.set(false);
             },
         });
     }
@@ -491,15 +507,20 @@ export class ChatPage implements OnInit {
             this.voltarParaHoje(mensagemId);
             return;
         }
+        this.trocandoConversa.set(true);
         this.chatService.recuperarConversa(data).subscribe({
             next: (resposta) => {
+                this.trocandoConversa.set(false);
                 if (!resposta.dados) return;
                 this.diaAberto.set(data);
                 this.conversaId.set(resposta.dados.conversaId);
                 this.mensagens.set(resposta.dados.mensagens.map((mensagem) => this.paraTela(mensagem)));
                 this.irParaMensagemOuFim(mensagemId);
             },
-            error: () => this.messageService.add({ severity: 'warn', summary: 'Chat', detail: 'Não foi possível abrir essa conversa' }),
+            error: () => {
+                this.trocandoConversa.set(false);
+                this.messageService.add({ severity: 'warn', summary: 'Chat', detail: 'Não foi possível abrir essa conversa' });
+            },
         });
     }
 
@@ -510,6 +531,7 @@ export class ChatPage implements OnInit {
 
     voltarParaHoje(mensagemId?: string): void {
         this.diaAberto.set(null);
+        this.trocandoConversa.set(true);
         this.carregar(mensagemId);
     }
 
@@ -548,6 +570,8 @@ export class ChatPage implements OnInit {
 
     abrirPlano(id: number): void {
         this.modo.set(ModoDoChatEnum.PLANEJAMENTO);
+        // O efeito do plano aberto só roda quando o plano muda: sem isso, reabrir o mesmo plano deixaria o carregamento ligado.
+        if (id !== this.planoAbertoId()) this.carregandoPlano.set(true);
         this.planoAbertoId.set(id);
     }
 
@@ -558,14 +582,22 @@ export class ChatPage implements OnInit {
 
     /** Lê a conversa do plano aberto (a de todos que têm acesso a ele). Erro: a lista fica vazia e a pessoa pode tentar trocar de plano. */
     private carregarConversaDoPlano(planoId: number): void {
+        this.carregandoPlano.set(true);
+        this.mensagensDoPlano.set([]);
         this.chatService.recuperarConversaDoPlano(planoId).subscribe({
             next: (resposta) => {
-                if (planoId !== this.planoAbertoId() || !resposta.dados) return;
+                if (planoId !== this.planoAbertoId()) return;
+                this.carregandoPlano.set(false);
+                if (!resposta.dados) return;
                 const { mensagens, autores } = resposta.dados;
                 this.mensagensDoPlano.set(mensagens.map((mensagem) => this.paraTela(mensagem, autores)));
                 this.irParaMensagemOuFim();
             },
-            error: () => this.mensagensDoPlano.set([]),
+            error: () => {
+                if (planoId !== this.planoAbertoId()) return;
+                this.carregandoPlano.set(false);
+                this.mensagensDoPlano.set([]);
+            },
         });
     }
 
@@ -591,15 +623,25 @@ export class ChatPage implements OnInit {
 
     /** "Novo plano" cria um plano pessoal (sem projeto); o projeto e a demanda vêm depois, no cabeçalho do plano. */
     criarPlano(): void {
+        const modoAnterior = this.modo();
+        this.modo.set(ModoDoChatEnum.PLANEJAMENTO);
+        this.abrindoPlano.set(true);
         this.planoService.criar({}).subscribe({
             next: (resposta) => {
-                if (!resposta.dados) return;
+                if (!resposta.dados) {
+                    this.abrindoPlano.set(false);
+                    return;
+                }
                 this.planoAbertoTitulo.set(resposta.dados.titulo);
                 this.abrirPlano(resposta.dados.id);
+                this.abrindoPlano.set(false);
                 this.seletor()?.recarregar();
             },
-            error: (falha) =>
-                this.messageService.add({ severity: 'warn', summary: 'Plano', detail: falha?.error?.mensagem ?? 'Não foi possível criar o plano' }),
+            error: (falha) => {
+                this.abrindoPlano.set(false);
+                if (this.planoAbertoId() === null) this.modo.set(modoAnterior);
+                this.messageService.add({ severity: 'warn', summary: 'Plano', detail: falha?.error?.mensagem ?? 'Não foi possível criar o plano' });
+            },
         });
     }
 
@@ -633,17 +675,22 @@ export class ChatPage implements OnInit {
     }
 
     private abrirUltimoPlano(): void {
+        this.abrindoPlano.set(true);
         this.planoService.listar().subscribe({
             next: (resposta) => {
                 const ultimo = resposta.dados?.[0];
+                this.abrindoPlano.set(false);
                 if (ultimo) {
                     this.planoAbertoTitulo.set(ultimo.titulo);
-                    this.planoAbertoId.set(ultimo.id);
+                    this.abrirPlano(ultimo.id);
                 } else {
                     setTimeout(() => this.seletor()?.abrir());
                 }
             },
-            error: () => setTimeout(() => this.seletor()?.abrir()),
+            error: () => {
+                this.abrindoPlano.set(false);
+                setTimeout(() => this.seletor()?.abrir());
+            },
         });
     }
 

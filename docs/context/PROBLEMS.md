@@ -37,30 +37,6 @@
 - **Correção:** assinar o executável (I-049); assinado, a reputação do editor reduz esse tipo de detecção.
 - **Desde:** 2026-11-03, versão 1.1.2.
 
-### P-068 — Falha ao carregar lista aparece como lista vazia · `ABERTO` · frontend
-
-- **Sintoma:** com a API respondendo erro (simulado no navegador trocando a rota por uma inexistente), Projetos mostra "Nenhum projeto ainda. Criar o primeiro projeto" e Tags mostra "Nenhuma tag ainda", além do aviso de erro; Demandas mostra "Selecione um projeto". A tela some com o erro e oferece o caminho de quem não tem dados.
-- **Causa:** as listas partem de um sinal vazio e só o interceptor mostra o erro; nenhuma tela guarda o estado "falhou ao carregar" para trocar o vazio por uma mensagem com "Tentar de novo".
-- **Contorno:** o aviso de erro (toast) aparece e recarregar a página resolve.
-- **Correção:** um estado de erro nas listas principais (Projetos, Tags, Usuários, Atividades, Calendário, Demandas), com mensagem e botão de nova tentativa, reaproveitando o padrão de uma tela que já tenha isso.
-- **Desde:** 2026-11-01 (visto na verificação dos estados de erro da task 297).
-
-### P-064 — Chat IA sem feedback ao criar ou trocar conversas e planos · `ABERTO` · frontend/chat
-
-- **Sintoma:** o autor relata que criar outra conversa ou carregar conversa/plano não mostra carregamento; fica sem saber se o clique foi atendido. Inclui navegar para conversas antigas.
-- **Causa:** não investigada; relato do autor, fora da task 293.
-- **Contorno:** aguardar a troca, sem indicação confiável de progresso.
-- **Correção:** definir feedback de carga consistente para essas operações, preservando a seleção e os estados de erro.
-- **Desde:** discussão de 2026-10-31; ainda não implementado nem verificado em cenário de falha real.
-
-### P-065 — Histórico somente leitura mostra o seletor Perguntas/Planejamento · `ABERTO` · frontend/chat
-
-- **Sintoma:** ao visualizar conversa antiga, a faixa "só para leitura" aparece junto do seletor Perguntas/Planejamento no rodapé, conforme print do autor.
-- **Causa:** não investigada; fora da task 293.
-- **Contorno:** ignorar o seletor ao consultar o histórico.
-- **Correção:** ocultar esse seletor na conversa histórica somente leitura, preservando o retorno para hoje.
-- **Desde:** relato e print do autor em 2026-10-31; correção pendente.
-
 ### P-023 — Desfazer da entrada numa demanda sem outros membros é recusado · `ABERTO` · chat IA/demanda
 
 - **Sintoma:** o desenvolvedor entra numa demanda **sem nenhum membro** pelo chat (cartão "Atribuir membro", Confirmar) e, ao clicar em **Desfazer**, a API responde

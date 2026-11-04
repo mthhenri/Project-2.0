@@ -52,6 +52,8 @@ export class TagListagemPage implements OnInit {
 
     readonly tags = signal<TagResumoDto[]>([]);
     readonly carregando = signal<boolean>(false);
+    /** A última carga falhou: sem itens na tela, a página mostra o erro com "Tentar de novo" no lugar do vazio. */
+    readonly erroAoCarregar = signal<boolean>(false);
     readonly jaCarregou = signal<boolean>(false);
     readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
     readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
@@ -128,6 +130,7 @@ export class TagListagemPage implements OnInit {
 
     buscarTags(): void {
         this.carregando.set(true);
+        this.erroAoCarregar.set(false);
         this.tagService
             .listar()
             .pipe(finalize(() => {
@@ -138,6 +141,7 @@ export class TagListagemPage implements OnInit {
                 next: (resposta) => {
                     if (resposta.sucesso && resposta.dados) this.tags.set(resposta.dados);
                 },
+                error: () => this.erroAoCarregar.set(true),
             });
     }
 

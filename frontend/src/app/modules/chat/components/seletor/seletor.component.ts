@@ -71,6 +71,8 @@ export class SeletorComponent {
     /** O que o botão mostra: o plano aberto (modo Planejamento), o nome da conversa (dado ou gerado) ou, sem ele, o dia ("Hoje, 26/10"). */
     readonly rotuloDoBotao = computed(() => {
         if (this.modo() === ModoDoChatEnum.PLANEJAMENTO) return this.planoAbertoTitulo() ?? 'Escolher um plano';
+        // Antes da primeira carga o dia ainda é vazio: sem este guarda o rótulo saía "undefined/undefined".
+        if (!this.diaAtual() || !this.hoje()) return 'Carregando…';
         const doDia = this.conversas().find((conversa) => conversa.data === this.diaAtual());
         if (doDia && !doDia.titulo.startsWith(PREFIXO_TITULO_PADRAO)) return doDia.titulo;
         const rotulo = rotuloDoDia(this.diaAtual(), this.hoje());
