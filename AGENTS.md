@@ -291,6 +291,13 @@ quatro workspaces (`npm run lint:tudo`). `npm run test:cobertura` mede a cobertu
 `.env.example` e `README.md`. Para verificação manual da aplicação real, consulte
 `.agents/skills/verify/SKILL.md`; build não a substitui quando a tarefa exige observar o app.
 
+## Decisões de modelagem são do autor
+
+Se a tarefa envolve **alterar a modelagem do projeto** (tabelas, colunas, relações, campos de
+documento JSONB, DTOs/contratos de dados, enums, índices dos armazenamentos, onde um dado novo
+vive), **pergunte ao autor antes**, sempre. Nunca tome decisão de modelagem sozinho, nem quando a
+spec parecer sugerir uma resposta: apresente o antes → depois e as opções, e aguarde a decisão.
+
 ## Segurança operacional
 
 Preserve alterações existentes do usuário. Antes de qualquer comando destrutivo, confirme o alvo e
