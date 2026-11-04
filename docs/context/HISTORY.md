@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-11-04 — Spec 261 remodelada (cadeia por nível) e spec 309 nova: só specs, sem código
+
+Revisão da modelagem da 261 com o autor, em perguntas e respostas; **nenhum código foi alterado**. Referencia (sem reescrever) o bloco de 2026-10-31 sobre a I-034.
+
+**Mudou.**
+- **261:** em vez de um provedor principal por nível sobre a cadeia global, cada nível (`RAPIDO`, `PADRAO`, `ANALITICO`) tem a sua cadeia de itens `{provedor, modelo, esforco}`, de tamanho livre (mínimo 1) e sem provedor repetido. Modelagem **A** escolhida pelo autor entre três (três colunas JSONB, uma coluna JSONB, tabela filha): `cadeia_rapido`, `cadeia_padrao` e `cadeia_analitico` em `configuracao_ia`, `NOT NULL` com `CHECK` de lista não vazia; saem `tipo_provedor_ia_id`, `modelos_provedor`, `fallbacks` e `esforco_analitico`. As versões antigas são convertidas em três cadeias iguais (Rápido e Padrão com `MEDIO` explícito); o `DOWN` perde informação.
+- **Decisões do autor na mesma revisão:** chave ausente salva mas avisa na tela ("Chave de Provedor não configurada"); `FORA_DO_AR` só quando nenhum item de nenhuma cadeia tem chave ou todos os níveis falharam, com o "último resultado" por nível; o fallback continua o turno com o histórico neutro, sem a `assinatura` do provedor anterior; a mensagem da IA ganha `modelo_planejado` e o chat mostra o alerta "Fallback utilizado" com tooltip.
+- **309 (nova):** a lista de modelos vinda da API de cada provedor no lugar do texto livre (contrato `{provedor, disponivel, modelos: [{id, nome}]}`, `GET /ia/modelos`, cache de 30 minutos, digitação à mão sem chave ou com falha). Depende da 261.
+
+**Achados.** Os sites de documentação dos três provedores não resolviam na rede da sessão, então a 309 se apoia nos tipos dos SDKs das versões do `package.json` e manda conferir cada ponto na documentação oficial antes de implementar. A listagem da Anthropic traz `display_name`, `lifecycle` e `capabilities`; a da OpenAI traz só `id`, `created`, `owned_by` e `shutdown_date`, sem como separar chat de embeddings por campo; a do Google traz `displayName` e `supportedActions`. Os provedores de `tipo_provedor_ia` deixam de ser lidos pela configuração (a tabela fica; removê-la ficou fora da 261).
+
+**Pendente.** Implementação da 261 e da 309 não começou. A `docs/specs/backlog/294-*` segue dependendo da 261 e deve revalidar os contratos depois dela.
+
 ## 2026-11-04 — P-068, P-064, P-065, rótulo "undefined" do chat e pacotes de IA (I-043)
 
 Pedido do autor, fora de spec (itens do bloco "Agora" do `PRIORITIES.md` mais dois defeitos do chat).
