@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-05 — Spec 294: a flag de pesquisa passa a ser por cadeia (nível)
+
+O autor corrigiu a decisão anterior: quer ligar a pesquisa no Rápido e não no Analítico, o que uma flag por provedor não permite. A 294 (item 1) foi reescrita: um interruptor por cadeia, valendo para todos os itens do nível, fallback herdando a flag do nível. Leitura literal de "por cadeia" (nível); a alternativa por item da cadeia não foi adotada. Onde a flag mora no banco segue para fechar com o autor ao implementar. Só spec.
+
 ## 2026-11-05 — Spec 294: pesquisa na internet passa a ser uma flag por provedor
 
 Pergunta do autor: com a configuração por cadeias (261), a flag de pesquisa muda? Hoje `pesquisaWeb` vem de `duvidasCodigo` (`chat.service.ts`); Anthropic e Google pesquisam, a OpenAI ignora o pedido. Decisão do autor: opção B (suportar o `web_search` da OpenAI, que já é o item 3 da 294) e opção 1 de armazenamento (uma flag por provedor, valendo em todos os níveis). A 294 foi reescrita só no item 1 (sai o interruptor no cabeçalho "Modelos: <provedor>" e o "principal e contingências", que a 261 extinguiu), com OpenAI desligada nas versões antigas. Onde a flag mora no banco/DTO ficou para fechar com o autor na implementação (modelagem). Só spec; nada implementado.
