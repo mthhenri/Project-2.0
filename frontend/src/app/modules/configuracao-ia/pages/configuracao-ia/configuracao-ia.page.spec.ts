@@ -427,10 +427,17 @@ describe('ConfiguracaoIaPage — abas, barra de salvar e cadeias por nível (tas
         await abrir({ ativa, historico: [ativa], provedoresComChave: [A, O, G] });
         const painel = document.body.querySelector('p-tabpanel[value="provedor"]') as HTMLElement;
         expect(painel.querySelectorAll('section[aria-label^="Cadeia do nível"]')).toHaveLength(3);
-        const resumo = painel.querySelector('.provedor-aba__resumo')!.textContent!.replace(/\s+/g, ' ');
-        expect(resumo).toContain('Rápido Anthropic · claude-haiku-5-5 · Médio');
-        expect(resumo).toContain('Padrão OpenAI · gpt-6.1-sol · Médio');
-        expect(resumo).toContain('Analítico Anthropic · claude-opus-5-5 · Alto');
+        const trilhas = Array.from(painel.querySelectorAll<HTMLElement>('.provedor-aba__trilha'));
+        const partes = (trilha: HTMLElement) =>
+            ['.provedor-aba__trilha-nivel', 'strong', '.provedor-aba__trilha-nome', '.provedor-aba__trilha-esforco'].map((seletor) => trilha.querySelector(seletor)!.textContent!.trim());
+        expect(trilhas.map(partes)).toEqual([
+            ['Rápido', 'Anthropic', 'claude-haiku-5-5', 'Esforço Médio'],
+            ['Padrão', 'OpenAI', 'gpt-6.1-sol', 'Esforço Médio'],
+            ['Analítico', 'Anthropic', 'claude-opus-5-5', 'Esforço Alto'],
+        ]);
+        // A cor de cada trilha é a do provedor no nível, o tom médio do provedor, igual nos três níveis (laranja Anthropic, cinza OpenAI).
+        expect(trilhas.map((trilha) => trilha.style.getPropertyValue('--tom'))).toEqual(['#f97316', '#6b7280', '#f97316']);
+        expect(trilhas[0].querySelector('.pi-arrow-right'), 'seta do nível para o modelo').not.toBeNull();
         expect(painel.textContent).toContain('Principal');
         expect(painel.textContent).toContain('Contingência 1');
     });

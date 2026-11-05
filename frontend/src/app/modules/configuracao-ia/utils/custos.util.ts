@@ -1,4 +1,5 @@
 import { IaCustoModeloDto, IaCustoPeriodoDto, NivelIaEnum, rotuloDoNivelIa } from '@project20/shared';
+import { ProvedorDeModelo, TONS_DO_PROVEDOR } from '../../../shared/utils/tons-de-provedor';
 import { GraficoBarrasCategoria } from '../../../shared/components/grafico-barras/grafico-barras.component';
 
 const MESES_ABREVIADOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'] as const;
@@ -23,15 +24,6 @@ export function rotuloDoRecorte(ano: number, mes: number | null): string {
     return mes === null ? String(ano) : `${MESES_POR_EXTENSO[mes - 1]} de ${ano}`;
 }
 
-export type ProvedorDeModelo = 'ANTHROPIC' | 'GOOGLE' | 'OPENAI' | 'OUTRO';
-
-/** Tons de cada provedor por nível do modelo: laranja para a Anthropic, azul para o Google (Gemini), cinza para a OpenAI. Quanto mais forte o nível, mais escuro. */
-const TONS_DO_PROVEDOR: Record<ProvedorDeModelo, Record<NivelIaEnum, string>> = {
-    ANTHROPIC: { RAPIDO: '#fdba74', PADRAO: '#f97316', ANALITICO: '#c2410c' },
-    GOOGLE: { RAPIDO: '#93c5fd', PADRAO: '#3b82f6', ANALITICO: '#1d4ed8' },
-    OPENAI: { RAPIDO: '#d1d5db', PADRAO: '#6b7280', ANALITICO: '#374151' },
-    OUTRO: { RAPIDO: '#5eead4', PADRAO: '#14b8a6', ANALITICO: '#0f766e' },
-};
 const ORDEM_DOS_PROVEDORES: readonly ProvedorDeModelo[] = ['ANTHROPIC', 'GOOGLE', 'OPENAI', 'OUTRO'];
 const FORCA_DO_NIVEL: Record<NivelIaEnum, number> = { RAPIDO: 0, PADRAO: 1, ANALITICO: 2 };
 

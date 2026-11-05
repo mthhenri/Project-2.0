@@ -17,20 +17,30 @@
                 modelos dos provedores…
             </p>
         }
-        <dl class="provedor-aba__resumo">
+        <div class="provedor-aba__resumo">
             @for (principal of principais(); track principal.nivel.nivel) {
-                <div class="provedor-aba__resumo-linha">
-                    <dt class="provedor-aba__resumo-nivel">{{ principal.nivel.titulo }}</dt>
-                    <dd class="provedor-aba__resumo-valor">
+                <div
+                    class="provedor-aba__trilha"
+                    [style.--tom]="
+                        principal.item ? tomMedioDoProvedor(principal.item.provedor) : null
+                    "
+                >
+                    <span class="provedor-aba__trilha-nivel">{{ principal.nivel.titulo }}</span>
+                    <i class="pi pi-arrow-right provedor-aba__seta" aria-hidden="true"></i>
+                    <div class="provedor-aba__trilha-modelo">
                         @if (principal.item; as item) {
-                            {{ resumoDoItem(item) }}
+                            <strong>{{ rotuloDoProvedor(item.provedor) }}</strong>
+                            <span class="provedor-aba__trilha-nome">{{ item.modelo }}</span>
+                            <span class="provedor-aba__trilha-esforco"
+                                >Esforço {{ rotuloDoEsforco(item.esforco) }}</span
+                            >
                         } @else {
                             —
                         }
-                    </dd>
+                    </div>
                 </div>
             }
-        </dl>
+        </div>
     </section>
 
     @for (nivel of niveis; track nivel.nivel) {

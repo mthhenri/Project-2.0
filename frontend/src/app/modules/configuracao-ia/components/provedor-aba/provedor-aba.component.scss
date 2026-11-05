@@ -48,30 +48,65 @@
         font-size: 0.75rem;
     }
 
-    // O trio que a IA usa agora: o item principal de cada nível, numa linha de texto.
+    // O trio que a IA usa agora: uma trilha por nível (caixa do nível, seta e caixa do modelo principal), na cor do provedor como no gráfico de custos.
+    // Uma trilha por linha (nível, seta e modelo principal), com a largura limitada para não esticar as caixas.
     &__resumo {
-        display: grid;
-        grid-template-columns: max-content minmax(0, 1fr);
-        gap: 0.375rem 1rem;
-        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-width: 34rem;
     }
 
-    &__resumo-linha {
-        display: contents;
+    // Caixa do nível, seta e caixa do modelo principal na mesma linha; o tom é o médio do provedor, o mesmo nos três níveis.
+    &__trilha {
+        --tom: var(--p-text-muted-color);
+
+        display: flex;
+        align-items: stretch;
+        gap: 0.375rem;
+        min-width: 0;
     }
 
-    &__resumo-nivel {
-        color: var(--p-text-muted-color);
+    &__trilha-nivel,
+    &__trilha-modelo {
+        padding: 0.375rem 0.625rem;
+        border: 1px solid var(--tom);
+        border-radius: 8px;
+    }
+
+    &__trilha-nivel {
+        display: flex;
+        flex: 0 0 5.5rem;
+        align-items: center;
+        justify-content: center;
+        background: color-mix(in srgb, var(--tom) 28%, var(--app-surface-0));
         font-size: 0.75rem;
-        font-weight: 600;
+        font-weight: 700;
         letter-spacing: 0.02em;
         text-transform: uppercase;
     }
 
-    &__resumo-valor {
-        margin: 0;
-        overflow-wrap: anywhere;
+    &__seta {
+        align-self: center;
+        color: var(--tom);
         font-size: 0.875rem;
+    }
+
+    &__trilha-modelo {
+        display: flex;
+        flex: 1;
+        flex-flow: row wrap;
+        align-items: baseline;
+        min-width: 0;
+        gap: 0.125rem 0.625rem;
+        background: color-mix(in srgb, var(--tom) 12%, var(--app-surface-0));
+        font-size: 0.8125rem;
+        overflow-wrap: anywhere;
+    }
+
+    &__trilha-esforco {
+        color: var(--p-text-muted-color);
+        font-size: 0.6875rem;
     }
 
     &__alerta {

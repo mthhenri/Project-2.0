@@ -27,7 +27,10 @@ import {
     novoItemDaCadeia,
     opcoesDoSelectDeModelo,
     resumoDoItem,
+    rotuloDoEsforco,
+    rotuloDoProvedor,
 } from '../../utils/configuracao-ia.util';
+import { tomMedioDoProvedor } from '../../../../shared/utils/tons-de-provedor';
 
 /**
  * Aba "Provedor e modelos" das Configurações da IA (spec 261): **uma cadeia por nível** (rápido, padrão e analítico), cada uma uma lista
@@ -66,6 +69,9 @@ export class ProvedorAbaComponent implements OnInit {
     readonly avisoSemChave = AVISO_SEM_CHAVE;
     readonly maximoDeItens = MAXIMO_DE_ITENS_DA_CADEIA;
     readonly resumoDoItem = resumoDoItem;
+    readonly rotuloDoProvedor = rotuloDoProvedor;
+    readonly rotuloDoEsforco = rotuloDoEsforco;
+    readonly tomMedioDoProvedor = tomMedioDoProvedor;
 
     ngOnInit(): void {
         this.configuracaoIaService

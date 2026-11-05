@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-05 — Resumo "Item principal de cada nível" em trilhas horizontais, na cor do provedor
+
+Pedido do autor depois das specs 261 e 309, só front. O resumo no topo da aba Provedor e modelos virou três trilhas, uma por linha: caixa do nível, seta e caixa do modelo principal (provedor, modelo e esforço numa linha). A caixa usa o **tom médio** do provedor (laranja Anthropic, azul Google, cinza OpenAI), o mesmo nos três níveis: os três tons por nível ficam só no gráfico de custos, onde uma barra só precisa distinguir os modelos. A tabela de cores saiu de `custos.util.ts` para `shared/utils/tons-de-provedor.ts`, fonte única das telas de IA. Testado: `tons-de-provedor.test.ts` e o teste da página (texto de cada trilha, seta e cor); 157 verdes no módulo e em `shared/utils`. Visto ao vivo em 1920×1080 no tema claro; **não visto** neste ajuste no tema escuro nem nos outros formatos (a cor usa `color-mix` com as superfícies do tema, como o resto da tela).
+
 ## 2026-11-05 — Spec 309: lista de modelos dos provedores no campo de modelo da configuração da IA
 
 Implementada a [309](../specs/done/309-ia-listar-modelos-dos-provedores.spec.md), que dependia da 261 (cadeia por nível). **O que não foi verificado fica no P-075** (nenhuma chamada real aos provedores; sem chaves no ambiente).
