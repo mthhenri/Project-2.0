@@ -79,11 +79,24 @@
         flex: 0 0 5.5rem;
         align-items: center;
         justify-content: center;
-        background: color-mix(in srgb, var(--tom) 28%, var(--app-surface-0));
+        // A caixa do nível usa a cor tema do app: o padrão é a cor tema, o rápido 25% mais claro e o analítico 25% mais escuro.
+        --cor-nivel: var(--p-primary-500);
+
+        border-color: var(--cor-nivel);
+        background: var(--cor-nivel);
+        color: var(--p-primary-contrast-color);
         font-size: 0.75rem;
         font-weight: 700;
         letter-spacing: 0.02em;
         text-transform: uppercase;
+    }
+
+    &__trilha-nivel[data-nivel="RAPIDO"] {
+        --cor-nivel: color-mix(in srgb, var(--p-primary-500) 75%, white);
+    }
+
+    &__trilha-nivel[data-nivel="ANALITICO"] {
+        --cor-nivel: color-mix(in srgb, var(--p-primary-500) 75%, black);
     }
 
     &__seta {

@@ -25,7 +25,11 @@
                         principal.item ? tomMedioDoProvedor(principal.item.provedor) : null
                     "
                 >
-                    <span class="provedor-aba__trilha-nivel">{{ principal.nivel.titulo }}</span>
+                    <span
+                        class="provedor-aba__trilha-nivel"
+                        [attr.data-nivel]="principal.nivel.nivel"
+                        >{{ principal.nivel.titulo }}</span
+                    >
                     <i class="pi pi-arrow-right provedor-aba__seta" aria-hidden="true"></i>
                     <div class="provedor-aba__trilha-modelo">
                         @if (principal.item; as item) {
