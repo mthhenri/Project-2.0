@@ -106,6 +106,8 @@ export class DemandaProjetoPage implements OnInit {
     /** A carga do grafo do projeto falhou: a tela oferece "Tentar de novo" em vez de dizer que o projeto não tem demandas (P-058). */
     readonly erroAoCarregarGrafo = signal<boolean>(false);
     readonly carregandoProjetos = signal<boolean>(false);
+    /** A lista de projetos não carregou: a área principal mostra o erro com "Tentar de novo" no lugar de "Selecione um projeto". */
+    readonly erroAoCarregarProjetos = signal<boolean>(false);
     readonly modoVisualizacao = signal<ModoVisualizacao>(this.modoInicial());
     readonly mostrarDialogNovaDemanda = signal<boolean>(false);
     readonly planejamento = signal<DemandaPlanejamentoDto[]>([]);
@@ -372,8 +374,9 @@ export class DemandaProjetoPage implements OnInit {
         }
     }
 
-    private carregarProjetos(): void {
+    carregarProjetos(): void {
         this.carregandoProjetos.set(true);
+        this.erroAoCarregarProjetos.set(false);
         this.projetoService
             .listar({ itensPorPagina: 100 })
             .pipe(finalize(() => this.carregandoProjetos.set(false)))
@@ -393,6 +396,7 @@ export class DemandaProjetoPage implements OnInit {
                     }
                 },
                 error: () => {
+                    this.erroAoCarregarProjetos.set(true);
                     this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar os projetos' });
                 },
             });

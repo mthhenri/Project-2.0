@@ -228,9 +228,17 @@ import { StandardResponse } from '@project20/shared/interfaces';
   `ResourceNotFoundException` ou `UnauthorizedAccessException`.
 - **Repository** só SQL, estende `BaseRepository`; use `executarConsulta<T>()`,
   `executarComando()` e `executarSoftDelete(id)`. Nunca DELETE físico.
-- Todo `SELECT` filtra `is_deleted = false`. Parâmetros nomeados (`:nomeParametro`), nunca `?` nem
+- Todo `SELECT` filtra `is_deleted = false`. **Registro `is_deleted = true` é morto**, equivale a apagado
+  fisicamente: toda tabela de negócio lida ou alterada (`FROM`, `JOIN`, subconsulta, `EXISTS`, CTE, `UPDATE`) filtra
+  `is_deleted = false`, sempre. Se uma listagem mostra o inativo (`ativo = false`) é decisão dela; o excluído nunca
+  entra. A única exceção é a leitura de restauração (`recuperarExcluid[oa]`) e o catálogo do banco. Parâmetros nomeados (`:nomeParametro`), nunca `?` nem
   interpolação. INSERT é `INSERT ... SELECT :campo ... RETURNING`, nunca `VALUES`. Nenhuma coluna
   tem `DEFAULT`: a aplicação fornece todos os valores.
+- **O banco não carrega lógica.** Sem trigger, sem função de negócio: `created_date`, `updated_date`, `is_deleted` e
+  `deleted_date` são gravados pela aplicação. Todo `UPDATE` novo grava `updated_date = NOW()`, também o `SET`
+  montado dinamicamente, e migration nova **não cria trigger**. Os 43 triggers `trg_<tabela>_updated_date`
+  existentes saem pela spec 277; a auditoria do filtro de exclusão em todo o SQL é a spec 276. Regras escritas em
+  `SYSTEM.SPEC.md` §9.2 (#1 e #14) e §16, `CONVENTIONS.md` e `SCHEMA.md`.
 - Aliases descritivos, sem abreviar (`demanda_filho`, não `d`). Tabelas no singular, em português
   snake_case. Datas genéricas `_date`, de negócio `_data` — nunca `_at`/`_em`.
 - Hierarquias e grafos: CTEs recursivas do PostgreSQL.
@@ -253,7 +261,8 @@ Regras de negócio que mais são violadas:
   entram em `demanda_usuario`: o acesso deles é por tipo (total). Não existe `projeto_usuario`.
 - Conexões do grafo de demandas (`DemandaConexao`) são validadas contra ciclos por CTE recursiva
   antes do INSERT.
-- Exclusões são sempre soft delete.
+- Exclusões são sempre soft delete. **Usuário com execução registrada não é excluído, só inativado**
+  (`UsuarioService.excluir`, task 275); quem não tem execução pode ser excluído.
 
 ## Comandos úteis
 
@@ -290,6 +299,13 @@ Testes ficam ao lado do código, em `*.test.ts`, com `node:test` e `node:assert/
 quatro workspaces (`npm run lint:tudo`). `npm run test:cobertura` mede a cobertura (sem gate). Variáveis de ambiente:
 `.env.example` e `README.md`. Para verificação manual da aplicação real, consulte
 `.agents/skills/verify/SKILL.md`; build não a substitui quando a tarefa exige observar o app.
+
+## Decisões de modelagem são do autor
+
+Se a tarefa envolve **alterar a modelagem do projeto** (tabelas, colunas, relações, campos de
+documento JSONB, DTOs/contratos de dados, enums, índices dos armazenamentos, onde um dado novo
+vive), **pergunte ao autor antes**, sempre. Nunca tome decisão de modelagem sozinho, nem quando a
+spec parecer sugerir uma resposta: apresente o antes → depois e as opções, e aguarde a decisão.
 
 ## Segurança operacional
 

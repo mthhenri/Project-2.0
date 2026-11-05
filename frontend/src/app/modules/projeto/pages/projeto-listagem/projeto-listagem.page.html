@@ -78,7 +78,24 @@
             <div class="projeto-listagem__conteudo" [class.conteudo-recarregando]="recarregando()">
                 <app-barra-recarga [ativa]="recarregando()" />
 
-                @if (projetos().length === 0) {
+                @if (erroAoCarregar() && projetos().length === 0) {
+                    <div class="projeto-listagem__vazio">
+                        <i
+                            class="pi pi-exclamation-triangle text-5xl text-muted-color"
+                            aria-hidden="true"
+                        ></i>
+                        <p class="text-muted-color mt-3" role="alert">
+                            Não foi possível carregar os projetos.
+                        </p>
+                        <p-button
+                            label="Tentar de novo"
+                            icon="pi pi-refresh"
+                            [outlined]="true"
+                            class="mt-2"
+                            (onClick)="buscarProjetos()"
+                        />
+                    </div>
+                } @else if (projetos().length === 0) {
                     <div class="projeto-listagem__vazio">
                         <i class="pi pi-folder-open text-5xl text-muted-color"></i>
                         <p class="text-muted-color mt-3">Nenhum projeto ainda.</p>

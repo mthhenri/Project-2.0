@@ -21,8 +21,7 @@ Triagem de 2026-10-31, com o autor.
 
 Resolver primeiro; o autor considera simples ou próximo.
 
-- **I-043** — atualizar os pacotes dos provedores de IA para poder usar sempre os modelos mais novos. Perto de "Agora" por ser concreto (2026-10-31).
-- **P-068** — falha ao carregar lista aparece como lista vazia (Projetos, Tags e outras telas). Estado de erro com "Tentar de novo" nas listas principais (2026-11-03).
+- **I-043** — atualizar os pacotes dos provedores de IA para poder usar sempre os modelos mais novos. Pacotes atualizados em 2026-11-04; falta conferir uma chamada real a cada provedor e decidir se vira rotina. Perto de "Agora" por ser concreto (2026-10-31).
 - **P-073** — Defender barra o executável do Project Desktop; a correção de fundo é assinar o `.exe` (I-049). Bloqueia a distribuição (2026-11-03).
 
 ## 2. Specs já escritas no backlog
@@ -41,8 +40,6 @@ Resolver depois do bloco "Agora", sem ordem entre si.
 - **P-023** — desfazer a entrada numa demanda sem outros membros é recusado. "Temos que resolver"; decidir antes se a recusa é o certo (2026-10-31).
 - **P-025** — conversas dos desenvolvedores: período e busca olham só uma janela do histórico. "Temos que ver, depois" (2026-10-31).
 - **P-043** — chat da IA: pergunta sem resposta, mas com custo registrado. "Temos que ver" (2026-10-31).
-- **P-064** — chat da IA sem feedback ao criar ou trocar conversas e planos. Entrou na triagem sem decisão de ordem (2026-11-03).
-- **P-065** — histórico somente leitura mostra o seletor Perguntas/Planejamento. Entrou na triagem sem decisão de ordem (2026-11-03).
 
 ## 4. A pensar
 

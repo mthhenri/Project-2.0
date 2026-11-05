@@ -73,6 +73,22 @@ describe('UsuarioListagemPage — estados', () => {
         expect(texto(montado)).toContain('2 usuários');
     });
 
+    it('erro ao carregar mostra o erro com "Tentar de novo" no lugar do vazio (P-068)', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+        for (const requisicao of montado.http.match((seguinte) => seguinte.method === 'GET' && seguinte.url.endsWith('/usuario'))) {
+            requisicao.flush({ mensagem: 'falha' }, { status: 500, statusText: 'Erro' });
+        }
+        await montado.atualizar();
+        expect(texto(montado)).toContain('Não foi possível carregar os usuários');
+        expect(texto(montado)).not.toContain('Nenhum usuário ainda');
+
+        montado.elemento.querySelector<HTMLElement>('.usuario-listagem__vazio button')?.click();
+        await montado.atualizar();
+        await carregar(montado, []);
+        expect(texto(montado)).not.toContain('Não foi possível carregar');
+        expect(texto(montado)).toContain('Nenhum usuário ainda');
+    });
+
     it('sem usuários e sem filtro: estado vazio com o convite a criar o primeiro (gestor)', async () => {
         const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
         await carregar(montado, []);

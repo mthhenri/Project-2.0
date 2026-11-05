@@ -65,7 +65,7 @@ describe('TagListagemPage — listagem', () => {
         montado.http.verify();
     });
 
-    it('em erro da API sai do carregamento, avisa por toast e fica no estado vazio', async () => {
+    it('em erro da API sai do carregamento, avisa por toast e mostra o erro com "Tentar de novo" (P-068)', async () => {
         const montado = await montarListagem();
         const avisos: unknown[] = [];
         montado.mensagens.messageObserver.subscribe((mensagem) => avisos.push(mensagem));
@@ -74,8 +74,16 @@ describe('TagListagemPage — listagem', () => {
         await montado.atualizar();
 
         expect(montado.elemento.querySelector('app-skeleton-lista')).toBeNull();
-        expect(textoDaPagina(montado)).toContain('Nenhuma tag ainda');
+        expect(textoDaPagina(montado)).toContain('Não foi possível carregar as tags');
+        expect(textoDaPagina(montado)).not.toContain('Nenhuma tag ainda');
         expect(avisos).toHaveLength(1);
+
+        montado.elemento.querySelector<HTMLElement>('.tag-listagem__vazio button')?.click();
+        await montado.atualizar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/tag'), []);
+        await montado.atualizar();
+        expect(textoDaPagina(montado)).not.toContain('Não foi possível carregar');
+        expect(textoDaPagina(montado)).toContain('Nenhuma tag ainda');
         montado.http.verify();
     });
 

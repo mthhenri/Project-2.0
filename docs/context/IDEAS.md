@@ -148,6 +148,7 @@
 - **Origem:** conversa de 2026-10-31 com o autor, ao triar as ideias.
 - **Por quê:** um modelo novo pode exigir uma versão recente do pacote, e o nome do modelo é texto livre na configuração da IA; sem pacote em dia, o administrador não consegue trocar para o modelo mais novo.
 - **Custo aparente:** baixo a médio: subir as versões, conferir mudanças que quebram (tipos, nomes de campo, a ferramenta de busca de cada provedor, ver spec 294), rodar os testes da IA e conferir ao vivo um provedor de cada. Decidir se a atualização vira rotina.
+- **Andamento (2026-11-04):** versões subidas (`@anthropic-ai/sdk` 0.135→1.4, `@google/genai` 2.30→2.32, `openai` 7.39→7.50); build e testes do backend passam. **Falta** a chamada real a um provedor de cada (sem chave no ambiente de verificação) e decidir se a atualização vira rotina.
 
 ### I-044 — Comando do usuário para pedir pesquisa na internet · chat IA
 
@@ -169,3 +170,10 @@
 - **Origem:** o autor, em 2026-11-03: "toda vez que eu vou baixar ele, ele dá como inseguro".
 - **Por quê:** o executável não é assinado (README do desktop), então o navegador (reputação do download) e o SmartScreen do Windows ("editor desconhecido") o barram; cada colega precisa forçar o download e o "Executar assim mesmo".
 - **Custo aparente:** depende do caminho, a decidir com o autor. (a) Certificado de assinatura de código OV de uma autoridade certificadora (≈ US$ 150–300/ano, chave em token ou HSM), configurado no `electron-builder`; o aviso some aos poucos, conforme o arquivo ganha reputação. (b) O Azure Artifact Signing (≈ US$ 10/mês) não atende pessoa nem empresa no Brasil hoje. (c) Uso só interno: certificado próprio instalado como confiável nas máquinas da equipe; resolve o "editor desconhecido" do Windows, mas não o aviso do navegador. Antes, confirmar qual aviso aparece: se o site for servido em HTTP, o Chrome também barra o download como "inseguro" por isso, e aí a correção é HTTPS.
+
+### I-050 — Datas de criação e alteração só nas tabelas em que fazem sentido · banco/modelagem
+- **Ideia:** hoje toda tabela traz as quatro colunas de `BaseEntity`. `is_deleted` e `deleted_date` ficam em todas, mas `created_date` e `updated_date` só nas que de fato são criadas e alteradas pela aplicação. Tabelas de tipo fixo (`tipo_usuario`, `tipo_prompt`, `tipo_anotacao` e parecidas) não têm criação nem alteração: o conjunto é fixo no sistema, no máximo se exclui uma linha (e aí a data de exclusão serve de auditoria). Algumas só não precisam de `updated_date`. Uma exceção recente é o tipo de usuário, que passou a ser alterado por causa das descrições.
+- **Origem:** o autor, em 2026-11-05, ao revisar a migration da spec 261: "nem todas essas entidades precisam desses registros".
+- **Por quê:** coluna que nunca muda de valor é ruído e passa a falsa ideia de auditoria. Junto vai a regra do P-074 (excluir não altera `updated_date`).
+- **Custo aparente:** a decidir com o autor, tabela por tabela (quais precisam de `created_date`, quais de `updated_date`). Mexe em `BaseEntity`, nas migrations (colunas a remover), no `docs/SCHEMA.md` e nos repositories, e depende da 276/277. A tela de Modelagem poderia passar a exibir esses campos por tabela (relaciona-se com a I-040). Decisão de modelagem: **perguntar ao autor antes de especificar**.
+

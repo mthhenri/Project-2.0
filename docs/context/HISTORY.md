@@ -12,6 +12,88 @@
 
 ---
 
+## 2026-11-05 — Regra das datas da BaseEntity: excluir não é alterar (P-074, I-050) e ajuste da 261
+
+Conversa com o autor ao revisar a migration da spec 261; só documentação, sem código. Referencia, sem reescrever, os blocos de 2026-11-04 sobre `is_deleted` morto e banco sem lógica.
+
+**Decidido pelo autor.** Cada data da `BaseEntity` tem um só motivo: `created_date` na criação, `updated_date` quando o objeto é alterado, `deleted_date` na exclusão. **Deletar não é alterar**: a exclusão grava `is_deleted` e `deleted_date` e não toca `updated_date`.
+
+**Registrado.**
+- **P-074:** o `BaseRepository.executarSoftDelete` e os triggers legados gravam `updated_date` na exclusão, e a regra escrita ("todo `UPDATE` grava `updated_date`") não prevê a exceção. A correção fica para junto das specs 276/277. As regras escritas (`CLAUDE.md`/`AGENTS.md`, `SYSTEM.SPEC.md`, `CONVENTIONS.md`, `SCHEMA.md`, skills) **ainda não foram alteradas**.
+- **I-050:** `created_date` e `updated_date` só nas tabelas em que fazem sentido (as de tipo fixo não são criadas nem alteradas); decisão de modelagem, tabela por tabela, a perguntar ao autor antes de especificar.
+- **261:** o preenchimento da migration atualiza `updated_date` nas linhas vivas e não toca nas excluídas.
+
+## 2026-11-04 — Spec 261 remodelada (cadeia por nível) e spec 309 nova: só specs, sem código
+
+Revisão da modelagem da 261 com o autor, em perguntas e respostas; **nenhum código foi alterado**. Referencia (sem reescrever) o bloco de 2026-10-31 sobre a I-034.
+
+**Mudou.**
+- **261:** em vez de um provedor principal por nível sobre a cadeia global, cada nível (`RAPIDO`, `PADRAO`, `ANALITICO`) tem a sua cadeia de itens `{provedor, modelo, esforco}`, de tamanho livre (mínimo 1) e sem provedor repetido. Modelagem **A** escolhida pelo autor entre três (três colunas JSONB, uma coluna JSONB, tabela filha): `cadeia_rapido`, `cadeia_padrao` e `cadeia_analitico` em `configuracao_ia`, `NOT NULL` com `CHECK` de lista não vazia; saem `tipo_provedor_ia_id`, `modelos_provedor`, `fallbacks` e `esforco_analitico`. As versões antigas são convertidas em três cadeias iguais (Rápido e Padrão com `MEDIO` explícito); o `DOWN` perde informação.
+- **Decisões do autor na mesma revisão:** chave ausente salva mas avisa na tela ("Chave de Provedor não configurada"); `FORA_DO_AR` só quando nenhum item de nenhuma cadeia tem chave ou todos os níveis falharam, com o "último resultado" por nível; o fallback continua o turno com o histórico neutro, sem a `assinatura` do provedor anterior; a mensagem da IA ganha `modelo_planejado` e o chat mostra o alerta "Fallback utilizado" com tooltip.
+- **309 (nova):** a lista de modelos vinda da API de cada provedor no lugar do texto livre (contrato `{provedor, disponivel, modelos: [{id, nome}]}`, `GET /ia/modelos`, cache de 30 minutos, digitação à mão sem chave ou com falha). Depende da 261.
+
+**Achados.** Os sites de documentação dos três provedores não resolviam na rede da sessão, então a 309 se apoia nos tipos dos SDKs das versões do `package.json` e manda conferir cada ponto na documentação oficial antes de implementar. A listagem da Anthropic traz `display_name`, `lifecycle` e `capabilities`; a da OpenAI traz só `id`, `created`, `owned_by` e `shutdown_date`, sem como separar chat de embeddings por campo; a do Google traz `displayName` e `supportedActions`. Os provedores de `tipo_provedor_ia` deixam de ser lidos pela configuração (a tabela fica; removê-la ficou fora da 261).
+
+**Pendente.** Implementação da 261 e da 309 não começou. A `docs/specs/backlog/294-*` segue dependendo da 261 e deve revalidar os contratos depois dela.
+---
+
+## 2026-11-04 — Documentos de padrão alinhados: `is_deleted` é morto e o banco não carrega lógica
+
+Pedido do autor, sequência do bloco abaixo: "a spec só vai corrigir o que já está; atualizar os docs garante que os próximos venham certos". Só documentação, nenhum código.
+
+**Mudou.** `SYSTEM.SPEC.md`: §9.2 #1 reescrita (toda tabela lida ou alterada filtra `is_deleted = false`, em `FROM`, `JOIN`, subconsulta, `EXISTS`, CTE e `UPDATE`; lista fechada de isenções; entidade com histórico dependente só é inativada), #12 passa a descrever os objetos genéricos legados, **#14 nova** (o banco não carrega lógica; `updated_date = NOW()` em todo `UPDATE`; migration nova sem trigger), exemplo de migration em §9.5 sem o `CREATE/DROP TRIGGER`, §16 #4 ampliada e **§16 #27 nova**. `CONVENTIONS.md`: exemplos de SQL (`UPDATE` com `updated_date`, `JOIN` com `is_deleted`), proibições e a seção de objetos genéricos de banco (trigger e função marcados como legado). `SCHEMA.md`: nota na seção BaseEntity e a seção "Função de Trigger" marcada como legado até a migration 0079. `CLAUDE.md`/`AGENTS.md`: removida a ressalva de que os documentos divergiam. Specs 276 e 277: o texto da regra deixou de ser entregável de escrita e virou conferência (276) e retirada do legado (277).
+
+**O que não mudou de propósito.** Os blocos `CREATE TRIGGER` por tabela em `SCHEMA.md` descrevem o banco real (43 triggers) e saem junto com a migration 0079.
+
+**Verificado:** `repo:verificar` e `diff` de `CLAUDE.md` com `AGENTS.md`. Nada rodou contra o banco ou o código.
+
+---
+
+## 2026-11-04 — Instruções do agente: `is_deleted` é morto e o banco não carrega lógica (specs 276 e 277)
+
+Pedido do autor, fora de spec. Duas decisões viraram regra de trabalho em `CLAUDE.md`/`AGENTS.md` (idênticos) e nas skills `sql-migrations` e `conventions-check` (cópias em `.claude/` e `.agents/`, idênticas):
+- **`is_deleted = true` é morto:** toda tabela de negócio lida ou alterada (`FROM`, `JOIN`, subconsulta, `EXISTS`, CTE, `UPDATE`) filtra `is_deleted = false`; se a listagem mostra o inativo é por `ativo`. Usuário com execução só é inativado (task 275).
+- **Sem lógica no banco:** nada de trigger nem função de negócio; `created_date`, `updated_date`, `is_deleted` e `deleted_date` são da aplicação, e todo `UPDATE` grava `updated_date = NOW()`.
+
+Specs novas, só no backlog: **276** (auditoria do `is_deleted` em todo o SQL, com regra de padrão completa e verificador estático) e **277** (remover os 43 triggers `trg_<tabela>_updated_date` e a `fn_set_updated_date()`, migration 0079, auditoria dos ~47 `UPDATE`s). Levantamento: o banco migrado tem 43 triggers, todos desse tipo; `created_date`, `deleted_date` e `is_deleted` já eram da aplicação e nenhuma das quatro colunas tem `DEFAULT`.
+
+**Pendência declarada:** `SYSTEM.SPEC.md` §9.2 e §16, `CONVENTIONS.md` e `SCHEMA.md` ainda descrevem o trigger e a regra curta do `SELECT`; as instruções dizem que, nesses dois pontos, vale a decisão do autor até as specs 276 e 277 alinharem os documentos. Verificado: `repo:verificar` e `diff` das cópias; nenhum código mudou.
+
+---
+
+## 2026-11-04 — Task 275: excluir usuário só se ele não tiver execução
+
+Relato do autor: usuário com Y horas executadas foi excluído (soft delete); a demanda e o volume do projeto mostravam as Y horas, mas a lista de atividades da demanda não, porque `AtividadeRepository.listar`/`recuperar` e o `ExecucaoRepository` fazem `INNER JOIN usuario ... is_deleted = false` e as somas de demanda/volume não passam por `usuario`.
+
+**Decisão do autor:** `is_deleted = true` é morto, toda query filtra, sempre; **não** se afrouxa o filtro. Em vez disso, quem tem execução não pode ser excluído, só inativado; quem não tem pode (atividade sem execução não bloqueia). Usuários que já estavam excluídos com execução o autor ajusta à mão.
+
+**Mudou.** `UsuarioRepository.validarExecucoes` (existe execução não excluída, incluindo a ativa, em atividade não excluída de que o usuário é dono) e, em `UsuarioService.excluir`, uma `BusinessException` quando houver, depois das guardas de administrador e antes do `excluir`. Regra em `SYSTEM.SPEC.md` §14. Nenhuma query de leitura mudou; a tela de Usuários também não (a recusa volta como toast e a linha é restaurada pelo `error` do `excluir`).
+
+**Testes.** Unitários da service: backend 39 passando nos dois arquivos do usuário (+2: recusa com execução sem gravar e a guarda do último administrador antes da checagem). Integração: 372 passando (+1: sem atividade, atividade sem execução, execução encerrada, de outro usuário, excluída, ativa, atividade excluída). `build --workspace=backend` e `lint:tudo` limpos.
+
+**Ao vivo** (backend real, PostgreSQL 16 local): `DELETE /usuario/2` com uma execução devolveu 400 com a mensagem e o usuário seguiu ativo; com a execução excluída (soft delete) devolveu 200 e o usuário ficou `is_deleted`. **Não verificado:** a tela de Usuários no navegador (não mudou); frontend e desktop não rodados (não tocados).
+
+**Consequência aceita:** o usuário excluído sem execução leva as atividades dele para fora das listagens (o `JOIN` já filtra), como previsto pelo autor.
+
+---
+
+## 2026-11-04 — P-068, P-064, P-065, rótulo "undefined" do chat e pacotes de IA (I-043)
+
+Pedido do autor, fora de spec (itens do bloco "Agora" do `PRIORITIES.md` mais dois defeitos do chat).
+
+**Mudou.**
+- **P-068:** Projetos, Tags, Usuários, Calendário e Demandas (lista de projetos) ganharam `erroAoCarregar*` e mostram "Não foi possível carregar…" com "Tentar de novo" no lugar do estado vazio, no padrão de Atividades. Antes a falha aparecia como "Nenhum projeto ainda" / "Nenhuma tag ainda".
+- **Chat — rótulo "undefined":** `hoje` e `diaExibido` são vazios até a primeira carga e o botão do seletor montava `undefined/undefined`; agora mostra "Carregando…" (`SeletorComponent.rotuloDoBotao`).
+- **P-064:** `carregandoConversa` (primeira carga, troca de dia, volta para hoje, leitura da conversa do plano, criação de plano e abertura do último plano) põe o esqueleto no lugar da conversa; as sugestões somem durante a troca. Falha restaura o estado anterior (criar plano com erro volta ao modo anterior).
+- **P-065:** o rodapé da conversa antiga só para leitura não mostra mais o seletor Perguntas/Planejamento; "Voltar para hoje" continua.
+- **I-043:** `@anthropic-ai/sdk` 0.135→1.4 (major), `@google/genai` 2.30→2.32, `openai` 7.39→7.50. Só o `ia.module.ts` e o `google.provedor.ts` importam os SDKs; compilou sem mudança de código.
+
+**Testes.** Frontend completo 205 arquivos / 2520 testes (3 testes que descreviam o vazio indevido foram corrigidos e há casos novos de erro + nova tentativa, rótulo, seletor de modo e esqueleto); backend unitário 1615; shared 311; `lint:tudo` limpo; builds do backend e do frontend.
+
+**Verificado ao vivo** (Postgres local, backend e frontend reais, Playwright, 1920×1080, 1366×768, 1080×1920, 720×1280 e 960×1080; claro e, em 1920×1080, escuro): erro simulado na API de projeto, tag, usuário e calendário mostra a mensagem e o botão, e "Tentar de novo" recupera; rótulo "Carregando…" durante a carga do chat; esqueleto ao trocar para o dia anterior; conversa antiga sem o seletor de modo.
+
+**Pendente / limites.** I-043: nenhuma chamada real a provedor (sem chave de IA no ambiente) — a major do SDK da Anthropic só foi coberta por build e testes com dublê; decidir se atualizar vira rotina. O esqueleto de plano (criar/abrir) tem teste de componente, mas não foi visto ao vivo. Demandas: o erro da lista de projetos tem código, mas não teste próprio nem captura.
+
 ## 2026-11-03 — Check-in no perfil acompanha a execução e balão do check-in cinza
 
 **Mudou.** (1) `CheckinProximoComponent` (linha "Próximo check-in" do menu do perfil) só consultava `GET /checkin/situacao` ao nascer; iniciar uma atividade, pelo usuário ou pela IA, não a atualizava até o F5. Agora um `effect` observa o `id` da execução em `ExecucaoAtivaService.ativa()` (que o `execucaoAtivaInterceptor` já ressincroniza após iniciar, encerrar e confirmar/desfazer proposta da IA) e refaz a consulta quando ele muda. (2) O balão da mensagem do usuário na janela do check-in (`checkin__balao`) passou do azul cheio para o cinza do chat (`--app-surface-200`, I-032).

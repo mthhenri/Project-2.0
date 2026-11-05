@@ -208,7 +208,7 @@ export class UsuarioService {
         }
     }
 
-    /** Realiza soft delete do usuário. Lança exceção se não encontrado. */
+    /** Realiza soft delete do usuário. Quem já tem execução registrada não é excluído, só inativado. */
     async excluir(dto: UsuarioExcluirDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<void>> {
         const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
 
@@ -218,6 +218,11 @@ export class UsuarioService {
 
         this.validarPermissaoSobreAdministrador(usuarioEncontrado, usuarioAtivo);
         await this.validarPermanenciaDeAdministradorAtivo(usuarioEncontrado);
+
+        const possuiExecucoes = await this.usuarioRepositorio.validarExecucoes({ id: dto.id });
+        if (possuiExecucoes) {
+            throw new BusinessException('O usuário possui execuções registradas e não pode ser excluído; inative-o');
+        }
 
         await this.usuarioRepositorio.excluir({ id: dto.id });
 
