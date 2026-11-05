@@ -36,6 +36,15 @@ Permitir configurar a pesquisa nativa por provedor e mostrar, nas respostas do c
 
 7. **Documentação e verificação auditável ao implementar.** Aplicar `gerenciamento-de-impacto` nos contratos, renderizador e componentes compartilhados antes de mudar consumidores. Registrar a matriz real de suporte e tarifação, o desenho de isolamento e os limites constatados no anexo da tarefa; atualizar documentos canônicos afetados e contexto apenas ao executar/fechar a implementação. Não atualizar pacotes indiscriminadamente: eventual mudança de SDK precisa ser mínima, necessária e justificada pelo endpoint/metadados usados.
 
+## Antes de implementar (obrigatório, decisão do autor 2026-11-05)
+
+Primeiro passo da execução, antes de qualquer código:
+
+1. **Fechar a modelagem da flag de pesquisa com o autor** (onde ela mora e a granularidade), perguntando antes de escrever.
+2. **Conferir a documentação oficial** de `web_search` (OpenAI, Responses API), do `web_search` da Anthropic e do Google Search do Gemini, com os links do item 3, e fazer uma chamada real por provedor com as chaves disponíveis; registrar data e resultado. Se os hosts da documentação estiverem bloqueados, liberá-los antes. Sem credenciais, registrar a verificação como pendente e não afirmar compatibilidade.
+3. **Revalidar o restante da spec** contra o código atual (a revalidação de 2026-11-05 cobriu só a configuração): `IaProvedor`, adaptadores, `chat.service`, mapeamentos dos índices, DTOs de mensagem e aba Custos.
+4. **Quebrar em tasks numeradas** (como as demais guarda-chuvas) antes de implementar.
+
 ## Critérios de Aceite
 
 - [ ] Testes com clientes falsos dos três adaptadores cobrem ferramenta ausente quando desligada, disponibilidade sem execução, execução com/sem fontes, múltiplas buscas, consumo ausente, citações em vários blocos, streaming incremental/acumulado e erro parcial. Fixtures seguem os formatos reais documentados, sem provar compatibilidade real apenas por mocks.
