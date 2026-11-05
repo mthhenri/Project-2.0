@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-11-05 — Regra das datas da BaseEntity: excluir não é alterar (P-074, I-050) e ajuste da 261
+
+Conversa com o autor ao revisar a migration da spec 261; só documentação, sem código. Referencia, sem reescrever, os blocos de 2026-11-04 sobre `is_deleted` morto e banco sem lógica.
+
+**Decidido pelo autor.** Cada data da `BaseEntity` tem um só motivo: `created_date` na criação, `updated_date` quando o objeto é alterado, `deleted_date` na exclusão. **Deletar não é alterar**: a exclusão grava `is_deleted` e `deleted_date` e não toca `updated_date`.
+
+**Registrado.**
+- **P-074:** o `BaseRepository.executarSoftDelete` e os triggers legados gravam `updated_date` na exclusão, e a regra escrita ("todo `UPDATE` grava `updated_date`") não prevê a exceção. A correção fica para junto das specs 276/277. As regras escritas (`CLAUDE.md`/`AGENTS.md`, `SYSTEM.SPEC.md`, `CONVENTIONS.md`, `SCHEMA.md`, skills) **ainda não foram alteradas**.
+- **I-050:** `created_date` e `updated_date` só nas tabelas em que fazem sentido (as de tipo fixo não são criadas nem alteradas); decisão de modelagem, tabela por tabela, a perguntar ao autor antes de especificar.
+- **261:** o preenchimento da migration atualiza `updated_date` nas linhas vivas e não toca nas excluídas.
+
 ## 2026-11-04 — Spec 261 remodelada (cadeia por nível) e spec 309 nova: só specs, sem código
 
 Revisão da modelagem da 261 com o autor, em perguntas e respostas; **nenhum código foi alterado**. Referencia (sem reescrever) o bloco de 2026-10-31 sobre a I-034.
