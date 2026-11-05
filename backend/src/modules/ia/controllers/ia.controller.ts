@@ -13,6 +13,13 @@ export class IaController {
         return this.iaService.recuperarEstadoCompleto();
     }
 
+    /** Os modelos que cada provedor oferece, para o select da configuração (spec 309). Só administrador, como o estado completo. */
+    @AdministradorOnly()
+    @Get('modelos')
+    listarModelos() {
+        return this.iaService.listarModelos();
+    }
+
     /** Só o `EstadoIaEnum` (desligada, fora do ar, no ar): nenhum dado de configuração. Para qualquer usuário autenticado. */
     @Get('disponibilidade')
     recuperarDisponibilidade() {

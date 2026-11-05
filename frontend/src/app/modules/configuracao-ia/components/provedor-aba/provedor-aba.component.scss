@@ -159,6 +159,18 @@
         min-width: 0;
     }
 
+    // O campo de digitação do modelo, com o botão de voltar à lista quando o provedor tem uma.
+    &__campo-modelo {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    &__entrada {
+        flex: 1;
+        min-width: 0;
+    }
+
     &__acoes {
         display: flex;
         align-items: center;

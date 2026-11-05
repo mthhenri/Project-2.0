@@ -12,6 +12,23 @@
 
 ---
 
+## 2026-11-05 — Spec 309: lista de modelos dos provedores no campo de modelo da configuração da IA
+
+Implementada a [309](../specs/done/309-ia-listar-modelos-dos-provedores.spec.md), que dependia da 261 (cadeia por nível). **O que não foi verificado fica no P-075** (nenhuma chamada real aos provedores; sem chaves no ambiente).
+
+**O que mudou.**
+- **Rota.** `GET /ia/modelos`, só administrador, devolve um registro por provedor (`IaModelosProvedorListadoDto`: `provedor`, `disponivel`, `modelos: {id, nome}[]`). `disponivel = false` e lista vazia quando o provedor não tem chave (nem é chamado), a listagem falhou, passou de 10 s ou veio **vazia depois do filtro** (decisão minha: o filtro é heurístico, então vazio vale como indisponível e a tela cai na digitação).
+- **Adaptadores.** Contrato novo `IaProvedor.listarModelos()`. Anthropic: `models.list({lifecycle:['active']})`; OpenAI: `models.list()`; Google: `models.list({config:{queryBase:true,pageSize:100}})`; os três pelos iteráveis paginados do SDK. Os tipos e as assinaturas foram conferidos **nos pacotes instalados** (`@anthropic-ai/sdk` 0.135, `openai` 7.39, `@google/genai` 2.30), não na documentação online nem em chamada real.
+- **Filtros** (`ia-modelos-filtro.ts`, funções puras com constantes nomeadas): Anthropic fica só com `active`; OpenAI com o prefixo de chat, sem os trechos de outra função (`embedding`, `whisper`, `tts`, `transcribe`, `audio`, `realtime`, `image`, `dall-e`, `moderation`, `sora`, `search`) e sem os `shutdown_date` passados; Google com `generateContent`, prefixo e sem `embedding`, `imagen`, `veo`, `tts`, `image`, `aqa`. Ordem do mais novo ao mais antigo quando há data; sem data, por nome.
+- **Cache** (`ia-modelos-cache.ts`): 30 minutos por provedor em memória (`TEMPO_DO_CACHE_DOS_MODELOS_MS`), só sucesso entra, chamadas simultâneas compartilham a mesma requisição, tempo limite de 10 s; a falha é registrada no log só com o tipo e o status (a mensagem de um erro de SDK pode trazer trechos da requisição).
+- **Tela.** A aba Provedor e modelos consulta a lista uma vez ao abrir (com "Carregando a lista…" discreto). Provedor com lista: o campo do item é um select com busca que mostra o nome e grava o `id`, com o valor salvo fora da lista mantido como opção e, no fim, "Outro modelo…" (abre a digitação à mão; um botão ao lado volta à lista). Sem lista (sem chave, consulta com erro ou ainda carregando): campo de digitação com as sugestões fixas, como antes. Ao trocar o provedor do item, o modelo do anterior sai e entra o primeiro da lista do novo (ou a primeira sugestão): **decisão minha**, fora do texto da spec, porque o modelo de um provedor não vale em outro. A validação de salvar continua a da 261.
+
+**Testado (números).** `backend`: 99 testes no módulo `ia` (filtros com listas de exemplo, cache com relógio injetado, adaptadores com clientes falsos e páginas, service: sem chave sem chamar, cache, falha não guardada, lista vazia, simultaneidade, e a rota só de administrador); `frontend`: 155 testes no módulo `configuracao-ia` (serviço, util e os estados do campo: select com nome e id, digitação sem lista e com erro da consulta, valor salvo fora da lista, "Outro modelo…" e a volta à lista, troca de provedor).
+
+**Verificado ao vivo** (stack isolado de novo: backend 3001, tela 4201, banco `project20_verify`, removidos ao fim). Como não há chaves, um servidor local mínimo (só do teste, em `.artifacts/309-listar-modelos/`) respondeu `/ia/modelos` com listas de exemplo da Anthropic e da OpenAI e o Google indisponível; o resto passou pelo backend verdadeiro. Percorrido: select com busca mostrando "Claude Haiku 5.5" e gravando o id, "Outro modelo…" abrindo a digitação com o valor mantido e sem alteração pendente, o botão de volta à lista, contingência do Google (sem lista) como campo de digitação com o aviso de chave, em 1920×1080 escuro e claro, 1366×768 e 720×1280 escuros. **Não percorridos:** 960×1080 e 1080×1920 (só na 261), troca de provedor pelo select na tela (coberta por teste de componente) e a consulta com erro ao vivo.
+
+**Pendente.** P-075 (os filtros pelo `id` e a paginação dos três SDKs só foram vistos por tipo e por teste; falta uma chamada real a cada provedor). Botão de recarregar a lista continua fora de escopo (a lista se renova pelo cache de 30 minutos).
+
 ## 2026-11-05 — Spec 261: cadeia de provedor, modelo e esforço por nível da IA, `modelo_planejado` e o alerta "Fallback utilizado"
 
 Implementada a [261](../specs/done/261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md) como remodelada com o autor em 2026-11-04. **O que não foi verificado fica no P-075** (nenhuma chamada real a provedor; sem chaves no ambiente).

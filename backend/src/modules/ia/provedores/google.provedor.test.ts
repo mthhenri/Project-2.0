@@ -18,7 +18,7 @@ const RESPOSTA: RespostaGoogle = {
     usageMetadata: { promptTokenCount: 17, candidatesTokenCount: 3, thoughtsTokenCount: 1, cachedContentTokenCount: 7 },
 };
 
-function clienteFalso(opcoes: { resposta?: RespostaGoogle; trechos?: RespostaGoogle[]; erro?: unknown } = {}) {
+function clienteFalso(opcoes: { resposta?: RespostaGoogle; trechos?: RespostaGoogle[]; erro?: unknown; modelos?: unknown[][]; erroNaListagem?: unknown } = {}) {
     const chamadas: Record<string, unknown>[] = [];
     const cliente: ClienteGoogle = {
         async gerar(parametros) {
@@ -31,6 +31,13 @@ function clienteFalso(opcoes: { resposta?: RespostaGoogle; trechos?: RespostaGoo
             if (opcoes.erro) throw opcoes.erro;
             return (async function* () {
                 yield* opcoes.trechos ?? [];
+            })();
+        },
+        async listarModelos() {
+            chamadas.push({ listagem: true });
+            if (opcoes.erroNaListagem) throw opcoes.erroNaListagem;
+            return (async function* () {
+                for (const pagina of opcoes.modelos ?? []) yield* pagina as never[];
             })();
         },
     };
@@ -255,4 +262,37 @@ test('histórico de ferramenta vindo de outro provedor (sem assinatura) recusado
         (erro: unknown) => erro instanceof IaException && erro.motivo === 'INDISPONIVEL',
     );
     await assert.rejects(() => recusado.gerar(SOLICITACAO), (erro: unknown) => erro instanceof IaException && erro.motivo === 'INDISPONIVEL');
+});
+
+// Listagem de modelos (spec 309).
+
+test('listarModelos junta as páginas, tira o models/ do id e fica só com os que geram texto, sem embeddings, imagem, vídeo e voz', async () => {
+    const gera = ['generateContent', 'countTokens'];
+    const { cliente } = clienteFalso({
+        modelos: [
+            [
+                { name: 'models/gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', supportedActions: gera },
+                { name: 'models/gemini-embedding-001', displayName: 'Gemini Embedding', supportedActions: ['embedContent'] },
+            ],
+            [
+                { name: 'models/gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', supportedActions: gera },
+                { name: 'models/gemini-2.5-flash-image', displayName: 'Gemini Image', supportedActions: gera },
+                { name: 'models/imagen-4', displayName: 'Imagen 4', supportedActions: ['predict'] },
+                { name: 'models/veo-3', displayName: 'Veo', supportedActions: ['predictLongRunning'] },
+                { name: 'models/gemma-3-27b-it', displayName: 'Gemma 3 27B', supportedActions: gera },
+            ],
+        ],
+    });
+    const modelos = await new GoogleProvedor(cliente).listarModelos();
+    assert.deepEqual(modelos, [
+        { id: 'gemini-2.5-flash', nome: 'Gemini 2.5 Flash' },
+        { id: 'gemini-2.5-pro', nome: 'Gemini 2.5 Pro' },
+        { id: 'gemma-3-27b-it', nome: 'Gemma 3 27B' },
+    ]);
+});
+
+test('listarModelos: lista vazia devolve vazia e erro do SDK sobe como veio', async () => {
+    assert.deepEqual(await new GoogleProvedor(clienteFalso({ modelos: [] }).cliente).listarModelos(), []);
+    const falha = { status: 500 };
+    await assert.rejects(() => new GoogleProvedor(clienteFalso({ erroNaListagem: falha }).cliente).listarModelos(), (erro: unknown) => erro === falha);
 });

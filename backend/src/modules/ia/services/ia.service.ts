@@ -5,6 +5,8 @@ import {
     EstadoIaEnum,
     IaEstadoCompletoRecuperadoDto,
     IaEstadoRecuperadoDto,
+    IaModeloListadoDto,
+    IaModelosProvedorListadoDto,
     NivelIaEnum,
     rotuloDoNivelIa,
     StandardResponse,
@@ -14,6 +16,7 @@ import { ConfiguracaoIaService } from '../../configuracao-ia/services/configurac
 import { IaException } from '../domain/ia.exception';
 import { IaProvedor } from '../domain/ia-provedor';
 import { descartarAssinaturas } from '../domain/ia-mensagens';
+import { CacheEmMemoria, comTempoLimite, TEMPO_DO_CACHE_DOS_MODELOS_MS, TEMPO_LIMITE_DA_LISTAGEM_DE_MODELOS_MS } from '../domain/ia-modelos-cache';
 import { turnoAtual } from '../domain/turno-ia';
 import { IaResposta, IaRespostaProvedor, IaSolicitacao, IaSolicitacaoProvedor } from '../domain/ia.tipos';
 
@@ -41,6 +44,9 @@ export class IaService {
         [NivelIaEnum.PADRAO]: EstadoIaEnum.NO_AR,
         [NivelIaEnum.ANALITICO]: EstadoIaEnum.NO_AR,
     };
+
+    /** Os modelos que cada provedor oferece (spec 309): 30 minutos em memória, só sucesso. */
+    private readonly cacheDeModelos = new CacheEmMemoria<IaModeloListadoDto[]>(TEMPO_DO_CACHE_DOS_MODELOS_MS);
 
     constructor(
         private readonly configuracaoIaService: ConfiguracaoIaService,
@@ -89,6 +95,35 @@ export class IaService {
     async recuperarEstadoCompleto(): Promise<StandardResponse<IaEstadoCompletoRecuperadoDto>> {
         const provedoresComChave = Object.values(TipoProvedorIaEnum).filter((tipo) => this.provedores[tipo]?.estaDisponivel());
         return { sucesso: true, dados: { estado: await this.obterEstado(), provedoresComChave }, mensagem: 'Estado da IA recuperado com sucesso' };
+    }
+
+    /**
+     * Para a tela de configurações (administrador): os modelos de texto de cada provedor, para o select do item da cadeia (spec 309). Um registro
+     * por provedor; `disponivel = false` (sem modelos) quando ele não tem chave, a listagem falhou, passou de 10 s ou veio vazia depois do
+     * filtro, e a tela volta a digitar o nome à mão sem precisar saber qual foi o motivo. Provedor sem chave nem é chamado; falha e lista
+     * vazia não entram no cache (a próxima abertura tenta de novo); duas aberturas simultâneas compartilham a mesma requisição.
+     */
+    async listarModelos(): Promise<StandardResponse<IaModelosProvedorListadoDto[]>> {
+        const dados = await Promise.all(
+            Object.values(TipoProvedorIaEnum).map(async (tipo): Promise<IaModelosProvedorListadoDto> => {
+                const provedor = this.provedores[tipo];
+                if (!provedor || !provedor.estaDisponivel()) return { provedor: tipo, disponivel: false, modelos: [] };
+                try {
+                    const modelos = await this.cacheDeModelos.obter(tipo, async () => {
+                        const lista = await comTempoLimite(provedor.listarModelos(), TEMPO_LIMITE_DA_LISTAGEM_DE_MODELOS_MS);
+                        if (lista.length === 0) throw new Error('A listagem não trouxe nenhum modelo de texto');
+                        return lista;
+                    });
+                    return { provedor: tipo, disponivel: true, modelos };
+                } catch (erro) {
+                    // Só o tipo e o status: a mensagem de um erro de SDK pode trazer trechos da requisição.
+                    const status = (erro as { status?: number } | null)?.status;
+                    this.logger.warn(`Listagem de modelos de ${tipo} falhou (${(erro as Error)?.name ?? 'erro'}${status ? ` ${status}` : ''})`);
+                    return { provedor: tipo, disponivel: false, modelos: [] };
+                }
+            }),
+        );
+        return { sucesso: true, dados, mensagem: 'Modelos dos provedores listados com sucesso' };
     }
 
     private temItemUtilizavel(cadeia: ConfiguracaoIaCadeiaItemDto[]): boolean {

@@ -7,6 +7,7 @@ import {
     ConfiguracaoIaRecuperadaDto,
     ConfiguracaoIaResumoDto,
     IaEstadoCompletoRecuperadoDto,
+    IaModelosProvedorListadoDto,
     PaginatedResult,
     StandardResponse,
 } from '@project20/shared';
@@ -34,6 +35,11 @@ export class ConfiguracaoIaService {
     /** Grava uma versão nova (a antiga nunca é alterada). */
     criar(dto: ConfiguracaoIaCriarDto): Observable<StandardResponse<ConfiguracaoIaCriadaDto>> {
         return this.httpClient.post<StandardResponse<ConfiguracaoIaCriadaDto>>(this.urlBase, dto);
+    }
+
+    /** Os modelos de texto que cada provedor oferece, para o select do modelo (spec 309). Leitura sem o scrim global. */
+    listarModelos(): Observable<StandardResponse<IaModelosProvedorListadoDto[]>> {
+        return this.httpClient.get<StandardResponse<IaModelosProvedorListadoDto[]>>(`${ambiente.apiUrl}/ia/modelos`, comFeedbackProprio());
     }
 
     recuperarEstado(): Observable<StandardResponse<IaEstadoCompletoRecuperadoDto>> {

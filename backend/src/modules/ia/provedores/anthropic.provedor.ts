@@ -1,7 +1,8 @@
-import { EsforcoIaEnum } from '@project20/shared';
+import { EsforcoIaEnum, IaModeloListadoDto } from '@project20/shared';
 import { IaException } from '../domain/ia.exception';
 import { traduzirErroDeProvedor } from '../domain/ia-erro-provedor';
 import { IaProvedor } from '../domain/ia-provedor';
+import { filtrarModelosDaAnthropic, ModeloDaAnthropic } from '../domain/ia-modelos-filtro';
 import { IaBloco, IaMensagem, IaMotivoParada, IaRespostaProvedor, IaSolicitacaoProvedor } from '../domain/ia.tipos';
 
 /** O pedaço do cliente do SDK que o provedor usa (permite um cliente falso nos testes). */
@@ -9,6 +10,10 @@ export interface ClienteAnthropic {
     messages: {
         create(parametros: Record<string, unknown>): Promise<MensagemAnthropic>;
         stream(parametros: Record<string, unknown>): FluxoAnthropic;
+    };
+    models: {
+        /** Paginada: o SDK devolve um iterável assíncrono que busca as páginas seguintes sozinho. */
+        list(parametros: Record<string, unknown>): AsyncIterable<ModeloDaAnthropic>;
     };
 }
 
@@ -67,6 +72,13 @@ export class AnthropicProvedor implements IaProvedor {
         } catch (erro) {
             throw traduzirErroDeProvedor(erro);
         }
+    }
+
+    /** Os modelos ativos (`lifecycle`), pedidos já filtrados à API: o padrão dela inclui os `deprecated`. */
+    async listarModelos(): Promise<IaModeloListadoDto[]> {
+        const modelos: ModeloDaAnthropic[] = [];
+        for await (const modelo of this.exigirCliente().models.list({ lifecycle: ['active'] })) modelos.push(modelo);
+        return filtrarModelosDaAnthropic(modelos);
     }
 
     private exigirCliente(): ClienteAnthropic {

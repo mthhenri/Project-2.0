@@ -1,11 +1,13 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { ConfiguracaoIaCadeiaItemDto, NivelIaEnum, TipoProvedorIaEnum, cadeiaDoNivelIa } from '@project20/shared';
+import { ConfiguracaoIaCadeiaItemDto, IaModeloListadoDto, IaModelosProvedorListadoDto, NivelIaEnum, TipoProvedorIaEnum, cadeiaDoNivelIa, modeloPertenceAoProvedor } from '@project20/shared';
+import { ConfiguracaoIaService } from '../../services/configuracao-ia.service';
 import {
     AVISO_SEM_CHAVE,
     FormularioConfiguracaoIa,
@@ -16,11 +18,14 @@ import {
     OPCOES_ESFORCO,
     OPCOES_PROVEDOR,
     SUGESTOES_MODELOS,
+    VALOR_OUTRO_MODELO,
     ValorFormularioConfiguracaoIa,
     cadeiaSemItemUtilizavel,
     grupoDoItemDaCadeia,
+    modeloInicialDoProvedor,
     moverItemDaCadeia,
     novoItemDaCadeia,
+    opcoesDoSelectDeModelo,
     resumoDoItem,
 } from '../../utils/configuracao-ia.util';
 
@@ -37,8 +42,16 @@ import {
     templateUrl: './provedor-aba.component.html',
     styleUrl: './provedor-aba.component.scss',
 })
-export class ProvedorAbaComponent {
+export class ProvedorAbaComponent implements OnInit {
     private readonly formBuilder = inject(FormBuilder);
+    private readonly configuracaoIaService = inject(ConfiguracaoIaService);
+    private readonly destroyRef = inject(DestroyRef);
+
+    /** A lista de modelos de cada provedor (spec 309), carregada **uma vez** ao abrir a aba; `null` até chegar e quando a consulta falha. */
+    readonly listasDeModelos = signal<Partial<Record<TipoProvedorIaEnum, IaModelosProvedorListadoDto>> | null>(null);
+    readonly carregandoModelos = signal(true);
+    /** Os itens em que o administrador escolheu "Outro modelo…": o campo vira digitação à mão enquanto a aba está aberta. */
+    private readonly itensDigitando = signal<readonly GrupoDoItemDaCadeia[]>([]);
 
     readonly formulario = input.required<FormularioConfiguracaoIa>();
     readonly valor = input.required<ValorFormularioConfiguracaoIa>();
@@ -53,6 +66,20 @@ export class ProvedorAbaComponent {
     readonly avisoSemChave = AVISO_SEM_CHAVE;
     readonly maximoDeItens = MAXIMO_DE_ITENS_DA_CADEIA;
     readonly resumoDoItem = resumoDoItem;
+
+    ngOnInit(): void {
+        this.configuracaoIaService
+            .listarModelos()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (resposta) => {
+                    // Sem a lista a tela segue com o campo de digitação à mão, como antes da 309: a consulta é só um conforto.
+                    this.listasDeModelos.set(Object.fromEntries((resposta.dados ?? []).map((lista) => [lista.provedor, lista])));
+                    this.carregandoModelos.set(false);
+                },
+                error: () => this.carregandoModelos.set(false),
+            });
+    }
 
     /** O item principal de cada nível, como está agora no formulário: o trio que a IA vai usar. */
     readonly principais = computed(() =>
@@ -120,6 +147,55 @@ export class ProvedorAbaComponent {
         const nova = moverItemDaCadeia(this.cadeiaDe(nivel), indice, deslocamento);
         lista.setValue(nova);
         lista.markAsDirty();
+    }
+
+    /** Os modelos que o provedor oferece, ou `null` quando não há lista (sem chave, consulta falhou ou ainda não chegou): o campo é de digitação. */
+    modelosDoProvedor(provedor: TipoProvedorIaEnum): readonly IaModeloListadoDto[] | null {
+        const lista = this.listasDeModelos()?.[provedor];
+        return lista?.disponivel ? lista.modelos : null;
+    }
+
+    /** O campo do modelo é um select (com busca) quando o provedor tem lista e o administrador não pediu para digitar. */
+    usaSelectDeModelo(nivel: NivelDaTela, indice: number): boolean {
+        const item = this.cadeiaDe(nivel)[indice];
+        const grupo = this.itens(nivel)[indice];
+        return !!item && !!grupo && this.modelosDoProvedor(item.provedor) !== null && !this.itensDigitando().includes(grupo);
+    }
+
+    /** O item está em digitação por escolha ("Outro modelo…") e o provedor tem lista para onde voltar. */
+    podeVoltarALista(nivel: NivelDaTela, indice: number): boolean {
+        const item = this.cadeiaDe(nivel)[indice];
+        const grupo = this.itens(nivel)[indice];
+        return !!item && !!grupo && this.modelosDoProvedor(item.provedor) !== null && this.itensDigitando().includes(grupo);
+    }
+
+    /** As opções do select do item: a lista do provedor, o valor salvo se estiver fora dela e "Outro modelo…". */
+    opcoesDoModelo(nivel: NivelDaTela, indice: number): IaModeloListadoDto[] {
+        const item = this.cadeiaDe(nivel)[indice];
+        return opcoesDoSelectDeModelo(this.modelosDoProvedor(item.provedor) ?? [], item.modelo);
+    }
+
+    /**
+     * "Outro modelo…" não é um modelo: devolve o campo ao valor de antes (o `valor` da aba só muda na próxima detecção de mudanças, então ainda
+     * guarda o anterior) e abre a digitação à mão.
+     */
+    aoEscolherModelo(nivel: NivelDaTela, indice: number, escolhido: string): void {
+        if (escolhido !== VALOR_OUTRO_MODELO) return;
+        const grupo = this.itens(nivel)[indice];
+        grupo.controls.modelo.setValue(this.cadeiaDe(nivel)[indice].modelo);
+        this.itensDigitando.update((grupos) => [...grupos, grupo]);
+    }
+
+    voltarALista(nivel: NivelDaTela, indice: number): void {
+        const grupo = this.itens(nivel)[indice];
+        this.itensDigitando.update((grupos) => grupos.filter((candidato) => candidato !== grupo));
+    }
+
+    /** Trocou o provedor do item: o modelo do provedor anterior não vale no novo, então entra o primeiro da lista dele (ou a primeira sugestão). */
+    aoTrocarProvedor(nivel: NivelDaTela, indice: number, provedor: TipoProvedorIaEnum): void {
+        const grupo = this.itens(nivel)[indice];
+        if (modeloPertenceAoProvedor(provedor, grupo.controls.modelo.value)) return;
+        grupo.controls.modelo.setValue(modeloInicialDoProvedor(provedor, this.modelosDoProvedor(provedor)));
     }
 
     sugestoesDe(provedor: TipoProvedorIaEnum): readonly string[] {

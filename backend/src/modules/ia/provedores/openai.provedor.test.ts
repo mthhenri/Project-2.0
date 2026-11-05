@@ -29,7 +29,7 @@ const RESPOSTA_RESPOSTAS: RespostaRespostasOpenAi = {
     usage: { input_tokens: 30, output_tokens: 12, input_tokens_details: { cached_tokens: 10 }, output_tokens_details: { reasoning_tokens: 8 } },
 };
 
-function clienteFalso(opcoes: { completude?: CompletudeOpenAi; trechos?: TrechoOpenAi[]; resposta?: RespostaRespostasOpenAi; eventos?: EventoRespostasOpenAi[]; erro?: unknown } = {}) {
+function clienteFalso(opcoes: { completude?: CompletudeOpenAi; trechos?: TrechoOpenAi[]; resposta?: RespostaRespostasOpenAi; eventos?: EventoRespostasOpenAi[]; erro?: unknown; modelos?: unknown[][]; erroNaListagem?: unknown } = {}) {
     const chamadas: Record<string, unknown>[] = [];
     const cliente: ClienteOpenAi = {
         async gerar(parametros) {
@@ -54,6 +54,13 @@ function clienteFalso(opcoes: { completude?: CompletudeOpenAi; trechos?: TrechoO
             if (opcoes.erro) throw opcoes.erro;
             return (async function* () {
                 yield* opcoes.eventos ?? [];
+            })();
+        },
+        listarModelos() {
+            chamadas.push({ listagem: true });
+            return (async function* () {
+                if (opcoes.erroNaListagem) throw opcoes.erroNaListagem;
+                for (const pagina of opcoes.modelos ?? []) yield* pagina as never[];
             })();
         },
     };
@@ -341,4 +348,29 @@ test('Responses API: erros do SDK viram IaException pelo status; pesquisaWeb con
     const { cliente, chamadas } = clienteFalso();
     await new OpenAiProvedor(cliente).gerar({ ...SOL, pesquisaWeb: true });
     assert.equal(chamadas[0]['tools'], undefined);
+});
+
+// Listagem de modelos (spec 309).
+
+test('listarModelos junta as páginas e fica só com os de texto: sem embeddings, voz, imagem, moderação, nem os já desligados', async () => {
+    const { cliente } = clienteFalso({
+        modelos: [
+            [{ id: 'gpt-5', created: 1_760_000_000 }, { id: 'text-embedding-3-large', created: 1_700_000_000 }, { id: 'whisper-1', created: 1_600_000_000 }],
+            [
+                { id: 'gpt-6.1-sol', created: 1_790_000_000 },
+                { id: 'gpt-image-1', created: 1_780_000_000 },
+                { id: 'omni-moderation-latest', created: 1_770_000_000 },
+                { id: 'gpt-4-velho', created: 1_500_000_000, shutdown_date: '2020-01-01' },
+                { id: 'o3', created: 1_750_000_000 },
+            ],
+        ],
+    });
+    const modelos = await new OpenAiProvedor(cliente).listarModelos();
+    assert.deepEqual(modelos, [{ id: 'gpt-6.1-sol', nome: 'gpt-6.1-sol' }, { id: 'gpt-5', nome: 'gpt-5' }, { id: 'o3', nome: 'o3' }]);
+});
+
+test('listarModelos: lista vazia devolve vazia e erro do SDK sobe como veio', async () => {
+    assert.deepEqual(await new OpenAiProvedor(clienteFalso({ modelos: [] }).cliente).listarModelos(), []);
+    const falha = { status: 429 };
+    await assert.rejects(() => new OpenAiProvedor(clienteFalso({ erroNaListagem: falha }).cliente).listarModelos(), (erro: unknown) => erro === falha);
 });

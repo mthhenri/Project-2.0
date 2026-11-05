@@ -19,7 +19,7 @@ const MENSAGEM: MensagemAnthropic = {
     usage: { input_tokens: 10, output_tokens: 4, cache_read_input_tokens: 7 },
 };
 
-function clienteFalso(opcoes: { mensagem?: MensagemAnthropic; trechos?: string[]; erro?: unknown } = {}) {
+function clienteFalso(opcoes: { mensagem?: MensagemAnthropic; trechos?: string[]; erro?: unknown; modelos?: unknown[][]; erroNaListagem?: unknown } = {}) {
     const chamadas: Record<string, unknown>[] = [];
     const cliente: ClienteAnthropic = {
         messages: {
@@ -42,6 +42,16 @@ function clienteFalso(opcoes: { mensagem?: MensagemAnthropic; trechos?: string[]
                         return opcoes.mensagem ?? MENSAGEM;
                     },
                 };
+            },
+        },
+        models: {
+            // Cada item de `modelos` é uma página: o SDK real busca as seguintes sozinho, e o provedor só vê o iterável.
+            list(parametros) {
+                chamadas.push({ listagem: parametros });
+                return (async function* () {
+                    if (opcoes.erroNaListagem) throw opcoes.erroNaListagem;
+                    for (const pagina of opcoes.modelos ?? []) yield* pagina as never[];
+                })();
             },
         },
     };
@@ -171,4 +181,31 @@ test('os blocos da pesquisa do servidor não viram ferramenta do projeto: só o 
     const resposta = await new AnthropicProvedor(cliente).gerar({ ...SOLICITACAO, pesquisaWeb: true });
     assert.equal(resposta.texto, 'Vou procurar. O React 19 trouxe actions.');
     assert.ok(resposta.blocos.every((bloco) => bloco.tipo === 'texto'));
+});
+
+// Listagem de modelos (spec 309).
+
+test('listarModelos pede só os ativos, junta as páginas e devolve nome amigável e id, do mais novo ao mais antigo', async () => {
+    const { cliente, chamadas } = clienteFalso({
+        modelos: [
+            [{ id: 'claude-haiku-5-5', display_name: 'Claude Haiku 5.5', lifecycle: 'active', created_at: '2026-01-10T00:00:00Z' }],
+            [
+                { id: 'claude-opus-5-5', display_name: 'Claude Opus 5.5', lifecycle: 'active', created_at: '2026-03-01T00:00:00Z' },
+                { id: 'claude-antigo-3', display_name: 'Claude Antigo', lifecycle: 'deprecated', created_at: '2024-01-01T00:00:00Z' },
+            ],
+        ],
+    });
+    const modelos = await new AnthropicProvedor(cliente).listarModelos();
+
+    assert.deepEqual(chamadas, [{ listagem: { lifecycle: ['active'] } }]);
+    assert.deepEqual(modelos, [
+        { id: 'claude-opus-5-5', nome: 'Claude Opus 5.5' },
+        { id: 'claude-haiku-5-5', nome: 'Claude Haiku 5.5' },
+    ]);
+});
+
+test('listarModelos: lista vazia devolve vazia e erro do SDK sobe como veio', async () => {
+    assert.deepEqual(await new AnthropicProvedor(clienteFalso({ modelos: [] }).cliente).listarModelos(), []);
+    const falha = { status: 503 };
+    await assert.rejects(() => new AnthropicProvedor(clienteFalso({ erroNaListagem: falha }).cliente).listarModelos(), (erro: unknown) => erro === falha);
 });

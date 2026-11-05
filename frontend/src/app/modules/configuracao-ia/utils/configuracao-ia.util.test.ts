@@ -16,6 +16,10 @@ import {
 import {
     AVISO_SEM_CHAVE,
     MAXIMO_DE_ITENS_DA_CADEIA,
+    ROTULO_OUTRO_MODELO,
+    VALOR_OUTRO_MODELO,
+    modeloInicialDoProvedor,
+    opcoesDoSelectDeModelo,
     NIVEIS_DA_TELA,
     OPCOES_PROVEDOR,
     ROTULO_ESTADO_IA,
@@ -226,4 +230,26 @@ test('níveis de autonomia: o DTO de criação leva o mapa completo e o formulá
     assert.deepEqual(paraDtoDeCriacao(valor).niveisProposta, NIVEIS_PADRAO_DA_PROPOSTA);
     assert.equal(formularioIgualAVersao(valor, VERSAO), true);
     assert.equal(formularioIgualAVersao({ ...valor, niveisProposta: { ...valor.niveisProposta, [TipoPropostaIaEnum.ANOTAR_PAD]: PropostaIaNivelEnum.PERGUNTA } }, VERSAO), false);
+});
+
+test('opcoesDoSelectDeModelo: a lista do provedor e, no fim, "Outro modelo…" (que nunca é um modelo gravado)', () => {
+    const lista = [{ id: 'claude-opus-5-5', nome: 'Claude Opus 5.5' }, { id: 'claude-haiku-5-5', nome: 'Claude Haiku 5.5' }];
+    const opcoes = opcoesDoSelectDeModelo(lista, 'claude-haiku-5-5');
+    assert.deepEqual(opcoes, [...lista, { id: VALOR_OUTRO_MODELO, nome: ROTULO_OUTRO_MODELO }]);
+    assert.equal(ROTULO_OUTRO_MODELO, 'Outro modelo…');
+});
+
+test('opcoesDoSelectDeModelo: o valor salvo fora da lista continua como opção (modelo retirado, filtrado ou digitado à mão)', () => {
+    const lista = [{ id: 'claude-opus-5-5', nome: 'Claude Opus 5.5' }];
+    const opcoes = opcoesDoSelectDeModelo(lista, 'claude-experimental');
+    assert.deepEqual(opcoes.map((opcao) => opcao.id), ['claude-experimental', 'claude-opus-5-5', VALOR_OUTRO_MODELO]);
+    assert.equal(opcoes[0].nome, 'claude-experimental');
+    assert.deepEqual(opcoesDoSelectDeModelo(lista, '  ').map((opcao) => opcao.id), ['claude-opus-5-5', VALOR_OUTRO_MODELO], 'valor vazio não vira opção');
+});
+
+test('modeloInicialDoProvedor: o primeiro da lista (o mais novo) ou, sem lista, a primeira sugestão fixa', () => {
+    assert.equal(modeloInicialDoProvedor(OPENAI, [{ id: 'gpt-6.1-sol', nome: 'gpt-6.1-sol' }, { id: 'gpt-5', nome: 'gpt-5' }]), 'gpt-6.1-sol');
+    assert.equal(modeloInicialDoProvedor(OPENAI, null), 'gpt-5-mini');
+    assert.equal(modeloInicialDoProvedor(OPENAI, []), 'gpt-5-mini');
+    assert.equal(modeloInicialDoProvedor(GOOGLE, null), 'gemini-2.5-flash');
 });

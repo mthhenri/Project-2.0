@@ -1,7 +1,8 @@
-import { EsforcoIaEnum } from '@project20/shared';
+import { EsforcoIaEnum, IaModeloListadoDto } from '@project20/shared';
 import { IaException } from '../domain/ia.exception';
 import { traduzirErroDeProvedor } from '../domain/ia-erro-provedor';
 import { IaProvedor } from '../domain/ia-provedor';
+import { filtrarModelosDaOpenAi, ModeloDaOpenAi } from '../domain/ia-modelos-filtro';
 import { IaBloco, IaMensagem, IaMotivoParada, IaRespostaProvedor, IaSolicitacaoProvedor } from '../domain/ia.tipos';
 import {
     consumirFluxoDeRespostas,
@@ -32,6 +33,8 @@ export interface ClienteOpenAi {
     responder(parametros: Record<string, unknown>): Promise<RespostaRespostasOpenAi>;
     /** Responses API, com streaming. */
     transmitirResposta(parametros: Record<string, unknown>): Promise<AsyncIterable<EventoRespostasOpenAi>>;
+    /** Todos os modelos da conta (paginada), de chat ou não: o filtro é do provedor. */
+    listarModelos(): AsyncIterable<ModeloDaOpenAi>;
 }
 
 interface UsoOpenAi {
@@ -133,6 +136,13 @@ export class OpenAiProvedor implements IaProvedor {
         } catch (erro) {
             throw traduzirErroDeProvedor(erro);
         }
+    }
+
+    /** A OpenAI mistura chat, embeddings, voz, imagem e moderação, sem campo de capacidade: o filtro é pelo `id`. */
+    async listarModelos(): Promise<IaModeloListadoDto[]> {
+        const modelos: ModeloDaOpenAi[] = [];
+        for await (const modelo of this.exigirCliente().listarModelos()) modelos.push(modelo);
+        return filtrarModelosDaOpenAi(modelos);
     }
 
     private exigirCliente(): ClienteOpenAi {

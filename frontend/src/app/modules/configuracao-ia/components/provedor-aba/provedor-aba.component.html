@@ -11,6 +11,12 @@
                 tooltipPosition="right"
             ></i>
         </div>
+        @if (carregandoModelos()) {
+            <p class="provedor-aba__ajuda" role="status">
+                <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Carregando a lista de
+                modelos dos provedores…
+            </p>
+        }
         <dl class="provedor-aba__resumo">
             @for (principal of principais(); track principal.nivel.nivel) {
                 <div class="provedor-aba__resumo-linha">
@@ -64,6 +70,7 @@
                         <span class="provedor-aba__papel">{{ papelDoItem(indice) }}</span>
                         <p-select
                             formControlName="provedor"
+                            (onChange)="aoTrocarProvedor(nivel, indice, $event.value)"
                             [options]="opcoesDoProvedor(nivel, indice)"
                             optionLabel="rotulo"
                             optionValue="valor"
@@ -76,20 +83,61 @@
                             "
                             class="provedor-aba__provedor"
                         />
-                        <input
-                            pInputText
-                            formControlName="modelo"
-                            maxlength="100"
-                            class="provedor-aba__modelo"
-                            [id]="'ia-modelo-' + nivel.nivel + '-' + indice"
-                            [attr.list]="'ia-sugestoes-' + cadeiaDe(nivel)[indice]?.provedor"
-                            [attr.aria-label]="
-                                'Modelo do item ' +
-                                papelDoItem(indice) +
-                                ' do nível ' +
-                                nivel.titulo
-                            "
-                        />
+                        @if (usaSelectDeModelo(nivel, indice)) {
+                            <p-select
+                                formControlName="modelo"
+                                [options]="opcoesDoModelo(nivel, indice)"
+                                optionLabel="nome"
+                                optionValue="id"
+                                [filter]="true"
+                                filterBy="nome,id"
+                                [inputId]="'ia-modelo-' + nivel.nivel + '-' + indice"
+                                [ariaLabel]="
+                                    'Modelo do item ' +
+                                    papelDoItem(indice) +
+                                    ' do nível ' +
+                                    nivel.titulo
+                                "
+                                (onChange)="aoEscolherModelo(nivel, indice, $event.value)"
+                                class="provedor-aba__modelo"
+                            />
+                        } @else {
+                            <div class="provedor-aba__modelo provedor-aba__campo-modelo">
+                                <input
+                                    pInputText
+                                    formControlName="modelo"
+                                    maxlength="100"
+                                    class="provedor-aba__entrada"
+                                    [id]="'ia-modelo-' + nivel.nivel + '-' + indice"
+                                    [attr.list]="
+                                        'ia-sugestoes-' + cadeiaDe(nivel)[indice]?.provedor
+                                    "
+                                    [attr.aria-label]="
+                                        'Modelo do item ' +
+                                        papelDoItem(indice) +
+                                        ' do nível ' +
+                                        nivel.titulo
+                                    "
+                                />
+                                @if (podeVoltarALista(nivel, indice)) {
+                                    <button
+                                        type="button"
+                                        class="provedor-aba__acao provedor-aba__voltar-lista"
+                                        pTooltip="Escolher da lista de modelos"
+                                        tooltipPosition="top"
+                                        [attr.aria-label]="
+                                            'Voltar à lista de modelos do item ' +
+                                            papelDoItem(indice) +
+                                            ' do nível ' +
+                                            nivel.titulo
+                                        "
+                                        (click)="voltarALista(nivel, indice)"
+                                    >
+                                        <i class="pi pi-list" aria-hidden="true"></i>
+                                    </button>
+                                }
+                            </div>
+                        }
                         <p-select
                             formControlName="esforco"
                             [options]="opcoesEsforco"

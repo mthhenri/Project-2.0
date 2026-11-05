@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { ConfiguracaoIaCadeiaItemDto, ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, NivelIaEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { ConfiguracaoIaCadeiaItemDto, ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, IaModeloListadoDto, ModoContextoChatEnum, NivelIaEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
 import { IaException } from '../domain/ia.exception';
 import { IaProvedor } from '../domain/ia-provedor';
@@ -69,6 +69,9 @@ function criarCom(
                 aoTrecho('um');
                 aoTrecho('dois');
                 return devolvido(solicitacao.modelo);
+            },
+            async listarModelos() {
+                return [];
             },
         };
     }
@@ -394,4 +397,83 @@ test('o estado completo (administrador) lista só os provedores com chave no amb
     assert.deepEqual(completo.dados.provedoresComChave, [A, O]);
     assert.equal(completo.dados.estado, EstadoIaEnum.NO_AR);
     assert.deepEqual(Object.keys((await servico.recuperarEstado()).dados), ['estado']);
+});
+
+// Listagem de modelos dos provedores (spec 309).
+
+interface ComportamentoDaListagem {
+    disponivel?: boolean;
+    listar?: () => Promise<IaModeloListadoDto[]>;
+}
+
+function criarServicoDeModelos(comportamentos: Partial<Record<TipoProvedorIaEnum, ComportamentoDaListagem>> = {}) {
+    const chamadas: TipoProvedorIaEnum[] = [];
+    const provedores: IaProvedores = {};
+    for (const tipo of Object.values(TipoProvedorIaEnum)) {
+        const comportamento = comportamentos[tipo] ?? {};
+        provedores[tipo] = {
+            estaDisponivel: () => comportamento.disponivel ?? true,
+            gerar: async () => { throw new Error('não usado'); },
+            transmitir: async () => { throw new Error('não usado'); },
+            async listarModelos() {
+                chamadas.push(tipo);
+                return (comportamento.listar ?? (async () => [{ id: `${tipo.toLowerCase()}-modelo`, nome: `Modelo ${tipo}` }]))();
+            },
+        };
+    }
+    const configuracaoIaService = { obterAtiva: async () => configuracao() } as unknown as ConfiguracaoIaService;
+    return { servico: new IaService(configuracaoIaService, provedores), chamadas };
+}
+
+test('listarModelos devolve um registro por provedor; sem chave, disponivel = false sem chamar o provedor', async () => {
+    const { servico, chamadas } = criarServicoDeModelos({ [G]: SEM_CHAVE });
+    const { dados } = await servico.listarModelos();
+
+    assert.deepEqual(dados.map((registro) => [registro.provedor, registro.disponivel, registro.modelos.length]), [[A, true, 1], [G, false, 0], [O, true, 1]]);
+    assert.deepEqual(dados[0].modelos, [{ id: 'anthropic-modelo', nome: 'Modelo ANTHROPIC' }]);
+    assert.deepEqual(chamadas.sort(), [A, O], 'o provedor sem chave nem foi chamado');
+});
+
+test('listarModelos: o cache evita nova chamada ao provedor na abertura seguinte', async () => {
+    const { servico, chamadas } = criarServicoDeModelos();
+    await servico.listarModelos();
+    await servico.listarModelos();
+    assert.equal(chamadas.length, 3, 'uma chamada por provedor, só na primeira abertura');
+});
+
+test('listarModelos: falha de um provedor não derruba os outros e não é guardada; a próxima abertura tenta de novo', async () => {
+    let falhar = true;
+    const { servico, chamadas } = criarServicoDeModelos({
+        [O]: { listar: async () => { if (falhar) throw Object.assign(new Error('chave aparece aqui: sk-segredo'), { status: 503 }); return [{ id: 'gpt-5', nome: 'gpt-5' }]; } },
+    });
+
+    const primeira = (await servico.listarModelos()).dados;
+    assert.deepEqual(primeira.map((registro) => [registro.provedor, registro.disponivel]), [[A, true], [G, true], [O, false]]);
+    assert.deepEqual(primeira[2].modelos, []);
+
+    falhar = false;
+    const segunda = (await servico.listarModelos()).dados;
+    assert.deepEqual(segunda[2], { provedor: O, disponivel: true, modelos: [{ id: 'gpt-5', nome: 'gpt-5' }] });
+    assert.equal(chamadas.filter((tipo) => tipo === O).length, 2, 'a falha não entrou no cache');
+    assert.equal(chamadas.filter((tipo) => tipo === A).length, 1, 'o sucesso de outro provedor segue em cache');
+});
+
+test('listarModelos: lista vazia depois do filtro vale como indisponível e não é guardada', async () => {
+    let vazia = true;
+    const { servico } = criarServicoDeModelos({ [G]: { listar: async () => (vazia ? [] : [{ id: 'gemini-2.5-pro', nome: 'Gemini 2.5 Pro' }]) } });
+    assert.equal((await servico.listarModelos()).dados[1].disponivel, false);
+    vazia = false;
+    assert.deepEqual((await servico.listarModelos()).dados[1], { provedor: G, disponivel: true, modelos: [{ id: 'gemini-2.5-pro', nome: 'Gemini 2.5 Pro' }] });
+});
+
+test('listarModelos: duas aberturas simultâneas geram uma só requisição ao provedor', async () => {
+    let liberar!: (modelos: IaModeloListadoDto[]) => void;
+    const { servico, chamadas } = criarServicoDeModelos({ [A]: { listar: () => new Promise((resolver) => { liberar = resolver; }) }, [G]: SEM_CHAVE, [O]: SEM_CHAVE });
+    const primeira = servico.listarModelos();
+    const segunda = servico.listarModelos();
+    await new Promise((resolver) => setImmediate(resolver));
+    liberar([{ id: 'claude-haiku-5-5', nome: 'Claude Haiku 5.5' }]);
+    const [um, dois] = await Promise.all([primeira, segunda]);
+    assert.deepEqual(um.dados[0], dois.dados[0]);
+    assert.equal(chamadas.length, 1);
 });

@@ -48,6 +48,11 @@ describe('ConfiguracaoIaService (frontend)', () => {
         expect(requisicao.request.context.get(SEM_OVERLAY_GLOBAL)).toBe(false);
     });
 
+    it('listarModelos faz GET em /ia/modelos (rota de administrador); leitura sem o scrim global (spec 309)', () => {
+        servico.listarModelos().subscribe();
+        expect(pedido('GET', '/ia/modelos').request.context.get(SEM_OVERLAY_GLOBAL)).toBe(true);
+    });
+
     it('recuperarEstado faz GET em /ia/estado (rota de administrador); leitura sem o scrim global', () => {
         servico.recuperarEstado().subscribe();
         expect(pedido('GET', '/ia/estado').request.context.get(SEM_OVERLAY_GLOBAL)).toBe(true);

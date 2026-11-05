@@ -8,6 +8,7 @@ import {
     ConfiguracaoIaResumoDto,
     EsforcoIaEnum,
     EstadoIaEnum,
+    IaModelosProvedorListadoDto,
     ModoContextoChatEnum,
     NIVEIS_PADRAO_DA_PROPOSTA,
     PropostaIaNivelEnum,
@@ -754,5 +755,143 @@ describe('ConfiguracaoIaPage — aba Autonomia (task 228)', () => {
         botao('Usar como base').click();
         await montado.atualizar();
         expect(montado.componente.formulario.controls.niveisProposta.getRawValue()[TipoPropostaIaEnum.ANOTAR_PAD]).toBe(PropostaIaNivelEnum.PERGUNTA);
+    });
+});
+
+describe('ConfiguracaoIaPage — lista de modelos dos provedores no campo de modelo (spec 309)', () => {
+    const LISTA_ANTHROPIC: IaModelosProvedorListadoDto = {
+        provedor: A, disponivel: true,
+        modelos: [{ id: 'claude-opus-5-5', nome: 'Claude Opus 5.5' }, { id: 'claude-haiku-5-5', nome: 'Claude Haiku 5.5' }],
+    };
+    const LISTA_OPENAI: IaModelosProvedorListadoDto = { provedor: O, disponivel: true, modelos: [{ id: 'gpt-6.1-sol', nome: 'gpt-6.1-sol' }, { id: 'gpt-5', nome: 'gpt-5' }] };
+    const SEM_LISTA = (provedor: TipoProvedorIaEnum): IaModelosProvedorListadoDto => ({ provedor, disponivel: false, modelos: [] });
+
+    /** Abre a tela e responde a consulta de modelos que a aba faz ao abrir (`ERRO` simula a falha da consulta). */
+    async function abrirComModelos(listas: IaModelosProvedorListadoDto[] | 'ERRO', opcoes: Parameters<typeof responderCarga>[1] = {}): Promise<Montado> {
+        const montado = await abrir(opcoes);
+        const pedidoDeModelos = esperarRequisicao(montado.http, 'GET', '/ia/modelos');
+        if (listas === 'ERRO') responderErro(pedidoDeModelos, 500, 'Falhou');
+        else responderSucesso(pedidoDeModelos, listas);
+        await montado.atualizar();
+        return montado;
+    }
+
+    const selectDeModelo = (nivel: string, indice = 0) => document.body.querySelector(`p-select.provedor-aba__modelo:has(#ia-modelo-${nivel}-${indice})`);
+
+    it('a aba consulta a lista uma vez ao abrir, com o carregamento discreto até ela chegar', async () => {
+        const montado = await abrir();
+        expect(textoDaTela()).toContain('Carregando a lista de modelos dos provedores');
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/modelos'), [LISTA_ANTHROPIC, SEM_LISTA(G), SEM_LISTA(O)]);
+        await montado.atualizar();
+        expect(textoDaTela()).not.toContain('Carregando a lista de modelos dos provedores');
+        montado.http.expectNone((requisicao) => requisicao.url.endsWith('/ia/modelos'));
+    });
+
+    it('provedor com lista: o campo é um select que mostra o nome amigável e grava o id', async () => {
+        const montado = await abrirComModelos([LISTA_ANTHROPIC, SEM_LISTA(G), SEM_LISTA(O)]);
+        const select = selectDeModelo('RAPIDO');
+        expect(select, 'o modelo do item principal é um select').not.toBeNull();
+        expect(select!.textContent).toContain('Claude Haiku 5.5');
+        expect(campoDoModelo('RAPIDO')?.tagName, 'não há mais o campo de digitação').not.toBe('INPUT');
+
+        const aba = abaDeProvedor(montado);
+        const opcoes = aba.opcoesDoModelo(aba.niveis[0], 0);
+        expect(opcoes.map((opcao) => [opcao.id, opcao.nome])).toEqual([
+            ['claude-opus-5-5', 'Claude Opus 5.5'], ['claude-haiku-5-5', 'Claude Haiku 5.5'], ['__outro_modelo__', 'Outro modelo…'],
+        ]);
+
+        montado.componente.formulario.controls.cadeiaRapido.at(0).controls.modelo.setValue('claude-opus-5-5');
+        await montado.atualizar();
+        expect(montado.componente.formulario.getRawValue().cadeiaRapido[0].modelo, 'o id é o que se grava').toBe('claude-opus-5-5');
+        expect(selectDeModelo('RAPIDO')!.textContent).toContain('Claude Opus 5.5');
+    });
+
+    it('sem chave (ou consulta que falhou) o campo é de digitação à mão, com as sugestões fixas', async () => {
+        await abrirComModelos([LISTA_ANTHROPIC, SEM_LISTA(G), SEM_LISTA(O)], {
+            ativa: versao(3, { cadeiaRapido: [item(G, 'gemini-2.5-flash')] }), historico: [versao(3, { cadeiaRapido: [item(G, 'gemini-2.5-flash')] })],
+        });
+        const campo = campoDoModelo('RAPIDO');
+        expect(campo?.tagName).toBe('INPUT');
+        expect(campo?.value).toBe('gemini-2.5-flash');
+        expect(document.body.querySelector('#ia-sugestoes-GOOGLE')).not.toBeNull();
+        expect(selectDeModelo('RAPIDO')).toBeNull();
+    });
+
+    it('a consulta com erro deixa todos os campos de digitação, como antes da lista, sem acusar nada na tela', async () => {
+        const montado = await abrirComModelos('ERRO');
+        expect(campoDoModelo('RAPIDO')?.tagName).toBe('INPUT');
+        expect(campoDoModelo('PADRAO')?.tagName).toBe('INPUT');
+        expect(textoDaTela()).not.toContain('Carregando a lista de modelos dos provedores');
+        expect(montado.componente.erro()).toBe(false);
+    });
+
+    it('o valor salvo fora da lista continua visível no select, sem apagar nem marcar erro', async () => {
+        const ativa = versao(3, { cadeiaRapido: [item(A, 'claude-experimental')] });
+        const montado = await abrirComModelos([LISTA_ANTHROPIC, SEM_LISTA(G), SEM_LISTA(O)], { ativa, historico: [ativa] });
+        expect(selectDeModelo('RAPIDO')!.textContent).toContain('claude-experimental');
+        expect(montado.componente.formulario.getRawValue().cadeiaRapido[0].modelo).toBe('claude-experimental');
+        expect(montado.componente.semAlteracoes()).toBe(true);
+        expect(montado.componente.errosDeCadeia()).toEqual([]);
+    });
+
+    it('"Outro modelo…" devolve o valor de antes e abre a digitação à mão; o botão ao lado volta para a lista', async () => {
+        const montado = await abrirComModelos([LISTA_ANTHROPIC, SEM_LISTA(G), SEM_LISTA(O)]);
+        const aba = abaDeProvedor(montado);
+        aba.aoEscolherModelo(aba.niveis[0], 0, '__outro_modelo__');
+        await montado.atualizar();
+
+        const campo = campoDoModelo('RAPIDO');
+        expect(campo?.tagName).toBe('INPUT');
+        expect(campo?.value, 'o modelo que já estava continua no campo').toBe('claude-haiku-5-5');
+        expect(montado.componente.formulario.getRawValue().cadeiaRapido[0].modelo).toBe('claude-haiku-5-5');
+        expect(montado.componente.semAlteracoes()).toBe(true);
+        expect(selectDeModelo('PADRAO'), 'os outros itens seguem como select').not.toBeNull();
+
+        campo!.value = 'claude-recem-lancado';
+        campo!.dispatchEvent(new Event('input'));
+        await montado.atualizar();
+        expect(montado.componente.formulario.getRawValue().cadeiaRapido[0].modelo).toBe('claude-recem-lancado');
+
+        botaoPorRotulo('Voltar à lista de modelos do item Principal do nível Rápido').click();
+        await montado.atualizar();
+        expect(selectDeModelo('RAPIDO')).not.toBeNull();
+        expect(selectDeModelo('RAPIDO')!.textContent, 'o valor digitado fica visível mesmo fora da lista').toContain('claude-recem-lancado');
+    });
+
+    it('"Outro modelo…" escolhido de outro valor não grava a opção como modelo', async () => {
+        const montado = await abrirComModelos([LISTA_ANTHROPIC, SEM_LISTA(G), SEM_LISTA(O)]);
+        const aba = abaDeProvedor(montado);
+        aba.aoEscolherModelo(aba.niveis[1], 0, 'claude-opus-5-5');
+        expect(aba.usaSelectDeModelo(aba.niveis[1], 0), 'qualquer valor que não é o "Outro" não muda o campo').toBe(true);
+        expect(JSON.stringify(montado.componente.formulario.getRawValue())).not.toContain('__outro_modelo__');
+    });
+
+    it('trocar o provedor do item põe o primeiro modelo da lista dele (ou a primeira sugestão) no lugar do modelo do anterior', async () => {
+        const montado = await abrirComModelos([LISTA_ANTHROPIC, SEM_LISTA(G), LISTA_OPENAI]);
+        const aba = abaDeProvedor(montado);
+        const grupo = montado.componente.formulario.controls.cadeiaRapido.at(0);
+
+        grupo.controls.provedor.setValue(O);
+        aba.aoTrocarProvedor(aba.niveis[0], 0, O);
+        await montado.atualizar();
+        expect(grupo.controls.modelo.value).toBe('gpt-6.1-sol');
+
+        grupo.controls.provedor.setValue(G);
+        aba.aoTrocarProvedor(aba.niveis[0], 0, G);
+        expect(grupo.controls.modelo.value, 'sem lista, a primeira sugestão fixa').toBe('gemini-2.5-flash');
+
+        grupo.controls.modelo.setValue('gemini-2.5-pro');
+        aba.aoTrocarProvedor(aba.niveis[0], 0, G);
+        expect(grupo.controls.modelo.value, 'modelo que já é do provedor não é trocado').toBe('gemini-2.5-pro');
+    });
+
+    it('a validação de salvar é a da 261: modelo do select ou digitado precisa ser do provedor do item', async () => {
+        const montado = await abrirComModelos([LISTA_ANTHROPIC, SEM_LISTA(G), SEM_LISTA(O)]);
+        montado.componente.formulario.controls.cadeiaRapido.at(0).patchValue({ modelo: 'gpt-5' });
+        await montado.atualizar();
+        montado.componente.salvar();
+        await montado.atualizar();
+        expect(textoDaTela()).toContain('O modelo "gpt-5" não é de Anthropic (cadeia do nível rápido)');
+        montado.http.expectNone((requisicao) => requisicao.method === 'POST');
     });
 });

@@ -7,3 +7,4 @@ export * from './ConfiguracaoIaCriadaDto';
 export * from './ConfiguracaoIaRecuperadaDto';
 export * from './IaEstadoCompletoRecuperadoDto';
 export * from './IaEstadoRecuperadoDto';
+export * from './IaModelosListadosDto';

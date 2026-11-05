@@ -5,6 +5,7 @@ import {
     ConfiguracaoIaResumoDto,
     EsforcoIaEnum,
     EstadoIaEnum,
+    IaModeloListadoDto,
     ModoContextoChatEnum,
     NivelIaEnum,
     PropostaIaNivelEnum,
@@ -72,6 +73,25 @@ export const rotuloDoEsforco = (esforco: EsforcoIaEnum): string =>
 
 export const rotuloDoProvedor = (provedor: TipoProvedorIaEnum): string =>
     OPCOES_PROVEDOR.find((opcao) => opcao.valor === provedor)?.rotulo ?? provedor;
+
+/** O valor da última opção do select de modelos ("Outro modelo…"): nunca é gravado, só abre o campo de digitação. */
+export const VALOR_OUTRO_MODELO = '__outro_modelo__';
+export const ROTULO_OUTRO_MODELO = 'Outro modelo…';
+
+/**
+ * As opções do select do modelo de um item: os modelos que o provedor oferece, o valor já salvo se ele não estiver na lista (um modelo retirado,
+ * filtrado ou digitado à mão continua visível, sem apagar nem marcar erro) e, no fim, "Outro modelo…".
+ */
+export function opcoesDoSelectDeModelo(lista: readonly IaModeloListadoDto[], valorSalvo: string): IaModeloListadoDto[] {
+    const salvo = valorSalvo.trim();
+    const alemDaLista = salvo !== '' && !lista.some((modelo) => modelo.id === salvo) ? [{ id: valorSalvo, nome: valorSalvo }] : [];
+    return [...alemDaLista, ...lista, { id: VALOR_OUTRO_MODELO, nome: ROTULO_OUTRO_MODELO }];
+}
+
+/** O primeiro modelo para um provedor que acabou de entrar no item: o da lista (mais novo) ou, sem lista, a primeira sugestão fixa. */
+export function modeloInicialDoProvedor(provedor: TipoProvedorIaEnum, lista: readonly IaModeloListadoDto[] | null): string {
+    return lista?.[0]?.id ?? SUGESTOES_MODELOS[provedor][0] ?? '';
+}
 
 /** O aviso do item cujo provedor não tem chave de API no ambiente. Não impede salvar: em execução o item é pulado. */
 export const AVISO_SEM_CHAVE = 'Chave de Provedor não configurada';

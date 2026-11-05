@@ -1,14 +1,17 @@
 import { randomUUID } from 'node:crypto';
-import { EsforcoIaEnum } from '@project20/shared';
+import { EsforcoIaEnum, IaModeloListadoDto } from '@project20/shared';
 import { IaException } from '../domain/ia.exception';
 import { traduzirErroDeProvedor } from '../domain/ia-erro-provedor';
 import { IaProvedor } from '../domain/ia-provedor';
+import { filtrarModelosDoGoogle, ModeloDoGoogle } from '../domain/ia-modelos-filtro';
 import { IaBloco, IaMensagem, IaMotivoParada, IaRespostaProvedor, IaSolicitacaoProvedor } from '../domain/ia.tipos';
 
 /** O pedaço do SDK `@google/genai` que o provedor usa; o módulo adapta o SDK real a isto e os testes usam um cliente falso. */
 export interface ClienteGoogle {
     gerar(parametros: Record<string, unknown>): Promise<RespostaGoogle>;
     transmitir(parametros: Record<string, unknown>): Promise<AsyncIterable<RespostaGoogle>>;
+    /** Só os modelos base (`queryBase`), paginados: o SDK devolve um iterável que busca as páginas seguintes. */
+    listarModelos(): Promise<AsyncIterable<ModeloDoGoogle>>;
 }
 
 export interface ParteGoogle {
@@ -106,6 +109,13 @@ export class GoogleProvedor implements IaProvedor {
             return new IaException('CONFIGURACAO', 'O Gemini recusou o histórico de ferramentas deste turno, que veio de outro provedor; tente de novo na próxima mensagem');
         }
         return traduzirErroDeProvedor(erro);
+    }
+
+    /** Pede só os modelos base; as variantes só de imagem ou áudio que ainda passam são tiradas pelo filtro. */
+    async listarModelos(): Promise<IaModeloListadoDto[]> {
+        const modelos: ModeloDoGoogle[] = [];
+        for await (const modelo of await this.exigirCliente().listarModelos()) modelos.push(modelo);
+        return filtrarModelosDoGoogle(modelos);
     }
 
     private exigirCliente(): ClienteGoogle {

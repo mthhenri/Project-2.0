@@ -19,6 +19,7 @@ function criarClienteGoogle(apiKey: string): ClienteGoogle {
     return {
         gerar: (parametros) => sdk.models.generateContent(parametros as never) as unknown as ReturnType<ClienteGoogle['gerar']>,
         transmitir: (parametros) => sdk.models.generateContentStream(parametros as never) as unknown as ReturnType<ClienteGoogle['transmitir']>,
+        listarModelos: () => sdk.models.list({ config: { queryBase: true, pageSize: 100 } }) as unknown as ReturnType<ClienteGoogle['listarModelos']>,
     };
 }
 
@@ -29,6 +30,7 @@ function criarClienteOpenAi(apiKey: string): ClienteOpenAi {
         transmitir: (parametros) => sdk.chat.completions.create(parametros as never) as unknown as ReturnType<ClienteOpenAi['transmitir']>,
         responder: (parametros) => sdk.responses.create(parametros as never) as unknown as ReturnType<ClienteOpenAi['responder']>,
         transmitirResposta: (parametros) => sdk.responses.create(parametros as never) as unknown as ReturnType<ClienteOpenAi['transmitirResposta']>,
+        listarModelos: () => sdk.models.list() as unknown as ReturnType<ClienteOpenAi['listarModelos']>,
     };
 }
 
