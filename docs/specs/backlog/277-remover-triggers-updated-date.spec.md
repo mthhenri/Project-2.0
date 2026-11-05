@@ -57,7 +57,7 @@ grave `updated_date = NOW()` explicitamente, sem nenhuma coluna ou data mudar de
 
 ## Dependências
 
-Nenhuma bloqueante; conversa com a 276 pelo verificador estático. Fontes: `docs/SCHEMA.md`, `docs/SYSTEM.SPEC.md`
+Nenhuma bloqueante; conversa com a 276 pelo verificador estático. **Regra do autor de 2026-11-05 (P-074 em `PROBLEMS.md`):** excluir não é alterar, então a exclusão não deve gravar `updated_date`. O trigger removido aqui é o que hoje força a data em toda exclusão; ao implementar esta spec, o soft delete (`BaseRepository.executarSoftDelete`) e as exclusões escritas à mão ficam **isentos** da regra "todo `UPDATE` grava `updated_date`" (o verificador do entregável 6 os trata como isentos, não como obrigados a gravar), e a correção do P-074 entra aqui ou logo depois, com o autor. Fontes: `docs/SCHEMA.md`, `docs/SYSTEM.SPEC.md`
 §9, `docs/CONVENTIONS.md` e as skills `sql-migrations` e `gerenciamento-de-impacto`.
 
 ## Riscos e Mitigação
