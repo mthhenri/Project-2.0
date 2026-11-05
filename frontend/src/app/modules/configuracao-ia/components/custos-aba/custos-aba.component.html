@@ -210,10 +210,17 @@
                                                         modelo.modelo
                                                     }}</span>
                                                     <span class="custos-aba__modelo-detalhe">
-                                                        @if (modelo.emUso) {
+                                                        @for (
+                                                            uso of usosNosNiveis(modelo);
+                                                            track uso.chave
+                                                        ) {
                                                             <p-tag
-                                                                value="em uso"
-                                                                severity="info"
+                                                                [value]="uso.rotulo"
+                                                                [severity]="
+                                                                    uso.principal
+                                                                        ? 'info'
+                                                                        : 'secondary'
+                                                                "
                                                                 [rounded]="true"
                                                             />
                                                         }

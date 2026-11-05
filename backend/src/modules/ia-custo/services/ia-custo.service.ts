@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
+    cadeiaDoNivelIa,
     IaCustoConsultadoDto,
     IaCustoConsultarDto,
     IaModeloPrecoAlteradoDto,
@@ -39,16 +40,16 @@ export class IaCustoService {
             this.configuracaoIaService.listarPrecos(),
             this.configuracaoIaService.obterAtiva(),
         ]);
-        // Os níveis são atribuídos aos modelos do provedor padrão; o que um fallback respondeu entra pelo nome do modelo gravado na mensagem.
-        const modelosDoPadrao = configuracao.modelosProvedor[configuracao.provedor];
-        const modelosPorNivel = {
-            [NivelIaEnum.RAPIDO]: modelosDoPadrao?.modeloRapido ?? '',
-            [NivelIaEnum.PADRAO]: modelosDoPadrao?.modeloPadrao ?? '',
-            [NivelIaEnum.ANALITICO]: modelosDoPadrao?.modeloAnalitico ?? '',
+        // Os níveis ficam com os modelos das suas cadeias (o principal e a contingência, mesmo de provedores diferentes). O custo, porém, é do
+        // modelo que de fato respondeu, gravado na mensagem: um fallback aparece com o modelo real e nunca é contado duas vezes.
+        const cadeiasPorNivel = {
+            [NivelIaEnum.RAPIDO]: cadeiaDoNivelIa(configuracao, NivelIaEnum.RAPIDO).map((item) => item.modelo),
+            [NivelIaEnum.PADRAO]: cadeiaDoNivelIa(configuracao, NivelIaEnum.PADRAO).map((item) => item.modelo),
+            [NivelIaEnum.ANALITICO]: cadeiaDoNivelIa(configuracao, NivelIaEnum.ANALITICO).map((item) => item.modelo),
         };
-        const modelosEmUso = [...new Set(Object.values(modelosPorNivel))];
+        const modelosEmUso = [...new Set(Object.values(cadeiasPorNivel).flat())];
         const usos = agruparPeloNomeConhecido(usosPorId, [...new Set([...precos.map((preco) => preco.modelo), ...modelosEmUso])]);
-        const modelos = montarModelos(usos, precos, modelosPorNivel);
+        const modelos = montarModelos(usos, precos, cadeiasPorNivel);
 
         return {
             sucesso: true,

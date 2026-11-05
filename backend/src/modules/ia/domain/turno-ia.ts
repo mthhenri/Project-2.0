@@ -21,12 +21,15 @@ export function nivelMaisAlto(primeiro: NivelIaEnum, segundo: NivelIaEnum): Nive
 export class TurnoIa {
     private nivelAtual: NivelIaEnum = NivelIaEnum.RAPIDO;
     private modeloAtual: string | null = null;
+    private modeloPlanejadoAtual: string | null = null;
     private readonly somaDosTokens: IaTokens = { entrada: 0, saida: 0, cache: 0 };
 
-    registrar(resposta: Pick<IaResposta, 'nivel' | 'modelo' | 'tokens'>): void {
+    registrar(resposta: Pick<IaResposta, 'nivel' | 'modelo' | 'modeloPlanejado' | 'tokens'>): void {
         if (this.modeloAtual === null || ORDEM_DOS_NIVEIS[resposta.nivel] >= ORDEM_DOS_NIVEIS[this.nivelAtual]) {
             this.nivelAtual = resposta.nivel;
+            // O modelo e o planejado andam juntos: os dois são da mesma chamada, a que decide o selo da mensagem.
             this.modeloAtual = resposta.modelo;
+            this.modeloPlanejadoAtual = resposta.modeloPlanejado;
         }
         this.somaDosTokens.entrada += resposta.tokens.entrada;
         this.somaDosTokens.saida += resposta.tokens.saida;
@@ -40,6 +43,11 @@ export class TurnoIa {
 
     get modelo(): string | null {
         return this.modeloAtual;
+    }
+
+    /** O modelo planejado da mesma chamada de `modelo` (spec 261); `null` enquanto nenhuma chamada foi registrada. */
+    get modeloPlanejado(): string | null {
+        return this.modeloPlanejadoAtual;
     }
 
     get tokens(): IaTokens {

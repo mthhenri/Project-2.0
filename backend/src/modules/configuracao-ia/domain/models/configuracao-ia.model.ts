@@ -1,13 +1,12 @@
 import { BaseEntity } from '../../../../core/base/base.entity';
-import { ConfiguracaoIaModelosPorProvedorDto, EsforcoIaEnum, ModoContextoChatEnum, PropostaIaNiveisDto, TipoProvedorIaEnum } from '@project20/shared';
+import { ConfiguracaoIaCadeiaItemDto, ModoContextoChatEnum, PropostaIaNiveisDto } from '@project20/shared';
 
 /** Uma versão da configuração da IA. */
 export interface ConfiguracaoIa extends BaseEntity {
     versao: number;
-    provedor: TipoProvedorIaEnum;
-    fallbacks: TipoProvedorIaEnum[];
-    modelosProvedor: ConfiguracaoIaModelosPorProvedorDto;
-    esforcoAnalitico: EsforcoIaEnum;
+    cadeiaRapido: ConfiguracaoIaCadeiaItemDto[];
+    cadeiaPadrao: ConfiguracaoIaCadeiaItemDto[];
+    cadeiaAnalitico: ConfiguracaoIaCadeiaItemDto[];
     checkinMinimoMinutos: number;
     checkinMaximoMinutos: number;
     duracaoRecomendadaMinutos: number;

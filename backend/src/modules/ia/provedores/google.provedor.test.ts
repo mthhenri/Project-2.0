@@ -225,3 +225,34 @@ test('pesquisaWeb com ferramentas do projeto: só a série 3 mistura (e pede as 
     assert.equal((config25['tools'] as unknown[]).length, 1);
     assert.equal(config25['toolConfig'], undefined);
 });
+
+test('esforço (spec 261): só ALTO libera o pensamento padrão do modelo; BAIXO e MEDIO mantêm o pensamento mínimo', async () => {
+    const { cliente, chamadas } = clienteFalso();
+    const provedor = new GoogleProvedor(cliente);
+    for (const esforco of [EsforcoIaEnum.BAIXO, EsforcoIaEnum.MEDIO, EsforcoIaEnum.ALTO]) {
+        await provedor.gerar({ ...SOLICITACAO, modelo: 'gemini-3-flash-preview', maximoTokens: 10, esforco });
+    }
+    const configuracao = (indice: number) => chamadas[indice]['config'] as Record<string, unknown>;
+    assert.deepEqual([configuracao(0)['thinkingConfig'], configuracao(1)['thinkingConfig']], [{ thinkingLevel: 'low' }, { thinkingLevel: 'low' }]);
+    assert.equal('thinkingConfig' in configuracao(2), false);
+});
+
+test('histórico de ferramenta vindo de outro provedor (sem assinatura) recusado com 400 falha com a mensagem do motivo; sem chamada sem assinatura vale a tradução comum', async () => {
+    const historico: IaSolicitacaoProvedor['mensagens'] = [
+        { papel: 'usuario', conteudo: 'e o prazo?' },
+        { papel: 'ia', conteudo: [{ tipo: 'uso_ferramenta', id: 'call_1', nome: 'consultar_prazo', entrada: {} }] },
+        { papel: 'usuario', conteudo: [{ tipo: 'resultado_ferramenta', usoId: 'call_1', conteudo: '10/11' }] },
+    ];
+    const recusado = new GoogleProvedor(clienteFalso({ erro: { status: 400 } }).cliente);
+    await assert.rejects(
+        () => recusado.gerar({ ...SOLICITACAO, mensagens: historico }),
+        (erro: unknown) => erro instanceof IaException && erro.motivo === 'CONFIGURACAO' && /veio de outro provedor/.test(erro.mensagem),
+    );
+    // Com assinatura (o histórico é do próprio Gemini) ou sem ferramenta, o 400 não é por isso.
+    const comAssinatura = historico.map((mensagem, indice) => (indice === 1 ? { ...mensagem, conteudo: [{ tipo: 'uso_ferramenta' as const, id: 'call_1', nome: 'consultar_prazo', entrada: {}, assinatura: 'SIG' }] } : mensagem));
+    await assert.rejects(
+        () => recusado.gerar({ ...SOLICITACAO, mensagens: comAssinatura }),
+        (erro: unknown) => erro instanceof IaException && erro.motivo === 'INDISPONIVEL',
+    );
+    await assert.rejects(() => recusado.gerar(SOLICITACAO), (erro: unknown) => erro instanceof IaException && erro.motivo === 'INDISPONIVEL');
+});

@@ -1,4 +1,4 @@
-import { IaCustoModeloDto, IaCustoPeriodoDto, NivelIaEnum } from '@project20/shared';
+import { IaCustoModeloDto, IaCustoPeriodoDto, NivelIaEnum, rotuloDoNivelIa } from '@project20/shared';
 import { GraficoBarrasCategoria } from '../../../shared/components/grafico-barras/grafico-barras.component';
 
 const MESES_ABREVIADOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'] as const;
@@ -95,5 +95,21 @@ export function montarCategoriasDeCusto(periodos: readonly IaCustoPeriodoDto[], 
                 descricao: `${quando} · ${parte.modelo}: ${formatarDolar(parte.custoDolar)} em ${parte.mensagens} ${parte.mensagens === 1 ? 'mensagem' : 'mensagens'} (${formatarTokens(parte.tokens)} tokens)`,
             })),
         };
+    });
+}
+
+export interface UsoDoModeloNoNivel {
+    chave: string;
+    /** "Rápido · principal" ou "Analítico · contingência". */
+    rotulo: string;
+    principal: boolean;
+}
+
+/** Em que níveis a configuração ativa usa o modelo, e se ele abre a cadeia do nível (principal) ou é a contingência. Vazio: modelo fora de uso. */
+export function usosDoModeloNosNiveis(modelo: Pick<IaCustoModeloDto, 'niveis' | 'niveisPrincipais'>): UsoDoModeloNoNivel[] {
+    return modelo.niveis.map((nivel) => {
+        const principal = modelo.niveisPrincipais.includes(nivel);
+        const nome = rotuloDoNivelIa(nivel);
+        return { chave: nivel, rotulo: `${nome.charAt(0).toUpperCase()}${nome.slice(1)} · ${principal ? 'principal' : 'contingência'}`, principal };
     });
 }

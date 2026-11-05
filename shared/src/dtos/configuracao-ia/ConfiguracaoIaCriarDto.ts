@@ -1,27 +1,25 @@
-import { ArrayMaxSize, IsArray, IsBoolean, IsEnum, IsInt, IsObject, IsOptional, Min } from 'class-validator';
-import { EsforcoIaEnum } from '../../enums/esforco-ia.enum';
+import { IsArray, IsBoolean, IsEnum, IsInt, IsObject, IsOptional, Min } from 'class-validator';
 import { ModoContextoChatEnum } from '../../enums/modo-contexto-chat.enum';
-import { TipoProvedorIaEnum } from '../../enums/tipo-provedor-ia.enum';
-import { ConfiguracaoIaModelosPorProvedorDto } from './ConfiguracaoIaModelosDto';
+import { ConfiguracaoIaCadeiaItemDto } from './ConfiguracaoIaCadeiaItemDto';
 import { PropostaIaNiveisDto } from './PropostaIaNiveisDto';
 
-/** Grava uma **versão nova** da configuração (a antiga nunca é alterada). O intervalo mínimo < máximo e a coerência provedor × modelo são conferidos na service. */
+/**
+ * Grava uma **versão nova** da configuração (a antiga nunca é alterada). O intervalo mínimo < máximo e a coerência de cada cadeia
+ * (ao menos um item, sem provedor repetido, modelo do provedor, esforço válido) são conferidos na service
+ * (`validarCadeiasDaConfiguracaoIa`).
+ */
 export class ConfiguracaoIaCriarDto {
-    @IsEnum(TipoProvedorIaEnum)
-    provedor: TipoProvedorIaEnum;
-
-    /** Cadeia de contingência, em ordem (no máximo dois, sem repetir o provedor padrão). */
+    /** A cadeia do nível rápido: o item principal e depois a contingência, em ordem. */
     @IsArray()
-    @ArrayMaxSize(2)
-    @IsEnum(TipoProvedorIaEnum, { each: true })
-    fallbacks: TipoProvedorIaEnum[];
+    cadeiaRapido: ConfiguracaoIaCadeiaItemDto[];
 
-    /** Os modelos por provedor. O formato do mapa e a coerência modelo × provedor são conferidos na service (`validarProvedoresDaConfiguracaoIa`). */
-    @IsObject()
-    modelosProvedor: ConfiguracaoIaModelosPorProvedorDto;
+    /** A cadeia do nível padrão. */
+    @IsArray()
+    cadeiaPadrao: ConfiguracaoIaCadeiaItemDto[];
 
-    @IsEnum(EsforcoIaEnum)
-    esforcoAnalitico: EsforcoIaEnum;
+    /** A cadeia do nível analítico. */
+    @IsArray()
+    cadeiaAnalitico: ConfiguracaoIaCadeiaItemDto[];
 
     @IsInt()
     @Min(1)

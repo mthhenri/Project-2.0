@@ -29,6 +29,14 @@
 
 ## Ativos
 
+### P-075 — Cadeias por nível da IA sem verificação com chave real de provedor · `ABERTO` · IA
+
+- **Sintoma:** nenhuma chamada real foi feita aos provedores depois da spec 261 (sem chaves no ambiente de desenvolvimento). Ficaram só os testes com clientes falsos e a tela verificada ao vivo.
+- **Causa:** o que depende de API real: (1) a **Responses API** do `gpt-6.1-sol` (nome e suporte de `reasoning.effort`, `max_output_tokens`, eventos do fluxo, `function_call` e `usage` foram escritos pelos tipos do SDK instalado, não por chamada); (2) o `output_config.effort` agora vai em **toda** chamada da Anthropic (rápido e padrão incluídos, antes só no analítico): se o `claude-haiku-5-5` ou o `claude-sonnet-5-5` recusar o parâmetro, as chamadas desses níveis falham logo depois da migration; (3) o **Gemini** não tem o parâmetro de esforço (aproximação: `ALTO` libera o pensamento padrão, `BAIXO`/`MEDIO` mantêm o mínimo; o analítico do Gemini passa de pensamento padrão a mínimo quando o esforço dele é `MEDIO`); (4) o Gemini recebendo chamada de ferramenta vinda de outro provedor (HTTP 400 esperado, mensagem clara já tratada); (5) a folga do teto de tokens por esforço (1024/2048/4096) para modelos de raciocínio.
+- **Contorno:** antes de ativar o híbrido em produção, fazer um smoke test por provedor (texto, streaming e ferramenta no Sol Medium; Opus Medium e High; Haiku e Sonnet com esforço explícito) e, se a Anthropic recusar o esforço em algum modelo, trocar o esforço do item ou pedir que o adaptador só o envie aos modelos que o admitem.
+- **Correção:** o smoke test real (sem registrar prompts sensíveis nem chaves) e o ajuste do que ele mostrar.
+- **Desde:** 2026-11-05, spec 261.
+
 ### P-073 — Windows Defender barra o executável do Project Desktop como ameaça · `CONTORNADO` · desktop
 
 - **Sintoma:** baixar o `Project-Desktop-1.1.2.exe` pelo menu do perfil terminava em "Não foi possível baixar - Erro de download"; o Defender também bloqueou a leitura do arquivo em `desktop/release/`. Detecção `Program:Win32/Contebrew.A!ml` (ThreatID 251873), em 2026-11-03.

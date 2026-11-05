@@ -15,10 +15,9 @@ import {
 const COLUNAS_RESUMO = `
     configuracao_ia.id,
     configuracao_ia.versao,
-    tipo_provedor_ia.codigo AS provedor,
-    configuracao_ia.fallbacks,
-    configuracao_ia.modelos_provedor AS "modelosProvedor",
-    configuracao_ia.esforco_analitico AS "esforcoAnalitico",
+    configuracao_ia.cadeia_rapido AS "cadeiaRapido",
+    configuracao_ia.cadeia_padrao AS "cadeiaPadrao",
+    configuracao_ia.cadeia_analitico AS "cadeiaAnalitico",
     configuracao_ia.checkin_minimo_minutos AS "checkinMinimoMinutos",
     configuracao_ia.checkin_maximo_minutos AS "checkinMaximoMinutos",
     configuracao_ia.duracao_recomendada_minutos AS "duracaoRecomendadaMinutos",
@@ -37,8 +36,6 @@ const COLUNAS_RESUMO = `
 const JUNCOES_RESUMO = `
     FROM
         configuracao_ia
-        INNER JOIN tipo_provedor_ia ON tipo_provedor_ia.id = configuracao_ia.tipo_provedor_ia_id
-        AND tipo_provedor_ia.is_deleted = false
         INNER JOIN usuario ON usuario.id = configuracao_ia.usuario_id
 `;
 
@@ -199,10 +196,9 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
                     INSERT INTO
                         configuracao_ia (
                             versao,
-                            tipo_provedor_ia_id,
-                            fallbacks,
-                            modelos_provedor,
-                            esforco_analitico,
+                            cadeia_rapido,
+                            cadeia_padrao,
+                            cadeia_analitico,
                             checkin_minimo_minutos,
                             checkin_maximo_minutos,
                             duracao_recomendada_minutos,
@@ -231,10 +227,9 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
                             ),
                             0
                         ) + 1,
-                        tipo_provedor_ia.id,
-                        CAST(:fallbacks AS jsonb),
-                        CAST(:modelosProvedor AS jsonb),
-                        :esforcoAnalitico,
+                        CAST(:cadeiaRapido AS jsonb),
+                        CAST(:cadeiaPadrao AS jsonb),
+                        CAST(:cadeiaAnalitico AS jsonb),
                         :checkinMinimoMinutos,
                         :checkinMaximoMinutos,
                         :duracaoRecomendadaMinutos,
@@ -278,24 +273,19 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
                         NOW(),
                         NOW(),
                         false
-                    FROM
-                        tipo_provedor_ia
-                    WHERE
-                        tipo_provedor_ia.codigo = :provedor
-                        AND tipo_provedor_ia.is_deleted = false
                     RETURNING
                         id
                 `,
                 {
                     ...dto,
-                    fallbacks: JSON.stringify(dto.fallbacks),
-                    modelosProvedor: JSON.stringify(dto.modelosProvedor),
+                    cadeiaRapido: JSON.stringify(dto.cadeiaRapido),
+                    cadeiaPadrao: JSON.stringify(dto.cadeiaPadrao),
+                    cadeiaAnalitico: JSON.stringify(dto.cadeiaAnalitico),
                     niveisProposta: dto.niveisProposta ? JSON.stringify(dto.niveisProposta) : null,
                     usuarioId,
                 },
                 transacao,
             );
-            if (inseridas.length === 0) throw new Error('Provedor de IA inexistente');
 
             const criadas = await this.executarConsulta<ConfiguracaoIaResumoDto>(
                 `

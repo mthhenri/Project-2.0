@@ -13,7 +13,7 @@ import { ChatService, ErroDoChat } from './chat.service';
 
 const mensagemFinal: ChatMensagemResumoDto = {
     id: 'm-1', conversaId: '1-2026-10-19', usuarioId: 1, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.IA, texto: 'Oi!',
-    nivel: NivelIaEnum.RAPIDO, modelo: 'modelo', tokensEntrada: 1, tokensSaida: 1, assunto: null, tokensCache: null, propostaIds: [], execucaoId: null,
+    nivel: NivelIaEnum.RAPIDO, modelo: 'modelo', modeloPlanejado: null, tokensEntrada: 1, tokensSaida: 1, assunto: null, tokensCache: null, propostaIds: [], execucaoId: null,
     atividadeId: null, demandaId: null, createdDate: new Date('2026-10-19T12:00:00.000Z'),
 };
 

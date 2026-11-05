@@ -408,6 +408,7 @@ export class ChatService {
             texto,
             nivel: turno.nivel,
             modelo: turno.modelo,
+            modeloPlanejado: turno.modeloPlanejado,
             tokensEntrada: tokens.entrada,
             tokensSaida: tokens.saida,
             tokensCache: tokens.cache,

@@ -35,9 +35,10 @@ describe('ConfiguracaoIaService (frontend)', () => {
 
     it('criar faz POST em /configuracao-ia com o corpo e mantém o scrim global (é mutação)', () => {
         const dto = {
-            provedor: TipoProvedorIaEnum.ANTHROPIC, fallbacks: [TipoProvedorIaEnum.GOOGLE],
-            modelosProvedor: { ANTHROPIC: { modeloRapido: 'a', modeloPadrao: 'b', modeloAnalitico: 'c' }, GOOGLE: { modeloRapido: 'd', modeloPadrao: 'e', modeloAnalitico: 'f' } },
-            esforcoAnalitico: EsforcoIaEnum.MEDIO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
+            cadeiaRapido: [{ provedor: TipoProvedorIaEnum.ANTHROPIC, modelo: 'a', esforco: EsforcoIaEnum.BAIXO }],
+            cadeiaPadrao: [{ provedor: TipoProvedorIaEnum.OPENAI, modelo: 'b', esforco: EsforcoIaEnum.MEDIO }, { provedor: TipoProvedorIaEnum.GOOGLE, modelo: 'e', esforco: EsforcoIaEnum.MEDIO }],
+            cadeiaAnalitico: [{ provedor: TipoProvedorIaEnum.ANTHROPIC, modelo: 'c', esforco: EsforcoIaEnum.ALTO }],
+            checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
             checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true,
             duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false,
         };

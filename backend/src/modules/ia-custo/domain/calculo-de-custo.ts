@@ -39,11 +39,12 @@ export function calcularCustoDolar(uso: Pick<TokensSomados, 'tokensEntrada' | 't
 }
 
 /**
- * Uma linha por modelo: os que tiveram uso no recorte, os que têm preço cadastrado e os que a configuração ativa usa (assim o
- * administrador define o preço de um modelo antes de ele ser chamado). Ordem: em uso, depois mais custo/mais mensagens, depois nome.
+ * Uma linha por modelo: os que tiveram uso no recorte, os que têm preço cadastrado e os que a configuração ativa usa em alguma cadeia
+ * (assim o administrador define o preço de um modelo antes de ele ser chamado). `cadeiasPorNivel` traz, por nível, os modelos da cadeia na
+ * ordem: o primeiro é o principal e os seguintes, a contingência. Ordem: em uso, depois mais custo/mais mensagens, depois nome.
  */
-export function montarModelos(usos: TokensSomados[], precos: IaModeloPrecoDto[], modelosPorNivel: Partial<Record<NivelIaEnum, string>>): IaCustoModeloDto[] {
-    const modelosEmUso = Object.values(modelosPorNivel);
+export function montarModelos(usos: TokensSomados[], precos: IaModeloPrecoDto[], cadeiasPorNivel: Partial<Record<NivelIaEnum, string[]>>): IaCustoModeloDto[] {
+    const modelosEmUso = Object.values(cadeiasPorNivel).flat();
     const precoPorModelo = new Map(precos.map((preco) => [preco.modelo, preco]));
     const somaPorModelo = new Map<string, Omit<TokensSomados, 'periodo' | 'modelo'>>();
     for (const uso of usos) {
@@ -66,7 +67,8 @@ export function montarModelos(usos: TokensSomados[], precos: IaModeloPrecoDto[],
             preco,
             custoDolar: preco ? calcularCustoDolar(soma, preco) : null,
             emUso: modelosEmUso.includes(modelo),
-            niveis: Object.values(NivelIaEnum).filter((nivel) => modelosPorNivel[nivel] === modelo),
+            niveis: Object.values(NivelIaEnum).filter((nivel) => cadeiasPorNivel[nivel]?.includes(modelo)),
+            niveisPrincipais: Object.values(NivelIaEnum).filter((nivel) => cadeiasPorNivel[nivel]?.[0] === modelo),
         };
     });
     return modelos.sort(

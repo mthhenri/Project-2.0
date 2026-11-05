@@ -13,7 +13,7 @@ import { BarraRecargaComponent } from '../../../../shared/components/barra-recar
 import { GraficoBarrasComponent } from '../../../../shared/components/grafico-barras/grafico-barras.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { IaCustoService } from '../../services/ia-custo.service';
-import { formatarDolar, formatarTokens, montarCategoriasDeCusto, montarLegendaDeCusto, rotuloDoRecorte } from '../../utils/custos.util';
+import { formatarDolar, formatarTokens, montarCategoriasDeCusto, montarLegendaDeCusto, rotuloDoRecorte, usosDoModeloNosNiveis } from '../../utils/custos.util';
 
 type RecorteDeCusto = 'MENSAL' | 'ANUAL';
 type FormularioDePreco = FormGroup<{ entrada: FormControl<number>; saida: FormControl<number>; cache: FormControl<number> }>;
@@ -83,6 +83,7 @@ export class CustosAbaComponent implements OnInit {
         );
         return montarLegendaDeCusto(this.modelosDaConsulta()).filter((item) => comCusto.has(item.modelo));
     });
+    readonly usosNosNiveis = usosDoModeloNosNiveis;
     readonly temUso = computed(() => (this.consulta()?.totais.mensagens ?? 0) > 0);
 
     readonly formatarDolar = formatarDolar;

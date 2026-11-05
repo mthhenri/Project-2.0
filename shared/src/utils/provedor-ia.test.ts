@@ -1,20 +1,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { ConfiguracaoIaCadeiaItemDto } from '../dtos/configuracao-ia/ConfiguracaoIaCadeiaItemDto';
+import { EsforcoIaEnum } from '../enums/esforco-ia.enum';
+import { NivelIaEnum } from '../enums/nivel-ia.enum';
 import { TipoProvedorIaEnum } from '../enums/tipo-provedor-ia.enum';
-import { cadeiaDeProvedoresIa, modeloPertenceAoProvedor, ProvedoresDaConfiguracaoIa, validarProvedoresDaConfiguracaoIa } from './provedor-ia';
-
-const ANTHROPIC = { modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'claude-opus-5-5' };
-const GOOGLE = { modeloRapido: 'gemini-flash', modeloPadrao: 'gemini-pro', modeloAnalitico: 'gemini-pro-max' };
-const OPENAI = { modeloRapido: 'gpt-mini', modeloPadrao: 'gpt-5', modeloAnalitico: 'o3' };
+import { cadeiaDoNivelIa, CadeiasDaConfiguracaoIa, modeloPertenceAoProvedor, rotuloDoNivelIa, validarCadeiasDaConfiguracaoIa } from './provedor-ia';
 
 const A = TipoProvedorIaEnum.ANTHROPIC;
 const G = TipoProvedorIaEnum.GOOGLE;
 const O = TipoProvedorIaEnum.OPENAI;
 
-const base = (parcial: Partial<ProvedoresDaConfiguracaoIa> = {}): ProvedoresDaConfiguracaoIa => ({
-    provedor: A,
-    fallbacks: [],
-    modelosProvedor: { [A]: ANTHROPIC },
+const item = (provedor: TipoProvedorIaEnum, modelo: string, esforco: EsforcoIaEnum = EsforcoIaEnum.MEDIO): ConfiguracaoIaCadeiaItemDto => ({ provedor, modelo, esforco });
+
+const base = (parcial: Partial<CadeiasDaConfiguracaoIa> = {}): CadeiasDaConfiguracaoIa => ({
+    cadeiaRapido: [item(A, 'claude-haiku-5-5')],
+    cadeiaPadrao: [item(O, 'gpt-6.1-sol')],
+    cadeiaAnalitico: [item(A, 'claude-opus-5-5')],
     ...parcial,
 });
 
@@ -28,61 +29,63 @@ test('modeloPertenceAoProvedor reconhece o prefixo de cada provedor e ignora cai
     assert.equal(modeloPertenceAoProvedor(O, 'omni-1'), false);
 });
 
-test('cadeiaDeProvedoresIa põe o padrão primeiro e segue a ordem dos fallbacks', () => {
-    assert.deepEqual(cadeiaDeProvedoresIa({ provedor: G, fallbacks: [O, A] }), [G, O, A]);
+test('cadeiaDoNivelIa devolve a cadeia do nível pedido e rotuloDoNivelIa o nome em português', () => {
+    const configuracao = base({ cadeiaPadrao: [item(O, 'gpt-5'), item(A, 'claude-sonnet-5-5')] });
+    assert.deepEqual(cadeiaDoNivelIa(configuracao, NivelIaEnum.RAPIDO), configuracao.cadeiaRapido);
+    assert.deepEqual(cadeiaDoNivelIa(configuracao, NivelIaEnum.PADRAO), configuracao.cadeiaPadrao);
+    assert.deepEqual(cadeiaDoNivelIa(configuracao, NivelIaEnum.ANALITICO), configuracao.cadeiaAnalitico);
+    assert.equal(rotuloDoNivelIa(NivelIaEnum.ANALITICO), 'analítico');
 });
 
-test('configuração coerente, com ou sem cadeia, não tem erro', () => {
-    assert.deepEqual(validarProvedoresDaConfiguracaoIa(base()), []);
-    assert.deepEqual(validarProvedoresDaConfiguracaoIa(base({ fallbacks: [G, O], modelosProvedor: { [A]: ANTHROPIC, [G]: GOOGLE, [O]: OPENAI } })), []);
-});
-
-test('trocar o padrão e voltar: os modelos do provedor que saiu da cadeia ficam guardados e valem de novo', () => {
-    const guardados = { [A]: ANTHROPIC, [G]: GOOGLE };
-    assert.deepEqual(validarProvedoresDaConfiguracaoIa({ provedor: G, fallbacks: [], modelosProvedor: guardados }), []);
-    assert.deepEqual(validarProvedoresDaConfiguracaoIa({ provedor: A, fallbacks: [], modelosProvedor: guardados }), []);
-});
-
-test('provedor da cadeia sem modelos, ou com um nível vazio, é recusado', () => {
-    const semGoogle = validarProvedoresDaConfiguracaoIa(base({ fallbacks: [G] }));
-    assert.deepEqual(semGoogle, ['Google está na cadeia, mas não tem os modelos informados']);
-
-    const nivelVazio = validarProvedoresDaConfiguracaoIa(base({ modelosProvedor: { [A]: { ...ANTHROPIC, modeloRapido: '  ' } } }));
-    assert.deepEqual(nivelVazio, ['Anthropic está na cadeia, mas o modelo rápido não foi informado']);
-});
-
-test('modelo de outro provedor é recusado, no padrão, no fallback e também no provedor guardado fora da cadeia', () => {
-    const noPadrao = validarProvedoresDaConfiguracaoIa(base({ modelosProvedor: { [A]: { ...ANTHROPIC, modeloRapido: 'gemini-flash' } } }));
-    assert.deepEqual(noPadrao, ['O modelo rápido "gemini-flash" não é de Anthropic']);
-
-    const noFallback = validarProvedoresDaConfiguracaoIa(
-        base({ fallbacks: [G], modelosProvedor: { [A]: ANTHROPIC, [G]: { ...GOOGLE, modeloAnalitico: 'gpt-5' } } }),
+test('configuração coerente não tem erro: uma cadeia pode ter um item, vários, e cada nível a sua', () => {
+    assert.deepEqual(validarCadeiasDaConfiguracaoIa(base()), []);
+    assert.deepEqual(
+        validarCadeiasDaConfiguracaoIa(base({ cadeiaRapido: [item(O, 'gpt-5-mini', EsforcoIaEnum.ALTO), item(A, 'claude-haiku-5-5'), item(G, 'gemini-flash', EsforcoIaEnum.BAIXO)] })),
+        [],
     );
-    assert.deepEqual(noFallback, ['O modelo analítico "gpt-5" não é de Google']);
-
-    const foraDaCadeia = validarProvedoresDaConfiguracaoIa(base({ modelosProvedor: { [A]: ANTHROPIC, [O]: { ...OPENAI, modeloPadrao: 'claude-sonnet-5-5' } } }));
-    assert.deepEqual(foraDaCadeia, ['O modelo padrão "claude-sonnet-5-5" não é de OpenAI']);
 });
 
-test('trio incompleto de provedor fora da cadeia é tolerado só se estiver vazio; texto inválido é recusado', () => {
-    const vazio = validarProvedoresDaConfiguracaoIa(base({ modelosProvedor: { [A]: ANTHROPIC, [G]: { modeloRapido: '', modeloPadrao: '', modeloAnalitico: '' } } }));
-    assert.deepEqual(vazio, []);
-    const invalido = validarProvedoresDaConfiguracaoIa(base({ modelosProvedor: { [A]: ANTHROPIC, [G]: { ...GOOGLE, modeloRapido: 7 as never } } }));
-    assert.deepEqual(invalido, ['O modelo rápido de Google é inválido']);
+test('o mesmo provedor pode estar em cadeias de níveis diferentes', () => {
+    assert.deepEqual(validarCadeiasDaConfiguracaoIa(base({ cadeiaPadrao: [item(A, 'claude-sonnet-5-5')] })), []);
 });
 
-test('modelo com mais de 100 caracteres e chave que não é provedor são recusados', () => {
-    const longo = validarProvedoresDaConfiguracaoIa(base({ modelosProvedor: { [A]: { ...ANTHROPIC, modeloRapido: `claude-${'x'.repeat(100)}` } } }));
-    assert.deepEqual(longo, ['O modelo rápido de Anthropic passa de 100 caracteres']);
-    const estranha = validarProvedoresDaConfiguracaoIa(base({ modelosProvedor: { [A]: ANTHROPIC, MISTRAL: GOOGLE } as never }));
-    assert.deepEqual(estranha, ['"MISTRAL" não é um provedor de IA']);
-    const herdada = validarProvedoresDaConfiguracaoIa(base({ modelosProvedor: JSON.parse('{"ANTHROPIC": {"modeloRapido":"claude-a","modeloPadrao":"claude-b","modeloAnalitico":"claude-c"}, "constructor": {}}') }));
-    assert.deepEqual(herdada, ['"constructor" não é um provedor de IA'], 'chave herdada do Object não passa por provedor');
+test('cadeia vazia ou que não é lista é recusada, com o nome do nível', () => {
+    assert.deepEqual(validarCadeiasDaConfiguracaoIa(base({ cadeiaRapido: [] })), ['A cadeia do nível rápido precisa ter ao menos um item']);
+    assert.deepEqual(validarCadeiasDaConfiguracaoIa(base({ cadeiaAnalitico: undefined as never })), ['A cadeia do nível analítico precisa ter ao menos um item']);
 });
 
-test('provedor repetido na cadeia (inclusive o padrão) e cadeia maior que o máximo são recusados', () => {
-    assert.match(validarProvedoresDaConfiguracaoIa(base({ fallbacks: [A] }))[0], /Anthropic aparece mais de uma vez/);
-    const todos = { [A]: ANTHROPIC, [G]: GOOGLE, [O]: OPENAI };
-    assert.match(validarProvedoresDaConfiguracaoIa(base({ fallbacks: [G, G], modelosProvedor: todos }))[0], /Google aparece mais de uma vez/);
-    assert.ok(validarProvedoresDaConfiguracaoIa(base({ fallbacks: [G, O, A], modelosProvedor: todos })).some((erro) => /no máximo 2/.test(erro)));
+test('provedor repetido na mesma cadeia é recusado', () => {
+    const erros = validarCadeiasDaConfiguracaoIa(base({ cadeiaPadrao: [item(O, 'gpt-5'), item(A, 'claude-sonnet-5-5'), item(O, 'gpt-5-mini')] }));
+    assert.deepEqual(erros, ['OpenAI aparece mais de uma vez na cadeia do nível padrão']);
+});
+
+test('modelo vazio, longo ou de outro provedor é recusado, citando item, provedor e nível', () => {
+    assert.deepEqual(validarCadeiasDaConfiguracaoIa(base({ cadeiaRapido: [item(A, '  ')] })), ['O modelo do item 1 (Anthropic) da cadeia do nível rápido não foi informado']);
+    assert.deepEqual(validarCadeiasDaConfiguracaoIa(base({ cadeiaRapido: [item(A, `claude-${'x'.repeat(100)}`)] })), [
+        'O modelo do item 1 (Anthropic) da cadeia do nível rápido passa de 100 caracteres',
+    ]);
+    assert.deepEqual(validarCadeiasDaConfiguracaoIa(base({ cadeiaAnalitico: [item(A, 'claude-opus-5-5'), item(G, 'gpt-5')] })), [
+        'O modelo "gpt-5" não é de Google (cadeia do nível analítico)',
+    ]);
+});
+
+test('esforço fora do enum e provedor desconhecido são recusados', () => {
+    assert.deepEqual(validarCadeiasDaConfiguracaoIa(base({ cadeiaPadrao: [item(O, 'gpt-5', 'ENORME' as never)] })), ['O esforço do item 1 da cadeia do nível padrão é inválido']);
+    const desconhecido = validarCadeiasDaConfiguracaoIa(base({ cadeiaPadrao: [{ provedor: 'MISTRAL' as never, modelo: 'mistral-large', esforco: EsforcoIaEnum.MEDIO }] }));
+    assert.deepEqual(desconhecido, ['O provedor do item 1 da cadeia do nível padrão é inválido']);
+    const herdada = validarCadeiasDaConfiguracaoIa(base({ cadeiaPadrao: [{ provedor: 'constructor' as never, modelo: 'gpt-5', esforco: EsforcoIaEnum.MEDIO }] }));
+    assert.deepEqual(herdada, ['O provedor do item 1 da cadeia do nível padrão é inválido'], 'chave herdada do Object não passa por provedor');
+});
+
+test('item que não é objeto é recusado sem derrubar a validação dos outros', () => {
+    const erros = validarCadeiasDaConfiguracaoIa(base({ cadeiaRapido: [null as never, item(A, 'claude-haiku-5-5')] }));
+    assert.deepEqual(erros, ['O item 1 da cadeia do nível rápido é inválido']);
+});
+
+test('um erro de cada nível aparece junto, na ordem rápido, padrão, analítico', () => {
+    const erros = validarCadeiasDaConfiguracaoIa({ cadeiaRapido: [], cadeiaPadrao: [], cadeiaAnalitico: [] });
+    assert.equal(erros.length, 3);
+    assert.match(erros[0], /rápido/);
+    assert.match(erros[1], /padrão/);
+    assert.match(erros[2], /analítico/);
 });

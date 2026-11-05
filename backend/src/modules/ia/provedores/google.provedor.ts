@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { EsforcoIaEnum } from '@project20/shared';
 import { IaException } from '../domain/ia.exception';
 import { traduzirErroDeProvedor } from '../domain/ia-erro-provedor';
 import { IaProvedor } from '../domain/ia-provedor';
@@ -70,7 +71,7 @@ export class GoogleProvedor implements IaProvedor {
         try {
             return this.montarResposta(solicitacao.modelo, [await cliente.gerar(this.montarParametros(solicitacao))]);
         } catch (erro) {
-            throw traduzirErroDeProvedor(erro);
+            throw this.traduzirErro(erro, solicitacao);
         }
     }
 
@@ -87,8 +88,24 @@ export class GoogleProvedor implements IaProvedor {
             }
             return this.montarResposta(solicitacao.modelo, trechos);
         } catch (erro) {
-            throw traduzirErroDeProvedor(erro);
+            throw this.traduzirErro(erro, solicitacao);
         }
+    }
+
+    /**
+     * O Gemini exige de volta a assinatura (`thoughtSignature`) das chamadas de ferramenta que ele fez. Se o turno começou em outro provedor
+     * (fallback no meio das voltas de ferramenta), as chamadas chegam sem ela e a API pode recusar o pedido (HTTP 400): só esse turno falha, com
+     * uma mensagem que diz o porquê, em vez de "temporariamente indisponível".
+     */
+    private traduzirErro(erro: unknown, solicitacao: IaSolicitacaoProvedor): IaException {
+        const status = (erro as { status?: number } | null)?.status;
+        const temChamadaSemAssinatura = solicitacao.mensagens.some(
+            (mensagem) => typeof mensagem.conteudo !== 'string' && mensagem.conteudo.some((bloco) => bloco.tipo === 'uso_ferramenta' && !bloco.assinatura),
+        );
+        if (status === 400 && temChamadaSemAssinatura) {
+            return new IaException('CONFIGURACAO', 'O Gemini recusou o histórico de ferramentas deste turno, que veio de outro provedor; tente de novo na próxima mensagem');
+        }
+        return traduzirErroDeProvedor(erro);
     }
 
     private exigirCliente(): ClienteGoogle {
@@ -105,7 +122,9 @@ export class GoogleProvedor implements IaProvedor {
         }
 
         const configuracao: Record<string, unknown> = { maxOutputTokens: solicitacao.maximoTokens };
-        const pensamentoLeve = solicitacao.esforco ? null : configurarPensamentoLeve(solicitacao.modelo);
+        // Adaptação do esforço (spec 261): o Gemini não recebe o esforço como parâmetro. `ALTO` libera o pensamento padrão do modelo (era o que o
+        // analítico recebia); `BAIXO` e `MEDIO` mantêm o pensamento mínimo, que protege as chamadas curtas de voltarem vazias. Não verificado com chave real.
+        const pensamentoLeve = solicitacao.esforco === EsforcoIaEnum.ALTO ? null : configurarPensamentoLeve(solicitacao.modelo);
         if (pensamentoLeve) {
             configuracao['thinkingConfig'] = pensamentoLeve.thinkingConfig;
             configuracao['maxOutputTokens'] = solicitacao.maximoTokens + pensamentoLeve.folga;

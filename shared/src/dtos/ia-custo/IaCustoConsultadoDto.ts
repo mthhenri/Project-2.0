@@ -20,10 +20,12 @@ export interface IaCustoModeloDto {
     tokensCache: number;
     preco: IaModeloPrecoDto | null;
     custoDolar: number | null;
-    /** `true` para o modelo que a configuração ativa usa em algum nível. */
+    /** `true` para o modelo que a configuração ativa usa em alguma cadeia de nível. */
     emUso: boolean;
-    /** Os níveis que a configuração ativa atribui a este modelo (vazio fora de uso). Dá a cor no gráfico: quanto mais forte o nível, mais escuro o tom. */
+    /** Os níveis em cuja cadeia a configuração ativa tem este modelo, como principal ou como contingência (vazio fora de uso). Dá a cor no gráfico: quanto mais forte o nível, mais escuro o tom. */
     niveis: NivelIaEnum[];
+    /** Entre `niveis`, aqueles em que o modelo é o item principal da cadeia (os demais são contingência). */
+    niveisPrincipais: NivelIaEnum[];
 }
 
 /** A parte de um modelo no uso de um período (o gráfico empilha uma por modelo). `custoDolar` é 0 para modelo sem preço. */

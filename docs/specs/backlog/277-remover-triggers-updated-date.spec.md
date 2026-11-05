@@ -21,7 +21,7 @@ grave `updated_date = NOW()` explicitamente, sem nenhuma coluna ou data mudar de
    construção, não por lembrança. Teste de integração por repository que altera linha: depois do `UPDATE`,
    `updated_date` é maior que `created_date`. Os leitores de `updatedDate` (`plano`, `plano_ponto`, `usuario`,
    `anotacao`) são conferidos um a um.
-3. **Migration 0079.** `-- UP`: remove os 43 triggers (por laço sobre `pg_trigger` com o nome `trg_%_updated_date`)
+3. **Migration (próximo número livre; a 0079 e a 0080 foram usadas pela spec 261).** `-- UP`: remove os 43 triggers (por laço sobre `pg_trigger` com o nome `trg_%_updated_date`)
    e a função `fn_set_updated_date()`. `-- DOWN`: recria a função e o trigger de toda tabela pública com coluna
    `updated_date`. Rollback testado de verdade (aplicar, reverter, aplicar de novo). Nenhuma migration antiga é
    editada. Migration nova não cria trigger (o modelo em `SYSTEM.SPEC.md` §9.5 muda).

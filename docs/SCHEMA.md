@@ -82,7 +82,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 10. execucao
 11. dia_nao_util
 12. tipo_anotacao, anotacao (migration `0030`)
-13. tipo_provedor_ia, configuracao_ia (migration `0033`; `0049` troca as colunas `modelo_*` por `modelos_provedor` e `fallbacks`; `0055` acrescenta `niveis_proposta`)
+13. tipo_provedor_ia, configuracao_ia (migration `0033`; `0049` troca as colunas `modelo_*` por `modelos_provedor` e `fallbacks`; `0055` acrescenta `niveis_proposta`; `0079` troca o provedor padrão, os fallbacks, o mapa de modelos e o esforço por **três cadeias, uma por nível**)
 14. tipo_prompt, prompt (migration `0034`)
 15. tipo_proposta_ia, tipo_proposta_ia_status, proposta_ia (migration `0035`; `0055` acrescenta `aplicada_pela_ia`)
 16. tipo_atividade_prioridade e `atividade.tipo_atividade_prioridade_id` (migration `0036`)
@@ -617,7 +617,7 @@ CREATE UNIQUE INDEX uix_anotacao_usuario_tipo_ativa
 ### configuracao_ia — configuração da IA, uma linha por versão (migration `0033`)
 
 A versão ativa é a de maior `versao`; versão antiga nunca é alterada (editar é gravar a seguinte). A chave de API do provedor **não** fica no banco
-(`.env`). A versão 1 vem por seed (Anthropic, IA **desligada**, check-in entre 30 e 80 minutos, duração recomendada de 90). A migration `0044` acrescentou `duvidas_codigo` e `modo_contexto_chat` (as versões que já existiam ficaram `false` e `MISTURADO`). A `0049` (task 203) moveu os três modelos para `modelos_provedor` (o trio de cada versão foi para a chave do provedor dela) e criou `fallbacks` (`[]` nas versões antigas); o provedor padrão continua em `tipo_provedor_ia_id`. A `0055` (task 228) acrescentou `niveis_proposta` (anulável: as versões que já existiam ficaram sem o mapa e valem o padrão do `shared`). A coerência modelo × provedor (prefixo do nome) e a regra de cadeia sem repetição são da **service**, não do banco: o nome do modelo é texto livre.
+(`.env`). A versão 1 vem por seed (Anthropic, IA **desligada**, check-in entre 30 e 80 minutos, duração recomendada de 90). A migration `0044` acrescentou `duvidas_codigo` e `modo_contexto_chat` (as versões que já existiam ficaram `false` e `MISTURADO`). A `0049` (task 203) moveu os três modelos para `modelos_provedor` (o trio de cada versão foi para a chave do provedor dela) e criou `fallbacks` (`[]` nas versões antigas); o provedor padrão continua em `tipo_provedor_ia_id`. A `0055` (task 228) acrescentou `niveis_proposta` (anulável: as versões que já existiam ficaram sem o mapa e valem o padrão do `shared`). A `0079` (spec 261) trocou tudo isso por **uma cadeia por nível**: `cadeia_rapido`, `cadeia_padrao` e `cadeia_analitico`, cada uma um array JSONB de itens `{ provedor, modelo, esforco }` na ordem em que são tentados (o primeiro é o principal do nível, os seguintes a contingência; tamanho livre, mínimo 1). Saíram `tipo_provedor_ia_id` (e a FK), `modelos_provedor`, `fallbacks` e `esforco_analitico`; a tabela `tipo_provedor_ia` e o seu seed **permanecem** (a configuração não a lê mais; removê-la é pendência registrada). Cada versão histórica foi convertida em três cadeias iguais, copiando a que tinha (provedor padrão e depois os fallbacks, com o modelo de cada nível); o esforço do analítico é o `esforco_analitico` que a versão tinha e rápido e padrão ganharam `MEDIO` explícito (antes dependiam do padrão do SDK). Modelos de provedores fora da cadeia da versão se perderam. O **`DOWN` perde informação** e está testado: o provedor padrão e os fallbacks saem da cadeia do padrão, o esforço do analítico do primeiro item da cadeia do analítico e os modelos de cada provedor dos itens das três cadeias (nível sem item do provedor usa o do padrão, depois o do rápido, depois o do analítico); as diferenças entre as cadeias dos níveis se perdem, então antes de qualquer rollback em produção mostre ao autor o que seria perdido. A conversão grava `updated_date = NOW()` nas linhas vivas e deixa o das excluídas como estava (excluído é morto; o trigger legado fica desligado só durante o `UPDATE`). A coerência (ao menos um item, sem provedor repetido na mesma cadeia, modelo do provedor pelo prefixo do nome, esforço válido) é da **service** e do `shared` (`validarCadeiasDaConfiguracaoIa`), não do banco: o provedor e o esforço dentro dos itens são texto validado, sem tabela de referência.
 
 ```sql
 CREATE TABLE configuracao_ia (
@@ -628,10 +628,9 @@ CREATE TABLE configuracao_ia (
   deleted_date                 TIMESTAMPTZ,
 
   versao                       INTEGER      NOT NULL,
-  tipo_provedor_ia_id          INTEGER      NOT NULL CONSTRAINT fk_configuracao_ia_tipo_provedor_ia REFERENCES tipo_provedor_ia(id),
-  modelos_provedor             JSONB        NOT NULL,   -- migration 0049: provedor → { modeloRapido, modeloPadrao, modeloAnalitico }, de todo provedor já configurado (da cadeia ou não); a nova versão copia o mapa inteiro
-  fallbacks                    JSONB        NOT NULL,   -- migration 0049: array com os códigos dos provedores de contingência, na ordem em que são tentados (até 2; [] = sem fallback)
-  esforco_analitico            VARCHAR(20)  NOT NULL,   -- BAIXO/MEDIO/ALTO (EsforcoIaEnum do shared; sem tabela nem CHECK)
+  cadeia_rapido                JSONB        NOT NULL,   -- migration 0079: array de { provedor, modelo, esforco } do nível RAPIDO, na ordem de tentativa (provedor = TipoProvedorIaEnum, esforco = EsforcoIaEnum BAIXO/MEDIO/ALTO; sem tabela nem CHECK nos itens)
+  cadeia_padrao                JSONB        NOT NULL,   -- migration 0079: o mesmo para o nível PADRAO
+  cadeia_analitico             JSONB        NOT NULL,   -- migration 0079: o mesmo para o nível ANALITICO
   checkin_minimo_minutos       INTEGER      NOT NULL,
   checkin_maximo_minutos       INTEGER      NOT NULL,
   duracao_recomendada_minutos  INTEGER      NOT NULL,
@@ -646,8 +645,9 @@ CREATE TABLE configuracao_ia (
   usuario_id                   INTEGER      NOT NULL CONSTRAINT fk_configuracao_ia_usuario REFERENCES usuario(id),  -- quem salvou
 
   CONSTRAINT chk_configuracao_ia_intervalo_checkin CHECK (checkin_minimo_minutos < checkin_maximo_minutos),
-  CONSTRAINT chk_configuracao_ia_modelos_provedor CHECK (jsonb_typeof(modelos_provedor) = 'object'),
-  CONSTRAINT chk_configuracao_ia_fallbacks CHECK (jsonb_typeof(fallbacks) = 'array'),
+  CONSTRAINT chk_configuracao_ia_cadeia_rapido CHECK (jsonb_typeof(cadeia_rapido) = 'array' AND jsonb_array_length(cadeia_rapido) >= 1),
+  CONSTRAINT chk_configuracao_ia_cadeia_padrao CHECK (jsonb_typeof(cadeia_padrao) = 'array' AND jsonb_array_length(cadeia_padrao) >= 1),
+  CONSTRAINT chk_configuracao_ia_cadeia_analitico CHECK (jsonb_typeof(cadeia_analitico) = 'array' AND jsonb_array_length(cadeia_analitico) >= 1),
   CONSTRAINT chk_configuracao_ia_niveis_proposta CHECK (niveis_proposta IS NULL OR jsonb_typeof(niveis_proposta) = 'object')
 );
 
@@ -862,7 +862,7 @@ dois usuários). Colunas de `BaseEntity` mais: `leitor_usuario_id`, `conversa_id
 
 #### `chat_mensagem`
 Uma linha por mensagem do chat, gravada uma vez e nunca reescrita (sem exclusão nem alteração pela aplicação). Colunas de `BaseEntity` mais:
-`mensagem_id` (UUID, único), `conversa_id` (`<usuarioId>-<yyyy-mm-dd>`), `usuario_id`, `contexto` (`CHAT`/`CHECKIN`), `autor` (`USUARIO`/`IA`/`SISTEMA`), `assunto` (`SISTEMA`/`CODIGO`, anulável: mensagem antiga, do sistema ou do check-in fica sem marca e é lida como `SISTEMA`; migration `0045`), `texto`, `nivel`, `modelo`, `tokens_entrada`, `tokens_saida`, `tokens_cache`, `proposta_id` (a primeira proposta do turno), `propostas_ids` (`INTEGER[]` anulável com todas, na ordem; migration `0054`, task 225: a linha antiga sem ela é lida como `[proposta_id]`), `execucao_id`, `atividade_id`, `demanda_id` (referências opcionais, sem FK) e `conteudo_bruto` (JSONB). `created_date` é a data da mensagem. Índices: (`usuario_id`, `conversa_id`, `created_date`) e GIN em `fn_chat_texto_busca(texto)`, que é `to_tsvector('portuguese', unaccent(texto))` (busca sem acento; exige a extensão `unaccent`). `fn_chat_texto_consulta(texto)` normaliza o texto digitado do mesmo jeito (`plainto_tsquery`). As duas fixam `search_path = public, extensions, pg_catalog`: no Supabase as extensões vivem no schema `extensions`, que a conexão da aplicação não enxerga por padrão, e o SQL da aplicação nunca chama `unaccent` diretamente.
+`mensagem_id` (UUID, único), `conversa_id` (`<usuarioId>-<yyyy-mm-dd>`), `usuario_id`, `contexto` (`CHAT`/`CHECKIN`), `autor` (`USUARIO`/`IA`/`SISTEMA`), `assunto` (`SISTEMA`/`CODIGO`, anulável: mensagem antiga, do sistema ou do check-in fica sem marca e é lida como `SISTEMA`; migration `0045`), `texto`, `nivel`, `modelo`, `modelo_planejado` (anulável, `VARCHAR(100)`; migration `0080`, spec 261: o modelo do item principal da cadeia do nível na chamada que gerou a resposta, a mesma de `modelo`; difere de `modelo` só quando um item de contingência respondeu, e a tela então mostra "Fallback utilizado"; a mensagem antiga e a que não é da IA ficam nulas, e no Elasticsearch o campo é `modelo_planejado`, `keyword`), `tokens_entrada`, `tokens_saida`, `tokens_cache`, `proposta_id` (a primeira proposta do turno), `propostas_ids` (`INTEGER[]` anulável com todas, na ordem; migration `0054`, task 225: a linha antiga sem ela é lida como `[proposta_id]`), `execucao_id`, `atividade_id`, `demanda_id` (referências opcionais, sem FK) e `conteudo_bruto` (JSONB). `created_date` é a data da mensagem. Índices: (`usuario_id`, `conversa_id`, `created_date`) e GIN em `fn_chat_texto_busca(texto)`, que é `to_tsvector('portuguese', unaccent(texto))` (busca sem acento; exige a extensão `unaccent`). `fn_chat_texto_consulta(texto)` normaliza o texto digitado do mesmo jeito (`plainto_tsquery`). As duas fixam `search_path = public, extensions, pg_catalog`: no Supabase as extensões vivem no schema `extensions`, que a conexão da aplicação não enxerga por padrão, e o SQL da aplicação nunca chama `unaccent` diretamente.
 
 #### `mensagem_direta` (task 207)
 Uma linha por mensagem entre colaboradores, com os mesmos campos e nomes do documento do índice `mensagem-direta`; gravada uma vez e nunca reescrita. Colunas de `BaseEntity` mais:

@@ -1,19 +1,18 @@
 import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import {
+    ConfiguracaoIaCadeiaItemDto,
     ConfiguracaoIaCriarDto,
-    ConfiguracaoIaModelosDto,
-    ConfiguracaoIaModelosPorProvedorDto,
     ConfiguracaoIaResumoDto,
     EsforcoIaEnum,
     EstadoIaEnum,
-    MAXIMO_FALLBACKS_IA,
     ModoContextoChatEnum,
+    NivelIaEnum,
     PropostaIaNivelEnum,
     TipoProvedorIaEnum,
-    cadeiaDeProvedoresIa,
-    modeloPertenceAoProvedor,
+    cadeiaDoNivelIa,
     normalizarNiveisDaProposta,
-    validarProvedoresDaConfiguracaoIa,
+    validarCadeiaDoNivelIa,
+    validarCadeiasDaConfiguracaoIa,
 } from '@project20/shared';
 
 export interface OpcaoDoSelect<T> {
@@ -53,7 +52,7 @@ export const rotuloDoModoContexto = (modo: ModoContextoChatEnum): string =>
 export const SUGESTOES_MODELOS: Record<TipoProvedorIaEnum, readonly string[]> = {
     [TipoProvedorIaEnum.ANTHROPIC]: ['claude-haiku-5-5', 'claude-sonnet-5-5', 'claude-opus-5-5', 'claude-fable-5-1'],
     [TipoProvedorIaEnum.GOOGLE]: ['gemini-2.5-flash', 'gemini-2.5-pro'],
-    [TipoProvedorIaEnum.OPENAI]: ['gpt-5-mini', 'gpt-5', 'o3'],
+    [TipoProvedorIaEnum.OPENAI]: ['gpt-5-mini', 'gpt-5', 'gpt-6.1-sol', 'o3'],
 };
 
 export const ROTULO_ESTADO_IA: Record<EstadoIaEnum, string> = {
@@ -74,19 +73,32 @@ export const rotuloDoEsforco = (esforco: EsforcoIaEnum): string =>
 export const rotuloDoProvedor = (provedor: TipoProvedorIaEnum): string =>
     OPCOES_PROVEDOR.find((opcao) => opcao.valor === provedor)?.rotulo ?? provedor;
 
-/** Os modelos de cada provedor no formulário: o provedor fora da cadeia continua com o que foi digitado (ou vazio). */
-export type ModelosPorProvedorDoFormulario = Record<TipoProvedorIaEnum, ConfiguracaoIaModelosDto>;
+/** O aviso do item cujo provedor não tem chave de API no ambiente. Não impede salvar: em execução o item é pulado. */
+export const AVISO_SEM_CHAVE = 'Chave de Provedor não configurada';
 
-const MODELOS_VAZIOS: ConfiguracaoIaModelosDto = { modeloRapido: '', modeloPadrao: '', modeloAnalitico: '' };
+/** O campo do formulário (e do DTO) que guarda a cadeia de cada nível. */
+export type CampoDaCadeia = 'cadeiaRapido' | 'cadeiaPadrao' | 'cadeiaAnalitico';
+
+export interface NivelDaTela {
+    nivel: NivelIaEnum;
+    campo: CampoDaCadeia;
+    titulo: string;
+    /** Para que serve o nível, mostrado sob o título. */
+    uso: string;
+}
+
+/** Os três níveis, na ordem em que a tela os mostra. */
+export const NIVEIS_DA_TELA: readonly NivelDaTela[] = [
+    { nivel: NivelIaEnum.RAPIDO, campo: 'cadeiaRapido', titulo: 'Rápido', uso: 'Conversa, listar, iniciar e pausar.' },
+    { nivel: NivelIaEnum.PADRAO, campo: 'cadeiaPadrao', titulo: 'Padrão', uso: 'Descrições, rigor, pad e prioridade.' },
+    { nivel: NivelIaEnum.ANALITICO, campo: 'cadeiaAnalitico', titulo: 'Analítico', uso: 'Analisar demanda, quebrar em atividades, sugerir conexões.' },
+];
 
 /** Valor do formulário (campos numéricos podem estar vazios enquanto se digita). */
 export interface ValorFormularioConfiguracaoIa {
-    provedor: TipoProvedorIaEnum;
-    /** Os dois campos de contingência, na ordem; `null` é "Nenhum". */
-    fallbackPrimeiro: TipoProvedorIaEnum | null;
-    fallbackSegundo: TipoProvedorIaEnum | null;
-    modelos: ModelosPorProvedorDoFormulario;
-    esforcoAnalitico: EsforcoIaEnum;
+    cadeiaRapido: ConfiguracaoIaCadeiaItemDto[];
+    cadeiaPadrao: ConfiguracaoIaCadeiaItemDto[];
+    cadeiaAnalitico: ConfiguracaoIaCadeiaItemDto[];
     checkinMinimoMinutos: number | null;
     checkinMaximoMinutos: number | null;
     duracaoRecomendadaMinutos: number | null;
@@ -100,49 +112,27 @@ export interface ValorFormularioConfiguracaoIa {
     niveisProposta: Record<string, PropostaIaNivelEnum>;
 }
 
-/** Os fallbacks do formulário em ordem, sem os campos em "Nenhum" (um fallback só no segundo campo sobe para o primeiro). */
-export function fallbacksDoFormulario(valor: Pick<ValorFormularioConfiguracaoIa, 'fallbackPrimeiro' | 'fallbackSegundo'>): TipoProvedorIaEnum[] {
-    return [valor.fallbackPrimeiro, valor.fallbackSegundo].filter((provedor): provedor is TipoProvedorIaEnum => provedor !== null);
+/** A cadeia sem espaço nas pontas dos nomes de modelo (é assim que a service a grava). */
+function aparar(cadeia: ConfiguracaoIaCadeiaItemDto[]): ConfiguracaoIaCadeiaItemDto[] {
+    return cadeia.map((item) => ({ provedor: item.provedor, modelo: item.modelo.trim(), esforco: item.esforco }));
 }
 
-/** Os modelos que vão na gravação: os de todo provedor da cadeia e os guardados de qualquer outro cujo trio esteja completo e coerente, aparados. */
-function modelosParaGravar(valor: ValorFormularioConfiguracaoIa): ConfiguracaoIaModelosPorProvedorDto {
-    const cadeia = cadeiaDeProvedoresIa({ provedor: valor.provedor, fallbacks: fallbacksDoFormulario(valor) });
-    const mapa: ConfiguracaoIaModelosPorProvedorDto = {};
-    for (const provedor of Object.values(TipoProvedorIaEnum)) {
-        const modelos = valor.modelos[provedor];
-        const aparados = {
-            modeloRapido: modelos.modeloRapido.trim(),
-            modeloPadrao: modelos.modeloPadrao.trim(),
-            modeloAnalitico: modelos.modeloAnalitico.trim(),
-        };
-        // Fora da cadeia o trio só fica guardado se estiver completo e for do provedor: um rascunho incoerente que a tela não mostra não pode bloquear o salvar.
-        const coerente = Object.values(aparados).every((modelo) => modelo !== '' && modeloPertenceAoProvedor(provedor, modelo));
-        if (cadeia.includes(provedor) || coerente) mapa[provedor] = aparados;
+/** Os erros de cada cadeia, pela mesma regra do `shared` (a da service), para marcar o nível com problema. Só entram níveis com erro. */
+export function errosPorNivel(valor: ValorFormularioConfiguracaoIa): Partial<Record<NivelIaEnum, string[]>> {
+    const porNivel: Partial<Record<NivelIaEnum, string[]>> = {};
+    for (const { nivel } of NIVEIS_DA_TELA) {
+        const erros = validarCadeiaDoNivelIa(nivel, aparar(cadeiaDoNivelIa(valor, nivel)));
+        if (erros.length > 0) porNivel[nivel] = erros;
     }
-    return mapa;
+    return porNivel;
 }
 
-/**
- * Os erros de modelo de cada provedor da cadeia, pela mesma regra do `shared` aplicada a um provedor por vez (a cadeia em si não repete provedor na tela).
- * Só entram provedores com erro: a tela marca o cartão deles e abre o primeiro.
- */
-export function errosPorProvedor(valor: ValorFormularioConfiguracaoIa): Partial<Record<TipoProvedorIaEnum, string[]>> {
-    const modelos = modelosParaGravar(valor);
-    const porProvedor: Partial<Record<TipoProvedorIaEnum, string[]>> = {};
-    for (const provedor of cadeiaDoFormulario(valor)) {
-        const erros = validarProvedoresDaConfiguracaoIa({ provedor, fallbacks: [], modelosProvedor: { [provedor]: modelos[provedor] } });
-        if (erros.length > 0) porProvedor[provedor] = erros;
-    }
-    return porProvedor;
-}
-
-/** Os erros de provedor e modelo da regra do `shared` (a mesma da service), para mostrar antes de salvar. */
-export function errosDeProvedores(valor: ValorFormularioConfiguracaoIa): string[] {
-    return validarProvedoresDaConfiguracaoIa({
-        provedor: valor.provedor,
-        fallbacks: fallbacksDoFormulario(valor),
-        modelosProvedor: modelosParaGravar(valor),
+/** Os erros de cadeia da regra do `shared` (a mesma da service), para mostrar antes de salvar. */
+export function errosDeCadeias(valor: ValorFormularioConfiguracaoIa): string[] {
+    return validarCadeiasDaConfiguracaoIa({
+        cadeiaRapido: aparar(valor.cadeiaRapido),
+        cadeiaPadrao: aparar(valor.cadeiaPadrao),
+        cadeiaAnalitico: aparar(valor.cadeiaAnalitico),
     });
 }
 
@@ -155,14 +145,10 @@ export function intervaloDoCheckinValido(controle: AbstractControl): ValidationE
 }
 
 export function valoresDaVersao(versao: ConfiguracaoIaResumoDto): ValorFormularioConfiguracaoIa {
-    const modelos = {} as ModelosPorProvedorDoFormulario;
-    for (const provedor of Object.values(TipoProvedorIaEnum)) modelos[provedor] = { ...MODELOS_VAZIOS, ...versao.modelosProvedor[provedor] };
     return {
-        provedor: versao.provedor,
-        fallbackPrimeiro: versao.fallbacks[0] ?? null,
-        fallbackSegundo: versao.fallbacks[1] ?? null,
-        modelos,
-        esforcoAnalitico: versao.esforcoAnalitico,
+        cadeiaRapido: versao.cadeiaRapido.map((item) => ({ ...item })),
+        cadeiaPadrao: versao.cadeiaPadrao.map((item) => ({ ...item })),
+        cadeiaAnalitico: versao.cadeiaAnalitico.map((item) => ({ ...item })),
         checkinMinimoMinutos: versao.checkinMinimoMinutos,
         checkinMaximoMinutos: versao.checkinMaximoMinutos,
         duracaoRecomendadaMinutos: versao.duracaoRecomendadaMinutos,
@@ -183,10 +169,9 @@ export function formularioIgualAVersao(valor: ValorFormularioConfiguracaoIa, ver
 
 export function paraDtoDeCriacao(valor: ValorFormularioConfiguracaoIa): ConfiguracaoIaCriarDto {
     return {
-        provedor: valor.provedor,
-        fallbacks: fallbacksDoFormulario(valor),
-        modelosProvedor: modelosParaGravar(valor),
-        esforcoAnalitico: valor.esforcoAnalitico,
+        cadeiaRapido: aparar(valor.cadeiaRapido),
+        cadeiaPadrao: aparar(valor.cadeiaPadrao),
+        cadeiaAnalitico: aparar(valor.cadeiaAnalitico),
         checkinMinimoMinutos: valor.checkinMinimoMinutos as number,
         checkinMaximoMinutos: valor.checkinMaximoMinutos as number,
         duracaoRecomendadaMinutos: valor.duracaoRecomendadaMinutos as number,
@@ -200,31 +185,57 @@ export function paraDtoDeCriacao(valor: ValorFormularioConfiguracaoIa): Configur
     };
 }
 
-/** Quantos fallbacks a tela oferece (o máximo da regra do `shared`). */
-export const QUANTIDADE_DE_FALLBACKS = MAXIMO_FALLBACKS_IA;
+/** Quantos itens cabem numa cadeia: um por provedor, porque o mesmo provedor não repete na mesma cadeia. */
+export const MAXIMO_DE_ITENS_DA_CADEIA = Object.values(TipoProvedorIaEnum).length;
 
-/** O trio de modelos de um provedor: texto livre de até 100 caracteres; se estão preenchidos, o que falta ou destoa do provedor vem da regra do shared. */
-function grupoDeModelos(formBuilder: FormBuilder) {
+/** O primeiro provedor ainda fora da cadeia (na ordem da tela), ou `null` quando todos já estão nela. */
+export function proximoProvedorLivre(cadeia: readonly ConfiguracaoIaCadeiaItemDto[]): TipoProvedorIaEnum | null {
+    return OPCOES_PROVEDOR.map((opcao) => opcao.valor).find((provedor) => !cadeia.some((item) => item.provedor === provedor)) ?? null;
+}
+
+/** O item novo de uma cadeia: o próximo provedor livre, com o primeiro modelo sugerido dele e esforço médio. `null` se a cadeia já está cheia. */
+export function novoItemDaCadeia(cadeia: readonly ConfiguracaoIaCadeiaItemDto[]): ConfiguracaoIaCadeiaItemDto | null {
+    const provedor = proximoProvedorLivre(cadeia);
+    return provedor === null ? null : { provedor, modelo: SUGESTOES_MODELOS[provedor][0] ?? '', esforco: EsforcoIaEnum.MEDIO };
+}
+
+/** A cadeia com o item da posição trocado de lugar com o vizinho (`-1` sobe, `1` desce); fora do limite, a cadeia como veio. */
+export function moverItemDaCadeia(cadeia: readonly ConfiguracaoIaCadeiaItemDto[], indice: number, deslocamento: -1 | 1): ConfiguracaoIaCadeiaItemDto[] {
+    const destino = indice + deslocamento;
+    if (indice < 0 || indice >= cadeia.length || destino < 0 || destino >= cadeia.length) return [...cadeia];
+    const nova = [...cadeia];
+    [nova[indice], nova[destino]] = [nova[destino], nova[indice]];
+    return nova;
+}
+
+/** Nenhum item da cadeia tem provedor com chave no ambiente. `false` quando não se sabe quais têm chave (`comChave` nulo). */
+export function cadeiaSemItemUtilizavel(cadeia: readonly ConfiguracaoIaCadeiaItemDto[], comChave: readonly TipoProvedorIaEnum[] | null): boolean {
+    return comChave !== null && !cadeia.some((item) => comChave.includes(item.provedor));
+}
+
+/** O item como uma linha de texto ("Anthropic · claude-haiku-5-5 · Médio"), para o resumo e o histórico. */
+export const resumoDoItem = (item: ConfiguracaoIaCadeiaItemDto): string => `${rotuloDoProvedor(item.provedor)} · ${item.modelo} · ${rotuloDoEsforco(item.esforco)}`;
+
+/** O grupo de um item da cadeia no formulário: provedor, modelo (texto livre de até 100 caracteres) e esforço. */
+export function grupoDoItemDaCadeia(formBuilder: FormBuilder, item: ConfiguracaoIaCadeiaItemDto) {
     return formBuilder.nonNullable.group({
-        modeloRapido: ['', Validators.maxLength(100)],
-        modeloPadrao: ['', Validators.maxLength(100)],
-        modeloAnalitico: ['', Validators.maxLength(100)],
+        provedor: [item.provedor, Validators.required],
+        modelo: [item.modelo, Validators.maxLength(100)],
+        esforco: [item.esforco, Validators.required],
     });
 }
 
-/** O formulário da configuração da IA (compartilhado pela página e pelas abas dela). Um trio por provedor, sempre presente: o de quem está fora da cadeia fica guardado. */
+export type GrupoDoItemDaCadeia = ReturnType<typeof grupoDoItemDaCadeia>;
+
+const ITEM_INICIAL = (provedor: TipoProvedorIaEnum, modelo: string): ConfiguracaoIaCadeiaItemDto => ({ provedor, modelo, esforco: EsforcoIaEnum.MEDIO });
+
+/** O formulário da configuração da IA (compartilhado pela página e pelas abas dela). Uma lista de itens por nível, sempre com ao menos um. */
 export function criarFormularioConfiguracaoIa(formBuilder: FormBuilder) {
     return formBuilder.nonNullable.group(
         {
-            provedor: [TipoProvedorIaEnum.ANTHROPIC, Validators.required],
-            fallbackPrimeiro: [null as TipoProvedorIaEnum | null],
-            fallbackSegundo: [null as TipoProvedorIaEnum | null],
-            modelos: formBuilder.nonNullable.group({
-                [TipoProvedorIaEnum.ANTHROPIC]: grupoDeModelos(formBuilder),
-                [TipoProvedorIaEnum.GOOGLE]: grupoDeModelos(formBuilder),
-                [TipoProvedorIaEnum.OPENAI]: grupoDeModelos(formBuilder),
-            }),
-            esforcoAnalitico: [EsforcoIaEnum.MEDIO, Validators.required],
+            cadeiaRapido: formBuilder.nonNullable.array([grupoDoItemDaCadeia(formBuilder, ITEM_INICIAL(TipoProvedorIaEnum.ANTHROPIC, 'claude-haiku-5-5'))]),
+            cadeiaPadrao: formBuilder.nonNullable.array([grupoDoItemDaCadeia(formBuilder, ITEM_INICIAL(TipoProvedorIaEnum.ANTHROPIC, 'claude-sonnet-5-5'))]),
+            cadeiaAnalitico: formBuilder.nonNullable.array([grupoDoItemDaCadeia(formBuilder, ITEM_INICIAL(TipoProvedorIaEnum.ANTHROPIC, 'claude-opus-5-5'))]),
             checkinMinimoMinutos: [null as number | null, [Validators.required, Validators.min(1)]],
             checkinMaximoMinutos: [null as number | null, [Validators.required, Validators.min(1)]],
             duracaoRecomendadaMinutos: [null as number | null, [Validators.required, Validators.min(1)]],
@@ -246,18 +257,15 @@ export function criarFormularioConfiguracaoIa(formBuilder: FormBuilder) {
 
 export type FormularioConfiguracaoIa = ReturnType<typeof criarFormularioConfiguracaoIa>;
 
-/** A cadeia (padrão e fallbacks) do formulário, na ordem em que os provedores são tentados. */
-export function cadeiaDoFormulario(valor: Pick<ValorFormularioConfiguracaoIa, 'provedor' | 'fallbackPrimeiro' | 'fallbackSegundo'>): TipoProvedorIaEnum[] {
-    return cadeiaDeProvedoresIa({ provedor: valor.provedor, fallbacks: fallbacksDoFormulario(valor) });
-}
-
-/** A cadeia como os três campos do formulário (o que não existe vira `null`: a cadeia é contígua). */
-export function camposDaCadeia(cadeia: TipoProvedorIaEnum[]): Pick<ValorFormularioConfiguracaoIa, 'provedor' | 'fallbackPrimeiro' | 'fallbackSegundo'> {
-    return { provedor: cadeia[0], fallbackPrimeiro: cadeia[1] ?? null, fallbackSegundo: cadeia[2] ?? null };
-}
-
-/** Tira um fallback da cadeia (o seguinte sobe um lugar); o padrão (posição 0) nunca sai. */
-export function removerProvedorDoCartao(cadeia: TipoProvedorIaEnum[], posicao: number): TipoProvedorIaEnum[] {
-    if (posicao <= 0 || posicao >= cadeia.length) return cadeia;
-    return cadeia.filter((_, indice) => indice !== posicao);
+/**
+ * Preenche o formulário com os valores de uma versão. O `reset` do Angular não muda o tamanho de uma lista, então cada cadeia é refeita com
+ * os itens da versão antes de o resto ser preenchido.
+ */
+export function preencherFormulario(formulario: FormularioConfiguracaoIa, formBuilder: FormBuilder, valores: ValorFormularioConfiguracaoIa): void {
+    for (const { campo } of NIVEIS_DA_TELA) {
+        const lista = formulario.controls[campo];
+        lista.clear({ emitEvent: false });
+        for (const item of valores[campo]) lista.push(grupoDoItemDaCadeia(formBuilder, item), { emitEvent: false });
+    }
+    formulario.reset(valores);
 }

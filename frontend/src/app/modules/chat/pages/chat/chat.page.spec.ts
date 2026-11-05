@@ -25,7 +25,7 @@ const CONVERSA_DE_HOJE = `1-${HOJE}`;
 function mensagem(autor: AutorChatEnum, texto: string, sobrescrita: Record<string, unknown> = {}) {
     return {
         id: `m-${texto}`, conversaId: CONVERSA_DE_HOJE, usuarioId: 1, contexto: ContextoChatEnum.CHAT, autor, texto,
-        nivel: autor === AutorChatEnum.IA ? NivelIaEnum.RAPIDO : null, modelo: null, tokensEntrada: null, tokensSaida: null,
+        nivel: autor === AutorChatEnum.IA ? NivelIaEnum.RAPIDO : null, modelo: null, modeloPlanejado: null, tokensEntrada: null, tokensSaida: null,
         assunto: null, tokensCache: null, propostaIds: [], execucaoId: null, atividadeId: null, demandaId: null,
         createdDate: '2026-10-19T12:00:00.000Z', ...sobrescrita,
     };
@@ -168,6 +168,26 @@ describe('ChatPage — abrir a conversa de hoje', () => {
         expect(rodapeProprio.firstElementChild?.getAttribute('aria-label')).toBe('Copiar a mensagem');
         expect(rodapeProprio.lastElementChild?.classList.contains('chat__hora')).toBe(true);
         expect(montado.elemento.querySelector('[aria-label="Copiar a resposta"]')).not.toBeNull();
+    });
+
+    it('"Fallback utilizado" aparece no rodapé só quando o modelo que respondeu difere do planejado, com os dois no tooltip (spec 261)', async () => {
+        const montado = await montarChat({
+            mensagens: [
+                DA_IA('Respondeu o fallback.', { modelo: 'gpt-5-mini', modeloPlanejado: 'claude-haiku-5-5' }),
+                DA_IA('Respondeu o principal.', { modelo: 'claude-haiku-5-5-20261015', modeloPlanejado: 'claude-haiku-5-5-20261015' }),
+                DA_IA('Mensagem antiga, sem planejado.', { modelo: 'claude-haiku-5-5', modeloPlanejado: null }),
+            ],
+        });
+        const alertas = Array.from(montado.elemento.querySelectorAll<HTMLElement>('[aria-label="Fallback utilizado"]'));
+        expect(alertas, 'só a primeira mensagem acusa fallback').toHaveLength(1);
+        expect(alertas[0].closest('.chat__rodape-mensagem')).not.toBeNull();
+        expect(alertas[0].textContent).toContain('Fallback utilizado');
+        expect(alertas[0].closest('.chat__linha')?.textContent).toContain('Respondeu o fallback.');
+
+        alertas[0].dispatchEvent(new MouseEvent('mouseenter'));
+        await montado.atualizar();
+        expect(document.body.querySelector('.p-tooltip')?.textContent).toContain('Respondeu gpt-5-mini no lugar de claude-haiku-5-5');
+        alertas[0].dispatchEvent(new MouseEvent('mouseleave'));
     });
 
     it('conversa vazia: avisa que não há mensagem hoje e oferece as sugestões iniciais do desenvolvedor', async () => {

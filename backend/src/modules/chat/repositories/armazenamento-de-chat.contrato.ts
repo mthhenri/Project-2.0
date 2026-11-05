@@ -44,7 +44,7 @@ export function registrarContratoDeArmazenamento(
             const primeira = await armazenamento.gravar(mensagem('Bom dia, preciso da descrição do cadastro'));
             await espera(15);
             const segunda = await armazenamento.gravar(
-                mensagem('Claro, aqui está', { autor: AutorChatEnum.IA, assunto: AssuntoChatEnum.CODIGO, nivel: NivelIaEnum.RAPIDO, modelo: 'modelo-x', tokensEntrada: 10, propostaIds: [7, 8], conteudoBruto: [{ type: 'text', text: 'Claro' }] }),
+                mensagem('Claro, aqui está', { autor: AutorChatEnum.IA, assunto: AssuntoChatEnum.CODIGO, nivel: NivelIaEnum.RAPIDO, modelo: 'modelo-x', modeloPlanejado: 'modelo-planejado-x', tokensEntrada: 10, propostaIds: [7, 8], conteudoBruto: [{ type: 'text', text: 'Claro' }] }),
             );
             assert.ok(primeira.id && segunda.id && primeira.id !== segunda.id);
             const lida = await armazenamento.listarConversa({ conversaId, usuarioId: dono });
@@ -55,6 +55,8 @@ export function registrarContratoDeArmazenamento(
             assert.deepEqual(lida[1].propostaIds, [7, 8], 'todas as propostas do turno voltam, na ordem');
             assert.deepEqual(lida[0].propostaIds, [], 'sem proposta, a lista vem vazia');
             assert.equal(lida[1].assunto, AssuntoChatEnum.CODIGO, 'o assunto gravado volta igual');
+            assert.equal(lida[1].modeloPlanejado, 'modelo-planejado-x', 'o modelo planejado gravado volta igual (spec 261)');
+            assert.equal(lida[0].modeloPlanejado, null, 'mensagem sem modelo planejado (antiga ou do usuário) volta null');
             assert.equal(lida[0].assunto, null, 'sem assunto, volta null');
             assert.deepEqual(lida[1].conteudoBruto, [{ type: 'text', text: 'Claro' }]);
             assert.ok(lida[0].createdDate instanceof Date && lida[0].createdDate <= lida[1].createdDate);

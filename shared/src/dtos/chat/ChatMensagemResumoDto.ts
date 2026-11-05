@@ -18,6 +18,12 @@ export interface ChatMensagemResumoDto {
     /** Só nas mensagens da IA. */
     nivel: NivelIaEnum | null;
     modelo: string | null;
+    /**
+     * O modelo do item principal da cadeia do nível na chamada que gerou a resposta (spec 261). Quando o principal respondeu é igual a
+     * `modelo`; quando um item de contingência respondeu (ou o principal foi pulado por falta de chave) é outro, e a tela mostra o alerta
+     * "Fallback utilizado". `null` na mensagem antiga e na que não é da IA: sem alerta.
+     */
+    modeloPlanejado: string | null;
     tokensEntrada: number | null;
     tokensSaida: number | null;
     tokensCache: number | null;

@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { describe, it, expect } from 'vitest';
 import {
+    ConfiguracaoIaCadeiaItemDto,
     ConfiguracaoIaResumoDto,
     EsforcoIaEnum,
     EstadoIaEnum,
@@ -26,14 +27,17 @@ import { ConfiguracaoIaPage } from './configuracao-ia.page';
 
 type Montado = ComponenteMontado<ConfiguracaoIaPage>;
 
-const ANTHROPIC = { modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'claude-opus-5-5' };
-const GEMINI = { modeloRapido: 'gemini-2.5-flash', modeloPadrao: 'gemini-2.5-pro', modeloAnalitico: 'gemini-2.5-pro' };
+const A = TipoProvedorIaEnum.ANTHROPIC;
+const G = TipoProvedorIaEnum.GOOGLE;
+const O = TipoProvedorIaEnum.OPENAI;
+
+const item = (provedor: TipoProvedorIaEnum, modelo: string, esforco: EsforcoIaEnum = EsforcoIaEnum.MEDIO): ConfiguracaoIaCadeiaItemDto => ({ provedor, modelo, esforco });
 
 function versao(numero: number, sobrescrita: Partial<ConfiguracaoIaResumoDto> = {}): ConfiguracaoIaResumoDto {
     return {
-        id: numero, versao: numero, provedor: TipoProvedorIaEnum.ANTHROPIC,
-        fallbacks: [], modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: ANTHROPIC },
-        esforcoAnalitico: EsforcoIaEnum.MEDIO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
+        id: numero, versao: numero,
+        cadeiaRapido: [item(A, 'claude-haiku-5-5')], cadeiaPadrao: [item(A, 'claude-sonnet-5-5')], cadeiaAnalitico: [item(A, 'claude-opus-5-5')],
+        checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
         checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true,
         duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false, niveisProposta: {},
         usuarioId: 1, usuarioNome: 'Ana Admin', createdDate: new Date('2026-10-01T12:00:00Z'),
@@ -42,7 +46,7 @@ function versao(numero: number, sobrescrita: Partial<ConfiguracaoIaResumoDto> = 
 }
 
 const ATIVA = versao(3);
-const HISTORICO = [versao(3), versao(2, { modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { ...ANTHROPIC, modeloRapido: 'claude-haiku-4' } }, iaDesligada: true, checkinMaximoMinutos: 50 }), versao(1)];
+const HISTORICO = [versao(3), versao(2, { cadeiaRapido: [item(A, 'claude-haiku-4')], iaDesligada: true, checkinMaximoMinutos: 50 }), versao(1)];
 
 function responderCarga(
     montado: Montado,
@@ -64,6 +68,8 @@ async function abrir(opcoes: Parameters<typeof responderCarga>[1] = {}): Promise
 
 const textoDaTela = () => document.body.textContent ?? '';
 const botaoPorRotulo = (rotulo: string) => document.body.querySelector(`button[aria-label="${rotulo}"]`) as HTMLButtonElement;
+/** O campo de modelo do item da cadeia de um nível (`RAPIDO`, `PADRAO`, `ANALITICO`). */
+const campoDoModelo = (nivel: string, indice = 0) => document.body.querySelector(`#ia-modelo-${nivel}-${indice}`) as HTMLInputElement | null;
 const abaDeProvedor = (montado: Montado) => montado.fixture.debugElement.query(By.directive(ProvedorAbaComponent)).componentInstance as ProvedorAbaComponent;
 const botao = (rotulo: string) =>
     Array.from(document.body.querySelectorAll('button')).find((candidato) => candidato.textContent?.includes(rotulo)) as HTMLButtonElement;
@@ -109,11 +115,13 @@ describe('ConfiguracaoIaPage — carregar', () => {
     it('o formulário nasce com os valores da versão ativa e sem nada a salvar', async () => {
         const montado = await abrir();
         expect(montado.componente.formulario.getRawValue()).toMatchObject({
-            provedor: TipoProvedorIaEnum.ANTHROPIC, fallbackPrimeiro: null, fallbackSegundo: null, checkinMinimoMinutos: 20, iaDesligada: false,
+            cadeiaRapido: [item(A, 'claude-haiku-5-5')], cadeiaPadrao: [item(A, 'claude-sonnet-5-5')], cadeiaAnalitico: [item(A, 'claude-opus-5-5')],
+            checkinMinimoMinutos: 20, iaDesligada: false,
         });
-        expect(montado.componente.formulario.getRawValue().modelos.ANTHROPIC).toEqual(ANTHROPIC);
-        expect((document.body.querySelector('#ia-modelo-rapido-ANTHROPIC') as HTMLInputElement).value).toBe('claude-haiku-5-5');
-        expect(document.body.querySelector('#ia-modelo-rapido-GOOGLE'), 'provedor fora da cadeia não mostra o trio').toBeNull();
+        expect(campoDoModelo('RAPIDO')?.value).toBe('claude-haiku-5-5');
+        expect(campoDoModelo('PADRAO')?.value).toBe('claude-sonnet-5-5');
+        expect(campoDoModelo('ANALITICO')?.value).toBe('claude-opus-5-5');
+        expect(campoDoModelo('RAPIDO', 1), 'cadeia de um item só não mostra contingência').toBeNull();
         expect(textoDaTela()).toContain('Nada a salvar: o formulário é igual à versão 3.');
         expect(botao('Salvar nova versão').disabled).toBe(true);
         expect(botao('Descartar alterações').disabled).toBe(true);
@@ -139,7 +147,7 @@ describe('ConfiguracaoIaPage — carregar', () => {
 describe('ConfiguracaoIaPage — editar e salvar', () => {
     it('digitar no campo de modelo habilita salvar e avisa que cria a versão seguinte (a ativa continua no histórico)', async () => {
         const montado = await abrir();
-        const campo = document.body.querySelector('#ia-modelo-rapido-ANTHROPIC') as HTMLInputElement;
+        const campo = campoDoModelo('RAPIDO')!;
         campo.value = 'claude-haiku-5-6';
         campo.dispatchEvent(new Event('input'));
         await montado.atualizar();
@@ -160,79 +168,100 @@ describe('ConfiguracaoIaPage — editar e salvar', () => {
         expect(textoDaTela()).toContain('Nada a salvar');
     });
 
-    it('modelo em branco mostra o erro ao tentar salvar e não envia nada', async () => {
+    it('modelo em branco mostra o erro do nível ao tentar salvar e não envia nada', async () => {
         const montado = await abrir();
-        montado.componente.formulario.controls.modelos.controls.ANTHROPIC.patchValue({ modeloPadrao: '   ', modeloAnalitico: '' });
+        montado.componente.formulario.controls.cadeiaPadrao.at(0).patchValue({ modelo: '   ' });
         await montado.atualizar();
         montado.componente.salvar();
         await montado.atualizar();
 
         expect(document.body.querySelectorAll('.provedor-aba__erro').length).toBeGreaterThan(0);
-        expect(textoDaTela()).toContain('Anthropic está na cadeia, mas o modelo padrão não foi informado');
-        expect(textoDaTela()).toContain('Anthropic está na cadeia, mas o modelo analítico não foi informado');
+        expect(textoDaTela()).toContain('O modelo do item 1 (Anthropic) da cadeia do nível padrão não foi informado');
         montado.http.expectNone((requisicao) => requisicao.method === 'POST');
     });
 
-    it('modelo de outro provedor no provedor padrão mostra o erro e não envia', async () => {
+    it('modelo de outro provedor mostra o erro e não envia', async () => {
         const montado = await abrir();
-        montado.componente.formulario.controls.modelos.controls.ANTHROPIC.patchValue({ modeloRapido: 'gemini-2.5-flash' });
+        montado.componente.formulario.controls.cadeiaRapido.at(0).patchValue({ modelo: 'gemini-2.5-flash' });
         await montado.atualizar();
         montado.componente.salvar();
         await montado.atualizar();
 
-        expect(textoDaTela()).toContain('O modelo rápido "gemini-2.5-flash" não é de Anthropic');
+        expect(textoDaTela()).toContain('O modelo "gemini-2.5-flash" não é de Anthropic (cadeia do nível rápido)');
         montado.http.expectNone((requisicao) => requisicao.method === 'POST');
     });
 
-    it('escolher um fallback mostra o trio dele; sem os modelos informados o erro aparece ao salvar, e com eles o POST leva a cadeia', async () => {
+    it('adicionar contingência põe o próximo provedor livre no fim da cadeia, e o POST leva as três cadeias', async () => {
         const montado = await abrir();
-        montado.componente.formulario.patchValue({ fallbackPrimeiro: TipoProvedorIaEnum.GOOGLE });
+        (document.body.querySelector('[aria-label="Adicionar contingência ao nível Rápido"]') as HTMLButtonElement).click();
         await montado.atualizar();
-        expect(document.body.querySelector('#ia-modelo-rapido-GOOGLE'), 'os modelos de um cartão só aparecem ao abri-lo').toBeNull();
-        botaoPorRotulo('Ver os modelos do cartão 1º fallback').click();
-        await montado.atualizar();
-        expect(document.body.querySelector('#ia-modelo-rapido-GOOGLE')).not.toBeNull();
-        expect(document.body.querySelector('#ia-modelo-rapido-ANTHROPIC')).toBeNull();
 
-        montado.componente.salvar();
-        await montado.atualizar();
-        expect(textoDaTela()).toContain('Google está na cadeia, mas o modelo rápido não foi informado');
-        montado.http.expectNone((requisicao) => requisicao.method === 'POST');
+        expect(montado.componente.formulario.getRawValue().cadeiaRapido).toEqual([item(A, 'claude-haiku-5-5'), item(G, 'gemini-2.5-flash')]);
+        expect(campoDoModelo('RAPIDO', 1)?.value).toBe('gemini-2.5-flash');
+        expect(textoDaTela()).toContain('Contingência 1');
 
-        montado.componente.formulario.controls.modelos.controls.GOOGLE.patchValue(GEMINI);
-        await montado.atualizar();
         botao('Salvar nova versão').click();
         const requisicao = esperarRequisicao(montado.http, 'POST', '/configuracao-ia');
         expect(requisicao.request.body).toMatchObject({
-            provedor: TipoProvedorIaEnum.ANTHROPIC,
-            fallbacks: [TipoProvedorIaEnum.GOOGLE],
-            modelosProvedor: { ANTHROPIC, GOOGLE: GEMINI },
+            cadeiaRapido: [item(A, 'claude-haiku-5-5'), item(G, 'gemini-2.5-flash')],
+            cadeiaPadrao: [item(A, 'claude-sonnet-5-5')],
+            cadeiaAnalitico: [item(A, 'claude-opus-5-5')],
         });
     });
 
-    it('os provedores já usados em outro cartão ficam desabilitados nas opções de cada cartão', async () => {
-        const montado = await abrir();
-        montado.componente.formulario.patchValue({ fallbackPrimeiro: TipoProvedorIaEnum.GOOGLE });
-        await montado.atualizar();
+    it('os provedores já usados em outro item da mesma cadeia ficam desabilitados nas opções do item', async () => {
+        const ativa = versao(3, { cadeiaRapido: [item(A, 'claude-haiku-5-5'), item(G, 'gemini-2.5-flash')] });
+        const montado = await abrir({ ativa, historico: [ativa] });
 
         const desabilitadas = (opcoes: { valor: unknown; desabilitada?: boolean }[]) => opcoes.filter((opcao) => opcao.desabilitada).map((opcao) => opcao.valor);
         const aba = abaDeProvedor(montado);
-        expect(desabilitadas(aba.opcoesDoCartao(1))).toEqual([TipoProvedorIaEnum.ANTHROPIC]);
-        expect(desabilitadas(aba.opcoesDoCartao(2))).toEqual([TipoProvedorIaEnum.ANTHROPIC, TipoProvedorIaEnum.GOOGLE]);
-        expect(desabilitadas(aba.opcoesDoCartao(0))).toEqual([TipoProvedorIaEnum.GOOGLE]);
+        const rapido = aba.niveis[0];
+        expect(desabilitadas(aba.opcoesDoProvedor(rapido, 0))).toEqual([G]);
+        expect(desabilitadas(aba.opcoesDoProvedor(rapido, 1))).toEqual([A]);
+        expect(desabilitadas(aba.opcoesDoProvedor(aba.niveis[1], 0)), 'o padrão tem a sua cadeia: só o item dele conta').toEqual([]);
     });
 
-    it('trocar o padrão para o Gemini e voltar reaproveita o trio da Anthropic que já estava no formulário', async () => {
+    it('o mesmo provedor pode estar em cadeias de níveis diferentes (híbrido por nível)', async () => {
         const montado = await abrir();
-        montado.componente.formulario.patchValue({ provedor: TipoProvedorIaEnum.GOOGLE });
-        montado.componente.formulario.controls.modelos.controls.GOOGLE.patchValue(GEMINI);
+        montado.componente.formulario.controls.cadeiaPadrao.at(0).patchValue({ provedor: O, modelo: 'gpt-6.1-sol' });
         await montado.atualizar();
-        expect(document.body.querySelector('#ia-modelo-rapido-ANTHROPIC')).toBeNull();
+        expect(montado.componente.errosDeCadeia()).toEqual([]);
 
-        montado.componente.formulario.patchValue({ provedor: TipoProvedorIaEnum.ANTHROPIC });
+        botao('Salvar nova versão').click();
+        const requisicao = esperarRequisicao(montado.http, 'POST', '/configuracao-ia');
+        expect(requisicao.request.body).toMatchObject({
+            cadeiaRapido: [item(A, 'claude-haiku-5-5')],
+            cadeiaPadrao: [item(O, 'gpt-6.1-sol')],
+            cadeiaAnalitico: [item(A, 'claude-opus-5-5')],
+        });
+    });
+
+    it('alterar só o esforço do item do analítico para Alto habilita salvar e o POST muda só esse item', async () => {
+        const montado = await abrir();
+        expect(montado.componente.semAlteracoes()).toBe(true);
+        montado.componente.formulario.controls.cadeiaAnalitico.at(0).patchValue({ esforco: EsforcoIaEnum.ALTO });
         await montado.atualizar();
-        expect((document.body.querySelector('#ia-modelo-rapido-ANTHROPIC') as HTMLInputElement).value).toBe('claude-haiku-5-5');
-        expect(abaDeProvedor(montado).cadeia()).toEqual([TipoProvedorIaEnum.ANTHROPIC]);
+        expect(botao('Salvar nova versão').disabled).toBe(false);
+
+        botao('Salvar nova versão').click();
+        const requisicao = esperarRequisicao(montado.http, 'POST', '/configuracao-ia');
+        expect(requisicao.request.body).toMatchObject({
+            cadeiaRapido: [item(A, 'claude-haiku-5-5')],
+            cadeiaPadrao: [item(A, 'claude-sonnet-5-5')],
+            cadeiaAnalitico: [item(A, 'claude-opus-5-5', EsforcoIaEnum.ALTO)],
+        });
+    });
+
+    it('provedor sem chave não impede salvar: a configuração é gravada mesmo assim', async () => {
+        const montado = await abrir({ provedoresComChave: [A] });
+        montado.componente.formulario.controls.cadeiaRapido.at(0).patchValue({ provedor: G, modelo: 'gemini-2.5-flash' });
+        await montado.atualizar();
+        expect(textoDaTela()).toContain('Chave de Provedor não configurada');
+
+        montado.componente.salvar();
+        await montado.atualizar();
+        const requisicao = esperarRequisicao(montado.http, 'POST', '/configuracao-ia');
+        expect(requisicao.request.body).toMatchObject({ cadeiaRapido: [item(G, 'gemini-2.5-flash')] });
     });
 
     it('check-in com mínimo maior ou igual ao máximo mostra o erro do intervalo e não envia', async () => {
@@ -262,21 +291,21 @@ describe('ConfiguracaoIaPage — editar e salvar', () => {
     it('salvar faz POST em /configuracao-ia com os nomes aparados, avisa o sucesso e recarrega mostrando a versão nova', async () => {
         const montado = await abrir();
         const avisos = avisosDe(montado);
-        montado.componente.formulario.controls.modelos.controls.ANTHROPIC.patchValue({ modeloPadrao: '  claude-sonnet-5-6 ' });
+        montado.componente.formulario.controls.cadeiaPadrao.at(0).patchValue({ modelo: '  claude-sonnet-5-6 ' });
         montado.componente.formulario.patchValue({ iaDesligada: true });
         await montado.atualizar();
 
         botao('Salvar nova versão').click();
         const requisicao = esperarRequisicao(montado.http, 'POST', '/configuracao-ia');
         expect(requisicao.request.body).toMatchObject({
-            iaDesligada: true, fallbacks: [], checkinMinimoMinutos: 20, checkinMaximoMinutos: 40,
-            modelosProvedor: { ANTHROPIC: { ...ANTHROPIC, modeloPadrao: 'claude-sonnet-5-6' } },
+            iaDesligada: true, checkinMinimoMinutos: 20, checkinMaximoMinutos: 40,
+            cadeiaPadrao: [item(A, 'claude-sonnet-5-6')],
         });
         responderSucesso(requisicao, { id: 4, versao: 4 });
         await montado.atualizar();
         expect(avisos.some((aviso) => aviso.severity === 'success')).toBe(true);
 
-        const nova = versao(4, { modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { ...ANTHROPIC, modeloPadrao: 'claude-sonnet-5-6' } }, iaDesligada: true });
+        const nova = versao(4, { cadeiaPadrao: [item(A, 'claude-sonnet-5-6')], iaDesligada: true });
         responderCarga(montado, { ativa: nova, historico: [nova, ...HISTORICO] });
         await montado.atualizar();
 
@@ -359,9 +388,7 @@ describe('ConfiguracaoIaPage — liga/desliga da IA (fora das abas)', () => {
     });
 });
 
-describe('ConfiguracaoIaPage — abas, barra de salvar e cartões de provedor (task 204)', () => {
-    const GPT = { modeloRapido: 'gpt-5-mini', modeloPadrao: 'gpt-5', modeloAnalitico: 'gpt-5' };
-
+describe('ConfiguracaoIaPage — abas, barra de salvar e cadeias por nível (task 204, spec 261)', () => {
     it('as abas são Provedor e modelos, Comportamento, Autonomia, Prompts e Custos (sem Prioridades)', async () => {
         await abrir();
         const abas = Array.from(document.body.querySelectorAll('p-tab')).map((aba) => aba.textContent?.trim());
@@ -390,65 +417,105 @@ describe('ConfiguracaoIaPage — abas, barra de salvar e cartões de provedor (t
         expect(botao('Salvar nova versão').disabled).toBe(false);
     });
 
-    it('cada cartão mostra se a chave do provedor está no ambiente', async () => {
-        const ativa = versao(3, { fallbacks: [TipoProvedorIaEnum.GOOGLE], modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: ANTHROPIC, [TipoProvedorIaEnum.GOOGLE]: GEMINI } });
-        const montado = await abrir({ ativa, historico: [ativa], provedoresComChave: [TipoProvedorIaEnum.ANTHROPIC] });
-        const aba = abaDeProvedor(montado);
-        expect(aba.temChave(TipoProvedorIaEnum.ANTHROPIC)).toBe(true);
-        expect(aba.temChave(TipoProvedorIaEnum.GOOGLE)).toBe(false);
-        expect(textoDaTela()).toContain('Chave configurada');
-        expect(textoDaTela()).toContain('Sem chave');
-    });
-
-    it('sem o estado da IA os cartões não afirmam nada sobre a chave', async () => {
-        const montado = await abrir({ estado: 'ERRO' });
-        expect(abaDeProvedor(montado).temChave(TipoProvedorIaEnum.ANTHROPIC)).toBeNull();
-        expect(textoDaTela()).not.toContain('Chave configurada');
-        expect(textoDaTela()).not.toContain('Sem chave');
-    });
-
-    it('remover o 1º fallback faz o 2º subir; o padrão não tem botão de remover', async () => {
+    it('a aba mostra uma cadeia por nível e o item principal de cada um (provedor, modelo e esforço)', async () => {
         const ativa = versao(3, {
-            fallbacks: [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI],
-            modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: ANTHROPIC, [TipoProvedorIaEnum.GOOGLE]: GEMINI, [TipoProvedorIaEnum.OPENAI]: GPT },
+            cadeiaRapido: [item(A, 'claude-haiku-5-5')],
+            cadeiaPadrao: [item(O, 'gpt-6.1-sol')],
+            cadeiaAnalitico: [item(A, 'claude-opus-5-5', EsforcoIaEnum.ALTO), item(G, 'gemini-2.5-pro')],
         });
-        const montado = await abrir({ ativa, historico: [ativa] });
-        expect(botaoPorRotulo('Remover o Padrão')).toBeNull();
-
-        botaoPorRotulo('Remover o 1º fallback').click();
-        await montado.atualizar();
-        expect(montado.componente.formulario.getRawValue()).toMatchObject({ provedor: TipoProvedorIaEnum.ANTHROPIC, fallbackPrimeiro: TipoProvedorIaEnum.OPENAI, fallbackSegundo: null });
-        expect(abaDeProvedor(montado).cadeia()).toEqual([TipoProvedorIaEnum.ANTHROPIC, TipoProvedorIaEnum.OPENAI]);
+        await abrir({ ativa, historico: [ativa], provedoresComChave: [A, O, G] });
+        const painel = document.body.querySelector('p-tabpanel[value="provedor"]') as HTMLElement;
+        expect(painel.querySelectorAll('section[aria-label^="Cadeia do nível"]')).toHaveLength(3);
+        const resumo = painel.querySelector('.provedor-aba__resumo')!.textContent!.replace(/\s+/g, ' ');
+        expect(resumo).toContain('Rápido Anthropic · claude-haiku-5-5 · Médio');
+        expect(resumo).toContain('Padrão OpenAI · gpt-6.1-sol · Médio');
+        expect(resumo).toContain('Analítico Anthropic · claude-opus-5-5 · Alto');
+        expect(painel.textContent).toContain('Principal');
+        expect(painel.textContent).toContain('Contingência 1');
     });
 
-    it('o erro de modelo marca o cartão do provedor com problema e salvar abre o primeiro cartão com erro', async () => {
-        const montado = await abrir();
-        montado.componente.formulario.patchValue({ fallbackPrimeiro: TipoProvedorIaEnum.GOOGLE });
+    it('cada item mostra o aviso quando o provedor dele não tem chave no ambiente, sem impedir nada', async () => {
+        const ativa = versao(3, { cadeiaRapido: [item(A, 'claude-haiku-5-5'), item(G, 'gemini-2.5-flash')] });
+        const montado = await abrir({ ativa, historico: [ativa], provedoresComChave: [A] });
+        const aba = abaDeProvedor(montado);
+        expect(aba.semChave(A)).toBe(false);
+        expect(aba.semChave(G)).toBe(true);
+        expect(document.body.querySelectorAll('.provedor-aba__chave')).toHaveLength(1);
+        expect(textoDaTela()).toContain('Chave de Provedor não configurada');
+        expect(textoDaTela(), 'o aviso é do item, não do nível: o nível tem o principal com chave').not.toContain('Nenhum provedor deste nível tem chave');
+    });
+
+    it('sem o estado da IA os itens não afirmam nada sobre a chave', async () => {
+        const montado = await abrir({ estado: 'ERRO' });
+        expect(abaDeProvedor(montado).semChave(A)).toBe(false);
+        expect(textoDaTela()).not.toContain('Chave de Provedor não configurada');
+        expect(textoDaTela()).not.toContain('Nenhum provedor deste nível tem chave');
+    });
+
+    it('nível sem nenhum item com chave mostra o alerta do nível, e os outros níveis seguem normais', async () => {
+        const ativa = versao(3, { cadeiaPadrao: [item(G, 'gemini-2.5-pro')] });
+        const montado = await abrir({ ativa, historico: [ativa], provedoresComChave: [A] });
+        const aba = abaDeProvedor(montado);
+        expect(aba.nivelSemItemUtilizavel(aba.niveis[0])).toBe(false);
+        expect(aba.nivelSemItemUtilizavel(aba.niveis[1])).toBe(true);
+        expect(textoDaTela()).toContain('Nenhum provedor deste nível tem chave configurada');
+        expect(document.body.querySelectorAll('[role="status"].provedor-aba__alerta')).toHaveLength(1);
+    });
+
+    it('remover a contingência tira o item; o principal da cadeia de um item só não pode ser removido', async () => {
+        const ativa = versao(3, { cadeiaRapido: [item(A, 'claude-haiku-5-5'), item(G, 'gemini-2.5-flash'), item(O, 'gpt-5-mini')] });
+        const montado = await abrir({ ativa, historico: [ativa] });
+        expect(botaoPorRotulo('Remover o item Principal do nível Padrão').disabled, 'cadeia de um item só: não remove').toBe(true);
+
+        botaoPorRotulo('Remover o item Contingência 1 do nível Rápido').click();
         await montado.atualizar();
-        expect(abaDeProvedor(montado).posicaoAberta(), 'o cartão aberto é o padrão, que está completo').toBe(0);
+        expect(montado.componente.formulario.getRawValue().cadeiaRapido).toEqual([item(A, 'claude-haiku-5-5'), item(O, 'gpt-5-mini')]);
+
+        botaoPorRotulo('Remover o item Contingência 1 do nível Rápido').click();
+        await montado.atualizar();
+        expect(montado.componente.formulario.getRawValue().cadeiaRapido).toEqual([item(A, 'claude-haiku-5-5')]);
+        expect(botaoPorRotulo('Remover o item Principal do nível Rápido').disabled, 'a cadeia nunca fica vazia').toBe(true);
+    });
+
+    it('subir e descer trocam os itens de lugar: o primeiro vira o principal', async () => {
+        const ativa = versao(3, { cadeiaAnalitico: [item(A, 'claude-opus-5-5'), item(G, 'gemini-2.5-pro')] });
+        const montado = await abrir({ ativa, historico: [ativa] });
+        expect(botaoPorRotulo('Subir o item Principal do nível Analítico').disabled).toBe(true);
+        expect(botaoPorRotulo('Descer o item Contingência 1 do nível Analítico').disabled).toBe(true);
+
+        botaoPorRotulo('Subir o item Contingência 1 do nível Analítico').click();
+        await montado.atualizar();
+        expect(montado.componente.formulario.getRawValue().cadeiaAnalitico).toEqual([item(G, 'gemini-2.5-pro'), item(A, 'claude-opus-5-5')]);
+        expect(botao('Salvar nova versão').disabled, 'a ordem é parte da configuração').toBe(false);
+
+        botaoPorRotulo('Descer o item Principal do nível Analítico').click();
+        await montado.atualizar();
+        expect(montado.componente.formulario.getRawValue().cadeiaAnalitico).toEqual([item(A, 'claude-opus-5-5'), item(G, 'gemini-2.5-pro')]);
+        expect(montado.componente.semAlteracoes()).toBe(true);
+    });
+
+    it('cadeia com um item por provedor não aceita mais contingência', async () => {
+        const ativa = versao(3, { cadeiaRapido: [item(A, 'claude-haiku-5-5'), item(G, 'gemini-2.5-flash'), item(O, 'gpt-5-mini')] });
+        const montado = await abrir({ ativa, historico: [ativa] });
+        const adicionar = (nivel: string) => document.body.querySelector(`[aria-label="Adicionar contingência ao nível ${nivel}"]`) as HTMLButtonElement;
+        expect(adicionar('Rápido').disabled).toBe(true);
+        expect(adicionar('Padrão').disabled).toBe(false);
+        expect(abaDeProvedor(montado).podeAdicionar(abaDeProvedor(montado).niveis[0])).toBe(false);
+    });
+
+    it('o erro de uma cadeia marca o nível com problema e a aba, só depois de tentar salvar', async () => {
+        const montado = await abrir();
+        montado.componente.formulario.controls.cadeiaPadrao.at(0).patchValue({ modelo: 'gemini-2.5-pro' });
+        await montado.atualizar();
+        expect(document.body.querySelector('.provedor-aba__secao--erro'), 'antes de tentar salvar não acusa').toBeNull();
 
         montado.componente.salvar();
         await montado.atualizar();
-        const aba = abaDeProvedor(montado);
-        expect(aba.temErro(TipoProvedorIaEnum.GOOGLE)).toBe(true);
-        expect(aba.temErro(TipoProvedorIaEnum.ANTHROPIC)).toBe(false);
-        expect(aba.posicaoAberta()).toBe(1);
-        expect(document.body.querySelector('.provedor-aba__cartao--erro')?.textContent).toContain('Modelos incompletos');
-        expect(document.body.querySelector('#ia-modelo-rapido-GOOGLE')).not.toBeNull();
-
-        botaoPorRotulo('Ver os modelos do cartão Padrão').click();
-        await montado.atualizar();
-        expect(aba.posicaoAberta(), 'escolher outro cartão depois não é desfeito').toBe(0);
-    });
-
-    it('clicar em qualquer ponto do cartão abre os modelos dele (não só no rótulo)', async () => {
-        const ativa = versao(3, { fallbacks: [TipoProvedorIaEnum.GOOGLE], modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: ANTHROPIC, [TipoProvedorIaEnum.GOOGLE]: GEMINI } });
-        const montado = await abrir({ ativa, historico: [ativa] });
-        const cartoes = Array.from(document.body.querySelectorAll<HTMLElement>('.provedor-aba__cartao'));
-        cartoes[1].click();
-        await montado.atualizar();
-        expect(abaDeProvedor(montado).posicaoAberta()).toBe(1);
-        expect(document.body.querySelector('#ia-modelo-rapido-GOOGLE')).not.toBeNull();
+        const comErro = Array.from(document.body.querySelectorAll('.provedor-aba__secao--erro'));
+        expect(comErro).toHaveLength(1);
+        expect(comErro[0].textContent).toContain('O modelo "gemini-2.5-pro" não é de Anthropic (cadeia do nível padrão)');
+        expect(document.body.querySelector('[aria-label="Há erros nesta aba"]')).not.toBeNull();
+        expect(montado.componente.abaAtiva()).toBe('provedor');
     });
 
     it('enquanto salva a tela o liga/desliga não aceita troca', async () => {
@@ -458,14 +525,6 @@ describe('ConfiguracaoIaPage — abas, barra de salvar e cartões de provedor (t
         montado.componente.salvando.set(true);
         await montado.atualizar();
         expect(liga.hasAttribute('inert')).toBe(true);
-    });
-
-    it('o cartão do 2º fallback só aceita provedor depois do 1º', async () => {
-        const montado = await abrir();
-        expect(document.body.querySelector('[aria-label="Adicionar o 1º fallback"]')).not.toBeNull();
-        expect(document.body.querySelector('[aria-label="Adicionar o 2º fallback"]')).toBeNull();
-        expect(textoDaTela()).toContain('Escolha o fallback anterior primeiro.');
-        expect(abaDeProvedor(montado).cartoes().map((cartao) => cartao.disponivel)).toEqual([true, true, false]);
     });
 });
 
@@ -503,8 +562,8 @@ describe('ConfiguracaoIaPage — dúvidas de programação no chat (task 190)', 
         const montado = await abrir();
         botao('Versão 2').click();
         await montado.atualizar();
-        expect(document.body.querySelector('dl')?.textContent).toContain('Dúvidas de código');
-        expect(document.body.querySelector('dl')?.textContent).toContain('Não · contexto misturado');
+        expect(document.body.querySelector('aside dl')?.textContent).toContain('Dúvidas de código');
+        expect(document.body.querySelector('aside dl')?.textContent).toContain('Não · contexto misturado');
     });
 });
 
@@ -534,12 +593,49 @@ describe('ConfiguracaoIaPage — histórico', () => {
         botao('Usar como base').click();
         await montado.atualizar();
 
-        expect(montado.componente.formulario.controls.modelos.controls.ANTHROPIC.controls.modeloRapido.value).toBe('claude-haiku-4');
+        expect(montado.componente.formulario.controls.cadeiaRapido.at(0).controls.modelo.value).toBe('claude-haiku-4');
         expect(montado.componente.formulario.controls.iaDesligada.value).toBe(true);
         expect(avisos.some((aviso) => aviso.severity === 'info' && aviso.detail === 'Valores da versão 2 no formulário. Salvar cria a versão 4.')).toBe(true);
         expect(textoDaTela()).toContain('Salvar cria a versão 4; a versão 3 continua no histórico.');
-        expect(document.body.querySelector('dl')).toBeNull();
+        expect(document.body.querySelector('aside dl')).toBeNull();
         montado.http.expectNone((requisicao) => requisicao.method !== 'GET');
+    });
+});
+
+describe('ConfiguracaoIaPage — histórico com cadeias de tamanhos diferentes (spec 261)', () => {
+    const maior = versao(2, {
+        cadeiaRapido: [item(O, 'gpt-5-mini', EsforcoIaEnum.ALTO), item(A, 'claude-haiku-5-5', EsforcoIaEnum.BAIXO)],
+        cadeiaAnalitico: [item(A, 'claude-opus-5-5', EsforcoIaEnum.ALTO), item(G, 'gemini-2.5-pro'), item(O, 'o3')],
+    });
+
+    it('o histórico mostra as três cadeias da versão, com principal, contingência e esforço', async () => {
+        const montado = await abrir({ historico: [versao(3), maior, versao(1)] });
+        botao('Versão 2').click();
+        await montado.atualizar();
+        const detalhe = document.body.querySelector('aside dl')!.textContent!.replace(/\s+/g, ' ');
+        expect(detalhe).toContain('Principal: OpenAI · gpt-5-mini · Alto');
+        expect(detalhe).toContain('Contingência 1: Anthropic · claude-haiku-5-5 · Baixo');
+        expect(detalhe).toContain('Principal: Anthropic · claude-sonnet-5-5 · Médio');
+        expect(detalhe).toContain('Contingência 2: OpenAI · o3 · Médio');
+    });
+
+    it('"Usar como base" refaz as listas do formulário com o tamanho da versão e "Descartar" volta ao da ativa', async () => {
+        const montado = await abrir({ historico: [versao(3), maior, versao(1)] });
+        botao('Versão 2').click();
+        await montado.atualizar();
+        botao('Usar como base').click();
+        await montado.atualizar();
+
+        const formulario = montado.componente.formulario;
+        expect([formulario.controls.cadeiaRapido.length, formulario.controls.cadeiaPadrao.length, formulario.controls.cadeiaAnalitico.length]).toEqual([2, 1, 3]);
+        expect(campoDoModelo('ANALITICO', 2)?.value).toBe('o3');
+        expect(textoDaTela()).toContain('Salvar cria a versão 4');
+
+        botao('Descartar alterações').click();
+        await montado.atualizar();
+        expect([formulario.controls.cadeiaRapido.length, formulario.controls.cadeiaPadrao.length, formulario.controls.cadeiaAnalitico.length]).toEqual([1, 1, 1]);
+        expect(campoDoModelo('ANALITICO', 2)).toBeNull();
+        expect(montado.componente.semAlteracoes()).toBe(true);
     });
 });
 

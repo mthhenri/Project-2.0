@@ -23,41 +23,24 @@
                 @if (selecionada()?.id === versao.id) {
                     <div class="historico-versoes__detalhe">
                         <dl class="historico-versoes__valores">
-                            @for (
-                                provedor of cadeiaDaVersao(versao);
-                                track provedor;
-                                let indice = $index
-                            ) {
-                                <dt class="historico-versoes__valores-provedor">
-                                    {{ indice === 0 ? "Provedor" : "Fallback " + indice }}
-                                </dt>
-                                <dd class="historico-versoes__valores-provedor">
-                                    {{ rotuloDoProvedor(provedor) }}
-                                    <span class="historico-versoes__modelo-linha"
-                                        >rápido:
-                                        {{ versao.modelosProvedor[provedor]?.modeloRapido }}</span
-                                    >
-                                    <span class="historico-versoes__modelo-linha"
-                                        >padrão:
-                                        {{ versao.modelosProvedor[provedor]?.modeloPadrao }}</span
-                                    >
-                                    <span class="historico-versoes__modelo-linha"
-                                        >analítico:
-                                        {{
-                                            versao.modelosProvedor[provedor]?.modeloAnalitico
-                                        }}</span
-                                    >
+                            @for (nivel of niveis; track nivel.nivel) {
+                                <dt>{{ nivel.titulo }}</dt>
+                                <dd>
+                                    @for (
+                                        item of cadeiaDoNivel(versao, nivel);
+                                        track item.provedor;
+                                        let indice = $index
+                                    ) {
+                                        <span class="historico-versoes__modelo-linha"
+                                            >{{
+                                                indice === 0
+                                                    ? "Principal"
+                                                    : "Contingência " + indice
+                                            }}: {{ resumoDoItem(item) }}</span
+                                        >
+                                    }
                                 </dd>
                             }
-                            @if (versao.fallbacks.length === 0) {
-                                <dt>Fallback</dt>
-                                <dd>Nenhum</dd>
-                            }
-                            <dt>Esforço</dt>
-                            <dd>
-                                {{ rotuloDoEsforco(versao.esforcoAnalitico) | lowercase }}
-                                (analítico)
-                            </dd>
                             <dt>Check-in</dt>
                             <dd>
                                 {{ versao.checkinMinimoMinutos }} a

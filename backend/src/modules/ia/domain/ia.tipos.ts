@@ -35,9 +35,10 @@ export interface IaSolicitacao {
     pesquisaWeb?: boolean;
 }
 
-/** O que o provedor recebe: o nível já resolvido em modelo (e esforço, só no analítico). */
+/** O que o provedor recebe: o nível já resolvido no modelo e no esforço do item da cadeia que está sendo tentado (spec 261). */
 export interface IaSolicitacaoProvedor extends Omit<IaSolicitacao, 'nivel' | 'maximoTokens'> {
     modelo: string;
+    /** O esforço do item da cadeia. Opcional só para quem monta a solicitação à mão (testes dos adaptadores). */
     esforco?: EsforcoIaEnum;
     maximoTokens: number;
 }
@@ -58,9 +59,15 @@ export interface IaResposta {
     nivel: NivelIaEnum;
     /** Modelo que respondeu. */
     modelo: string;
+    /**
+     * O modelo do primeiro item da cadeia do nível naquela chamada. Quando o item principal respondeu, vale o próprio `modelo` (o provedor
+     * devolve o nome do modelo com a data do lançamento, que não é o nome configurado: comparar os dois acusaria troca onde não houve). Só
+     * difere de `modelo` quando um item de contingência respondeu, ou o principal foi pulado por falta de chave.
+     */
+    modeloPlanejado: string;
     tokens: IaTokens;
     motivoParada: IaMotivoParada;
 }
 
-/** Resposta antes de o serviço acrescentar o nível. */
-export type IaRespostaProvedor = Omit<IaResposta, 'nivel'>;
+/** Resposta antes de o serviço acrescentar o nível e o modelo planejado. */
+export type IaRespostaProvedor = Omit<IaResposta, 'nivel' | 'modeloPlanejado'>;

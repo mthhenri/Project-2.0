@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
-import { formatarDolar, formatarTokens, montarCategoriasDeCusto, ModeloDeCusto, montarLegendaDeCusto, provedorDoModelo, rotuloDoRecorte } from './custos.util';
+import { formatarDolar, formatarTokens, montarCategoriasDeCusto, ModeloDeCusto, montarLegendaDeCusto, provedorDoModelo, rotuloDoRecorte, usosDoModeloNosNiveis } from './custos.util';
 
 const normalizar = (texto: string) => texto.replace(/\u00A0/g, ' ');
 
@@ -86,4 +86,12 @@ test('o custo do dia é empilhado por modelo, o total fica no segmento do topo e
     assert.deepEqual(dia.barras.map((barra) => barra.valor), [0.25, 0.5]);
     assert.deepEqual(dia.barras.map((barra) => normalizar(barra.rotulo)), ['', '0,75']);
     assert.deepEqual(dia.barras.map((barra) => barra.cor), ['#fdba74', '#c2410c']);
+});
+
+test('usosDoModeloNosNiveis diz em que níveis o modelo está e onde ele abre a cadeia (principal) ou é contingência', () => {
+    assert.deepEqual(usosDoModeloNosNiveis({ niveis: ['RAPIDO', 'ANALITICO'] as never, niveisPrincipais: ['RAPIDO'] as never }), [
+        { chave: 'RAPIDO', rotulo: 'Rápido · principal', principal: true },
+        { chave: 'ANALITICO', rotulo: 'Analítico · contingência', principal: false },
+    ]);
+    assert.deepEqual(usosDoModeloNosNiveis({ niveis: [], niveisPrincipais: [] }), [], 'modelo fora de uso não tem nível');
 });

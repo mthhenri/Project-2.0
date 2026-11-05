@@ -24,14 +24,16 @@ test('os modelos juntam uso, preços e a configuração ativa; sem preço o cust
             uso('2026-10-02', 'modelo-sem-preco', { tokensEntrada: 500, mensagens: 9 }),
         ],
         [PRECO_SONNET, PRECO_HAIKU],
-        { RAPIDO: 'haiku', PADRAO: 'sonnet', ANALITICO: 'sonnet' },
+        { RAPIDO: ['haiku'], PADRAO: ['sonnet'], ANALITICO: ['sonnet', 'haiku'] },
     );
     const porNome = Object.fromEntries(modelos.map((modelo) => [modelo.modelo, modelo]));
     assert.equal(porNome.sonnet.mensagens, 6);
     assert.equal(porNome.sonnet.custoDolar, 18);
     assert.equal(porNome.sonnet.emUso, true);
     assert.deepEqual(porNome.sonnet.niveis, ['PADRAO', 'ANALITICO']);
-    assert.deepEqual(porNome.haiku.niveis, ['RAPIDO']);
+    assert.deepEqual(porNome.sonnet.niveisPrincipais, ['PADRAO', 'ANALITICO']);
+    assert.deepEqual(porNome.haiku.niveis, ['RAPIDO', 'ANALITICO'], 'o modelo da contingência também aparece no nível');
+    assert.deepEqual(porNome.haiku.niveisPrincipais, ['RAPIDO'], 'mas só é principal onde abre a cadeia');
     assert.deepEqual(porNome['modelo-sem-preco'].niveis, []);
     assert.deepEqual([porNome.haiku.mensagens, porNome.haiku.custoDolar, porNome.haiku.emUso], [0, 0, true]);
     assert.deepEqual([porNome['modelo-sem-preco'].preco, porNome['modelo-sem-preco'].custoDolar, porNome['modelo-sem-preco'].emUso], [null, null, false]);

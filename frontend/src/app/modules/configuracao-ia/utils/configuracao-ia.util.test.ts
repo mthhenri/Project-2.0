@@ -2,38 +2,49 @@ import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { FormControl, FormGroup } from '@angular/forms';
 import {
+    ConfiguracaoIaCadeiaItemDto,
     ConfiguracaoIaResumoDto,
     EsforcoIaEnum,
     EstadoIaEnum,
     ModoContextoChatEnum,
     NIVEIS_PADRAO_DA_PROPOSTA,
+    NivelIaEnum,
     PropostaIaNivelEnum,
     TipoProvedorIaEnum,
     TipoPropostaIaEnum,
 } from '@project20/shared';
 import {
+    AVISO_SEM_CHAVE,
+    MAXIMO_DE_ITENS_DA_CADEIA,
+    NIVEIS_DA_TELA,
     OPCOES_PROVEDOR,
-    cadeiaDoFormulario,
-    camposDaCadeia,
-    removerProvedorDoCartao,
-    errosDeProvedores,
-    errosPorProvedor,
-    fallbacksDoFormulario,
     ROTULO_ESTADO_IA,
     SEVERIDADE_ESTADO_IA,
+    cadeiaSemItemUtilizavel,
+    errosDeCadeias,
+    errosPorNivel,
     formularioIgualAVersao,
     intervaloDoCheckinValido,
+    moverItemDaCadeia,
+    novoItemDaCadeia,
     paraDtoDeCriacao,
+    proximoProvedorLivre,
+    resumoDoItem,
     rotuloDoEsforco,
     rotuloDoProvedor,
     valoresDaVersao,
 } from './configuracao-ia.util';
 
+const { ANTHROPIC, GOOGLE, OPENAI } = TipoProvedorIaEnum;
+
+const item = (provedor: TipoProvedorIaEnum, modelo: string, esforco: EsforcoIaEnum = EsforcoIaEnum.MEDIO): ConfiguracaoIaCadeiaItemDto => ({ provedor, modelo, esforco });
+
 const VERSAO: ConfiguracaoIaResumoDto = {
-    id: 4, versao: 3, provedor: TipoProvedorIaEnum.ANTHROPIC,
-    fallbacks: [],
-    modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'claude-opus-5-5' } },
-    esforcoAnalitico: EsforcoIaEnum.ALTO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
+    id: 4, versao: 3,
+    cadeiaRapido: [item(ANTHROPIC, 'claude-haiku-5-5')],
+    cadeiaPadrao: [item(ANTHROPIC, 'claude-sonnet-5-5')],
+    cadeiaAnalitico: [item(ANTHROPIC, 'claude-opus-5-5', EsforcoIaEnum.ALTO)],
+    checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
     checkinInteligente: true, rigorProporcional: false, deteccaoAutomatica: true,
     duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false, niveisProposta: {},
     usuarioId: 1, usuarioNome: 'Admin', createdDate: new Date('2026-10-01T12:00:00Z'),
@@ -87,31 +98,47 @@ test('intervaloDoCheckinValido: campo ainda vazio não acusa intervalo (o "obrig
 test('valoresDaVersao copia só os campos do formulário (sem id, versão, autor nem data)', () => {
     const valores = valoresDaVersao(VERSAO);
     assert.deepEqual(Object.keys(valores).sort(), [
-        'checkinInteligente', 'checkinMaximoMinutos', 'checkinMinimoMinutos', 'deteccaoAutomatica', 'duracaoRecomendadaMinutos',
-        'duvidasCodigo', 'esforcoAnalitico', 'fallbackPrimeiro', 'fallbackSegundo', 'iaDesligada', 'modelos', 'modoContextoChat', 'niveisProposta',
-        'provedor', 'rigorProporcional',
+        'cadeiaAnalitico', 'cadeiaPadrao', 'cadeiaRapido', 'checkinInteligente', 'checkinMaximoMinutos', 'checkinMinimoMinutos', 'deteccaoAutomatica',
+        'duracaoRecomendadaMinutos', 'duvidasCodigo', 'iaDesligada', 'modoContextoChat', 'niveisProposta', 'rigorProporcional',
     ]);
-    assert.equal(valores.modelos.ANTHROPIC.modeloAnalitico, 'claude-opus-5-5');
-    assert.deepEqual(valores.modelos.GOOGLE, { modeloRapido: '', modeloPadrao: '', modeloAnalitico: '' }, 'provedor sem modelos guardados volta vazio');
+    assert.deepEqual(valores.cadeiaAnalitico, [item(ANTHROPIC, 'claude-opus-5-5', EsforcoIaEnum.ALTO)]);
     assert.equal(valores.rigorProporcional, false);
+});
+
+test('valoresDaVersao copia as cadeias: mexer no formulário não altera a versão do histórico', () => {
+    const valores = valoresDaVersao(VERSAO);
+    valores.cadeiaRapido[0].modelo = 'outro';
+    assert.equal(VERSAO.cadeiaRapido[0].modelo, 'claude-haiku-5-5');
 });
 
 test('formularioIgualAVersao: igual à versão não há o que salvar; qualquer campo diferente habilita salvar', () => {
     assert.equal(formularioIgualAVersao(valoresDaVersao(VERSAO), VERSAO), true);
     assert.equal(formularioIgualAVersao({ ...valoresDaVersao(VERSAO), iaDesligada: true }, VERSAO), false);
     assert.equal(formularioIgualAVersao({ ...valoresDaVersao(VERSAO), checkinMaximoMinutos: 41 }, VERSAO), false);
-    assert.equal(formularioIgualAVersao({ ...valoresDaVersao(VERSAO), esforcoAnalitico: EsforcoIaEnum.BAIXO }, VERSAO), false);
     assert.equal(formularioIgualAVersao({ ...valoresDaVersao(VERSAO), duvidasCodigo: true }, VERSAO), false);
     assert.equal(formularioIgualAVersao({ ...valoresDaVersao(VERSAO), modoContextoChat: ModoContextoChatEnum.SEPARADO }, VERSAO), false);
 });
 
-test('paraDtoDeCriacao apara os nomes dos modelos e mantém o restante', () => {
+test('formularioIgualAVersao: mudar só o esforço de um item, o modelo, a ordem ou o tamanho da cadeia habilita salvar', () => {
     const base = valoresDaVersao(VERSAO);
-    const dto = paraDtoDeCriacao({
-        ...base,
-        modelos: { ...base.modelos, ANTHROPIC: { modeloRapido: '  claude-haiku-5-5 ', modeloPadrao: ' x', modeloAnalitico: 'y  ' } },
-    });
-    assert.deepEqual(dto.modelosProvedor.ANTHROPIC, { modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'x', modeloAnalitico: 'y' });
+    assert.equal(formularioIgualAVersao({ ...base, cadeiaAnalitico: [item(ANTHROPIC, 'claude-opus-5-5', EsforcoIaEnum.MEDIO)] }, VERSAO), false);
+    assert.equal(formularioIgualAVersao({ ...base, cadeiaRapido: [item(ANTHROPIC, 'claude-haiku-5-6')] }, VERSAO), false);
+    assert.equal(formularioIgualAVersao({ ...base, cadeiaPadrao: [...base.cadeiaPadrao, item(OPENAI, 'gpt-5')] }, VERSAO), false);
+    const comDuas = { ...VERSAO, cadeiaPadrao: [item(ANTHROPIC, 'a'), item(OPENAI, 'gpt-5')] };
+    const duas = valoresDaVersao(comDuas);
+    assert.equal(formularioIgualAVersao({ ...duas, cadeiaPadrao: [duas.cadeiaPadrao[1], duas.cadeiaPadrao[0]] }, comDuas), false);
+});
+
+test('espaços nas pontas do modelo não contam como alteração e o DTO os apara', () => {
+    const base = valoresDaVersao(VERSAO);
+    const comEspaco = { ...base, cadeiaRapido: [item(ANTHROPIC, '  claude-haiku-5-5 ')] };
+    assert.equal(formularioIgualAVersao(comEspaco, VERSAO), true);
+    assert.equal(paraDtoDeCriacao(comEspaco).cadeiaRapido[0].modelo, 'claude-haiku-5-5');
+});
+
+test('paraDtoDeCriacao leva as três cadeias e mantém o restante', () => {
+    const dto = paraDtoDeCriacao(valoresDaVersao(VERSAO));
+    assert.deepEqual([dto.cadeiaRapido, dto.cadeiaPadrao, dto.cadeiaAnalitico], [VERSAO.cadeiaRapido, VERSAO.cadeiaPadrao, VERSAO.cadeiaAnalitico]);
     assert.equal(dto.checkinMinimoMinutos, 20);
     assert.equal(dto.duracaoRecomendadaMinutos, 90);
     assert.equal(dto.iaDesligada, false);
@@ -119,80 +146,72 @@ test('paraDtoDeCriacao apara os nomes dos modelos e mantém o restante', () => {
     assert.equal(dto.modoContextoChat, ModoContextoChatEnum.MISTURADO);
 });
 
-const GEMINI = { modeloRapido: 'gemini-flash', modeloPadrao: 'gemini-pro', modeloAnalitico: 'gemini-pro-max' };
-
-test('fallbacksDoFormulario ignora "Nenhum" e sobe o segundo quando o primeiro está vazio', () => {
-    assert.deepEqual(fallbacksDoFormulario({ fallbackPrimeiro: null, fallbackSegundo: TipoProvedorIaEnum.OPENAI }), [TipoProvedorIaEnum.OPENAI]);
-    assert.deepEqual(fallbacksDoFormulario({ fallbackPrimeiro: null, fallbackSegundo: null }), []);
+test('errosDeCadeias aponta cadeia vazia, provedor repetido, modelo vazio ou de outro provedor, com a mensagem do shared', () => {
+    const base = valoresDaVersao(VERSAO);
+    assert.deepEqual(errosDeCadeias(base), []);
+    assert.deepEqual(errosDeCadeias({ ...base, cadeiaRapido: [] }), ['A cadeia do nível rápido precisa ter ao menos um item']);
+    assert.deepEqual(errosDeCadeias({ ...base, cadeiaPadrao: [item(OPENAI, 'gpt-5'), item(OPENAI, 'gpt-5-mini')] }), ['OpenAI aparece mais de uma vez na cadeia do nível padrão']);
+    assert.deepEqual(errosDeCadeias({ ...base, cadeiaAnalitico: [item(ANTHROPIC, '   ')] }), ['O modelo do item 1 (Anthropic) da cadeia do nível analítico não foi informado']);
+    assert.deepEqual(errosDeCadeias({ ...base, cadeiaRapido: [item(ANTHROPIC, 'gpt-5')] }), ['O modelo "gpt-5" não é de Anthropic (cadeia do nível rápido)']);
 });
 
-test('paraDtoDeCriacao leva os modelos do fallback e o trio guardado de provedor fora da cadeia; trio vazio fora da cadeia não vai', () => {
-    const base = valoresDaVersao(VERSAO);
-    const comGemini = paraDtoDeCriacao({ ...base, fallbackPrimeiro: TipoProvedorIaEnum.GOOGLE, modelos: { ...base.modelos, GOOGLE: GEMINI } });
-    assert.deepEqual(comGemini.fallbacks, [TipoProvedorIaEnum.GOOGLE]);
-    assert.deepEqual(Object.keys(comGemini.modelosProvedor), [TipoProvedorIaEnum.ANTHROPIC, TipoProvedorIaEnum.GOOGLE]);
-
-    const guardado = paraDtoDeCriacao({ ...base, modelos: { ...base.modelos, GOOGLE: GEMINI } });
-    assert.deepEqual(guardado.fallbacks, []);
-    assert.deepEqual(guardado.modelosProvedor.GOOGLE, GEMINI, 'o trio do Gemini fica guardado mesmo sem estar na cadeia');
-    assert.equal(paraDtoDeCriacao(base).modelosProvedor.OPENAI, undefined);
+test('provedor sem chave no ambiente não é erro de cadeia: só ganha o aviso na tela', () => {
+    const base = valoresDaVersao({ ...VERSAO, cadeiaRapido: [item(GOOGLE, 'gemini-2.5-flash')] });
+    assert.deepEqual(errosDeCadeias(base), []);
+    assert.equal(AVISO_SEM_CHAVE, 'Chave de Provedor não configurada');
 });
 
-test('trio incoerente de provedor fora da cadeia não é enviado e não bloqueia o salvar (a tela não o mostra)', () => {
+test('errosPorNivel: só os níveis com problema, cada um com as suas mensagens', () => {
     const base = valoresDaVersao(VERSAO);
-    const rascunho = { ...base, modelos: { ...base.modelos, OPENAI: { modeloRapido: 'claude-x', modeloPadrao: '', modeloAnalitico: '' } } };
-    assert.deepEqual(errosDeProvedores(rascunho), []);
-    assert.equal(paraDtoDeCriacao(rascunho).modelosProvedor.OPENAI, undefined);
-    assert.equal(formularioIgualAVersao(rascunho, VERSAO), true, 'o rascunho escondido não conta como alteração');
+    assert.deepEqual(errosPorNivel(base), {});
+    const quebrado = { ...base, cadeiaPadrao: [], cadeiaAnalitico: [item(ANTHROPIC, 'gpt-5')] };
+    assert.deepEqual(errosPorNivel(quebrado), {
+        [NivelIaEnum.PADRAO]: ['A cadeia do nível padrão precisa ter ao menos um item'],
+        [NivelIaEnum.ANALITICO]: ['O modelo "gpt-5" não é de Anthropic (cadeia do nível analítico)'],
+    });
 });
 
-test('trocar o padrão para o Gemini e voltar: a versão gravada devolve o trio da Anthropic preenchido', () => {
-    const base = valoresDaVersao(VERSAO);
-    const noGemini = paraDtoDeCriacao({ ...base, provedor: TipoProvedorIaEnum.GOOGLE, modelos: { ...base.modelos, GOOGLE: GEMINI } });
-    const gravada: ConfiguracaoIaResumoDto = { ...VERSAO, versao: 4, provedor: noGemini.provedor, fallbacks: noGemini.fallbacks, modelosProvedor: noGemini.modelosProvedor };
-    const deVolta = { ...valoresDaVersao(gravada), provedor: TipoProvedorIaEnum.ANTHROPIC };
-    assert.equal(deVolta.modelos.ANTHROPIC.modeloPadrao, 'claude-sonnet-5-5');
-    assert.deepEqual(errosDeProvedores(deVolta), []);
-});
-
-test('errosDeProvedores aponta provedor da cadeia sem modelos e modelo de outro provedor', () => {
-    const base = valoresDaVersao(VERSAO);
-    assert.deepEqual(errosDeProvedores(base), []);
-    assert.deepEqual(errosDeProvedores({ ...base, fallbackPrimeiro: TipoProvedorIaEnum.GOOGLE }), [
-        'Google está na cadeia, mas o modelo rápido não foi informado',
-        'Google está na cadeia, mas o modelo padrão não foi informado',
-        'Google está na cadeia, mas o modelo analítico não foi informado',
+test('os três níveis da tela: rápido, padrão e analítico, cada um com o seu campo de cadeia', () => {
+    assert.deepEqual(NIVEIS_DA_TELA.map((nivel) => [nivel.nivel, nivel.campo, nivel.titulo]), [
+        [NivelIaEnum.RAPIDO, 'cadeiaRapido', 'Rápido'],
+        [NivelIaEnum.PADRAO, 'cadeiaPadrao', 'Padrão'],
+        [NivelIaEnum.ANALITICO, 'cadeiaAnalitico', 'Analítico'],
     ]);
-    assert.deepEqual(
-        errosDeProvedores({ ...base, modelos: { ...base.modelos, ANTHROPIC: { ...base.modelos.ANTHROPIC, modeloRapido: 'gpt-5' } } }),
-        ['O modelo rápido "gpt-5" não é de Anthropic'],
-    );
 });
 
-const { ANTHROPIC, GOOGLE, OPENAI } = TipoProvedorIaEnum;
-
-test('cadeiaDoFormulario e camposDaCadeia: ida e volta, com a cadeia contígua (o que não existe vira null)', () => {
-    assert.deepEqual(cadeiaDoFormulario({ provedor: ANTHROPIC, fallbackPrimeiro: null, fallbackSegundo: GOOGLE }), [ANTHROPIC, GOOGLE]);
-    assert.deepEqual(camposDaCadeia([OPENAI]), { provedor: OPENAI, fallbackPrimeiro: null, fallbackSegundo: null });
-    assert.deepEqual(camposDaCadeia([ANTHROPIC, GOOGLE, OPENAI]), { provedor: ANTHROPIC, fallbackPrimeiro: GOOGLE, fallbackSegundo: OPENAI });
+test('proximoProvedorLivre e novoItemDaCadeia: o primeiro provedor que a cadeia ainda não usa, com a primeira sugestão dele e esforço médio', () => {
+    assert.equal(proximoProvedorLivre([item(ANTHROPIC, 'a')]), GOOGLE);
+    assert.equal(proximoProvedorLivre([item(ANTHROPIC, 'a'), item(GOOGLE, 'g')]), OPENAI);
+    assert.equal(proximoProvedorLivre([item(GOOGLE, 'g')]), ANTHROPIC);
+    assert.equal(novoItemDaCadeia([item(ANTHROPIC, 'a')])?.provedor, GOOGLE);
+    assert.deepEqual(novoItemDaCadeia([item(ANTHROPIC, 'a'), item(GOOGLE, 'g')]), { provedor: OPENAI, modelo: 'gpt-5-mini', esforco: EsforcoIaEnum.MEDIO });
 });
 
-test('removerProvedorDoCartao: tirar o 1º fallback sobe o 2º; o padrão nunca sai', () => {
-    assert.deepEqual(removerProvedorDoCartao([ANTHROPIC, GOOGLE, OPENAI], 1), [ANTHROPIC, OPENAI]);
-    assert.deepEqual(removerProvedorDoCartao([ANTHROPIC, GOOGLE, OPENAI], 2), [ANTHROPIC, GOOGLE]);
-    assert.deepEqual(removerProvedorDoCartao([ANTHROPIC, GOOGLE], 0), [ANTHROPIC, GOOGLE]);
-    assert.deepEqual(removerProvedorDoCartao([ANTHROPIC], 1), [ANTHROPIC]);
+test('a cadeia cheia (um item por provedor) não aceita mais itens', () => {
+    const cheia = OPCOES_PROVEDOR.map((opcao) => item(opcao.valor, 'x'));
+    assert.equal(cheia.length, MAXIMO_DE_ITENS_DA_CADEIA);
+    assert.equal(proximoProvedorLivre(cheia), null);
+    assert.equal(novoItemDaCadeia(cheia), null);
 });
 
-test('errosPorProvedor: só os provedores da cadeia com problema, cada um com as suas mensagens', () => {
-    const base = valoresDaVersao({ ...VERSAO, fallbacks: [TipoProvedorIaEnum.GOOGLE], modelosProvedor: { ...VERSAO.modelosProvedor, [TipoProvedorIaEnum.GOOGLE]: { modeloRapido: 'gemini-2.5-flash', modeloPadrao: 'gemini-2.5-pro', modeloAnalitico: 'gemini-2.5-pro' } } });
-    assert.deepEqual(errosPorProvedor(base), {});
+test('moverItemDaCadeia troca com o vizinho e não passa dos limites nem altera a cadeia original', () => {
+    const cadeia = [item(ANTHROPIC, 'a'), item(GOOGLE, 'g'), item(OPENAI, 'o')];
+    assert.deepEqual(moverItemDaCadeia(cadeia, 1, -1).map((itemDaCadeia) => itemDaCadeia.provedor), [GOOGLE, ANTHROPIC, OPENAI]);
+    assert.deepEqual(moverItemDaCadeia(cadeia, 1, 1).map((itemDaCadeia) => itemDaCadeia.provedor), [ANTHROPIC, OPENAI, GOOGLE]);
+    assert.deepEqual(moverItemDaCadeia(cadeia, 0, -1).map((itemDaCadeia) => itemDaCadeia.provedor), [ANTHROPIC, GOOGLE, OPENAI], 'o primeiro não sobe');
+    assert.deepEqual(moverItemDaCadeia(cadeia, 2, 1).map((itemDaCadeia) => itemDaCadeia.provedor), [ANTHROPIC, GOOGLE, OPENAI], 'o último não desce');
+    assert.deepEqual(cadeia.map((itemDaCadeia) => itemDaCadeia.provedor), [ANTHROPIC, GOOGLE, OPENAI]);
+});
 
-    const quebrado = { ...base, modelos: { ...base.modelos, [TipoProvedorIaEnum.GOOGLE]: { ...base.modelos[TipoProvedorIaEnum.GOOGLE], modeloRapido: '' } } };
-    assert.deepEqual(errosPorProvedor(quebrado), { [TipoProvedorIaEnum.GOOGLE]: ['Google está na cadeia, mas o modelo rápido não foi informado'] });
+test('cadeiaSemItemUtilizavel: só afirma quando se sabe quais provedores têm chave', () => {
+    const cadeia = [item(ANTHROPIC, 'a'), item(GOOGLE, 'g')];
+    assert.equal(cadeiaSemItemUtilizavel(cadeia, [OPENAI]), true);
+    assert.equal(cadeiaSemItemUtilizavel(cadeia, [GOOGLE]), false);
+    assert.equal(cadeiaSemItemUtilizavel(cadeia, null), false, 'estado não lido: o nível não é acusado');
+});
 
-    const deOutro = { ...base, modelos: { ...base.modelos, [TipoProvedorIaEnum.ANTHROPIC]: { ...base.modelos[TipoProvedorIaEnum.ANTHROPIC], modeloPadrao: 'gpt-5' } } };
-    assert.deepEqual(Object.keys(errosPorProvedor(deOutro)), [TipoProvedorIaEnum.ANTHROPIC]);
+test('resumoDoItem escreve provedor, modelo e esforço', () => {
+    assert.equal(resumoDoItem(item(OPENAI, 'gpt-6.1-sol', EsforcoIaEnum.MEDIO)), 'OpenAI · gpt-6.1-sol · Médio');
 });
 
 test('níveis de autonomia (task 228): a versão sem o mapa, ou com o mapa incompleto, abre no formulário com o padrão do shared', () => {

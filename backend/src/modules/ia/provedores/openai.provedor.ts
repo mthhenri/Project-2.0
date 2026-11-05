@@ -3,17 +3,35 @@ import { IaException } from '../domain/ia.exception';
 import { traduzirErroDeProvedor } from '../domain/ia-erro-provedor';
 import { IaProvedor } from '../domain/ia-provedor';
 import { IaBloco, IaMensagem, IaMotivoParada, IaRespostaProvedor, IaSolicitacaoProvedor } from '../domain/ia.tipos';
+import {
+    consumirFluxoDeRespostas,
+    ESFORCO_OPENAI,
+    EventoRespostasOpenAi,
+    folgaDeRaciocinio,
+    modeloUsaRespostasApi,
+    montarParametrosRespostas,
+    montarRespostaDeRespostas,
+    RespostaRespostasOpenAi,
+} from './openai.respostas';
 
 /**
- * A OpenAI **não pesquisa na internet** por aqui: a pesquisa dela é uma ferramenta da Responses API (`web_search`), e este provedor usa a Chat
- * Completions, onde só os modelos `*-search-preview` pesquisam. `IaSolicitacao.pesquisaWeb` é ignorado e a resposta sai sem pesquisa; o dia em que o
- * provedor migrar para a Responses API (spec 261) a ferramenta entra aqui.
+ * A OpenAI **não pesquisa na internet** por aqui: a pesquisa dela é uma ferramenta da Responses API (`web_search`), e só os modelos `*-search-preview` da
+ * Chat Completions pesquisam. `IaSolicitacao.pesquisaWeb` é ignorado nos dois caminhos e a resposta sai sem pesquisa; ligar a ferramenta na Responses API
+ * muda custo e comportamento e tem spec própria (294).
+ *
+ * Dois caminhos (spec 261): os modelos `gpt-6` em diante usam a **Responses API** (`openai.respostas.ts`); os anteriores, a Chat Completions.
  */
 
-/** O pedaço do SDK da OpenAI que o provedor usa (Chat Completions); o módulo adapta o SDK real a isto e os testes usam um cliente falso. */
+/** O pedaço do SDK da OpenAI que o provedor usa; o módulo adapta o SDK real a isto e os testes usam um cliente falso. */
 export interface ClienteOpenAi {
+    /** Chat Completions, sem streaming. */
     gerar(parametros: Record<string, unknown>): Promise<CompletudeOpenAi>;
+    /** Chat Completions, com streaming. */
     transmitir(parametros: Record<string, unknown>): Promise<AsyncIterable<TrechoOpenAi>>;
+    /** Responses API, sem streaming. */
+    responder(parametros: Record<string, unknown>): Promise<RespostaRespostasOpenAi>;
+    /** Responses API, com streaming. */
+    transmitirResposta(parametros: Record<string, unknown>): Promise<AsyncIterable<EventoRespostasOpenAi>>;
 }
 
 interface UsoOpenAi {
@@ -46,18 +64,8 @@ export interface TrechoOpenAi {
     usage?: UsoOpenAi | null;
 }
 
-/** Esforço neutro do projeto → `reasoning_effort` da OpenAI. */
-const ESFORCO_OPENAI: Record<EsforcoIaEnum, string> = {
-    [EsforcoIaEnum.BAIXO]: 'low',
-    [EsforcoIaEnum.MEDIO]: 'medium',
-    [EsforcoIaEnum.ALTO]: 'high',
-};
-
-/** Só os modelos de raciocínio (série `o` e `gpt-5`) aceitam `reasoning_effort`; nos outros o parâmetro é recusado. */
+/** Só os modelos de raciocínio (série `o` e `gpt-5`) aceitam `reasoning_effort` na Chat Completions; nos outros o parâmetro é recusado. */
 const MODELO_DE_RACIOCINIO = /^(o\d|gpt-5)/;
-
-/** Mesmo no esforço baixo o modelo de raciocínio pensa antes de responder, e isso sai do teto; as chamadas curtas (assunto, nome) voltariam vazias. */
-const FOLGA_DE_RACIOCINIO = 1024;
 
 const MOTIVOS_DE_PARADA: Record<string, IaMotivoParada> = {
     stop: 'fim',
@@ -76,6 +84,9 @@ export class OpenAiProvedor implements IaProvedor {
     async gerar(solicitacao: IaSolicitacaoProvedor): Promise<IaRespostaProvedor> {
         const cliente = this.exigirCliente();
         try {
+            if (modeloUsaRespostasApi(solicitacao.modelo)) {
+                return montarRespostaDeRespostas(await cliente.responder(montarParametrosRespostas(solicitacao)), solicitacao.modelo);
+            }
             const completude = await cliente.gerar(this.montarParametros(solicitacao));
             const escolha = completude.choices[0];
             const chamadas = (escolha?.message.tool_calls ?? []).map((chamada) => ({ id: chamada.id, nome: chamada.function.name, argumentos: chamada.function.arguments }));
@@ -88,6 +99,10 @@ export class OpenAiProvedor implements IaProvedor {
     async transmitir(solicitacao: IaSolicitacaoProvedor, aoTrecho: (trecho: string) => void): Promise<IaRespostaProvedor> {
         const cliente = this.exigirCliente();
         try {
+            if (modeloUsaRespostasApi(solicitacao.modelo)) {
+                const fluxoDeEventos = await cliente.transmitirResposta({ ...montarParametrosRespostas(solicitacao), stream: true });
+                return await consumirFluxoDeRespostas(fluxoDeEventos, solicitacao.modelo, aoTrecho);
+            }
             const fluxo = await cliente.transmitir({ ...this.montarParametros(solicitacao), stream: true, stream_options: { include_usage: true } });
             let modelo = solicitacao.modelo;
             let texto = '';
@@ -141,10 +156,10 @@ export class OpenAiProvedor implements IaProvedor {
                 function: { name: ferramenta.nome, description: ferramenta.descricao, parameters: ferramenta.esquemaEntrada },
             }));
         }
-        // Modelo de raciocínio gasta o teto de tokens pensando: sem o nível analítico pedindo mais, o esforço baixo preserva a resposta.
+        // Modelo de raciocínio gasta o teto de tokens pensando: o esforço do item da cadeia vai explícito e a folga cresce com ele.
         if (MODELO_DE_RACIOCINIO.test(solicitacao.modelo.toLowerCase())) {
-            parametros['reasoning_effort'] = solicitacao.esforco ? ESFORCO_OPENAI[solicitacao.esforco] : 'low';
-            if (!solicitacao.esforco) parametros['max_completion_tokens'] = solicitacao.maximoTokens + FOLGA_DE_RACIOCINIO;
+            parametros['reasoning_effort'] = ESFORCO_OPENAI[solicitacao.esforco ?? EsforcoIaEnum.BAIXO];
+            parametros['max_completion_tokens'] = solicitacao.maximoTokens + folgaDeRaciocinio(solicitacao.esforco);
         }
         return parametros;
     }

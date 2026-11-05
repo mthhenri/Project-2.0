@@ -27,6 +27,7 @@ function resposta(parcial: Partial<IaResposta> & { texto?: string }): IaResposta
         blocos: parcial.blocos ?? (texto ? [{ tipo: 'texto', texto }] : []),
         nivel: NivelIaEnum.RAPIDO,
         modelo: 'claude-haiku-5-5',
+        modeloPlanejado: parcial.modeloPlanejado ?? 'claude-haiku-5-5',
         tokens: parcial.tokens ?? { entrada: 10, saida: 5, cache: 1 },
         motivoParada: parcial.motivoParada ?? 'fim',
     };
@@ -784,6 +785,13 @@ test('turno sem ferramenta que chame a IA grava RAPIDO, o modelo e os tokens da 
     await enviar(servico);
     const ia = gravadas.at(-1)!;
     assert.deepEqual([ia.nivel, ia.modelo, ia.tokensEntrada, ia.tokensSaida, ia.tokensCache], [NivelIaEnum.RAPIDO, 'claude-haiku-5-5', 10, 5, 1]);
+});
+
+test('a mensagem da IA grava o modelo planejado da mesma chamada que o modelo (spec 261)', async () => {
+    const { servico, gravadas } = montar({ chamadas: [async () => ({ ...resposta({ texto: 'oi' }), modelo: 'gpt-6.1-sol', modeloPlanejado: 'claude-haiku-5-5' })] });
+    await enviar(servico);
+    const ia = gravadas.at(-1)!;
+    assert.deepEqual([ia.modelo, ia.modeloPlanejado], ['gpt-6.1-sol', 'claude-haiku-5-5']);
 });
 
 test('ferramenta que chamou o analítico: a mensagem grava ANALITICO, o modelo dele e os tokens somados', async () => {

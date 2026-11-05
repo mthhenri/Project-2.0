@@ -1,4 +1,4 @@
-export * from './ConfiguracaoIaModelosDto';
+export * from './ConfiguracaoIaCadeiaItemDto';
 export * from './PropostaIaNiveisDto';
 export * from './ConfiguracaoIaResumoDto';
 export * from './ConfiguracaoIaListarDto';

@@ -12,8 +12,8 @@ import {
     PaginatedResult,
     StandardResponse,
     temPermissaoDeAdministrador,
+    validarCadeiasDaConfiguracaoIa,
     validarNiveisDaProposta,
-    validarProvedoresDaConfiguracaoIa,
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -85,9 +85,14 @@ export class ConfiguracaoIaService implements OnModuleInit {
         if (dto.checkinMinimoMinutos >= dto.checkinMaximoMinutos) {
             throw new BusinessException('O intervalo mínimo do check-in deve ser menor que o máximo');
         }
-        const aparada = { ...dto, modelosProvedor: this.aparar(dto) };
-        const errosDeProvedor = validarProvedoresDaConfiguracaoIa(aparada);
-        if (errosDeProvedor.length > 0) throw new BusinessException(errosDeProvedor[0]);
+        const aparada = {
+            ...dto,
+            cadeiaRapido: this.aparar(dto.cadeiaRapido),
+            cadeiaPadrao: this.aparar(dto.cadeiaPadrao),
+            cadeiaAnalitico: this.aparar(dto.cadeiaAnalitico),
+        };
+        const errosDeCadeia = validarCadeiasDaConfiguracaoIa(aparada);
+        if (errosDeCadeia.length > 0) throw new BusinessException(errosDeCadeia[0]);
         const errosDeNiveis = dto.niveisProposta ? validarNiveisDaProposta(dto.niveisProposta) : [];
         if (errosDeNiveis.length > 0) throw new BusinessException(errosDeNiveis[0]);
         // O mapa gravado é sempre completo; sem ele no pedido, o repositório copia o da versão anterior.
@@ -112,15 +117,13 @@ export class ConfiguracaoIaService implements OnModuleInit {
         return { ...configuracao, niveisProposta: normalizarNiveisDaProposta(configuracao.niveisProposta) };
     }
 
-    /** Os nomes de modelo gravados sem espaço nas pontas (a regra confere o prefixo ignorando-os, então o que vai ao provedor é o nome limpo). */
-    private aparar(dto: ConfiguracaoIaCriarDto): ConfiguracaoIaCriarDto['modelosProvedor'] {
-        const aparados: Record<string, unknown> = {};
-        for (const [provedor, modelos] of Object.entries(dto.modelosProvedor ?? {})) {
-            aparados[provedor] = Object.fromEntries(
-                Object.entries((modelos ?? {}) as Record<string, unknown>).map(([campo, valor]) => [campo, typeof valor === 'string' ? valor.trim() : valor]),
-            );
-        }
-        return aparados as ConfiguracaoIaCriarDto['modelosProvedor'];
+    /**
+     * Os nomes de modelo de uma cadeia gravados sem espaço nas pontas (a regra confere o prefixo ignorando-os, então o que vai ao provedor
+     * é o nome limpo). O que não é lista ou item volta como veio: quem recusa é `validarCadeiasDaConfiguracaoIa`.
+     */
+    private aparar(cadeia: ConfiguracaoIaCriarDto['cadeiaRapido']): ConfiguracaoIaCriarDto['cadeiaRapido'] {
+        if (!Array.isArray(cadeia)) return cadeia;
+        return cadeia.map((item) => (item && typeof item === 'object' && typeof item.modelo === 'string' ? { ...item, modelo: item.modelo.trim() } : item));
     }
 
     /** Defesa em profundidade: o `AdministradorGuard` já barra a rota. */

@@ -1,6 +1,6 @@
 # 309-ia-listar-modelos-dos-provedores.spec.md
 
-> Origem: decisão do autor em 2026-11-04, durante a remodelagem da [261](261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md). Na Configuração da IA, o campo de modelo de cada item da cadeia passa a oferecer **a lista de modelos do próprio provedor**, obtida pela API dele, em vez de depender só de texto livre. **Depende da 261 em `done/`** (a tela de cadeias por nível, onde o campo mora). Não implementar antes.
+> Origem: decisão do autor em 2026-11-04, durante a remodelagem da [261](../done/261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md). Na Configuração da IA, o campo de modelo de cada item da cadeia passa a oferecer **a lista de modelos do próprio provedor**, obtida pela API dele, em vez de depender só de texto livre. **Depende da 261 em `done/`** (a tela de cadeias por nível, onde o campo mora). Não implementar antes.
 
 ## Objetivo
 

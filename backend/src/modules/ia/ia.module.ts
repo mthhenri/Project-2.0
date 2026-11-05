@@ -27,6 +27,8 @@ function criarClienteOpenAi(apiKey: string): ClienteOpenAi {
     return {
         gerar: (parametros) => sdk.chat.completions.create(parametros as never) as unknown as ReturnType<ClienteOpenAi['gerar']>,
         transmitir: (parametros) => sdk.chat.completions.create(parametros as never) as unknown as ReturnType<ClienteOpenAi['transmitir']>,
+        responder: (parametros) => sdk.responses.create(parametros as never) as unknown as ReturnType<ClienteOpenAi['responder']>,
+        transmitirResposta: (parametros) => sdk.responses.create(parametros as never) as unknown as ReturnType<ClienteOpenAi['transmitirResposta']>,
     };
 }
 

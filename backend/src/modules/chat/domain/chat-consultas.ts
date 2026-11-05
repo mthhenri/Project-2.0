@@ -9,12 +9,13 @@ export const LIMITE_BUSCA = 50;
 export const LIMITE_CONVERSAS = 100;
 
 /**
- * Campos que nasceram depois da criação do índice (task 191: `assunto`; task 225: `propostas_ids`). Um índice que já existe não os tem; `acrescentarCampos` os
- * põe nele ao subir (acrescentar um campo novo é permitido, mudar o tipo de um existente não).
+ * Campos que nasceram depois da criação do índice (task 191: `assunto`; task 225: `propostas_ids`; spec 261: `modelo_planejado`). Um índice que
+ * já existe não os tem; `acrescentarCampos` os põe nele ao subir (acrescentar um campo novo é permitido, mudar o tipo de um existente não).
  */
 export const CAMPOS_POSTERIORES_DA_MENSAGEM = {
     assunto: { type: 'keyword' },
     propostas_ids: { type: 'integer' },
+    modelo_planejado: { type: 'keyword' },
 };
 
 /**

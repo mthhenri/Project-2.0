@@ -276,6 +276,26 @@
                                                                     }}</span
                                                                 >
                                                             }
+                                                            @if (usouFallback(mensagem)) {
+                                                                <span
+                                                                    class="chat__fallback"
+                                                                    role="img"
+                                                                    tabindex="0"
+                                                                    aria-label="Fallback utilizado"
+                                                                    [pTooltip]="
+                                                                        'Respondeu ' +
+                                                                        mensagem.modelo +
+                                                                        ' no lugar de ' +
+                                                                        mensagem.modeloPlanejado
+                                                                    "
+                                                                    tooltipPosition="bottom"
+                                                                    ><i
+                                                                        class="pi pi-exclamation-triangle"
+                                                                        aria-hidden="true"
+                                                                    ></i
+                                                                    >Fallback utilizado</span
+                                                                >
+                                                            }
                                                             <button
                                                                 type="button"
                                                                 class="chat__copiar"

@@ -11,6 +11,8 @@ export interface ChatMensagemNova {
     texto: string;
     nivel?: NivelIaEnum | null;
     modelo?: string | null;
+    /** O modelo do item principal da cadeia do nível na chamada que decide `modelo` (spec 261); ausente em mensagem que não é da IA. */
+    modeloPlanejado?: string | null;
     tokensEntrada?: number | null;
     tokensSaida?: number | null;
     tokensCache?: number | null;
@@ -40,6 +42,8 @@ export interface ChatMensagemFonte {
     texto: string;
     nivel: string | null;
     modelo: string | null;
+    /** Ausente nos documentos anteriores à spec 261: conta como `null`. */
+    modelo_planejado?: string | null;
     tokens_entrada: number | null;
     tokens_saida: number | null;
     tokens_cache: number | null;
@@ -65,6 +69,7 @@ export function paraFonte(mensagem: ChatMensagemNova, id: string, criadaEm: Date
         texto: mensagem.texto,
         nivel: mensagem.nivel ?? null,
         modelo: mensagem.modelo ?? null,
+        modelo_planejado: mensagem.modeloPlanejado ?? null,
         tokens_entrada: mensagem.tokensEntrada ?? null,
         tokens_saida: mensagem.tokensSaida ?? null,
         tokens_cache: mensagem.tokensCache ?? null,
@@ -95,6 +100,7 @@ export function deFonte(fonte: ChatMensagemFonte): ChatMensagemLida {
         texto: fonte.texto,
         nivel: (fonte.nivel as NivelIaEnum | null) ?? null,
         modelo: fonte.modelo,
+        modeloPlanejado: fonte.modelo_planejado ?? null,
         tokensEntrada: fonte.tokens_entrada,
         tokensSaida: fonte.tokens_saida,
         tokensCache: fonte.tokens_cache,

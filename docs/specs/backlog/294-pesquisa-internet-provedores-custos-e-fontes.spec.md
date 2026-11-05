@@ -58,7 +58,7 @@ Permitir configurar a pesquisa nativa por provedor e mostrar, nas respostas do c
 
 ## Dependências
 
-- [261 — roteamento e Responses](261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md), em `done/` antes de executar esta task; a pesquisa OpenAI depende de sua migração. Revalidar os caminhos e contratos após ela.
+- [261 — roteamento e Responses](../done/261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md), em `done/` antes de executar esta task; a pesquisa OpenAI depende de sua migração. Revalidar os caminhos e contratos após ela.
 - [263 — pesquisa nativa](../done/263-ia-pesquisa-na-internet-do-provedor.spec.md), [202 — custos pelas mensagens](../done/202-custos-pelas-mensagens-do-chat.spec.md), 162/163 (armazenamentos), 188–191 (dúvidas e assunto), 203/204 (provedores/configuração), já implementadas.
 - `docs/SYSTEM.SPEC.md`, `docs/CONVENTIONS.md`, `docs/SCHEMA.md` e skills `task-flow`, `project20-dto-conventions`, `gerenciamento-de-impacto`, `sql-migrations`, `verify` e `conventions-check`, conforme o recorte.
 

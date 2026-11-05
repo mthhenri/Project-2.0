@@ -34,6 +34,9 @@ interface MensagemNaTela {
     autor: AutorChatEnum;
     texto: string;
     nivel: NivelIaEnum | null;
+    /** O modelo que respondeu e o do item principal da cadeia do nível (spec 261); só vêm na mensagem gravada da IA, e quando diferem há fallback. */
+    modelo?: string | null;
+    modeloPlanejado?: string | null;
     propostaIds: number[];
     criadaEm: Date | null;
     /** Só na resposta em andamento: ainda chegando (sem rodapé, com o "consultando…"). */
@@ -789,6 +792,11 @@ export class ChatPage implements OnInit {
         this.iaDisponibilidade.carregar();
     }
 
+    /** Respondeu um modelo diferente do planejado (um item de contingência da cadeia): a mensagem antiga, sem o planejado, nunca acusa. */
+    usouFallback(mensagem: MensagemNaTela): boolean {
+        return !!mensagem.modelo && !!mensagem.modeloPlanejado && mensagem.modelo !== mensagem.modeloPlanejado;
+    }
+
     private paraTela(mensagem: ChatMensagemResumoDto, autores?: Record<number, string>): MensagemNaTela {
         const deOutraPessoa = autores !== undefined && mensagem.autor === AutorChatEnum.USUARIO && mensagem.usuarioId !== this.sessao.id();
         return {
@@ -798,6 +806,8 @@ export class ChatPage implements OnInit {
             autor: mensagem.autor,
             texto: mensagem.texto,
             nivel: mensagem.nivel,
+            modelo: mensagem.modelo,
+            modeloPlanejado: mensagem.modeloPlanejado,
             propostaIds: mensagem.propostaIds,
             criadaEm: new Date(mensagem.createdDate),
         };

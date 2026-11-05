@@ -1,17 +1,29 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, NivelIaEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { ConfiguracaoIaCadeiaItemDto, ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, NivelIaEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
 import { IaException } from '../domain/ia.exception';
 import { IaProvedor } from '../domain/ia-provedor';
-import { IaRespostaProvedor, IaSolicitacaoProvedor } from '../domain/ia.tipos';
+import { IaMensagem, IaRespostaProvedor, IaSolicitacaoProvedor } from '../domain/ia.tipos';
 import { executarNoTurno, TurnoIa } from '../domain/turno-ia';
 import { IaProvedores, IaService } from './ia.service';
 
+const A = TipoProvedorIaEnum.ANTHROPIC;
+const G = TipoProvedorIaEnum.GOOGLE;
+const O = TipoProvedorIaEnum.OPENAI;
+
+const item = (provedor: TipoProvedorIaEnum, modelo: string, esforco: EsforcoIaEnum = EsforcoIaEnum.MEDIO): ConfiguracaoIaCadeiaItemDto => ({ provedor, modelo, esforco });
+
+/** A configuração de hoje: tudo na Anthropic, uma cadeia de um item por nível. */
+const CADEIAS_SO_ANTHROPIC = {
+    cadeiaRapido: [item(A, 'haiku')],
+    cadeiaPadrao: [item(A, 'sonnet')],
+    cadeiaAnalitico: [item(A, 'opus')],
+};
+
 function configuracao(parcial: Partial<ConfiguracaoIaResumoDto> = {}): ConfiguracaoIaResumoDto {
     return {
-        id: 1, versao: 1, provedor: TipoProvedorIaEnum.ANTHROPIC,
-        fallbacks: [], modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'haiku', modeloPadrao: 'sonnet', modeloAnalitico: 'opus' } }, esforcoAnalitico: EsforcoIaEnum.MEDIO,
+        id: 1, versao: 1, ...CADEIAS_SO_ANTHROPIC,
         checkinMinimoMinutos: 30, checkinMaximoMinutos: 80, duracaoRecomendadaMinutos: 90,
         checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true,
         duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false, niveisProposta: {},
@@ -20,56 +32,99 @@ function configuracao(parcial: Partial<ConfiguracaoIaResumoDto> = {}): Configura
     };
 }
 
-function criar(parcial: Partial<ConfiguracaoIaResumoDto> = {}, opcoes: { disponivel?: boolean; falha?: unknown } = {}) {
-    const estado = { atual: configuracao(parcial) };
-    const chamadas: IaSolicitacaoProvedor[] = [];
-    const provedor: IaProvedor = {
-        estaDisponivel: () => opcoes.disponivel ?? true,
-        async gerar(solicitacao) {
-            chamadas.push(solicitacao);
-            if (opcoes.falha) throw opcoes.falha;
-            return resposta(solicitacao.modelo);
-        },
-        async transmitir(solicitacao, aoTrecho) {
-            chamadas.push(solicitacao);
-            aoTrecho('um');
-            aoTrecho('dois');
-            return resposta(solicitacao.modelo);
-        },
-    };
-    const configuracaoIaService = { obterAtiva: async () => estado.atual } as unknown as ConfiguracaoIaService;
-    const provedores: IaProvedores = { [TipoProvedorIaEnum.ANTHROPIC]: provedor };
-    return { servico: new IaService(configuracaoIaService, provedores), estado, chamadas };
-}
-
 function resposta(modelo: string): IaRespostaProvedor {
     return { texto: 'ok', blocos: [{ tipo: 'texto', texto: 'ok' }], modelo, tokens: { entrada: 1, saida: 1, cache: 0 }, motivoParada: 'fim' };
 }
 
-const PEDIDO = { mensagens: [{ papel: 'usuario' as const, conteudo: 'oi' }] };
+interface ComportamentoDoProvedor {
+    disponivel?: boolean;
+    falha?: unknown;
+    /** Emite um trecho antes de falhar (só no streaming). */
+    trechoAntesDaFalha?: string;
+    /** Devolve o modelo com a data do lançamento, como os provedores fazem com um alias. */
+    sufixoDoModeloDevolvido?: string;
+}
 
-test('cada nível usa o modelo da configuração; o esforço só vale no analítico', async () => {
-    const { servico, chamadas } = criar();
+function criarCom(
+    parcial: Partial<ConfiguracaoIaResumoDto>,
+    comportamentos: Partial<Record<TipoProvedorIaEnum, ComportamentoDoProvedor>> = {},
+) {
+    const estado = { atual: configuracao(parcial) };
+    const chamadas: Array<{ provedor: TipoProvedorIaEnum; solicitacao: IaSolicitacaoProvedor }> = [];
+    const provedores: IaProvedores = {};
+    for (const tipo of Object.values(TipoProvedorIaEnum)) {
+        const comportamento = comportamentos[tipo] ?? {};
+        const devolvido = (modelo: string) => resposta(`${modelo}${comportamento.sufixoDoModeloDevolvido ?? ''}`);
+        provedores[tipo] = {
+            estaDisponivel: () => comportamento.disponivel ?? true,
+            async gerar(solicitacao) {
+                chamadas.push({ provedor: tipo, solicitacao });
+                if (comportamento.falha) throw comportamento.falha;
+                return devolvido(solicitacao.modelo);
+            },
+            async transmitir(solicitacao, aoTrecho) {
+                chamadas.push({ provedor: tipo, solicitacao });
+                if (comportamento.trechoAntesDaFalha) aoTrecho(comportamento.trechoAntesDaFalha);
+                if (comportamento.falha) throw comportamento.falha;
+                aoTrecho('um');
+                aoTrecho('dois');
+                return devolvido(solicitacao.modelo);
+            },
+        };
+    }
+    const configuracaoIaService = { obterAtiva: async () => estado.atual } as unknown as ConfiguracaoIaService;
+    return { servico: new IaService(configuracaoIaService, provedores), estado, chamadas };
+}
+
+const PEDIDO = { mensagens: [{ papel: 'usuario' as const, conteudo: 'oi' }] };
+const CAIU = new IaException('INDISPONIVEL', 'caiu');
+const SEM_CHAVE = { disponivel: false };
+
+test('cada nível usa o modelo e o esforço do item principal da própria cadeia', async () => {
+    const { servico, chamadas } = criarCom({
+        cadeiaRapido: [item(A, 'haiku', EsforcoIaEnum.BAIXO)],
+        cadeiaPadrao: [item(A, 'sonnet', EsforcoIaEnum.MEDIO)],
+        cadeiaAnalitico: [item(A, 'opus', EsforcoIaEnum.ALTO)],
+    });
     const rapido = await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO });
     const padrao = await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
     const analitico = await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.ANALITICO });
 
-    assert.deepEqual(chamadas.map((c) => c.modelo), ['haiku', 'sonnet', 'opus']);
-    assert.deepEqual(chamadas.map((c) => c.esforco), [undefined, undefined, EsforcoIaEnum.MEDIO]);
+    assert.deepEqual(chamadas.map((c) => c.solicitacao.modelo), ['haiku', 'sonnet', 'opus']);
+    assert.deepEqual(chamadas.map((c) => c.solicitacao.esforco), [EsforcoIaEnum.BAIXO, EsforcoIaEnum.MEDIO, EsforcoIaEnum.ALTO], 'o esforço é de cada item, em todos os níveis');
     assert.deepEqual([rapido.nivel, padrao.nivel, analitico.nivel], [NivelIaEnum.RAPIDO, NivelIaEnum.PADRAO, NivelIaEnum.ANALITICO]);
-    assert.equal(chamadas[0].maximoTokens, 1024);
+    assert.equal(chamadas[0].solicitacao.maximoTokens, 1024);
+});
+
+test('configuração híbrida: cada nível chama o provedor do seu item principal', async () => {
+    const { servico, chamadas } = criarCom({
+        cadeiaRapido: [item(A, 'claude-haiku-5-5')],
+        cadeiaPadrao: [item(O, 'gpt-6.1-sol')],
+        cadeiaAnalitico: [item(A, 'claude-opus-5-5')],
+    });
+    for (const nivel of Object.values(NivelIaEnum)) await servico.gerar({ ...PEDIDO, nivel });
+    assert.deepEqual(chamadas.map((c) => [c.provedor, c.solicitacao.modelo]), [[A, 'claude-haiku-5-5'], [O, 'gpt-6.1-sol'], [A, 'claude-opus-5-5']]);
+});
+
+test('alterar só o esforço do analítico para ALTO vale na chamada seguinte e não mexe nos outros níveis', async () => {
+    const { servico, estado, chamadas } = criarCom({});
+    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.ANALITICO });
+    estado.atual = configuracao({ cadeiaAnalitico: [item(A, 'opus', EsforcoIaEnum.ALTO)], versao: 2 });
+    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.ANALITICO });
+    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO });
+    assert.deepEqual(chamadas.map((c) => c.solicitacao.esforco), [EsforcoIaEnum.MEDIO, EsforcoIaEnum.ALTO, EsforcoIaEnum.MEDIO]);
 });
 
 test('trocar o modelo na configuração vale na chamada seguinte, sem reiniciar', async () => {
-    const { servico, estado, chamadas } = criar();
+    const { servico, estado, chamadas } = criarCom({});
     await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
-    estado.atual = configuracao({ modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'haiku', modeloPadrao: 'sonnet-novo', modeloAnalitico: 'opus' } }, versao: 2 });
+    estado.atual = configuracao({ cadeiaPadrao: [item(A, 'sonnet-novo')], versao: 2 });
     await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
-    assert.deepEqual(chamadas.map((c) => c.modelo), ['sonnet', 'sonnet-novo']);
+    assert.deepEqual(chamadas.map((c) => c.solicitacao.modelo), ['sonnet', 'sonnet-novo']);
 });
 
 test('IA desligada recusa antes de chamar o provedor', async () => {
-    const { servico, chamadas } = criar({ iaDesligada: true });
+    const { servico, chamadas } = criarCom({ iaDesligada: true });
     await assert.rejects(
         () => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }),
         (erro: unknown) => erro instanceof IaException && erro.motivo === 'DESLIGADA',
@@ -79,54 +134,78 @@ test('IA desligada recusa antes de chamar o provedor', async () => {
     assert.equal(await servico.obterEstado(), EstadoIaEnum.DESLIGADA);
 });
 
-test('provedor sem chave (ou sem implementação) é pulado; sozinho na cadeia, a chamada falha como indisponível', async () => {
-    const { servico } = criar({ provedor: TipoProvedorIaEnum.GOOGLE, modelosProvedor: { [TipoProvedorIaEnum.GOOGLE]: { modeloRapido: 'g', modeloPadrao: 'g', modeloAnalitico: 'g' } } });
-    await assert.rejects(
-        () => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }),
-        (erro: unknown) => erro instanceof IaException && erro.motivo === 'INDISPONIVEL',
-    );
-    assert.equal(await servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
-});
-
 test('transmitir entrega os trechos e devolve a resposta com o nível', async () => {
-    const { servico } = criar();
+    const { servico } = criarCom({});
     const trechos: string[] = [];
     const resultado = await servico.transmitir({ ...PEDIDO, nivel: NivelIaEnum.PADRAO }, (t) => trechos.push(t));
     assert.deepEqual(trechos, ['um', 'dois']);
     assert.equal(resultado.nivel, NivelIaEnum.PADRAO);
 });
 
-test('estado: falha de indisponibilidade põe fora do ar e o próximo sucesso volta ao ar', async () => {
-    const falha = { falha: new IaException('INDISPONIVEL', 'caiu') };
-    const { servico, estado } = criar();
-    assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
+// Estado da IA: por nível (decisão 7 da spec 261).
 
-    const comFalha = criar({}, falha);
-    await assert.rejects(() => comFalha.servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }), IaException);
-    assert.equal(await comFalha.servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
-
-    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO });
-    assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
-    void estado;
+test('estado: nenhum item de nenhuma cadeia com chave deixa a IA fora do ar', async () => {
+    assert.equal(await criarCom({}, { [A]: SEM_CHAVE }).servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
+    // Provedor com chave que não está em cadeia nenhuma não conta.
+    assert.equal(await criarCom({}, { [A]: SEM_CHAVE, [O]: { disponivel: true } }).servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
 });
 
-test('estado: provedor sem chave está fora do ar; limite de uso não derruba o estado', async () => {
-    assert.equal(await criar({}, { disponivel: false }).servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
+test('estado: um só nível sem item utilizável não derruba a IA; os outros níveis funcionam e o sem item falha citando o nível', async () => {
+    const { servico, chamadas } = criarCom(
+        { cadeiaPadrao: [item(O, 'gpt-5')] },
+        { [O]: SEM_CHAVE },
+    );
+    assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
 
-    const limite = criar({}, { falha: new IaException('LIMITE', 'limite') });
-    await assert.rejects(() => limite.servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }), IaException);
+    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO });
+    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.ANALITICO });
+    assert.deepEqual(chamadas.map((c) => c.solicitacao.modelo), ['haiku', 'opus']);
+
+    await assert.rejects(
+        () => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO }),
+        (erro: unknown) => erro instanceof IaException && erro.motivo === 'INDISPONIVEL' && /nível padrão/.test(erro.mensagem),
+    );
+    assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR, 'um nível indisponível não derruba o sistema');
+});
+
+test('estado: com a detecção automática, o último resultado é por nível e o sistema só cai quando todos os níveis falharam', async () => {
+    const { servico } = criarCom({}, { [A]: { falha: CAIU } });
+    assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
+
+    await assert.rejects(() => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }), IaException);
+    await assert.rejects(() => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO }), IaException);
+    assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR, 'rápido e padrão falharam, o analítico ainda não');
+
+    await assert.rejects(() => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.ANALITICO }), IaException);
+    assert.equal(await servico.obterEstado(), EstadoIaEnum.FORA_DO_AR, 'os três níveis falharam na última chamada');
+});
+
+test('estado: a primeira chamada bem-sucedida de um nível o recupera, e o sistema volta ao ar', async () => {
+    const { servico, estado } = criarCom({ cadeiaRapido: [item(A, 'haiku')], cadeiaPadrao: [item(A, 'sonnet')], cadeiaAnalitico: [item(A, 'opus')] }, { [A]: { falha: CAIU } });
+    for (const nivel of Object.values(NivelIaEnum)) await assert.rejects(() => servico.gerar({ ...PEDIDO, nivel }), IaException);
+    assert.equal(await servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
+
+    // O provedor volta: a mesma configuração, agora com um fallback que responde no nível rápido.
+    estado.atual = configuracao({ cadeiaRapido: [item(A, 'haiku'), item(G, 'gemini-flash')], versao: 2 });
+    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO });
+    assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
+});
+
+test('estado: limite de uso não derruba o estado', async () => {
+    const limite = criarCom({}, { [A]: { falha: new IaException('LIMITE', 'limite') } });
+    for (const nivel of Object.values(NivelIaEnum)) await assert.rejects(() => limite.servico.gerar({ ...PEDIDO, nivel }), IaException);
     assert.equal(await limite.servico.obterEstado(), EstadoIaEnum.NO_AR);
 });
 
 test('detecção automática desligada: a falha do provedor não derruba o estado (só o desligamento manual troca as telas)', async () => {
-    const { servico } = criar({ deteccaoAutomatica: false }, { falha: new IaException('INDISPONIVEL', 'caiu') });
-    await assert.rejects(() => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }), IaException);
+    const { servico } = criarCom({ deteccaoAutomatica: false }, { [A]: { falha: CAIU } });
+    for (const nivel of Object.values(NivelIaEnum)) await assert.rejects(() => servico.gerar({ ...PEDIDO, nivel }), IaException);
     assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
 });
 
 test('detecção automática desligada depois de uma queda registrada: o estado volta ao ar, e ligar de novo traz a queda de volta', async () => {
-    const { servico, estado } = criar({}, { falha: new IaException('INDISPONIVEL', 'caiu') });
-    await assert.rejects(() => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }), IaException);
+    const { servico, estado } = criarCom({}, { [A]: { falha: CAIU } });
+    for (const nivel of Object.values(NivelIaEnum)) await assert.rejects(() => servico.gerar({ ...PEDIDO, nivel }), IaException);
     assert.equal(await servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
     estado.atual = configuracao({ deteccaoAutomatica: false, versao: 2 });
     assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
@@ -135,14 +214,14 @@ test('detecção automática desligada depois de uma queda registrada: o estado 
 });
 
 test('desligar manualmente vale mesmo com a detecção automática desligada', async () => {
-    const { servico } = criar({ deteccaoAutomatica: false, iaDesligada: true });
+    const { servico } = criarCom({ deteccaoAutomatica: false, iaDesligada: true });
     assert.equal(await servico.obterEstado(), EstadoIaEnum.DESLIGADA);
 });
 
 // Task 188: o ponto único da coleta do turno do chat.
 
 test('dentro de um turno, gerar e transmitir registram o nível, o modelo e os tokens; fora, nada muda', async () => {
-    const { servico } = criar();
+    const { servico } = criarCom({});
     const turno = new TurnoIa();
     await executarNoTurno(turno, async () => {
         await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
@@ -156,14 +235,14 @@ test('dentro de um turno, gerar e transmitir registram o nível, o modelo e os t
 });
 
 test('chamada que falhou dentro do turno não é registrada', async () => {
-    const { servico } = criar({}, { falha: new IaException('INDISPONIVEL', 'fora do ar') });
+    const { servico } = criarCom({}, { [A]: { falha: new IaException('INDISPONIVEL', 'fora do ar') } });
     const turno = new TurnoIa();
     await executarNoTurno(turno, () => assert.rejects(() => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.ANALITICO }), IaException));
     assert.deepEqual([turno.nivel, turno.modelo, turno.tokens], [NivelIaEnum.RAPIDO, null, { entrada: 0, saida: 0, cache: 0 }]);
 });
 
 test('turnos simultâneos pelo mesmo serviço não misturam o que cada um gastou', async () => {
-    const { servico } = criar();
+    const { servico } = criarCom({});
     const primeiro = new TurnoIa();
     const segundo = new TurnoIa();
     await Promise.all([
@@ -174,96 +253,53 @@ test('turnos simultâneos pelo mesmo serviço não misturam o que cada um gastou
     assert.deepEqual([segundo.nivel, segundo.tokens.entrada], [NivelIaEnum.RAPIDO, 2]);
 });
 
-// Task 203: fallback entre provedores.
+// Fallback dentro da cadeia de cada nível.
 
-const MODELOS_POR_PROVEDOR = {
-    [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'haiku', modeloPadrao: 'sonnet', modeloAnalitico: 'opus' },
-    [TipoProvedorIaEnum.GOOGLE]: { modeloRapido: 'gemini-flash', modeloPadrao: 'gemini-pro', modeloAnalitico: 'gemini-pro-max' },
-    [TipoProvedorIaEnum.OPENAI]: { modeloRapido: 'gpt-mini', modeloPadrao: 'gpt-5', modeloAnalitico: 'o3' },
-};
+const CADEIA_DE_TRES = [item(A, 'opus', EsforcoIaEnum.ALTO), item(G, 'gemini-pro-max', EsforcoIaEnum.MEDIO), item(O, 'o3', EsforcoIaEnum.BAIXO)];
 
-interface ComportamentoDoProvedor {
-    disponivel?: boolean;
-    falha?: unknown;
-    /** Emite um trecho antes de falhar (só no streaming). */
-    trechoAntesDaFalha?: string;
-}
-
-function criarCadeia(parcial: Partial<ConfiguracaoIaResumoDto>, comportamentos: Partial<Record<TipoProvedorIaEnum, ComportamentoDoProvedor>>) {
-    const chamadas: Array<{ provedor: TipoProvedorIaEnum; solicitacao: IaSolicitacaoProvedor }> = [];
-    const provedores: IaProvedores = {};
-    for (const tipo of Object.values(TipoProvedorIaEnum)) {
-        const comportamento = comportamentos[tipo] ?? {};
-        provedores[tipo] = {
-            estaDisponivel: () => comportamento.disponivel ?? true,
-            async gerar(solicitacao) {
-                chamadas.push({ provedor: tipo, solicitacao });
-                if (comportamento.falha) throw comportamento.falha;
-                return resposta(solicitacao.modelo);
-            },
-            async transmitir(solicitacao, aoTrecho) {
-                chamadas.push({ provedor: tipo, solicitacao });
-                if (comportamento.trechoAntesDaFalha) aoTrecho(comportamento.trechoAntesDaFalha);
-                if (comportamento.falha) throw comportamento.falha;
-                aoTrecho('ok');
-                return resposta(solicitacao.modelo);
-            },
-        };
-    }
-    const configuracaoIaService = { obterAtiva: async () => configuracao(parcial) } as unknown as ConfiguracaoIaService;
-    return { servico: new IaService(configuracaoIaService, provedores), chamadas };
-}
-
-const CADEIA = { fallbacks: [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI], modelosProvedor: MODELOS_POR_PROVEDOR };
-const CAIU = new IaException('INDISPONIVEL', 'caiu');
-
-test('fallback: sem falha, só o provedor padrão é chamado', async () => {
-    const { servico, chamadas } = criarCadeia(CADEIA, {});
-    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
-    assert.deepEqual(chamadas.map((chamada) => chamada.provedor), [TipoProvedorIaEnum.ANTHROPIC]);
+test('fallback: sem falha, só o item principal do nível é chamado', async () => {
+    const { servico, chamadas } = criarCom({ cadeiaAnalitico: CADEIA_DE_TRES });
+    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.ANALITICO });
+    assert.deepEqual(chamadas.map((chamada) => chamada.provedor), [A]);
 });
 
-test('fallback: se o padrão cai, vai ao Gemini com os modelos do Gemini; se o Gemini cai também, vai à OpenAI', async () => {
-    const { servico, chamadas } = criarCadeia(CADEIA, {
-        [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU },
-        [TipoProvedorIaEnum.GOOGLE]: { falha: new IaException('LIMITE', 'limite') },
-    });
+test('fallback: cada item seguinte usa o modelo e o esforço dele, na ordem da cadeia do nível', async () => {
+    const { servico, chamadas } = criarCom(
+        { cadeiaAnalitico: CADEIA_DE_TRES },
+        { [A]: { falha: CAIU }, [G]: { falha: new IaException('LIMITE', 'limite') } },
+    );
     const resultado = await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.ANALITICO });
 
-    assert.deepEqual(chamadas.map((chamada) => [chamada.provedor, chamada.solicitacao.modelo]), [
-        [TipoProvedorIaEnum.ANTHROPIC, 'opus'],
-        [TipoProvedorIaEnum.GOOGLE, 'gemini-pro-max'],
-        [TipoProvedorIaEnum.OPENAI, 'o3'],
+    assert.deepEqual(chamadas.map((chamada) => [chamada.provedor, chamada.solicitacao.modelo, chamada.solicitacao.esforco]), [
+        [A, 'opus', EsforcoIaEnum.ALTO],
+        [G, 'gemini-pro-max', EsforcoIaEnum.MEDIO],
+        [O, 'o3', EsforcoIaEnum.BAIXO],
     ]);
     assert.equal(resultado.modelo, 'o3');
-    assert.equal(chamadas[2].solicitacao.esforco, EsforcoIaEnum.MEDIO, 'o esforço do analítico acompanha a chamada de contingência');
 });
 
-test('fallback: a ordem é a da configuração, não a dos provedores', async () => {
-    const { servico, chamadas } = criarCadeia(
-        { fallbacks: [TipoProvedorIaEnum.OPENAI, TipoProvedorIaEnum.GOOGLE], modelosProvedor: MODELOS_POR_PROVEDOR },
-        { [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU } },
+test('fallback: a cadeia de um nível não interfere na dos outros', async () => {
+    const { servico, chamadas } = criarCom(
+        { cadeiaRapido: [item(A, 'haiku'), item(O, 'gpt-5-mini')] },
+        { [A]: { falha: CAIU } },
     );
     await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO });
-    assert.deepEqual(chamadas.map((chamada) => chamada.provedor), [TipoProvedorIaEnum.ANTHROPIC, TipoProvedorIaEnum.OPENAI]);
+    await assert.rejects(() => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO }), IaException);
+    assert.deepEqual(chamadas.map((chamada) => [chamada.provedor, chamada.solicitacao.modelo]), [[A, 'haiku'], [O, 'gpt-5-mini'], [A, 'sonnet']]);
 });
 
-test('fallback: provedor sem chave é pulado sem ser chamado', async () => {
-    const { servico, chamadas } = criarCadeia(CADEIA, {
-        [TipoProvedorIaEnum.ANTHROPIC]: { disponivel: false },
-        [TipoProvedorIaEnum.GOOGLE]: { disponivel: false },
-    });
+test('fallback: item sem chave é pulado sem ser chamado', async () => {
+    const { servico, chamadas } = criarCom({ cadeiaRapido: [item(A, 'haiku'), item(G, 'gemini-flash'), item(O, 'gpt-5-mini')] }, { [A]: SEM_CHAVE, [G]: SEM_CHAVE });
     const resultado = await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO });
-    assert.deepEqual(chamadas.map((chamada) => chamada.provedor), [TipoProvedorIaEnum.OPENAI]);
-    assert.equal(resultado.modelo, 'gpt-mini');
+    assert.deepEqual(chamadas.map((chamada) => chamada.provedor), [O]);
+    assert.equal(resultado.modelo, 'gpt-5-mini');
 });
 
-test('fallback: padrão sem chave e fallback com limite devolve o limite (provedor pulado não é falha) e não derruba o estado', async () => {
-    const { servico } = criarCadeia(CADEIA, {
-        [TipoProvedorIaEnum.ANTHROPIC]: { disponivel: false },
-        [TipoProvedorIaEnum.GOOGLE]: { falha: new IaException('LIMITE', 'limite do Gemini') },
-        [TipoProvedorIaEnum.OPENAI]: { disponivel: false },
-    });
+test('fallback: principal sem chave e contingência com limite devolve o limite (item pulado não é falha) e não derruba o estado', async () => {
+    const { servico } = criarCom(
+        { cadeiaRapido: [item(A, 'haiku'), item(G, 'gemini-flash'), item(O, 'gpt-5-mini')] },
+        { [A]: SEM_CHAVE, [G]: { falha: new IaException('LIMITE', 'limite do Gemini') }, [O]: SEM_CHAVE },
+    );
     await assert.rejects(
         () => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }),
         (erro: unknown) => erro instanceof IaException && erro.motivo === 'LIMITE',
@@ -271,91 +307,91 @@ test('fallback: padrão sem chave e fallback com limite devolve o limite (proved
     assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
 });
 
-test('fallback: cadeia inteira falhando devolve a falha do provedor padrão e marca fora do ar', async () => {
-    const { servico } = criarCadeia(CADEIA, {
-        [TipoProvedorIaEnum.ANTHROPIC]: { falha: new IaException('LIMITE', 'limite do padrão') },
-        [TipoProvedorIaEnum.GOOGLE]: { falha: CAIU },
-        [TipoProvedorIaEnum.OPENAI]: { falha: CAIU },
-    });
+test('fallback: cadeia inteira falhando devolve a falha do primeiro item chamado', async () => {
+    const { servico } = criarCom(
+        { cadeiaRapido: [item(A, 'haiku'), item(G, 'gemini-flash'), item(O, 'gpt-5-mini')] },
+        { [A]: { falha: new IaException('LIMITE', 'limite do principal') }, [G]: { falha: CAIU }, [O]: { falha: CAIU } },
+    );
     await assert.rejects(
         () => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }),
-        (erro: unknown) => erro instanceof IaException && erro.motivo === 'LIMITE' && erro.mensagem === 'limite do padrão',
+        (erro: unknown) => erro instanceof IaException && erro.motivo === 'LIMITE' && erro.mensagem === 'limite do principal',
     );
-    assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR, 'a falha do padrão foi limite de uso, não queda');
-
-    const caidos = criarCadeia(CADEIA, {
-        [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU },
-        [TipoProvedorIaEnum.GOOGLE]: { falha: CAIU },
-        [TipoProvedorIaEnum.OPENAI]: { falha: CAIU },
-    });
-    await assert.rejects(() => caidos.servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }), IaException);
-    assert.equal(await caidos.servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
-});
-
-test('fallback: o padrão caído mas o fallback respondendo mantém a IA no ar', async () => {
-    const { servico } = criarCadeia(CADEIA, { [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU } });
-    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO });
-    assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
-});
-
-test('estado: fora do ar só quando nenhum provedor da cadeia tem chave', async () => {
-    const soOFallback = criarCadeia(CADEIA, { [TipoProvedorIaEnum.ANTHROPIC]: { disponivel: false }, [TipoProvedorIaEnum.GOOGLE]: { disponivel: false } });
-    assert.equal(await soOFallback.servico.obterEstado(), EstadoIaEnum.NO_AR);
-    const nenhum = criarCadeia(CADEIA, {
-        [TipoProvedorIaEnum.ANTHROPIC]: { disponivel: false },
-        [TipoProvedorIaEnum.GOOGLE]: { disponivel: false },
-        [TipoProvedorIaEnum.OPENAI]: { disponivel: false },
-    });
-    assert.equal(await nenhum.servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
-    // Provedor fora da cadeia não conta: o padrão sem chave e sem fallback está fora do ar mesmo com a OpenAI configurada no ambiente.
-    const foraDaCadeia = criarCadeia({}, { [TipoProvedorIaEnum.ANTHROPIC]: { disponivel: false } });
-    assert.equal(await foraDaCadeia.servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
 });
 
 test('fallback no streaming: falha antes de qualquer trecho passa ao próximo; depois de um trecho enviado, não repete a resposta', async () => {
-    const antes = criarCadeia(CADEIA, { [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU } });
+    const cadeia = { cadeiaPadrao: [item(A, 'sonnet'), item(G, 'gemini-pro')] };
+    const antes = criarCom(cadeia, { [A]: { falha: CAIU } });
     const trechos: string[] = [];
     await antes.servico.transmitir({ ...PEDIDO, nivel: NivelIaEnum.PADRAO }, (trecho) => trechos.push(trecho));
-    assert.deepEqual(trechos, ['ok']);
-    assert.deepEqual(antes.chamadas.map((chamada) => chamada.provedor), [TipoProvedorIaEnum.ANTHROPIC, TipoProvedorIaEnum.GOOGLE]);
+    assert.deepEqual(trechos, ['um', 'dois']);
+    assert.deepEqual(antes.chamadas.map((chamada) => chamada.provedor), [A, G]);
 
-    const depois = criarCadeia(CADEIA, { [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU, trechoAntesDaFalha: 'meio' } });
+    const depois = criarCom(cadeia, { [A]: { falha: CAIU, trechoAntesDaFalha: 'meio' } });
     const recebidos: string[] = [];
     await assert.rejects(() => depois.servico.transmitir({ ...PEDIDO, nivel: NivelIaEnum.PADRAO }, (trecho) => recebidos.push(trecho)), IaException);
     assert.deepEqual(recebidos, ['meio']);
-    assert.deepEqual(depois.chamadas.map((chamada) => chamada.provedor), [TipoProvedorIaEnum.ANTHROPIC]);
+    assert.deepEqual(depois.chamadas.map((chamada) => chamada.provedor), [A]);
 });
 
-test('fallback: a chamada que respondeu no fallback é a que entra no turno', async () => {
-    const { servico } = criarCadeia(CADEIA, { [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU } });
+test('fallback: a chamada que respondeu no fallback é a que entra no turno, com o modelo planejado do principal', async () => {
+    const { servico } = criarCom({ cadeiaPadrao: [item(A, 'sonnet'), item(G, 'gemini-pro')] }, { [A]: { falha: CAIU } });
     const turno = new TurnoIa();
     await executarNoTurno(turno, async () => {
         await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
     });
-    assert.equal(turno.modelo, 'gemini-pro');
+    assert.deepEqual([turno.modelo, turno.modeloPlanejado], ['gemini-pro', 'sonnet']);
 });
 
-test('trocar o provedor padrão e voltar: cada versão usa o trio do provedor que está no ponteiro, e o trio guardado de outro provedor não é chamado', async () => {
-    const { servico, chamadas } = criarCadeia({ provedor: TipoProvedorIaEnum.GOOGLE, fallbacks: [], modelosProvedor: MODELOS_POR_PROVEDOR }, {});
-    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
-    assert.deepEqual(chamadas.map((chamada) => [chamada.provedor, chamada.solicitacao.modelo]), [[TipoProvedorIaEnum.GOOGLE, 'gemini-pro']]);
+// Modelo planejado (decisão 9 da spec 261).
 
-    const voltou = criarCadeia({ provedor: TipoProvedorIaEnum.ANTHROPIC, fallbacks: [], modelosProvedor: MODELOS_POR_PROVEDOR }, {});
-    await voltou.servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
-    assert.deepEqual(voltou.chamadas.map((chamada) => [chamada.provedor, chamada.solicitacao.modelo]), [[TipoProvedorIaEnum.ANTHROPIC, 'sonnet']]);
+test('modelo planejado: o item principal respondeu, então é o próprio modelo devolvido (o provedor acrescenta a data ao nome configurado)', async () => {
+    const { servico } = criarCom({}, { [A]: { sufixoDoModeloDevolvido: '-20261015' } });
+    const resultado = await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
+    assert.equal(resultado.modelo, 'sonnet-20261015');
+    assert.equal(resultado.modeloPlanejado, 'sonnet-20261015', 'sem troca de item não há alerta de fallback');
 });
 
-test('o estado completo (administrador) lista só os provedores com chave no ambiente, sem expor a chave; a disponibilidade de todos não os traz', async () => {
+test('modelo planejado: um item de contingência respondeu, então o planejado é o modelo configurado do principal', async () => {
+    const { servico } = criarCom({ cadeiaPadrao: [item(A, 'sonnet'), item(O, 'gpt-5')] }, { [A]: { falha: CAIU } });
+    const resultado = await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
+    assert.deepEqual([resultado.modelo, resultado.modeloPlanejado], ['gpt-5', 'sonnet']);
+});
+
+test('modelo planejado: o principal foi pulado por falta de chave, e o planejado continua sendo o dele', async () => {
+    const { servico } = criarCom({ cadeiaPadrao: [item(A, 'sonnet'), item(O, 'gpt-5')] }, { [A]: SEM_CHAVE });
+    const resultado = await servico.transmitir({ ...PEDIDO, nivel: NivelIaEnum.PADRAO }, () => undefined);
+    assert.deepEqual([resultado.modelo, resultado.modeloPlanejado], ['gpt-5', 'sonnet']);
+});
+
+// Troca de provedor dentro do turno (decisão 8): o histórico neutro segue, a assinatura do Gemini não.
+
+const HISTORICO_COM_ASSINATURA: IaMensagem[] = [
+    { papel: 'usuario', conteudo: 'e o prazo?' },
+    { papel: 'ia', conteudo: [{ tipo: 'uso_ferramenta', id: 'gem_1', nome: 'consultar_prazo', entrada: { demanda: 3 }, assinatura: 'ASSINATURA-DO-GEMINI' }] },
+    { papel: 'usuario', conteudo: [{ tipo: 'resultado_ferramenta', usoId: 'gem_1', conteudo: '10/11' }] },
+];
+
+test('troca de provedor no meio do turno: o histórico neutro vai ao próximo item sem a assinatura do Gemini', async () => {
+    const { servico, chamadas } = criarCom({ cadeiaPadrao: [item(G, 'gemini-pro'), item(A, 'sonnet')] }, { [G]: { falha: CAIU } });
+    await servico.gerar({ nivel: NivelIaEnum.PADRAO, mensagens: HISTORICO_COM_ASSINATURA });
+
+    const [paraOGemini, paraAAnthropic] = chamadas;
+    const usoParaOGemini = (paraOGemini.solicitacao.mensagens[1].conteudo as Array<{ assinatura?: string }>)[0];
+    const usoParaAAnthropic = (paraAAnthropic.solicitacao.mensagens[1].conteudo as Array<{ assinatura?: string; nome?: string }>)[0];
+    assert.equal(usoParaOGemini.assinatura, 'ASSINATURA-DO-GEMINI', 'o próprio Gemini recebe a assinatura que ele deu');
+    assert.equal('assinatura' in usoParaAAnthropic, false, 'outro provedor não recebe a assinatura');
+    assert.equal(usoParaAAnthropic.nome, 'consultar_prazo', 'a chamada de ferramenta segue intacta');
+    assert.deepEqual(paraAAnthropic.solicitacao.mensagens[2], HISTORICO_COM_ASSINATURA[2], 'o resultado da ferramenta também segue');
+    assert.equal(HISTORICO_COM_ASSINATURA[1].conteudo !== undefined && (HISTORICO_COM_ASSINATURA[1].conteudo as Array<{ assinatura?: string }>)[0].assinatura, 'ASSINATURA-DO-GEMINI', 'o histórico de quem chamou não é alterado');
+});
+
+test('o estado completo (administrador) lista só os provedores com chave no ambiente, sem expor a chave', async () => {
     const provedor = (disponivel: boolean): IaProvedor => ({ estaDisponivel: () => disponivel }) as unknown as IaProvedor;
     const configuracaoIaService = { obterAtiva: async () => configuracao() } as unknown as ConfiguracaoIaService;
-    const servico = new IaService(configuracaoIaService, {
-        [TipoProvedorIaEnum.ANTHROPIC]: provedor(true),
-        [TipoProvedorIaEnum.GOOGLE]: provedor(false),
-        [TipoProvedorIaEnum.OPENAI]: provedor(true),
-    });
+    const servico = new IaService(configuracaoIaService, { [A]: provedor(true), [G]: provedor(false), [O]: provedor(true) });
 
     const completo = await servico.recuperarEstadoCompleto();
-    assert.deepEqual(completo.dados.provedoresComChave, [TipoProvedorIaEnum.ANTHROPIC, TipoProvedorIaEnum.OPENAI]);
+    assert.deepEqual(completo.dados.provedoresComChave, [A, O]);
     assert.equal(completo.dados.estado, EstadoIaEnum.NO_AR);
     assert.deepEqual(Object.keys((await servico.recuperarEstado()).dados), ['estado']);
 });

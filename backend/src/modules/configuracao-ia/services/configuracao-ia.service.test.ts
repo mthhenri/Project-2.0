@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import {
+    ConfiguracaoIaCadeiaItemDto,
     ConfiguracaoIaCriarDto,
     ConfiguracaoIaResumoDto,
     EsforcoIaEnum,
@@ -20,13 +21,16 @@ const ADMINISTRADOR = { sub: 1, tipo: TipoUsuarioEnum.ADMINISTRADOR } as never;
 const GESTOR = { sub: 2, tipo: TipoUsuarioEnum.GESTOR } as never;
 const DESENVOLVEDOR = { sub: 3, tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-const ANTHROPIC = { modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'claude-opus-5-5' };
+const A = TipoProvedorIaEnum.ANTHROPIC;
+const G = TipoProvedorIaEnum.GOOGLE;
+const O = TipoProvedorIaEnum.OPENAI;
+
+const item = (provedor: TipoProvedorIaEnum, modelo: string, esforco: EsforcoIaEnum = EsforcoIaEnum.MEDIO): ConfiguracaoIaCadeiaItemDto => ({ provedor, modelo, esforco });
 
 const BASE: ConfiguracaoIaCriarDto = {
-    provedor: TipoProvedorIaEnum.ANTHROPIC,
-    fallbacks: [],
-    modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: ANTHROPIC },
-    esforcoAnalitico: EsforcoIaEnum.MEDIO,
+    cadeiaRapido: [item(A, 'claude-haiku-5-5')],
+    cadeiaPadrao: [item(A, 'claude-sonnet-5-5')],
+    cadeiaAnalitico: [item(A, 'claude-opus-5-5')],
     checkinMinimoMinutos: 30,
     checkinMaximoMinutos: 80,
     duracaoRecomendadaMinutos: 90,
@@ -69,11 +73,11 @@ test('criar grava a versão seguinte sem alterar a anterior e renova o cache', a
     const servico = new ConfiguracaoIaService(repositorio);
 
     assert.equal((await servico.obterAtiva()).versao, 1);
-    const resposta = await servico.criar({ ...BASE, modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { ...ANTHROPIC, modeloPadrao: 'claude-sonnet-5-5-novo' } }, iaDesligada: false }, ADMINISTRADOR);
+    const resposta = await servico.criar({ ...BASE, cadeiaPadrao: [item(A, 'claude-sonnet-5-5-novo')], iaDesligada: false }, ADMINISTRADOR);
 
     assert.equal(resposta.dados.versao, 2);
-    assert.equal(versoes[0].modelosProvedor.ANTHROPIC?.modeloPadrao, 'claude-sonnet-5-5', 'a versão 1 não muda');
-    assert.equal((await servico.obterAtiva()).modelosProvedor.ANTHROPIC?.modeloPadrao, 'claude-sonnet-5-5-novo');
+    assert.equal(versoes[0].cadeiaPadrao[0].modelo, 'claude-sonnet-5-5', 'a versão 1 não muda');
+    assert.equal((await servico.obterAtiva()).cadeiaPadrao[0].modelo, 'claude-sonnet-5-5-novo');
     assert.equal(estado.leiturasDaAtiva, 1, 'a leitura seguinte vem do cache, sem ir ao banco');
 });
 
@@ -111,53 +115,51 @@ test('intervalo de check-in invertido ou igual é recusado e nada é gravado', a
 
 const mensagemDe = (erro: BusinessException): string => (erro.getResponse() as { mensagem: string }).mensagem;
 
-const GEMINI = { modeloRapido: 'gemini-flash', modeloPadrao: 'gemini-pro', modeloAnalitico: 'gemini-pro' };
-const OPENAI = { modeloRapido: 'gpt-mini', modeloPadrao: 'gpt-5', modeloAnalitico: 'o3' };
-const TODOS = { [TipoProvedorIaEnum.ANTHROPIC]: ANTHROPIC, [TipoProvedorIaEnum.GOOGLE]: GEMINI, [TipoProvedorIaEnum.OPENAI]: OPENAI };
-
-test('criar grava a cadeia de fallback na ordem dada, com o mapa de modelos', async () => {
+test('criar grava uma cadeia por nível, na ordem dada, cada uma com os itens dela', async () => {
     const { repositorio } = criarRepositorio();
     const servico = new ConfiguracaoIaService(repositorio);
-    const resposta = await servico.criar({ ...BASE, fallbacks: [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI], modelosProvedor: TODOS }, ADMINISTRADOR);
-    assert.deepEqual(resposta.dados.fallbacks, [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI]);
-    assert.deepEqual(resposta.dados.modelosProvedor, TODOS);
+    const cadeias = {
+        cadeiaRapido: [item(O, 'gpt-5-mini', EsforcoIaEnum.ALTO), item(A, 'claude-haiku-5-5')],
+        cadeiaPadrao: [item(O, 'gpt-6.1-sol')],
+        cadeiaAnalitico: [item(A, 'claude-opus-5-5', EsforcoIaEnum.ALTO), item(G, 'gemini-pro'), item(O, 'o3', EsforcoIaEnum.BAIXO)],
+    };
+    const resposta = await servico.criar({ ...BASE, ...cadeias }, ADMINISTRADOR);
+    assert.deepEqual([resposta.dados.cadeiaRapido, resposta.dados.cadeiaPadrao, resposta.dados.cadeiaAnalitico], [cadeias.cadeiaRapido, cadeias.cadeiaPadrao, cadeias.cadeiaAnalitico]);
 });
 
-test('trocar o padrão para o Gemini e voltar: o trio da Anthropic continua no mapa e volta preenchido', async () => {
+test('alterar só o esforço do item do analítico cria uma versão nova e deixa os outros níveis como estavam', async () => {
+    const { repositorio, versoes } = criarRepositorio();
+    const servico = new ConfiguracaoIaService(repositorio);
+    const resposta = await servico.criar({ ...BASE, cadeiaAnalitico: [item(A, 'claude-opus-5-5', EsforcoIaEnum.ALTO)] }, ADMINISTRADOR);
+    assert.equal(resposta.dados.versao, 2);
+    assert.equal(resposta.dados.cadeiaAnalitico[0].esforco, EsforcoIaEnum.ALTO);
+    assert.deepEqual([resposta.dados.cadeiaRapido, resposta.dados.cadeiaPadrao], [BASE.cadeiaRapido, BASE.cadeiaPadrao]);
+    assert.equal(versoes[0].cadeiaAnalitico[0].esforco, EsforcoIaEnum.MEDIO, 'a versão 1 não muda');
+});
+
+test('provedor sem chave não invalida a configuração: o servidor não conhece chave, só a regra de coerência', async () => {
     const { repositorio } = criarRepositorio();
     const servico = new ConfiguracaoIaService(repositorio);
-    const noGemini = await servico.criar({ ...BASE, provedor: TipoProvedorIaEnum.GOOGLE, modelosProvedor: { ...BASE.modelosProvedor, [TipoProvedorIaEnum.GOOGLE]: GEMINI } }, ADMINISTRADOR);
-    const deVolta = await servico.criar({ ...BASE, modelosProvedor: noGemini.dados.modelosProvedor }, ADMINISTRADOR);
-    assert.equal(deVolta.dados.provedor, TipoProvedorIaEnum.ANTHROPIC);
-    assert.deepEqual(deVolta.dados.modelosProvedor.ANTHROPIC, ANTHROPIC);
+    const resposta = await servico.criar({ ...BASE, cadeiaRapido: [item(G, 'gemini-flash')] }, ADMINISTRADOR);
+    assert.equal(resposta.dados.cadeiaRapido[0].provedor, G);
 });
 
-test('provedor padrão com modelo de outro provedor, ou sem modelos, é recusado e nada é gravado', async () => {
+test('cadeia vazia, provedor repetido, modelo vazio, de outro provedor ou esforço inválido são recusados e nada é gravado', async () => {
     const { repositorio, versoes } = criarRepositorio();
     const servico = new ConfiguracaoIaService(repositorio);
-    await assert.rejects(
-        () => servico.criar({ ...BASE, provedor: TipoProvedorIaEnum.OPENAI, modelosProvedor: { [TipoProvedorIaEnum.OPENAI]: ANTHROPIC } }, ADMINISTRADOR),
-        (erro: unknown) => erro instanceof BusinessException && /não é de OpenAI/.test(mensagemDe(erro)),
-    );
-    await assert.rejects(
-        () => servico.criar({ ...BASE, provedor: TipoProvedorIaEnum.GOOGLE }, ADMINISTRADOR),
-        (erro: unknown) => erro instanceof BusinessException && /Google está na cadeia, mas não tem os modelos/.test(mensagemDe(erro)),
-    );
-    assert.equal(versoes.length, 1);
-});
-
-test('fallback com modelo de outro provedor e provedor repetido na cadeia são recusados', async () => {
-    const { repositorio, versoes } = criarRepositorio();
-    const servico = new ConfiguracaoIaService(repositorio);
-    await assert.rejects(
-        () => servico.criar({ ...BASE, fallbacks: [TipoProvedorIaEnum.GOOGLE], modelosProvedor: { ...TODOS, [TipoProvedorIaEnum.GOOGLE]: { ...GEMINI, modeloPadrao: 'gpt-5' } } }, ADMINISTRADOR),
-        BusinessException,
-    );
-    await assert.rejects(() => servico.criar({ ...BASE, fallbacks: [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.GOOGLE], modelosProvedor: TODOS }, ADMINISTRADOR), BusinessException);
-    await assert.rejects(
-        () => servico.criar({ ...BASE, fallbacks: [TipoProvedorIaEnum.ANTHROPIC] }, ADMINISTRADOR),
-        (erro: unknown) => erro instanceof BusinessException && /mais de uma vez/.test(mensagemDe(erro)),
-    );
+    const recusas: Array<[Partial<ConfiguracaoIaCriarDto>, RegExp]> = [
+        [{ cadeiaRapido: [] }, /A cadeia do nível rápido precisa ter ao menos um item/],
+        [{ cadeiaPadrao: [item(O, 'gpt-5'), item(A, 'claude-sonnet-5-5'), item(O, 'gpt-5-mini')] }, /OpenAI aparece mais de uma vez na cadeia do nível padrão/],
+        [{ cadeiaAnalitico: [item(A, '   ')] }, /não foi informado/],
+        [{ cadeiaAnalitico: [item(O, 'claude-opus-5-5')] }, /não é de OpenAI/],
+        [{ cadeiaRapido: [item(A, 'claude-haiku-5-5', 'ENORME' as never)] }, /esforço do item 1/],
+    ];
+    for (const [alteracao, mensagem] of recusas) {
+        await assert.rejects(
+            () => servico.criar({ ...BASE, ...alteracao }, ADMINISTRADOR),
+            (erro: unknown) => erro instanceof BusinessException && mensagem.test(mensagemDe(erro)),
+        );
+    }
     assert.equal(versoes.length, 1);
 });
 
@@ -165,10 +167,10 @@ test('os nomes de modelo são gravados sem espaço nas pontas', async () => {
     const { repositorio } = criarRepositorio();
     const servico = new ConfiguracaoIaService(repositorio);
     const resposta = await servico.criar(
-        { ...BASE, modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: ' claude-haiku-5-5 ', modeloPadrao: 'claude-sonnet-5-5\n', modeloAnalitico: ' Claude-Opus-5-5' } } },
+        { ...BASE, cadeiaRapido: [item(A, ' claude-haiku-5-5 ')], cadeiaPadrao: [item(A, 'claude-sonnet-5-5\n')], cadeiaAnalitico: [item(A, ' Claude-Opus-5-5')] },
         ADMINISTRADOR,
     );
-    assert.deepEqual(resposta.dados.modelosProvedor.ANTHROPIC, { modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'Claude-Opus-5-5' });
+    assert.deepEqual([resposta.dados.cadeiaRapido[0].modelo, resposta.dados.cadeiaPadrao[0].modelo, resposta.dados.cadeiaAnalitico[0].modelo], ['claude-haiku-5-5', 'claude-sonnet-5-5', 'Claude-Opus-5-5']);
 });
 
 test('só administrador lê, lista e grava; gestor e desenvolvedor são recusados', async () => {

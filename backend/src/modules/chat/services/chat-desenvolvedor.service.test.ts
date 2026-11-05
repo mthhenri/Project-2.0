@@ -24,6 +24,7 @@ function mensagem(indice: number, parcial: Partial<ChatMensagemLida> = {}): Chat
         texto: `texto ${indice}`,
         nivel: null,
         modelo: 'claude',
+        modeloPlanejado: null,
         tokensEntrada: 10,
         tokensSaida: 5,
         tokensCache: 0,

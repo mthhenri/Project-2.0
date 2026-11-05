@@ -3,7 +3,7 @@ import * as assert from 'node:assert/strict';
 import { NivelIaEnum } from '@project20/shared';
 import { executarNoTurno, nivelMaisAlto, turnoAtual, TurnoIa } from './turno-ia';
 
-const chamada = (nivel: NivelIaEnum, modelo: string, entrada = 1) => ({ nivel, modelo, tokens: { entrada, saida: 2, cache: 3 } });
+const chamada = (nivel: NivelIaEnum, modelo: string, entrada = 1, modeloPlanejado = modelo) => ({ nivel, modelo, modeloPlanejado, tokens: { entrada, saida: 2, cache: 3 } });
 const espera = (milissegundos: number) => new Promise((resolver) => setTimeout(resolver, milissegundos));
 
 describe('nível mais alto do turno (task 188)', () => {
@@ -36,6 +36,15 @@ describe('TurnoIa', () => {
         const turno = new TurnoIa();
         turno.registrar(chamada(NivelIaEnum.RAPIDO, 'haiku'));
         assert.deepEqual([turno.nivel, turno.modelo], [NivelIaEnum.RAPIDO, 'haiku']);
+    });
+
+    it('o modelo planejado anda junto com o modelo, da mesma chamada (spec 261)', () => {
+        const turno = new TurnoIa();
+        assert.equal(turno.modeloPlanejado, null);
+        turno.registrar(chamada(NivelIaEnum.RAPIDO, 'haiku', 1, 'haiku'));
+        turno.registrar(chamada(NivelIaEnum.ANALITICO, 'gemini-pro', 1, 'opus'));
+        turno.registrar(chamada(NivelIaEnum.PADRAO, 'sonnet', 1, 'sonnet-planejado'));
+        assert.deepEqual([turno.modelo, turno.modeloPlanejado], ['gemini-pro', 'opus'], 'a chamada de nível menor não troca o par');
     });
 
     it('os tokens devolvidos são uma cópia: mexer neles não altera o turno', () => {

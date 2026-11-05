@@ -24,10 +24,11 @@ import {
     SEVERIDADE_ESTADO_IA,
     ValorFormularioConfiguracaoIa,
     criarFormularioConfiguracaoIa,
-    errosDeProvedores,
-    errosPorProvedor,
+    errosDeCadeias,
+    errosPorNivel,
     formularioIgualAVersao,
     paraDtoDeCriacao,
+    preencherFormulario,
     valoresDaVersao,
 } from '../../utils/configuracao-ia.util';
 
@@ -92,10 +93,9 @@ export class ConfiguracaoIaPage implements OnInit {
         return !ativa || formularioIgualAVersao(this.valorAtual(), ativa);
     });
 
-    /** Erros de provedor e modelo (a regra do shared, a mesma da service): aparecem depois da primeira tentativa de salvar. */
-    readonly errosDeProvedor = computed(() => errosDeProvedores(this.valorAtual()));
-    readonly errosDeProvedorVisiveis = computed(() => (this.tentouSalvar() ? this.errosDeProvedor() : []));
-    readonly errosPorProvedorVisiveis = computed(() => (this.tentouSalvar() ? errosPorProvedor(this.valorAtual()) : {}));
+    /** Erros das cadeias (a regra do shared, a mesma da service): aparecem, por nível, depois da primeira tentativa de salvar. */
+    readonly errosDeCadeia = computed(() => errosDeCadeias(this.valorAtual()));
+    readonly errosPorNivelVisiveis = computed(() => (this.tentouSalvar() ? errosPorNivel(this.valorAtual()) : {}));
 
     /** Algum campo da aba Comportamento inválido (minutos ou intervalo do check-in). */
     readonly comportamentoInvalido = computed(() => {
@@ -105,7 +105,7 @@ export class ConfiguracaoIaPage implements OnInit {
     });
 
     /** As abas com erro depois de uma tentativa de salvar ganham um indicador. */
-    readonly provedorComErro = computed(() => this.tentouSalvar() && this.errosDeProvedor().length > 0);
+    readonly provedorComErro = computed(() => this.tentouSalvar() && this.errosDeCadeia().length > 0);
     readonly comportamentoComErro = computed(() => this.tentouSalvar() && this.comportamentoInvalido());
 
     /** A barra de salvar é da configuração versionada: fica nas abas dela e, nas outras, só enquanto há algo pendente (o liga/desliga mexe nela de qualquer aba). */
@@ -149,7 +149,7 @@ export class ConfiguracaoIaPage implements OnInit {
                 this.versoes.set(versoes.dados.itens);
                 this.estado.set(estado?.dados?.estado ?? null);
                 this.provedoresComChave.set(estado?.dados?.provedoresComChave ?? null);
-                this.formulario.reset(valoresDaVersao(ativa.dados));
+                preencherFormulario(this.formulario, this.formBuilder, valoresDaVersao(ativa.dados));
                 this.valorAtual.set(this.formulario.getRawValue());
                 this.tentouSalvar.set(false);
                 this.carregando.set(false);
@@ -164,9 +164,9 @@ export class ConfiguracaoIaPage implements OnInit {
 
     salvar(): void {
         this.tentouSalvar.set(true);
-        if (this.formulario.invalid || this.errosDeProvedor().length > 0) {
+        if (this.formulario.invalid || this.errosDeCadeia().length > 0) {
             // O erro pode estar numa aba que não é a aberta: leva à primeira com problema.
-            if (this.errosDeProvedor().length > 0) this.abaAtiva.set('provedor');
+            if (this.errosDeCadeia().length > 0) this.abaAtiva.set('provedor');
             else if (this.comportamentoInvalido()) this.abaAtiva.set('comportamento');
             return;
         }
@@ -187,14 +187,14 @@ export class ConfiguracaoIaPage implements OnInit {
     descartarAlteracoes(): void {
         const ativa = this.ativa();
         if (!ativa) return;
-        this.formulario.reset(valoresDaVersao(ativa));
+        preencherFormulario(this.formulario, this.formBuilder, valoresDaVersao(ativa));
         this.valorAtual.set(this.formulario.getRawValue());
         this.tentouSalvar.set(false);
     }
 
     /** Preenche o formulário com os valores da versão; nada é gravado até salvar. */
     usarComoBase(versao: ConfiguracaoIaResumoDto): void {
-        this.formulario.reset(valoresDaVersao(versao));
+        preencherFormulario(this.formulario, this.formBuilder, valoresDaVersao(versao));
         this.valorAtual.set(this.formulario.getRawValue());
         this.formulario.markAsDirty();
         this.messageService.add({

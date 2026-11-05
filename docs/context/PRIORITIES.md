@@ -29,7 +29,6 @@ Resolver primeiro; o autor considera simples ou próximo.
 Ainda **sem ordem decidida** entre si nem em relação ao bloco "Agora". O autor define.
 
 - `chat-proposta-no-documento.spec.md` (tasks 273–277)
-- `261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md`
 - `222-modelagem-em-arquivo-json.spec.md`
 - `294-pesquisa-internet-provedores-custos-e-fontes.spec.md` — pesquisa, fontes, custos e controle por provedor; fazer depois, conforme decisão do autor (2026-10-31), sem ordem definida neste bloco.
 

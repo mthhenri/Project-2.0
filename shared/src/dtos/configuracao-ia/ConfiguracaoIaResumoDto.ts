@@ -1,19 +1,17 @@
-import { EsforcoIaEnum } from '../../enums/esforco-ia.enum';
 import { ModoContextoChatEnum } from '../../enums/modo-contexto-chat.enum';
-import { TipoProvedorIaEnum } from '../../enums/tipo-provedor-ia.enum';
-import { ConfiguracaoIaModelosPorProvedorDto } from './ConfiguracaoIaModelosDto';
+import { ConfiguracaoIaCadeiaItemDto } from './ConfiguracaoIaCadeiaItemDto';
 import { PropostaIaNiveisDto } from './PropostaIaNiveisDto';
 
 /** Uma versão da configuração da IA. A ativa é a de maior `versao`. */
 export interface ConfiguracaoIaResumoDto {
     id: number;
     versao: number;
-    provedor: TipoProvedorIaEnum;
-    /** Contingência, em ordem: se o provedor padrão falha, tenta o primeiro, depois o segundo. Vazia: sem fallback. */
-    fallbacks: TipoProvedorIaEnum[];
-    /** Os três modelos de cada provedor já configurado (da cadeia ou guardado de versões anteriores). */
-    modelosProvedor: ConfiguracaoIaModelosPorProvedorDto;
-    esforcoAnalitico: EsforcoIaEnum;
+    /** A cadeia do nível rápido: o primeiro item é o principal e os seguintes são a contingência (nunca vazia). */
+    cadeiaRapido: ConfiguracaoIaCadeiaItemDto[];
+    /** A cadeia do nível padrão. */
+    cadeiaPadrao: ConfiguracaoIaCadeiaItemDto[];
+    /** A cadeia do nível analítico. */
+    cadeiaAnalitico: ConfiguracaoIaCadeiaItemDto[];
     checkinMinimoMinutos: number;
     checkinMaximoMinutos: number;
     duracaoRecomendadaMinutos: number;

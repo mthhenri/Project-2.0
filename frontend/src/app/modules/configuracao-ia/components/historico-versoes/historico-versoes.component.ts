@@ -2,8 +2,8 @@ import { Component, computed, effect, input, output, signal } from '@angular/cor
 import { DatePipe, LowerCasePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { ConfiguracaoIaResumoDto, TipoProvedorIaEnum, cadeiaDeProvedoresIa } from '@project20/shared';
-import { rotuloDoEsforco, rotuloDoModoContexto, rotuloDoProvedor } from '../../utils/configuracao-ia.util';
+import { ConfiguracaoIaCadeiaItemDto, ConfiguracaoIaResumoDto, cadeiaDoNivelIa } from '@project20/shared';
+import { NIVEIS_DA_TELA, NivelDaTela, resumoDoItem, rotuloDoModoContexto } from '../../utils/configuracao-ia.util';
 
 /**
  * Coluna fixa de histórico das Configurações da IA (task 204), à direita e independente da aba: lista as versões e abre o valor de uma por
@@ -21,9 +21,9 @@ export class HistoricoVersoesComponent {
     readonly ativa = input.required<ConfiguracaoIaResumoDto | null>();
     readonly usarComoBase = output<ConfiguracaoIaResumoDto>();
 
-    readonly rotuloDoEsforco = rotuloDoEsforco;
     readonly rotuloDoModoContexto = rotuloDoModoContexto;
-    readonly rotuloDoProvedor = rotuloDoProvedor;
+    readonly resumoDoItem = resumoDoItem;
+    readonly niveis = NIVEIS_DA_TELA;
 
     private readonly idSelecionado = signal<number | null>(null);
     readonly selecionada = computed(() => this.versoes().find((versao) => versao.id === this.idSelecionado()) ?? null);
@@ -40,8 +40,9 @@ export class HistoricoVersoesComponent {
         this.idSelecionado.set(this.idSelecionado() === versao.id ? null : versao.id);
     }
 
-    cadeiaDaVersao(versao: ConfiguracaoIaResumoDto): TipoProvedorIaEnum[] {
-        return cadeiaDeProvedoresIa(versao);
+    /** A cadeia de um nível da versão: o item principal primeiro e depois a contingência (versão antiga mostra a cadeia convertida pela migration). */
+    cadeiaDoNivel(versao: ConfiguracaoIaResumoDto, nivel: NivelDaTela): ConfiguracaoIaCadeiaItemDto[] {
+        return cadeiaDoNivelIa(versao, nivel.nivel);
     }
 
     usar(versao: ConfiguracaoIaResumoDto): void {

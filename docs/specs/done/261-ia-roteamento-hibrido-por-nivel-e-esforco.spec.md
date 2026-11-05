@@ -1,6 +1,6 @@
 # 261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md
 
-> Origem: decisão do autor em 2026-10-28, após comparar qualidade, latência, tokens e custo do Project 2.0. **Remodelada com o autor em 2026-11-04** (a escolha de modelagem é do autor; ver "Decisões do autor"): em vez de um provedor principal por nível sobre uma cadeia global, **cada nível tem a sua própria cadeia** de provedor, modelo e esforço. Task de configuração e compatibilidade entre provedores; **não troca modelos silenciosamente em produção**. Depende das tasks [129](../done/129-ia-configuracao-modelo-e-api.spec.md), [130](../done/130-ia-interface-de-provedor-e-niveis-de-modelo.spec.md), [202](../done/202-custos-pelas-mensagens-do-chat.spec.md), [203](../done/203-ia-provedores-e-fallback.spec.md) e [204](../done/204-configuracao-ia-redesenho-da-tela.spec.md). A lista de modelos vinda dos provedores é a spec [309](309-ia-listar-modelos-dos-provedores.spec.md), à parte.
+> Origem: decisão do autor em 2026-10-28, após comparar qualidade, latência, tokens e custo do Project 2.0. **Remodelada com o autor em 2026-11-04** (a escolha de modelagem é do autor; ver "Decisões do autor"): em vez de um provedor principal por nível sobre uma cadeia global, **cada nível tem a sua própria cadeia** de provedor, modelo e esforço. Task de configuração e compatibilidade entre provedores; **não troca modelos silenciosamente em produção**. Depende das tasks [129](../done/129-ia-configuracao-modelo-e-api.spec.md), [130](../done/130-ia-interface-de-provedor-e-niveis-de-modelo.spec.md), [202](../done/202-custos-pelas-mensagens-do-chat.spec.md), [203](../done/203-ia-provedores-e-fallback.spec.md) e [204](../done/204-configuracao-ia-redesenho-da-tela.spec.md). A lista de modelos vinda dos provedores é a spec [309](../backlog/309-ia-listar-modelos-dos-provedores.spec.md), à parte.
 
 ## Objetivo
 
@@ -120,7 +120,7 @@ Registro das escolhas que remodelaram a spec. Qualquer mudança nelas volta ao a
 
 ## Fora de escopo
 
-- Lista de modelos vinda da API dos provedores (select no lugar do texto livre): spec [309](309-ia-listar-modelos-dos-provedores.spec.md).
+- Lista de modelos vinda da API dos provedores (select no lugar do texto livre): spec [309](../backlog/309-ia-listar-modelos-dos-provedores.spec.md).
 - Remover a tabela `tipo_provedor_ia` e o seu seed.
 - Escolher modelos automaticamente por preço, confiança, complexidade, heurística ou benchmark; escalonar automaticamente Medium → High.
 - Botão de esforço por mensagem para usuários finais ou execução de duas IAs em paralelo para escolher a melhor resposta.

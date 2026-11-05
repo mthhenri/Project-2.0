@@ -398,6 +398,18 @@
         line-height: 1.125rem;
     }
 
+    // Respondeu um item de contingência da cadeia, não o modelo planejado: discreto, na mesma linha do selo de nível.
+    &__fallback {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: var(--p-orange-500);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        line-height: 1.125rem;
+        cursor: help;
+    }
+
     // Os três pontinhos que pulsam enquanto a IA pensa.
     &__pontos {
         display: inline-flex;

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { ConfiguracaoIaCriarDto, EsforcoIaEnum, IaModeloPrecoDto, ModoContextoChatEnum, PropostaIaNivelEnum, TipoProvedorIaEnum, TipoPropostaIaEnum } from '@project20/shared';
+import { ConfiguracaoIaCadeiaItemDto, ConfiguracaoIaCriarDto, EsforcoIaEnum, IaModeloPrecoDto, ModoContextoChatEnum, PropostaIaNivelEnum, TipoProvedorIaEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { testarComBanco, obterConexaoBancoTeste, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAdministrador } from '../../../testes/fabricas';
@@ -11,16 +11,20 @@ import { ConfiguracaoIaRepository } from './configuracao-ia.repository';
 
 const repositorioDe = (conexao: ConexaoTeste) => criarRepositorio(ConfiguracaoIaRepository, conexao);
 
-/** A criação com outro modelo padrão do provedor Anthropic (o repositório não confere o prefixo: isso é da service). */
-const comModeloPadrao = (modeloPadrao: string): ConfiguracaoIaCriarDto => ({
-    ...NOVA,
-    modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { ...NOVA.modelosProvedor.ANTHROPIC!, modeloPadrao } },
-});
+const A = TipoProvedorIaEnum.ANTHROPIC;
+const G = TipoProvedorIaEnum.GOOGLE;
+const O = TipoProvedorIaEnum.OPENAI;
+
+const item = (provedor: TipoProvedorIaEnum, modelo: string, esforco: EsforcoIaEnum = EsforcoIaEnum.MEDIO): ConfiguracaoIaCadeiaItemDto => ({ provedor, modelo, esforco });
+
+/** A criação com outro modelo no item principal do padrão (o repositório não confere o prefixo: isso é da service). */
+const comModeloPadrao = (modelo: string): ConfiguracaoIaCriarDto => ({ ...NOVA, cadeiaPadrao: [item(A, modelo)] });
 
 const NOVA: ConfiguracaoIaCriarDto = {
-    provedor: TipoProvedorIaEnum.ANTHROPIC, fallbacks: [],
-    modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'modelo-rapido', modeloPadrao: 'modelo-padrao', modeloAnalitico: 'modelo-analitico' } },
-    esforcoAnalitico: EsforcoIaEnum.ALTO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 60, duracaoRecomendadaMinutos: 45,
+    cadeiaRapido: [item(A, 'modelo-rapido', EsforcoIaEnum.BAIXO)],
+    cadeiaPadrao: [item(A, 'modelo-padrao')],
+    cadeiaAnalitico: [item(A, 'modelo-analitico', EsforcoIaEnum.ALTO)],
+    checkinMinimoMinutos: 20, checkinMaximoMinutos: 60, duracaoRecomendadaMinutos: 45,
     checkinInteligente: false, rigorProporcional: false, deteccaoAutomatica: false,
     duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO, iaDesligada: true,
 };
@@ -33,9 +37,9 @@ testarComBanco('recuperarAtiva: a versão de maior número, com provedor e nome 
     const ativa = await repositorioDe(conexao).recuperarAtiva();
     assert.equal(ativa?.id, gravada.id);
     assert.equal(ativa?.versao, (anterior?.versao ?? 0) + 1);
-    assert.equal(ativa?.provedor, TipoProvedorIaEnum.ANTHROPIC);
-    assert.equal(ativa?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'modelo-padrao');
-    assert.equal(ativa?.esforcoAnalitico, EsforcoIaEnum.ALTO);
+    assert.deepEqual(ativa?.cadeiaRapido, NOVA.cadeiaRapido);
+    assert.deepEqual(ativa?.cadeiaPadrao, NOVA.cadeiaPadrao);
+    assert.deepEqual(ativa?.cadeiaAnalitico, NOVA.cadeiaAnalitico);
     assert.equal(ativa?.duvidasCodigo, true);
     assert.equal(ativa?.modoContextoChat, ModoContextoChatEnum.SEPARADO);
     assert.equal(ativa?.iaDesligada, true);
@@ -61,7 +65,7 @@ testarComBanco('inserirNovaVersao: a anterior continua intacta e o histórico li
     assert.equal(total >= 2, true);
     assert.deepEqual(itens.slice(0, 2).map((item) => item.id), [nova.id, anterior.id]);
     const anteriorDepois = itens.find((item) => item.id === anterior.id)!;
-    assert.equal(anteriorDepois.modelosProvedor.ANTHROPIC?.modeloPadrao, anterior.modelosProvedor.ANTHROPIC?.modeloPadrao);
+    assert.deepEqual(anteriorDepois.cadeiaPadrao, anterior.cadeiaPadrao);
     assert.equal(anteriorDepois.versao, anterior.versao);
 });
 
@@ -70,17 +74,7 @@ testarComBanco('inserirNovaVersao: duas gravações em sequência geram versões
     const primeira = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
     const segunda = await repositorioDe(conexao).inserirNovaVersao(comModeloPadrao('outro'), administrador.id);
     assert.equal(segunda.versao, primeira.versao + 1);
-    assert.equal((await repositorioDe(conexao).recuperarAtiva())?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'outro');
-});
-
-testarComBanco('inserirNovaVersao: provedor inexistente falha e não grava versão', async (conexao) => {
-    const administrador = await criarAdministrador(conexao);
-    const antes = (await repositorioDe(conexao).listar({})).total;
-    await assert.rejects(
-        () => repositorioDe(conexao).inserirNovaVersao({ ...NOVA, provedor: 'INEXISTENTE' as TipoProvedorIaEnum }, administrador.id),
-        /Provedor de IA inexistente/,
-    );
-    assert.equal((await repositorioDe(conexao).listar({})).total, antes);
+    assert.equal((await repositorioDe(conexao).recuperarAtiva())?.cadeiaPadrao[0].modelo, 'outro');
 });
 
 testarComBanco('versão excluída (soft delete) não é a ativa nem aparece no histórico', async (conexao) => {
@@ -231,46 +225,63 @@ testarComBanco('inserirNovaVersao copia os preços da versão anterior; a anteri
     assert.equal(doModelo(await repositorio.listarPrecos(), 'modelo-preco-a')?.precoSaidaMilhao, 20);
 });
 
-const GEMINI = { modeloRapido: 'gemini-flash', modeloPadrao: 'gemini-pro', modeloAnalitico: 'gemini-pro-max' };
-const OPENAI = { modeloRapido: 'gpt-mini', modeloPadrao: 'gpt-5', modeloAnalitico: 'o3' };
-const MODELOS = { ...NOVA.modelosProvedor, [TipoProvedorIaEnum.GOOGLE]: GEMINI, [TipoProvedorIaEnum.OPENAI]: OPENAI };
+const CADEIAS_HIBRIDAS = {
+    cadeiaRapido: [item(O, 'gpt-5-mini', EsforcoIaEnum.ALTO), item(A, 'claude-haiku-5-5', EsforcoIaEnum.BAIXO)],
+    cadeiaPadrao: [item(O, 'gpt-6.1-sol')],
+    cadeiaAnalitico: [item(A, 'claude-opus-5-5', EsforcoIaEnum.ALTO), item(G, 'gemini-pro'), item(O, 'o3', EsforcoIaEnum.BAIXO)],
+};
 
-testarComBanco('migration 0049: a cadeia e o mapa de modelos voltam como foram gravados, na criada, na ativa e na listagem', async (conexao) => {
+testarComBanco('as três cadeias voltam como foram gravadas (itens, ordem e esforço), na criada, na ativa e na listagem', async (conexao) => {
     const administrador = await criarAdministrador(conexao);
-    const fallbacks = [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI];
-    const criada = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, fallbacks, modelosProvedor: MODELOS }, administrador.id);
-    assert.deepEqual(criada.fallbacks, fallbacks);
-    assert.deepEqual(criada.modelosProvedor, MODELOS);
-
-    const ativa = await repositorioDe(conexao).recuperarAtiva();
-    assert.deepEqual(ativa?.fallbacks, fallbacks);
-    assert.deepEqual(ativa?.modelosProvedor, MODELOS);
-
-    const { itens } = await repositorioDe(conexao).listar({});
-    assert.deepEqual(itens[0].fallbacks, fallbacks);
+    const criada = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, ...CADEIAS_HIBRIDAS }, administrador.id);
+    for (const lida of [criada, (await repositorioDe(conexao).recuperarAtiva())!, (await repositorioDe(conexao).listar({})).itens[0]]) {
+        assert.deepEqual([lida.cadeiaRapido, lida.cadeiaPadrao, lida.cadeiaAnalitico], [CADEIAS_HIBRIDAS.cadeiaRapido, CADEIAS_HIBRIDAS.cadeiaPadrao, CADEIAS_HIBRIDAS.cadeiaAnalitico]);
+    }
 });
 
-testarComBanco('trocar o padrão para o Google e voltar: o trio da Anthropic fica no mapa de cada versão e a ordem do fallback é a gravada', async (conexao) => {
+testarComBanco('cada nível pode ter uma cadeia de tamanho próprio, inclusive de um item só', async (conexao) => {
     const administrador = await criarAdministrador(conexao);
-    const noGoogle = await repositorioDe(conexao).inserirNovaVersao(
-        { ...NOVA, provedor: TipoProvedorIaEnum.GOOGLE, fallbacks: [TipoProvedorIaEnum.OPENAI, TipoProvedorIaEnum.ANTHROPIC], modelosProvedor: MODELOS },
-        administrador.id,
-    );
-    assert.equal(noGoogle.provedor, TipoProvedorIaEnum.GOOGLE);
-    assert.deepEqual(noGoogle.fallbacks, [TipoProvedorIaEnum.OPENAI, TipoProvedorIaEnum.ANTHROPIC]);
-
-    const deVolta = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, modelosProvedor: noGoogle.modelosProvedor }, administrador.id);
-    assert.equal(deVolta.provedor, TipoProvedorIaEnum.ANTHROPIC);
-    assert.deepEqual(deVolta.modelosProvedor.ANTHROPIC, NOVA.modelosProvedor.ANTHROPIC);
-    assert.deepEqual(deVolta.fallbacks, []);
+    const criada = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, ...CADEIAS_HIBRIDAS }, administrador.id);
+    assert.deepEqual([criada.cadeiaRapido.length, criada.cadeiaPadrao.length, criada.cadeiaAnalitico.length], [2, 1, 3]);
 });
 
-testarComBanco('migration 0049: a versão 1 do seed ganhou o mapa com o trio da Anthropic e nenhum fallback', async (conexao) => {
-    const { itens } = await repositorioDe(conexao).listar({});
-    const versaoUm = itens.find((item) => item.versao === 1);
-    assert.deepEqual(versaoUm?.fallbacks, []);
-    assert.deepEqual(Object.keys(versaoUm?.modelosProvedor ?? {}), [TipoProvedorIaEnum.ANTHROPIC]);
-    assert.equal(versaoUm?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'claude-sonnet-5-5');
+testarComBanco('o banco recusa cadeia vazia (CHECK de lista com ao menos um item) e não grava versão', async (conexao) => {
+    const administrador = await criarAdministrador(conexao);
+    const antes = (await repositorioDe(conexao).listar({})).total;
+    for (const campo of ['cadeiaRapido', 'cadeiaPadrao', 'cadeiaAnalitico'] as const) {
+        await assert.rejects(() => repositorioDe(conexao).inserirNovaVersao({ ...NOVA, [campo]: [] }, administrador.id), /chk_configuracao_ia_cadeia_/);
+    }
+    assert.equal((await repositorioDe(conexao).listar({})).total, antes);
+});
+
+// Migration 0079: as colunas antigas saíram e as versões que já existiam viraram três cadeias iguais.
+
+testarComBanco('migration 0079: as colunas antigas deixaram de existir e as três cadeias são NOT NULL, sem DEFAULT', async (conexao) => {
+    const { rows } = await conexao.raw(`
+        SELECT
+            information_schema.columns.column_name AS coluna,
+            information_schema.columns.is_nullable AS anulavel,
+            information_schema.columns.column_default AS padrao
+        FROM
+            information_schema.columns
+        WHERE
+            information_schema.columns.table_name = 'configuracao_ia'
+            AND information_schema.columns.table_schema = current_schema()
+    `);
+    const colunas = new Map(rows.map((linha: { coluna: string; anulavel: string; padrao: string | null }) => [linha.coluna, linha]));
+    for (const antiga of ['tipo_provedor_ia_id', 'fallbacks', 'modelos_provedor', 'esforco_analitico']) assert.equal(colunas.has(antiga), false, `${antiga} saiu`);
+    for (const nova of ['cadeia_rapido', 'cadeia_padrao', 'cadeia_analitico']) {
+        const coluna = colunas.get(nova) as { anulavel: string; padrao: string | null };
+        assert.deepEqual([coluna.anulavel, coluna.padrao], ['NO', null], `${nova} é NOT NULL e sem DEFAULT`);
+    }
+});
+
+testarComBanco('migration 0079: a versão 1 do seed virou três cadeias iguais com o trio da Anthropic e MEDIO explícito em todos os itens', async (conexao) => {
+    const { itens } = await repositorioDe(conexao).listar({ itensPorPagina: 100 });
+    const versaoUm = itens.find((versao) => versao.versao === 1)!;
+    assert.deepEqual(versaoUm.cadeiaRapido, [item(A, 'claude-haiku-5-5')]);
+    assert.deepEqual(versaoUm.cadeiaPadrao, [item(A, 'claude-sonnet-5-5')]);
+    assert.deepEqual(versaoUm.cadeiaAnalitico, [item(A, 'claude-opus-5-5')]);
 });
 
 testarComBanco('migration 0055: as versões que já existiam ficam sem o mapa de níveis (nulo = padrão do shared)', async (conexao) => {

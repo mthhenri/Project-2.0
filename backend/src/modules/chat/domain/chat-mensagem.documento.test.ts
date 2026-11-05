@@ -10,14 +10,14 @@ const CRIADA_EM = new Date('2026-10-17T15:30:00.000Z');
 
 const completa: ChatMensagemNova = {
     conversaId: '7-2026-10-17', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.IA, assunto: AssuntoChatEnum.CODIGO, texto: 'Pronto',
-    nivel: NivelIaEnum.RAPIDO, modelo: 'modelo-x', tokensEntrada: 10, tokensSaida: 20, tokensCache: 5,
+    nivel: NivelIaEnum.RAPIDO, modelo: 'modelo-x', modeloPlanejado: 'modelo-planejado', tokensEntrada: 10, tokensSaida: 20, tokensCache: 5,
     propostaIds: [3, 8], execucaoId: 4, atividadeId: 5, demandaId: 6, conteudoBruto: [{ type: 'text', text: 'Pronto' }],
 };
 
 test('paraFonte: usa os nomes da modelagem, o id e a data de criação em ISO', () => {
     assert.deepEqual(paraFonte(completa, 'id-1', CRIADA_EM), {
         mensagem_id: 'id-1', conversa_id: '7-2026-10-17', usuario_id: 7, contexto: 'CHAT', autor: 'IA', assunto: 'CODIGO', texto: 'Pronto',
-        nivel: 'RAPIDO', modelo: 'modelo-x', tokens_entrada: 10, tokens_saida: 20, tokens_cache: 5,
+        nivel: 'RAPIDO', modelo: 'modelo-x', modelo_planejado: 'modelo-planejado', tokens_entrada: 10, tokens_saida: 20, tokens_cache: 5,
         proposta_id: 3, propostas_ids: [3, 8], execucao_id: 4, atividade_id: 5, demanda_id: 6, conteudo_bruto: [{ type: 'text', text: 'Pronto' }],
         created_date: '2026-10-17T15:30:00.000Z',
     });
@@ -25,7 +25,7 @@ test('paraFonte: usa os nomes da modelagem, o id e a data de criação em ISO', 
 
 test('paraFonte: todo campo opcional que faltar vira null (nunca undefined)', () => {
     const fonte = paraFonte({ conversaId: 'c', usuarioId: 1, contexto: ContextoChatEnum.CHECKIN, autor: AutorChatEnum.USUARIO, texto: 'Oi' }, 'id', CRIADA_EM);
-    for (const campo of ['assunto', 'nivel', 'modelo', 'tokens_entrada', 'tokens_saida', 'tokens_cache', 'proposta_id', 'execucao_id', 'atividade_id', 'demanda_id', 'conteudo_bruto'] as const) {
+    for (const campo of ['assunto', 'nivel', 'modelo', 'modelo_planejado', 'tokens_entrada', 'tokens_saida', 'tokens_cache', 'proposta_id', 'execucao_id', 'atividade_id', 'demanda_id', 'conteudo_bruto'] as const) {
         assert.equal(fonte[campo], null, campo);
     }
     assert.deepEqual(fonte.propostas_ids, [], 'sem propostas, a lista vai vazia');
