@@ -2,6 +2,8 @@
 
 :host {
     display: block;
+    min-width: 0;
+    max-width: 100%;
     margin: 0 0 0.6em;
 
     @include realce.variaveis-do-realce;
@@ -37,13 +39,13 @@
     &__corpo {
         margin: 0;
         padding: 0.75em 1em;
-        overflow-x: auto;
+        // Quebra de linha: o código acompanha a largura do balão (balão, pad e chat entre colaboradores) em vez de estourar para a direita.
         font-family: var(--font-mono, monospace);
         font-size: 0.85em;
         line-height: 1.45;
-        white-space: pre;
+        white-space: pre-wrap;
         word-break: normal;
-        overflow-wrap: normal;
+        overflow-wrap: anywhere;
     }
 
     @include realce.classes-dos-tokens;

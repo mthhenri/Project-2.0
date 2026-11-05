@@ -177,3 +177,8 @@
 - **Por quê:** coluna que nunca muda de valor é ruído e passa a falsa ideia de auditoria. Junto vai a regra do P-074 (excluir não altera `updated_date`).
 - **Custo aparente:** a decidir com o autor, tabela por tabela (quais precisam de `created_date`, quais de `updated_date`). Mexe em `BaseEntity`, nas migrations (colunas a remover), no `docs/SCHEMA.md` e nos repositories, e depende da 276/277. A tela de Modelagem poderia passar a exibir esses campos por tabela (relaciona-se com a I-040). Decisão de modelagem: **perguntar ao autor antes de especificar**.
 
+
+### I-051 — Bloco de código e caixa maior na barra de formatação do campo da IA · chat IA/frontend
+- **Ideia:** a barra de formatação do campo do chat com a IA ganha a opção de **bloco de código** (como a do chat entre colaboradores) e um controle para **expandir a caixa de texto para mais alto**, para ler e revisar um texto longo antes de enviar.
+- **Origem:** o autor, em 2026-11-05, ao ver o código escapando do balão (corrigido com quebra de linha nos blocos).
+- **Custo aparente:** a decidir; mexe só no campo formatado do chat da IA (spec 218/252). Não está especificada.

@@ -29,6 +29,14 @@
 
 ## Ativos
 
+### P-076 — Campo de código do chat entre colaboradores não quebra a linha ao digitar · `ABERTO` · frontend/chat
+
+- **Sintoma:** no mini editor de código (`editor-codigo`) do chat entre colaboradores, uma linha longa estoura a largura e rola na horizontal, enquanto o bloco já enviado (`markdown-bloco-codigo`) passou a quebrar a linha.
+- **Causa:** o editor usa `white-space: pre` na camada de realce e no `textarea`, com numeração de linhas de altura fixa (`--editor-codigo-linha`); quebrar sem alinhar as duas camadas desalinha a numeração.
+- **Contorno:** rolar na horizontal; ao enviar, o bloco já aparece quebrado.
+- **Correção:** quebrar a linha nas duas camadas com o mesmo cálculo de linhas visuais e manter a numeração por linha lógica; pede task própria.
+- **Desde:** 2026-11-05.
+
 ### P-075 — Cadeias por nível da IA sem verificação com chave real de provedor · `ABERTO` · IA
 
 - **Sintoma:** nenhuma chamada real foi feita aos provedores depois da spec 261 (sem chaves no ambiente de desenvolvimento). Ficaram só os testes com clientes falsos e a tela verificada ao vivo.
