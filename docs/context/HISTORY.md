@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-11-06 — Chat entre colaboradores: mensagens seguidas coladas e "digitando" como balão
+
+Pedido do autor (ajuste de acabamento do popup, só front, sem spec própria): mensagens seguidas da mesma pessoa a menos de 5 minutos ficam coladas, sem o espaço entre os balões e só a última da sequência mostra o horário; e o "digitando" aparece também como balão de três pontinhos no fim da conversa, no estilo do WhatsApp (o status do cabeçalho continua). A regra é pura (`marcarEmendas`, `INTERVALO_DA_SEQUENCIA_MS`, em `mensagem-direta.util.ts`): mesma pessoa, mesmo dia, intervalo menor que 5 min. O rodapé só some se a mensagem não carrega estado ("Lida", "Enviada", "Enviando…", "Não enviada"); nas coladas o botão de ações (três pontinhos) vai para o lado do balão, no hover, e o botão direito segue abrindo o menu. O balão de digitando rola o fim da conversa quando o usuário está lá.
+
+Testes: 2 de regra pura (`marcarEmendas`) e 2 de componente (emenda e horário; balão aparece e some com a validade), suíte do frontend 2551 passados (206 arquivos); `npm run lint:tudo` limpo. Verificado ao vivo (Postgres local, `CHAT_ARMAZENAMENTO=postgres`, gestor × desenvolvedor com o cenário da captura do autor) em 1920×1080, 1366×768, 1080×1920, 720×1280 e 960×1080, nos temas claro e escuro, com e sem o aviso de digitação. Limite: a animação dos pontinhos só foi vista em quadro parado; o caso "conversa vazia e a pessoa digitando" não mostra o balão (o estado vazio ocupa o lugar), aceito por ora.
+
 ## 2026-11-05 — Spec 294: a flag de pesquisa passa a ser por cadeia (nível)
 
 O autor corrigiu a decisão anterior: quer ligar a pesquisa no Rápido e não no Analítico, o que uma flag por provedor não permite. A 294 (item 1) foi reescrita: um interruptor por cadeia, valendo para todos os itens do nível, fallback herdando a flag do nível. Leitura literal de "por cadeia" (nível); a alternativa por item da cadeia não foi adotada. Onde a flag mora no banco segue para fechar com o autor ao implementar. Só spec.
