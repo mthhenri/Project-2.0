@@ -31,8 +31,8 @@ resposta aparece para as duas pessoas da conversa; quem não tem acesso ao que a
 propostas já existente (cartões, Aceitar/Descartar), com as mesmas permissões do chat da IA, e o custo entra na aba Custos como uso da IA.
 
 **Volume (317).** Pedido: nível de 1 a 5, o 3 é o som de hoje, cada ponto sobe ou desce uma porcentagem do volume; mais tarde, trocar o som.
-Perguntas abertas ao autor: onde a preferência vive (a tabela `mensagem_direta_preferencia` já guarda os avisos por usuário, então a
-proposta é uma coluna nova nela) e a porcentagem de cada nível.
+Decidido em 2026-11-06: a preferência fica numa coluna nova de `mensagem_direta_preferencia` (que já guarda os avisos por usuário). A
+porcentagem de cada nível **fica como ideia**: precisa ser testada ao ouvir (acima de 100% do som atual pode distorcer) antes de virar spec.
 
 ## Fora de escopo
 
