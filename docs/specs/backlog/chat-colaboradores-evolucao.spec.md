@@ -12,7 +12,7 @@ Ordem de execução (decidida em 2026-11-06): **318**, 313, 314, **316 antes da 
 | 310 | Endereço solto vira link (no visualizador de Markdown, vale para todo o sistema) | não | feita (`done/`) |
 | 311 | Dois cliques na mensagem respondem a ela | não | feita (`done/`) |
 | 312 | Barra de bolinhas: com uma conversa aberta, a lista vira uma coluna de avatares | não | feita (`done/`) |
-| 313 | Editar mensagem | sim | especificada (backlog), a implementar |
+| 313 | Editar mensagem | sim (`editada_date`, migration 0082) | feita em 2026-11-06 (`done/`) |
 | 314 | Reações nas mensagens e seletor de emoji | sim | reservada |
 | 315 | `@IA` no chat entre colaboradores | sim | reservada, spec própria antes de qualquer código |
 | 316 | Cor da bolinha escolhida pela pessoa (só no chat por ora) | sim | reservada, feita antes da 315 |

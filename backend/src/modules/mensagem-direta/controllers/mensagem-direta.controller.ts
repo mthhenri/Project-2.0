@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, ParseEnumPipe, ParseIntPipe, Post, Put, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseEnumPipe, ParseIntPipe, Patch, Post, Put, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import {
     MensagemDiretaBuscarDto,
     MensagemDiretaDigitacaoAvisarDto,
+    MensagemDiretaEditarDto,
     MensagemDiretaEnviarDto,
     MensagemDiretaLeituraAlterarDto,
     MensagemDiretaListarDto,
@@ -90,6 +91,11 @@ export class MensagemDiretaController {
     @Post('mensagem')
     enviarMensagem(@Body() dto: MensagemDiretaEnviarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
         return this.mensagemDiretaService.enviarMensagem(dto, usuarioAtivo);
+    }
+
+    @Patch('mensagem')
+    alterarMensagem(@Body() dto: MensagemDiretaEditarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.mensagemDiretaService.alterarMensagem(dto, usuarioAtivo);
     }
 
     @Put('conversa/:usuarioId/leitura')

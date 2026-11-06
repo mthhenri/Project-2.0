@@ -39,6 +39,8 @@ export const MAPEAMENTO_MENSAGEM_DIRETA = {
             responde_a_autor_usuario_id: { type: 'integer' },
             responde_a_trecho: { type: 'text', index: false },
             created_date: { type: 'date' },
+            // Task 313. Índice criado antes dela não tem o campo mapeado: o mapeamento dinâmico o reconhece como data na primeira edição.
+            editada_date: { type: 'date' },
         },
     },
 };

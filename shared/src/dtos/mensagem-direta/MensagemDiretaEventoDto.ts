@@ -9,6 +9,8 @@ export type MensagemDiretaEventoDto =
   | { tipo: 'ABERTURA'; onlineUsuarioIds: number[] }
   /** Uma mensagem nova em conversa do usuário (inclusive as que ele mesmo enviou em outra aba). */
   | { tipo: 'MENSAGEM'; mensagem: MensagemDiretaResumoDto }
+  /** Uma mensagem da conversa foi editada pelo autor (task 313): quem a tem na tela troca o texto e mostra "editada". Não avisa nem toca som. */
+  | { tipo: 'EDICAO'; mensagem: MensagemDiretaResumoDto }
   /** Alguém marcou a conversa como lida até `lidaAteDate` (a data da última mensagem que viu): é daí que sai o "Lida". */
   | { tipo: 'LEITURA'; conversaId: string; usuarioId: number; lidaAteDate: Date }
   | { tipo: 'PRESENCA'; usuarioId: number; online: boolean }

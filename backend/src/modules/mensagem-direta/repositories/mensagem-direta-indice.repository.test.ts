@@ -45,6 +45,11 @@ class IndiceFalso extends MensagemDiretaIndiceRepository {
         if (this.falhaAoLer) throw this.falhaAoLer;
         return this.documentos.get(id) ?? null;
     }
+    atualizacoes: { indice: string; id: string; campos: Partial<MensagemDiretaFonte> }[] = [];
+    protected async atualizarDocumento(indice: string, id: string, campos: Partial<MensagemDiretaFonte>): Promise<void> {
+        this.atualizacoes.push({ indice, id, campos });
+        this.documentos.set(id, { ...this.documentos.get(id)!, ...campos });
+    }
     protected async pesquisar(indice: string, consulta: unknown): Promise<ResultadoDaPesquisaDireta> {
         if (this.falhaAoPesquisar) throw this.falhaAoPesquisar;
         this.pesquisas.push({ indice, consulta });
@@ -258,10 +263,56 @@ test('a supervisão devolve as conversas e o total da agregação (zero quando n
     await rejeitaComBusiness(indice.listarTodasConversas({ usuarioIdsExcluidos: [], pagina: 0, porPagina: 10 }));
 });
 
-test('não expõe exclusão nem alteração de documento', () => {
+test('não expõe exclusão; a única alteração é a edição do texto (task 313)', () => {
     const metodos = [MensagemDiretaIndiceRepository.prototype].flatMap((prototipo) => Object.getOwnPropertyNames(prototipo));
-    assert.deepEqual(
-        metodos.filter((nome) => /exclu|delet|remov|apag|alter|atualiz|update/i.test(nome)),
-        [],
-    );
+    assert.deepEqual(metodos.filter((nome) => /exclu|delet|remov|apag/i.test(nome)), []);
+    assert.deepEqual(metodos.filter((nome) => /alter|atualiz|update/i.test(nome)), ['alterarMensagem']);
+});
+
+// --- editar a mensagem (task 313) -------------------------------------------
+
+const EDICAO = { mensagemId: UUID, conversaId: '4-9', autorUsuarioId: 9, texto: 'Oi, corrigido', contemCodigo: true, mencoes: [4], referencias: [] };
+
+test('alterarMensagem: troca só o texto e o que deriva dele, marca editada_date e não mexe na data de envio nem na resposta', async () => {
+    const indice = new IndiceFalso();
+    indice.existe = true;
+    const original = paraFonteDireta({ ...NOVA, respondeA: { mensagemId: '11111111-2222-4333-8444-555555555555', autorUsuarioId: 4, trecho: 'antes' } }, new Date('2026-10-21T14:00:00.000Z'));
+    indice.documentos.set(UUID, original);
+
+    const alterada = await indice.alterarMensagem(EDICAO);
+
+    assert.equal(indice.atualizacoes.length, 1);
+    assert.deepEqual(Object.keys(indice.atualizacoes[0].campos).sort(), ['contem_codigo', 'editada_date', 'mencoes', 'referencias', 'texto']);
+    assert.equal(alterada?.texto, 'Oi, corrigido');
+    assert.equal(alterada?.contemCodigo, true);
+    assert.deepEqual(alterada?.mencoes, [4]);
+    assert.deepEqual(alterada?.referencias, []);
+    assert.ok(alterada?.editadaDate instanceof Date);
+    assert.equal(alterada?.createdDate.toISOString(), '2026-10-21T14:00:00.000Z');
+    assert.equal(alterada?.respondeA?.trecho, 'antes');
+    assert.equal(indice.documentos.get(UUID)?.created_date, '2026-10-21T14:00:00.000Z', 'o documento gravado mantém o envio');
+});
+
+test('alterarMensagem: id em maiúsculas acha o documento; outro autor, outra conversa ou documento inexistente devolvem null sem gravar', async () => {
+    const indice = new IndiceFalso();
+    indice.existe = true;
+    indice.documentos.set(UUID, paraFonteDireta(NOVA, new Date()));
+
+    assert.ok(await indice.alterarMensagem({ ...EDICAO, mensagemId: UUID.toUpperCase() }));
+    indice.atualizacoes.length = 0;
+    assert.equal(await indice.alterarMensagem({ ...EDICAO, autorUsuarioId: 4 }), null, 'não é do autor');
+    assert.equal(await indice.alterarMensagem({ ...EDICAO, conversaId: '4-12' }), null, 'outra conversa');
+    assert.equal(await indice.alterarMensagem({ ...EDICAO, mensagemId: '00000000-0000-4000-8000-0000000000ff' }), null, 'inexistente');
+    assert.equal(indice.atualizacoes.length, 0);
+});
+
+test('alterarMensagem: recusa texto vazio, id que não é UUID e conversa inválida; falha do serviço vira BusinessException', async () => {
+    const indice = new IndiceFalso();
+    indice.existe = true;
+    indice.documentos.set(UUID, paraFonteDireta(NOVA, new Date()));
+    await rejeitaComBusiness(indice.alterarMensagem({ ...EDICAO, texto: '   ' }));
+    await rejeitaComBusiness(indice.alterarMensagem({ ...EDICAO, mensagemId: 'abc' }));
+    await rejeitaComBusiness(indice.alterarMensagem({ ...EDICAO, conversaId: '9-4' }));
+    indice.falhaAoLer = new Error('connection refused');
+    await rejeitaComBusiness(indice.alterarMensagem(EDICAO));
 });

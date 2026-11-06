@@ -12,6 +12,7 @@ import {
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
+import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { MarcadorDeLeituraRegistrado } from '../repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaService } from './mensagem-direta.service';
 
@@ -35,6 +36,7 @@ function mensagem(parcial: Partial<MensagemDiretaResumoDto> = {}): MensagemDiret
         referencias: [],
         respondeA: null,
         createdDate: new Date('2026-10-21T14:00:00.000Z'),
+        editadaDate: null,
         ...parcial,
     };
 }
@@ -49,6 +51,8 @@ interface Cenario {
     jaExistia?: boolean;
     /** As mensagens que `recuperarMensagem` encontra, por id (cada uma já com a conversa dela). */
     originais?: MensagemDiretaResumoDto[];
+    /** `alterarMensagem` não acha a mensagem (outra conversa, outro autor ou sumiu entre a leitura e a gravação). */
+    edicaoNaoAchada?: boolean;
     marcadores?: MarcadorDeLeituraRegistrado[];
     marcadorDoOutro?: MarcadorDeLeituraRegistrado | null;
     conversas?: { conversaId: string; participantes: number[]; totalMensagens: number; ultimaMensagem: MensagemDiretaResumoDto }[];
@@ -70,6 +74,11 @@ function montar(cenario: Cenario = {}) {
         recuperarMensagem: async (consulta: { conversaId: string; mensagemId: string }) => {
             registrar('recuperarMensagem', consulta);
             return (cenario.originais ?? []).find((original) => original.mensagemId === consulta.mensagemId && original.conversaId === consulta.conversaId) ?? null;
+        },
+        alterarMensagem: async (alteracao: { mensagemId: string; texto: string }) => {
+            registrar('alterarMensagem', alteracao);
+            const original = (cenario.originais ?? []).find((item) => item.mensagemId === alteracao.mensagemId);
+            return cenario.edicaoNaoAchada ? null : mensagem({ ...original, texto: alteracao.texto, editadaDate: new Date('2026-10-21T14:20:00.000Z') });
         },
         listarConversa: async (consulta: unknown) => { registrar('listarConversa', consulta); return { mensagens: [mensagem()], proximoCursor: 'abc' }; },
         listarConversasDoUsuario: async (consulta: unknown) => { registrar('listarConversasDoUsuario', consulta); return cenario.conversas ?? []; },
@@ -500,4 +509,77 @@ test('recuperarReferencia: o gestor vê a atividade mesmo sem atribuição à de
     const { dados } = await service.recuperarReferencia({ tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 57 }, GESTOR);
     assert.equal(dados!.acessivel, true);
     assert.equal(chamadas.acessoDemanda, undefined);
+});
+
+// --- editar (task 313) -----------------------------------------------------
+
+const edicao = (parcial: Record<string, unknown> = {}) => ({ destinatarioId: BRUNO_ID, mensagemId: UUID.toLowerCase(), texto: 'texto corrigido', ...parcial }) as never;
+/** A mensagem da Ana (id 4) para o Bruno, enviada às 14:00 UTC; o relógio dos testes é fixado em torno dela. */
+const DA_ANA = () => mensagem({ texto: 'texto original' });
+
+test('alterarMensagem: o autor edita dentro de 1 hora; grava para a conversa do par, avisa as duas pontas e devolve "editada"', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T14:30:00.000Z') });
+    const { service, chamadas } = montar({ originais: [DA_ANA()] });
+    const resposta = await service.alterarMensagem(edicao({ texto: 'Veja ```ts\nconst a = 1;\n``` agora' }), ANA);
+
+    assert.equal(resposta.sucesso, true);
+    assert.equal(resposta.dados!.mensagem.texto, 'Veja ```ts\nconst a = 1;\n``` agora');
+    assert.ok(resposta.dados!.mensagem.editadaDate instanceof Date);
+    const gravada = chamadas.alterarMensagem[0] as { conversaId: string; autorUsuarioId: number; contemCodigo: boolean; mensagemId: string };
+    assert.equal(gravada.conversaId, '4-9');
+    assert.equal(gravada.autorUsuarioId, 4, 'o autor vem do token');
+    assert.equal(gravada.contemCodigo, true, 'recalcula o que deriva do texto');
+    assert.equal(gravada.mensagemId, UUID.toLowerCase());
+    const evento = chamadas.publicar[0] as { usuarioIds: number[]; evento: { tipo: string } };
+    assert.deepEqual(evento.usuarioIds, [4, 9]);
+    assert.equal(evento.evento.tipo, 'EDICAO');
+});
+
+test('alterarMensagem: no limite de 1 hora ainda edita; um instante depois recusa e não grava', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T15:00:00.000Z') });
+    const noLimite = montar({ originais: [DA_ANA()] });
+    assert.equal((await noLimite.service.alterarMensagem(edicao(), ANA)).sucesso, true);
+
+    contexto.mock.timers.setTime(new Date('2026-10-21T15:00:00.001Z').getTime());
+    const passou = montar({ originais: [DA_ANA()] });
+    await recusaComMensagem(passou.service.alterarMensagem(edicao(), ANA), /prazo de 1 hora/i);
+    assert.equal(passou.chamadas.alterarMensagem, undefined);
+    assert.equal(passou.chamadas.publicar, undefined);
+});
+
+test('alterarMensagem: só o autor edita (o outro lado recebe 403) e a mensagem do sistema não se edita', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T14:10:00.000Z') });
+    const doBruno = montar({ originais: [DA_ANA()], usuarios: { 4: {}, 9: {} } });
+    const BRUNO_TOKEN = { sub: 9, login: 'bruno', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+    await assert.rejects(doBruno.service.alterarMensagem({ destinatarioId: 4, mensagemId: UUID.toLowerCase(), texto: 'x' } as never, BRUNO_TOKEN), (erro: unknown) => erro instanceof UnauthorizedAccessException);
+    assert.equal(doBruno.chamadas.alterarMensagem, undefined);
+
+    const doSistema = montar({ originais: [mensagem({ autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null })] });
+    await recusaComMensagem(doSistema.service.alterarMensagem(edicao(), ANA), /sistema/i);
+});
+
+test('alterarMensagem: mensagem de outra conversa ou inexistente é "não encontrada"; a pessoa de si mesma e a inexistente são recusadas', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T14:10:00.000Z') });
+    const { service, chamadas } = montar({ originais: [mensagem({ conversaId: '4-12' })] });
+    await assert.rejects(service.alterarMensagem(edicao(), ANA), (erro: unknown) => erro instanceof ResourceNotFoundException);
+    await recusaComMensagem(service.alterarMensagem(edicao({ destinatarioId: 4 }), ANA), /outra pessoa/i);
+    await assert.rejects(service.alterarMensagem(edicao({ destinatarioId: 77 }), ANA), (erro: unknown) => erro instanceof ResourceNotFoundException);
+    assert.equal(chamadas.alterarMensagem, undefined);
+});
+
+test('alterarMensagem: texto igual ao atual não grava nem avisa', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T14:10:00.000Z') });
+    const { service, chamadas } = montar({ originais: [DA_ANA()] });
+    const resposta = await service.alterarMensagem(edicao({ texto: 'texto original' }), ANA);
+    assert.equal(resposta.sucesso, true);
+    assert.equal(resposta.dados!.mensagem.editadaDate, null);
+    assert.equal(chamadas.alterarMensagem, undefined);
+    assert.equal(chamadas.publicar, undefined);
+});
+
+test('alterarMensagem: se a mensagem some entre a leitura e a gravação, é "não encontrada" e ninguém é avisado', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T14:10:00.000Z') });
+    const { service, chamadas } = montar({ originais: [DA_ANA()], edicaoNaoAchada: true });
+    await assert.rejects(service.alterarMensagem(edicao(), ANA), (erro: unknown) => erro instanceof ResourceNotFoundException);
+    assert.equal(chamadas.publicar, undefined);
 });

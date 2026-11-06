@@ -253,6 +253,16 @@
                                                 @if (!compacto) {
                                                     <span class="conversa-direta__horario"
                                                         >{{ hora(mensagem.createdDate) }}
+                                                        @if (mensagem.editadaDate) {
+                                                            <span
+                                                                class="conversa-direta__editada"
+                                                                [attr.title]="
+                                                                    'Editada às ' +
+                                                                    hora(mensagem.editadaDate)
+                                                                "
+                                                                >· editada</span
+                                                            >
+                                                        }
                                                         @if (
                                                             minha &&
                                                             mensagem.mensagemId === lidaId()
@@ -352,6 +362,10 @@
             [pessoas]="pessoasMencionaveis()"
             [resposta]="respostaEmPreparo()"
             (cancelarResposta)="estado.cancelarResposta()"
+            [edicao]="edicaoEmPreparo()"
+            (cancelarEdicao)="estado.cancelarEdicao()"
+            [salvando]="estado.salvandoEdicao()"
+            [erroDaEdicao]="estado.erroNaEdicao()"
             [chave]="pessoaAberta()"
             [codigoInicial]="estado.rascunhoDoDesktop()"
             (textoAplicado)="estado.rascunhoDoDesktop.set(null)"

@@ -23,6 +23,7 @@ function mensagem(texto = 'oi'): MensagemDiretaResumoDto {
         referencias: [],
         respondeA: null,
         createdDate: new Date('2026-10-21T14:05:11.482Z'),
+        editadaDate: null,
     };
 }
 
@@ -33,6 +34,23 @@ test('barramento: a mensagem de uma ENTREGA volta com a data como Date, e o rest
     const lida = decodificarMensagemDoBarramento(codificarMensagemDoBarramento(original));
     assert.deepEqual(lida, original);
     assert.ok(lida?.tipo === 'ENTREGA' && lida.evento.tipo === 'MENSAGEM' && lida.evento.mensagem.createdDate instanceof Date);
+});
+
+test('barramento: a EDICAO volta com as duas datas como Date (envio e edição); uma mensagem nunca editada volta com null', () => {
+    const editada: MensagemDoBarramento = { tipo: 'ENTREGA', usuarioIds: [4, 9], evento: { tipo: 'EDICAO', mensagem: { ...mensagem('texto corrigido'), editadaDate: new Date('2026-10-21T14:20:00.000Z') } } };
+    const lida = decodificarMensagemDoBarramento(codificarMensagemDoBarramento(editada));
+    assert.deepEqual(lida, editada);
+    assert.ok(lida?.tipo === 'ENTREGA' && lida.evento.tipo === 'EDICAO' && lida.evento.mensagem.editadaDate instanceof Date);
+
+    const semEdicao: MensagemDoBarramento = { tipo: 'ENTREGA', usuarioIds: [4], evento: { tipo: 'MENSAGEM', mensagem: mensagem() } };
+    const lidaSemEdicao = decodificarMensagemDoBarramento(codificarMensagemDoBarramento(semEdicao));
+    assert.ok(lidaSemEdicao?.tipo === 'ENTREGA' && lidaSemEdicao.evento.tipo === 'MENSAGEM' && lidaSemEdicao.evento.mensagem.editadaDate === null);
+});
+
+test('barramento: a EDICAO de texto grande demais para o NOTIFY vira SINCRONIZAR da conversa, como a mensagem nova', () => {
+    const grande: MensagemDoBarramento = { tipo: 'ENTREGA', usuarioIds: [4, 9], evento: { tipo: 'EDICAO', mensagem: mensagem('x'.repeat(9_000)) } };
+    const preparada = decodificarMensagemDoBarramento(prepararParaNotify(grande));
+    assert.deepEqual(preparada, { tipo: 'ENTREGA', usuarioIds: [4, 9], evento: { tipo: 'SINCRONIZAR', conversaId: '4-9' } });
 });
 
 test('barramento: LEITURA volta com Date; os eventos sem data e a PRESENCA passam como estão', () => {

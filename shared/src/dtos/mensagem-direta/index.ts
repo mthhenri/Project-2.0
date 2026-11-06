@@ -8,6 +8,8 @@ export * from './MensagemDiretaSilencioAlterarDto';
 export * from './MensagemDiretaDigitacaoAvisarDto';
 export * from './MensagemDiretaPreferenciaAlterarDto';
 export * from './MensagemDiretaResumoDto';
+export * from './MensagemDiretaEditadaDto';
+export * from './MensagemDiretaEditarDto';
 export * from './MensagemDiretaEnviadaDto';
 export * from './MensagemDiretaListadasDto';
 export * from './MensagemDiretaBuscadoDto';

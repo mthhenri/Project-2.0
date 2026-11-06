@@ -46,6 +46,14 @@ describe('MensagemDiretaService', () => {
         responderSucesso(requisicao, {});
     });
 
+    it('editarMensagem é um PATCH em /mensagem com o corpo da edição (task 313)', () => {
+        servico.editarMensagem({ destinatarioId: 9, mensagemId: 'uuid', texto: 'corrigido' }).subscribe();
+        const requisicao = esperarRequisicao(http, 'PATCH', '/mensagem-direta/mensagem');
+        expect(requisicao.request.body).toEqual({ destinatarioId: 9, mensagemId: 'uuid', texto: 'corrigido' });
+        expect(requisicao.request.context.get(ERRO_TRATADO_PELA_TELA)).toBe(true);
+        responderSucesso(requisicao, {});
+    });
+
     it('alterarLeitura é um PUT em /conversa/:usuarioId/leitura com a data em ISO', () => {
         servico.alterarLeitura(9, new Date('2026-10-21T14:05:11.482Z')).subscribe();
         const requisicao = esperarRequisicao(http, 'PUT', '/mensagem-direta/conversa/9/leitura');

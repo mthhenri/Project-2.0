@@ -6,6 +6,7 @@ import {
     MensagemNaConversa,
     agruparPorDia,
     marcarEmendas,
+    aplicarEdicaoNaLista,
     aplicarMensagemNaLista,
     dataDaUltimaDoOutro,
     devePublicarDigitacao,
@@ -43,6 +44,7 @@ function mensagem(id: string, minutos: number, autor = OUTRO, parcial: Partial<M
         referencias: [],
         respondeA: null,
         createdDate: new Date(2026, 9, 21, 14, minutos),
+        editadaDate: null,
         situacao: 'ENVIADA',
         ...parcial,
     };
@@ -221,6 +223,31 @@ describe('lista de conversas', () => {
         expect(previaDaMensagem('veja\n\n```ts\nconst a = 1;\n```', true, true)).toBe('Você: veja [código]');
         expect(previaDaMensagem('```ts\nx\n```', true, false)).toBe('[código]');
         expect(previaDaMensagem('```ts\nbloco sem fechar', true, false)).toBe('[código]');
+    });
+
+    it('normalizarMensagem converte editadaDate em Date e mantém o nulo (task 313)', () => {
+        const resumo = { ...mensagem('e1', 0), createdDate: '2026-10-21T14:00:00.000Z' as never, editadaDate: '2026-10-21T14:20:00.000Z' as never };
+        const { situacao: _situacao, ...semSituacao } = resumo;
+        expect(normalizarMensagem(semSituacao).editadaDate).toEqual(new Date('2026-10-21T14:20:00.000Z'));
+        expect(normalizarMensagem({ ...semSituacao, editadaDate: null }).editadaDate).toBeNull();
+        const lista = normalizarConversa({
+            conversaId: '4-9', usuarioId: 9, usuarioNome: 'Pessoa', naoLidas: 0, silenciada: false, online: false,
+            ultimaMensagem: { ...semSituacao, editadaDate: '2026-10-21T14:20:00.000Z' as never },
+        });
+        expect(lista.ultimaMensagem?.editadaDate).toEqual(new Date('2026-10-21T14:20:00.000Z'));
+    });
+
+    it('aplicarEdicaoNaLista: troca a prévia só se a editada é a última da conversa, sem mover a conversa nem contar não lida', () => {
+        const lista = [conversa('7', 2), conversa('9', 0)];
+        const editadaDaNove = mensagem('u9', 0, OUTRO, { conversaId: '4-9', texto: 'texto corrigido', editadaDate: new Date(2026, 9, 21, 14, 20) });
+        const resultado = aplicarEdicaoNaLista(lista, editadaDaNove);
+        expect(resultado.map((c) => c.conversaId)).toEqual(['4-7', '4-9']);
+        expect(resultado[1].ultimaMensagem?.texto).toBe('texto corrigido');
+        expect(resultado[1].ultimaMensagem?.editadaDate).toEqual(new Date(2026, 9, 21, 14, 20));
+        expect(resultado.map((c) => c.naoLidas)).toEqual([2, 0]);
+
+        const antiga = mensagem('antiga', 0, OUTRO, { conversaId: '4-9', texto: 'não é a última' });
+        expect(aplicarEdicaoNaLista(lista, antiga)).toEqual(lista);
     });
 
     it('aplicarMensagemNaLista: sobe a conversa ao topo e conta uma não lida só se for do outro e a conversa não estiver aberta', () => {

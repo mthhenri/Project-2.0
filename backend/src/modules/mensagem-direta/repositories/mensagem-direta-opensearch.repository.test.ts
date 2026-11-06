@@ -3,7 +3,7 @@ import * as assert from 'node:assert/strict';
 import { AutorMensagemDiretaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { MAPEAMENTO_MENSAGEM_DIRETA } from '../domain/mensagem-direta-consultas';
-import { MensagemDiretaFonte, MensagemDiretaNova } from '../domain/mensagem-direta.documento';
+import { MensagemDiretaFonte, MensagemDiretaNova, paraFonteDireta } from '../domain/mensagem-direta.documento';
 import { registrarContratoDeArmazenamentoDeMensagemDireta } from './armazenamento-de-mensagem-direta.contrato';
 import {
     ClienteOpenSearchMensagemDireta,
@@ -47,6 +47,7 @@ function criarClienteFalso(opcoes: { indiceExiste?: boolean; falhar?: boolean; e
         create: [] as { index: string; body: unknown }[],
         index: [] as { index: string; id: string; body: unknown; refresh: string; op_type: string }[],
         get: [] as { index: string; id: string }[],
+        update: [] as { index: string; id: string; body: { doc: Partial<MensagemDiretaFonte> }; refresh: string }[],
         search: [] as { index: string; body: any }[],
     };
     const documentos = new Map<string, MensagemDiretaFonte>();
@@ -75,6 +76,11 @@ function criarClienteFalso(opcoes: { indiceExiste?: boolean; falhar?: boolean; e
             const documento = documentos.get(parametros.id);
             if (!documento) throw Object.assign(new Error('not_found'), { statusCode: 404 });
             return { body: { _source: documento } };
+        },
+        update: async (parametros) => {
+            chamadas.update.push(parametros);
+            documentos.set(parametros.id, { ...documentos.get(parametros.id)!, ...parametros.body.doc });
+            return {};
         },
         search: async (parametros) => {
             chamadas.search.push(parametros);
@@ -163,11 +169,36 @@ describe('MensagemDiretaOpenSearchRepository', () => {
         await assert.rejects(repositorio.listarConversasDoUsuario({ usuarioId: 9 }), (erro) => erro instanceof BusinessException);
     });
 
-    it('não expõe exclusão nem alteração de documento', () => {
+    it('não expõe exclusão; a única alteração é a edição do texto (task 313)', () => {
         const metodos = [MensagemDiretaOpenSearchRepository.prototype, Object.getPrototypeOf(MensagemDiretaOpenSearchRepository.prototype)].flatMap((prototipo) => Object.getOwnPropertyNames(prototipo));
-        assert.deepEqual(
-            metodos.filter((nome) => /exclu|delet|remov|apag|alter|atualiz|update/i.test(nome)),
-            [],
-        );
+        assert.deepEqual(metodos.filter((nome) => /exclu|delet|remov|apag/i.test(nome)), []);
+        assert.deepEqual(metodos.filter((nome) => /alter|atualiz|update/i.test(nome)).sort(), ['alterarMensagem', 'atualizarDocumento']);
+    });
+});
+
+describe('alterarMensagem (task 313)', () => {
+    it('atualiza parcialmente o documento pelo _id, com refresh, e devolve a mensagem editada', async () => {
+        const { cliente, chamadas, documentos } = criarClienteFalso({ indiceExiste: true });
+        documentos.set(nova.mensagemId, { ...paraFonteDireta(nova, new Date('2026-10-21T14:00:00.000Z')) });
+        const alterada = await new MensagemDiretaOpenSearchRepository(cliente).alterarMensagem({
+            mensagemId: nova.mensagemId, conversaId: nova.conversaId, autorUsuarioId: 9, texto: 'Oi, corrigido', contemCodigo: false, mencoes: [], referencias: [],
+        });
+        assert.equal(chamadas.update.length, 1);
+        assert.equal(chamadas.update[0].id, nova.mensagemId);
+        assert.equal(chamadas.update[0].refresh, 'wait_for');
+        assert.equal(chamadas.update[0].body.doc.texto, 'Oi, corrigido');
+        assert.ok(chamadas.update[0].body.doc.editada_date);
+        assert.equal(alterada?.texto, 'Oi, corrigido');
+        assert.equal(alterada?.createdDate.toISOString(), '2026-10-21T14:00:00.000Z');
+    });
+
+    it('mensagem de outro autor não chama o update', async () => {
+        const { cliente, chamadas, documentos } = criarClienteFalso({ indiceExiste: true });
+        documentos.set(nova.mensagemId, paraFonteDireta(nova, new Date()));
+        const resultado = await new MensagemDiretaOpenSearchRepository(cliente).alterarMensagem({
+            mensagemId: nova.mensagemId, conversaId: nova.conversaId, autorUsuarioId: 4, texto: 'x', contemCodigo: false, mencoes: [], referencias: [],
+        });
+        assert.equal(resultado, null);
+        assert.equal(chamadas.update.length, 0);
     });
 });

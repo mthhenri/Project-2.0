@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { AutorMensagemDiretaEnum, CitacaoMensagemDto, ReferenciaMensagemDiretaEnum, trechoDaMensagemDireta } from '@project20/shared';
+import { AutorMensagemDiretaEnum, CitacaoMensagemDto, ReferenciaMensagemDiretaEnum, podeEditarMensagemDireta, trechoDaMensagemDireta } from '@project20/shared';
 import { MenuItem, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ContextMenu } from 'primeng/contextmenu';
@@ -10,6 +10,7 @@ import { TEMPO_DO_COPIADO_MS } from '../../../../shared/components/markdown-bloc
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-referencia.service';
 import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
+import { EdicaoEmPreparo } from '../../utils/compositor.util';
 import { AVISO_DE_LEITURA_DAS_CONVERSAS, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa, marcarEmendas } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
@@ -94,6 +95,16 @@ export class MensagemDiretaConversaComponent {
         if (!respondida || respondida.autorUsuarioId === null) return null;
         return { nome: this.nomeDoAutor(respondida.autorUsuarioId), trecho: trechoDaMensagemDireta(respondida.texto) };
     });
+    /** A mensagem própria em edição, no formato do compositor (task 313): o texto, as menções e as referências com o nome que o texto traz. */
+    protected readonly edicaoEmPreparo = computed<EdicaoEmPreparo | null>(() => {
+        const editando = this.estado.editando();
+        if (!editando) return null;
+        const referencias = editando.referencias.flatMap((referencia) => {
+            const nome = this.nomesDasReferencias().get(`${referencia.tipo}:${referencia.id}`);
+            return nome ? [{ ...referencia, nome }] : [];
+        });
+        return { mensagemId: editando.mensagemId, texto: editando.texto, mencoes: editando.mencoes, referencias };
+    });
     /** A mensagem realçada depois de a citação levar até ela, e o aviso quando ela não foi achada. */
     protected readonly destacadaId = signal<string | null>(null);
     protected readonly avisoDaOriginal = signal<string | null>(null);
@@ -173,6 +184,12 @@ export class MensagemDiretaConversaComponent {
         this.nomesDasReferencias.update((atuais) => new Map(atuais).set(chave, dados.nome as string));
     }
 
+    /** A opção "Editar" só aparece na mensagem própria enviada, dentro do prazo de 1 hora (a mesma regra pura da service, que é quem decide de verdade). */
+    protected podeEditar(mensagem: MensagemNaConversa): boolean {
+        const meuId = this.sessao.id();
+        return meuId !== undefined && mensagem.situacao === 'ENVIADA' && podeEditarMensagemDireta({ ...mensagem, usuarioId: meuId, agora: new Date() });
+    }
+
     /** Menu da mensagem enviada: o botão direito e os três pontos oferecem as mesmas ações. */
     protected abrirMenu(evento: MouseEvent, mensagem: MensagemNaConversa, peloBotao = false): void {
         if (mensagem.situacao !== 'ENVIADA' || mensagem.autor !== AutorMensagemDiretaEnum.USUARIO) return;
@@ -185,6 +202,7 @@ export class MensagemDiretaConversaComponent {
         this.mensagemDoMenu.set(mensagem.mensagemId);
         this.itensMenu.set([
             { label: 'Responder', icon: 'pi pi-reply', command: () => this.estado.responder(mensagem) },
+            ...(this.podeEditar(mensagem) ? [{ label: 'Editar', icon: 'pi pi-pencil', command: () => this.estado.editar(mensagem) }] : []),
             { label: 'Copiar texto', icon: 'pi pi-copy', command: () => void this.copiar(mensagem.mensagemId, mensagem.texto) },
         ]);
         // Cliques de teclado têm coordenadas zero: ancorar o menu no botão também atende Enter/Espaço.
@@ -331,7 +349,7 @@ export class MensagemDiretaConversaComponent {
 
     /** O rodapé (horário, "Lida", menu) só aparece na última mensagem da sequência, salvo quando carrega um estado que não pode sumir. */
     protected rodapeCompacto(mensagem: MensagemNaConversa): boolean {
-        return !!this.emendas().get(mensagem.mensagemId)?.comProxima && mensagem.situacao === 'ENVIADA' && mensagem.mensagemId !== this.lidaId() && mensagem.mensagemId !== this.ultimaMinhaId();
+        return !!this.emendas().get(mensagem.mensagemId)?.comProxima && mensagem.situacao === 'ENVIADA' && !mensagem.editadaDate && mensagem.mensagemId !== this.lidaId() && mensagem.mensagemId !== this.ultimaMinhaId();
     }
 
     protected aoDigitar(): void {
@@ -340,6 +358,11 @@ export class MensagemDiretaConversaComponent {
     }
 
     protected aoEnviar(envio: EnvioDoCompositor): void {
+        // Com uma mensagem em edição, enviar é salvar a edição (nada de mensagem nova).
+        if (this.estado.editando()) {
+            void this.estado.confirmarEdicao(envio);
+            return;
+        }
         this.colarNoFim = true;
         void this.estado.enviar(envio);
     }

@@ -69,6 +69,14 @@ export interface ReferenciaEscolhida extends ReferenciaMensagemDto {
     nome: string;
 }
 
+/** A mensagem própria que o compositor edita (task 313): o texto de partida e as menções e referências que ela já tinha (com os nomes que o texto traz). */
+export interface EdicaoEmPreparo {
+    mensagemId: string;
+    texto: string;
+    mencoes: number[];
+    referencias: ReferenciaEscolhida[];
+}
+
 function contemMarcado(texto: string, marcado: string): boolean {
     let posicao = texto.indexOf(marcado);
     while (posicao >= 0) {

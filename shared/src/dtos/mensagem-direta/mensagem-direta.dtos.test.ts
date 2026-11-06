@@ -10,6 +10,7 @@ import {
     LIMITE_TEXTO_MENSAGEM_DIRETA,
 } from '../../utils/mensagem-direta';
 import { MensagemDiretaBuscarDto } from './MensagemDiretaBuscarDto';
+import { MensagemDiretaEditarDto } from './MensagemDiretaEditarDto';
 import { MensagemDiretaEnviarDto } from './MensagemDiretaEnviarDto';
 import { MensagemDiretaLeituraAlterarDto } from './MensagemDiretaLeituraAlterarDto';
 import { MensagemDiretaListarDto } from './MensagemDiretaListarDto';
@@ -30,6 +31,23 @@ async function erros<T extends object>(classe: Construtor<T>, carga: Record<stri
 
 const UUID = '7f0c2b9e-4c1a-4e6a-9d55-2f6c0d1b8a10';
 const ENVIO_VALIDO = { destinatarioId: 9, mensagemId: UUID, texto: 'Consegue olhar isso?' };
+
+// --- MensagemDiretaEditarDto (task 313) ---------------------------------------
+
+test('editar: destinatário, mensagem e texto são obrigatórios; menções e referências são opcionais', async () => {
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, ENVIO_VALIDO), []);
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, { ...ENVIO_VALIDO, mencoes: [4], referencias: [{ tipo: 'DEMANDA', id: 212 }] }), []);
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, { destinatarioId: 9 }), ['mensagemId', 'texto']);
+});
+
+test('editar: recusa texto vazio ou só espaços, texto grande demais, id que não é UUID v4 e campo desconhecido', async () => {
+    for (const texto of ['', '   ', 'x'.repeat(LIMITE_TEXTO_MENSAGEM_DIRETA + 1)]) {
+        assert.deepEqual(await erros(MensagemDiretaEditarDto, { ...ENVIO_VALIDO, texto }), ['texto'], texto.slice(0, 10));
+    }
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, { ...ENVIO_VALIDO, mensagemId: 'abc' }), ['mensagemId']);
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, { ...ENVIO_VALIDO, destinatarioId: 0 }), ['destinatarioId']);
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, { ...ENVIO_VALIDO, respondeAMensagemId: UUID }), ['respondeAMensagemId'], 'a resposta não se troca na edição');
+});
 
 // --- MensagemDiretaEnviarDto -------------------------------------------------
 

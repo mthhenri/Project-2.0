@@ -8,6 +8,8 @@ import {
     MensagemDiretaBuscadoDto,
     MensagemDiretaBuscarDto,
     MensagemDiretaDigitacaoAvisarDto,
+    MensagemDiretaEditadaDto,
+    MensagemDiretaEditarDto,
     MensagemDiretaEnviadaDto,
     MensagemDiretaEnviarDto,
     MensagemDiretaLeituraAlteradaDto,
@@ -29,6 +31,7 @@ import {
     ReferenciaMensagemDiretaEnum,
     ReferenciaMensagemDto,
     StandardResponse,
+    avaliarEdicaoDeMensagemDireta,
     contemBlocoDeCodigo,
     montarConversaDiretaId,
     outroParticipanteDaConversaDireta,
@@ -37,6 +40,7 @@ import {
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
+import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { AtividadeRepository } from '../../atividade/repositories/atividade.repository';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
@@ -114,6 +118,55 @@ export class MensagemDiretaService {
             dados: enviada,
             mensagem: enviada.jaExistia ? 'Mensagem já enviada' : 'Mensagem enviada com sucesso',
         };
+    }
+
+    // ---------------------------------------------------------------------------
+    // Editar (task 313)
+    // ---------------------------------------------------------------------------
+
+    /**
+     * O autor troca o texto da própria mensagem, até 1 hora depois do envio. O texto original não é guardado (I-052). Texto igual ao atual não grava
+     * nem avisa. Menções e referências seguem as regras do envio; a resposta, a data de envio e a ordem não mudam. As duas pontas recebem `EDICAO`.
+     */
+    async alterarMensagem(dto: MensagemDiretaEditarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaEditadaDto>> {
+        await this.validarOutraPessoa(dto.destinatarioId, usuarioAtivo);
+        const conversaId = montarConversaDiretaId(usuarioAtivo.sub, dto.destinatarioId);
+        const existente = await this.armazenamento.recuperarMensagem({ conversaId, mensagemId: dto.mensagemId });
+        if (!existente) throw new ResourceNotFoundException('Mensagem');
+
+        switch (avaliarEdicaoDeMensagemDireta({ ...existente, usuarioId: usuarioAtivo.sub, agora: new Date() })) {
+            case 'MENSAGEM_DO_SISTEMA':
+                throw new BusinessException('A mensagem do sistema não pode ser editada');
+            case 'NAO_E_DO_AUTOR':
+                throw new UnauthorizedAccessException('Só o autor pode editar a mensagem');
+            case 'PRAZO_ENCERRADO':
+                throw new BusinessException('O prazo de 1 hora para editar a mensagem acabou');
+        }
+
+        if (existente.texto === dto.texto) {
+            return { sucesso: true, dados: { mensagem: existente }, mensagem: 'Mensagem sem alterações' };
+        }
+
+        const mencoes = normalizarMencoes(dto.mencoes, [usuarioAtivo.sub, dto.destinatarioId]);
+        const referencias = normalizarReferencias(dto.referencias);
+        for (const referencia of referencias) {
+            await this.validarReferencia(referencia, usuarioAtivo);
+        }
+
+        const alterada = await this.armazenamento.alterarMensagem({
+            mensagemId: dto.mensagemId.toLowerCase(),
+            conversaId,
+            autorUsuarioId: usuarioAtivo.sub,
+            texto: dto.texto,
+            contemCodigo: contemBlocoDeCodigo(dto.texto),
+            mencoes,
+            referencias,
+        });
+        if (!alterada) throw new ResourceNotFoundException('Mensagem');
+
+        await this.eventosService.publicarParaUsuarios({ usuarioIds: [usuarioAtivo.sub, dto.destinatarioId], evento: { tipo: 'EDICAO', mensagem: alterada } });
+
+        return { sucesso: true, dados: { mensagem: alterada }, mensagem: 'Mensagem editada com sucesso' };
     }
 
     // ---------------------------------------------------------------------------

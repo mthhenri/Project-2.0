@@ -19,8 +19,7 @@ ser sobrescrito. **Não há `texto_original`** (I-052). Em cada implementação 
 - **PostgreSQL:** coluna `editada_date timestamptz` nula em `mensagem_direta` (migration **0082**, sem DEFAULT, sem trigger; `updated_date = NOW()` no UPDATE).
 - **OpenSearch / Elasticsearch:** campo `editada_date` no documento (`MensagemDiretaFonte.editada_date?: string | null`), mapeado como `date`.
 - **shared:** `MensagemDiretaResumoDto.editadaDate: Date | null`; DTOs novos `MensagemDiretaEditarDto` (entrada: `mensagemId`, `destinatarioId`, `texto`, `mencoes?`, `referencias?`)
-  e `MensagemDiretaEditadaDto` (saída). Evento novo do stream `{ tipo: 'EDICAO'; mensagem: MensagemDiretaResumoDto }`. Rota `PATCH /mensagem-direta/mensagem`
-  (verbo de edição já usado no projeto; conferir com os controllers vizinhos). Nomes finais: skill `project20-dto-conventions`.
+  e `MensagemDiretaEditadaDto` (saída). Evento novo do stream `{ tipo: 'EDICAO'; mensagem: MensagemDiretaResumoDto }`. Rota `PATCH /mensagem-direta/mensagem` (a corpo da edição também recusa `respondeAMensagemId`: a resposta não se troca). Nomes conferidos com a skill `project20-dto-conventions`: `MensagemDiretaEditarDto` (entrada) e `MensagemDiretaEditadaDto` (saída).
 - A regra do prazo e da autoria é **pura no `shared`** (`podeEditarMensagemDireta`, com o relógio recebido por parâmetro), usada pela service (autoridade) e pelo front (só mostra o botão).
 
 ## Backend
@@ -46,3 +45,14 @@ ser sobrescrito. **Não há `texto_original`** (I-052). Em cada implementação 
 ## Fora de escopo
 
 Guardar/mostrar o original à supervisão (I-052); excluir mensagem; histórico de edições.
+
+## Verificação (2026-11-06)
+
+- **Testes:** `shared` 324 (regra do prazo e DTO de edição), `backend` 1679 (service: autor, prazo no limite e 1 ms depois, sistema, outra conversa, texto igual, mensagem que some; índice, OpenSearch e Elasticsearch com cliente em dublê;
+  barramento com `EDICAO` e texto grande), integração 375 (o contrato único, contra o PostgreSQL 16 local, agora com o cenário de edição: data de envio, ordem, resposta e busca), `frontend` 2578 em 210 arquivos (fluxo completo
+  no componente: menu, barra, salvar, "editada", recusa, evento, prévia da lista). `npm run lint:tudo` limpo; builds do backend e do frontend sem erro.
+- **Ao vivo** (Postgres local com a migration 0082, `CHAT_ARMAZENAMENTO=postgres`, gestor e Thiago em dois navegadores): o gestor enviou, editou pelo menu e salvou; o Thiago, **sem recarregar** (sentinela viva), viu o texto novo e
+  "editada" em tempo real; o Thiago não tem "Editar" na mensagem do gestor; a mensagem de 50 minutos tem a opção e a de 2 horas não; Esc cancela. Pela API: 400 fora do prazo, 403 para quem não é o autor, 400 para texto vazio, 200
+  dentro do prazo (`editada_date` gravada, `created_date` intacta). Formatos 1920×1080, 1366×768 (claro e escuro), 1080×1920, 720×1280 e 960×1080 com a barra de edição. Capturas em `.artifacts/313/` (ignorada pelo Git).
+- **Limites:** o contrato do OpenSearch e do Elasticsearch **reais** (`CHAT_INTEGRACAO=1`) não rodou (sem serviço no ambiente); só o PostgreSQL e os dublês de cliente. Em índice criado antes da task, `editada_date` nasce por mapeamento
+  dinâmico (data ISO) na primeira edição. O Project Desktop não foi exercitado. A citação já gravada em outra mensagem (`responde_a_trecho`) não acompanha a edição (decisão de projeto desta spec).

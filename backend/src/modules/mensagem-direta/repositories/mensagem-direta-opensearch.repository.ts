@@ -12,6 +12,7 @@ export interface ClienteOpenSearchMensagemDireta {
     };
     index(parametros: { index: string; id: string; body: unknown; refresh: 'wait_for'; op_type: 'create' }): Promise<unknown>;
     get(parametros: { index: string; id: string }): Promise<{ body: { _source: MensagemDiretaFonte } }>;
+    update(parametros: { index: string; id: string; body: { doc: Partial<MensagemDiretaFonte> }; refresh: 'wait_for' }): Promise<unknown>;
     search(parametros: { index: string; body: unknown }): Promise<{
         body: {
             hits: { hits: { _source: MensagemDiretaFonte }[] };
@@ -65,6 +66,10 @@ export class MensagemDiretaOpenSearchRepository extends MensagemDiretaIndiceRepo
             if (this.ehNaoEncontrado(erro)) return null;
             throw erro;
         }
+    }
+
+    protected async atualizarDocumento(indice: string, id: string, campos: Partial<MensagemDiretaFonte>): Promise<void> {
+        await this.cliente.update({ index: indice, id, body: { doc: campos }, refresh: 'wait_for' });
     }
 
     protected async pesquisar(indice: string, consulta: unknown): Promise<ResultadoDaPesquisaDireta> {

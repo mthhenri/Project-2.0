@@ -6,6 +6,7 @@ import {
     MensagemDiretaPessoaResumoDto,
     ReferenciaMensagemDto,
     montarConversaDiretaId,
+    podeEditarMensagemDireta,
     trechoDaMensagemDireta,
 } from '@project20/shared';
 import { ProjectDesktopService } from '../../../core/services/project-desktop.service';
@@ -14,6 +15,7 @@ import {
     ConversaNaLista,
     MensagemNaConversa,
     VALIDADE_DO_DIGITANDO_MS,
+    aplicarEdicaoNaLista,
     aplicarMensagemNaLista,
     devePublicarDigitacao,
     dataDaUltimaDoOutro,
@@ -92,6 +94,11 @@ export class MensagemDiretaEstadoService {
     readonly conversaAberta = signal<ConversaAberta | null>(null);
     /** A mensagem a que o próximo envio responde (task 220): vale para a conversa aberta, sai ao enviar, cancelar ou abrir outra conversa. */
     readonly respondendoA = signal<MensagemNaConversa | null>(null);
+    /** A mensagem própria que o compositor está editando (task 313): vale para a conversa aberta, sai ao salvar, cancelar ou abrir outra conversa. */
+    readonly editando = signal<MensagemNaConversa | null>(null);
+    readonly salvandoEdicao = signal(false);
+    /** O motivo de a edição não ter sido salva (o servidor recusa depois do prazo, por exemplo); a edição continua aberta para o usuário decidir. */
+    readonly erroNaEdicao = signal<string | null>(null);
     /** O código que o usuário copiou antes de apertar o atalho do Desktop (task 213): vira bloco no campo da próxima conversa aberta e some. */
     readonly rascunhoDoDesktop = signal<string | null>(null);
 
@@ -172,6 +179,7 @@ export class MensagemDiretaEstadoService {
         this.stream.parar();
         document.removeEventListener('visibilitychange', this.aoVoltarVisivel);
         this.geracaoDaSessao++;
+        this.cancelarEdicao();
         this.referencias.limpar();
         this.avisos.limpar();
         this.silenciadasSemLinha.set(new Set());
@@ -229,6 +237,7 @@ export class MensagemDiretaEstadoService {
     voltarParaALista(): void {
         this.rascunhoDoDesktop.set(null);
         this.respondendoA.set(null);
+        this.cancelarEdicao();
         this.conversaAberta.set(null);
         this.resultadoDaBusca.set(null);
         this.visao.set('LISTA');
@@ -266,7 +275,10 @@ export class MensagemDiretaEstadoService {
         if (meuId === undefined || meuId === usuarioId) return;
         // O código copiado só vai à conversa escolhida na tela de nova conversa; qualquer outro caminho até uma conversa o descarta.
         if (this.visao() !== 'NOVA') this.rascunhoDoDesktop.set(null);
-        if (this.conversaAberta()?.usuarioId !== usuarioId) this.respondendoA.set(null);
+        if (this.conversaAberta()?.usuarioId !== usuarioId) {
+            this.respondendoA.set(null);
+            this.cancelarEdicao();
+        }
         this.aberto.set(true);
         this.visao.set('CONVERSA');
         this.conversaAberta.set({
@@ -370,6 +382,65 @@ export class MensagemDiretaEstadoService {
         this.respondendoA.set(null);
     }
 
+    /** Passa a editar uma mensagem própria já enviada da conversa aberta, se o prazo de 1 hora (contado do envio) ainda vale. Editar e responder não se misturam. */
+    editar(mensagem: MensagemNaConversa): void {
+        const meuId = this.sessao.id();
+        if (meuId === undefined || mensagem.situacao !== 'ENVIADA' || mensagem.conversaId !== this.conversaAberta()?.conversaId) return;
+        if (!podeEditarMensagemDireta({ ...mensagem, usuarioId: meuId, agora: new Date() })) return;
+        this.respondendoA.set(null);
+        this.erroNaEdicao.set(null);
+        this.editando.set(mensagem);
+    }
+
+    cancelarEdicao(): void {
+        this.editando.set(null);
+        this.erroNaEdicao.set(null);
+        this.salvandoEdicao.set(false);
+    }
+
+    /**
+   * Salva o texto editado. Sem mudança, só fecha a edição. Se o servidor recusar (prazo vencido, mensagem sumiu, sem rede), a edição continua aberta com o
+   * motivo, e o texto digitado não se perde.
+   */
+    async confirmarEdicao(envio: EnvioDoCompositor): Promise<void> {
+        const aberta = this.conversaAberta();
+        const alvo = this.editando();
+        const texto = envio.texto.trim();
+        if (!aberta || !alvo || !texto || this.salvandoEdicao()) return;
+        if (texto === alvo.texto.trim()) {
+            this.cancelarEdicao();
+            return;
+        }
+        const sessao = this.geracaoDaSessao;
+        this.salvandoEdicao.set(true);
+        this.erroNaEdicao.set(null);
+        try {
+            const resposta = await firstValueFrom(
+                this.api.editarMensagem({ destinatarioId: aberta.usuarioId, mensagemId: alvo.mensagemId, texto, mencoes: envio.mencoes, referencias: envio.referencias }),
+            );
+            if (sessao !== this.geracaoDaSessao) return;
+            this.aplicarEdicao(normalizarMensagem(resposta.dados!.mensagem));
+            this.editando.set(null);
+        } catch (erro) {
+            if (sessao !== this.geracaoDaSessao) return;
+            const motivo = (erro as { error?: { mensagem?: unknown } })?.error?.mensagem;
+            this.erroNaEdicao.set(typeof motivo === 'string' && motivo ? motivo : 'Não foi possível salvar a edição. Tente de novo.');
+        } finally {
+            if (sessao === this.geracaoDaSessao) this.salvandoEdicao.set(false);
+        }
+    }
+
+    /** A mensagem editada (resposta do meu PATCH ou evento `EDICAO`) substitui a que a tela tinha; não avisa, não conta como não lida e não muda a ordem. */
+    private aplicarEdicao(mensagem: MensagemNaConversa): void {
+        const aberta = this.conversaAberta();
+        if (aberta && aberta.conversaId === mensagem.conversaId) {
+            this.atualizarConversaAberta(aberta.usuarioId, (atual) => ({ mensagens: mesclarMensagens(atual.mensagens, [mensagem]) }));
+        }
+        this.conversas.update((lista) => aplicarEdicaoNaLista(lista, mensagem));
+        // A mesma mensagem editada em outra aba minha: a edição daqui perde o sentido (o texto de partida mudou).
+        if (this.editando()?.mensagemId === mensagem.mensagemId && !this.salvandoEdicao()) this.editando.set(null);
+    }
+
     /**
    * Envia o texto (com as menções e referências que ainda valem nele) na conversa aberta: a mensagem aparece na hora (`ENVIANDO`) e vira `ENVIADA`
    * ou `FALHOU`. O reenvio leva os mesmos `mencoes` e `referencias`, porque eles ficam guardados na mensagem local.
@@ -401,6 +472,7 @@ export class MensagemDiretaEstadoService {
             referencias: envio.referencias,
             respondeA,
             createdDate: new Date(),
+            editadaDate: null,
             situacao: 'ENVIANDO',
         };
         this.guardarPendente(aberta.usuarioId, local);
@@ -526,6 +598,9 @@ export class MensagemDiretaEstadoService {
                 break;
             case 'MENSAGEM':
                 this.receberMensagem(normalizarMensagem(evento.mensagem), true);
+                break;
+            case 'EDICAO':
+                this.aplicarEdicao(normalizarMensagem(evento.mensagem));
                 break;
             case 'LEITURA': {
                 const aberta = this.conversaAberta();

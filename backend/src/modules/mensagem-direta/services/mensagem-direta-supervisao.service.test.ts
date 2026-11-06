@@ -27,6 +27,7 @@ function mensagem(parcial: Partial<MensagemDiretaResumoDto> = {}): MensagemDiret
         referencias: [],
         respondeA: null,
         createdDate: new Date('2026-10-31T14:00:00.000Z'),
+        editadaDate: null,
         ...parcial,
     };
 }

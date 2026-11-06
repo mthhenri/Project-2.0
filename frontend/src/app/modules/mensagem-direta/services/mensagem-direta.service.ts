@@ -5,6 +5,8 @@ import {
     ConversaDiretaListadasDto,
     ConversaDiretaSupervisaoListadasDto,
     MensagemDiretaBuscadoDto,
+    MensagemDiretaEditadaDto,
+    MensagemDiretaEditarDto,
     MensagemDiretaEnviadaDto,
     MensagemDiretaEnviarDto,
     MensagemDiretaLeituraAlteradaDto,
@@ -42,6 +44,11 @@ export class MensagemDiretaService {
         let params = new HttpParams();
         if (cursor) params = params.set('cursor', cursor);
         return this.httpClient.get<StandardResponse<MensagemDiretaListadasDto>>(`${this.urlBase}/conversa/${usuarioId}`, { params, ...comFeedbackProprioEErroTratado() });
+    }
+
+    /** Edita o texto de uma mensagem própria (task 313): só o autor, até 1 hora depois do envio. */
+    editarMensagem(dto: MensagemDiretaEditarDto): Observable<StandardResponse<MensagemDiretaEditadaDto>> {
+        return this.httpClient.patch<StandardResponse<MensagemDiretaEditadaDto>>(`${this.urlBase}/mensagem`, dto, comFeedbackProprioEErroTratado());
     }
 
     enviarMensagem(dto: MensagemDiretaEnviarDto): Observable<StandardResponse<MensagemDiretaEnviadaDto>> {

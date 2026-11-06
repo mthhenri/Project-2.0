@@ -14,14 +14,16 @@ export const AVISO_DE_LEITURA_DAS_CONVERSAS = 'Gestores e administradores podem 
 /** Uma mensagem como a tela a mostra: as do servidor (`ENVIADA`) mais as locais que ainda não chegaram (`ENVIANDO`) ou que falharam. */
 export type SituacaoDaMensagem = 'ENVIADA' | 'ENVIANDO' | 'FALHOU';
 
-export interface MensagemNaConversa extends Omit<MensagemDiretaResumoDto, 'createdDate'> {
+export interface MensagemNaConversa extends Omit<MensagemDiretaResumoDto, 'createdDate' | 'editadaDate'> {
     createdDate: Date;
+    /** Quando o autor editou a mensagem (task 313); `null` quando nunca foi editada. */
+    editadaDate: Date | null;
     situacao: SituacaoDaMensagem;
 }
 
 /** A conversa da lista: o resumo do servidor com as datas já como `Date`. */
 export interface ConversaNaLista extends Omit<ConversaDiretaResumoDto, 'ultimaMensagem'> {
-    ultimaMensagem: (Omit<MensagemDiretaResumoDto, 'createdDate'> & { createdDate: Date }) | null;
+    ultimaMensagem: (Omit<MensagemDiretaResumoDto, 'createdDate' | 'editadaDate'> & { createdDate: Date; editadaDate: Date | null }) | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,7 +86,7 @@ export function devePublicarDigitacao(ultimoAvisoEm: number | null, agora: numbe
 
 /** O servidor manda as datas como texto ISO; a tela trabalha com `Date`. */
 export function normalizarMensagem(mensagem: MensagemDiretaResumoDto, situacao: SituacaoDaMensagem = 'ENVIADA'): MensagemNaConversa {
-    return { ...mensagem, createdDate: new Date(mensagem.createdDate), situacao };
+    return { ...mensagem, createdDate: new Date(mensagem.createdDate), editadaDate: mensagem.editadaDate ? new Date(mensagem.editadaDate) : null, situacao };
 }
 
 function ordemDaConversa(mensagemNaConversa: MensagemNaConversa, segundo: MensagemNaConversa): number {
@@ -217,7 +219,13 @@ export function dataDaUltimaDoOutro(mensagens: MensagemNaConversa[], meuId: numb
 export function normalizarConversa(conversa: ConversaDiretaResumoDto): ConversaNaLista {
     return {
         ...conversa,
-        ultimaMensagem: conversa.ultimaMensagem ? { ...conversa.ultimaMensagem, createdDate: new Date(conversa.ultimaMensagem.createdDate) } : null,
+        ultimaMensagem: conversa.ultimaMensagem
+            ? {
+                ...conversa.ultimaMensagem,
+                createdDate: new Date(conversa.ultimaMensagem.createdDate),
+                editadaDate: conversa.ultimaMensagem.editadaDate ? new Date(conversa.ultimaMensagem.editadaDate) : null,
+            }
+            : null,
     };
 }
 
@@ -269,6 +277,15 @@ export function aplicarMensagemNaLista(
     };
     const demais = conversas.filter((conversa) => conversa.conversaId !== mensagem.conversaId);
     return { conversas: [atualizada, ...demais], conversaDesconhecida: false };
+}
+
+/**
+ * Aplica a edição de uma mensagem à lista (task 313): se ela é a última da conversa, a prévia passa a mostrar o texto novo. A conversa **não** sobe
+ * para o topo e não ganha não lida: editar não é mensagem nova.
+ */
+export function aplicarEdicaoNaLista(conversas: ConversaNaLista[], mensagem: MensagemNaConversa): ConversaNaLista[] {
+    const { situacao: _situacao, ...resumo } = mensagem;
+    return conversas.map((conversa) => (conversa.conversaId === mensagem.conversaId && conversa.ultimaMensagem?.mensagemId === mensagem.mensagemId ? { ...conversa, ultimaMensagem: resumo } : conversa));
 }
 
 export function zerarNaoLidas(conversas: ConversaNaLista[], conversaId: string): ConversaNaLista[] {

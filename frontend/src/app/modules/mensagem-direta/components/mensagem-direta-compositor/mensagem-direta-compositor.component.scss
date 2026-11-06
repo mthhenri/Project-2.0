@@ -54,6 +54,11 @@
         color: var(--p-primary-color);
     }
 
+    &__resposta-erro {
+        font-size: 0.6875rem;
+        color: var(--p-red-500);
+    }
+
     &__resposta-trecho {
         overflow: hidden;
         text-overflow: ellipsis;
