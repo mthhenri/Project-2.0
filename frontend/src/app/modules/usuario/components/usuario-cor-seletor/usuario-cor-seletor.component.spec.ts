@@ -21,26 +21,24 @@ describe('UsuarioCorSeletorComponent', () => {
         expect(tela.elemento.querySelector('.cor-seletor__dica')?.textContent?.trim()).toBe('Cor padrão');
     });
 
-    it('sem pedido do dono não há botão de aplicar', async () => {
-        const sem = await montarComponente(UsuarioCorSeletorComponent, { entradas: { nome: 'Camila Duarte' } });
-        expect(sem.elemento.querySelector('p-button')).toBeNull();
-    });
-
-    it('quando o dono do seletor pede, o botão de aplicar aparece e avisa', async () => {
-        const com = await montarComponente(UsuarioCorSeletorComponent, { entradas: { nome: 'Camila Duarte', rotuloAplicar: 'Aplicar' } });
-        let avisos = 0;
-        com.componente.aplicada.subscribe(() => avisos++);
-        com.elemento.querySelector<HTMLButtonElement>('p-button button')!.click();
-        expect(avisos).toBe(1);
-    });
-
-    it('a escolha do seletor vira #RRGGBB maiúsculo; valor que não é cor completa é ignorado', async () => {
+    it('a escolha da paleta vira #RRGGBB maiúsculo; valor que não é cor completa é ignorado', async () => {
         const tela = await montarComponente(UsuarioCorSeletorComponent, { entradas: { nome: 'Camila Duarte' } });
-        const componente = tela.componente as unknown as { aoEscolher(valor: string | object): void };
-        componente.aoEscolher('1e3a8a');
+        const componente = tela.componente as unknown as { aoEscolher(valor: string | null): void };
+        componente.aoEscolher('#1e3a8a');
         expect(tela.componente.cor()).toBe('#1E3A8A');
-        componente.aoEscolher('1e3');
-        componente.aoEscolher({});
+        componente.aoEscolher('#1e3');
+        componente.aoEscolher(null);
         expect(tela.componente.cor()).toBe('#1E3A8A');
+    });
+
+    it('usa a paleta das tags: clicar numa amostra escolhe a cor, e sem cor nenhuma amostra vem marcada', async () => {
+        const tela = await montarComponente(UsuarioCorSeletorComponent, { entradas: { nome: 'Camila Duarte' } });
+        const amostras = () => Array.from(tela.elemento.querySelectorAll<HTMLButtonElement>('.seletor-cor__amostra'));
+        expect(amostras().length).toBeGreaterThan(20);
+        expect(tela.elemento.querySelector('.seletor-cor__amostra--ativa')).toBeNull();
+        amostras()[0].click();
+        await tela.atualizar();
+        expect(tela.componente.cor()).toBe('#EF4444');
+        expect(tela.elemento.querySelector('.seletor-cor__amostra--ativa')).not.toBeNull();
     });
 });

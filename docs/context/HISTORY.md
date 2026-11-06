@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-06 — Task 316 (ajustes): paleta das tags na cor da bolinha e ícone do chat de volta
+
+O autor achou o seletor de cor do perfil deslocado e pediu as mesmas cores das tags. O perfil deixou de ter o seletor aberto: ganhou a linha "Minha cor" com o botão **"Editar cor"**, que abre o diálogo `usuario-cor-dialog` (seletor à esquerda e, à direita, prévias reais da bolinha na lista de conversas, no cabeçalho, na barra e no aviso, com Cancelar e Salvar; nada grava antes do Salvar). O seletor e o diálogo do gestor passaram a usar o `app-seletor-cor` (modo compacto: as 28 cores da paleta das tags e "Outra cor…" com roda e hexadecimal), com a entrada nova `aceitaSemCor` (aditiva: sem ela, `null` segue virando o azul de Tags e Projetos). A troca do ícone do chat entre colegas por envelope foi **desfeita** a pedido do autor (volta `pi-comments`); a dificuldade de distinguir os dois chats ficou registrada como problema (ver PROBLEMS.md). Isto não reescreve o bloco anterior, que descreve o envelope como foi entregue.
+
 ## 2026-11-06 — Task 316: cor da bolinha escolhida pela pessoa (e ícone próprio do chat entre colegas)
 
 **Pedido e decisões do autor.** Cada pessoa escolhe a cor da própria bolinha; a cor é do usuário, e o gestor pode alterar a de qualquer um. Escolha livre (qualquer cor), sem tempo real (vale no F5),

@@ -29,6 +29,15 @@
 
 ## Ativos
 
+### P-077 — O Chat da IA e o chat entre colegas usam o mesmo ícone (balão duplo) · `ABERTO` · frontend/identidade visual
+
+- **Sintoma:** o item "Chat" da barra lateral (a IA, `/chat`) e o botão "Chat com colegas" da barra de cima usam `pi-comments`; também a supervisão do chat e o estado vazio da lista de conversas. A pessoa não distingue um do outro só pelo ícone (pedido do autor, 2026-11-06).
+- **Causa:** o ícone foi reaproveitado quando o chat entre colegas nasceu (tasks 205–215). Uma troca para `pi-envelope` foi tentada na task 316 e desfeita pelo autor no mesmo dia.
+- **Contorno:** o rótulo ("Chat" na barra lateral, tooltip "Chat com colegas" no botão).
+- **Correção:** escolher com o autor um par de ícones distintos (o PrimeIcons não tem um balão que sirva aos dois; `pi-sparkles` já é da IA em "IA Config." e em "Voltar para a IA", e `pi-users` é de Usuários); rodar `gerenciamento-de-impacto` sobre `pi-comments` nos cinco pontos.
+- **Desde:** 2026-11-06.
+
+
 ### P-076 — Campo de código do chat entre colaboradores não quebra a linha ao digitar · `ABERTO` · frontend/chat
 
 - **Sintoma:** no mini editor de código (`editor-codigo`) do chat entre colaboradores, uma linha longa estoura a largura e rola na horizontal, enquanto o bloco já enviado (`markdown-bloco-codigo`) passou a quebrar a linha.

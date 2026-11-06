@@ -27,15 +27,16 @@ import { IaDisponibilidadeService } from '../../../core/services/ia-disponibilid
 import { MensagemDiretaEstadoService } from '../../../modules/mensagem-direta/services/mensagem-direta-estado.service';
 import { ChipExecucaoAtivaComponent } from './chip-execucao-ativa/chip-execucao-ativa.component';
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
-import { UsuarioCorSeletorComponent } from '../../../modules/usuario/components/usuario-cor-seletor/usuario-cor-seletor.component';
-import { UsuarioService } from '../../../modules/usuario/services/usuario.service';
+import { UsuarioCorDialogComponent } from '../../../modules/usuario/components/usuario-cor-dialog/usuario-cor-dialog.component';
+import { MensagemDiretaAvatarComponent } from '../../../modules/mensagem-direta/components/mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { CheckinProximoComponent } from '../../../modules/checkin/components/checkin-proximo/checkin-proximo.component';
 
 @Component({
     selector: 'app-topbar',
     standalone: true,
     imports: [
-        UsuarioCorSeletorComponent,
+        UsuarioCorDialogComponent,
+        MensagemDiretaAvatarComponent,
         ReactiveFormsModule,
         FormsModule,
         ToggleSwitchModule,
@@ -76,27 +77,12 @@ export class TopbarComponent {
         void this.roteador.navigateByUrl('/chat');
     }
 
-    private readonly usuarioService = inject(UsuarioService);
+    @ViewChild('corDialog') private corDialog?: UsuarioCorDialogComponent;
 
-    /** A cor da bolinha em escolha no perfil (task 316): só vale depois do "Aplicar". */
-    readonly corDaBolinha = signal<string | null>(null);
-    readonly gravandoCorDaBolinha = signal(false);
-
-    /** Abre o perfil com a cor atual da pessoa já no seletor. */
-    alternarPerfil(evento: Event, popover: { toggle(evento: Event): void }): void {
-        this.corDaBolinha.set(this.sessao.corAvatar());
-        popover.toggle(evento);
-    }
-
-    aplicarCorDaBolinha(): void {
-        this.gravandoCorDaBolinha.set(true);
-        this.usuarioService.alterarCor({ corAvatar: this.corDaBolinha() }).subscribe({
-            next: (resposta) => {
-                this.gravandoCorDaBolinha.set(false);
-                if (resposta.sucesso && resposta.dados) this.sessao.definirCorAvatar(resposta.dados.corAvatar);
-            },
-            error: () => this.gravandoCorDaBolinha.set(false),
-        });
+    /** "Editar cor" do perfil (task 316): fecha o popover e abre o diálogo com as prévias. */
+    editarCor(popover: { hide(): void }): void {
+        popover.hide();
+        this.corDialog?.abrir();
     }
 
     readonly coresSugeridas = CORES_SUGERIDAS;

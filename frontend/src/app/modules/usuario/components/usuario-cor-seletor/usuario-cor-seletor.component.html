@@ -4,11 +4,11 @@
         <span class="cor-seletor__dica">{{ cor() ?? "Cor padrão" }}</span>
     </div>
 
-    <p-colorpicker
-        [inline]="true"
-        format="hex"
-        [ngModel]="valorDoSeletor()"
-        (onChange)="aoEscolher($event.value)"
+    <app-seletor-cor
+        [compacto]="true"
+        [aceitaSemCor]="true"
+        [ngModel]="cor()"
+        (ngModelChange)="aoEscolher($event)"
     />
 
     <div class="cor-seletor__acoes">
@@ -20,13 +20,5 @@
         >
             Voltar à cor padrão
         </button>
-        @if (rotuloAplicar(); as rotulo) {
-            <p-button
-                [label]="rotulo"
-                size="small"
-                [loading]="aplicando()"
-                (onClick)="aplicada.emit()"
-            />
-        }
     </div>
 </div>

@@ -45,7 +45,7 @@
 
         @if (sessao.usuarioAtual()) {
             <p-button
-                icon="pi pi-envelope"
+                icon="pi pi-comments"
                 [text]="true"
                 [rounded]="true"
                 size="small"
@@ -81,7 +81,7 @@
                 type="button"
                 class="topbar__perfil"
                 [attr.aria-label]="'Menu de ' + sessao.nomeCompleto()"
-                (click)="alternarPerfil($event, perfilPopover)"
+                (click)="perfilPopover.toggle($event)"
             >
                 <span class="topbar__avatar" aria-hidden="true">{{ iniciais() }}</span>
                 <span class="topbar__perfil-nome">{{ primeiroNome() }}</span>
@@ -112,14 +112,21 @@
                     </label>
 
                     <p-divider class="my-0" />
-                    <div class="flex flex-col gap-2">
-                        <span class="text-xs text-muted-color">Minha cor</span>
-                        <app-usuario-cor-seletor
-                            [nome]="sessao.nomeCompleto() ?? ''"
-                            [(cor)]="corDaBolinha"
-                            rotuloAplicar="Aplicar"
-                            [aplicando]="gravandoCorDaBolinha()"
-                            (aplicada)="aplicarCorDaBolinha()"
+                    <div class="topbar__linha-switch text-sm">
+                        <span class="topbar__minha-cor">
+                            <app-mensagem-direta-avatar
+                                [nome]="sessao.nomeCompleto() ?? ''"
+                                [cor]="sessao.corAvatar()"
+                                [pequeno]="true"
+                            />
+                            Minha cor
+                        </span>
+                        <p-button
+                            label="Editar cor"
+                            icon="pi pi-palette"
+                            [text]="true"
+                            size="small"
+                            (onClick)="editarCor(perfilPopover)"
                         />
                     </div>
 
@@ -208,4 +215,5 @@
 <!-- O diálogo de anotações traz o editor de Markdown inteiro: fica fora do pacote inicial (P-032) e carrega logo depois da primeira tela. -->
 @defer (on immediate) {
     <app-usuario-anotacoes-dialog #anotacoesDialog />
+    <app-usuario-cor-dialog #corDialog />
 }

@@ -44,6 +44,12 @@ seção do perfil grava e restaura o padrão, diálogo do gestor). Ao vivo nos c
 
 Cor por contato, paleta fixa, tempo real, avatares fora do chat (task 319), foto de perfil.
 
+## Ajustes do autor depois da entrega (2026-11-06)
+
+- A cor usa **a paleta das tags** (`app-seletor-cor` em modo compacto, com "Outra cor…", e a entrada aditiva `aceitaSemCor`); o seletor aberto no perfil saiu.
+- O perfil tem só **"Editar cor"**, que abre o diálogo `usuario-cor-dialog` com o seletor e **prévias** de onde a bolinha aparece (lista de conversas, cabeçalho, barra, aviso), atualizadas na hora; grava só no Salvar.
+- O ícone do chat entre colegas **voltou** ao balão; distingui-lo do Chat da IA ficou como problema (P-077 em `PROBLEMS.md`). Isto substitui o item "Também nesta entrega" abaixo.
+
 ## Verificação (2026-11-06)
 
 - **Testes:** `shared` 332 (4 novos: regra e contraste da cor), `backend` 1691, integração `npm run test:integracao` 381 (repository: nasce sem cor, `alterarCor`, `alterar` do gestor, e as leituras do chat devolvem a cor;
