@@ -5,6 +5,8 @@
 
 ## Tasks e ordem
 
+Ordem de execução (decidida em 2026-11-06): 313, 314, **316 antes da 315** (o autor quer a cor da bolinha antes do `@IA`), 315, e a 317 quando a ideia dos níveis estiver testada. Os números são só reservas e não seguem a ordem.
+
 | Task | O que | Modelagem? | Estado |
 |---|---|---|---|
 | 310 | Endereço solto vira link (no visualizador de Markdown, vale para todo o sistema) | não | feita (`done/`) |
@@ -13,7 +15,7 @@
 | 313 | Editar mensagem | sim | reservada |
 | 314 | Reações nas mensagens e seletor de emoji | sim | reservada |
 | 315 | `@IA` no chat entre colaboradores | sim | reservada, spec própria antes de qualquer código |
-| 316 | Cor da bolinha escolhida pela pessoa (só no chat por ora; ideia de baixa prioridade) | sim | reservada, junto com a 317 se o autor confirmar |
+| 316 | Cor da bolinha escolhida pela pessoa (só no chat por ora) | sim | reservada, feita antes da 315 |
 | 317 | Volume do aviso do chat de 1 a 5 (3 é o atual) e, depois, escolher o som | sim (preferência do usuário) | pedido em 2026-11-06, a especificar |
 
 ## Decisões do autor
