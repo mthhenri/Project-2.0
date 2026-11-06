@@ -32,6 +32,9 @@ interface CartaoNo {
     no: DemandaGrafoNoDto;
     esquerda: number;
     topo: number;
+    /** O cartão fica à esquerda/acima do ponto (e não à direita/abaixo) quando não cabe: a largura real não importa. */
+    paraEsquerda: boolean;
+    paraCima: boolean;
 }
 
 type NoSimulado = DemandaGrafoNoDto & d3.SimulationNodeDatum;
@@ -482,13 +485,13 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     /** Posiciona o cartão ao lado do cursor, virando para o outro lado perto das bordas do canvas. */
     private mostrarCartao(evento: MouseEvent, no: DemandaGrafoNoDto): void {
         const caixa = (this.elementRef.nativeElement as HTMLElement).getBoundingClientRect();
-        const larguraCartao = 280;
+        const larguraCartao = 280; // estimativa só para decidir o lado; o cartão cresce com o conteúdo
         const alturaCartao = 150;
-        let esquerda = evento.clientX - caixa.left + 16;
-        let topo = evento.clientY - caixa.top + 16;
-        if (esquerda + larguraCartao > caixa.width) esquerda = evento.clientX - caixa.left - larguraCartao - 16;
-        if (topo + alturaCartao > caixa.height) topo = evento.clientY - caixa.top - alturaCartao - 16;
-        this.cartao.set({ no, esquerda: Math.max(8, esquerda), topo: Math.max(8, topo) });
+        const paraEsquerda = evento.clientX - caixa.left + 16 + larguraCartao > caixa.width;
+        const paraCima = evento.clientY - caixa.top + 16 + alturaCartao > caixa.height;
+        const esquerda = evento.clientX - caixa.left + (paraEsquerda ? -16 : 16);
+        const topo = evento.clientY - caixa.top + (paraCima ? -16 : 16);
+        this.cartao.set({ no, esquerda: Math.max(8, esquerda), topo: Math.max(8, topo), paraEsquerda, paraCima });
     }
 
     private calcularRaioNo(no: DemandaGrafoNoDto): number {

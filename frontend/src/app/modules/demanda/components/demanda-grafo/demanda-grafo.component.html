@@ -55,7 +55,13 @@
 
 <!-- Cartão do nó sob o mouse -->
 @if (cartao(); as c) {
-    <div class="demanda-grafo__cartao" [style.left.px]="c.esquerda" [style.top.px]="c.topo">
+    <div
+        class="demanda-grafo__cartao"
+        [class.demanda-grafo__cartao--esquerda]="c.paraEsquerda"
+        [class.demanda-grafo__cartao--acima]="c.paraCima"
+        [style.left.px]="c.esquerda"
+        [style.top.px]="c.topo"
+    >
         <div class="demanda-grafo__cartao-nome">{{ c.no.nome }}</div>
         <span class="demanda-grafo__cartao-status">
             <app-demanda-status [status]="c.no.status" />
