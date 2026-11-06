@@ -284,12 +284,12 @@ body:has(.anotacoes-drawer) .toast-desfazer {
     }
 }
 
-// Cadeado de uma descrição só de leitura (a do cliente para quem não a edita): pequeno e discreto, depois do ícone da aba.
+// Cadeado de uma descrição só de leitura (a do cliente para quem não a edita): só nas abas, bem sutil, depois do ícone da aba.
 .icone-cadeado {
-    margin-left: 0.35rem;
-    font-size: 0.65rem;
+    margin-left: 0.3rem;
+    font-size: 0.55rem;
     color: var(--app-surface-400);
-    opacity: 0.8;
+    opacity: 0.45;
     vertical-align: middle;
 }
 
