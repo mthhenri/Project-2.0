@@ -19,3 +19,6 @@ export * from './UsuarioNomeListadoDto';
 export * from './UsuarioExistenciaVerificarDto';
 export * from './UsuarioAtivoListadoDto';
 export * from './UsuarioTipoListadoDto';
+export * from './UsuarioCorAlterarDto';
+export * from './UsuarioCorAlteradaDto';
+export * from './UsuarioCorInternoAlterarDto';

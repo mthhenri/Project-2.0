@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-11-06 — Task 316: cor da bolinha escolhida pela pessoa (e ícone próprio do chat entre colegas)
+
+**Pedido e decisões do autor.** Cada pessoa escolhe a cor da própria bolinha; a cor é do usuário, e o gestor pode alterar a de qualquer um. Escolha livre (qualquer cor), sem tempo real (vale no F5),
+gestor só pela tela de Usuários, a própria cor no perfil (popover da barra de cima) e não nas configurações do chat. O restante do escopo (demais avatares do sistema) ficou na spec **319**, só a spec no backlog.
+
+**O que mudou.** Coluna `usuario.cor_avatar VARCHAR(7)` anulável (migration `0084`); `shared`: `cor-avatar.ts` (`ehCorAvatarValida`, `corDoTextoSobre` pela luminância WCAG) e `UsuarioCor*Dto`; `corAvatar` nos DTOs de
+usuário e nos do chat (pessoa, conversa, supervisão). Rota `PUT /usuario/cor` (qualquer autenticado, grava só a própria) antes de `PUT /usuario/:id`; o gestor usa a edição existente. A service do chat junta a cor lida de `usuario`
+(nada na mensagem; o contrato dos três armazenamentos não mudou). Frontend: `mensagem-direta-avatar` recebe `cor`; `usuario-cor-seletor` serve ao perfil (com "Aplicar") e ao diálogo do gestor; `estado.corDe(usuarioId)` cobre
+barra, aviso, menção e achados da busca. Avulso, pedido na mesma sessão: o chat entre colegas ganhou o ícone de envelope, para não se confundir com o balão do Chat da IA.
+
+**Testes.** `shared` 332, `backend` 1691, integração 381, `frontend` 2621; `lint:tudo` limpo. **Ao vivo:** API, lista de conversas nos cinco formatos e dois temas, perfil e diálogo do gestor (spec, seção Verificação).
+
+**Achados.** (1) O lint de SQL acusava três arquivos da 314 fora do padrão (o commit da 314 passou sem isso); formatados nesta entrega. (2) Dois testes novos montavam dois componentes no mesmo `it` (o TestBed não aceita);
+foram separados. (3) O login não devolve a cor; ela chega pelo `atualizarSessao`.
+
 ## 2026-11-06 — Task 314: reações nas mensagens do chat entre colaboradores e seletor de emoji
 
 Cada mensagem de pessoa (a do sistema não) ganha "Reagir" (menu da mensagem e botão ao passar o mouse): seis atalhos (👍 ❤️ 😂 😮 😢 🙏) e um "+" que abre o seletor completo, então vale **qualquer emoji**. Uma reação por pessoa por mensagem: outro emoji troca, o mesmo tira. Pílulas sob o balão (a minha destacada), em tempo real nas duas pontas. O autor da mensagem recebe o cartão de aviso "<PESSOA> reagiu à sua mensagem com <EMOJI>" (respeita silêncio, conversa silenciada, conversa à vista e Desktop); **nada entra na conversa** e o cartão não conta como mensagem nova. O mesmo seletor, com busca em português, está no compositor.

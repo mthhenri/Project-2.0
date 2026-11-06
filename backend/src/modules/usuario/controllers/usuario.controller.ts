@@ -16,6 +16,7 @@ import {
     UsuarioCriarDto,
     UsuarioListarDto,
     UsuarioAlterarDto,
+    UsuarioCorAlterarDto,
     UsuarioSenhaAlterarDto,
     temVisibilidadeTotal,
 } from '@project20/shared';
@@ -103,6 +104,15 @@ export class UsuarioController {
     @Get()
     listar(@Query() dto: UsuarioListarDto) {
         return this.usuarioService.listar(dto);
+    }
+
+    @ApiOperation({ summary: 'Alterar a cor da própria bolinha (qualquer usuário autenticado; null volta à cor padrão)' })
+    @ApiResponse({ status: 200, description: 'Cor alterada', schema: { example: { sucesso: true, dados: { corAvatar: '#1E3A8A' }, mensagem: 'Cor alterada com sucesso' } } })
+    @ApiResponse({ status: 400, description: 'Cor inválida', schema: { example: { sucesso: false, dados: null, mensagem: 'Validation failed', erros: ['A cor deve ser um hexadecimal #RRGGBB'] } } })
+    @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @Put('cor')
+    alterarCor(@Body() dto: UsuarioCorAlterarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.usuarioService.alterarCor({ id: usuarioAtivo.sub, corAvatar: dto.corAvatar });
     }
 
     @ApiOperation({ summary: 'Recuperar usuário por ID (desenvolvedor acessa apenas o próprio perfil)' })

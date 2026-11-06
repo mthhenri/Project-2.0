@@ -40,6 +40,7 @@ interface ItemDaSugestao {
     icone: string | null;
     /** Para a pessoa: o nome do avatar. */
     nomeDoAvatar: string | null;
+    corDoAvatar: string | null;
     /** O que o item representa: a pessoa (do `@`) ou a demanda/atividade (do `#`). Quem escolhe usa isto, não o rótulo (dois itens podem ter o mesmo nome). */
     pessoa: PessoaEscolhida | null;
     referencia: MensagemDiretaReferenciaResumoDto | null;
@@ -150,7 +151,7 @@ export class MensagemDiretaCompositorComponent {
                 this.pessoas().map((pessoa) => ({ ...pessoa, usuarioNome: pessoa.nome })),
                 gatilho.termo,
             ).map((pessoa) => ({
-                rotulo: pessoa.nome, titulo: pessoa.nome, detalhe: '', icone: null, nomeDoAvatar: pessoa.nome,
+                rotulo: pessoa.nome, titulo: pessoa.nome, detalhe: '', icone: null, nomeDoAvatar: pessoa.nome, corDoAvatar: pessoa.corAvatar ?? null,
                 pessoa: { usuarioId: pessoa.usuarioId, nome: pessoa.nome }, referencia: null,
             }));
         }
@@ -163,6 +164,7 @@ export class MensagemDiretaCompositorComponent {
             : `${ROTULO_DO_TIPO_DE_REFERENCIA[referencia.tipo]} · ${referencia.demandaNome ?? ''}`,
             icone: referencia.tipo === ReferenciaMensagemDiretaEnum.DEMANDA ? 'pi-sitemap' : 'pi-check-square',
             nomeDoAvatar: null,
+            corDoAvatar: null,
             pessoa: null,
             referencia,
         }));

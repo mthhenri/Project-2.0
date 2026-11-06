@@ -16,7 +16,7 @@ class EventosFalso {
 }
 
 const conversa = (usuarioId: number, usuarioNome: string, naoLidas = 0, silenciada = false): ConversaNaLista => ({
-    conversaId: `1-${usuarioId}`, usuarioId, usuarioNome, ultimaMensagem: null, naoLidas, silenciada, online: false,
+    conversaId: `1-${usuarioId}`, usuarioId, usuarioNome, corAvatar: null, ultimaMensagem: null, naoLidas, silenciada, online: false,
 });
 
 describe('MensagemDiretaBarraComponent', () => {
@@ -40,6 +40,17 @@ describe('MensagemDiretaBarraComponent', () => {
         expect(bolinhas()[1].classList.contains('barra-direta__bolinha--ativa')).toBe(true);
         expect(bolinhas()[1].getAttribute('aria-current')).toBe('true');
         expect(bolinhas()[0].querySelector('.barra-direta__contador')?.textContent?.trim()).toBe('3');
+    });
+
+    it('a bolinha usa a cor que a pessoa escolheu e a cor padrão quando ela não escolheu', async () => {
+        estado.conversas.update((lista) => lista.map((item) => (item.usuarioId === 9 ? { ...item, corAvatar: '#1E3A8A' } : item)));
+        await tela.atualizar();
+        const fundo = (indice: number) => bolinhas()[indice].querySelector<HTMLElement>('.avatar-direto')!.style.background;
+        expect(fundo(0)).toBe('rgb(30, 58, 138)');
+        expect(fundo(1)).toBe('');
+        expect(estado.corDe(9)).toBe('#1E3A8A');
+        expect(estado.corDe(15)).toBeNull();
+        expect(estado.corDe(404)).toBeNull();
     });
 
     it('clicar numa bolinha abre aquela conversa; clicar na aberta não faz nada', async () => {

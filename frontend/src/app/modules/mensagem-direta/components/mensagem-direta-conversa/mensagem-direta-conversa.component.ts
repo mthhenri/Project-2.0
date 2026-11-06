@@ -59,7 +59,7 @@ export class MensagemDiretaConversaComponent {
     /** Só a outra pessoa da conversa pode ser mencionada (a regra do servidor: quem não lê a conversa não é avisado dela). */
     protected readonly pessoasMencionaveis = computed(() => {
         const aberta = this.aberta();
-        return aberta ? [{ usuarioId: aberta.usuarioId, nome: aberta.usuarioNome }] : [];
+        return aberta ? [{ usuarioId: aberta.usuarioId, nome: aberta.usuarioNome, corAvatar: this.estado.corDe(aberta.usuarioId) }] : [];
     });
     protected readonly estaDigitando = computed(() => {
         const aberta = this.aberta();

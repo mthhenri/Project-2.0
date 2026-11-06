@@ -35,7 +35,7 @@ export class MensagemDiretaReacaoRepository extends BaseRepository<MensagemDiret
                 FROM
                     mensagem_direta_reacao
                 WHERE
-                    mensagem_direta_reacao.mensagem_id = ANY(CAST(:mensagemIds AS uuid[]))
+                    mensagem_direta_reacao.mensagem_id = ANY (CAST(:mensagemIds AS uuid[]))
                     AND mensagem_direta_reacao.is_deleted = false
                 ORDER BY
                     mensagem_direta_reacao.created_date,

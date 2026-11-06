@@ -139,6 +139,7 @@
                         ) {
                             <app-mensagem-direta-avatar
                                 [nome]="participante.usuarioNome"
+                                [cor]="participante.corAvatar"
                                 [pequeno]="true"
                             />
                         }
@@ -256,7 +257,7 @@
                 </div>
             } @else {
                 <div class="supervisao-chat__estado supervisao-chat__estado--central">
-                    <i class="pi pi-comments supervisao-chat__estado-icone" aria-hidden="true"></i>
+                    <i class="pi pi-envelope supervisao-chat__estado-icone" aria-hidden="true"></i>
                     <p class="supervisao-chat__estado-titulo">Escolha uma conversa</p>
                     <p class="supervisao-chat__estado-texto">
                         Abrir uma conversa a registra na auditoria e avisa os dois desenvolvedores.

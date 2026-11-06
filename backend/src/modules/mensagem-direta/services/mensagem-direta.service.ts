@@ -263,7 +263,7 @@ export class MensagemDiretaService {
 
         const outroPorConversa = new Map(resumos.map((resumo) => [resumo.conversaId, outroParticipanteDaConversaDireta(resumo.conversaId, usuarioId)]));
         const usuarioIds = [...new Set([...outroPorConversa.values()].filter((outroId): outroId is number => outroId !== null))];
-        const nomes = new Map((await this.usuarioRepositorio.listarNomesPorIds({ usuarioIds })).map((usuario) => [usuario.id, usuario.nomeCompleto]));
+        const usuarios = new Map((await this.usuarioRepositorio.listarNomesPorIds({ usuarioIds })).map((usuario) => [usuario.id, usuario]));
 
         const online = this.eventosService.listarUsuariosOnline();
         const conversas: ConversaDiretaResumoDto[] = [];
@@ -273,7 +273,8 @@ export class MensagemDiretaService {
             conversas.push({
                 conversaId: resumo.conversaId,
                 usuarioId: outroId,
-                usuarioNome: nomes.get(outroId) ?? NOME_DE_USUARIO_REMOVIDO,
+                usuarioNome: usuarios.get(outroId)?.nomeCompleto ?? NOME_DE_USUARIO_REMOVIDO,
+                corAvatar: usuarios.get(outroId)?.corAvatar ?? null,
                 ultimaMensagem: resumo.ultimaMensagem,
                 naoLidas: naoLidas[resumo.conversaId] ?? 0,
                 silenciada: marcadorPorConversa.get(resumo.conversaId)?.silenciada ?? false,
@@ -290,7 +291,7 @@ export class MensagemDiretaService {
         const ativos = await this.usuarioRepositorio.listarAtivos();
         const pessoas = ativos
             .filter((usuario) => usuario.id !== usuarioAtivo.sub)
-            .map((usuario) => ({ usuarioId: usuario.id, usuarioNome: usuario.nomeCompleto, tipo: usuario.tipo, online: online.has(usuario.id) }));
+            .map((usuario) => ({ usuarioId: usuario.id, usuarioNome: usuario.nomeCompleto, tipo: usuario.tipo, online: online.has(usuario.id), corAvatar: usuario.corAvatar }));
         return { sucesso: true, dados: { pessoas }, mensagem: 'Pessoas listadas com sucesso' };
     }
 

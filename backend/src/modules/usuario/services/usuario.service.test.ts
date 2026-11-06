@@ -267,3 +267,32 @@ test('recuperarParaAtribuicao: auxiliar e gestor leem qualquer alvo; o desenvolv
     await assert.rejects(() => servico.recuperarParaAtribuicao({ id: 8 }, desenvolvedor), UnauthorizedAccessException);
     await assert.rejects(() => servico.recuperar({ id: 8 }, auxiliar), UnauthorizedAccessException);
 });
+
+// --- cor da bolinha (task 316) ---------------------------------------------------------------------------------
+
+test('alterarCor: grava a cor válida do próprio usuário e devolve a gravada', async () => {
+    const chamadas: unknown[] = [];
+    const servico = criarServico({ alterarCor: async (dto: unknown) => { chamadas.push(dto); return { corAvatar: '#1E3A8A' }; } });
+    const resposta = await servico.alterarCor({ id: 7, corAvatar: '#1E3A8A' });
+    assert.deepEqual(chamadas, [{ id: 7, corAvatar: '#1E3A8A' }]);
+    assert.deepEqual(resposta.dados, { corAvatar: '#1E3A8A' });
+});
+
+test('alterarCor: null volta à cor padrão', async () => {
+    const servico = criarServico({ alterarCor: async () => ({ corAvatar: null }) });
+    assert.deepEqual((await servico.alterarCor({ id: 7, corAvatar: null })).dados, { corAvatar: null });
+});
+
+test('alterarCor: recusa cor fora de #RRGGBB maiúsculo sem tocar no banco', async () => {
+    const chamadas: unknown[] = [];
+    const servico = criarServico({ alterarCor: async (dto: unknown) => { chamadas.push(dto); return { corAvatar: null }; } });
+    for (const invalida of ['azul', '#FFF', '#1a2b3c', '1E3A8A', '#12345G']) {
+        await assert.rejects(() => servico.alterarCor({ id: 7, corAvatar: invalida }), BusinessException);
+    }
+    assert.deepEqual(chamadas, []);
+});
+
+test('alterarCor: usuário que não existe mais lança ResourceNotFoundException', async () => {
+    const servico = criarServico({ alterarCor: async () => undefined });
+    await assert.rejects(() => servico.alterarCor({ id: 7, corAvatar: '#1E3A8A' }), ResourceNotFoundException);
+});

@@ -191,8 +191,8 @@ describe('MensagemDiretaConversaComponent — editar', () => {
 
     it('o evento EDICAO troca o texto na conversa, mostra "editada", não conta não lida nem muda a ordem', async () => {
         estado.conversas.set([
-            { conversaId: '1-9', usuarioId: 9, usuarioNome: 'Camila Duarte', naoLidas: 0, silenciada: false, online: false, ultimaMensagem: { ...resumo(mensagem(DA_CAMILA_ID, 9, 'Mensagem da Camila')), createdDate: ENVIADA_EM } },
-            { conversaId: '1-12', usuarioId: 12, usuarioNome: 'Outro', naoLidas: 0, silenciada: false, online: false, ultimaMensagem: null },
+            { conversaId: '1-9', usuarioId: 9, usuarioNome: 'Camila Duarte', corAvatar: null, naoLidas: 0, silenciada: false, online: false, ultimaMensagem: { ...resumo(mensagem(DA_CAMILA_ID, 9, 'Mensagem da Camila')), createdDate: ENVIADA_EM } },
+            { conversaId: '1-12', usuarioId: 12, usuarioNome: 'Outro', corAvatar: null, naoLidas: 0, silenciada: false, online: false, ultimaMensagem: null },
         ]);
         estado.aplicarEvento({ tipo: 'EDICAO', mensagem: resumo(mensagem(DA_CAMILA_ID, 9, 'Camila corrigiu', { editadaDate: new Date(ENVIADA_EM.getTime() + 20 * 60_000) })) });
         await redesenhar();

@@ -98,7 +98,11 @@
                         class="lista-direta__linha lista-direta__linha--achado"
                         (click)="abrir(pessoa.usuarioId, pessoa.nome)"
                     >
-                        <app-mensagem-direta-avatar [nome]="pessoa.nome" [pequeno]="true" />
+                        <app-mensagem-direta-avatar
+                            [nome]="pessoa.nome"
+                            [cor]="estado.corDe(pessoa.usuarioId)"
+                            [pequeno]="true"
+                        />
                         <span class="lista-direta__miolo">
                             <span class="lista-direta__topo">
                                 <span class="lista-direta__nome">{{ pessoa.nome }}</span>
@@ -141,6 +145,7 @@
                     >
                         <app-mensagem-direta-avatar
                             [nome]="pessoa.usuarioNome"
+                            [cor]="pessoa.corAvatar"
                             [online]="estado.online().has(pessoa.usuarioId)"
                             [pequeno]="true"
                         />
@@ -175,7 +180,7 @@
         } @else if (estado.conversas().length === 0) {
             <div class="lista-direta__estado">
                 <span class="lista-direta__estado-icone"
-                    ><i class="pi pi-comments" aria-hidden="true"></i
+                    ><i class="pi pi-envelope" aria-hidden="true"></i
                 ></span>
                 <h3 class="lista-direta__estado-titulo">Nenhuma conversa ainda</h3>
                 <p class="lista-direta__estado-texto">
@@ -194,6 +199,7 @@
                 >
                     <app-mensagem-direta-avatar
                         [nome]="conversa.usuarioNome"
+                        [cor]="conversa.corAvatar"
                         [online]="estado.online().has(conversa.usuarioId)"
                     />
                     <span class="lista-direta__miolo">

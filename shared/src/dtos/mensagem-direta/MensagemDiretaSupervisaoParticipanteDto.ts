@@ -5,4 +5,6 @@ export interface MensagemDiretaSupervisaoParticipanteDto {
     usuarioId: number;
     usuarioNome: string;
     tipo: TipoUsuarioEnum;
+    /** Cor da bolinha escolhida; `null` = cor padrão. */
+    corAvatar: string | null;
 }

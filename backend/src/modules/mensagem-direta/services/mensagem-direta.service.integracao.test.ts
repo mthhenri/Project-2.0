@@ -238,7 +238,16 @@ testarComBanco('reagir: a reação vai para a tabela, junta às mensagens da con
 
     await service.reagirMensagem({ destinatarioId: ana.id, mensagemId, reacao: '❤️' }, como(bruno));
     assert.deepEqual((await service.listarConversa({ usuarioId: ana.id }, como(bruno))).dados!.mensagens[0].reacoes, [{ usuarioId: ana.id, reacao: '🎉' }]);
-    const gravadas = await conexao.raw('SELECT is_deleted FROM mensagem_direta_reacao WHERE usuario_id = ? ORDER BY id', [bruno.id]);
+    const gravadas = await conexao.raw(`
+        SELECT
+            is_deleted
+        FROM
+            mensagem_direta_reacao
+        WHERE
+            usuario_id = ?
+        ORDER BY
+            id
+    `, [bruno.id]);
     assert.equal(gravadas.rows.length, 1, 'trocar é UPDATE; remover é soft delete da mesma linha');
     assert.equal(gravadas.rows[0].is_deleted, true);
 });

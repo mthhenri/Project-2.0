@@ -12,6 +12,7 @@ import { MessageService } from 'primeng/api';
 import { UsuarioCriarDto, UsuarioAlterarDto, UsuarioRecuperadoDto, TipoUsuarioEnum } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { UsuarioCorSeletorComponent } from '../usuario-cor-seletor/usuario-cor-seletor.component';
 import { UsuarioTipoDescricaoComponent } from '../usuario-tipo-descricao/usuario-tipo-descricao.component';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
@@ -25,7 +26,7 @@ import { sugerirLogin, sugerirSenha } from '../../utils/usuario-credenciais.util
 @Component({
     selector: 'app-usuario-formulario-dialog',
     standalone: true,
-    imports: [UsuarioTipoDescricaoComponent, DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, SelectButtonModule, InputNumberModule, TooltipModule, DialogModule],
+    imports: [UsuarioCorSeletorComponent, UsuarioTipoDescricaoComponent, DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, SelectButtonModule, InputNumberModule, TooltipModule, DialogModule],
     templateUrl: './usuario-formulario-dialog.component.html',
     styleUrl: './usuario-formulario-dialog.component.scss',
 })
@@ -54,6 +55,9 @@ export class UsuarioFormularioDialogComponent {
         this.formulario.controls.tipo.valueChanges.pipe(startWith(this.formulario.controls.tipo.value)),
         { requireSync: true },
     );
+
+    /** A cor da bolinha do usuário em edição (`#RRGGBB`; `null` = cor padrão). Só o gestor a altera aqui; a própria pessoa usa o perfil. */
+    readonly corAvatar = signal<string | null>(null);
 
     readonly carregando = signal<boolean>(false);
     readonly mostrarDialog = signal<boolean>(false);
@@ -107,6 +111,7 @@ export class UsuarioFormularioDialogComponent {
     /** Abre o dialog para editar: busca o usuário (o resumo da listagem não traz as horas diárias). */
     abrirEdicao(usuarioId: number): void {
         this.usuarioEmEdicao.set(null);
+        this.corAvatar.set(null);
         this.carregandoUsuario.set(true);
         this.formulario.reset({ tipo: TipoUsuarioEnum.DESENVOLVEDOR, horasDiariasNecessarias: 8 });
         this.alternarSenhaDaCriacao(false);
@@ -120,6 +125,7 @@ export class UsuarioFormularioDialogComponent {
                     if (!resposta.sucesso || !resposta.dados) return;
                     const usuario = resposta.dados;
                     this.usuarioEmEdicao.set(usuario);
+                    this.corAvatar.set(usuario.corAvatar ?? null);
                     this.formulario.patchValue({
                         login: usuario.login,
                         nomeCompleto: usuario.nomeCompleto,
@@ -190,6 +196,7 @@ export class UsuarioFormularioDialogComponent {
             nomeCompleto: valores.nomeCompleto,
             cargoTitulo: valores.cargoTitulo,
             horasDiariasNecessarias: valores.horasDiariasNecessarias,
+            corAvatar: this.corAvatar(),
         };
         if (this.podeEditarTipo()) dto.tipo = valores.tipo;
 
@@ -199,6 +206,7 @@ export class UsuarioFormularioDialogComponent {
             .pipe(finalize(() => this.carregando.set(false)))
             .subscribe({
                 next: () => {
+                    if (usuarioEditado.id === this.sessao.id()) this.sessao.definirCorAvatar(dto.corAvatar ?? null);
                     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Usuário alterado com sucesso' });
                     this.mostrarDialog.set(false);
                     this.aoAlterar.emit();

@@ -179,6 +179,27 @@ describe('TopbarComponent — menu do perfil', () => {
         expect(sair).toHaveBeenCalledTimes(1);
     });
 
+    it('"Minha cor": aplicar grava a cor da própria bolinha e a guarda na sessão', async () => {
+        const montado = await montarBarra();
+        await abrirPerfil(montado);
+        expect(document.body.textContent).toContain('Minha cor');
+        montado.componente.corDaBolinha.set('#1E3A8A');
+        botaoPorTexto('Aplicar')!.click();
+        const requisicao = esperarRequisicao(montado.http, 'PUT', '/usuario/cor');
+        expect(requisicao.request.body).toEqual({ corAvatar: '#1E3A8A' });
+        responderSucesso(requisicao, { corAvatar: '#1E3A8A' });
+        await montado.atualizar();
+        expect(montado.componente.sessao.corAvatar()).toBe('#1E3A8A');
+        expect(montado.componente.gravandoCorDaBolinha()).toBe(false);
+    });
+
+    it('"Minha cor": o seletor abre já com a cor atual da pessoa', async () => {
+        const montado = await montarBarra();
+        montado.componente.sessao.definirCorAvatar('#FDE047');
+        await abrirPerfil(montado);
+        expect(montado.componente.corDaBolinha()).toBe('#FDE047');
+    });
+
     it('o seletor "Tempos em dias" alterna a unidade de tempo', async () => {
         const montado = await montarBarra();
         await abrirPerfil(montado);

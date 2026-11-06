@@ -33,7 +33,7 @@ interface Temporizador {
 })
 export class MensagemDiretaAvisosComponent {
     private readonly servico = inject(MensagemDiretaAvisosService);
-    private readonly estado = inject(MensagemDiretaEstadoService);
+    protected readonly estado = inject(MensagemDiretaEstadoService);
 
     protected readonly avisos = this.servico.avisos;
     protected readonly rotuloDaQuantidade = rotuloDaQuantidade;

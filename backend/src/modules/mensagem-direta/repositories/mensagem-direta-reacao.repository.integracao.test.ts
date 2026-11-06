@@ -28,7 +28,14 @@ testarComBanco('definir: grava a reação; a mesma pessoa reagindo de novo TROCA
 
     const lidas = await repositorio.listarPorMensagens({ mensagemIds: [mensagemId] });
     assert.deepEqual(lidas.map((item) => [item.usuarioId, item.reacao]), [[ana.id, '👨‍👩‍👧'], [bruno.id, '🇧🇷']], 'o emoji volta inteiro, com ZWJ e bandeira; a troca mantém o lugar na ordem');
-    const linhas = await conexao.raw('SELECT count(*)::int AS total FROM mensagem_direta_reacao WHERE mensagem_id = ?', [mensagemId]);
+    const linhas = await conexao.raw(`
+        SELECT
+            count(*)::int AS total
+        FROM
+            mensagem_direta_reacao
+        WHERE
+            mensagem_id = ?
+    `, [mensagemId]);
     assert.equal(linhas.rows[0].total, 2, 'a troca não criou linha nova');
 });
 
@@ -44,7 +51,18 @@ testarComBanco('remover: soft delete só da reação da pessoa; reagir de novo c
     assert.deepEqual((await repositorio.listarPorMensagens({ mensagemIds: [mensagemId] })).map((item) => item.usuarioId), [bruno.id]);
 
     await repositorio.definir({ mensagemId, conversaId, usuarioId: ana.id, reacao: '😂' });
-    const gravadas = await conexao.raw('SELECT is_deleted, deleted_date FROM mensagem_direta_reacao WHERE mensagem_id = ? AND usuario_id = ? ORDER BY id', [mensagemId, ana.id]);
+    const gravadas = await conexao.raw(`
+        SELECT
+            is_deleted,
+            deleted_date
+        FROM
+            mensagem_direta_reacao
+        WHERE
+            mensagem_id = ?
+            AND usuario_id = ?
+        ORDER BY
+            id
+    `, [mensagemId, ana.id]);
     assert.deepEqual(gravadas.rows.map((linha: { is_deleted: boolean }) => linha.is_deleted), [true, false]);
     assert.notEqual(gravadas.rows[0].deleted_date, null);
 });

@@ -140,6 +140,7 @@ CREATE TRIGGER trg_usuario_updated_date
 Usuários do sistema. Podem ser desenvolvedores ou gestores.
 Gestores têm acesso irrestrito. Desenvolvedores acessam apenas projetos
 onde possuem ao menos uma demanda atribuída via `demanda_usuario`.
+`cor_avatar` (migration `0084`, task 316) é a cor da bolinha que a pessoa escolhe para si: `#RRGGBB` maiúsculo, anulável (`NULL` = cor de acento do tema; o padrão mora no frontend, nunca em DEFAULT); a própria pessoa grava por `PUT /usuario/cor` e o gestor pela edição do usuário, e a service do chat a junta às pessoas, conversas e supervisão (nada é gravado na mensagem).
 `ativo` diz se o usuário pode entrar e receber atribuições; a migration `0075` trocou por ele a tabela de referência `tipo_usuario_status`, que só tinha `ATIVO` e `INATIVO`.
 
 ```sql
@@ -157,7 +158,8 @@ CREATE TABLE usuario (
   horas_diarias_necessarias INTEGER      NOT NULL,
   tipo_usuario_id           INTEGER      NOT NULL
                               CONSTRAINT fk_usuario_tipo_usuario REFERENCES tipo_usuario(id),
-  ativo                     BOOLEAN      NOT NULL
+  ativo                     BOOLEAN      NOT NULL,
+  cor_avatar                VARCHAR(7)
 );
 
 CREATE UNIQUE INDEX uix_usuario_login_ativo

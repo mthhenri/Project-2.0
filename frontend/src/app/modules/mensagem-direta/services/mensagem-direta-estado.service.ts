@@ -115,6 +115,22 @@ export class MensagemDiretaEstadoService {
     readonly buscando = signal(false);
     readonly erroNaBusca = signal(false);
 
+    /** A cor da bolinha de cada pessoa que o chat já conhece (conversas e lista de pessoas); quem não escolheu cor fica de fora. */
+    private readonly coresPorUsuario = computed(() => {
+        const cores = new Map<number, string>();
+        for (const pessoa of this.pessoas() ?? []) if (pessoa.corAvatar) cores.set(pessoa.usuarioId, pessoa.corAvatar);
+        for (const conversa of this.conversas()) {
+            if (conversa.corAvatar) cores.set(conversa.usuarioId, conversa.corAvatar);
+            else cores.delete(conversa.usuarioId);
+        }
+        return cores;
+    });
+
+    /** A cor escolhida pela pessoa para a bolinha, ou `null` (cor padrão do tema). */
+    corDe(usuarioId: number): string | null {
+        return this.coresPorUsuario().get(usuarioId) ?? null;
+    }
+
     /** O contador do topbar: as não lidas das conversas que **não** estão silenciadas (a linha de cada conversa na lista mostra a sua mesmo assim). */
     readonly naoLidas = computed(() => totalNaoLidas(this.conversas().filter((conversa) => !conversa.silenciada)));
 

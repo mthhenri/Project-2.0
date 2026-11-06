@@ -1,4 +1,10 @@
-<span class="avatar-direto" [class.avatar-direto--pequeno]="pequeno()" aria-hidden="true">
+<span
+    class="avatar-direto"
+    [class.avatar-direto--pequeno]="pequeno()"
+    [style.background]="fundo()"
+    [style.color]="corDoTexto()"
+    aria-hidden="true"
+>
     {{ iniciais() }}
     @if (online() !== null) {
         <span

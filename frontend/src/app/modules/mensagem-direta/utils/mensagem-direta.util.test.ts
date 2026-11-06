@@ -52,7 +52,7 @@ function mensagem(id: string, minutos: number, autor = OUTRO, parcial: Partial<M
 
 function conversa(id: string, naoLidas = 0): ConversaNaLista {
     return {
-        conversaId: `4-${id}`, usuarioId: Number(id), usuarioNome: `Pessoa ${id}`, naoLidas, silenciada: false, online: false,
+        conversaId: `4-${id}`, usuarioId: Number(id), usuarioNome: `Pessoa ${id}`, corAvatar: null, naoLidas, silenciada: false, online: false,
         ultimaMensagem: { ...mensagem(`u${id}`, 0), conversaId: `4-${id}` },
     };
 }
@@ -231,7 +231,7 @@ describe('lista de conversas', () => {
         expect(normalizarMensagem(semSituacao).editadaDate).toEqual(new Date('2026-10-21T14:20:00.000Z'));
         expect(normalizarMensagem({ ...semSituacao, editadaDate: null, reacoes: [] }).editadaDate).toBeNull();
         const lista = normalizarConversa({
-            conversaId: '4-9', usuarioId: 9, usuarioNome: 'Pessoa', naoLidas: 0, silenciada: false, online: false,
+            conversaId: '4-9', usuarioId: 9, usuarioNome: 'Pessoa', corAvatar: null, naoLidas: 0, silenciada: false, online: false,
             ultimaMensagem: { ...semSituacao, editadaDate: '2026-10-21T14:20:00.000Z' as never },
         });
         expect(lista.ultimaMensagem?.editadaDate).toEqual(new Date('2026-10-21T14:20:00.000Z'));

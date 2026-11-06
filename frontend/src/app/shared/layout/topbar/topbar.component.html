@@ -45,7 +45,7 @@
 
         @if (sessao.usuarioAtual()) {
             <p-button
-                icon="pi pi-comments"
+                icon="pi pi-envelope"
                 [text]="true"
                 [rounded]="true"
                 size="small"
@@ -81,7 +81,7 @@
                 type="button"
                 class="topbar__perfil"
                 [attr.aria-label]="'Menu de ' + sessao.nomeCompleto()"
-                (click)="perfilPopover.toggle($event)"
+                (click)="alternarPerfil($event, perfilPopover)"
             >
                 <span class="topbar__avatar" aria-hidden="true">{{ iniciais() }}</span>
                 <span class="topbar__perfil-nome">{{ primeiroNome() }}</span>
@@ -110,6 +110,18 @@
                             (onChange)="unidadeTempo.alternar()"
                         />
                     </label>
+
+                    <p-divider class="my-0" />
+                    <div class="flex flex-col gap-2">
+                        <span class="text-xs text-muted-color">Minha cor</span>
+                        <app-usuario-cor-seletor
+                            [nome]="sessao.nomeCompleto() ?? ''"
+                            [(cor)]="corDaBolinha"
+                            rotuloAplicar="Aplicar"
+                            [aplicando]="gravandoCorDaBolinha()"
+                            (aplicada)="aplicarCorDaBolinha()"
+                        />
+                    </div>
 
                     @if (temaPersonalizado.desbloqueado()) {
                         <p-divider class="my-0" />

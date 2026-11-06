@@ -10,6 +10,7 @@ import { MensagemDiretaConfiguracoesBotaoComponent } from '../mensagem-direta-co
 interface BolinhaDaBarra {
     usuarioId: number;
     nome: string;
+    cor: string | null;
     online: boolean;
     naoLidas: number;
     silenciada: boolean;
@@ -41,13 +42,14 @@ export class MensagemDiretaBarraComponent {
         const bolinhas = this.estado.conversas().map((conversa) => ({
             usuarioId: conversa.usuarioId,
             nome: conversa.usuarioNome,
+            cor: conversa.corAvatar,
             online: online.has(conversa.usuarioId),
             naoLidas: conversa.naoLidas,
             silenciada: conversa.silenciada,
             ativa: conversa.usuarioId === aberta?.usuarioId,
         }));
         if (aberta && !bolinhas.some((bolinha) => bolinha.ativa)) {
-            bolinhas.unshift({ usuarioId: aberta.usuarioId, nome: aberta.usuarioNome, online: online.has(aberta.usuarioId), naoLidas: 0, silenciada: false, ativa: true });
+            bolinhas.unshift({ usuarioId: aberta.usuarioId, nome: aberta.usuarioNome, cor: this.estado.corDe(aberta.usuarioId), online: online.has(aberta.usuarioId), naoLidas: 0, silenciada: false, ativa: true });
         }
         return bolinhas;
     });

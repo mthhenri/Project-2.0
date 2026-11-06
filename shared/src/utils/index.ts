@@ -13,3 +13,4 @@ export * from './plano';
 export * from './plano-fonte';
 export * from './alterar-trecho';
 export * from './tipo-usuario-descricao';
+export * from './cor-avatar';

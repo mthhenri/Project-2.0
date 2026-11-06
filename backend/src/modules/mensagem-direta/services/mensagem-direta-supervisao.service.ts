@@ -179,10 +179,10 @@ export class MensagemDiretaSupervisaoService {
     }
 
     private paraParticipante(usuario: UsuarioTipoListadoDto): MensagemDiretaSupervisaoParticipanteDto {
-        return { usuarioId: usuario.id, usuarioNome: usuario.nomeCompleto, tipo: usuario.tipo };
+        return { usuarioId: usuario.id, usuarioNome: usuario.nomeCompleto, tipo: usuario.tipo, corAvatar: usuario.corAvatar };
     }
 
     private participanteRemovido(usuarioId: number): MensagemDiretaSupervisaoParticipanteDto {
-        return { usuarioId, usuarioNome: NOME_DE_USUARIO_REMOVIDO, tipo: TipoUsuarioEnum.DESENVOLVEDOR };
+        return { usuarioId, usuarioNome: NOME_DE_USUARIO_REMOVIDO, tipo: TipoUsuarioEnum.DESENVOLVEDOR, corAvatar: null };
     }
 }

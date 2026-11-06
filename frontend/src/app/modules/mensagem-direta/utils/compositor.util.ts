@@ -63,6 +63,8 @@ export function aplicarEscolha(texto: string, gatilho: Gatilho, cursor: number, 
 export interface PessoaEscolhida {
     usuarioId: number;
     nome: string;
+    /** Cor da bolinha da pessoa, para a sugestão do `@`. */
+    corAvatar?: string | null;
 }
 
 export interface ReferenciaEscolhida extends ReferenciaMensagemDto {

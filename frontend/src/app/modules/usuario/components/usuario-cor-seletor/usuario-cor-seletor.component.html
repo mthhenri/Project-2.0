@@ -1,0 +1,32 @@
+<div class="cor-seletor">
+    <div class="cor-seletor__previa">
+        <app-mensagem-direta-avatar [nome]="nome()" [cor]="cor()" />
+        <span class="cor-seletor__dica">{{ cor() ?? "Cor padrão" }}</span>
+    </div>
+
+    <p-colorpicker
+        [inline]="true"
+        format="hex"
+        [ngModel]="valorDoSeletor()"
+        (onChange)="aoEscolher($event.value)"
+    />
+
+    <div class="cor-seletor__acoes">
+        <button
+            type="button"
+            class="cor-seletor__padrao"
+            [disabled]="cor() === null"
+            (click)="voltarAoPadrao()"
+        >
+            Voltar à cor padrão
+        </button>
+        @if (rotuloAplicar(); as rotulo) {
+            <p-button
+                [label]="rotulo"
+                size="small"
+                [loading]="aplicando()"
+                (onClick)="aplicada.emit()"
+            />
+        }
+    </div>
+</div>

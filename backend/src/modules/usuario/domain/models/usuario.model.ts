@@ -9,4 +9,5 @@ export class Usuario extends BaseEntity {
     horasDiariasNecessarias: number;
     tipo: TipoUsuarioEnum;
     ativo: boolean;
+    corAvatar: string | null;
 }

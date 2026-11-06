@@ -42,7 +42,7 @@ function mensagem(parcial: Partial<MensagemDiretaResumoDto> = {}): MensagemDiret
 }
 
 interface Cenario {
-    usuarios?: Record<number, { ativo?: boolean; nomeCompleto?: string }>;
+    usuarios?: Record<number, { ativo?: boolean; nomeCompleto?: string; corAvatar?: string | null }>;
     /** Ids de pessoas excluídas: não são recuperadas, mas ainda existem (o histórico continua). */
     excluidos?: number[];
     demandaVisivel?: boolean;
@@ -61,7 +61,7 @@ interface Cenario {
     naoLidas?: Record<string, number>;
     preferencia?: unknown;
     online?: number[];
-    ativos?: { id: number; nome: string; tipo?: TipoUsuarioEnum }[];
+    ativos?: { id: number; nome: string; tipo?: TipoUsuarioEnum; corAvatar?: string | null }[];
     demandasAchadas?: { id: number; projetoId: number; nome: string; status: string }[];
     atividadesAchadas?: { id: number; nome: string; status: string; demandaId: number; nomeDemanda: string; projetoId: number }[];
 }
@@ -125,9 +125,9 @@ function montar(cenario: Cenario = {}) {
             const encontrado = usuarios[id];
             return encontrado ? { id, ativo: encontrado.ativo ?? true, nomeCompleto: encontrado.nomeCompleto ?? `Pessoa ${id}` } : null;
         },
-        listarAtivos: async () => (cenario.ativos ?? []).map((item) => ({ id: item.id, nomeCompleto: item.nome, tipo: item.tipo ?? TipoUsuarioEnum.DESENVOLVEDOR })),
+        listarAtivos: async () => (cenario.ativos ?? []).map((item) => ({ id: item.id, nomeCompleto: item.nome, tipo: item.tipo ?? TipoUsuarioEnum.DESENVOLVEDOR, corAvatar: item.corAvatar ?? null })),
         listarNomesPorIds: async ({ usuarioIds }: { usuarioIds: number[] }) =>
-            usuarioIds.filter((id) => usuarios[id]).map((id) => ({ id, nomeCompleto: usuarios[id].nomeCompleto ?? `Pessoa ${id}` })),
+            usuarioIds.filter((id) => usuarios[id]).map((id) => ({ id, nomeCompleto: usuarios[id].nomeCompleto ?? `Pessoa ${id}`, corAvatar: usuarios[id].corAvatar ?? null })),
     };
     const demanda = {
         recuperar: async (dto: unknown, filtro: unknown) => { registrar('demanda', { dto, filtro }); return cenario.demandaVisivel === false ? null : { id: 1, nome: 'Corrigir filtro', status: 'DESENVOLVENDO', projetoId: 5 }; },
@@ -310,7 +310,7 @@ test('listarConversas: nome, não lidas e silêncio por conversa; pessoa removid
 
     const lidaAteDate = new Date('2026-10-21T10:00:00.000Z');
     const { service, chamadas } = montar({
-        usuarios: { [BRUNO_ID]: { nomeCompleto: 'Bruno' } },
+        usuarios: { [BRUNO_ID]: { nomeCompleto: 'Bruno', corAvatar: '#FDE047' } },
         conversas: [
             { conversaId: '4-9', participantes: [4, 9], totalMensagens: 3, ultimaMensagem: mensagem() },
             { conversaId: '4-15', participantes: [4, 15], totalMensagens: 1, ultimaMensagem: mensagem({ conversaId: '4-15' }) },
@@ -325,6 +325,7 @@ test('listarConversas: nome, não lidas e silêncio por conversa; pessoa removid
         marcadores: [{ conversaId: '4-9', lidaAteDate }, { conversaId: '4-15', lidaAteDate: null }],
     });
     assert.deepEqual(conversas.map((c) => [c.usuarioId, c.usuarioNome, c.naoLidas, c.silenciada]), [[9, 'Bruno', 2, true], [15, 'Usuário removido', 1, false]]);
+    assert.deepEqual(conversas.map((c) => c.corAvatar), ['#FDE047', null]);
 });
 
 test('buscar: sempre como a pessoa do token, com o período convertido e o filtro de código', async () => {
@@ -470,7 +471,7 @@ test('listarConversas: online vem da presença global', async () => {
 test('listarPessoas: as ativas, menos quem pergunta, com tipo e presença — para qualquer tipo de usuário', async () => {
     const { service } = montar({
         online: [9],
-        ativos: [{ id: 4, nome: 'Ana' }, { id: 9, nome: 'Bruno' }, { id: 15, nome: 'Carla', tipo: TipoUsuarioEnum.GESTOR }],
+        ativos: [{ id: 4, nome: 'Ana' }, { id: 9, nome: 'Bruno', corAvatar: '#1E3A8A' }, { id: 15, nome: 'Carla', tipo: TipoUsuarioEnum.GESTOR }],
     });
     for (const quem of [ANA, GESTOR]) {
         const { pessoas } = (await service.listarPessoas(quem)).dados!;
@@ -478,8 +479,8 @@ test('listarPessoas: as ativas, menos quem pergunta, com tipo e presença — pa
     }
     const { pessoas } = (await service.listarPessoas(ANA)).dados!;
     assert.deepEqual(pessoas, [
-        { usuarioId: 9, usuarioNome: 'Bruno', tipo: TipoUsuarioEnum.DESENVOLVEDOR, online: true },
-        { usuarioId: 15, usuarioNome: 'Carla', tipo: TipoUsuarioEnum.GESTOR, online: false },
+        { usuarioId: 9, usuarioNome: 'Bruno', tipo: TipoUsuarioEnum.DESENVOLVEDOR, online: true, corAvatar: '#1E3A8A' },
+        { usuarioId: 15, usuarioNome: 'Carla', tipo: TipoUsuarioEnum.GESTOR, online: false, corAvatar: null },
     ]);
 });
 

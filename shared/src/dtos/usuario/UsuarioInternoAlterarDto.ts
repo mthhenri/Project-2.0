@@ -8,4 +8,5 @@ export class UsuarioInternoAlterarDto {
     horasDiariasNecessarias?: number;
     ativo?: boolean;
     tipo?: TipoUsuarioEnum;
+    corAvatar?: string | null;
 }

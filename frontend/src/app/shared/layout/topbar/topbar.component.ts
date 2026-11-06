@@ -27,12 +27,15 @@ import { IaDisponibilidadeService } from '../../../core/services/ia-disponibilid
 import { MensagemDiretaEstadoService } from '../../../modules/mensagem-direta/services/mensagem-direta-estado.service';
 import { ChipExecucaoAtivaComponent } from './chip-execucao-ativa/chip-execucao-ativa.component';
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
+import { UsuarioCorSeletorComponent } from '../../../modules/usuario/components/usuario-cor-seletor/usuario-cor-seletor.component';
+import { UsuarioService } from '../../../modules/usuario/services/usuario.service';
 import { CheckinProximoComponent } from '../../../modules/checkin/components/checkin-proximo/checkin-proximo.component';
 
 @Component({
     selector: 'app-topbar',
     standalone: true,
     imports: [
+        UsuarioCorSeletorComponent,
         ReactiveFormsModule,
         FormsModule,
         ToggleSwitchModule,
@@ -71,6 +74,29 @@ export class TopbarComponent {
     voltarParaAIa(): void {
         this.iaDisponibilidade.voltarParaAIa();
         void this.roteador.navigateByUrl('/chat');
+    }
+
+    private readonly usuarioService = inject(UsuarioService);
+
+    /** A cor da bolinha em escolha no perfil (task 316): só vale depois do "Aplicar". */
+    readonly corDaBolinha = signal<string | null>(null);
+    readonly gravandoCorDaBolinha = signal(false);
+
+    /** Abre o perfil com a cor atual da pessoa já no seletor. */
+    alternarPerfil(evento: Event, popover: { toggle(evento: Event): void }): void {
+        this.corDaBolinha.set(this.sessao.corAvatar());
+        popover.toggle(evento);
+    }
+
+    aplicarCorDaBolinha(): void {
+        this.gravandoCorDaBolinha.set(true);
+        this.usuarioService.alterarCor({ corAvatar: this.corDaBolinha() }).subscribe({
+            next: (resposta) => {
+                this.gravandoCorDaBolinha.set(false);
+                if (resposta.sucesso && resposta.dados) this.sessao.definirCorAvatar(resposta.dados.corAvatar);
+            },
+            error: () => this.gravandoCorDaBolinha.set(false),
+        });
     }
 
     readonly coresSugeridas = CORES_SUGERIDAS;

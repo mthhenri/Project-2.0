@@ -41,10 +41,14 @@ test('usuário: recuperar e alterar não têm @GestorOnly — a service decide (
     assert.equal(rotas['alterar'].gestorOnly, false);
 });
 
+test('usuário: alterarCor é da própria pessoa — sem @GestorOnly (qualquer usuário autenticado escolhe a cor da própria bolinha)', () => {
+    assert.equal(rotasPorNome(UsuarioController)['alterarCor'].gestorOnly, false);
+});
+
 test('usuário: verbos e caminhos das rotas', () => {
     const rotas = rotasPorNome(UsuarioController);
     assert.deepEqual(
         Object.values(rotas).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
-        ['DELETE :id', 'GET /', 'GET :id', 'PATCH :id/restaurar', 'PATCH :id/senha', 'POST /', 'PUT :id'].sort(),
+        ['DELETE :id', 'GET /', 'GET :id', 'PATCH :id/restaurar', 'PATCH :id/senha', 'POST /', 'PUT :id', 'PUT cor'].sort(),
     );
 });

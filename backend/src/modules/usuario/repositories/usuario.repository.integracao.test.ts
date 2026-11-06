@@ -329,6 +329,34 @@ testarComBanco('alterar troca o login e o devolve', async (conexao) => {
     assert.equal(await repositorio.validarLogin({ login: 'login.trocado' }), true);
 });
 
+testarComBanco('cor da bolinha: nasce sem cor, alterarCor grava e limpa só a do próprio usuário, e as leituras do chat a devolvem', async (conexao) => {
+    const repositorio = criarRepositorio(UsuarioRepository, conexao);
+    const dono = await criarDesenvolvedor(conexao, { nomeCompleto: 'Dono da Cor' });
+    const outro = await criarDesenvolvedor(conexao, { nomeCompleto: 'Outro Sem Cor' });
+    assert.equal((await repositorio.recuperar({ id: dono.id }))!.corAvatar, null, 'nasce sem cor');
+
+    assert.deepEqual(await repositorio.alterarCor({ id: dono.id, corAvatar: '#1E3A8A' }), { corAvatar: '#1E3A8A' });
+    assert.equal((await repositorio.recuperar({ id: dono.id }))!.corAvatar, '#1E3A8A');
+    assert.equal((await repositorio.recuperar({ id: outro.id }))!.corAvatar, null, 'a do outro não muda');
+
+    const nomes = await repositorio.listarNomesPorIds({ usuarioIds: [dono.id, outro.id] });
+    assert.equal(nomes.find((usuario) => usuario.id === dono.id)!.corAvatar, '#1E3A8A');
+    assert.equal(nomes.find((usuario) => usuario.id === outro.id)!.corAvatar, null);
+    assert.equal((await repositorio.listarAtivos()).find((usuario) => usuario.id === dono.id)!.corAvatar, '#1E3A8A');
+    assert.equal((await repositorio.listarTiposPorIds({ usuarioIds: [dono.id] }))[0].corAvatar, '#1E3A8A');
+
+    assert.deepEqual(await repositorio.alterarCor({ id: dono.id, corAvatar: null }), { corAvatar: null });
+    assert.equal((await repositorio.recuperar({ id: dono.id }))!.corAvatar, null, 'null volta à cor padrão');
+});
+
+testarComBanco('alterar (gestor) grava a cor de outro usuário e a devolve; sem o campo não mexe nela', async (conexao) => {
+    const repositorio = criarRepositorio(UsuarioRepository, conexao);
+    const usuario = await criarDesenvolvedor(conexao, { nomeCompleto: 'Pintado Pelo Gestor' });
+    assert.equal((await repositorio.alterar({ id: usuario.id, corAvatar: '#FDE047' })).corAvatar, '#FDE047');
+    assert.equal((await repositorio.alterar({ id: usuario.id, nomeCompleto: 'Nome Novo' })).corAvatar, '#FDE047');
+    assert.equal((await repositorio.alterar({ id: usuario.id, corAvatar: null })).corAvatar, null);
+});
+
 testarComBanco('validarExecucoes: só execução não excluída, em atividade não excluída e do próprio usuário', async (conexao) => {
     const repositorio = criarRepositorio(UsuarioRepository, conexao);
     const semAtividade = await criarDesenvolvedor(conexao);

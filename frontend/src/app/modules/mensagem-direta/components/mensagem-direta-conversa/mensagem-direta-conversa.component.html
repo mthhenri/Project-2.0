@@ -21,6 +21,7 @@
             />
             <app-mensagem-direta-avatar
                 [nome]="conversa.usuarioNome"
+                [cor]="estado.corDe(conversa.usuarioId)"
                 [online]="estaOnline()"
                 [pequeno]="true"
             />

@@ -2,7 +2,7 @@
 
 > Pedido do autor em 2026-11-06 ("a cor da bolinha antes do `@IA`"). Task da guarda-chuva `chat-colaboradores-evolucao.spec.md`.
 > Decisões do autor (2026-11-06): a cor é **do usuário** (a pessoa escolhe a própria; o **gestor pode alterar a de qualquer usuário**) e a escolha é **livre** (qualquer cor, não uma paleta).
-> Modelagem confirmada pelo autor (2026-11-06): coluna em `usuario`, sem tempo real, gestor só pela tela de Usuários, escolha da própria cor no perfil. **Estado: pronta para implementar.**
+> Modelagem confirmada pelo autor (2026-11-06): coluna em `usuario`, sem tempo real, gestor só pela tela de Usuários, escolha da própria cor no perfil. **Estado: feita em 2026-11-06.**
 
 ## O que muda para o usuário
 
@@ -43,3 +43,15 @@ seção do perfil grava e restaura o padrão, diálogo do gestor). Ao vivo nos c
 ## Fora de escopo
 
 Cor por contato, paleta fixa, tempo real, avatares fora do chat (task 319), foto de perfil.
+
+## Verificação (2026-11-06)
+
+- **Testes:** `shared` 332 (4 novos: regra e contraste da cor), `backend` 1691, integração `npm run test:integracao` 381 (repository: nasce sem cor, `alterarCor`, `alterar` do gestor, e as leituras do chat devolvem a cor;
+  Postgres 16 local, migration 0084 aplicada), `frontend` 2621 (novos: avatar com e sem cor e contraste, seletor, perfil "Minha cor", diálogo do gestor, barra). `npm run lint:tudo` limpo; builds sem erro.
+- **Ao vivo** (Postgres local, `CHAT_ARMAZENAMENTO=postgres`): cor inválida recusada; desenvolvedor grava a própria (`#fde047` vira `#FDE047`); gestor pinta outra pessoa; desenvolvedor não pinta ninguém além de si
+  (403 da service); a lista de conversas do gestor mostra Thiago em amarelo com iniciais escuras e Camila em azul com iniciais claras, nos cinco formatos e nos dois temas; o popover do perfil traz "Minha cor" com a
+  cor atual, "Voltar à cor padrão" e "Aplicar" (gravou `null`); o diálogo de edição do gestor abre com a cor da pessoa. Capturas em `.artifacts/316/` (ignorada pelo Git).
+- **Decisões do autor na sessão:** coluna em `usuario`; sem tempo real (vale no F5); gestor só pela tela de Usuários; a própria cor no perfil, não nas configurações do chat; demais avatares na task 319.
+- **Também nesta entrega (pedido do autor, avulso):** o chat entre colegas ganhou o ícone de envelope (botão da barra de cima, estado vazio da lista e da supervisão); o Chat da IA mantém o balão (`pi-comments`).
+- **Limites:** o login devolve o usuário sem a cor, que chega no `atualizarSessao` (P-062); o Project Desktop e o contrato real de OpenSearch/Elasticsearch não foram exercitados (a cor vem de `usuario`, não do armazenamento). A
+  formatação do SQL de três arquivos da 314 estava fora do padrão e foi corrigida junto.
