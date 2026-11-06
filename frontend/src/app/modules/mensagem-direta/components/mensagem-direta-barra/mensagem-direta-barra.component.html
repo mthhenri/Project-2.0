@@ -1,0 +1,26 @@
+<nav class="barra-direta" aria-label="Conversas">
+    @for (bolinha of bolinhas(); track bolinha.usuarioId) {
+        <button
+            type="button"
+            class="barra-direta__bolinha"
+            [class.barra-direta__bolinha--ativa]="bolinha.ativa"
+            [class.barra-direta__bolinha--silenciada]="bolinha.silenciada"
+            [attr.aria-label]="rotulo(bolinha)"
+            [attr.aria-current]="bolinha.ativa ? 'true' : null"
+            [pTooltip]="rotulo(bolinha)"
+            tooltipPosition="right"
+            (click)="abrir(bolinha)"
+        >
+            <app-mensagem-direta-avatar
+                [nome]="bolinha.nome"
+                [online]="bolinha.online"
+                [pequeno]="true"
+            />
+            @if (bolinha.naoLidas > 0 && !bolinha.ativa) {
+                <span class="barra-direta__contador" aria-hidden="true">{{
+                    bolinha.naoLidas > 99 ? "99+" : bolinha.naoLidas
+                }}</span>
+            }
+        </button>
+    }
+</nav>

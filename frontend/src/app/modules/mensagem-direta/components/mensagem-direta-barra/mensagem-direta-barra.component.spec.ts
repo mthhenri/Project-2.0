@@ -1,0 +1,58 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { TipoUsuarioEnum } from '@project20/shared';
+import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
+import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
+import { MensagemDiretaEventosService } from '../../services/mensagem-direta-eventos.service';
+import { ConversaNaLista } from '../../utils/mensagem-direta.util';
+import { MensagemDiretaBarraComponent } from './mensagem-direta-barra.component';
+
+class EventosFalso {
+    readonly conectado = signal(true);
+    iniciar(): void {}
+    parar(): void {}
+}
+
+const conversa = (usuarioId: number, usuarioNome: string, naoLidas = 0, silenciada = false): ConversaNaLista => ({
+    conversaId: `1-${usuarioId}`, usuarioId, usuarioNome, ultimaMensagem: null, naoLidas, silenciada, online: false,
+});
+
+describe('MensagemDiretaBarraComponent', () => {
+    let tela: ComponenteMontado<MensagemDiretaBarraComponent>;
+    let estado: MensagemDiretaEstadoService;
+    const bolinhas = () => Array.from(tela.elemento.querySelectorAll<HTMLButtonElement>('.barra-direta__bolinha'));
+
+    beforeEach(async () => {
+        tela = await montarComponente(MensagemDiretaBarraComponent, {
+            usuario: TipoUsuarioEnum.DESENVOLVEDOR,
+            provedores: [{ provide: MensagemDiretaEventosService, useClass: EventosFalso }],
+        });
+        estado = TestBed.inject(MensagemDiretaEstadoService);
+        estado.conversas.set([conversa(9, 'Camila Duarte', 3), conversa(15, 'Rafael Moura', 0, true)]);
+        estado.conversaAberta.set({ usuarioId: 15, usuarioNome: 'Rafael Moura', conversaId: '1-15', mensagens: [], lidaPeloOutroAte: null, proximoCursor: null, carregando: false, carregandoMais: false, erro: false });
+        await tela.atualizar();
+    });
+
+    it('mostra uma bolinha por conversa, na ordem da lista, com a aberta marcada e o contador das não lidas', () => {
+        expect(bolinhas().map((botao) => botao.getAttribute('aria-label'))).toEqual(['Camila Duarte, 3 não lidas', 'Rafael Moura']);
+        expect(bolinhas()[1].classList.contains('barra-direta__bolinha--ativa')).toBe(true);
+        expect(bolinhas()[1].getAttribute('aria-current')).toBe('true');
+        expect(bolinhas()[0].querySelector('.barra-direta__contador')?.textContent?.trim()).toBe('3');
+    });
+
+    it('clicar numa bolinha abre aquela conversa; clicar na aberta não faz nada', async () => {
+        const abrir = vi.spyOn(estado, 'abrirConversa').mockResolvedValue();
+        bolinhas()[1].click();
+        expect(abrir).not.toHaveBeenCalled();
+        bolinhas()[0].click();
+        expect(abrir).toHaveBeenCalledWith(9, 'Camila Duarte');
+    });
+
+    it('a conversa aberta que a lista ainda não traz (sem mensagem) entra na barra', async () => {
+        estado.conversaAberta.update((aberta) => ({ ...aberta!, usuarioId: 33, usuarioNome: 'Nova Pessoa', conversaId: '1-33' }));
+        await tela.atualizar();
+        expect(bolinhas().map((botao) => botao.getAttribute('aria-label'))).toEqual(['Nova Pessoa', 'Camila Duarte, 3 não lidas', 'Rafael Moura']);
+        expect(bolinhas()[0].classList.contains('barra-direta__bolinha--ativa')).toBe(true);
+    });
+});

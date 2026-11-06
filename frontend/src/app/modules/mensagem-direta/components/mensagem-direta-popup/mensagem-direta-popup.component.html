@@ -25,7 +25,11 @@
         @defer (on immediate) {
             @switch (estado.visao()) {
                 @case ("CONVERSA") {
-                    <app-mensagem-direta-conversa />
+                    <!-- Com uma conversa aberta a lista vira a barra de bolinhas (a lista completa continua no "voltar"). -->
+                    <div class="popup-direto__conversa-com-barra">
+                        <app-mensagem-direta-barra />
+                        <app-mensagem-direta-conversa />
+                    </div>
                 }
                 @case ("NOVA") {
                     <app-mensagem-direta-nova />

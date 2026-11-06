@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-06 — Chat entre colaboradores: links soltos, duplo clique para responder e barra de bolinhas (tasks 310–312)
+
+Depois do ajuste das mensagens coladas, o autor listou a evolução do chat (editar, reações e emoji, `@IA`, cor da bolinha, volume do aviso) e decidiu cada ponto; as decisões e a ordem estão em `docs/specs/backlog/chat-colaboradores-evolucao.spec.md` (tasks 310–317 reservadas) e as três primeiras, sem modelagem, foram feitas: endereço solto vira link no visualizador de Markdown (regra pura no `shared`, vale para todo o sistema), dois cliques no balão respondem à mensagem, e a lista vira uma barra vertical de bolinhas quando há conversa aberta. Detalhes, testes (shared 316, frontend 2555, backend 1664; lint limpo) e a verificação ao vivo nos cinco formatos e nos dois temas em `docs/specs/done/310-312-chat-links-duplo-clique-e-barra.spec.md`. O pedido de volume do aviso (1 a 5) entrou como task 317 e aguarda decisão de modelagem. Impacto avisado: o link solto muda o texto de todas as telas que usam o visualizador.
+
 ## 2026-11-06 — Chat entre colaboradores: mensagens seguidas coladas e "digitando" como balão
 
 Pedido do autor (ajuste de acabamento do popup, só front, sem spec própria): mensagens seguidas da mesma pessoa a menos de 5 minutos ficam coladas, sem o espaço entre os balões e só a última da sequência mostra o horário; e o "digitando" aparece também como balão de três pontinhos no fim da conversa, no estilo do WhatsApp (o status do cabeçalho continua). A regra é pura (`marcarEmendas`, `INTERVALO_DA_SEQUENCIA_MS`, em `mensagem-direta.util.ts`): mesma pessoa, mesmo dia, intervalo menor que 5 min. O rodapé só some se a mensagem não carrega estado ("Lida", "Enviada", "Enviando…", "Não enviada"); nas coladas o botão de ações (três pontinhos) vai para o lado do balão, no hover, e o botão direito segue abrindo o menu. O balão de digitando rola o fim da conversa quando o usuário está lá.

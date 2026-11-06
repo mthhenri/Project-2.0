@@ -186,6 +186,28 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
         await tela.atualizar();
         expect(botao().querySelector('.pi-ellipsis-h')).not.toBeNull();
     });
+    it('dois cliques no balão respondem à mensagem; em link, código ou mensagem não enviada não', async () => {
+        const mensagem = (mensagemId: string, texto: string, situacao: 'ENVIADA' | 'ENVIANDO' = 'ENVIADA') => ({
+            mensagemId, conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto, contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: new Date(), situacao,
+        });
+        estado.conversaAberta.update((aberta) => ({ ...aberta!, mensagens: [mensagem('texto', 'Oi, tudo bem?'), mensagem('link', 'veja https://exemplo.com/a'), mensagem('pendente', 'ainda indo', 'ENVIANDO')] }));
+        await redesenhar();
+        const dobrar = async (alvo: Element) => {
+            alvo.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+            await redesenhar();
+        };
+        const balao = (id: string) => tela.elemento.querySelector(`[data-mensagem-id="${id}"]`)!;
+
+        await dobrar(balao('link').querySelector('a')!);
+        expect(estado.respondendoA()).toBeNull();
+        await dobrar(balao('pendente'));
+        expect(estado.respondendoA()).toBeNull();
+        await dobrar(balao('texto'));
+        expect(estado.respondendoA()?.mensagemId).toBe('texto');
+        await dobrar(balao('link'));
+        expect(estado.respondendoA()?.mensagemId).toBe('link');
+    });
+
     it('o botão direito abre as ações da mensagem escolhida e trocar de conversa fecha o menu', async () => {
         const escrever = vi.fn().mockResolvedValue(undefined);
         Object.defineProperty(navigator, 'clipboard', { value: { writeText: escrever }, configurable: true });

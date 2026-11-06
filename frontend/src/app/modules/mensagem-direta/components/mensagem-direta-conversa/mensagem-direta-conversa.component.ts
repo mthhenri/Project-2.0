@@ -23,6 +23,8 @@ const PAGINAS_PARA_ACHAR_A_ORIGINAL = 5;
 const TEMPO_DO_REALCE_MS = 1_500;
 const TEMPO_DO_AVISO_MS = 4_000;
 const AVISO_ORIGINAL_NAO_ACHADA = 'Mensagem antiga demais para localizar.';
+/** Onde o duplo clique mantém o comportamento próprio (selecionar texto, abrir, copiar) em vez de responder. */
+const SELETOR_DO_QUE_NAO_RESPONDE_COM_DOIS_CLIQUES = 'a, button, pre, code, app-mensagem-direta-referencia-cartao';
 const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
 /** Distância do topo (px) a partir da qual se pede a página mais antiga. */
 const MARGEM_DO_TOPO_PX = 40;
@@ -190,6 +192,20 @@ export class MensagemDiretaConversaComponent {
             preventDefault: () => evento.preventDefault(),
             stopPropagation: () => evento.stopPropagation(),
         } : evento);
+    }
+
+    /**
+     * Dois cliques no balão respondem à mensagem (como no WhatsApp). Ficam de fora o duplo clique em link, botão, código e cartão de referência (que
+     * têm o seu uso próprio e onde o duplo clique seleciona texto) e a mensagem que ainda não foi enviada. O duplo clique selecionaria uma palavra:
+     * a seleção é desfeita, porque o gesto aqui é o de responder.
+     */
+    protected aoDarDoisCliques(evento: MouseEvent, mensagem: MensagemNaConversa): void {
+        if (mensagem.situacao !== 'ENVIADA' || mensagem.autor !== AutorMensagemDiretaEnum.USUARIO) return;
+        const alvo = evento.target instanceof Element ? evento.target : null;
+        if (alvo?.closest(SELETOR_DO_QUE_NAO_RESPONDE_COM_DOIS_CLIQUES)) return;
+        evento.preventDefault();
+        alvo?.ownerDocument.defaultView?.getSelection()?.removeAllRanges();
+        this.estado.responder(mensagem);
     }
 
     /** Copia o texto da mensagem como foi escrito (o Markdown), inclusive blocos de código. */

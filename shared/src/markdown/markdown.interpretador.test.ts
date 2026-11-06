@@ -178,7 +178,8 @@ test('links http, https e mailto com texto formatado', () => {
 
 test('link incompleto vira texto', () => {
     assert.deepEqual(paragrafo('[sem url]'), [texto('[sem url]')]);
-    assert.deepEqual(paragrafo('[a](https://x.com'), [texto('[a](https://x.com')]);
+    // O endereço solto dentro do trecho incompleto vira link (é um endereço escrito no texto); o resto fica como foi escrito.
+    assert.deepEqual(paragrafo('[a](https://x.com'), [texto('[a]('), { tipo: 'link', url: 'https://x.com', filhos: [texto('https://x.com')] }]);
     assert.deepEqual(paragrafo('[[a](https://x.com)'), [texto('['), { tipo: 'link', url: 'https://x.com', filhos: [texto('a')] }]);
 });
 
@@ -195,6 +196,10 @@ test('entidades não são decodificadas', () => {
     assert.deepEqual(paragrafo('&lt;script&gt; &amp; &#60;b&#62;'), [texto('&lt;script&gt; &amp; &#60;b&#62;')]);
 });
 
+test('espaço depois do parêntese não faz a sintaxe de link; só o endereço solto vira link', () => {
+    assert.deepEqual(paragrafo('[a]( https://x.com)'), [texto('[a]( '), { tipo: 'link', url: 'https://x.com', filhos: [texto('https://x.com')] }, texto(')')]);
+});
+
 test('esquemas perigosos nunca viram link', () => {
     const vetores = [
         '[a](javascript:alert(1))',
@@ -208,7 +213,6 @@ test('esquemas perigosos nunca viram link', () => {
         '[a](java\tscript:alert(1))',
         '[a](https://\u0000evil.com)',
         '[a](https://)',
-        '[a]( https://x.com)',
     ];
     for (const vetor of vetores) {
         const tipos = tiposDeNo(interpretarMarkdown(vetor));
@@ -351,4 +355,31 @@ test('tabela enorme é cortada no limite de linhas e termina rápido', () => {
     const tabela = interpretarMarkdown(`| n |\n|---|\n${linhas}`, COM_TABELAS)[0] as Extract<MarkdownBlocoNo, { tipo: 'tabela' }>;
     assert.equal(tabela.linhas.length, 500);
     assert.ok(Date.now() - inicio < 1000);
+});
+
+test('endereço solto vira link, sem levar a pontuação da frase', () => {
+    assert.deepEqual(paragrafo('veja https://exemplo.com/a_b_c?x=1, ok'), [
+        texto('veja '),
+        { tipo: 'link', url: 'https://exemplo.com/a_b_c?x=1', filhos: [texto('https://exemplo.com/a_b_c?x=1')] },
+        texto(', ok'),
+    ]);
+    assert.deepEqual(paragrafo('(https://exemplo.com/x).'), [
+        texto('('),
+        { tipo: 'link', url: 'https://exemplo.com/x', filhos: [texto('https://exemplo.com/x')] },
+        texto(').'),
+    ]);
+    assert.deepEqual(paragrafo('www.exemplo.com.br'), [{ tipo: 'link', url: 'https://www.exemplo.com.br', filhos: [texto('www.exemplo.com.br')] }]);
+});
+
+test('endereço solto: endereço com parêntese balanceado, localhost e o que não é endereço', () => {
+    assert.equal((paragrafo('https://pt.wikipedia.org/wiki/X_(y)')[0] as { url: string }).url, 'https://pt.wikipedia.org/wiki/X_(y)');
+    assert.equal((paragrafo('http://localhost:4200/demanda')[0] as { tipo: string }).tipo, 'link');
+    for (const entrada of ['https://', 'www.', 'awww.exemplo.com', 'ftp://exemplo.com']) {
+        assert.ok(!paragrafo(entrada).some((no) => no.tipo === 'link'), entrada);
+    }
+});
+
+test('endereço solto não duplica o link já escrito com a sintaxe nem entra em código', () => {
+    assert.equal(paragrafo('[https://a.com](https://a.com)').length, 1);
+    assert.deepEqual(paragrafo('`https://a.com`'), [{ tipo: 'codigo', valor: 'https://a.com' }]);
 });

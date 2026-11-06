@@ -6,6 +6,7 @@ import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-esta
 import { MensagemDiretaPosicaoService } from '../../services/mensagem-direta-posicao.service';
 import { AVISO_DE_LEITURA_DAS_CONVERSAS } from '../../utils/mensagem-direta.util';
 import { CantoDoPopup, PASSO_DO_TECLADO_PX, PASSO_GRANDE_DO_TECLADO_PX, Retangulo, moverPopup, redimensionarPopup } from '../../utils/posicao-popup.util';
+import { MensagemDiretaBarraComponent } from '../mensagem-direta-barra/mensagem-direta-barra.component';
 import { MensagemDiretaConversaComponent } from '../mensagem-direta-conversa/mensagem-direta-conversa.component';
 import { MensagemDiretaListaComponent } from '../mensagem-direta-lista/mensagem-direta-lista.component';
 import { MensagemDiretaNovaComponent } from '../mensagem-direta-nova/mensagem-direta-nova.component';
@@ -21,7 +22,7 @@ import { MensagemDiretaNovaComponent } from '../mensagem-direta-nova/mensagem-di
 @Component({
     selector: 'app-mensagem-direta-popup',
     standalone: true,
-    imports: [TooltipModule, MensagemDiretaListaComponent, MensagemDiretaConversaComponent, MensagemDiretaNovaComponent],
+    imports: [TooltipModule, MensagemDiretaBarraComponent, MensagemDiretaListaComponent, MensagemDiretaConversaComponent, MensagemDiretaNovaComponent],
     templateUrl: './mensagem-direta-popup.component.html',
     styleUrl: './mensagem-direta-popup.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,

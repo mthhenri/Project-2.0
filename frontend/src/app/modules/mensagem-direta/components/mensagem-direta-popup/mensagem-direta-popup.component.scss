@@ -37,6 +37,14 @@
         cursor: grabbing;
     }
 
+    // A barra de bolinhas ao lado da conversa aberta: a conversa ocupa o resto da largura.
+    &__conversa-com-barra {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+        min-width: 0;
+    }
+
     // A alça fica no canto oposto ao da âncora (`data-canto`) e só aparece com o mouse perto ou com o foco nela.
     &__redimensionar {
         position: absolute;

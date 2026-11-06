@@ -178,6 +178,7 @@
                                         mensagem.situacao === 'FALHOU'
                                     "
                                     (contextmenu)="abrirMenu($event, mensagem)"
+                                    (dblclick)="aoDarDoisCliques($event, mensagem)"
                                 >
                                     @if (mensagem.respondeA; as citacao) {
                                         <button
