@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { TipoUsuarioEnum } from '@project20/shared';
+import { PosicaoBarraChatEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
+import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { MensagemDiretaEventosService } from '../../services/mensagem-direta-eventos.service';
 import { ConversaNaLista } from '../../utils/mensagem-direta.util';
@@ -54,5 +55,29 @@ describe('MensagemDiretaBarraComponent', () => {
         await tela.atualizar();
         expect(bolinhas().map((botao) => botao.getAttribute('aria-label'))).toEqual(['Nova Pessoa', 'Camila Duarte, 3 não lidas', 'Rafael Moura']);
         expect(bolinhas()[0].classList.contains('barra-direta__bolinha--ativa')).toBe(true);
+    });
+
+    // Task 318: a posição vem da preferência da conta e a engrenagem fica no fim da barra.
+    it('a barra segue a posição da preferência: esquerda (padrão), direita, acima e abaixo', async () => {
+        const barra = () => tela.elemento.querySelector<HTMLElement>('nav.barra-direta')!;
+        expect(barra().classList.contains('barra-direta--esquerda')).toBe(true);
+        for (const posicao of [PosicaoBarraChatEnum.DIREITA, PosicaoBarraChatEnum.ACIMA, PosicaoBarraChatEnum.ABAIXO]) {
+            TestBed.inject(MensagemDiretaAvisosService).preferencia.update((atual) => ({ ...atual, posicaoBarra: posicao }));
+            await tela.atualizar();
+            expect(barra().classList.contains(`barra-direta--${posicao.toLowerCase()}`)).toBe(true);
+            expect(barra().classList.contains('barra-direta--esquerda')).toBe(false);
+        }
+    });
+
+    it('a engrenagem fica depois das bolinhas, fora da área que rola, e abre as configurações do chat', async () => {
+        const engrenagem = tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Configurações do chat"]');
+        expect(engrenagem).not.toBeNull();
+        expect(tela.elemento.querySelector('.barra-direta__bolinhas')!.contains(engrenagem)).toBe(false);
+        const nav = tela.elemento.querySelector('nav.barra-direta')!;
+        expect(nav.lastElementChild!.contains(engrenagem)).toBe(true);
+        engrenagem!.click();
+        await tela.atualizar();
+        expect(document.body.querySelector('.menu-notificacoes')?.textContent).toContain('Configurações do chat');
+        document.body.querySelectorAll('.p-popover').forEach((elemento) => elemento.remove());
     });
 });

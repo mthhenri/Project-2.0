@@ -1,11 +1,11 @@
 # chat-colaboradores-evolucao.spec.md
 
-> Guarda-chuva da evolução do chat entre colaboradores (tasks 205–221 em `done/`), pedida pelo autor em 2026-11-06. Reserva as tasks **310–317**;
+> Guarda-chuva da evolução do chat entre colaboradores (tasks 205–221 em `done/`), pedida pelo autor em 2026-11-06. Reserva as tasks **310–317** (mais a **318**, acrescentada em 2026-11-06);
 > cada uma ganha o seu `NNN-*.spec.md` ao ser aberta. As decisões abaixo são do autor (respondidas em 2026-11-06 sobre a análise de cada item).
 
 ## Tasks e ordem
 
-Ordem de execução (decidida em 2026-11-06): 313, 314, **316 antes da 315** (o autor quer a cor da bolinha antes do `@IA`), 315, e a 317 quando a ideia dos níveis estiver testada. Os números são só reservas e não seguem a ordem.
+Ordem de execução (decidida em 2026-11-06): **318**, 313, 314, **316 antes da 315** (o autor quer a cor da bolinha antes do `@IA`), 315, e a 317 quando a ideia dos níveis estiver testada. Os números são só reservas e não seguem a ordem.
 
 | Task | O que | Modelagem? | Estado |
 |---|---|---|---|
@@ -17,6 +17,7 @@ Ordem de execução (decidida em 2026-11-06): 313, 314, **316 antes da 315** (o 
 | 315 | `@IA` no chat entre colaboradores | sim | reservada, spec própria antes de qualquer código |
 | 316 | Cor da bolinha escolhida pela pessoa (só no chat por ora) | sim | reservada, feita antes da 315 |
 | 317 | Volume do aviso do chat de 1 a 5 (3 é o atual) e, depois, escolher o som | sim (preferência do usuário) | pedido em 2026-11-06, a especificar |
+| 318 | Posição da barra de conversas (esquerda, direita, acima, abaixo) e engrenagem de configurações na barra | sim (`posicao_barra`, migration 0081) | feita em 2026-11-06 (`done/`); inclui a setinha "voltar ao atual" |
 
 ## Decisões do autor
 

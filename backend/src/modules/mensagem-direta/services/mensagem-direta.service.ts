@@ -293,9 +293,13 @@ export class MensagemDiretaService {
         const gravada = await this.preferenciaRepositorio.recuperar({ usuarioId: usuarioAtivo.sub });
         return {
             sucesso: true,
-            // A coluna da posição é anulável (linha anterior à task 221): sem valor vale o padrão do `shared`.
+            // As colunas das posições são anuláveis (linha anterior às tasks 221 e 318): sem valor vale o padrão do `shared`.
             dados: gravada
-                ? { ...gravada, posicaoPopup: gravada.posicaoPopup ?? PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoPopup }
+                ? {
+                    ...gravada,
+                    posicaoPopup: gravada.posicaoPopup ?? PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoPopup,
+                    posicaoBarra: gravada.posicaoBarra ?? PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoBarra,
+                }
                 : { ...PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA },
             mensagem: 'Preferências recuperadas com sucesso',
         };
@@ -316,6 +320,7 @@ export class MensagemDiretaService {
             silenciadoAteDate,
             atalhoGlobal: dto.atalhoGlobal,
             posicaoPopup: dto.posicaoPopup,
+            posicaoBarra: dto.posicaoBarra,
         });
         return { sucesso: true, dados: gravada, mensagem: 'Preferências alteradas com sucesso' };
     }

@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, OnDestroy, OnInit, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, OnDestroy, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
+import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { MensagemDiretaPosicaoService } from '../../services/mensagem-direta-posicao.service';
 import { AVISO_DE_LEITURA_DAS_CONVERSAS } from '../../utils/mensagem-direta.util';
@@ -34,6 +35,9 @@ export class MensagemDiretaPopupComponent implements OnInit, OnDestroy {
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly posicao = inject(MensagemDiretaPosicaoService);
+    private readonly avisos = inject(MensagemDiretaAvisosService);
+    /** Onde a barra de conversas fica em relação à conversa aberta (task 318). */
+    protected readonly posicaoDaBarra = computed(() => this.avisos.preferencia().posicaoBarra);
 
     protected readonly retangulo = this.posicao.retangulo;
     protected readonly cantoDaAlca = this.posicao.cantoDaAlca;

@@ -10,7 +10,7 @@ import { MensagemDiretaNotificacoesComponent } from './mensagem-direta-notificac
 
 // O menu "Notificações" (task 212): interruptores gravados na hora (o conjunto inteiro), silêncio geral e volta ao valor anterior quando a gravação falha.
 
-const PREFERENCIA = { avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: false, silenciadoAteDate: null, atalhoGlobal: 'Ctrl+Shift+Space', posicaoPopup: 'CANTO_INFERIOR_DIREITO' as const };
+const PREFERENCIA = { avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: false, silenciadoAteDate: null, atalhoGlobal: 'Ctrl+Shift+Space', posicaoPopup: 'CANTO_INFERIOR_DIREITO' as const, posicaoBarra: 'ESQUERDA' as const };
 
 describe('MensagemDiretaNotificacoesComponent', () => {
     let tela: ComponenteMontado<MensagemDiretaNotificacoesComponent>;
@@ -58,7 +58,7 @@ describe('MensagemDiretaNotificacoesComponent', () => {
         await tela.atualizar();
 
         const requisicao = esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/preferencia');
-        expect(requisicao.request.body).toEqual({ avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: true, silenciadoAteDate: null, atalhoGlobal: 'Ctrl+Shift+Space', posicaoPopup: 'CANTO_INFERIOR_DIREITO' });
+        expect(requisicao.request.body).toEqual({ avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: true, silenciadoAteDate: null, atalhoGlobal: 'Ctrl+Shift+Space', posicaoPopup: 'CANTO_INFERIOR_DIREITO', posicaoBarra: 'ESQUERDA' });
         responderSucesso(requisicao, { ...PREFERENCIA, somAtivo: true });
         await tela.atualizar();
         expect(avisos.preferencia().somAtivo).toBe(true);
@@ -68,7 +68,7 @@ describe('MensagemDiretaNotificacoesComponent', () => {
     it('lista as cinco posições do chat, com a preferida marcada', async () => {
         await montar();
         await abrirMenu();
-        const itens = Array.from(menu()!.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'));
+        const itens = Array.from(menu()!.querySelectorAll<HTMLButtonElement>('[aria-labelledby="posicao-do-popup"] [role="menuitemradio"]'));
         expect(itens.map((item) => item.textContent?.trim())).toEqual([
             'Canto inferior direito', 'Canto inferior esquerdo', 'Canto superior direito', 'Canto superior esquerdo', 'Centro',
         ]);
@@ -89,7 +89,23 @@ describe('MensagemDiretaNotificacoesComponent', () => {
         responderSucesso(requisicao, { ...PREFERENCIA, posicaoPopup: 'CENTRO' });
         await tela.atualizar();
         expect(avisos.preferencia().posicaoPopup).toBe('CENTRO');
-        expect(menu()!.querySelector('[role="menuitemradio"][aria-checked="true"]')?.textContent).toContain('Centro');
+        expect(menu()!.querySelector('[aria-labelledby="posicao-do-popup"] [role="menuitemradio"][aria-checked="true"]')?.textContent).toContain('Centro');
+    });
+
+    it('a seção "Barra de conversas" oferece as quatro posições e gravar uma troca só a barra (task 318)', async () => {
+        await montar();
+        await abrirMenu();
+        expect(menu()!.textContent).toContain('Barra de conversas');
+        expect(menu()!.querySelector('[aria-labelledby="posicao-da-barra"] [role="menuitemradio"][aria-checked="true"]')?.textContent).toContain('À esquerda');
+        for (const rotulo of ['À esquerda', 'À direita', 'Acima', 'Abaixo']) expect(botao(rotulo)).toBeDefined();
+
+        botao('Acima').click();
+        await tela.atualizar();
+        const requisicao = esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/preferencia');
+        expect(requisicao.request.body).toMatchObject({ posicaoBarra: 'ACIMA', posicaoPopup: 'CANTO_INFERIOR_DIREITO', avisosAtivos: true });
+        responderSucesso(requisicao, { ...PREFERENCIA, posicaoBarra: 'ACIMA' });
+        await tela.atualizar();
+        expect(avisos.preferencia().posicaoBarra).toBe('ACIMA');
     });
 
     it('se o servidor recusa a posição, a tela volta à anterior e o menu avisa', async () => {

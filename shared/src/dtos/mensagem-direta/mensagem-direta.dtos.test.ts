@@ -13,6 +13,7 @@ import { MensagemDiretaBuscarDto } from './MensagemDiretaBuscarDto';
 import { MensagemDiretaEnviarDto } from './MensagemDiretaEnviarDto';
 import { MensagemDiretaLeituraAlterarDto } from './MensagemDiretaLeituraAlterarDto';
 import { MensagemDiretaListarDto } from './MensagemDiretaListarDto';
+import { PosicaoBarraChatEnum } from '../../enums/posicao-barra-chat.enum';
 import { PosicaoPopupChatEnum } from '../../enums/posicao-popup-chat.enum';
 import { MensagemDiretaPreferenciaAlterarDto } from './MensagemDiretaPreferenciaAlterarDto';
 import { MensagemDiretaSilencioAlterarDto } from './MensagemDiretaSilencioAlterarDto';
@@ -155,6 +156,7 @@ const PREFERENCIA_VALIDA = {
     silenciadoAteDate: null,
     atalhoGlobal: 'Ctrl+Shift+Space',
     posicaoPopup: 'CANTO_INFERIOR_DIREITO',
+    posicaoBarra: 'ESQUERDA',
 };
 
 test('preferência: aceita cada posição do popup e recusa valor fora do enum', async () => {
@@ -163,6 +165,15 @@ test('preferência: aceita cada posição do popup e recusa valor fora do enum',
     }
     for (const posicaoPopup of ['', 'ESQUERDA', 'centro', 1, null]) {
         assert.deepEqual(await erros(MensagemDiretaPreferenciaAlterarDto, { ...PREFERENCIA_VALIDA, posicaoPopup }), ['posicaoPopup'], String(posicaoPopup));
+    }
+});
+
+test('preferência: aceita cada posição da barra e recusa valor fora do enum (task 318)', async () => {
+    for (const posicaoBarra of Object.values(PosicaoBarraChatEnum)) {
+        assert.deepEqual(await erros(MensagemDiretaPreferenciaAlterarDto, { ...PREFERENCIA_VALIDA, posicaoBarra }), [], posicaoBarra);
+    }
+    for (const posicaoBarra of ['', 'CENTRO', 'esquerda', 1, null, undefined]) {
+        assert.deepEqual(await erros(MensagemDiretaPreferenciaAlterarDto, { ...PREFERENCIA_VALIDA, posicaoBarra }), ['posicaoBarra'], String(posicaoBarra));
     }
 });
 

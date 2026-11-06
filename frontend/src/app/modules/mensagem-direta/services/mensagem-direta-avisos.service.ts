@@ -91,6 +91,7 @@ export class MensagemDiretaAvisosService {
                     silenciadoAteDate: proxima.silenciadoAteDate ? proxima.silenciadoAteDate.toISOString() : null,
                     atalhoGlobal: proxima.atalhoGlobal,
                     posicaoPopup: proxima.posicaoPopup,
+                    posicaoBarra: proxima.posicaoBarra,
                 }),
             );
             if (sessao !== this.geracaoDaSessao) return;

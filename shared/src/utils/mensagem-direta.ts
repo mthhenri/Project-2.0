@@ -1,3 +1,4 @@
+import { PosicaoBarraChatEnum } from '../enums/posicao-barra-chat.enum';
 import { PosicaoPopupChatEnum } from '../enums/posicao-popup-chat.enum';
 import { ReferenciaMensagemDiretaEnum } from '../enums/referencia-mensagem-direta.enum';
 import type { MensagemDiretaPreferenciaRecuperadaDto } from '../dtos/mensagem-direta/MensagemDiretaPreferenciaRecuperadaDto';
@@ -47,6 +48,7 @@ export const PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA: MensagemDiretaPreferenciaRec
     silenciadoAteDate: null,
     atalhoGlobal: ATALHO_GLOBAL_PADRAO,
     posicaoPopup: PosicaoPopupChatEnum.CANTO_INFERIOR_DIREITO,
+    posicaoBarra: PosicaoBarraChatEnum.ESQUERDA,
 };
 
 // ---------------------------------------------------------------------------

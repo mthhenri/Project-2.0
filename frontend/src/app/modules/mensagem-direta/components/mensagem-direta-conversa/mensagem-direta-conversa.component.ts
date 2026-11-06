@@ -17,6 +17,8 @@ import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-refe
 
 /** Distância do fim (px) até a qual a conversa continua acompanhando as mensagens que chegam. */
 const MARGEM_DO_FIM_PX = 80;
+/** Quanto o usuário precisa ter subido (px) para o botão "voltar ao atual" aparecer. */
+const DISTANCIA_DO_BOTAO_PX = 200;
 /** Quantas páginas mais antigas a citação carrega, no máximo, ao procurar a mensagem original (task 220). */
 const PAGINAS_PARA_ACHAR_A_ORIGINAL = 5;
 /** Quanto tempo a mensagem original fica realçada depois de a citação levar até ela. */
@@ -103,6 +105,8 @@ export class MensagemDiretaConversaComponent {
     private temporizadorDoCopiado: ReturnType<typeof setTimeout> | null = null;
 
     private colarNoFim = true;
+    /** O usuário subiu na conversa: mostra a setinha que leva de volta à mensagem mais recente. */
+    protected readonly longeDoFim = signal(false);
     private alturaAntes: number | null = null;
     private topoAntes = 0;
     private totalAntes = 0;
@@ -113,6 +117,7 @@ export class MensagemDiretaConversaComponent {
             this.pessoaAberta();
             this.menuAcoes()?.hide();
             this.mensagemDoMenu.set(null);
+            this.longeDoFim.set(false);
         });
         // Quando o NÚMERO de mensagens muda: acompanha o fim se o usuário está lá, ou mantém o ponto que ele lia quando chega uma página mais antiga.
         effect(() => {
@@ -280,7 +285,9 @@ export class MensagemDiretaConversaComponent {
     protected aoRolar(): void {
         const elementoAtual = this.rolagem()?.nativeElement;
         if (!elementoAtual) return;
-        this.colarNoFim = elementoAtual.scrollHeight - elementoAtual.scrollTop - elementoAtual.clientHeight < MARGEM_DO_FIM_PX;
+        const distanciaDoFim = elementoAtual.scrollHeight - elementoAtual.scrollTop - elementoAtual.clientHeight;
+        this.colarNoFim = distanciaDoFim < MARGEM_DO_FIM_PX;
+        this.longeDoFim.set(distanciaDoFim >= DISTANCIA_DO_BOTAO_PX);
         const aberta = this.aberta();
         if (elementoAtual.scrollTop < MARGEM_DO_TOPO_PX && aberta?.proximoCursor && !aberta.carregandoMais && !aberta.carregando) {
             this.alturaAntes = elementoAtual.scrollHeight;
@@ -307,6 +314,14 @@ export class MensagemDiretaConversaComponent {
             return;
         }
         if (this.colarNoFim && cresceu) elemento.scrollTop = elemento.scrollHeight;
+    }
+
+    protected irParaOAtual(): void {
+        const elemento = this.rolagem()?.nativeElement;
+        if (!elemento) return;
+        this.colarNoFim = true;
+        if (elemento.scrollTo) elemento.scrollTo({ top: elemento.scrollHeight, behavior: 'smooth' });
+        else elemento.scrollTop = elemento.scrollHeight;
     }
 
     private acompanharOFim(): void {

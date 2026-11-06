@@ -5,6 +5,7 @@ import {
     LIMITE_PADRAO_DA_CONVERSA_DIRETA,
     MensagemDiretaResumoDto,
     PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA,
+    PosicaoBarraChatEnum,
     PosicaoPopupChatEnum,
     ReferenciaMensagemDiretaEnum,
     TipoUsuarioEnum,
@@ -344,21 +345,24 @@ test('recuperarPreferencia: sem linha gravada vale o padrão do shared (uma cóp
     assert.deepEqual(dados, PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA);
     assert.notEqual(dados, PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA);
 
-    const gravada = { avisosAtivos: false, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: null, atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CENTRO };
+    const gravada = { avisosAtivos: false, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: null, atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CENTRO, posicaoBarra: PosicaoBarraChatEnum.DIREITA };
     assert.deepEqual((await montar({ preferencia: gravada }).service.recuperarPreferencia(ANA)).dados, gravada);
 
     // Linha anterior à task 221: a coluna da posição é nula e vale o padrão do shared.
-    const antiga = { ...gravada, posicaoPopup: null };
-    assert.equal((await montar({ preferencia: antiga }).service.recuperarPreferencia(ANA)).dados!.posicaoPopup, PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoPopup);
+    const antiga = { ...gravada, posicaoPopup: null, posicaoBarra: null };
+    const recuperada = (await montar({ preferencia: antiga }).service.recuperarPreferencia(ANA)).dados!;
+    assert.equal(recuperada.posicaoPopup, PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoPopup);
+    assert.equal(recuperada.posicaoBarra, PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoBarra, 'linha anterior à task 318: a barra fica à esquerda');
 });
 
 test('alterarPreferencia: grava para a pessoa do token, convertendo o fim do silêncio; data inválida é recusada', async () => {
     const { service, chamadas } = montar();
-    const dto = { avisosAtivos: true, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: '2026-10-21T16:00:00.000Z', atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CANTO_SUPERIOR_ESQUERDO };
+    const dto = { avisosAtivos: true, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: '2026-10-21T16:00:00.000Z', atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CANTO_SUPERIOR_ESQUERDO, posicaoBarra: PosicaoBarraChatEnum.ABAIXO };
     await service.alterarPreferencia(dto, ANA);
-    const gravada = chamadas.alterarPreferencia[0] as { usuarioId: number; silenciadoAteDate: Date; posicaoPopup: string };
+    const gravada = chamadas.alterarPreferencia[0] as { usuarioId: number; silenciadoAteDate: Date; posicaoPopup: string; posicaoBarra: string };
     assert.equal(gravada.usuarioId, 4);
     assert.equal(gravada.posicaoPopup, PosicaoPopupChatEnum.CANTO_SUPERIOR_ESQUERDO);
+    assert.equal(gravada.posicaoBarra, PosicaoBarraChatEnum.ABAIXO);
     assert.equal(gravada.silenciadoAteDate.toISOString(), '2026-10-21T16:00:00.000Z');
 
     await service.alterarPreferencia({ ...dto, silenciadoAteDate: null }, ANA);

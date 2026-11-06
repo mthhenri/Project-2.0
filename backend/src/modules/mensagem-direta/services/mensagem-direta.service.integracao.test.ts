@@ -1,6 +1,6 @@
 import * as assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { PosicaoPopupChatEnum, ReferenciaMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { PosicaoBarraChatEnum, PosicaoPopupChatEnum, ReferenciaMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { testarComBanco, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAtividade, criarDemanda, criarDemandaUsuario, criarDesenvolvedor, criarGestor, criarUsuario } from '../../../testes/fabricas';
@@ -178,21 +178,23 @@ testarComBanco('preferências: o padrão do shared até a primeira alteração, 
     assert.equal(padrao.silenciadoAteDate, null);
 
     await service.alterarPreferencia(
-        { avisosAtivos: false, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: '2026-10-21T16:00:00.000Z', atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CANTO_SUPERIOR_DIREITO },
+        { avisosAtivos: false, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: '2026-10-21T16:00:00.000Z', atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CANTO_SUPERIOR_DIREITO, posicaoBarra: PosicaoBarraChatEnum.ACIMA },
         como(ana),
     );
     const gravada = (await service.recuperarPreferencia(como(ana))).dados!;
-    assert.deepEqual([gravada.avisosAtivos, gravada.somAtivo, gravada.atalhoGlobal, gravada.posicaoPopup], [false, true, 'Alt+F1', PosicaoPopupChatEnum.CANTO_SUPERIOR_DIREITO]);
+    assert.deepEqual([gravada.avisosAtivos, gravada.somAtivo, gravada.atalhoGlobal, gravada.posicaoPopup, gravada.posicaoBarra], [false, true, 'Alt+F1', PosicaoPopupChatEnum.CANTO_SUPERIOR_DIREITO, PosicaoBarraChatEnum.ACIMA]);
 
     // Linha anterior à task 221: a coluna da posição é nula e vale o padrão do shared.
     await conexao.raw(`
         UPDATE mensagem_direta_preferencia
         SET
-            posicao_popup = NULL
+            posicao_popup = NULL,
+            posicao_barra = NULL
         WHERE
             usuario_id = ?
     `, [ana.id]);
     assert.equal((await service.recuperarPreferencia(como(ana))).dados!.posicaoPopup, PosicaoPopupChatEnum.CANTO_INFERIOR_DIREITO);
+    assert.equal((await service.recuperarPreferencia(como(ana))).dados!.posicaoBarra, PosicaoBarraChatEnum.ESQUERDA);
     assert.equal(gravada.silenciadoAteDate?.toISOString(), '2026-10-21T16:00:00.000Z');
     assert.deepEqual((await service.recuperarPreferencia(como(bruno))).dados, padrao);
 });

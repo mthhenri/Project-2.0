@@ -43,6 +43,19 @@
         flex: 1;
         min-height: 0;
         min-width: 0;
+
+        // A barra à direita, acima ou abaixo da conversa (task 318); à esquerda é a ordem do DOM.
+        &--direita {
+            flex-direction: row-reverse;
+        }
+
+        &--acima {
+            flex-direction: column;
+        }
+
+        &--abaixo {
+            flex-direction: column-reverse;
+        }
     }
 
     // A alça fica no canto oposto ao da âncora (`data-canto`) e só aparece com o mouse perto ou com o foco nela.

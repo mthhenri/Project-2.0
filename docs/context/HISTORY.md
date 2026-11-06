@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-11-06 — Chat entre colaboradores: posição da barra, engrenagem e "voltar ao atual" (task 318) e spec da 313
+
+Ao ver a barra de bolinhas (312) à esquerda, o autor sugeriu a direita; ficou configurável. A 318 acrescenta à preferência do chat a posição da barra (esquerda, direita, acima, abaixo; **no banco**, decisão do autor: coluna `posicao_barra` em `mensagem_direta_preferencia`, migration `0081`, enum `PosicaoBarraChatEnum`, campo `posicaoBarra` nos quatro DTOs de preferência), uma engrenagem no fim da barra que abre o mesmo menu do sino (agora com a seção "Barra de conversas") e, a pedido do autor no meio da tarefa, uma setinha "voltar ao atual" na conversa (só front). A spec da 313 (editar mensagem) também foi escrita: editar só marca `editada_date`; **guardar o texto original para a supervisão foi retirado pelo autor e virou a I-052**; a migration da 313 passa a ser a `0082`. A I-043 foi dada como verificada pelo autor (bloco abaixo).
+
+Testes: shared 318, backend 1664, integração 374, frontend 2565 (209 arquivos); lint limpo. Ao vivo nas quatro posições, claro e escuro, e nos cinco formatos (detalhes e limites em `docs/specs/done/318-chat-posicao-da-barra-e-engrenagem.spec.md`). Achados na verificação: `networkidle` nunca fecha com o stream de eventos (usar `load` e esperar o botão); o seletor de texto do popup precisa ser escopado, porque a página de fundo pode ter o mesmo nome. Impacto: o menu do sino e o do chat ganharam grupos `role="group"`, e dois testes antigos foram escopados ao grupo "Posição do chat".
+
+---
+
 ## 2026-11-06 — I-043 encerrada: chamadas reais aos provedores conferidas pelo autor
 
 O autor informou que testou uma chamada real a cada provedor depois da atualização dos pacotes de 2026-11-04 (bloco abaixo, que deixara isso pendente) e que está tudo certo. A I-043 saiu de `IDEAS.md` e de `PRIORITIES.md`. A pergunta "a atualização vira rotina?" não teve decisão registrada; segue sem rotina, e uma nova subida de versão volta como ideia se for preciso. Verificação feita pelo autor, não por este agente.

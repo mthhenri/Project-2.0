@@ -1,18 +1,34 @@
-<p-button
-    icon="pi pi-bell"
-    [severity]="silenciado() || !preferencia().avisosAtivos ? 'warn' : 'secondary'"
-    [text]="true"
-    [rounded]="true"
-    size="small"
-    ariaLabel="Configurar notificações"
-    pTooltip="Notificações"
-    tooltipPosition="bottom"
-    (onClick)="atualizarRelogio(); menu.toggle($event)"
-/>
+@if (gatilho() === "engrenagem") {
+    <p-button
+        icon="pi pi-cog"
+        severity="secondary"
+        [text]="true"
+        [rounded]="true"
+        size="small"
+        ariaLabel="Configurações do chat"
+        pTooltip="Configurações do chat"
+        tooltipPosition="top"
+        (onClick)="atualizarRelogio(); menu.toggle($event)"
+    />
+} @else {
+    <p-button
+        icon="pi pi-bell"
+        [severity]="silenciado() || !preferencia().avisosAtivos ? 'warn' : 'secondary'"
+        [text]="true"
+        [rounded]="true"
+        size="small"
+        ariaLabel="Configurar notificações"
+        pTooltip="Notificações"
+        tooltipPosition="bottom"
+        (onClick)="atualizarRelogio(); menu.toggle($event)"
+    />
+}
 
 <p-popover #menu>
     <div class="menu-notificacoes">
-        <p class="menu-notificacoes__titulo">Notificações</p>
+        <p class="menu-notificacoes__titulo">
+            {{ gatilho() === "engrenagem" ? "Configurações do chat" : "Notificações" }}
+        </p>
 
         <label for="notificacao-avisos" class="menu-notificacoes__linha">
             <span class="menu-notificacoes__texto">
@@ -99,23 +115,44 @@
             </button>
         }
 
-        @if (comPosicao) {
-            <hr class="menu-notificacoes__divisor" />
-            <p class="menu-notificacoes__secao">Posição do chat</p>
-            @for (item of posicoes; track item.valor) {
+        <hr class="menu-notificacoes__divisor" />
+        <p class="menu-notificacoes__secao" id="posicao-da-barra">Barra de conversas</p>
+        <div role="group" aria-labelledby="posicao-da-barra">
+            @for (item of posicoesDaBarra; track item.valor) {
                 <button
                     type="button"
                     class="menu-notificacoes__opcao menu-notificacoes__opcao--posicao"
                     role="menuitemradio"
-                    [attr.aria-checked]="posicaoPreferida() === item.valor"
-                    (click)="escolherPosicao(item.valor)"
+                    [attr.aria-checked]="posicaoDaBarraPreferida() === item.valor"
+                    (click)="escolherPosicaoDaBarra(item.valor)"
                 >
                     <span>{{ item.rotulo }}</span>
-                    @if (posicaoPreferida() === item.valor) {
+                    @if (posicaoDaBarraPreferida() === item.valor) {
                         <i class="pi pi-check menu-notificacoes__marca" aria-hidden="true"></i>
                     }
                 </button>
             }
+        </div>
+
+        @if (comPosicao) {
+            <hr class="menu-notificacoes__divisor" />
+            <p class="menu-notificacoes__secao" id="posicao-do-popup">Posição do chat</p>
+            <div role="group" aria-labelledby="posicao-do-popup">
+                @for (item of posicoes; track item.valor) {
+                    <button
+                        type="button"
+                        class="menu-notificacoes__opcao menu-notificacoes__opcao--posicao"
+                        role="menuitemradio"
+                        [attr.aria-checked]="posicaoPreferida() === item.valor"
+                        (click)="escolherPosicao(item.valor)"
+                    >
+                        <span>{{ item.rotulo }}</span>
+                        @if (posicaoPreferida() === item.valor) {
+                            <i class="pi pi-check menu-notificacoes__marca" aria-hidden="true"></i>
+                        }
+                    </button>
+                }
+            </div>
             <button
                 type="button"
                 class="menu-notificacoes__reativar menu-notificacoes__restaurar"

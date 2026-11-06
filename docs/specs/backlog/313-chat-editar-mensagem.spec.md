@@ -16,7 +16,7 @@
 Antes: a mensagem tem `texto` e `created_date`; "gravada uma vez e nunca reescrita". Depois: ganha **`editada_date`** (nula = nunca editada) e o `texto` pode
 ser sobrescrito. **Não há `texto_original`** (I-052). Em cada implementação do armazenamento:
 
-- **PostgreSQL:** coluna `editada_date timestamptz` nula em `mensagem_direta` (migration **0081**, sem DEFAULT, sem trigger; `updated_date = NOW()` no UPDATE).
+- **PostgreSQL:** coluna `editada_date timestamptz` nula em `mensagem_direta` (migration **0082**, sem DEFAULT, sem trigger; `updated_date = NOW()` no UPDATE).
 - **OpenSearch / Elasticsearch:** campo `editada_date` no documento (`MensagemDiretaFonte.editada_date?: string | null`), mapeado como `date`.
 - **shared:** `MensagemDiretaResumoDto.editadaDate: Date | null`; DTOs novos `MensagemDiretaEditarDto` (entrada: `mensagemId`, `destinatarioId`, `texto`, `mencoes?`, `referencias?`)
   e `MensagemDiretaEditadaDto` (saída). Evento novo do stream `{ tipo: 'EDICAO'; mensagem: MensagemDiretaResumoDto }`. Rota `PATCH /mensagem-direta/mensagem`

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, NgZone, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, input, NgZone, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { PopoverModule } from 'primeng/popover';
@@ -7,10 +7,11 @@ import { TooltipModule } from 'primeng/tooltip';
 import { estaSilenciado } from '@project20/shared';
 import { ambiente } from '../../../../../environments/environment';
 import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
-import { PosicaoPopupChatEnum } from '@project20/shared';
+import { PosicaoBarraChatEnum, PosicaoPopupChatEnum } from '@project20/shared';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaPosicaoService } from '../../services/mensagem-direta-posicao.service';
 import { OpcaoDeSilencio, atalhoDoTeclado, rotuloDoSilencio } from '../../utils/avisos.util';
+import { POSICOES_DA_BARRA } from '../../utils/posicao-barra.util';
 import { POSICOES_DO_POPUP } from '../../utils/posicao-popup.util';
 
 interface OpcaoDoMenu {
@@ -53,6 +54,10 @@ export class MensagemDiretaNotificacoesComponent {
     protected readonly comPosicao = !this.desktop.naJanelaDeChat;
     protected readonly posicoes = POSICOES_DO_POPUP;
     protected readonly posicaoPreferida = computed(() => this.servico.preferencia().posicaoPopup);
+    /** Quem abre o menu: o sino do cabeçalho da lista ou a engrenagem da barra de conversas (task 318); o menu é o mesmo. */
+    readonly gatilho = input<'sino' | 'engrenagem'>('sino');
+    protected readonly posicoesDaBarra = POSICOES_DA_BARRA;
+    protected readonly posicaoDaBarraPreferida = computed(() => this.servico.preferencia().posicaoBarra);
     protected readonly preferencia = this.servico.preferencia;
     protected readonly erro = this.servico.erroNaPreferencia;
 
@@ -130,6 +135,10 @@ export class MensagemDiretaNotificacoesComponent {
     protected escolherPosicao(posicao: PosicaoPopupChatEnum): void {
         this.posicao.restaurar();
         void this.servico.alterarPreferencia({ posicaoPopup: posicao });
+    }
+
+    protected escolherPosicaoDaBarra(posicao: PosicaoBarraChatEnum): void {
+        void this.servico.alterarPreferencia({ posicaoBarra: posicao });
     }
 
     /** Volta à posição preferida da conta, com o tamanho padrão. */
