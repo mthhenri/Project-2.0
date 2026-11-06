@@ -1,4 +1,5 @@
 import {
+    AutorMensagemDiretaEnum,
     ConversaDiretaResumoDto,
     MensagemDiretaResumoDto,
     outroParticipanteDaConversaDireta,
@@ -143,6 +144,38 @@ export function agruparPorDia(mensagens: MensagemNaConversa[], agora: Date): Gru
         else grupos.push({ rotulo, mensagens: [mensagem] });
     }
     return grupos;
+}
+
+/** Mensagens seguidas da mesma pessoa com menos que isto entre uma e outra se emendam: ficam coladas e só a última mostra o horário. */
+export const INTERVALO_DA_SEQUENCIA_MS = 5 * 60_000;
+
+export interface EmendaDaMensagem {
+    /** A mensagem anterior é da mesma pessoa, do mesmo dia e de menos de 5 minutos antes. */
+    comAnterior: boolean;
+    /** A mensagem seguinte se emenda nesta. */
+    comProxima: boolean;
+}
+
+function seEmendam(anterior: MensagemNaConversa, seguinte: MensagemNaConversa): boolean {
+    if (anterior.autor !== AutorMensagemDiretaEnum.USUARIO || seguinte.autor !== AutorMensagemDiretaEnum.USUARIO) return false;
+    if (anterior.autorUsuarioId !== seguinte.autorUsuarioId) return false;
+    if (inicioDoDia(anterior.createdDate) !== inicioDoDia(seguinte.createdDate)) return false;
+    const intervalo = seguinte.createdDate.getTime() - anterior.createdDate.getTime();
+    return intervalo >= 0 && intervalo < INTERVALO_DA_SEQUENCIA_MS;
+}
+
+/** Para cada mensagem (por `mensagemId`), se ela se emenda na anterior e na seguinte. As mensagens chegam em ordem. */
+export function marcarEmendas(mensagens: MensagemNaConversa[]): Map<string, EmendaDaMensagem> {
+    const emendas = new Map<string, EmendaDaMensagem>();
+    mensagens.forEach((mensagem, indice) => {
+        const anterior = mensagens[indice - 1];
+        const proxima = mensagens[indice + 1];
+        emendas.set(mensagem.mensagemId, {
+            comAnterior: !!anterior && seEmendam(anterior, mensagem),
+            comProxima: !!proxima && seEmendam(mensagem, proxima),
+        });
+    });
+    return emendas;
 }
 
 const DIAS_DA_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];

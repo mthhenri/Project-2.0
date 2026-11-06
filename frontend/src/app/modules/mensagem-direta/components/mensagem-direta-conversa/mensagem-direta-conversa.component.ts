@@ -10,7 +10,7 @@ import { TEMPO_DO_COPIADO_MS } from '../../../../shared/components/markdown-bloc
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-referencia.service';
 import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
-import { AVISO_DE_LEITURA_DAS_CONVERSAS, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa } from '../../utils/mensagem-direta.util';
+import { AVISO_DE_LEITURA_DAS_CONVERSAS, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa, marcarEmendas } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
@@ -63,6 +63,7 @@ export class MensagemDiretaConversaComponent {
         return aberta ? this.estado.online().has(aberta.usuarioId) : false;
     });
 
+    protected readonly emendas = computed(() => marcarEmendas(this.aberta()?.mensagens ?? []));
     protected readonly grupos = computed(() => agruparPorDia(this.aberta()?.mensagens ?? [], new Date()));
     protected readonly lidaId = computed(() => {
         const aberta = this.aberta();
@@ -115,6 +116,11 @@ export class MensagemDiretaConversaComponent {
         effect(() => {
             this.totalDeMensagens();
             setTimeout(() => this.ajustarRolagem(), 0);
+        });
+
+        // O balão de "digitando" ocupa o fim da conversa: quem lê o fim continua vendo-o sem rolar.
+        effect(() => {
+            if (this.estaDigitando()) setTimeout(() => this.acompanharOFim(), 0);
         });
 
         inject(DestroyRef).onDestroy(() => {
@@ -285,6 +291,16 @@ export class MensagemDiretaConversaComponent {
             return;
         }
         if (this.colarNoFim && cresceu) elemento.scrollTop = elemento.scrollHeight;
+    }
+
+    private acompanharOFim(): void {
+        const elemento = this.rolagem()?.nativeElement;
+        if (elemento && this.colarNoFim) elemento.scrollTop = elemento.scrollHeight;
+    }
+
+    /** O rodapé (horário, "Lida", menu) só aparece na última mensagem da sequência, salvo quando carrega um estado que não pode sumir. */
+    protected rodapeCompacto(mensagem: MensagemNaConversa): boolean {
+        return !!this.emendas().get(mensagem.mensagemId)?.comProxima && mensagem.situacao === 'ENVIADA' && mensagem.mensagemId !== this.lidaId() && mensagem.mensagemId !== this.ultimaMinhaId();
     }
 
     protected aoDigitar(): void {

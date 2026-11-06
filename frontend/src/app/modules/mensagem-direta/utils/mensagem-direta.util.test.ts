@@ -5,6 +5,7 @@ import {
     ConversaNaLista,
     MensagemNaConversa,
     agruparPorDia,
+    marcarEmendas,
     aplicarMensagemNaLista,
     dataDaUltimaDoOutro,
     devePublicarDigitacao,
@@ -143,6 +144,34 @@ describe('dias e horas', () => {
         const ontem = mensagem('a', 0, OUTRO, { createdDate: new Date(2026, 9, 20, 10, 0) });
         const grupos = agruparPorDia([ontem, mensagem('b', 1), mensagem('c', 2)], agora);
         expect(grupos.map((g) => [g.rotulo, g.mensagens.length])).toEqual([['Ontem', 1], ['Hoje', 2]]);
+    });
+
+    it('marcarEmendas cola as mensagens seguidas da mesma pessoa a menos de 5 minutos', () => {
+        const base = new Date(2026, 9, 21, 10, 0);
+        const em = (minutos: number) => new Date(base.getTime() + minutos * 60_000);
+        const lista = [
+            mensagem('a', 0, OUTRO, { createdDate: em(0) }),
+            mensagem('b', 1, OUTRO, { createdDate: em(4) }),
+            mensagem('c', 2, OUTRO, { createdDate: em(9) }),
+            mensagem('d', 3, OUTRO, { createdDate: em(9) }),
+        ];
+        const emendas = marcarEmendas(lista);
+        expect(emendas.get('a')).toEqual({ comAnterior: false, comProxima: true });
+        expect(emendas.get('b')).toEqual({ comAnterior: true, comProxima: false });
+        expect(emendas.get('c')).toEqual({ comAnterior: false, comProxima: true });
+        expect(emendas.get('d')).toEqual({ comAnterior: true, comProxima: false });
+    });
+
+    it('marcarEmendas não cola pessoas diferentes nem dias diferentes', () => {
+        const noite = new Date(2026, 9, 20, 23, 58);
+        const lista = [
+            mensagem('a', 0, OUTRO, { createdDate: noite }),
+            mensagem('b', 1, OUTRO, { createdDate: new Date(2026, 9, 21, 0, 1) }),
+            mensagem('c', 2, EU, { createdDate: new Date(2026, 9, 21, 0, 2) }),
+        ];
+        const emendas = marcarEmendas(lista);
+        expect(emendas.get('a')?.comProxima).toBe(false);
+        expect(emendas.get('b')).toEqual({ comAnterior: false, comProxima: false });
     });
 
     it('rotuloDaLista: hora hoje, Ontem, dia da semana nesta semana, senão a data', () => {
