@@ -12,7 +12,7 @@ Ordem de execução (decidida em 2026-11-06): 313, 314, **316 antes da 315** (o 
 | 310 | Endereço solto vira link (no visualizador de Markdown, vale para todo o sistema) | não | feita (`done/`) |
 | 311 | Dois cliques na mensagem respondem a ela | não | feita (`done/`) |
 | 312 | Barra de bolinhas: com uma conversa aberta, a lista vira uma coluna de avatares | não | feita (`done/`) |
-| 313 | Editar mensagem | sim | reservada |
+| 313 | Editar mensagem | sim | especificada (backlog), a implementar |
 | 314 | Reações nas mensagens e seletor de emoji | sim | reservada |
 | 315 | `@IA` no chat entre colaboradores | sim | reservada, spec própria antes de qualquer código |
 | 316 | Cor da bolinha escolhida pela pessoa (só no chat por ora) | sim | reservada, feita antes da 315 |
@@ -20,9 +20,9 @@ Ordem de execução (decidida em 2026-11-06): 313, 314, **316 antes da 315** (o 
 
 ## Decisões do autor
 
-**Editar (313).** Só o autor edita, até 1 hora depois do envio. A mensagem editada mostra "editada". O texto original é guardado só para a
-supervisão (gestor e administrador não perdem a auditoria); o contrato de armazenamento ganha o método de alterar mensagem nas três
-implementações (OpenSearch, Elasticsearch, PostgreSQL).
+**Editar (313).** Só o autor edita, até 1 hora depois do envio. A mensagem editada mostra "editada". Em 2026-11-06 o autor decidiu **não guardar o texto
+original** nesta task: a edição sobrescreve o texto e só marca a data; guardar o original para a supervisão virou a ideia I-052 (`IDEAS.md`). O contrato de
+armazenamento ganha o método de alterar mensagem nas três implementações (OpenSearch, Elasticsearch, PostgreSQL). Spec: `313-chat-editar-mensagem.spec.md`.
 
 **Reações (314).** Ficam numa tabela do PostgreSQL (mensagem, usuário, emoji), não no documento da mensagem; falta ver como a consulta junta
 as reações às mensagens do índice no OpenSearch/Elasticsearch. Uma reação por pessoa por mensagem. O autor da mensagem recebe um aviso:

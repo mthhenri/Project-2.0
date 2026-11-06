@@ -142,14 +142,6 @@
 - **Por quê:** quem lê o desenho não sabe o que cada coluna significa sem abrir `docs/SCHEMA.md`.
 - **Custo aparente:** a decidir onde a descrição mora: tabela nova (migration) ou o arquivo JSON local da spec 222 (`modelagem-em-arquivo-json.spec.md`), que muda onde a Modelagem guarda a organização; ou só texto em `docs/SCHEMA.md` lido pela tela. Definir isso com o autor antes de especificar.
 
-### I-043 — Manter os pacotes dos provedores de IA atualizados · chat IA/backend
-
-- **Ideia:** atualizar os pacotes dos três provedores (`@anthropic-ai/sdk`, `openai`, `@google/genai`) e manter isso em dia, para o sistema poder usar sempre os modelos mais novos assim que saírem.
-- **Origem:** conversa de 2026-10-31 com o autor, ao triar as ideias.
-- **Por quê:** um modelo novo pode exigir uma versão recente do pacote, e o nome do modelo é texto livre na configuração da IA; sem pacote em dia, o administrador não consegue trocar para o modelo mais novo.
-- **Custo aparente:** baixo a médio: subir as versões, conferir mudanças que quebram (tipos, nomes de campo, a ferramenta de busca de cada provedor, ver spec 294), rodar os testes da IA e conferir ao vivo um provedor de cada. Decidir se a atualização vira rotina.
-- **Andamento (2026-11-04):** versões subidas (`@anthropic-ai/sdk` 0.135→1.4, `@google/genai` 2.30→2.32, `openai` 7.39→7.50); build e testes do backend passam. **Falta** a chamada real a um provedor de cada (sem chave no ambiente de verificação) e decidir se a atualização vira rotina.
-
 ### I-044 — Comando do usuário para pedir pesquisa na internet · chat IA
 
 - **Ideia:** permitir ao usuário ativar um comando/controle para pedir explicitamente pesquisa na internet ao tirar uma dúvida de código. Continua só ideia, sem formato definido nem autorização de implementação.
@@ -182,3 +174,10 @@
 - **Ideia:** a barra de formatação do campo do chat com a IA ganha a opção de **bloco de código** (como a do chat entre colaboradores) e um controle para **expandir a caixa de texto para mais alto**, para ler e revisar um texto longo antes de enviar.
 - **Origem:** o autor, em 2026-11-05, ao ver o código escapando do balão (corrigido com quebra de linha nos blocos).
 - **Custo aparente:** a decidir; mexe só no campo formatado do chat da IA (spec 218/252). Não está especificada.
+
+### I-052 — Guardar o texto original da mensagem editada para a supervisão · chat entre colaboradores/backend
+
+- **Ideia:** quando uma mensagem do chat entre colaboradores é editada (task 313), guardar o texto original (ou todas as versões) e mostrá-lo só à supervisão (gestor e administrador), para a auditoria não se perder.
+- **Origem:** o autor, em 2026-11-06, na especificação da 313: primeiro pediu o original guardado, depois mandou deixar isso como ideia e editar sem guardar.
+- **Por quê:** sem isso, a supervisão lê só o texto atual e não vê o que foi dito antes da edição.
+- **Custo aparente:** decisão de modelagem (já discutida): campo `texto_original` no próprio documento/tabela `mensagem_direta` (migration + OpenSearch/Elasticsearch) lido só pelo DTO da supervisão, ou tabela de edições no PostgreSQL se quiser todas as versões. Perguntar ao autor de novo antes de especificar.

@@ -28,7 +28,6 @@ Resolver primeiro; o autor considera simples ou próximo.
 3. **316** — cor da bolinha escolhida pela pessoa, só no chat por ora; vem antes do `@IA` (2026-11-06).
 4. **315** — `@IA` no chat entre colaboradores (spec própria e decisão de privacidade antes de qualquer código).
 
-- **I-043** — atualizar os pacotes dos provedores de IA para poder usar sempre os modelos mais novos. Pacotes atualizados em 2026-11-04; falta conferir uma chamada real a cada provedor e decidir se vira rotina. Perto de "Agora" por ser concreto (2026-10-31).
 - **P-073** — Defender barra o executável do Project Desktop; a correção de fundo é assinar o `.exe` (I-049). Bloqueia a distribuição (2026-11-03).
 
 ## 2. Specs já escritas no backlog

@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-06 — I-043 encerrada: chamadas reais aos provedores conferidas pelo autor
+
+O autor informou que testou uma chamada real a cada provedor depois da atualização dos pacotes de 2026-11-04 (bloco abaixo, que deixara isso pendente) e que está tudo certo. A I-043 saiu de `IDEAS.md` e de `PRIORITIES.md`. A pergunta "a atualização vira rotina?" não teve decisão registrada; segue sem rotina, e uma nova subida de versão volta como ideia se for preciso. Verificação feita pelo autor, não por este agente.
+
 ## 2026-11-06 — Chat entre colaboradores: links soltos, duplo clique para responder e barra de bolinhas (tasks 310–312)
 
 Depois do ajuste das mensagens coladas, o autor listou a evolução do chat (editar, reações e emoji, `@IA`, cor da bolinha, volume do aviso) e decidiu cada ponto; as decisões e a ordem estão em `docs/specs/backlog/chat-colaboradores-evolucao.spec.md` (tasks 310–317 reservadas) e as três primeiras, sem modelagem, foram feitas: endereço solto vira link no visualizador de Markdown (regra pura no `shared`, vale para todo o sistema), dois cliques no balão respondem à mensagem, e a lista vira uma barra vertical de bolinhas quando há conversa aberta. Detalhes, testes (shared 316, frontend 2555, backend 1664; lint limpo) e a verificação ao vivo nos cinco formatos e nos dois temas em `docs/specs/done/310-312-chat-links-duplo-clique-e-barra.spec.md`. O pedido de volume do aviso (1 a 5) entrou como task 317 e aguarda decisão de modelagem. Impacto avisado: o link solto muda o texto de todas as telas que usam o visualizador.
