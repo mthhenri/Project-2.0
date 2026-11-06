@@ -13,7 +13,7 @@ Ordem de execução (decidida em 2026-11-06): **318**, 313, 314, **316 antes da 
 | 311 | Dois cliques na mensagem respondem a ela | não | feita (`done/`) |
 | 312 | Barra de bolinhas: com uma conversa aberta, a lista vira uma coluna de avatares | não | feita (`done/`) |
 | 313 | Editar mensagem | sim (`editada_date`, migration 0082) | feita em 2026-11-06 (`done/`) |
-| 314 | Reações nas mensagens e seletor de emoji | sim | reservada |
+| 314 | Reações nas mensagens e seletor de emoji | sim (tabela `mensagem_direta_reacao`, migration 0083) | spec escrita em 2026-11-06 (`314-chat-reacoes-e-seletor-de-emoji.spec.md`), aguardando aprovação |
 | 315 | `@IA` no chat entre colaboradores | sim | reservada, spec própria antes de qualquer código |
 | 316 | Cor da bolinha escolhida pela pessoa (só no chat por ora) | sim | reservada, feita antes da 315 |
 | 317 | Volume do aviso do chat de 1 a 5 (3 é o atual) e, depois, escolher o som | sim (preferência do usuário) | pedido em 2026-11-06, a especificar |
@@ -25,8 +25,8 @@ Ordem de execução (decidida em 2026-11-06): **318**, 313, 314, **316 antes da 
 original** nesta task: a edição sobrescreve o texto e só marca a data; guardar o original para a supervisão virou a ideia I-052 (`IDEAS.md`). O contrato de
 armazenamento ganha o método de alterar mensagem nas três implementações (OpenSearch, Elasticsearch, PostgreSQL). Spec: `313-chat-editar-mensagem.spec.md`.
 
-**Reações (314).** Ficam numa tabela do PostgreSQL (mensagem, usuário, emoji), não no documento da mensagem; falta ver como a consulta junta
-as reações às mensagens do índice no OpenSearch/Elasticsearch. Uma reação por pessoa por mensagem. O autor da mensagem recebe um aviso:
+**Reações (314).** Ficam numa tabela do PostgreSQL (mensagem, usuário, reação), não no documento da mensagem; a service junta as reações à página de mensagens numa consulta só (o contrato do
+armazenamento não muda). Em 2026-11-06 o autor escolheu **seis reações fixas** (👍 ❤️ 😂 😮 😢 🙏) e o aviso como cartão do chat, **sem gravar na conversa**. Spec: `314-chat-reacoes-e-seletor-de-emoji.spec.md`. Uma reação por pessoa por mensagem. O autor da mensagem recebe um aviso:
 "<PESSOA> reagiu à sua mensagem com <EMOJI>". O seletor de emoji para escrever é independente das reações.
 
 **`@IA` (315).** A IA atende só quem a chamou e só ao pedido dessa pessoa (a mensagem atual ou a seguinte), e executa **uma** ação por chamada. A
