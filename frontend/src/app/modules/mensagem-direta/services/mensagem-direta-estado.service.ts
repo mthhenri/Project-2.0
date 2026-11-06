@@ -36,7 +36,7 @@ import { MensagemDiretaService } from './mensagem-direta.service';
 
 const ESPERA_ATE_AVISAR_SEM_CONEXAO_MS = 2_500;
 
-export type VisaoDoPopup = 'LISTA' | 'CONVERSA' | 'NOVA';
+export type VisaoDoPopup = 'LISTA' | 'CONVERSA' | 'NOVA' | 'CONFIGURACOES';
 
 /** A conversa aberta na tela com uma pessoa. */
 export interface ConversaAberta {
@@ -80,6 +80,7 @@ export class MensagemDiretaEstadoService {
 
     readonly aberto = signal(false);
     readonly visao = signal<VisaoDoPopup>('LISTA');
+    private visaoAntesDasConfiguracoes: 'LISTA' | 'CONVERSA' = 'LISTA';
 
     readonly conversas = signal<ConversaNaLista[]>([]);
     readonly carregandoConversas = signal(false);
@@ -232,6 +233,20 @@ export class MensagemDiretaEstadoService {
         this.conversaAberta.set(null);
         this.visao.set('NOVA');
         void this.carregarPessoas();
+    }
+
+    /** A tela de configurações (engrenagem do cabeçalho e da barra): ocupa o popup e, ao fechar, devolve a pessoa de onde ela veio. */
+    abrirConfiguracoes(): void {
+        if (this.visao() === 'CONFIGURACOES') return;
+        this.visaoAntesDasConfiguracoes = this.visao() === 'CONVERSA' && this.conversaAberta() ? 'CONVERSA' : 'LISTA';
+        this.visao.set('CONFIGURACOES');
+    }
+
+    fecharConfiguracoes(): void {
+        if (this.visao() !== 'CONFIGURACOES') return;
+        const voltaParaAConversa = this.visaoAntesDasConfiguracoes === 'CONVERSA' && this.conversaAberta() !== null;
+        this.visao.set(voltaParaAConversa ? 'CONVERSA' : 'LISTA');
+        if (voltaParaAConversa) void this.marcarComoLida();
     }
 
     voltarParaALista(): void {

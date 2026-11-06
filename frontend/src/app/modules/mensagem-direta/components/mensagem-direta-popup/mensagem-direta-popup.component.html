@@ -36,6 +36,9 @@
                         <app-mensagem-direta-conversa />
                     </div>
                 }
+                @case ("CONFIGURACOES") {
+                    <app-mensagem-direta-configuracoes />
+                }
                 @case ("NOVA") {
                     <app-mensagem-direta-nova />
                 }

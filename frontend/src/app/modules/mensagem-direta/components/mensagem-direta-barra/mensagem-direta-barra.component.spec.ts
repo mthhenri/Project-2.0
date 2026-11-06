@@ -69,7 +69,7 @@ describe('MensagemDiretaBarraComponent', () => {
         }
     });
 
-    it('a engrenagem fica depois das bolinhas, fora da área que rola, e abre as configurações do chat', async () => {
+    it('a engrenagem fica depois das bolinhas, fora da área que rola, e abre a tela de configurações do chat', async () => {
         const engrenagem = tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Configurações do chat"]');
         expect(engrenagem).not.toBeNull();
         expect(tela.elemento.querySelector('.barra-direta__bolinhas')!.contains(engrenagem)).toBe(false);
@@ -77,7 +77,6 @@ describe('MensagemDiretaBarraComponent', () => {
         expect(nav.lastElementChild!.contains(engrenagem)).toBe(true);
         engrenagem!.click();
         await tela.atualizar();
-        expect(document.body.querySelector('.menu-notificacoes')?.textContent).toContain('Configurações do chat');
-        document.body.querySelectorAll('.p-popover').forEach((elemento) => elemento.remove());
+        expect(TestBed.inject(MensagemDiretaEstadoService).visao()).toBe('CONFIGURACOES');
     });
 });

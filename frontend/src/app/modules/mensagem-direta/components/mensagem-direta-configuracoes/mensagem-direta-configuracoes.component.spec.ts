@@ -1,23 +1,24 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
+import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { MensagemDiretaPosicaoService } from '../../services/mensagem-direta-posicao.service';
-import { MensagemDiretaNotificacoesComponent } from './mensagem-direta-notificacoes.component';
+import { MensagemDiretaConfiguracoesComponent } from './mensagem-direta-configuracoes.component';
 
-// O menu "Notificações" (task 212): interruptores gravados na hora (o conjunto inteiro), silêncio geral e volta ao valor anterior quando a gravação falha.
+// A tela de configurações (task 212, 318): interruptores gravados na hora (o conjunto inteiro), silêncio geral e volta ao valor anterior quando a gravação falha.
 
 const PREFERENCIA = { avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: false, silenciadoAteDate: null, atalhoGlobal: 'Ctrl+Shift+Space', posicaoPopup: 'CANTO_INFERIOR_DIREITO' as const, posicaoBarra: 'ESQUERDA' as const };
 
-describe('MensagemDiretaNotificacoesComponent', () => {
-    let tela: ComponenteMontado<MensagemDiretaNotificacoesComponent>;
+describe('MensagemDiretaConfiguracoesComponent', () => {
+    let tela: ComponenteMontado<MensagemDiretaConfiguracoesComponent>;
     let avisos: MensagemDiretaAvisosService;
 
     async function montar() {
-        tela = await montarComponente(MensagemDiretaNotificacoesComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+        tela = await montarComponente(MensagemDiretaConfiguracoesComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
         avisos = TestBed.inject(MensagemDiretaAvisosService);
         // Só se grava depois de ler o que está gravado (senão o padrão apagaria a escolha do usuário).
         const leitura = avisos.carregarPreferencia();
@@ -26,17 +27,23 @@ describe('MensagemDiretaNotificacoesComponent', () => {
         await tela.atualizar();
     }
 
+    /** A tela já está montada; o nome fica para os testes lerem como "abrir a tela". */
     async function abrirMenu() {
-        tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Configurar notificações"]')!.click();
         await tela.atualizar();
     }
 
-    const menu = () => document.body.querySelector('.menu-notificacoes') as HTMLElement | null;
+    const menu = () => tela.elemento.querySelector('.config-direta') as HTMLElement | null;
     const botao = (texto: string) => Array.from(menu()!.querySelectorAll<HTMLButtonElement>('button')).find((botaoDaTela) => botaoDaTela.textContent?.includes(texto))!;
     const interruptor = (rotulo: string) => menu()!.querySelector<HTMLInputElement>(`input[aria-label="${rotulo}"]`)!;
 
-    afterEach(() => {
-        document.body.querySelectorAll('.p-popover').forEach((elemento) => elemento.remove());
+
+    it('é uma tela com título e Voltar, que devolve a pessoa à lista', async () => {
+        await montar();
+        const estado = TestBed.inject(MensagemDiretaEstadoService);
+        estado.abrirConfiguracoes();
+        expect(tela.elemento.querySelector('h2')?.textContent).toContain('Configurações');
+        tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Voltar"]')!.click();
+        expect(estado.visao()).toBe('LISTA');
     });
 
     it('abre com os três interruptores e as três opções de silêncio', async () => {
@@ -68,7 +75,7 @@ describe('MensagemDiretaNotificacoesComponent', () => {
     it('lista as cinco posições do chat, com a preferida marcada', async () => {
         await montar();
         await abrirMenu();
-        const itens = Array.from(menu()!.querySelectorAll<HTMLButtonElement>('[aria-labelledby="posicao-do-popup"] [role="menuitemradio"]'));
+        const itens = Array.from(menu()!.querySelectorAll<HTMLButtonElement>('[aria-labelledby="posicao-do-popup"] [role="radio"]'));
         expect(itens.map((item) => item.textContent?.trim())).toEqual([
             'Canto inferior direito', 'Canto inferior esquerdo', 'Canto superior direito', 'Canto superior esquerdo', 'Centro',
         ]);
@@ -89,14 +96,14 @@ describe('MensagemDiretaNotificacoesComponent', () => {
         responderSucesso(requisicao, { ...PREFERENCIA, posicaoPopup: 'CENTRO' });
         await tela.atualizar();
         expect(avisos.preferencia().posicaoPopup).toBe('CENTRO');
-        expect(menu()!.querySelector('[aria-labelledby="posicao-do-popup"] [role="menuitemradio"][aria-checked="true"]')?.textContent).toContain('Centro');
+        expect(menu()!.querySelector('[aria-labelledby="posicao-do-popup"] [role="radio"][aria-checked="true"]')?.textContent).toContain('Centro');
     });
 
     it('a seção "Barra de conversas" oferece as quatro posições e gravar uma troca só a barra (task 318)', async () => {
         await montar();
         await abrirMenu();
         expect(menu()!.textContent).toContain('Barra de conversas');
-        expect(menu()!.querySelector('[aria-labelledby="posicao-da-barra"] [role="menuitemradio"][aria-checked="true"]')?.textContent).toContain('À esquerda');
+        expect(menu()!.querySelector('[aria-labelledby="posicao-da-barra"] [role="radio"][aria-checked="true"]')?.textContent).toContain('À esquerda');
         for (const rotulo of ['À esquerda', 'À direita', 'Acima', 'Abaixo']) expect(botao(rotulo)).toBeDefined();
 
         botao('Acima').click();
@@ -182,7 +189,7 @@ describe('MensagemDiretaNotificacoesComponent', () => {
     });
 
     it('se a leitura da preferência falhou, o interruptor tenta ler de novo antes de gravar e não grava o padrão por cima', async () => {
-        tela = await montarComponente(MensagemDiretaNotificacoesComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+        tela = await montarComponente(MensagemDiretaConfiguracoesComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
         avisos = TestBed.inject(MensagemDiretaAvisosService);
         const leitura = avisos.carregarPreferencia();
         responderErro(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/preferencia'), 500, 'falhou');
@@ -215,11 +222,8 @@ describe('MensagemDiretaNotificacoesComponent', () => {
         expect(avisos.preferencia().avisosAtivos).toBe(true);
     });
 
-    it('"Até eu reativar" mostra o texto próprio, e o sino fica em alerta com o silêncio ou os avisos desligados', async () => {
+    it('"Até eu reativar" mostra o texto próprio', async () => {
         await montar();
-        const sino = () => tela.elemento.querySelector('p-button')!;
-        expect(sino().innerHTML).not.toContain('p-button-warn');
-
         await abrirMenu();
         botao('Até eu reativar').click();
         await tela.atualizar();
@@ -227,17 +231,16 @@ describe('MensagemDiretaNotificacoesComponent', () => {
         responderSucesso(requisicao, { ...PREFERENCIA, silenciadoAteDate: requisicao.request.body.silenciadoAteDate });
         await tela.atualizar();
         expect(menu()!.textContent).toContain('Silenciado até você reativar');
-        expect(sino().innerHTML).toContain('p-button-warn');
     });
 });
 
-describe('MensagemDiretaNotificacoesComponent: atalho do chat no Project Desktop (task 213)', () => {
-    let tela: ComponenteMontado<MensagemDiretaNotificacoesComponent>;
+describe('MensagemDiretaConfiguracoesComponent: atalho do chat no Project Desktop (task 213)', () => {
+    let tela: ComponenteMontado<MensagemDiretaConfiguracoesComponent>;
     let situacao: { atalho: string | null; registrado: boolean };
 
-    async function montarNoDesktop(disponivel: boolean) {
-        situacao = { atalho: 'Ctrl+Shift+Space', registrado: true };
-        tela = await montarComponente(MensagemDiretaNotificacoesComponent, {
+    async function montarNoDesktop(disponivel: boolean, registrado = true) {
+        situacao = { atalho: 'Ctrl+Shift+Space', registrado };
+        tela = await montarComponente(MensagemDiretaConfiguracoesComponent, {
             usuario: TipoUsuarioEnum.DESENVOLVEDOR,
             provedores: [{ provide: ProjectDesktopService, useValue: { disponivel, situacaoDoAtalho: () => Promise.resolve(situacao) } }],
         });
@@ -248,12 +251,9 @@ describe('MensagemDiretaNotificacoesComponent: atalho do chat no Project Desktop
     }
 
     const abrir = async () => {
-        tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Configurar notificações"]')!.click();
-        await tela.atualizar();
-        await new Promise((resolver) => setTimeout(resolver, 0));
         await tela.atualizar();
     };
-    const menu = () => document.body.querySelector('.menu-notificacoes') as HTMLElement;
+    const menu = () => tela.elemento.querySelector('.config-direta') as HTMLElement;
     const botaoAlterar = () => Array.from(menu().querySelectorAll<HTMLButtonElement>('button')).find((botaoDaTela) => botaoDaTela.textContent?.includes('Alterar'));
     const campo = () => menu().querySelector<HTMLInputElement>('input[aria-label^="Gravar o novo atalho"]')!;
     /**
@@ -273,7 +273,6 @@ describe('MensagemDiretaNotificacoesComponent: atalho do chat no Project Desktop
     };
     const teclar = (parcial: KeyboardEventInit) => campo().dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...parcial }));
 
-    afterEach(() => document.body.querySelectorAll('.p-popover').forEach((elemento) => elemento.remove()));
 
     it('no navegador o menu não mostra o atalho', async () => {
         await montarNoDesktop(false);
@@ -315,8 +314,7 @@ describe('MensagemDiretaNotificacoesComponent: atalho do chat no Project Desktop
     });
 
     it('avisa quando o sistema recusou o atalho (outro programa já o usa)', async () => {
-        await montarNoDesktop(true);
-        situacao = { atalho: 'Ctrl+Shift+Space', registrado: false };
+        await montarNoDesktop(true, false);
         await abrir();
         expect(menu().textContent).toContain('Outro programa já usa este atalho.');
     });

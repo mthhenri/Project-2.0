@@ -1,0 +1,175 @@
+<div class="config-direta-tela">
+    <div class="config-direta-tela__cabecalho" data-popup-arrasto>
+        <p-button
+            icon="pi pi-angle-left"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Voltar"
+            pTooltip="Voltar"
+            tooltipPosition="bottom"
+            (onClick)="voltar()"
+        />
+        <h2 class="config-direta-tela__titulo">Configurações</h2>
+        <p-button
+            icon="pi pi-minus"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Ocultar o chat"
+            pTooltip="Ocultar"
+            tooltipPosition="bottom"
+            (onClick)="estado.fechar()"
+        />
+    </div>
+    <div class="config-direta-tela__corpo">
+        <div class="config-direta">
+            <p class="config-direta__secao">Notificações</p>
+
+            <label for="notificacao-avisos" class="config-direta__linha">
+                <span class="config-direta__texto">
+                    <span class="config-direta__rotulo">Avisos de mensagem</span>
+                    <span class="config-direta__detalhe">Popup dentro do Project</span>
+                </span>
+                <p-toggleswitch
+                    inputId="notificacao-avisos"
+                    [formControl]="controleAvisos"
+                    ariaLabel="Avisos de mensagem"
+                />
+            </label>
+            <label for="notificacao-desktop" class="config-direta__linha">
+                <span class="config-direta__texto">
+                    <span class="config-direta__rotulo">Aviso no Project Desktop</span>
+                    <span class="config-direta__detalhe">Também com o app minimizado</span>
+                </span>
+                <p-toggleswitch
+                    inputId="notificacao-desktop"
+                    [formControl]="controleDesktop"
+                    ariaLabel="Aviso no Project Desktop"
+                />
+            </label>
+            <label for="notificacao-som" class="config-direta__linha">
+                <span class="config-direta__texto">
+                    <span class="config-direta__rotulo">Som</span>
+                </span>
+                <p-toggleswitch
+                    inputId="notificacao-som"
+                    [formControl]="controleSom"
+                    ariaLabel="Som"
+                />
+            </label>
+
+            @if (noDesktop) {
+                <hr class="config-direta__divisor" />
+                <p class="config-direta__secao">Chat no Project Desktop</p>
+                <div class="config-direta__linha config-direta__linha--atalho">
+                    <span class="config-direta__rotulo">Atalho global</span>
+                    @if (gravandoAtalho()) {
+                        <input
+                            #campoDoAtalho
+                            type="text"
+                            readonly
+                            class="config-direta__tecla config-direta__tecla--gravando"
+                            placeholder="Aperte as teclas"
+                            aria-label="Gravar o novo atalho: aperte as teclas, ou Esc para desistir"
+                            (keydown)="aoTeclarAtalho($event)"
+                            (blur)="gravandoAtalho.set(false)"
+                        />
+                    } @else {
+                        <kbd class="config-direta__tecla">{{ atalho() }}</kbd>
+                        <button
+                            type="button"
+                            class="config-direta__reativar"
+                            (click)="comecarAGravarAtalho()"
+                        >
+                            Alterar
+                        </button>
+                    }
+                </div>
+                @if (estadoDoAtalho() === "indisponivel") {
+                    <p class="config-direta__erro" role="alert">
+                        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i> Outro programa
+                        já usa este atalho. Escolha outro.
+                    </p>
+                } @else if (estadoDoAtalho() === "pendente") {
+                    <p class="config-direta__detalhe config-direta__nota" role="status">
+                        O novo atalho vale em até 1 minuto.
+                    </p>
+                }
+            }
+
+            <hr class="config-direta__divisor" />
+            <p class="config-direta__secao">Silenciar tudo</p>
+            @if (silenciado()) {
+                <p class="config-direta__status" role="status">
+                    <i class="pi pi-bell-slash" aria-hidden="true"></i>
+                    <span>{{ rotuloDoSilencio() }}</span>
+                    <button type="button" class="config-direta__reativar" (click)="reativar()">
+                        Reativar
+                    </button>
+                </p>
+            }
+            @for (item of opcoes; track item.opcao) {
+                <button type="button" class="config-direta__opcao" (click)="silenciar(item.opcao)">
+                    {{ item.rotulo }}
+                </button>
+            }
+
+            <hr class="config-direta__divisor" />
+            <p class="config-direta__secao" id="posicao-da-barra">Barra de conversas</p>
+            <div role="radiogroup" aria-labelledby="posicao-da-barra">
+                @for (item of posicoesDaBarra; track item.valor) {
+                    <button
+                        type="button"
+                        class="config-direta__opcao config-direta__opcao--posicao"
+                        role="radio"
+                        [attr.aria-checked]="posicaoDaBarraPreferida() === item.valor"
+                        (click)="escolherPosicaoDaBarra(item.valor)"
+                    >
+                        <span>{{ item.rotulo }}</span>
+                        @if (posicaoDaBarraPreferida() === item.valor) {
+                            <i class="pi pi-check config-direta__marca" aria-hidden="true"></i>
+                        }
+                    </button>
+                }
+            </div>
+
+            @if (comPosicao) {
+                <hr class="config-direta__divisor" />
+                <p class="config-direta__secao" id="posicao-do-popup">Posição do chat</p>
+                <div role="radiogroup" aria-labelledby="posicao-do-popup">
+                    @for (item of posicoes; track item.valor) {
+                        <button
+                            type="button"
+                            class="config-direta__opcao config-direta__opcao--posicao"
+                            role="radio"
+                            [attr.aria-checked]="posicaoPreferida() === item.valor"
+                            (click)="escolherPosicao(item.valor)"
+                        >
+                            <span>{{ item.rotulo }}</span>
+                            @if (posicaoPreferida() === item.valor) {
+                                <i class="pi pi-check config-direta__marca" aria-hidden="true"></i>
+                            }
+                        </button>
+                    }
+                </div>
+                <button
+                    type="button"
+                    class="config-direta__reativar config-direta__restaurar"
+                    (click)="restaurarPosicao()"
+                >
+                    Restaurar posição e tamanho
+                </button>
+            }
+
+            @if (erro()) {
+                <p class="config-direta__erro" role="alert">
+                    <i class="pi pi-exclamation-triangle" aria-hidden="true"></i> Não foi possível
+                    salvar. Tente de novo.
+                </p>
+            }
+        </div>
+    </div>
+</div>

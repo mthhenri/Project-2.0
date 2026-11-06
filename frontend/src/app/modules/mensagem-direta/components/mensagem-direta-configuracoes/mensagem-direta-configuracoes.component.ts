@@ -1,7 +1,6 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, input, NgZone, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, NgZone, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { PopoverModule } from 'primeng/popover';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { estaSilenciado } from '@project20/shared';
@@ -9,6 +8,7 @@ import { ambiente } from '../../../../../environments/environment';
 import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { PosicaoBarraChatEnum, PosicaoPopupChatEnum } from '@project20/shared';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
+import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { MensagemDiretaPosicaoService } from '../../services/mensagem-direta-posicao.service';
 import { OpcaoDeSilencio, atalhoDoTeclado, rotuloDoSilencio } from '../../utils/avisos.util';
 import { POSICOES_DA_BARRA } from '../../utils/posicao-barra.util';
@@ -23,19 +23,21 @@ interface OpcaoDoMenu {
 const LIMITE_DO_TEMPORIZADOR_MS = 2_147_483_647;
 
 /**
- * O sino do cabeçalho da lista e o menu "Notificações" (task 212): os interruptores de avisos, aviso no Project Desktop e som, e o silêncio geral
- * (1 hora, até amanhã às 8h, até reativar). O interruptor do Desktop só guarda a escolha (quem a usa é o app, na 213). Cada mudança é gravada
- * na hora; se o servidor recusar, a tela volta ao valor anterior e o menu avisa.
+ * A tela de configurações do chat (task 212, 318 e pedido do autor de 2026-11-06): ocupa o popup no lugar da lista, aberta pela engrenagem do cabeçalho
+ * ou da barra de conversas. Reúne os interruptores de avisos, aviso no Project Desktop e som, o silêncio geral, a posição da barra de conversas e do
+ * popup e, no Desktop, o atalho global. O interruptor do Desktop só guarda a escolha (quem a usa é o app, na 213). Cada mudança é gravada na hora;
+ * se o servidor recusar, a tela volta ao valor anterior e avisa.
  */
 @Component({
-    selector: 'app-mensagem-direta-notificacoes',
+    selector: 'app-mensagem-direta-configuracoes',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, PopoverModule, ToggleSwitchModule, TooltipModule],
-    templateUrl: './mensagem-direta-notificacoes.component.html',
-    styleUrl: './mensagem-direta-notificacoes.component.scss',
+    imports: [ReactiveFormsModule, ButtonModule, ToggleSwitchModule, TooltipModule],
+    templateUrl: './mensagem-direta-configuracoes.component.html',
+    styleUrl: './mensagem-direta-configuracoes.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MensagemDiretaNotificacoesComponent {
+export class MensagemDiretaConfiguracoesComponent {
+    protected readonly estado = inject(MensagemDiretaEstadoService);
     private readonly servico = inject(MensagemDiretaAvisosService);
     private readonly zona = inject(NgZone);
     private readonly desktop = inject(ProjectDesktopService);
@@ -54,8 +56,6 @@ export class MensagemDiretaNotificacoesComponent {
     protected readonly comPosicao = !this.desktop.naJanelaDeChat;
     protected readonly posicoes = POSICOES_DO_POPUP;
     protected readonly posicaoPreferida = computed(() => this.servico.preferencia().posicaoPopup);
-    /** Quem abre o menu: o sino do cabeçalho da lista ou a engrenagem da barra de conversas (task 318); o menu é o mesmo. */
-    readonly gatilho = input<'sino' | 'engrenagem'>('sino');
     protected readonly posicoesDaBarra = POSICOES_DA_BARRA;
     protected readonly posicaoDaBarraPreferida = computed(() => this.servico.preferencia().posicaoBarra);
     protected readonly preferencia = this.servico.preferencia;
@@ -77,7 +77,8 @@ export class MensagemDiretaNotificacoesComponent {
     protected readonly rotuloDoSilencio = computed(() => rotuloDoSilencio(this.preferencia().silenciadoAteDate, this.agora(), ambiente.fusoHorario));
 
     constructor() {
-    // A tela segue a preferência (carga, gravação e volta atrás); os interruptores gravam o que o usuário muda.
+        this.atualizarRelogio();
+        // A tela segue a preferência (carga, gravação e volta atrás); os interruptores gravam o que o usuário muda.
         effect(() => {
             const preferencia = this.preferencia();
             this.controleAvisos.setValue(preferencia.avisosAtivos, { emitEvent: false });
@@ -96,6 +97,10 @@ export class MensagemDiretaNotificacoesComponent {
         this.controleAvisos.valueChanges.subscribe((valor) => void this.servico.alterarPreferencia({ avisosAtivos: valor }));
         this.controleDesktop.valueChanges.subscribe((valor) => void this.servico.alterarPreferencia({ avisoDesktopAtivo: valor }));
         this.controleSom.valueChanges.subscribe((valor) => void this.servico.alterarPreferencia({ somAtivo: valor }));
+    }
+
+    protected voltar(): void {
+        this.estado.fecharConfiguracoes();
     }
 
     protected atualizarRelogio(): void {
