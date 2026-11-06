@@ -10,6 +10,7 @@ export function criarUsuarioTeste(tipo: TipoUsuarioEnum = TipoUsuarioEnum.DESENV
         tipo,
         ativo: true,
         horasDiariasNecessarias: 8,
+        corAvatar: null,
         createdDate: new Date('2026-01-15T12:00:00.000Z'),
     };
 }

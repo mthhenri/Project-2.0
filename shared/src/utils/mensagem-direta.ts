@@ -1,4 +1,6 @@
+import { PosicaoBarraChatEnum } from '../enums/posicao-barra-chat.enum';
 import { PosicaoPopupChatEnum } from '../enums/posicao-popup-chat.enum';
+import { AutorMensagemDiretaEnum } from '../enums/autor-mensagem-direta.enum';
 import { ReferenciaMensagemDiretaEnum } from '../enums/referencia-mensagem-direta.enum';
 import type { MensagemDiretaPreferenciaRecuperadaDto } from '../dtos/mensagem-direta/MensagemDiretaPreferenciaRecuperadaDto';
 import type { ReferenciaMensagemDto } from '../dtos/mensagem-direta/ReferenciaMensagemDto';
@@ -23,6 +25,24 @@ export const LIMITE_CURSOR_DA_CONVERSA_DIRETA = 120;
 export const LIMITE_PADRAO_DA_SUPERVISAO_DIRETA = 20;
 export const LIMITE_MAXIMO_DA_SUPERVISAO_DIRETA = 100;
 export const LIMITE_ATALHO_GLOBAL = 40;
+/** Quanto tempo depois do envio o autor ainda pode editar a mensagem (task 313): 1 hora. */
+export const PRAZO_PARA_EDITAR_MENSAGEM_DIRETA_MS = 3_600_000;
+
+/** Os seis atalhos da faixa de reações (task 314); a pessoa pode reagir com qualquer outro emoji pelo seletor. */
+export const REACOES_RAPIDAS_MENSAGEM_DIRETA = ['👍', '❤️', '😂', '😮', '😢', '🙏'] as const;
+/** Caracteres (unidades UTF-16) que um emoji, com todas as suas partes, pode ter na reação; cabe a família com tons de pele e a bandeira com tags. */
+export const LIMITE_REACAO_MENSAGEM_DIRETA = 32;
+
+/**
+ * Exatamente **um** emoji: o pictograma com variação e tom de pele opcionais, emojis ligados por ZWJ (família, profissão), a bandeira (duas letras regionais),
+ * a bandeira com tags (Inglaterra) e o teclado (`1️⃣`). Texto, espaço, vazio e dois emojis não passam.
+ */
+export const REGEX_REACAO_MENSAGEM_DIRETA =
+    /^(?:[0-9#*]\uFE0F?\u20E3|\p{Regional_Indicator}{2}|\p{Extended_Pictographic}[\u{E0020}-\u{E007E}]+\u{E007F}|\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?)*)$/u;
+
+export function ehReacaoValida(reacao: string): boolean {
+    return reacao.length <= LIMITE_REACAO_MENSAGEM_DIRETA && REGEX_REACAO_MENSAGEM_DIRETA.test(reacao);
+}
 
 /** "Silenciar por 1 hora", para a reunião. */
 export const DURACAO_DO_SILENCIO_DE_REUNIAO_MINUTOS = 60;
@@ -47,6 +67,7 @@ export const PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA: MensagemDiretaPreferenciaRec
     silenciadoAteDate: null,
     atalhoGlobal: ATALHO_GLOBAL_PADRAO,
     posicaoPopup: PosicaoPopupChatEnum.CANTO_INFERIOR_DIREITO,
+    posicaoBarra: PosicaoBarraChatEnum.ESQUERDA,
 };
 
 // ---------------------------------------------------------------------------
@@ -179,4 +200,35 @@ export function trechoDaMensagemDireta(texto: string): string {
     const simples = textoSimplesDaMensagemDireta(texto, contemBlocoDeCodigo(texto));
     if (simples.length <= LIMITE_TRECHO_MENSAGEM_DIRETA) return simples;
     return `${simples.slice(0, LIMITE_TRECHO_MENSAGEM_DIRETA - 1).trimEnd()}…`;
+}
+
+// ---------------------------------------------------------------------------
+// Editar a mensagem (task 313)
+// ---------------------------------------------------------------------------
+
+export type SituacaoDaEdicaoDeMensagemDireta = 'PODE' | 'MENSAGEM_DO_SISTEMA' | 'NAO_E_DO_AUTOR' | 'PRAZO_ENCERRADO';
+
+export interface EdicaoDeMensagemDiretaConsulta {
+    autor: AutorMensagemDiretaEnum;
+    autorUsuarioId: number | null;
+    /** Quem quer editar. */
+    usuarioId: number;
+    createdDate: Date | string;
+    /** O relógio entra por parâmetro: a regra é pura e vale igual na service (autoridade) e na tela (só mostra o botão). */
+    agora: Date;
+}
+
+/**
+ * Só o autor edita a própria mensagem de pessoa, até 1 hora depois do envio (contada em `created_date`, não na última edição). Mensagem do
+ * sistema nunca se edita. O prazo vale por inteiro: com exatamente 1 hora ainda pode, um milissegundo depois não.
+ */
+export function avaliarEdicaoDeMensagemDireta(consulta: EdicaoDeMensagemDiretaConsulta): SituacaoDaEdicaoDeMensagemDireta {
+    if (consulta.autor !== AutorMensagemDiretaEnum.USUARIO) return 'MENSAGEM_DO_SISTEMA';
+    if (consulta.autorUsuarioId !== consulta.usuarioId) return 'NAO_E_DO_AUTOR';
+    const decorrido = consulta.agora.getTime() - new Date(consulta.createdDate).getTime();
+    return decorrido > PRAZO_PARA_EDITAR_MENSAGEM_DIRETA_MS ? 'PRAZO_ENCERRADO' : 'PODE';
+}
+
+export function podeEditarMensagemDireta(consulta: EdicaoDeMensagemDiretaConsulta): boolean {
+    return avaliarEdicaoDeMensagemDireta(consulta) === 'PODE';
 }

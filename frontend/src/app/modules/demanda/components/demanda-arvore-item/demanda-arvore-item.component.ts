@@ -66,10 +66,6 @@ export class DemandaArvoreItemComponent implements OnChanges {
         return this.sessao.podeEditarDemanda();
     }
 
-    /** A descrição do cliente só o gestor edita; para os outros o ícone da linha abre a leitura, com cadeado. */
-    clienteSomenteLeitura(): boolean {
-        return !this.sessao.eGestor();
-    }
     readonly unidadeTempo = inject(VisualizacaoTempoService);
 
     /** Único menu de contexto aberto na árvore, compartilhado entre todas as instâncias. */

@@ -65,6 +65,13 @@ test('o documento leva os dois participantes em ordem, as referências em texto 
     });
 });
 
+test('editada_date no documento vira editadaDate no resumo; sem ela, null (mensagem anterior à task 313)', () => {
+    const base = paraFonteDireta({ mensagemId: '7f0c2b9e-4c1a-4e6a-9d55-2f6c0d1b8a10', conversaId: '4-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: 'oi', contemCodigo: false, mencoes: [], referencias: [] }, new Date('2026-10-21T14:00:00.000Z'));
+    assert.equal(deFonteDireta(base).editadaDate, null);
+    assert.equal(deFonteDireta({ ...base, editada_date: null }).editadaDate, null);
+    assert.equal(deFonteDireta({ ...base, editada_date: '2026-10-21T14:20:00.000Z' }).editadaDate?.toISOString(), '2026-10-21T14:20:00.000Z');
+});
+
 test('ler o documento devolve o resumo, com as referências de volta como objeto', () => {
     const resumo = deFonteDireta(paraFonteDireta(NOVA, new Date('2026-10-21T14:05:11.482Z')));
     assert.deepEqual(resumo, {
@@ -78,6 +85,7 @@ test('ler o documento devolve o resumo, com as referências de volta como objeto
         referencias: [{ tipo: ReferenciaMensagemDiretaEnum.DEMANDA, id: 212 }],
         respondeA: null,
         createdDate: new Date('2026-10-21T14:05:11.482Z'),
+        editadaDate: null, reacoes: [],
     });
 });
 

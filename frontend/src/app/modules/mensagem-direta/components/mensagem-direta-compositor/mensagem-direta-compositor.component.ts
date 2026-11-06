@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, comp
 import { firstValueFrom } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { LIMITE_TEXTO_MENSAGEM_DIRETA, MensagemDiretaReferenciaResumoDto, ReferenciaMensagemDiretaEnum } from '@project20/shared';
+import { LIMITE_TEXTO_MENSAGEM_DIRETA, MensagemDiretaReferenciaResumoDto, ReferenciaMensagemDiretaEnum, trechoDaMensagemDireta } from '@project20/shared';
 import { EnvioDoCompositor } from '../../services/mensagem-direta-estado.service';
 import { MensagemDiretaService } from '../../services/mensagem-direta.service';
 import {
+    EdicaoEmPreparo,
     Gatilho,
     PessoaEscolhida,
     ReferenciaEscolhida,
@@ -21,6 +22,7 @@ import { filtrarPessoasPorNome } from '../../utils/mensagem-direta.util';
 import type { BlocoAtual } from '../../../../shared/components/markdown-editor/markdown-formatado';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { CodigoEscolhido, MensagemDiretaCodigoPainelComponent } from '../mensagem-direta-codigo-painel/mensagem-direta-codigo-painel.component';
+import { MensagemDiretaEmojiSeletorComponent } from '../mensagem-direta-emoji-seletor/mensagem-direta-emoji-seletor.component';
 import { EditorMensagemComponent } from '../../../../shared/components/editor-mensagem/editor-mensagem.component';
 
 const ATRASO_DA_BUSCA_MS = 250;
@@ -38,6 +40,7 @@ interface ItemDaSugestao {
     icone: string | null;
     /** Para a pessoa: o nome do avatar. */
     nomeDoAvatar: string | null;
+    corDoAvatar: string | null;
     /** O que o item representa: a pessoa (do `@`) ou a demanda/atividade (do `#`). Quem escolhe usa isto, não o rótulo (dois itens podem ter o mesmo nome). */
     pessoa: PessoaEscolhida | null;
     referencia: MensagemDiretaReferenciaResumoDto | null;
@@ -64,7 +67,7 @@ function consumir(evento: Event): void {
 @Component({
     selector: 'app-mensagem-direta-compositor',
     standalone: true,
-    imports: [ButtonModule, TooltipModule, MensagemDiretaAvatarComponent, MensagemDiretaCodigoPainelComponent, EditorMensagemComponent],
+    imports: [ButtonModule, TooltipModule, MensagemDiretaAvatarComponent, MensagemDiretaCodigoPainelComponent, MensagemDiretaEmojiSeletorComponent, EditorMensagemComponent],
     templateUrl: './mensagem-direta-compositor.component.html',
     styleUrl: './mensagem-direta-compositor.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -82,6 +85,16 @@ export class MensagemDiretaCompositorComponent {
     /** A mensagem a que o envio responde (task 220): a barra "Respondendo a…" acima do campo. `null` = mensagem comum. */
     readonly resposta = input<{ nome: string; trecho: string } | null>(null);
     readonly cancelarResposta = output<void>();
+    /**
+   * A mensagem própria em edição (task 313): o campo recebe o texto dela e a barra "Editando mensagem" aparece acima. Enviar emite `enviar` como sempre; quem usa decide
+   * (salvar a edição) e, quando `edicao` volta a `null`, o campo é limpo. Se o servidor recusar, `edicao` continua e o texto digitado fica.
+   */
+    readonly edicao = input<EdicaoEmPreparo | null>(null);
+    readonly cancelarEdicao = output<void>();
+    /** A edição está sendo salva: o envio fica desligado até a resposta. */
+    readonly salvando = input(false);
+    /** O motivo de a edição não ter sido salva, mostrado na barra de edição. */
+    readonly erroDaEdicao = input<string | null>(null);
     /** O usuário está escrevendo (tecla que insere ou apaga texto, ou colagem): só ação dele, nunca o texto posto por programa (código do Desktop, limpar após enviar). Quem usa o compositor decide quando avisar a outra pessoa. */
     readonly digitando = output<void>();
     /** Código a pôr no campo como bloco (o que o usuário copiou antes do atalho do Desktop, task 213); `textoAplicado` avisa que já foi usado. */
@@ -91,6 +104,8 @@ export class MensagemDiretaCompositorComponent {
     protected readonly limiteDoTexto = LIMITE_TEXTO_MENSAGEM_DIRETA;
     /** O Markdown da mensagem. */
     protected readonly texto = signal('');
+    /** O seletor de emoji (task 314), aberto pelo botão do rosto: o emoji escolhido entra no cursor do campo. */
+    protected readonly seletorDeEmojiAberto = signal(false);
     /** O painel do mini editor de código (task 216), aberto pelo botão `</>`: guarda o trecho que estava selecionado. `null` = fechado. */
     protected readonly painelDeCodigo = signal<{ selecionado: string } | null>(null);
     /** O bloco de texto do cursor, atualizado a cada mudança do texto ou do cursor. */
@@ -103,7 +118,8 @@ export class MensagemDiretaCompositorComponent {
    */
     private readonly escolhido = signal<{ inicio: number; marcador: string } | null>(null);
 
-    protected readonly podeEnviar = computed(() => this.texto().trim().length > 0 && this.texto().length <= LIMITE_TEXTO_MENSAGEM_DIRETA);
+    protected readonly trechoDaEdicao = computed(() => trechoDaMensagemDireta(this.edicao()?.texto ?? ''));
+    protected readonly podeEnviar = computed(() => this.texto().trim().length > 0 && this.texto().length <= LIMITE_TEXTO_MENSAGEM_DIRETA && !this.salvando());
     protected readonly excedeu = computed(() => this.texto().length > LIMITE_TEXTO_MENSAGEM_DIRETA);
     protected readonly mostrarContador = computed(() => this.texto().length >= COMECO_DO_AVISO_DE_LIMITE);
     protected readonly contador = computed(() => `${this.texto().length.toLocaleString('pt-BR')} / ${LIMITE_TEXTO_MENSAGEM_DIRETA.toLocaleString('pt-BR')}`);
@@ -135,7 +151,7 @@ export class MensagemDiretaCompositorComponent {
                 this.pessoas().map((pessoa) => ({ ...pessoa, usuarioNome: pessoa.nome })),
                 gatilho.termo,
             ).map((pessoa) => ({
-                rotulo: pessoa.nome, titulo: pessoa.nome, detalhe: '', icone: null, nomeDoAvatar: pessoa.nome,
+                rotulo: pessoa.nome, titulo: pessoa.nome, detalhe: '', icone: null, nomeDoAvatar: pessoa.nome, corDoAvatar: pessoa.corAvatar ?? null,
                 pessoa: { usuarioId: pessoa.usuarioId, nome: pessoa.nome }, referencia: null,
             }));
         }
@@ -148,6 +164,7 @@ export class MensagemDiretaCompositorComponent {
             : `${ROTULO_DO_TIPO_DE_REFERENCIA[referencia.tipo]} · ${referencia.demandaNome ?? ''}`,
             icone: referencia.tipo === ReferenciaMensagemDiretaEnum.DEMANDA ? 'pi-sitemap' : 'pi-check-square',
             nomeDoAvatar: null,
+            corDoAvatar: null,
             pessoa: null,
             referencia,
         }));
@@ -189,6 +206,26 @@ export class MensagemDiretaCompositorComponent {
             const respondendo = this.resposta();
             const editor = this.campo().editor();
             if (respondendo && editor) untracked(() => editor.focar());
+        });
+
+        // Começar a editar põe o texto da mensagem no campo (já formatado), com as menções e referências que ela tinha, e leva o foco para lá. Terminar a
+        // edição (salvou ou cancelou) deixa o campo vazio de novo: o que estava escrito antes de editar não é guardado.
+        let editavaAntes = false;
+        effect(() => {
+            const edicao = this.edicao();
+            const editor = this.campo().editor();
+            if (!editor) return;
+            untracked(() => {
+                if (edicao) {
+                    this.escolhidasPessoas = this.pessoas().filter((pessoa) => edicao.mencoes.includes(pessoa.usuarioId));
+                    this.escolhidasReferencias = [...edicao.referencias];
+                    this.campo().definirTexto(edicao.texto);
+                    editor.focar();
+                } else if (editavaAntes) {
+                    this.limparCampo();
+                }
+                editavaAntes = edicao !== null;
+            });
         });
 
         // O código do Desktop entra uma vez como bloco, no cursor; o usuário confere e envia (nada é enviado sozinho).
@@ -312,6 +349,12 @@ export class MensagemDiretaCompositorComponent {
             this.dispensadoEm.set(this.gatilho()!.inicioNoDocumento);
             return;
         }
+        if (evento.key === 'Escape' && this.edicao()) {
+            // Cancela a edição (o campo volta vazio) e não deixa o Esc ocultar o popup.
+            consumir(evento);
+            this.cancelarEdicao.emit();
+            return;
+        }
         if (evento.key === 'Escape' && this.resposta()) {
             // Cancela só a resposta (o texto fica) e não deixa o Esc ocultar o popup.
             consumir(evento);
@@ -364,6 +407,23 @@ export class MensagemDiretaCompositorComponent {
         if (this.texto().length + colado.length + FOLGA_DA_CERCA_DO_CODIGO > LIMITE_TEXTO_MENSAGEM_DIRETA) return;
         consumir(evento);
         editor.inserirBlocoDeCodigo(colado, null);
+    }
+
+    protected alternarSeletorDeEmoji(): void {
+        this.seletorDeEmojiAberto.update((aberto) => !aberto);
+    }
+
+    protected fecharSeletorDeEmoji(): void {
+        this.seletorDeEmojiAberto.set(false);
+        this.campo().focar();
+    }
+
+    /** Põe o emoji no cursor (ou no lugar da seleção), fecha o seletor e devolve o foco ao campo. */
+    protected inserirEmoji(emoji: string): void {
+        const editor = this.campo().editor();
+        if (!editor) return;
+        editor.inserirTexto(emoji);
+        this.fecharSeletorDeEmoji();
     }
 
     /** O botão `</>` abre o mini editor; o trecho selecionado no campo (se houver) já vem nele. */
@@ -430,12 +490,18 @@ export class MensagemDiretaCompositorComponent {
     protected enviarMensagem(): void {
     // O texto vem do editor na hora do envio, não do último valor sincronizado.
         const texto = (this.campo().editor()?.obterMarkdown() ?? this.texto()).trim();
-        if (texto === '' || texto.length > LIMITE_TEXTO_MENSAGEM_DIRETA) return;
+        if (texto === '' || texto.length > LIMITE_TEXTO_MENSAGEM_DIRETA || this.salvando()) return;
         this.enviar.emit({
             texto,
             mencoes: mencoesPresentes(texto, this.escolhidasPessoas),
             referencias: referenciasPresentes(texto, this.escolhidasReferencias),
         });
+        // Editando, o campo só é limpo quando a edição termina (se o servidor recusar, o texto digitado fica).
+        if (this.edicao()) return;
+        this.limparCampo();
+    }
+
+    private limparCampo(): void {
         this.campo().limpar();
         this.bloco.set(null);
         this.dispensadoEm.set(null);

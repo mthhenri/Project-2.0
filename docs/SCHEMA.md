@@ -86,7 +86,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 14. tipo_prompt, prompt (migration `0034`)
 15. tipo_proposta_ia, tipo_proposta_ia_status, proposta_ia (migration `0035`; `0055` acrescenta `aplicada_pela_ia`)
 16. tipo_atividade_prioridade e `atividade.tipo_atividade_prioridade_id` (migration `0036`)
-17. mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao (migration `0050`; só dependem de `usuario`)
+17. mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao (migration `0050`; só dependem de `usuario`) e mensagem_direta_reacao (migration `0083`, task 314; depende de `usuario`)
 18. mensagem_direta (migration `0051`, provisória; sem FK, depende só das funções `fn_chat_texto_*` da `0038`)
 19. modelagem_grupo, modelagem_tabela (migrations `0052` e `0053`; `modelagem_tabela` referencia `modelagem_grupo`)
 ```
@@ -140,6 +140,7 @@ CREATE TRIGGER trg_usuario_updated_date
 Usuários do sistema. Podem ser desenvolvedores ou gestores.
 Gestores têm acesso irrestrito. Desenvolvedores acessam apenas projetos
 onde possuem ao menos uma demanda atribuída via `demanda_usuario`.
+`cor_avatar` (migration `0084`, task 316) é a cor da bolinha que a pessoa escolhe para si: `#RRGGBB` maiúsculo, anulável (`NULL` = cor de acento do tema; o padrão mora no frontend, nunca em DEFAULT); a própria pessoa grava por `PUT /usuario/cor` e o gestor pela edição do usuário, e a service do chat a junta às pessoas, conversas e supervisão (nada é gravado na mensagem).
 `ativo` diz se o usuário pode entrar e receber atribuições; a migration `0075` trocou por ele a tabela de referência `tipo_usuario_status`, que só tinha `ATIVO` e `INATIVO`.
 
 ```sql
@@ -157,7 +158,8 @@ CREATE TABLE usuario (
   horas_diarias_necessarias INTEGER      NOT NULL,
   tipo_usuario_id           INTEGER      NOT NULL
                               CONSTRAINT fk_usuario_tipo_usuario REFERENCES tipo_usuario(id),
-  ativo                     BOOLEAN      NOT NULL
+  ativo                     BOOLEAN      NOT NULL,
+  cor_avatar                VARCHAR(7)
 );
 
 CREATE UNIQUE INDEX uix_usuario_login_ativo
@@ -825,7 +827,7 @@ Seeds (`codigo` → `descricao`):
 
 ### Chat entre colaboradores — migration `0050` (task 205)
 
-> As **mensagens não ficam no PostgreSQL**: são gravadas uma vez e nunca reescritas, num índice (OpenSearch no desenvolvimento, Elasticsearch na produção final) ou,
+> As **mensagens não ficam no PostgreSQL**: são gravadas uma vez e, no chat entre colaboradores, só o autor reescreve o texto da própria mensagem, até 1 hora depois do envio (task 313; o chat da IA nunca reescreve), num índice (OpenSearch no desenvolvimento, Elasticsearch na produção final) ou,
 > na produção de teste, numa tabela provisória (task 207). Estas três tabelas guardam o **estado que muda**. Modelagem completa em
 > `docs/specs/backlog/chat-colaboradores/modelagem.md` (anexo da guarda-chuva `chat-colaboradores.spec.md`; os dois vão para `done/` com a última task, a 215).
 >
@@ -842,7 +844,7 @@ igual à data dela. Índice único parcial em (`conversa_id`, `usuario_id`) e í
 #### `mensagem_direta_preferencia`
 As preferências do chat, uma linha por usuário, criada na primeira alteração: `usuario_id` (FK, único entre as linhas ativas), `avisos_ativos`, `aviso_desktop_ativo`, `som_ativo`,
 `silenciado_ate_date` (anulável), `atalho_global` (`VARCHAR(40)`, formato do Electron) e, desde a task 221 (migration `0064`), `posicao_popup` (`VARCHAR(30)` anulável: o código de `PosicaoPopupChatEnum`, sem tabela de referência porque não
-entra em `WHERE`/`JOIN`/FK; sem valor vale `CANTO_INFERIOR_DIREITO`, o padrão do `shared`). Sem linha, a service devolve `PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA`, do `shared`
+entra em `WHERE`/`JOIN`/FK; sem valor vale `CANTO_INFERIOR_DIREITO`, o padrão do `shared`) e, desde a task 318 (migration `0081`), `posicao_barra` (`VARCHAR(30)` anulável: o código de `PosicaoBarraChatEnum`, onde fica a barra de conversas da conversa aberta; sem valor vale `ESQUERDA`). Sem linha, a service devolve `PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA`, do `shared`
 (nunca um `DEFAULT`). "Silenciar por 1 hora" grava o instante final em `silenciado_ate_date`; quem decide se um aviso aparece é a service, comparando com a hora atual, então não
 há tarefa agendada para reativar.
 
@@ -851,6 +853,9 @@ Auditoria: cada abertura, por gestor ou administrador, de uma conversa que não 
 dois usuários). Colunas de `BaseEntity` mais: `leitor_usuario_id`, `conversa_id`, `usuario_menor_id`, `usuario_maior_id` (FKs para `usuario`; `usuario_menor_id < usuario_maior_id`) e
 `participantes_avisados` (esta abertura gerou o aviso na conversa; o aviso sai uma vez por leitor, conversa e dia). `created_date` é o instante da abertura. Índice em
 (`leitor_usuario_id`, `conversa_id`, `created_date`).
+
+#### `mensagem_direta_reacao` (task 314)
+As reações às mensagens do chat entre colaboradores, uma por pessoa por mensagem. Fica no PostgreSQL **para as três implementações do armazenamento** (a mensagem pode viver no índice), e a service junta as reações à página de mensagens. Colunas de `BaseEntity` mais: `mensagem_id` (`UUID`, **sem FK**: a mensagem pode estar fora do PostgreSQL), `conversa_id` (`VARCHAR(21)`, `<menorId>-<maiorId>`, com `CHECK` do formato), `usuario_id` (FK para `usuario`, quem reagiu) e `reacao` (`VARCHAR(32)`: o **próprio emoji**, um só, conferido pela regra `ehReacaoValida` do `shared`). Índice único parcial em (`mensagem_id`, `usuario_id`) onde `is_deleted = false` e índice em `conversa_id`. Trocar a reação é `UPDATE`; tirar é soft delete, e reagir de novo depois cria uma linha nova.
 
 ### Tabelas provisórias — migrations `0038` (task 162) e `0051` (task 207)
 
@@ -865,12 +870,12 @@ Uma linha por mensagem do chat, gravada uma vez e nunca reescrita (sem exclusão
 `mensagem_id` (UUID, único), `conversa_id` (`<usuarioId>-<yyyy-mm-dd>`), `usuario_id`, `contexto` (`CHAT`/`CHECKIN`), `autor` (`USUARIO`/`IA`/`SISTEMA`), `assunto` (`SISTEMA`/`CODIGO`, anulável: mensagem antiga, do sistema ou do check-in fica sem marca e é lida como `SISTEMA`; migration `0045`), `texto`, `nivel`, `modelo`, `modelo_planejado` (anulável, `VARCHAR(100)`; migration `0080`, spec 261: o modelo do item principal da cadeia do nível na chamada que gerou a resposta, a mesma de `modelo`; difere de `modelo` só quando um item de contingência respondeu, e a tela então mostra "Fallback utilizado"; a mensagem antiga e a que não é da IA ficam nulas, e no Elasticsearch o campo é `modelo_planejado`, `keyword`), `tokens_entrada`, `tokens_saida`, `tokens_cache`, `proposta_id` (a primeira proposta do turno), `propostas_ids` (`INTEGER[]` anulável com todas, na ordem; migration `0054`, task 225: a linha antiga sem ela é lida como `[proposta_id]`), `execucao_id`, `atividade_id`, `demanda_id` (referências opcionais, sem FK) e `conteudo_bruto` (JSONB). `created_date` é a data da mensagem. Índices: (`usuario_id`, `conversa_id`, `created_date`) e GIN em `fn_chat_texto_busca(texto)`, que é `to_tsvector('portuguese', unaccent(texto))` (busca sem acento; exige a extensão `unaccent`). `fn_chat_texto_consulta(texto)` normaliza o texto digitado do mesmo jeito (`plainto_tsquery`). As duas fixam `search_path = public, extensions, pg_catalog`: no Supabase as extensões vivem no schema `extensions`, que a conexão da aplicação não enxerga por padrão, e o SQL da aplicação nunca chama `unaccent` diretamente.
 
 #### `mensagem_direta` (task 207)
-Uma linha por mensagem entre colaboradores, com os mesmos campos e nomes do documento do índice `mensagem-direta`; gravada uma vez e nunca reescrita. Colunas de `BaseEntity` mais:
+Uma linha por mensagem entre colaboradores, com os mesmos campos e nomes do documento do índice `mensagem-direta`; gravada uma vez, e só o autor reescreve o `texto` (task 313, até 1 hora depois de `created_date`). Colunas de `BaseEntity` mais:
 `mensagem_id` (UUID, único, vem do cliente e dá idempotência ao reenvio), `conversa_id` (`VARCHAR(21)`, `<menorId>-<maiorId>`), `usuario_menor_id` e `usuario_maior_id` (os dois
 participantes, **sem FK** para `usuario`, como `chat_mensagem`; `CHECK` de menor < maior e de que `conversa_id` bate com os dois), `autor_usuario_id` (anulável: mensagem do sistema),
 `autor` (`USUARIO`/`SISTEMA`), `texto` (Markdown), `contem_codigo`, `mencoes` (`INTEGER[]`) e `referencias` (`TEXT[]`, `DEMANDA:212`) e, desde a task 220 (migration `0063`), `responde_a_mensagem_id` (`UUID`), `responde_a_autor_usuario_id` (`INTEGER`) e `responde_a_trecho` (`TEXT`): a mensagem
 que esta responde, anuláveis e **sempre os três juntos ou nenhum** (`CHECK`), sem FK; o trecho é uma cópia do começo do texto original, gravada no envio. `created_date` é a data da mensagem, definida pela
-aplicação em milissegundos (é o que o cursor de paginação compara). Índices: (`conversa_id`, `created_date`, `mensagem_id`), um por participante e GIN em `fn_chat_texto_busca(texto)`.
+aplicação em milissegundos (é o que o cursor de paginação compara; editar nunca a muda). `editada_date` (`TIMESTAMPTZ` anulável, migration `0082`, task 313): quando o autor editou o texto pela última vez; nula = nunca editada. O texto original **não** é guardado (I-052); no índice o campo é `editada_date` (`date`). Índices: (`conversa_id`, `created_date`, `mensagem_id`), um por participante e GIN em `fn_chat_texto_busca(texto)`.
 
 #### `chat_conversa`
 O nome da conversa: `conversa_id` (único), `usuario_id`, `titulo` (vazio = sem nome gravado; vale o padrão "Chat do dia ...") e `titulo_editado` (verdadeiro quando o usuário renomeou; a renomeação automática da IA deixa essa conversa em paz), mais as colunas de `BaseEntity`.
@@ -901,7 +906,7 @@ projeto ─── demanda
 
 dia_nao_util  [standalone, consultado pelo módulo ponto]
 
-usuario ─── mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao
+usuario ─── mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao, mensagem_direta_reacao
             [chat entre colaboradores; as mensagens ficam no índice, não no PostgreSQL]
 
 projeto ─── plano ─── plano_demanda ─── demanda

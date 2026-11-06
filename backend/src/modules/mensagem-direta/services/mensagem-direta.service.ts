@@ -8,6 +8,8 @@ import {
     MensagemDiretaBuscadoDto,
     MensagemDiretaBuscarDto,
     MensagemDiretaDigitacaoAvisarDto,
+    MensagemDiretaEditadaDto,
+    MensagemDiretaEditarDto,
     MensagemDiretaEnviadaDto,
     MensagemDiretaEnviarDto,
     MensagemDiretaLeituraAlteradaDto,
@@ -15,6 +17,8 @@ import {
     MensagemDiretaListadasDto,
     MensagemDiretaListarDto,
     MensagemDiretaPreferenciaAlteradaDto,
+    MensagemDiretaReagidaDto,
+    MensagemDiretaReagirDto,
     MensagemDiretaPreferenciaAlterarDto,
     MensagemDiretaPessoasListadasDto,
     MensagemDiretaReferenciaBuscarDto,
@@ -26,10 +30,14 @@ import {
     MensagemDiretaSilencioAlteradoDto,
     MensagemDiretaSilencioAlterarDto,
     PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA,
+    ReacaoMensagemDiretaDto,
     ReferenciaMensagemDiretaEnum,
     ReferenciaMensagemDto,
+    MensagemDiretaResumoDto,
     StandardResponse,
+    avaliarEdicaoDeMensagemDireta,
     contemBlocoDeCodigo,
+    ehReacaoValida,
     montarConversaDiretaId,
     outroParticipanteDaConversaDireta,
     trechoDaMensagemDireta,
@@ -37,6 +45,7 @@ import {
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
+import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { AtividadeRepository } from '../../atividade/repositories/atividade.repository';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
@@ -52,6 +61,7 @@ import {
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, ArmazenamentoDeMensagemDireta } from '../repositories/armazenamento-de-mensagem-direta';
 import { MensagemDiretaLeituraRepository } from '../repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPreferenciaRepository } from '../repositories/mensagem-direta-preferencia.repository';
+import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-reacao.repository';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 
 const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
@@ -72,6 +82,7 @@ export class MensagemDiretaService {
         @Inject(ARMAZENAMENTO_DE_MENSAGEM_DIRETA) private readonly armazenamento: ArmazenamentoDeMensagemDireta,
         private readonly leituraRepositorio: MensagemDiretaLeituraRepository,
         private readonly preferenciaRepositorio: MensagemDiretaPreferenciaRepository,
+        private readonly reacaoRepositorio: MensagemDiretaReacaoRepository,
         private readonly usuarioRepositorio: UsuarioRepository,
         private readonly demandaRepositorio: DemandaRepository,
         private readonly atividadeRepositorio: AtividadeRepository,
@@ -104,6 +115,9 @@ export class MensagemDiretaService {
             respondeA,
         });
 
+        // O reenvio de uma mensagem que já estava gravada pode já ter reações; a nova não tem.
+        if (enviada.jaExistia) enviada.mensagem = (await this.juntarReacoes([enviada.mensagem]))[0];
+
         // O reenvio de uma mensagem que já estava gravada não avisa de novo. As duas pontas recebem (a do remetente cobre as outras abas dele).
         if (!enviada.jaExistia) {
             await this.eventosService.publicarParaUsuarios({ usuarioIds: [usuarioAtivo.sub, dto.destinatarioId], evento: { tipo: 'MENSAGEM', mensagem: enviada.mensagem } });
@@ -114,6 +128,101 @@ export class MensagemDiretaService {
             dados: enviada,
             mensagem: enviada.jaExistia ? 'Mensagem já enviada' : 'Mensagem enviada com sucesso',
         };
+    }
+
+    // ---------------------------------------------------------------------------
+    // Editar (task 313)
+    // ---------------------------------------------------------------------------
+
+    /**
+     * O autor troca o texto da própria mensagem, até 1 hora depois do envio. O texto original não é guardado (I-052). Texto igual ao atual não grava
+     * nem avisa. Menções e referências seguem as regras do envio; a resposta, a data de envio e a ordem não mudam. As duas pontas recebem `EDICAO`.
+     */
+    async alterarMensagem(dto: MensagemDiretaEditarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaEditadaDto>> {
+        await this.validarOutraPessoa(dto.destinatarioId, usuarioAtivo);
+        const conversaId = montarConversaDiretaId(usuarioAtivo.sub, dto.destinatarioId);
+        const existente = await this.armazenamento.recuperarMensagem({ conversaId, mensagemId: dto.mensagemId });
+        if (!existente) throw new ResourceNotFoundException('Mensagem');
+
+        switch (avaliarEdicaoDeMensagemDireta({ ...existente, usuarioId: usuarioAtivo.sub, agora: new Date() })) {
+            case 'MENSAGEM_DO_SISTEMA':
+                throw new BusinessException('A mensagem do sistema não pode ser editada');
+            case 'NAO_E_DO_AUTOR':
+                throw new UnauthorizedAccessException('Só o autor pode editar a mensagem');
+            case 'PRAZO_ENCERRADO':
+                throw new BusinessException('O prazo de 1 hora para editar a mensagem acabou');
+        }
+
+        if (existente.texto === dto.texto) {
+            return { sucesso: true, dados: { mensagem: (await this.juntarReacoes([existente]))[0] }, mensagem: 'Mensagem sem alterações' };
+        }
+
+        const mencoes = normalizarMencoes(dto.mencoes, [usuarioAtivo.sub, dto.destinatarioId]);
+        const referencias = normalizarReferencias(dto.referencias);
+        for (const referencia of referencias) {
+            await this.validarReferencia(referencia, usuarioAtivo);
+        }
+
+        const alterada = await this.armazenamento.alterarMensagem({
+            mensagemId: dto.mensagemId.toLowerCase(),
+            conversaId,
+            autorUsuarioId: usuarioAtivo.sub,
+            texto: dto.texto,
+            contemCodigo: contemBlocoDeCodigo(dto.texto),
+            mencoes,
+            referencias,
+        });
+        if (!alterada) throw new ResourceNotFoundException('Mensagem');
+        const [comReacoes] = await this.juntarReacoes([alterada]);
+
+        await this.eventosService.publicarParaUsuarios({ usuarioIds: [usuarioAtivo.sub, dto.destinatarioId], evento: { tipo: 'EDICAO', mensagem: comReacoes } });
+
+        return { sucesso: true, dados: { mensagem: comReacoes }, mensagem: 'Mensagem editada com sucesso' };
+    }
+
+    // ---------------------------------------------------------------------------
+    // Reagir (task 314)
+    // ---------------------------------------------------------------------------
+
+    /**
+     * A pessoa reage a uma mensagem de **pessoa** da conversa (a dela ou a da outra; a do sistema não tem reação): um só emoji, uma reação por pessoa por mensagem.
+     * O mesmo emoji de antes (ou `null`) tira a reação; outro troca. As duas pontas recebem `REACAO` com a lista completa. O aviso ao autor é do cliente, a partir
+     * do evento: nada entra na conversa nem nas não lidas.
+     */
+    async reagirMensagem(dto: MensagemDiretaReagirDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaReagidaDto>> {
+        await this.validarOutraPessoa(dto.destinatarioId, usuarioAtivo);
+        const reacao = dto.reacao ?? null;
+        if (reacao !== null && !ehReacaoValida(reacao)) throw new BusinessException('A reação deve ser um único emoji');
+        const conversaId = montarConversaDiretaId(usuarioAtivo.sub, dto.destinatarioId);
+        const mensagemId = dto.mensagemId.toLowerCase();
+        const original = await this.armazenamento.recuperarMensagem({ conversaId, mensagemId });
+        if (!original) throw new ResourceNotFoundException('Mensagem');
+        if (original.autor !== AutorMensagemDiretaEnum.USUARIO || original.autorUsuarioId === null) throw new BusinessException('A mensagem do sistema não recebe reação');
+
+        const atuais = await this.reacaoRepositorio.listarPorMensagens({ mensagemIds: [mensagemId] });
+        const minhaAtual = atuais.find((atual) => atual.usuarioId === usuarioAtivo.sub)?.reacao ?? null;
+        const nova = reacao !== null && reacao !== minhaAtual ? reacao : null;
+        if (nova === null) await this.reacaoRepositorio.remover({ mensagemId, usuarioId: usuarioAtivo.sub });
+        else await this.reacaoRepositorio.definir({ mensagemId, conversaId, usuarioId: usuarioAtivo.sub, reacao: nova });
+
+        const reacoes = (await this.reacaoRepositorio.listarPorMensagens({ mensagemIds: [mensagemId] })).map(({ usuarioId, reacao: emoji }): ReacaoMensagemDiretaDto => ({ usuarioId, reacao: emoji }));
+        await this.eventosService.publicarParaUsuarios({
+            usuarioIds: [usuarioAtivo.sub, dto.destinatarioId],
+            evento: { tipo: 'REACAO', conversaId, mensagemId, reacoes, reatorUsuarioId: usuarioAtivo.sub, autorUsuarioId: original.autorUsuarioId, reacao: nova },
+        });
+        return { sucesso: true, dados: { mensagemId, reacoes }, mensagem: nova === null ? 'Reação removida' : 'Reação registrada' };
+    }
+
+    /** Põe as reações (tabela do PostgreSQL) nas mensagens que o armazenamento devolveu, numa consulta só. O armazenamento sempre devolve `reacoes: []`. */
+    private async juntarReacoes(mensagens: MensagemDiretaResumoDto[]): Promise<MensagemDiretaResumoDto[]> {
+        const reacoes = await this.reacaoRepositorio.listarPorMensagens({ mensagemIds: mensagens.map((mensagem) => mensagem.mensagemId) });
+        if (reacoes.length === 0) return mensagens;
+        return mensagens.map((mensagem) => ({
+            ...mensagem,
+            reacoes: reacoes
+                .filter((reacao) => reacao.mensagemId === mensagem.mensagemId.toLowerCase())
+                .map(({ usuarioId, reacao }): ReacaoMensagemDiretaDto => ({ usuarioId, reacao })),
+        }));
     }
 
     // ---------------------------------------------------------------------------
@@ -133,7 +242,7 @@ export class MensagemDiretaService {
 
         return {
             sucesso: true,
-            dados: { mensagens: pagina.mensagens, proximoCursor: pagina.proximoCursor, lidaAteDate: marcadorDoOutro?.lidaAteDate ?? null },
+            dados: { mensagens: await this.juntarReacoes(pagina.mensagens), proximoCursor: pagina.proximoCursor, lidaAteDate: marcadorDoOutro?.lidaAteDate ?? null },
             mensagem: 'Conversa recuperada com sucesso',
         };
     }
@@ -154,7 +263,7 @@ export class MensagemDiretaService {
 
         const outroPorConversa = new Map(resumos.map((resumo) => [resumo.conversaId, outroParticipanteDaConversaDireta(resumo.conversaId, usuarioId)]));
         const usuarioIds = [...new Set([...outroPorConversa.values()].filter((outroId): outroId is number => outroId !== null))];
-        const nomes = new Map((await this.usuarioRepositorio.listarNomesPorIds({ usuarioIds })).map((usuario) => [usuario.id, usuario.nomeCompleto]));
+        const usuarios = new Map((await this.usuarioRepositorio.listarNomesPorIds({ usuarioIds })).map((usuario) => [usuario.id, usuario]));
 
         const online = this.eventosService.listarUsuariosOnline();
         const conversas: ConversaDiretaResumoDto[] = [];
@@ -164,7 +273,8 @@ export class MensagemDiretaService {
             conversas.push({
                 conversaId: resumo.conversaId,
                 usuarioId: outroId,
-                usuarioNome: nomes.get(outroId) ?? NOME_DE_USUARIO_REMOVIDO,
+                usuarioNome: usuarios.get(outroId)?.nomeCompleto ?? NOME_DE_USUARIO_REMOVIDO,
+                corAvatar: usuarios.get(outroId)?.corAvatar ?? null,
                 ultimaMensagem: resumo.ultimaMensagem,
                 naoLidas: naoLidas[resumo.conversaId] ?? 0,
                 silenciada: marcadorPorConversa.get(resumo.conversaId)?.silenciada ?? false,
@@ -181,7 +291,7 @@ export class MensagemDiretaService {
         const ativos = await this.usuarioRepositorio.listarAtivos();
         const pessoas = ativos
             .filter((usuario) => usuario.id !== usuarioAtivo.sub)
-            .map((usuario) => ({ usuarioId: usuario.id, usuarioNome: usuario.nomeCompleto, tipo: usuario.tipo, online: online.has(usuario.id) }));
+            .map((usuario) => ({ usuarioId: usuario.id, usuarioNome: usuario.nomeCompleto, tipo: usuario.tipo, online: online.has(usuario.id), corAvatar: usuario.corAvatar }));
         return { sucesso: true, dados: { pessoas }, mensagem: 'Pessoas listadas com sucesso' };
     }
 
@@ -293,9 +403,13 @@ export class MensagemDiretaService {
         const gravada = await this.preferenciaRepositorio.recuperar({ usuarioId: usuarioAtivo.sub });
         return {
             sucesso: true,
-            // A coluna da posição é anulável (linha anterior à task 221): sem valor vale o padrão do `shared`.
+            // As colunas das posições são anuláveis (linha anterior às tasks 221 e 318): sem valor vale o padrão do `shared`.
             dados: gravada
-                ? { ...gravada, posicaoPopup: gravada.posicaoPopup ?? PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoPopup }
+                ? {
+                    ...gravada,
+                    posicaoPopup: gravada.posicaoPopup ?? PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoPopup,
+                    posicaoBarra: gravada.posicaoBarra ?? PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoBarra,
+                }
                 : { ...PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA },
             mensagem: 'Preferências recuperadas com sucesso',
         };
@@ -316,6 +430,7 @@ export class MensagemDiretaService {
             silenciadoAteDate,
             atalhoGlobal: dto.atalhoGlobal,
             posicaoPopup: dto.posicaoPopup,
+            posicaoBarra: dto.posicaoBarra,
         });
         return { sucesso: true, dados: gravada, mensagem: 'Preferências alteradas com sucesso' };
     }

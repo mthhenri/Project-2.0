@@ -14,6 +14,9 @@ import {
     UsuarioExcluirDto,
     UsuarioSenhaAlterarDto,
     UsuarioSenhaAlteradaDto,
+    UsuarioCorInternoAlterarDto,
+    UsuarioCorAlteradaDto,
+    ehCorAvatarValida,
     TipoUsuarioEnum,
     podeAtribuirMembroOuTag,
     temPermissaoDeAdministrador,
@@ -256,6 +259,18 @@ export class UsuarioService {
         };
     }
 
+    /** A própria pessoa escolhendo a cor da bolinha (`null` volta à cor padrão). Não passa por `alterar`, que é do gestor. */
+    async alterarCor(dto: UsuarioCorInternoAlterarDto): Promise<StandardResponse<UsuarioCorAlteradaDto>> {
+        if (dto.corAvatar !== null && !ehCorAvatarValida(dto.corAvatar)) {
+            throw new BusinessException('A cor deve ser um hexadecimal #RRGGBB');
+        }
+        const usuarioAlterado = await this.usuarioRepositorio.alterarCor(dto);
+        if (!usuarioAlterado) {
+            throw new ResourceNotFoundException('Usuário');
+        }
+        return { sucesso: true, dados: { corAvatar: usuarioAlterado.corAvatar }, mensagem: 'Cor alterada com sucesso' };
+    }
+
     async alterarSenha(dto: UsuarioSenhaAlterarDto & { id: number }, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioSenhaAlteradaDto>> {
         const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
 
@@ -284,6 +299,7 @@ export class UsuarioService {
             tipo:                    usuario.tipo,
             ativo:                   usuario.ativo,
             horasDiariasNecessarias: usuario.horasDiariasNecessarias,
+            corAvatar:               usuario.corAvatar,
             createdDate:             usuario.createdDate,
         };
     }

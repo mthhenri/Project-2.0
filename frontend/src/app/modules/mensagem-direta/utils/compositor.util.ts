@@ -63,10 +63,20 @@ export function aplicarEscolha(texto: string, gatilho: Gatilho, cursor: number, 
 export interface PessoaEscolhida {
     usuarioId: number;
     nome: string;
+    /** Cor da bolinha da pessoa, para a sugestão do `@`. */
+    corAvatar?: string | null;
 }
 
 export interface ReferenciaEscolhida extends ReferenciaMensagemDto {
     nome: string;
+}
+
+/** A mensagem própria que o compositor edita (task 313): o texto de partida e as menções e referências que ela já tinha (com os nomes que o texto traz). */
+export interface EdicaoEmPreparo {
+    mensagemId: string;
+    texto: string;
+    mencoes: number[];
+    referencias: ReferenciaEscolhida[];
 }
 
 function contemMarcado(texto: string, marcado: string): boolean {

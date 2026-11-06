@@ -7,6 +7,8 @@ export interface ConversaDiretaResumoDto {
     /** A outra pessoa. */
     usuarioId: number;
     usuarioNome: string;
+    /** Cor da bolinha da outra pessoa; `null` = cor padrão. */
+    corAvatar: string | null;
     /** `null` quando a conversa ainda não tem mensagem. */
     ultimaMensagem: MensagemDiretaResumoDto | null;
     /** Mensagens da outra pessoa mais novas que o ponto em que o usuário leu. */

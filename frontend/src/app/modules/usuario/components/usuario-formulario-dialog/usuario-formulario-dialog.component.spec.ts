@@ -20,7 +20,7 @@ const rotulosDosTipos = (componente: UsuarioFormularioDialogComponent) => compon
 
 const USUARIO_EDITADO = {
     id: 50, login: 'beto', nomeCompleto: 'Beto Lima', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR,
-    ativo: true, horasDiariasNecessarias: 6, createdDate: '2026-01-15T00:00:00Z',
+    ativo: true, horasDiariasNecessarias: 6, corAvatar: null as string | null, createdDate: '2026-01-15T00:00:00Z',
 };
 
 describe('UsuarioFormularioDialogComponent — criar', () => {
@@ -153,12 +153,37 @@ describe('UsuarioFormularioDialogComponent — editar', () => {
         montado.componente.salvar();
         const requisicao = esperarRequisicao(montado.http, 'PUT', '/usuario/50');
         expect(requisicao.request.body).toEqual({
-            login: 'beto.lima', nomeCompleto: 'Beto Lima', cargoTitulo: 'Dev', horasDiariasNecessarias: 6, tipo: TipoUsuarioEnum.GESTOR,
+            login: 'beto.lima', nomeCompleto: 'Beto Lima', cargoTitulo: 'Dev', horasDiariasNecessarias: 6, tipo: TipoUsuarioEnum.GESTOR, corAvatar: null,
         });
         responderSucesso(requisicao, USUARIO_EDITADO);
         await montado.atualizar();
         expect(alterados).toHaveLength(1);
         expect(montado.componente.mostrarDialog()).toBe(false);
+    });
+
+    it('o gestor escolhe a cor da bolinha de outra pessoa e ela vai no corpo', async () => {
+        const { montado } = await abrirEdicao(TipoUsuarioEnum.GESTOR, { ...USUARIO_EDITADO, corAvatar: '#FDE047' });
+        expect(montado.componente.corAvatar()).toBe('#FDE047');
+        expect(document.body.textContent).toContain('Cor da bolinha');
+        montado.componente.corAvatar.set('#1E3A8A');
+        montado.componente.salvar();
+        const requisicao = esperarRequisicao(montado.http, 'PUT', '/usuario/50');
+        expect(requisicao.request.body.corAvatar).toBe('#1E3A8A');
+        responderSucesso(requisicao, USUARIO_EDITADO);
+    });
+
+    it('voltar à cor padrão envia corAvatar null', async () => {
+        const { montado } = await abrirEdicao(TipoUsuarioEnum.GESTOR, { ...USUARIO_EDITADO, corAvatar: '#FDE047' });
+        montado.componente.corAvatar.set(null);
+        montado.componente.salvar();
+        expect(esperarRequisicao(montado.http, 'PUT', '/usuario/50').request.body.corAvatar).toBeNull();
+    });
+
+    it('criar usuário não mostra a cor (ela só existe depois, na edição)', async () => {
+        const { montado } = await montar(TipoUsuarioEnum.GESTOR);
+        montado.componente.abrir();
+        await montado.atualizar();
+        expect(document.body.textContent).not.toContain('Cor da bolinha');
     });
 
     it('ninguém muda o próprio tipo: o corpo vai sem ele (e o login segue editável)', async () => {

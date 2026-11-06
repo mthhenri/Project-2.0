@@ -11,8 +11,8 @@ import { MensagemDiretaSupervisaoService } from './mensagem-direta-supervisao.se
 const GESTOR = { sub: 1, login: 'carla', tipo: TipoUsuarioEnum.GESTOR } as never;
 const DESENVOLVEDOR = { sub: 4, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-const ANA = { id: 4, nomeCompleto: 'Ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR };
-const BRUNO = { id: 9, nomeCompleto: 'Bruno', tipo: TipoUsuarioEnum.DESENVOLVEDOR };
+const ANA = { id: 4, nomeCompleto: 'Ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR, corAvatar: null };
+const BRUNO = { id: 9, nomeCompleto: 'Bruno', tipo: TipoUsuarioEnum.DESENVOLVEDOR, corAvatar: '#1E3A8A' };
 const CARLA = { id: 1, nomeCompleto: 'Carla', tipo: TipoUsuarioEnum.GESTOR };
 
 function mensagem(parcial: Partial<MensagemDiretaResumoDto> = {}): MensagemDiretaResumoDto {
@@ -27,6 +27,7 @@ function mensagem(parcial: Partial<MensagemDiretaResumoDto> = {}): MensagemDiret
         referencias: [],
         respondeA: null,
         createdDate: new Date('2026-10-31T14:00:00.000Z'),
+        editadaDate: null, reacoes: [],
         ...parcial,
     };
 }

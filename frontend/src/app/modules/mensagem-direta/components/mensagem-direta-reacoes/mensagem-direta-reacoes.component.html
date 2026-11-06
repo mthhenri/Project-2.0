@@ -1,0 +1,52 @@
+@if (pilulas().length) {
+    <div class="reacoes__pilulas" role="group" aria-label="Reações">
+        @for (pilula of pilulas(); track pilula.reacao) {
+            <button
+                type="button"
+                class="reacoes__pilula"
+                [class.reacoes__pilula--minha]="pilula.minha"
+                [attr.aria-pressed]="pilula.minha"
+                [attr.aria-label]="rotulo(pilula)"
+                [pTooltip]="pilula.nomes.join(', ')"
+                tooltipPosition="top"
+                (click)="reagir.emit(pilula.reacao)"
+            >
+                <span class="reacoes__emoji">{{ pilula.reacao }}</span>
+                @if (pilula.total > 1) {
+                    <span class="reacoes__total">{{ pilula.total }}</span>
+                }
+            </button>
+        }
+    </div>
+}
+@if (barraAberta()) {
+    <div
+        class="reacoes__barra"
+        role="toolbar"
+        aria-label="Escolher reação"
+        tabindex="-1"
+        (keydown.escape)="aoApertarEsc($event)"
+    >
+        @for (atalho of atalhos; track atalho) {
+            <button
+                type="button"
+                class="reacoes__atalho"
+                [class.reacoes__atalho--minha]="atalho === minha()"
+                [attr.aria-label]="'Reagir com ' + atalho"
+                (click)="reagir.emit(atalho)"
+            >
+                {{ atalho }}
+            </button>
+        }
+        <button
+            type="button"
+            class="reacoes__mais"
+            aria-label="Mais emojis"
+            pTooltip="Mais emojis"
+            tooltipPosition="top"
+            (click)="abrirSeletor.emit()"
+        >
+            <i class="pi pi-plus" aria-hidden="true"></i>
+        </button>
+    </div>
+}

@@ -10,9 +10,12 @@ import {
     LIMITE_TEXTO_MENSAGEM_DIRETA,
 } from '../../utils/mensagem-direta';
 import { MensagemDiretaBuscarDto } from './MensagemDiretaBuscarDto';
+import { MensagemDiretaEditarDto } from './MensagemDiretaEditarDto';
 import { MensagemDiretaEnviarDto } from './MensagemDiretaEnviarDto';
 import { MensagemDiretaLeituraAlterarDto } from './MensagemDiretaLeituraAlterarDto';
 import { MensagemDiretaListarDto } from './MensagemDiretaListarDto';
+import { MensagemDiretaReagirDto } from './MensagemDiretaReagirDto';
+import { PosicaoBarraChatEnum } from '../../enums/posicao-barra-chat.enum';
 import { PosicaoPopupChatEnum } from '../../enums/posicao-popup-chat.enum';
 import { MensagemDiretaPreferenciaAlterarDto } from './MensagemDiretaPreferenciaAlterarDto';
 import { MensagemDiretaSilencioAlterarDto } from './MensagemDiretaSilencioAlterarDto';
@@ -29,6 +32,23 @@ async function erros<T extends object>(classe: Construtor<T>, carga: Record<stri
 
 const UUID = '7f0c2b9e-4c1a-4e6a-9d55-2f6c0d1b8a10';
 const ENVIO_VALIDO = { destinatarioId: 9, mensagemId: UUID, texto: 'Consegue olhar isso?' };
+
+// --- MensagemDiretaEditarDto (task 313) ---------------------------------------
+
+test('editar: destinatário, mensagem e texto são obrigatórios; menções e referências são opcionais', async () => {
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, ENVIO_VALIDO), []);
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, { ...ENVIO_VALIDO, mencoes: [4], referencias: [{ tipo: 'DEMANDA', id: 212 }] }), []);
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, { destinatarioId: 9 }), ['mensagemId', 'texto']);
+});
+
+test('editar: recusa texto vazio ou só espaços, texto grande demais, id que não é UUID v4 e campo desconhecido', async () => {
+    for (const texto of ['', '   ', 'x'.repeat(LIMITE_TEXTO_MENSAGEM_DIRETA + 1)]) {
+        assert.deepEqual(await erros(MensagemDiretaEditarDto, { ...ENVIO_VALIDO, texto }), ['texto'], texto.slice(0, 10));
+    }
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, { ...ENVIO_VALIDO, mensagemId: 'abc' }), ['mensagemId']);
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, { ...ENVIO_VALIDO, destinatarioId: 0 }), ['destinatarioId']);
+    assert.deepEqual(await erros(MensagemDiretaEditarDto, { ...ENVIO_VALIDO, respondeAMensagemId: UUID }), ['respondeAMensagemId'], 'a resposta não se troca na edição');
+});
 
 // --- MensagemDiretaEnviarDto -------------------------------------------------
 
@@ -155,6 +175,7 @@ const PREFERENCIA_VALIDA = {
     silenciadoAteDate: null,
     atalhoGlobal: 'Ctrl+Shift+Space',
     posicaoPopup: 'CANTO_INFERIOR_DIREITO',
+    posicaoBarra: 'ESQUERDA',
 };
 
 test('preferência: aceita cada posição do popup e recusa valor fora do enum', async () => {
@@ -163,6 +184,15 @@ test('preferência: aceita cada posição do popup e recusa valor fora do enum',
     }
     for (const posicaoPopup of ['', 'ESQUERDA', 'centro', 1, null]) {
         assert.deepEqual(await erros(MensagemDiretaPreferenciaAlterarDto, { ...PREFERENCIA_VALIDA, posicaoPopup }), ['posicaoPopup'], String(posicaoPopup));
+    }
+});
+
+test('preferência: aceita cada posição da barra e recusa valor fora do enum (task 318)', async () => {
+    for (const posicaoBarra of Object.values(PosicaoBarraChatEnum)) {
+        assert.deepEqual(await erros(MensagemDiretaPreferenciaAlterarDto, { ...PREFERENCIA_VALIDA, posicaoBarra }), [], posicaoBarra);
+    }
+    for (const posicaoBarra of ['', 'CENTRO', 'esquerda', 1, null, undefined]) {
+        assert.deepEqual(await erros(MensagemDiretaPreferenciaAlterarDto, { ...PREFERENCIA_VALIDA, posicaoBarra }), ['posicaoBarra'], String(posicaoBarra));
     }
 });
 
@@ -199,4 +229,18 @@ test('MensagemDiretaReferenciaBuscarDto: aparar os espaços vem ANTES do mínimo
     assert.ok((await validar('x'.repeat(101))).length > 0);
     assert.ok((await validar(undefined)).length > 0);
     assert.equal(plainToInstance(MensagemDiretaReferenciaBuscarDto, { texto: '  filtro ' }).texto, 'filtro');
+});
+
+// --- MensagemDiretaReagirDto (task 314) ---------------------------------------
+
+test('reagir: destinatário, mensagem e um único emoji; null (ou ausente) remove a reação', async () => {
+    const base = { destinatarioId: 9, mensagemId: UUID };
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, reacao: '👍' }), []);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, reacao: '🇧🇷' }), []);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, reacao: null }), []);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, base), []);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, reacao: 'ok' }), ['reacao']);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, reacao: '👍👍' }), ['reacao']);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, mensagemId: 'x', reacao: '👍' }), ['mensagemId']);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { destinatarioId: 0, mensagemId: UUID, reacao: '👍' }), ['destinatarioId']);
 });

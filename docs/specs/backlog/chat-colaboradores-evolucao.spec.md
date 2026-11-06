@@ -1,31 +1,33 @@
 # chat-colaboradores-evolucao.spec.md
 
-> Guarda-chuva da evolução do chat entre colaboradores (tasks 205–221 em `done/`), pedida pelo autor em 2026-11-06. Reserva as tasks **310–317**;
+> Guarda-chuva da evolução do chat entre colaboradores (tasks 205–221 em `done/`), pedida pelo autor em 2026-11-06. Reserva as tasks **310–317** (mais a **318** e a **319**, acrescentadas em 2026-11-06);
 > cada uma ganha o seu `NNN-*.spec.md` ao ser aberta. As decisões abaixo são do autor (respondidas em 2026-11-06 sobre a análise de cada item).
 
 ## Tasks e ordem
 
-Ordem de execução (decidida em 2026-11-06): 313, 314, **316 antes da 315** (o autor quer a cor da bolinha antes do `@IA`), 315, e a 317 quando a ideia dos níveis estiver testada. Os números são só reservas e não seguem a ordem.
+Ordem de execução (decidida em 2026-11-06): **318**, 313, 314, **316 antes da 315** (o autor quer a cor da bolinha antes do `@IA`), 315, e a 317 quando a ideia dos níveis estiver testada. Os números são só reservas e não seguem a ordem.
 
 | Task | O que | Modelagem? | Estado |
 |---|---|---|---|
 | 310 | Endereço solto vira link (no visualizador de Markdown, vale para todo o sistema) | não | feita (`done/`) |
 | 311 | Dois cliques na mensagem respondem a ela | não | feita (`done/`) |
 | 312 | Barra de bolinhas: com uma conversa aberta, a lista vira uma coluna de avatares | não | feita (`done/`) |
-| 313 | Editar mensagem | sim | reservada |
-| 314 | Reações nas mensagens e seletor de emoji | sim | reservada |
+| 313 | Editar mensagem | sim (`editada_date`, migration 0082) | feita em 2026-11-06 (`done/`) |
+| 314 | Reações nas mensagens e seletor de emoji | sim (tabela `mensagem_direta_reacao`, migration 0083) | feita em 2026-11-06 (`done/`) |
 | 315 | `@IA` no chat entre colaboradores | sim | reservada, spec própria antes de qualquer código |
-| 316 | Cor da bolinha escolhida pela pessoa (só no chat por ora) | sim | reservada, feita antes da 315 |
+| 316 | Cor da bolinha escolhida pela pessoa (só no chat por ora) | sim (`usuario.cor_avatar`, migration 0084) | feita em 2026-11-06 (`done/`); a 319 leva a cor aos demais avatares |
+| 319 | Cor da bolinha nos demais avatares do sistema (depende da 316) | não | spec no backlog (`319-cor-da-bolinha-em-todo-o-sistema.spec.md`) |
 | 317 | Volume do aviso do chat de 1 a 5 (3 é o atual) e, depois, escolher o som | sim (preferência do usuário) | pedido em 2026-11-06, a especificar |
+| 318 | Posição da barra de conversas (esquerda, direita, acima, abaixo) e engrenagem de configurações na barra | sim (`posicao_barra`, migration 0081) | feita em 2026-11-06 (`done/`); inclui a setinha "voltar ao atual" |
 
 ## Decisões do autor
 
-**Editar (313).** Só o autor edita, até 1 hora depois do envio. A mensagem editada mostra "editada". O texto original é guardado só para a
-supervisão (gestor e administrador não perdem a auditoria); o contrato de armazenamento ganha o método de alterar mensagem nas três
-implementações (OpenSearch, Elasticsearch, PostgreSQL).
+**Editar (313).** Só o autor edita, até 1 hora depois do envio. A mensagem editada mostra "editada". Em 2026-11-06 o autor decidiu **não guardar o texto
+original** nesta task: a edição sobrescreve o texto e só marca a data; guardar o original para a supervisão virou a ideia I-052 (`IDEAS.md`). O contrato de
+armazenamento ganha o método de alterar mensagem nas três implementações (OpenSearch, Elasticsearch, PostgreSQL). Spec: `313-chat-editar-mensagem.spec.md`.
 
-**Reações (314).** Ficam numa tabela do PostgreSQL (mensagem, usuário, emoji), não no documento da mensagem; falta ver como a consulta junta
-as reações às mensagens do índice no OpenSearch/Elasticsearch. Uma reação por pessoa por mensagem. O autor da mensagem recebe um aviso:
+**Reações (314).** Ficam numa tabela do PostgreSQL (mensagem, usuário, reação), não no documento da mensagem; a service junta as reações à página de mensagens numa consulta só (o contrato do
+armazenamento não muda). Em 2026-11-06 o autor escolheu **qualquer emoji como reação**, com seis atalhos (👍 ❤️ 😂 😮 😢 🙏) e o "+" para o seletor completo, e o aviso como cartão do chat, **sem gravar na conversa**. Spec: `done/314-chat-reacoes-e-seletor-de-emoji.spec.md`. Uma reação por pessoa por mensagem. O autor da mensagem recebe um aviso:
 "<PESSOA> reagiu à sua mensagem com <EMOJI>". O seletor de emoji para escrever é independente das reações.
 
 **`@IA` (315).** A IA atende só quem a chamou e só ao pedido dessa pessoa (a mensagem atual ou a seguinte), e executa **uma** ação por chamada. A

@@ -30,6 +30,11 @@ export class SeletorCorComponent implements ControlValueAccessor {
    * "Outra cor…". Sem o input, o componente segue como sempre (Tags e demais usos).
    */
     readonly compacto = input<boolean>(false);
+    /**
+   * O valor `null` é "sem cor" (task 316): nenhuma amostra aparece marcada e o campo hex fica vazio. Sem o input, `null` vira o azul
+   * de sempre (Tags, Projetos).
+   */
+    readonly aceitaSemCor = input<boolean>(false);
     readonly mostrarOutraCor = signal<boolean>(false);
 
     readonly coresPredefinidas = CORES_PREDEFINIDAS;
@@ -49,6 +54,11 @@ export class SeletorCorComponent implements ControlValueAccessor {
     }
 
     writeValue(valor: string | null): void {
+        if (valor === null && this.aceitaSemCor()) {
+            this.controleCor.setValue('#3b82f6', { emitEvent: false });
+            this.cor.set('');
+            return;
+        }
         const corResolvida = valor ?? '#3b82f6';
         this.controleCor.setValue(corResolvida, { emitEvent: false });
         this.cor.set(corResolvida);
@@ -77,7 +87,7 @@ export class SeletorCorComponent implements ControlValueAccessor {
 
     /** Cor atual fora da paleta (ex.: escolhida na roda): "Outra cor…" já aparece aberto. */
     get corForaDaPaleta(): boolean {
-        return !this.coresPredefinidas.some((predefinida) => this.corSelecionada(predefinida));
+        return this.cor() !== '' && !this.coresPredefinidas.some((predefinida) => this.corSelecionada(predefinida));
     }
 
     corSelecionada(valor: string): boolean {

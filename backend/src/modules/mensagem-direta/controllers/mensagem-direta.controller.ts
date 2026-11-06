@@ -1,12 +1,14 @@
-import { Body, Controller, Get, Param, ParseEnumPipe, ParseIntPipe, Post, Put, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseEnumPipe, ParseIntPipe, Patch, Post, Put, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import {
     MensagemDiretaBuscarDto,
     MensagemDiretaDigitacaoAvisarDto,
+    MensagemDiretaEditarDto,
     MensagemDiretaEnviarDto,
     MensagemDiretaLeituraAlterarDto,
     MensagemDiretaListarDto,
     MensagemDiretaPreferenciaAlterarDto,
+    MensagemDiretaReagirDto,
     MensagemDiretaReferenciaBuscarDto,
     MensagemDiretaSilencioAlterarDto,
     MensagemDiretaSupervisaoLerDto,
@@ -90,6 +92,17 @@ export class MensagemDiretaController {
     @Post('mensagem')
     enviarMensagem(@Body() dto: MensagemDiretaEnviarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
         return this.mensagemDiretaService.enviarMensagem(dto, usuarioAtivo);
+    }
+
+    @Patch('mensagem')
+    alterarMensagem(@Body() dto: MensagemDiretaEditarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.mensagemDiretaService.alterarMensagem(dto, usuarioAtivo);
+    }
+
+    /** Reage a uma mensagem da conversa com um emoji (o mesmo de antes tira a reação, outro troca). */
+    @Put('reacao')
+    reagirMensagem(@Body() dto: MensagemDiretaReagirDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.mensagemDiretaService.reagirMensagem(dto, usuarioAtivo);
     }
 
     @Put('conversa/:usuarioId/leitura')

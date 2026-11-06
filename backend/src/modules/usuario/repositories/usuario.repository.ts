@@ -13,6 +13,8 @@ import {
     UsuarioValidarLoginDto,
     UsuarioSenhaInternoAlterarDto,
     UsuarioExcluirDto,
+    UsuarioCorInternoAlterarDto,
+    UsuarioCorAlteradaDto,
 } from '@project20/shared';
 import { TipoUsuarioEnum, UsuarioAtivoListadoDto, UsuarioExistenciaVerificarDto, UsuarioNomeListadoDto, UsuarioNomeListarDto, UsuarioTipoListadoDto } from '@project20/shared';
 import { UsuarioRestaurarDto, UsuarioRestauradoDto } from '@project20/shared';
@@ -75,6 +77,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                     usuario.horas_diarias_necessarias AS "horasDiariasNecessarias",
                     tipo_usuario.codigo AS tipo,
                     usuario.ativo,
+                    usuario.cor_avatar AS "corAvatar",
                     usuario.created_date AS "createdDate",
                     usuario.updated_date AS "updatedDate",
                     usuario.is_deleted AS "isDeleted",
@@ -286,6 +289,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                     ) AS tipo,
                     ativo,
                     horas_diarias_necessarias AS "horasDiariasNecessarias",
+                    cor_avatar AS "corAvatar",
                     created_date AS "createdDate"
             `,
             {
@@ -327,6 +331,10 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
             setClauses.push('ativo = :ativo');
             parametros.ativo = dto.ativo;
         }
+        if (dto.corAvatar !== undefined) {
+            setClauses.push('cor_avatar = :corAvatar');
+            parametros.corAvatar = dto.corAvatar;
+        }
         if (dto.tipo !== undefined) {
             setClauses.push(
                 `
@@ -367,9 +375,29 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                     ) AS tipo,
                     ativo,
                     horas_diarias_necessarias AS "horasDiariasNecessarias",
+                    cor_avatar AS "corAvatar",
                     created_date AS "createdDate"
             `,
             parametros,
+        );
+        return resultado[0];
+    }
+
+    /** Altera apenas a cor da bolinha (a própria pessoa escolhendo). */
+    async alterarCor(dto: UsuarioCorInternoAlterarDto): Promise<UsuarioCorAlteradaDto> {
+        const resultado = await this.executarConsulta<UsuarioCorAlteradaDto>(
+            `
+                UPDATE usuario
+                SET
+                    cor_avatar = :corAvatar,
+                    updated_date = NOW()
+                WHERE
+                    usuario.id = :id
+                    AND usuario.is_deleted = false
+                RETURNING
+                    cor_avatar AS "corAvatar"
+            `,
+            { id: dto.id, corAvatar: dto.corAvatar },
         );
         return resultado[0];
     }
@@ -484,7 +512,8 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
             `
                 SELECT
                     usuario.id,
-                    usuario.nome_completo AS "nomeCompleto"
+                    usuario.nome_completo AS "nomeCompleto",
+                    usuario.cor_avatar AS "corAvatar"
                 FROM
                     usuario
                 WHERE
@@ -524,7 +553,8 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                 SELECT
                     usuario.id,
                     usuario.nome_completo AS "nomeCompleto",
-                    tipo_usuario.codigo AS tipo
+                    tipo_usuario.codigo AS tipo,
+                    usuario.cor_avatar AS "corAvatar"
                 FROM
                     usuario
                     INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
@@ -580,7 +610,8 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                 SELECT
                     usuario.id,
                     usuario.nome_completo AS "nomeCompleto",
-                    tipo_usuario.codigo AS tipo
+                    tipo_usuario.codigo AS tipo,
+                    usuario.cor_avatar AS "corAvatar"
                 FROM
                     usuario
                     INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id

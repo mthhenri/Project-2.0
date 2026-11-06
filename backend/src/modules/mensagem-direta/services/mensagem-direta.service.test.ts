@@ -5,12 +5,14 @@ import {
     LIMITE_PADRAO_DA_CONVERSA_DIRETA,
     MensagemDiretaResumoDto,
     PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA,
+    PosicaoBarraChatEnum,
     PosicaoPopupChatEnum,
     ReferenciaMensagemDiretaEnum,
     TipoUsuarioEnum,
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
+import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { MarcadorDeLeituraRegistrado } from '../repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaService } from './mensagem-direta.service';
 
@@ -34,12 +36,13 @@ function mensagem(parcial: Partial<MensagemDiretaResumoDto> = {}): MensagemDiret
         referencias: [],
         respondeA: null,
         createdDate: new Date('2026-10-21T14:00:00.000Z'),
+        editadaDate: null, reacoes: [],
         ...parcial,
     };
 }
 
 interface Cenario {
-    usuarios?: Record<number, { ativo?: boolean; nomeCompleto?: string }>;
+    usuarios?: Record<number, { ativo?: boolean; nomeCompleto?: string; corAvatar?: string | null }>;
     /** Ids de pessoas excluídas: não são recuperadas, mas ainda existem (o histórico continua). */
     excluidos?: number[];
     demandaVisivel?: boolean;
@@ -48,13 +51,17 @@ interface Cenario {
     jaExistia?: boolean;
     /** As mensagens que `recuperarMensagem` encontra, por id (cada uma já com a conversa dela). */
     originais?: MensagemDiretaResumoDto[];
+    /** `alterarMensagem` não acha a mensagem (outra conversa, outro autor ou sumiu entre a leitura e a gravação). */
+    edicaoNaoAchada?: boolean;
+    /** As reações já gravadas na tabela (o dublê guarda as mudanças nela, como o banco: uma por pessoa por mensagem). */
+    reacoes?: { mensagemId: string; usuarioId: number; reacao: string }[];
     marcadores?: MarcadorDeLeituraRegistrado[];
     marcadorDoOutro?: MarcadorDeLeituraRegistrado | null;
     conversas?: { conversaId: string; participantes: number[]; totalMensagens: number; ultimaMensagem: MensagemDiretaResumoDto }[];
     naoLidas?: Record<string, number>;
     preferencia?: unknown;
     online?: number[];
-    ativos?: { id: number; nome: string; tipo?: TipoUsuarioEnum }[];
+    ativos?: { id: number; nome: string; tipo?: TipoUsuarioEnum; corAvatar?: string | null }[];
     demandasAchadas?: { id: number; projetoId: number; nome: string; status: string }[];
     atividadesAchadas?: { id: number; nome: string; status: string; demandaId: number; nomeDemanda: string; projetoId: number }[];
 }
@@ -69,6 +76,11 @@ function montar(cenario: Cenario = {}) {
         recuperarMensagem: async (consulta: { conversaId: string; mensagemId: string }) => {
             registrar('recuperarMensagem', consulta);
             return (cenario.originais ?? []).find((original) => original.mensagemId === consulta.mensagemId && original.conversaId === consulta.conversaId) ?? null;
+        },
+        alterarMensagem: async (alteracao: { mensagemId: string; texto: string }) => {
+            registrar('alterarMensagem', alteracao);
+            const original = (cenario.originais ?? []).find((item) => item.mensagemId === alteracao.mensagemId);
+            return cenario.edicaoNaoAchada ? null : mensagem({ ...original, texto: alteracao.texto, editadaDate: new Date('2026-10-21T14:20:00.000Z') });
         },
         listarConversa: async (consulta: unknown) => { registrar('listarConversa', consulta); return { mensagens: [mensagem()], proximoCursor: 'abc' }; },
         listarConversasDoUsuario: async (consulta: unknown) => { registrar('listarConversasDoUsuario', consulta); return cenario.conversas ?? []; },
@@ -91,15 +103,31 @@ function montar(cenario: Cenario = {}) {
         recuperar: async () => cenario.preferencia ?? null,
         alterar: async (dto: unknown) => { registrar('alterarPreferencia', dto); return dto; },
     };
+    const reacoesGravadas = [...(cenario.reacoes ?? [])];
+    const reacao = {
+        listarPorMensagens: async (dto: { mensagemIds: string[] }) => { registrar('listarReacoes', dto); return reacoesGravadas.filter((item) => dto.mensagemIds.includes(item.mensagemId)); },
+        definir: async (dto: { mensagemId: string; usuarioId: number; reacao: string }) => {
+            registrar('definirReacao', dto);
+            const indice = reacoesGravadas.findIndex((item) => item.mensagemId === dto.mensagemId && item.usuarioId === dto.usuarioId);
+            if (indice >= 0) reacoesGravadas[indice] = { mensagemId: dto.mensagemId, usuarioId: dto.usuarioId, reacao: dto.reacao };
+            else reacoesGravadas.push({ mensagemId: dto.mensagemId, usuarioId: dto.usuarioId, reacao: dto.reacao });
+            return { mensagemId: dto.mensagemId, usuarioId: dto.usuarioId, reacao: dto.reacao };
+        },
+        remover: async (dto: { mensagemId: string; usuarioId: number }) => {
+            registrar('removerReacao', dto);
+            const indice = reacoesGravadas.findIndex((item) => item.mensagemId === dto.mensagemId && item.usuarioId === dto.usuarioId);
+            if (indice >= 0) reacoesGravadas.splice(indice, 1);
+        },
+    };
     const usuario = {
         validarExistenciaIncluindoExcluido: async ({ id }: { id: number }) => id in usuarios || (cenario.excluidos ?? []).includes(id),
         recuperar: async ({ id }: { id: number }) => {
             const encontrado = usuarios[id];
             return encontrado ? { id, ativo: encontrado.ativo ?? true, nomeCompleto: encontrado.nomeCompleto ?? `Pessoa ${id}` } : null;
         },
-        listarAtivos: async () => (cenario.ativos ?? []).map((item) => ({ id: item.id, nomeCompleto: item.nome, tipo: item.tipo ?? TipoUsuarioEnum.DESENVOLVEDOR })),
+        listarAtivos: async () => (cenario.ativos ?? []).map((item) => ({ id: item.id, nomeCompleto: item.nome, tipo: item.tipo ?? TipoUsuarioEnum.DESENVOLVEDOR, corAvatar: item.corAvatar ?? null })),
         listarNomesPorIds: async ({ usuarioIds }: { usuarioIds: number[] }) =>
-            usuarioIds.filter((id) => usuarios[id]).map((id) => ({ id, nomeCompleto: usuarios[id].nomeCompleto ?? `Pessoa ${id}` })),
+            usuarioIds.filter((id) => usuarios[id]).map((id) => ({ id, nomeCompleto: usuarios[id].nomeCompleto ?? `Pessoa ${id}`, corAvatar: usuarios[id].corAvatar ?? null })),
     };
     const demanda = {
         recuperar: async (dto: unknown, filtro: unknown) => { registrar('demanda', { dto, filtro }); return cenario.demandaVisivel === false ? null : { id: 1, nome: 'Corrigir filtro', status: 'DESENVOLVENDO', projetoId: 5 }; },
@@ -117,7 +145,7 @@ function montar(cenario: Cenario = {}) {
     };
 
     const service = new MensagemDiretaService(
-        armazenamento as never, leitura as never, preferencia as never, usuario as never, demanda as never, atividade as never, eventos as never,
+        armazenamento as never, leitura as never, preferencia as never, reacao as never, usuario as never, demanda as never, atividade as never, eventos as never,
     );
     return { service, chamadas };
 }
@@ -282,7 +310,7 @@ test('listarConversas: nome, não lidas e silêncio por conversa; pessoa removid
 
     const lidaAteDate = new Date('2026-10-21T10:00:00.000Z');
     const { service, chamadas } = montar({
-        usuarios: { [BRUNO_ID]: { nomeCompleto: 'Bruno' } },
+        usuarios: { [BRUNO_ID]: { nomeCompleto: 'Bruno', corAvatar: '#FDE047' } },
         conversas: [
             { conversaId: '4-9', participantes: [4, 9], totalMensagens: 3, ultimaMensagem: mensagem() },
             { conversaId: '4-15', participantes: [4, 15], totalMensagens: 1, ultimaMensagem: mensagem({ conversaId: '4-15' }) },
@@ -297,6 +325,7 @@ test('listarConversas: nome, não lidas e silêncio por conversa; pessoa removid
         marcadores: [{ conversaId: '4-9', lidaAteDate }, { conversaId: '4-15', lidaAteDate: null }],
     });
     assert.deepEqual(conversas.map((c) => [c.usuarioId, c.usuarioNome, c.naoLidas, c.silenciada]), [[9, 'Bruno', 2, true], [15, 'Usuário removido', 1, false]]);
+    assert.deepEqual(conversas.map((c) => c.corAvatar), ['#FDE047', null]);
 });
 
 test('buscar: sempre como a pessoa do token, com o período convertido e o filtro de código', async () => {
@@ -344,21 +373,24 @@ test('recuperarPreferencia: sem linha gravada vale o padrão do shared (uma cóp
     assert.deepEqual(dados, PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA);
     assert.notEqual(dados, PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA);
 
-    const gravada = { avisosAtivos: false, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: null, atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CENTRO };
+    const gravada = { avisosAtivos: false, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: null, atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CENTRO, posicaoBarra: PosicaoBarraChatEnum.DIREITA };
     assert.deepEqual((await montar({ preferencia: gravada }).service.recuperarPreferencia(ANA)).dados, gravada);
 
     // Linha anterior à task 221: a coluna da posição é nula e vale o padrão do shared.
-    const antiga = { ...gravada, posicaoPopup: null };
-    assert.equal((await montar({ preferencia: antiga }).service.recuperarPreferencia(ANA)).dados!.posicaoPopup, PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoPopup);
+    const antiga = { ...gravada, posicaoPopup: null, posicaoBarra: null };
+    const recuperada = (await montar({ preferencia: antiga }).service.recuperarPreferencia(ANA)).dados!;
+    assert.equal(recuperada.posicaoPopup, PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoPopup);
+    assert.equal(recuperada.posicaoBarra, PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoBarra, 'linha anterior à task 318: a barra fica à esquerda');
 });
 
 test('alterarPreferencia: grava para a pessoa do token, convertendo o fim do silêncio; data inválida é recusada', async () => {
     const { service, chamadas } = montar();
-    const dto = { avisosAtivos: true, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: '2026-10-21T16:00:00.000Z', atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CANTO_SUPERIOR_ESQUERDO };
+    const dto = { avisosAtivos: true, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: '2026-10-21T16:00:00.000Z', atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CANTO_SUPERIOR_ESQUERDO, posicaoBarra: PosicaoBarraChatEnum.ABAIXO };
     await service.alterarPreferencia(dto, ANA);
-    const gravada = chamadas.alterarPreferencia[0] as { usuarioId: number; silenciadoAteDate: Date; posicaoPopup: string };
+    const gravada = chamadas.alterarPreferencia[0] as { usuarioId: number; silenciadoAteDate: Date; posicaoPopup: string; posicaoBarra: string };
     assert.equal(gravada.usuarioId, 4);
     assert.equal(gravada.posicaoPopup, PosicaoPopupChatEnum.CANTO_SUPERIOR_ESQUERDO);
+    assert.equal(gravada.posicaoBarra, PosicaoBarraChatEnum.ABAIXO);
     assert.equal(gravada.silenciadoAteDate.toISOString(), '2026-10-21T16:00:00.000Z');
 
     await service.alterarPreferencia({ ...dto, silenciadoAteDate: null }, ANA);
@@ -439,7 +471,7 @@ test('listarConversas: online vem da presença global', async () => {
 test('listarPessoas: as ativas, menos quem pergunta, com tipo e presença — para qualquer tipo de usuário', async () => {
     const { service } = montar({
         online: [9],
-        ativos: [{ id: 4, nome: 'Ana' }, { id: 9, nome: 'Bruno' }, { id: 15, nome: 'Carla', tipo: TipoUsuarioEnum.GESTOR }],
+        ativos: [{ id: 4, nome: 'Ana' }, { id: 9, nome: 'Bruno', corAvatar: '#1E3A8A' }, { id: 15, nome: 'Carla', tipo: TipoUsuarioEnum.GESTOR }],
     });
     for (const quem of [ANA, GESTOR]) {
         const { pessoas } = (await service.listarPessoas(quem)).dados!;
@@ -447,8 +479,8 @@ test('listarPessoas: as ativas, menos quem pergunta, com tipo e presença — pa
     }
     const { pessoas } = (await service.listarPessoas(ANA)).dados!;
     assert.deepEqual(pessoas, [
-        { usuarioId: 9, usuarioNome: 'Bruno', tipo: TipoUsuarioEnum.DESENVOLVEDOR, online: true },
-        { usuarioId: 15, usuarioNome: 'Carla', tipo: TipoUsuarioEnum.GESTOR, online: false },
+        { usuarioId: 9, usuarioNome: 'Bruno', tipo: TipoUsuarioEnum.DESENVOLVEDOR, online: true, corAvatar: '#1E3A8A' },
+        { usuarioId: 15, usuarioNome: 'Carla', tipo: TipoUsuarioEnum.GESTOR, online: false, corAvatar: null },
     ]);
 });
 
@@ -496,4 +528,159 @@ test('recuperarReferencia: o gestor vê a atividade mesmo sem atribuição à de
     const { dados } = await service.recuperarReferencia({ tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 57 }, GESTOR);
     assert.equal(dados!.acessivel, true);
     assert.equal(chamadas.acessoDemanda, undefined);
+});
+
+// --- editar (task 313) -----------------------------------------------------
+
+const edicao = (parcial: Record<string, unknown> = {}) => ({ destinatarioId: BRUNO_ID, mensagemId: UUID.toLowerCase(), texto: 'texto corrigido', ...parcial }) as never;
+/** A mensagem da Ana (id 4) para o Bruno, enviada às 14:00 UTC; o relógio dos testes é fixado em torno dela. */
+const DA_ANA = () => mensagem({ texto: 'texto original' });
+
+test('alterarMensagem: o autor edita dentro de 1 hora; grava para a conversa do par, avisa as duas pontas e devolve "editada"', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T14:30:00.000Z') });
+    const { service, chamadas } = montar({ originais: [DA_ANA()] });
+    const resposta = await service.alterarMensagem(edicao({ texto: 'Veja ```ts\nconst a = 1;\n``` agora' }), ANA);
+
+    assert.equal(resposta.sucesso, true);
+    assert.equal(resposta.dados!.mensagem.texto, 'Veja ```ts\nconst a = 1;\n``` agora');
+    assert.ok(resposta.dados!.mensagem.editadaDate instanceof Date);
+    const gravada = chamadas.alterarMensagem[0] as { conversaId: string; autorUsuarioId: number; contemCodigo: boolean; mensagemId: string };
+    assert.equal(gravada.conversaId, '4-9');
+    assert.equal(gravada.autorUsuarioId, 4, 'o autor vem do token');
+    assert.equal(gravada.contemCodigo, true, 'recalcula o que deriva do texto');
+    assert.equal(gravada.mensagemId, UUID.toLowerCase());
+    const evento = chamadas.publicar[0] as { usuarioIds: number[]; evento: { tipo: string } };
+    assert.deepEqual(evento.usuarioIds, [4, 9]);
+    assert.equal(evento.evento.tipo, 'EDICAO');
+});
+
+test('alterarMensagem: no limite de 1 hora ainda edita; um instante depois recusa e não grava', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T15:00:00.000Z') });
+    const noLimite = montar({ originais: [DA_ANA()] });
+    assert.equal((await noLimite.service.alterarMensagem(edicao(), ANA)).sucesso, true);
+
+    contexto.mock.timers.setTime(new Date('2026-10-21T15:00:00.001Z').getTime());
+    const passou = montar({ originais: [DA_ANA()] });
+    await recusaComMensagem(passou.service.alterarMensagem(edicao(), ANA), /prazo de 1 hora/i);
+    assert.equal(passou.chamadas.alterarMensagem, undefined);
+    assert.equal(passou.chamadas.publicar, undefined);
+});
+
+test('alterarMensagem: só o autor edita (o outro lado recebe 403) e a mensagem do sistema não se edita', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T14:10:00.000Z') });
+    const doBruno = montar({ originais: [DA_ANA()], usuarios: { 4: {}, 9: {} } });
+    const BRUNO_TOKEN = { sub: 9, login: 'bruno', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+    await assert.rejects(doBruno.service.alterarMensagem({ destinatarioId: 4, mensagemId: UUID.toLowerCase(), texto: 'x' } as never, BRUNO_TOKEN), (erro: unknown) => erro instanceof UnauthorizedAccessException);
+    assert.equal(doBruno.chamadas.alterarMensagem, undefined);
+
+    const doSistema = montar({ originais: [mensagem({ autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null })] });
+    await recusaComMensagem(doSistema.service.alterarMensagem(edicao(), ANA), /sistema/i);
+});
+
+test('alterarMensagem: mensagem de outra conversa ou inexistente é "não encontrada"; a pessoa de si mesma e a inexistente são recusadas', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T14:10:00.000Z') });
+    const { service, chamadas } = montar({ originais: [mensagem({ conversaId: '4-12' })] });
+    await assert.rejects(service.alterarMensagem(edicao(), ANA), (erro: unknown) => erro instanceof ResourceNotFoundException);
+    await recusaComMensagem(service.alterarMensagem(edicao({ destinatarioId: 4 }), ANA), /outra pessoa/i);
+    await assert.rejects(service.alterarMensagem(edicao({ destinatarioId: 77 }), ANA), (erro: unknown) => erro instanceof ResourceNotFoundException);
+    assert.equal(chamadas.alterarMensagem, undefined);
+});
+
+test('alterarMensagem: texto igual ao atual não grava nem avisa', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T14:10:00.000Z') });
+    const { service, chamadas } = montar({ originais: [DA_ANA()] });
+    const resposta = await service.alterarMensagem(edicao({ texto: 'texto original' }), ANA);
+    assert.equal(resposta.sucesso, true);
+    assert.equal(resposta.dados!.mensagem.editadaDate, null);
+    assert.equal(chamadas.alterarMensagem, undefined);
+    assert.equal(chamadas.publicar, undefined);
+});
+
+test('alterarMensagem: se a mensagem some entre a leitura e a gravação, é "não encontrada" e ninguém é avisado', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T14:10:00.000Z') });
+    const { service, chamadas } = montar({ originais: [DA_ANA()], edicaoNaoAchada: true });
+    await assert.rejects(service.alterarMensagem(edicao(), ANA), (erro: unknown) => erro instanceof ResourceNotFoundException);
+    assert.equal(chamadas.publicar, undefined);
+});
+
+// --- reagir (task 314) -----------------------------------------------------
+
+const reacao = (parcial: Record<string, unknown> = {}) => ({ destinatarioId: 4, mensagemId: UUID.toLowerCase(), reacao: '👍', ...parcial }) as never;
+const AMBOS = { 4: {}, [BRUNO_ID]: {} };
+const BRUNO_TOKEN = { sub: BRUNO_ID, login: 'bruno', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+
+test('reagirMensagem: grava a reação de quem reage, devolve a lista e avisa as duas pontas com o autor e a reação nova', async () => {
+    const { service, chamadas } = montar({ usuarios: AMBOS, originais: [DA_ANA()] });
+    const resposta = await service.reagirMensagem(reacao({ reacao: '🎉' }), BRUNO_TOKEN);
+
+    assert.deepEqual(chamadas.definirReacao, [{ mensagemId: UUID.toLowerCase(), conversaId: '4-9', usuarioId: BRUNO_ID, reacao: '🎉' }]);
+    assert.deepEqual(resposta.dados, { mensagemId: UUID.toLowerCase(), reacoes: [{ usuarioId: BRUNO_ID, reacao: '🎉' }] });
+    const publicado = chamadas.publicar[0] as { usuarioIds: number[]; evento: Record<string, unknown> };
+    assert.deepEqual(publicado.usuarioIds, [BRUNO_ID, 4]);
+    assert.deepEqual(publicado.evento, {
+        tipo: 'REACAO', conversaId: '4-9', mensagemId: UUID.toLowerCase(), reacoes: [{ usuarioId: BRUNO_ID, reacao: '🎉' }], reatorUsuarioId: BRUNO_ID, autorUsuarioId: 4, reacao: '🎉',
+    });
+});
+
+test('reagirMensagem: outro emoji troca a reação; o mesmo de novo (ou null) remove, e a remoção avisa com reacao null', async () => {
+    const { service, chamadas } = montar({ usuarios: AMBOS, originais: [DA_ANA()], reacoes: [{ mensagemId: UUID.toLowerCase(), usuarioId: BRUNO_ID, reacao: '👍' }] });
+
+    const troca = await service.reagirMensagem(reacao({ reacao: '❤️' }), BRUNO_TOKEN);
+    assert.deepEqual(troca.dados!.reacoes, [{ usuarioId: BRUNO_ID, reacao: '❤️' }]);
+
+    const mesma = await service.reagirMensagem(reacao({ reacao: '❤️' }), BRUNO_TOKEN);
+    assert.deepEqual(mesma.dados!.reacoes, []);
+    assert.equal(chamadas.removerReacao.length, 1);
+    const aviso = (chamadas.publicar[1] as { evento: { reacao: string | null } }).evento;
+    assert.equal(aviso.reacao, null, 'remover não avisa o autor: o cliente só avisa quando há reação nova');
+
+    await service.reagirMensagem(reacao({ reacao: '😂' }), BRUNO_TOKEN);
+    const semReacao = await service.reagirMensagem(reacao({ reacao: null }), BRUNO_TOKEN);
+    assert.deepEqual(semReacao.dados!.reacoes, []);
+});
+
+test('reagirMensagem: o autor pode reagir à própria mensagem, e as duas pessoas ficam na lista', async () => {
+    const { service } = montar({ usuarios: AMBOS, originais: [DA_ANA()], reacoes: [{ mensagemId: UUID.toLowerCase(), usuarioId: BRUNO_ID, reacao: '👍' }] });
+    const resposta = await service.reagirMensagem(reacao({ destinatarioId: BRUNO_ID, reacao: '🙏' }), ANA);
+    assert.deepEqual(resposta.dados!.reacoes, [{ usuarioId: BRUNO_ID, reacao: '👍' }, { usuarioId: 4, reacao: '🙏' }]);
+});
+
+test('reagirMensagem: recusa o que não é um emoji, a mensagem do sistema, a de outra conversa, a inexistente e a pessoa de si mesma — e não grava nem avisa', async () => {
+    const sistema = mensagem({ autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null });
+    const comEmojiInvalido = montar({ usuarios: AMBOS, originais: [DA_ANA()] });
+    await recusaComMensagem(comEmojiInvalido.service.reagirMensagem(reacao({ reacao: 'oi' }), BRUNO_TOKEN), /único emoji/i);
+    await recusaComMensagem(comEmojiInvalido.service.reagirMensagem(reacao({ reacao: '👍👍' }), BRUNO_TOKEN), /único emoji/i);
+    await recusaComMensagem(comEmojiInvalido.service.reagirMensagem(reacao({ destinatarioId: BRUNO_ID }), BRUNO_TOKEN), /outra pessoa/i);
+
+    const doSistema = montar({ usuarios: AMBOS, originais: [sistema] });
+    await recusaComMensagem(doSistema.service.reagirMensagem(reacao(), BRUNO_TOKEN), /sistema/i);
+
+    const deOutraConversa = montar({ usuarios: AMBOS, originais: [mensagem({ conversaId: '4-12' })] });
+    await assert.rejects(deOutraConversa.service.reagirMensagem(reacao(), BRUNO_TOKEN), (erro: unknown) => erro instanceof ResourceNotFoundException);
+    await assert.rejects(deOutraConversa.service.reagirMensagem(reacao({ destinatarioId: 77 }), BRUNO_TOKEN), (erro: unknown) => erro instanceof ResourceNotFoundException);
+
+    for (const { chamadas } of [comEmojiInvalido, doSistema, deOutraConversa]) {
+        assert.equal(chamadas.definirReacao, undefined);
+        assert.equal(chamadas.removerReacao, undefined);
+        assert.equal(chamadas.publicar, undefined);
+    }
+});
+
+test('listarConversa: junta as reações às mensagens da página numa consulta só; mensagem sem reação fica com lista vazia', async () => {
+    const { service, chamadas } = montar({ reacoes: [{ mensagemId: UUID.toLowerCase(), usuarioId: BRUNO_ID, reacao: '👍' }] });
+    const { dados } = await service.listarConversa({ usuarioId: BRUNO_ID } as never, ANA);
+    assert.deepEqual(dados!.mensagens[0].reacoes, [{ usuarioId: BRUNO_ID, reacao: '👍' }]);
+    assert.equal(chamadas.listarReacoes.length, 1);
+    assert.deepEqual((chamadas.listarReacoes[0] as { mensagemIds: string[] }).mensagemIds, [UUID.toLowerCase()]);
+
+    const vazia = montar();
+    assert.deepEqual((await vazia.service.listarConversa({ usuarioId: BRUNO_ID } as never, ANA)).dados!.mensagens[0].reacoes, []);
+});
+
+test('alterarMensagem: a mensagem editada devolve e avisa com as reações que ela já tem', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-21T14:10:00.000Z') });
+    const { service, chamadas } = montar({ usuarios: AMBOS, originais: [DA_ANA()], reacoes: [{ mensagemId: UUID.toLowerCase(), usuarioId: BRUNO_ID, reacao: '👍' }] });
+    const resposta = await service.alterarMensagem(edicao(), ANA);
+    assert.deepEqual(resposta.dados!.mensagem.reacoes, [{ usuarioId: BRUNO_ID, reacao: '👍' }]);
+    assert.deepEqual((chamadas.publicar[0] as { evento: { mensagem: { reacoes: unknown } } }).evento.mensagem.reacoes, [{ usuarioId: BRUNO_ID, reacao: '👍' }]);
 });

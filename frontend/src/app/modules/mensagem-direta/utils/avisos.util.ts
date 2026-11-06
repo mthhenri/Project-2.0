@@ -128,6 +128,8 @@ export interface NovaMensagemParaAviso {
     markdown?: string;
     mencionaVoce: boolean;
     agora: number;
+    /** Aviso que não é mensagem nova (a reação, task 314): não entra na contagem "N mensagens novas" do cartão. */
+    semContar?: boolean;
 }
 
 /**
@@ -137,8 +139,8 @@ export interface NovaMensagemParaAviso {
 export function somarAviso(avisos: AvisoNaTela[], nova: NovaMensagemParaAviso): AvisoNaTela[] {
     const existente = avisos.find((aviso) => aviso.id === nova.conversaId);
     const atualizado: AvisoNaTela = existente
-        ? { ...existente, usuarioNome: nova.usuarioNome, texto: nova.texto, markdown: nova.markdown, mencionaVoce: existente.mencionaVoce || nova.mencionaVoce, quantidade: existente.quantidade + 1, atualizadoEm: nova.agora }
-        : { id: nova.conversaId, usuarioId: nova.usuarioId, usuarioNome: nova.usuarioNome, texto: nova.texto, markdown: nova.markdown, mencionaVoce: nova.mencionaVoce, quantidade: 1, atualizadoEm: nova.agora };
+        ? { ...existente, usuarioNome: nova.usuarioNome, texto: nova.texto, markdown: nova.markdown, mencionaVoce: existente.mencionaVoce || nova.mencionaVoce, quantidade: existente.quantidade + (nova.semContar ? 0 : 1), atualizadoEm: nova.agora }
+        : { id: nova.conversaId, usuarioId: nova.usuarioId, usuarioNome: nova.usuarioNome, texto: nova.texto, markdown: nova.markdown, mencionaVoce: nova.mencionaVoce, quantidade: nova.semContar ? 0 : 1, atualizadoEm: nova.agora };
     return [atualizado, ...avisos.filter((aviso) => aviso.id !== nova.conversaId)].slice(0, MAXIMO_DE_AVISOS_NA_TELA);
 }
 

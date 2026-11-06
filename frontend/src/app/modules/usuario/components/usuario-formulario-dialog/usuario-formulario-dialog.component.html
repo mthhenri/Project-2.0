@@ -66,6 +66,13 @@
             </div>
         </div>
 
+        @if (usuarioEmEdicao(); as usuarioAtual) {
+            <div class="usuario-formulario-dialog__campo">
+                <span class="usuario-formulario-dialog__label">Cor da bolinha</span>
+                <app-usuario-cor-seletor [nome]="usuarioAtual.nomeCompleto" [(cor)]="corAvatar" />
+            </div>
+        }
+
         <div class="usuario-formulario-dialog__linha">
             <div class="usuario-formulario-dialog__campo">
                 <label for="login" class="usuario-formulario-dialog__label"

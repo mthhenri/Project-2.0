@@ -28,12 +28,15 @@ import {
     validarConsultaNaoLidas,
 } from '../domain/mensagem-direta-consultas';
 import {
+    MensagemDiretaAlterar,
     MensagemDiretaFonte,
     MensagemDiretaNova,
     REGEX_UUID,
     deFonteDireta,
     mesmaOrigemDaMensagem,
+    paraCamposDeEdicao,
     paraFonteDireta,
+    validarMensagemDiretaAlterar,
     validarMensagemDiretaNova,
 } from '../domain/mensagem-direta.documento';
 import { ArmazenamentoDeMensagemDireta } from './armazenamento-de-mensagem-direta';
@@ -67,6 +70,8 @@ export abstract class MensagemDiretaIndiceRepository implements ArmazenamentoDeM
     protected abstract gravarDocumentoNovo(indice: string, id: string, documento: unknown): Promise<boolean>;
     /** O documento com esse `id`, ou `null` se não existe. */
     protected abstract lerDocumento(indice: string, id: string): Promise<MensagemDiretaFonte | null>;
+    /** Troca só os campos dados do documento (atualização parcial) e espera o índice atualizar. */
+    protected abstract atualizarDocumento(indice: string, id: string, campos: Partial<MensagemDiretaFonte>): Promise<void>;
     protected abstract pesquisar(indice: string, consulta: unknown): Promise<ResultadoDaPesquisaDireta>;
 
     /** O serviço fora do ar na subida não derruba o backend: o chat fica indisponível e o índice é criado na primeira chamada. */
@@ -92,6 +97,20 @@ export abstract class MensagemDiretaIndiceRepository implements ArmazenamentoDeM
             if (!existente) throw new Error('O documento existia na gravação e não foi encontrado na leitura');
             if (!mesmaOrigemDaMensagem(existente, mensagem)) throw new BusinessException('Esse identificador de mensagem já foi usado');
             return { mensagem: deFonteDireta(existente), jaExistia: true };
+        });
+    }
+
+    async alterarMensagem(alteracao: MensagemDiretaAlterar): Promise<MensagemDiretaResumoDto | null> {
+        validarMensagemDiretaAlterar(alteracao);
+        return this.proteger(async () => {
+            await this.garantirIndice();
+            const id = alteracao.mensagemId.toLowerCase();
+            const existente = await this.lerDocumento(INDICE_MENSAGEM_DIRETA, id);
+            // Só o autor altera a mensagem dele, na conversa dele; qualquer outra coisa é "não achada".
+            if (!existente || existente.conversa_id !== alteracao.conversaId || existente.autor_usuario_id !== alteracao.autorUsuarioId) return null;
+            const campos = paraCamposDeEdicao(alteracao, new Date());
+            await this.atualizarDocumento(INDICE_MENSAGEM_DIRETA, id, campos);
+            return deFonteDireta({ ...existente, ...campos });
         });
     }
 

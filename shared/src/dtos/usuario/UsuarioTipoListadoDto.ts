@@ -5,4 +5,6 @@ export interface UsuarioTipoListadoDto {
     id: number;
     nomeCompleto: string;
     tipo: TipoUsuarioEnum;
+    /** Cor da bolinha escolhida; `null` = cor padrão. */
+    corAvatar: string | null;
 }

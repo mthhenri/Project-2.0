@@ -6,6 +6,7 @@ import { MensagemDiretaController } from './controllers/mensagem-direta.controll
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, armazenamentoDeMensagemDiretaProvider } from './repositories/armazenamento-de-mensagem-direta';
 import { MensagemDiretaLeituraRepository } from './repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPreferenciaRepository } from './repositories/mensagem-direta-preferencia.repository';
+import { MensagemDiretaReacaoRepository } from './repositories/mensagem-direta-reacao.repository';
 import { MensagemDiretaSupervisaoRepository } from './repositories/mensagem-direta-supervisao.repository';
 import { publicadorDeEventosDiretosProvider } from './publicadores/publicador-de-eventos-diretos';
 import { MensagemDiretaEventosService } from './services/mensagem-direta-eventos.service';
@@ -24,6 +25,7 @@ import { MensagemDiretaService } from './services/mensagem-direta.service';
         publicadorDeEventosDiretosProvider,
         MensagemDiretaLeituraRepository,
         MensagemDiretaPreferenciaRepository,
+        MensagemDiretaReacaoRepository,
         MensagemDiretaSupervisaoRepository,
         MensagemDiretaEventosService,
         MensagemDiretaService,

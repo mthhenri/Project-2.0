@@ -25,6 +25,8 @@ export interface MensagemParaAvisar extends Omit<EntradaDaDecisaoDeAviso, 'prefe
     texto: string;
     /** O Markdown da mensagem, que o cartão do Project renderiza. */
     markdown?: string;
+    /** Aviso que não é mensagem nova (a reação, task 314): não entra na contagem do cartão. */
+    semContar?: boolean;
 }
 
 /**
@@ -91,6 +93,7 @@ export class MensagemDiretaAvisosService {
                     silenciadoAteDate: proxima.silenciadoAteDate ? proxima.silenciadoAteDate.toISOString() : null,
                     atalhoGlobal: proxima.atalhoGlobal,
                     posicaoPopup: proxima.posicaoPopup,
+                    posicaoBarra: proxima.posicaoBarra,
                 }),
             );
             if (sessao !== this.geracaoDaSessao) return;
@@ -141,6 +144,7 @@ export class MensagemDiretaAvisosService {
                 markdown: mensagem.markdown,
                 mencionaVoce: mensagem.mencionaVoce,
                 agora: agora.getTime(),
+                semContar: mensagem.semContar,
             }),
         );
         if (this.preferencia().somAtivo) this.som.tocar();

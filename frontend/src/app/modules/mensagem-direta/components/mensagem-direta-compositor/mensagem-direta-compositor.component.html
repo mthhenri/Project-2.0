@@ -37,6 +37,7 @@
                         @if (item.nomeDoAvatar) {
                             <app-mensagem-direta-avatar
                                 [nome]="item.nomeDoAvatar"
+                                [cor]="item.corDoAvatar"
                                 [pequeno]="true"
                             />
                         } @else {
@@ -90,6 +91,37 @@
         </div>
     }
 
+    @if (edicao(); as alvo) {
+        <div class="compositor-direto__resposta" role="group" aria-label="Edição em preparo">
+            <span class="compositor-direto__resposta-texto">
+                <span class="compositor-direto__resposta-nome">Editando mensagem</span>
+                <span class="compositor-direto__resposta-trecho">{{ trechoDaEdicao() }}</span>
+                @if (erroDaEdicao(); as motivo) {
+                    <span class="compositor-direto__resposta-erro" role="alert">{{ motivo }}</span>
+                }
+            </span>
+            <p-button
+                icon="pi pi-times"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                ariaLabel="Cancelar a edição"
+                pTooltip="Cancelar a edição (Esc)"
+                tooltipPosition="top"
+                (onClick)="cancelarEdicao.emit()"
+            />
+        </div>
+    }
+
+    @if (seletorDeEmojiAberto()) {
+        <app-mensagem-direta-emoji-seletor
+            class="compositor-direto__emojis"
+            (escolher)="inserirEmoji($event)"
+            (fechar)="fecharSeletorDeEmoji()"
+        />
+    }
+
     <div class="compositor-direto__caixa" [attr.inert]="painelDeCodigo() ? '' : null">
         <app-editor-mensagem
             class="compositor-direto__campo"
@@ -103,6 +135,18 @@
             (teclou)="aoTeclar($event)"
             (colou)="aoColar($event)"
             (perdeuFoco)="aoPerderOFoco()"
+        />
+        <p-button
+            class="compositor-direto__emoji"
+            icon="pi pi-face-smile"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Inserir emoji"
+            pTooltip="Emoji"
+            tooltipPosition="top"
+            (onClick)="alternarSeletorDeEmoji()"
         />
         <p-button
             class="compositor-direto__codigo"
@@ -119,8 +163,12 @@
         <button
             type="submit"
             class="compositor-direto__enviar"
-            aria-label="Enviar mensagem"
-            pTooltip="Enviar (Enter) · Shift+Enter nova linha · Ctrl+Enter envia em lista e código"
+            [attr.aria-label]="edicao() ? 'Salvar edição' : 'Enviar mensagem'"
+            [pTooltip]="
+                edicao()
+                    ? 'Salvar a edição (Enter)'
+                    : 'Enviar (Enter) · Shift+Enter nova linha · Ctrl+Enter envia em lista e código'
+            "
             tooltipPosition="top"
             [disabled]="!podeEnviar()"
         >

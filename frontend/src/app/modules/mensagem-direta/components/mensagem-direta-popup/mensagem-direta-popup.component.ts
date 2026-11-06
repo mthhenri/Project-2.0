@@ -1,12 +1,14 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, OnDestroy, OnInit, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, OnDestroy, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
+import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { MensagemDiretaPosicaoService } from '../../services/mensagem-direta-posicao.service';
 import { AVISO_DE_LEITURA_DAS_CONVERSAS } from '../../utils/mensagem-direta.util';
 import { CantoDoPopup, PASSO_DO_TECLADO_PX, PASSO_GRANDE_DO_TECLADO_PX, Retangulo, moverPopup, redimensionarPopup } from '../../utils/posicao-popup.util';
 import { MensagemDiretaBarraComponent } from '../mensagem-direta-barra/mensagem-direta-barra.component';
+import { MensagemDiretaConfiguracoesComponent } from '../mensagem-direta-configuracoes/mensagem-direta-configuracoes.component';
 import { MensagemDiretaConversaComponent } from '../mensagem-direta-conversa/mensagem-direta-conversa.component';
 import { MensagemDiretaListaComponent } from '../mensagem-direta-lista/mensagem-direta-lista.component';
 import { MensagemDiretaNovaComponent } from '../mensagem-direta-nova/mensagem-direta-nova.component';
@@ -22,7 +24,7 @@ import { MensagemDiretaNovaComponent } from '../mensagem-direta-nova/mensagem-di
 @Component({
     selector: 'app-mensagem-direta-popup',
     standalone: true,
-    imports: [TooltipModule, MensagemDiretaBarraComponent, MensagemDiretaListaComponent, MensagemDiretaConversaComponent, MensagemDiretaNovaComponent],
+    imports: [TooltipModule, MensagemDiretaBarraComponent, MensagemDiretaListaComponent, MensagemDiretaConversaComponent, MensagemDiretaNovaComponent, MensagemDiretaConfiguracoesComponent],
     templateUrl: './mensagem-direta-popup.component.html',
     styleUrl: './mensagem-direta-popup.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,6 +36,9 @@ export class MensagemDiretaPopupComponent implements OnInit, OnDestroy {
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly posicao = inject(MensagemDiretaPosicaoService);
+    private readonly avisos = inject(MensagemDiretaAvisosService);
+    /** Onde a barra de conversas fica em relação à conversa aberta (task 318). */
+    protected readonly posicaoDaBarra = computed(() => this.avisos.preferencia().posicaoBarra);
 
     protected readonly retangulo = this.posicao.retangulo;
     protected readonly cantoDaAlca = this.posicao.cantoDaAlca;

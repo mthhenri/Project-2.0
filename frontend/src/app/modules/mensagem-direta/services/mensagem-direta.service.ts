@@ -5,6 +5,8 @@ import {
     ConversaDiretaListadasDto,
     ConversaDiretaSupervisaoListadasDto,
     MensagemDiretaBuscadoDto,
+    MensagemDiretaEditadaDto,
+    MensagemDiretaEditarDto,
     MensagemDiretaEnviadaDto,
     MensagemDiretaEnviarDto,
     MensagemDiretaLeituraAlteradaDto,
@@ -13,6 +15,8 @@ import {
     MensagemDiretaPreferenciaAlterarDto,
     MensagemDiretaPreferenciaAlteradaDto,
     MensagemDiretaPreferenciaRecuperadaDto,
+    MensagemDiretaReagidaDto,
+    MensagemDiretaReagirDto,
     MensagemDiretaSilencioAlteradoDto,
     MensagemDiretaSupervisaoListadasDto,
     MensagemDiretaSupervisaoListarDto,
@@ -42,6 +46,16 @@ export class MensagemDiretaService {
         let params = new HttpParams();
         if (cursor) params = params.set('cursor', cursor);
         return this.httpClient.get<StandardResponse<MensagemDiretaListadasDto>>(`${this.urlBase}/conversa/${usuarioId}`, { params, ...comFeedbackProprioEErroTratado() });
+    }
+
+    /** Edita o texto de uma mensagem própria (task 313): só o autor, até 1 hora depois do envio. */
+    editarMensagem(dto: MensagemDiretaEditarDto): Observable<StandardResponse<MensagemDiretaEditadaDto>> {
+        return this.httpClient.patch<StandardResponse<MensagemDiretaEditadaDto>>(`${this.urlBase}/mensagem`, dto, comFeedbackProprioEErroTratado());
+    }
+
+    /** Reage a uma mensagem da conversa com um emoji (o mesmo de antes tira a reação; outro troca) (task 314). */
+    reagirMensagem(dto: MensagemDiretaReagirDto): Observable<StandardResponse<MensagemDiretaReagidaDto>> {
+        return this.httpClient.put<StandardResponse<MensagemDiretaReagidaDto>>(`${this.urlBase}/reacao`, dto, comFeedbackProprioEErroTratado());
     }
 
     enviarMensagem(dto: MensagemDiretaEnviarDto): Observable<StandardResponse<MensagemDiretaEnviadaDto>> {

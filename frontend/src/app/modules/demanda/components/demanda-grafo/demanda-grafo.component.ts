@@ -32,6 +32,9 @@ interface CartaoNo {
     no: DemandaGrafoNoDto;
     esquerda: number;
     topo: number;
+    /** O cartão fica à esquerda/acima do ponto (e não à direita/abaixo) quando não cabe: a largura real não importa. */
+    paraEsquerda: boolean;
+    paraCima: boolean;
 }
 
 type NoSimulado = DemandaGrafoNoDto & d3.SimulationNodeDatum;
@@ -144,7 +147,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     /** Enquadra o projeto todo na tela, sem aproximar além do tamanho normal. */
-    private ajustarAoGrafo(): void {
+    private ajustarAoGrafo(animar = true): void {
         if (!this.svgSelecao || !this.comportamentoZoom) return;
         const dentro = this.nosSimulados.filter((no) => no.x !== undefined && no.y !== undefined);
         if (!dentro.length) return;
@@ -161,7 +164,8 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             .translate(largura / 2, altura / 2)
             .scale(escala)
             .translate(-(minX + maxX) / 2, -(minY + maxY) / 2);
-        this.svgSelecao.transition().duration(350).call(this.comportamentoZoom.transform, transformacao);
+        if (animar) this.svgSelecao.transition().duration(350).call(this.comportamentoZoom.transform, transformacao);
+        else this.svgSelecao.call(this.comportamentoZoom.transform, transformacao);
     }
 
     /** A marca do status dentro do nó: ponto (planejada), ✓ (concluída) e risco (cancelada); a pendente fica vazia. */
@@ -427,6 +431,18 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             }
         });
 
+        // Recorte da aba Conexões: poucos nós e o foco fixo. Assenta o layout de uma vez, sem a animação em que os nós nascem juntos e
+        // se afastam "como uma mola", e desenha já enquadrado.
+        if (this.modo === 'recorte') {
+            this.simulacao.stop();
+            this.simulacao.tick(300);
+            this.simulacao.on('tick')?.call(this.simulacao);
+            this.ajusteInicialFeito = true;
+            this.ajusteFinalFeito = true;
+            this.ajustarAoGrafo(false);
+            return;
+        }
+
         // A repulsão continua afastando os blocos desconectados depois do primeiro enquadramento: ao assentar, enquadra de novo (P-060).
         this.simulacao.on('end', () => {
             if (this.ajusteFinalFeito) return;
@@ -482,13 +498,13 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     /** Posiciona o cartão ao lado do cursor, virando para o outro lado perto das bordas do canvas. */
     private mostrarCartao(evento: MouseEvent, no: DemandaGrafoNoDto): void {
         const caixa = (this.elementRef.nativeElement as HTMLElement).getBoundingClientRect();
-        const larguraCartao = 280;
+        const larguraCartao = 280; // estimativa só para decidir o lado; o cartão cresce com o conteúdo
         const alturaCartao = 150;
-        let esquerda = evento.clientX - caixa.left + 16;
-        let topo = evento.clientY - caixa.top + 16;
-        if (esquerda + larguraCartao > caixa.width) esquerda = evento.clientX - caixa.left - larguraCartao - 16;
-        if (topo + alturaCartao > caixa.height) topo = evento.clientY - caixa.top - alturaCartao - 16;
-        this.cartao.set({ no, esquerda: Math.max(8, esquerda), topo: Math.max(8, topo) });
+        const paraEsquerda = evento.clientX - caixa.left + 16 + larguraCartao > caixa.width;
+        const paraCima = evento.clientY - caixa.top + 16 + alturaCartao > caixa.height;
+        const esquerda = evento.clientX - caixa.left + (paraEsquerda ? -16 : 16);
+        const topo = evento.clientY - caixa.top + (paraCima ? -16 : 16);
+        this.cartao.set({ no, esquerda: Math.max(8, esquerda), topo: Math.max(8, topo), paraEsquerda, paraCima });
     }
 
     private calcularRaioNo(no: DemandaGrafoNoDto): number {

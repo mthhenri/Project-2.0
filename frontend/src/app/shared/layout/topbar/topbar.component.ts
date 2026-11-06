@@ -27,12 +27,16 @@ import { IaDisponibilidadeService } from '../../../core/services/ia-disponibilid
 import { MensagemDiretaEstadoService } from '../../../modules/mensagem-direta/services/mensagem-direta-estado.service';
 import { ChipExecucaoAtivaComponent } from './chip-execucao-ativa/chip-execucao-ativa.component';
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
+import { UsuarioCorDialogComponent } from '../../../modules/usuario/components/usuario-cor-dialog/usuario-cor-dialog.component';
+import { MensagemDiretaAvatarComponent } from '../../../modules/mensagem-direta/components/mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { CheckinProximoComponent } from '../../../modules/checkin/components/checkin-proximo/checkin-proximo.component';
 
 @Component({
     selector: 'app-topbar',
     standalone: true,
     imports: [
+        UsuarioCorDialogComponent,
+        MensagemDiretaAvatarComponent,
         ReactiveFormsModule,
         FormsModule,
         ToggleSwitchModule,
@@ -71,6 +75,14 @@ export class TopbarComponent {
     voltarParaAIa(): void {
         this.iaDisponibilidade.voltarParaAIa();
         void this.roteador.navigateByUrl('/chat');
+    }
+
+    @ViewChild('corDialog') private corDialog?: UsuarioCorDialogComponent;
+
+    /** "Editar cor" do perfil (task 316): fecha o popover e abre o diálogo com as prévias. */
+    editarCor(popover: { hide(): void }): void {
+        popover.hide();
+        this.corDialog?.abrir();
     }
 
     readonly coresSugeridas = CORES_SUGERIDAS;

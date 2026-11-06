@@ -1,6 +1,6 @@
 import * as assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { PosicaoPopupChatEnum, ReferenciaMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { PosicaoBarraChatEnum, PosicaoPopupChatEnum, ReferenciaMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { testarComBanco, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAtividade, criarDemanda, criarDemandaUsuario, criarDesenvolvedor, criarGestor, criarUsuario } from '../../../testes/fabricas';
@@ -10,6 +10,7 @@ import { UsuarioRepository } from '../../usuario/repositories/usuario.repository
 import { MensagemDiretaLeituraRepository } from '../repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPostgresRepository } from '../repositories/mensagem-direta-postgres.repository';
 import { MensagemDiretaPreferenciaRepository } from '../repositories/mensagem-direta-preferencia.repository';
+import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-reacao.repository';
 import { PublicadorEmMemoria } from '../publicadores/publicador-em-memoria';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 import { MensagemDiretaService } from './mensagem-direta.service';
@@ -22,6 +23,7 @@ function montar(conexao: ConexaoTeste) {
         new MensagemDiretaPostgresRepository(conexao),
         criarRepositorio(MensagemDiretaLeituraRepository, conexao),
         criarRepositorio(MensagemDiretaPreferenciaRepository, conexao),
+        criarRepositorio(MensagemDiretaReacaoRepository, conexao),
         criarRepositorio(UsuarioRepository, conexao),
         criarRepositorio(DemandaRepository, conexao),
         criarRepositorio(AtividadeRepository, conexao),
@@ -178,21 +180,23 @@ testarComBanco('preferências: o padrão do shared até a primeira alteração, 
     assert.equal(padrao.silenciadoAteDate, null);
 
     await service.alterarPreferencia(
-        { avisosAtivos: false, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: '2026-10-21T16:00:00.000Z', atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CANTO_SUPERIOR_DIREITO },
+        { avisosAtivos: false, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: '2026-10-21T16:00:00.000Z', atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CANTO_SUPERIOR_DIREITO, posicaoBarra: PosicaoBarraChatEnum.ACIMA },
         como(ana),
     );
     const gravada = (await service.recuperarPreferencia(como(ana))).dados!;
-    assert.deepEqual([gravada.avisosAtivos, gravada.somAtivo, gravada.atalhoGlobal, gravada.posicaoPopup], [false, true, 'Alt+F1', PosicaoPopupChatEnum.CANTO_SUPERIOR_DIREITO]);
+    assert.deepEqual([gravada.avisosAtivos, gravada.somAtivo, gravada.atalhoGlobal, gravada.posicaoPopup, gravada.posicaoBarra], [false, true, 'Alt+F1', PosicaoPopupChatEnum.CANTO_SUPERIOR_DIREITO, PosicaoBarraChatEnum.ACIMA]);
 
     // Linha anterior à task 221: a coluna da posição é nula e vale o padrão do shared.
     await conexao.raw(`
         UPDATE mensagem_direta_preferencia
         SET
-            posicao_popup = NULL
+            posicao_popup = NULL,
+            posicao_barra = NULL
         WHERE
             usuario_id = ?
     `, [ana.id]);
     assert.equal((await service.recuperarPreferencia(como(ana))).dados!.posicaoPopup, PosicaoPopupChatEnum.CANTO_INFERIOR_DIREITO);
+    assert.equal((await service.recuperarPreferencia(como(ana))).dados!.posicaoBarra, PosicaoBarraChatEnum.ESQUERDA);
     assert.equal(gravada.silenciadoAteDate?.toISOString(), '2026-10-21T16:00:00.000Z');
     assert.deepEqual((await service.recuperarPreferencia(como(bruno))).dados, padrao);
 });
@@ -212,4 +216,38 @@ testarComBanco('conversa com pessoa excluída: continua legível e o contador ze
     assert.equal((await service.listarConversas(como(ana))).dados!.conversas[0].naoLidas, 0);
     await service.alterarSilencio({ usuarioId: bruno.id, silenciada: true }, como(ana));
     await assert.rejects(service.enviarMensagem({ destinatarioId: bruno.id, mensagemId: randomUUID(), texto: 'oi' }, como(ana)));
+});
+
+testarComBanco('reagir: a reação vai para a tabela, junta às mensagens da conversa dos dois lados, troca, remove e a mensagem editada a mantém', async (conexao) => {
+    const service = montar(conexao);
+    const ana = await criarDesenvolvedor(conexao);
+    const bruno = await criarDesenvolvedor(conexao);
+    const enviada = await enviar(service, ana, bruno.id, 'resolvido o problema');
+    const mensagemId = enviada.mensagem.mensagemId;
+
+    await service.reagirMensagem({ destinatarioId: ana.id, mensagemId, reacao: '👍' }, como(bruno));
+    await service.reagirMensagem({ destinatarioId: bruno.id, mensagemId, reacao: '🎉' }, como(ana));
+    const deAna = (await service.listarConversa({ usuarioId: bruno.id }, como(ana))).dados!.mensagens[0].reacoes;
+    const deBruno = (await service.listarConversa({ usuarioId: ana.id }, como(bruno))).dados!.mensagens[0].reacoes;
+    assert.deepEqual(deAna, [{ usuarioId: bruno.id, reacao: '👍' }, { usuarioId: ana.id, reacao: '🎉' }]);
+    assert.deepEqual(deBruno, deAna);
+
+    await service.reagirMensagem({ destinatarioId: ana.id, mensagemId, reacao: '❤️' }, como(bruno));
+    const editada = await service.alterarMensagem({ destinatarioId: bruno.id, mensagemId, texto: 'resolvido o problema de vez' }, como(ana));
+    assert.deepEqual(editada.dados!.mensagem.reacoes.map((item) => item.reacao).sort(), ['❤️', '🎉']);
+
+    await service.reagirMensagem({ destinatarioId: ana.id, mensagemId, reacao: '❤️' }, como(bruno));
+    assert.deepEqual((await service.listarConversa({ usuarioId: ana.id }, como(bruno))).dados!.mensagens[0].reacoes, [{ usuarioId: ana.id, reacao: '🎉' }]);
+    const gravadas = await conexao.raw(`
+        SELECT
+            is_deleted
+        FROM
+            mensagem_direta_reacao
+        WHERE
+            usuario_id = ?
+        ORDER BY
+            id
+    `, [bruno.id]);
+    assert.equal(gravadas.rows.length, 1, 'trocar é UPDATE; remover é soft delete da mesma linha');
+    assert.equal(gravadas.rows[0].is_deleted, true);
 });

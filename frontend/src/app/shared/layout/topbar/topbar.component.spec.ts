@@ -179,6 +179,17 @@ describe('TopbarComponent — menu do perfil', () => {
         expect(sair).toHaveBeenCalledTimes(1);
     });
 
+    it('"Editar cor" fecha o perfil e abre o diálogo da cor com a cor atual da pessoa', async () => {
+        const montado = await montarBarra();
+        montado.componente.sessao.definirCorAvatar('#FDE047');
+        await abrirPerfil(montado);
+        expect(document.body.textContent).toContain('Minha cor');
+        botaoPorTexto('Editar cor')!.click();
+        await montado.atualizar();
+        expect(document.body.textContent).toContain('Cor da minha bolinha');
+        expect(document.body.textContent).toContain('#FDE047');
+    });
+
     it('o seletor "Tempos em dias" alterna a unidade de tempo', async () => {
         const montado = await montarBarra();
         await abrirPerfil(montado);

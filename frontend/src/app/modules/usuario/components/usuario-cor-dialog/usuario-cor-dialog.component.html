@@ -1,0 +1,92 @@
+<p-dialog
+    header="Cor da minha bolinha"
+    dialogFormulario
+    [dialogBloqueado]="carregando()"
+    (dialogEnviar)="salvar()"
+    [(visible)]="mostrarDialog"
+    [modal]="true"
+    [style]="{ width: '46rem', maxWidth: '95vw' }"
+    [draggable]="false"
+>
+    <div class="usuario-cor-dialog">
+        <section class="usuario-cor-dialog__escolha" aria-label="Escolher a cor">
+            <app-usuario-cor-seletor [nome]="nome()" [(cor)]="cor" />
+        </section>
+
+        <section class="usuario-cor-dialog__previas" aria-label="Como fica no chat">
+            <h3 class="usuario-cor-dialog__titulo">Como as pessoas veem você</h3>
+
+            <div class="usuario-cor-dialog__previa">
+                <span class="usuario-cor-dialog__legenda">Lista de conversas</span>
+                <div class="usuario-cor-dialog__linha">
+                    <app-mensagem-direta-avatar [nome]="nome()" [cor]="cor()" [online]="true" />
+                    <span class="usuario-cor-dialog__texto">
+                        <span class="usuario-cor-dialog__nome">{{ nome() }}</span>
+                        <span class="usuario-cor-dialog__trecho">Consegue olhar o PR de hoje?</span>
+                    </span>
+                    <span class="usuario-cor-dialog__hora">14:36</span>
+                </div>
+            </div>
+
+            <div class="usuario-cor-dialog__previa">
+                <span class="usuario-cor-dialog__legenda">Cabeçalho da conversa</span>
+                <div class="usuario-cor-dialog__linha">
+                    <app-mensagem-direta-avatar
+                        [nome]="nome()"
+                        [cor]="cor()"
+                        [online]="true"
+                        [pequeno]="true"
+                    />
+                    <span class="usuario-cor-dialog__texto">
+                        <span class="usuario-cor-dialog__nome">{{ nome() }}</span>
+                        <span class="usuario-cor-dialog__trecho">online</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="usuario-cor-dialog__previa">
+                <span class="usuario-cor-dialog__legenda">Barra de conversas</span>
+                <div class="usuario-cor-dialog__barra">
+                    <app-mensagem-direta-avatar
+                        nome="Ana Souza"
+                        [online]="false"
+                        [pequeno]="true"
+                    />
+                    <app-mensagem-direta-avatar
+                        [nome]="nome()"
+                        [cor]="cor()"
+                        [online]="true"
+                        [pequeno]="true"
+                    />
+                    <app-mensagem-direta-avatar
+                        nome="Bruno Lima"
+                        [online]="true"
+                        [pequeno]="true"
+                    />
+                </div>
+            </div>
+
+            <div class="usuario-cor-dialog__previa">
+                <span class="usuario-cor-dialog__legenda">Aviso de mensagem nova</span>
+                <div class="usuario-cor-dialog__aviso">
+                    <app-mensagem-direta-avatar [nome]="nome()" [cor]="cor()" [pequeno]="true" />
+                    <span class="usuario-cor-dialog__texto">
+                        <span class="usuario-cor-dialog__nome">{{ nome() }}</span>
+                        <span class="usuario-cor-dialog__trecho">Oi! Pode revisar o cadastro?</span>
+                    </span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <app-dialog-dica-atalhos />
+        <p-button
+            label="Cancelar"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="mostrarDialog.set(false)"
+        />
+        <p-button label="Salvar" icon="pi pi-check" [loading]="carregando()" (onClick)="salvar()" />
+    </ng-template>
+</p-dialog>

@@ -21,14 +21,10 @@ Triagem de 2026-10-31, com o autor; chat entre colaboradores no topo de "Agora" 
 
 Resolver primeiro; o autor considera simples ou próximo.
 
-**Evolução do chat entre colaboradores** (guarda-chuva `chat-colaboradores-evolucao.spec.md`, tasks 313–317; as 310–312 já foram feitas). Nesta ordem, decidida pelo autor (2026-11-06):
+**Evolução do chat entre colaboradores** (guarda-chuva `chat-colaboradores-evolucao.spec.md`, tasks 315–317; as 310–314, a 316 e a 318 já foram feitas). Nesta ordem, decidida pelo autor (2026-11-06):
 
-1. **313** — editar mensagem (só o autor, 1 hora de prazo, "editada", original guardado para a supervisão).
-2. **314** — reações nas mensagens e seletor de emoji (uma por pessoa, aviso ao autor).
-3. **316** — cor da bolinha escolhida pela pessoa, só no chat por ora; vem antes do `@IA` (2026-11-06).
-4. **315** — `@IA` no chat entre colaboradores (spec própria e decisão de privacidade antes de qualquer código).
+1. **315** — `@IA` no chat entre colaboradores (spec própria e decisão de privacidade antes de qualquer código).
 
-- **I-043** — atualizar os pacotes dos provedores de IA para poder usar sempre os modelos mais novos. Pacotes atualizados em 2026-11-04; falta conferir uma chamada real a cada provedor e decidir se vira rotina. Perto de "Agora" por ser concreto (2026-10-31).
 - **P-073** — Defender barra o executável do Project Desktop; a correção de fundo é assinar o `.exe` (I-049). Bloqueia a distribuição (2026-11-03).
 
 ## 2. Specs já escritas no backlog

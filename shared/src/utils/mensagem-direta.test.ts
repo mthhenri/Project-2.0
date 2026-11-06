@@ -1,11 +1,17 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
+import { AutorMensagemDiretaEnum } from '../enums/autor-mensagem-direta.enum';
 import { ReferenciaMensagemDiretaEnum } from '../enums/referencia-mensagem-direta.enum';
 import {
+    REACOES_RAPIDAS_MENSAGEM_DIRETA,
+    ehReacaoValida,
     ATALHO_GLOBAL_PADRAO,
     DURACAO_DO_SILENCIO_DE_REUNIAO_MINUTOS,
+    PRAZO_PARA_EDITAR_MENSAGEM_DIRETA_MS,
     PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA,
     REGEX_ATALHO_GLOBAL,
+    avaliarEdicaoDeMensagemDireta,
+    podeEditarMensagemDireta,
     contemBlocoDeCodigo,
     estaSilenciado,
     formatarReferenciaDireta,
@@ -132,6 +138,7 @@ test('a preferência padrão é válida e não silencia ninguém', () => {
     assert.equal(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.silenciadoAteDate, null);
     assert.match(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.atalhoGlobal, REGEX_ATALHO_GLOBAL);
     assert.equal(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoPopup, 'CANTO_INFERIOR_DIREITO', 'o padrão é o canto de hoje');
+    assert.equal(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoBarra, 'ESQUERDA', 'o padrão é o lado de hoje');
 });
 
 // --- texto simples e trecho da resposta (task 220) --------------------------
@@ -153,4 +160,54 @@ test('o trecho da resposta é o texto simples, cortado com reticências acima do
     const longo = trechoDaMensagemDireta('b'.repeat(LIMITE_TRECHO_MENSAGEM_DIRETA + 50));
     assert.equal(longo.length, LIMITE_TRECHO_MENSAGEM_DIRETA);
     assert.ok(longo.endsWith('…'));
+});
+
+// --- editar a mensagem (task 313) ------------------------------------------
+
+const ENVIADA_EM = new Date('2026-11-06T10:00:00.000Z');
+const edicao = (parcial: Partial<Parameters<typeof avaliarEdicaoDeMensagemDireta>[0]> = {}) => ({
+    autor: AutorMensagemDiretaEnum.USUARIO,
+    autorUsuarioId: 4,
+    usuarioId: 4,
+    createdDate: ENVIADA_EM,
+    agora: new Date(ENVIADA_EM.getTime() + 60_000),
+    ...parcial,
+});
+
+test('editar: o prazo é de 1 hora', () => {
+    assert.equal(PRAZO_PARA_EDITAR_MENSAGEM_DIRETA_MS, 3_600_000);
+});
+
+test('editar: o autor edita dentro de 1 hora, com o limite incluso, e não um instante depois', () => {
+    assert.equal(avaliarEdicaoDeMensagemDireta(edicao()), 'PODE');
+    assert.equal(avaliarEdicaoDeMensagemDireta(edicao({ agora: ENVIADA_EM })), 'PODE', 'recém-enviada');
+    assert.equal(avaliarEdicaoDeMensagemDireta(edicao({ agora: new Date(ENVIADA_EM.getTime() + PRAZO_PARA_EDITAR_MENSAGEM_DIRETA_MS) })), 'PODE', 'exatamente 1 hora');
+    assert.equal(avaliarEdicaoDeMensagemDireta(edicao({ agora: new Date(ENVIADA_EM.getTime() + PRAZO_PARA_EDITAR_MENSAGEM_DIRETA_MS + 1) })), 'PRAZO_ENCERRADO');
+});
+
+test('editar: o prazo conta do envio, aceita a data como texto e relógio atrasado não bloqueia', () => {
+    assert.equal(avaliarEdicaoDeMensagemDireta(edicao({ createdDate: ENVIADA_EM.toISOString() })), 'PODE');
+    assert.equal(avaliarEdicaoDeMensagemDireta(edicao({ agora: new Date(ENVIADA_EM.getTime() - 5_000) })), 'PODE');
+});
+
+test('editar: só o autor, e nunca a mensagem do sistema', () => {
+    assert.equal(avaliarEdicaoDeMensagemDireta(edicao({ usuarioId: 9 })), 'NAO_E_DO_AUTOR');
+    assert.equal(avaliarEdicaoDeMensagemDireta(edicao({ autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null })), 'MENSAGEM_DO_SISTEMA');
+    assert.equal(podeEditarMensagemDireta(edicao()), true);
+    assert.equal(podeEditarMensagemDireta(edicao({ usuarioId: 9 })), false);
+    assert.equal(podeEditarMensagemDireta(edicao({ agora: new Date(ENVIADA_EM.getTime() + 2 * PRAZO_PARA_EDITAR_MENSAGEM_DIRETA_MS) })), false);
+});
+
+test('a reação é exatamente um emoji: simples, com variação, tom de pele, ZWJ, bandeira, tags e teclado', () => {
+    for (const emoji of ['👍', '❤️', '🙏', '👍🏽', '👨‍👩‍👧', '🇧🇷', '1️⃣', '🏴󠁧󠁢󠁥󠁮󠁧󠁿']) assert.equal(ehReacaoValida(emoji), true, emoji);
+});
+
+test('a reação recusa texto, vazio, espaço, dois emojis e excesso de partes', () => {
+    for (const texto of ['', 'a', 'ok', ' 👍', '👍 ', '👍👍', '👍a', '<b>', '🇧', '👍'.repeat(20)]) assert.equal(ehReacaoValida(texto), false, JSON.stringify(texto));
+});
+
+test('os seis atalhos da faixa são reações válidas e distintas', () => {
+    assert.equal(REACOES_RAPIDAS_MENSAGEM_DIRETA.length, 6);
+    assert.equal(new Set(REACOES_RAPIDAS_MENSAGEM_DIRETA).size, 6);
+    for (const emoji of REACOES_RAPIDAS_MENSAGEM_DIRETA) assert.equal(ehReacaoValida(emoji), true, emoji);
 });

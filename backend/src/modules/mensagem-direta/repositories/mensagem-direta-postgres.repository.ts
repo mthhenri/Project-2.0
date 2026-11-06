@@ -25,12 +25,15 @@ import {
     validarPaginaDaSupervisao,
 } from '../domain/mensagem-direta-consultas';
 import {
+    MensagemDiretaAlterar,
     MensagemDiretaFonte,
     MensagemDiretaNova,
     REGEX_UUID,
     deFonteDireta,
     mesmaOrigemDaMensagem,
+    paraCamposDeEdicao,
     paraFonteDireta,
+    validarMensagemDiretaAlterar,
     validarMensagemDiretaNova,
 } from '../domain/mensagem-direta.documento';
 import { ArmazenamentoDeMensagemDireta } from './armazenamento-de-mensagem-direta';
@@ -51,6 +54,7 @@ interface LinhaDeMensagemDireta {
     responde_a_autor_usuario_id: number | null;
     responde_a_trecho: string | null;
     created_date: Date;
+    editada_date: Date | null;
 }
 
 interface LinhaDeConversaDireta extends LinhaDeMensagemDireta {
@@ -76,7 +80,8 @@ const COLUNAS_DA_MENSAGEM = `
     responde_a_mensagem_id,
     responde_a_autor_usuario_id,
     responde_a_trecho,
-    created_date
+    created_date,
+    editada_date
 `;
 
 /** A pessoa é um dos dois participantes da conversa. */
@@ -170,6 +175,7 @@ function deLinha(linha: LinhaDeMensagemDireta): MensagemDiretaFonte {
             }
             : {}),
         created_date: linha.created_date.toISOString(),
+        editada_date: linha.editada_date ? linha.editada_date.toISOString() : null,
     };
 }
 
@@ -277,6 +283,45 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
             const existente = deLinha(existentes[0]);
             if (!mesmaOrigemDaMensagem(existente, mensagem)) throw new BusinessException('Esse identificador de mensagem já foi usado');
             return { mensagem: deFonteDireta(existente), jaExistia: true };
+        });
+    }
+
+    async alterarMensagem(alteracao: MensagemDiretaAlterar): Promise<MensagemDiretaResumoDto | null> {
+        validarMensagemDiretaAlterar(alteracao);
+        const campos = paraCamposDeEdicao(alteracao, new Date());
+        return this.proteger(async () => {
+            const linhas = await this.executarConsulta<LinhaDeMensagemDireta>(
+                `
+                    UPDATE mensagem_direta
+                    SET
+                        texto = :texto,
+                        contem_codigo = :contemCodigo,
+                        mencoes = CAST(:mencoes AS integer[]),
+                        referencias = CAST(:referencias AS text[]),
+                        editada_date = CAST(:editadaDate AS timestamptz),
+                        updated_date = NOW()
+                    WHERE
+                        mensagem_id = CAST(:mensagemId AS uuid)
+                        AND conversa_id = :conversaId
+                        AND autor = :autor
+                        AND autor_usuario_id = :autorUsuarioId
+                        AND is_deleted = false
+                    RETURNING
+                        ${COLUNAS_DA_MENSAGEM}
+                `,
+                {
+                    texto: campos.texto,
+                    contemCodigo: campos.contem_codigo,
+                    mencoes: campos.mencoes,
+                    referencias: campos.referencias,
+                    editadaDate: campos.editada_date,
+                    mensagemId: alteracao.mensagemId.toLowerCase(),
+                    conversaId: alteracao.conversaId,
+                    autor: AutorMensagemDiretaEnum.USUARIO,
+                    autorUsuarioId: alteracao.autorUsuarioId,
+                },
+            );
+            return linhas.length > 0 ? deFonteDireta(deLinha(linhas[0])) : null;
         });
     }
 

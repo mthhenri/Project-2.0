@@ -25,6 +25,8 @@ export class UsuarioSessaoService {
     readonly id            = computed(() => this._usuario()?.id);
     readonly login         = computed(() => this._usuario()?.login);
     readonly nomeCompleto  = computed(() => this._usuario()?.nomeCompleto);
+    /** A cor da bolinha que a pessoa escolheu (`#RRGGBB`); `null` = cor padrão. */
+    readonly corAvatar     = computed(() => this._usuario()?.corAvatar ?? null);
     readonly eGestor       = computed(() => {
         const usuario = this._usuario();
         return !!usuario && temPermissaoDeGestor(usuario.tipo);
@@ -73,6 +75,12 @@ export class UsuarioSessaoService {
     definirUsuario(usuario: UsuarioRecuperadoDto): void {
         this._usuario.set(usuario);
         localStorage.setItem(this.CHAVE_SESSAO, JSON.stringify(usuario));
+    }
+
+    /** Guarda a cor nova da bolinha na sessão (e no armazenamento local) sem refazer o login. */
+    definirCorAvatar(corAvatar: string | null): void {
+        const usuario = this._usuario();
+        if (usuario) this.definirUsuario({ ...usuario, corAvatar });
     }
 
     limpar(): void {

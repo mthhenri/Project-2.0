@@ -21,6 +21,7 @@
             />
             <app-mensagem-direta-avatar
                 [nome]="conversa.usuarioNome"
+                [cor]="estado.corDe(conversa.usuarioId)"
                 [online]="estaOnline()"
                 [pequeno]="true"
             />
@@ -98,230 +99,281 @@
             </p>
         }
 
-        <div
-            #rolagem
-            class="conversa-direta__mensagens"
-            role="log"
-            aria-live="polite"
-            [attr.aria-label]="'Conversa com ' + conversa.usuarioNome"
-            (scroll)="aoRolar()"
-        >
-            @if (conversa.carregando && conversa.mensagens.length === 0) {
-                <div class="conversa-direta__esqueleto" aria-busy="true">
-                    <p-skeleton height="2.5rem" width="55%" />
-                    <div class="conversa-direta__esqueleto-meu">
-                        <p-skeleton height="3.5rem" width="75%" />
+        <div class="conversa-direta__area">
+            <div
+                #rolagem
+                class="conversa-direta__mensagens"
+                role="log"
+                aria-live="polite"
+                [attr.aria-label]="'Conversa com ' + conversa.usuarioNome"
+                (scroll)="aoRolar()"
+            >
+                @if (conversa.carregando && conversa.mensagens.length === 0) {
+                    <div class="conversa-direta__esqueleto" aria-busy="true">
+                        <p-skeleton height="2.5rem" width="55%" />
+                        <div class="conversa-direta__esqueleto-meu">
+                            <p-skeleton height="3.5rem" width="75%" />
+                        </div>
+                        <p-skeleton height="2.5rem" width="40%" />
                     </div>
-                    <p-skeleton height="2.5rem" width="40%" />
-                </div>
-            } @else if (conversa.erro && conversa.mensagens.length === 0) {
-                <div class="conversa-direta__estado" role="alert">
-                    <i
-                        class="pi pi-exclamation-triangle conversa-direta__estado-icone"
-                        aria-hidden="true"
-                    ></i>
-                    <p class="conversa-direta__estado-texto">
-                        Não foi possível carregar a conversa.
-                    </p>
-                    <p-button
-                        label="Tentar de novo"
-                        icon="pi pi-refresh"
-                        size="small"
-                        [outlined]="true"
-                        (onClick)="estado.carregarConversaAberta()"
-                    />
-                </div>
-            } @else if (conversa.mensagens.length === 0) {
-                <div class="conversa-direta__estado">
-                    <p class="conversa-direta__estado-titulo">Nenhuma mensagem ainda</p>
-                    <p class="conversa-direta__estado-texto">
-                        Diga olá para {{ conversa.usuarioNome }}.
-                    </p>
-                </div>
-            } @else {
-                @if (conversa.carregandoMais) {
-                    <div class="conversa-direta__mais" aria-busy="true">
-                        <i class="pi pi-spinner pi-spin" aria-hidden="true"></i> Carregando
-                        mensagens anteriores…
+                } @else if (conversa.erro && conversa.mensagens.length === 0) {
+                    <div class="conversa-direta__estado" role="alert">
+                        <i
+                            class="pi pi-exclamation-triangle conversa-direta__estado-icone"
+                            aria-hidden="true"
+                        ></i>
+                        <p class="conversa-direta__estado-texto">
+                            Não foi possível carregar a conversa.
+                        </p>
+                        <p-button
+                            label="Tentar de novo"
+                            icon="pi pi-refresh"
+                            size="small"
+                            [outlined]="true"
+                            (onClick)="estado.carregarConversaAberta()"
+                        />
                     </div>
-                }
-                @for (grupo of grupos(); track grupo.rotulo) {
-                    <div class="conversa-direta__dia">{{ grupo.rotulo }}</div>
-                    @for (mensagem of grupo.mensagens; track mensagem.mensagemId) {
-                        @if (mensagem.autor === "SISTEMA") {
-                            <p
-                                class="conversa-direta__sistema"
-                                [attr.data-mensagem-id]="mensagem.mensagemId"
-                            >
-                                {{ mensagem.texto }} · {{ hora(mensagem.createdDate) }}
-                            </p>
-                        } @else {
-                            @let minha = mensagem.autorUsuarioId === meuId();
-                            @let emenda = emendas().get(mensagem.mensagemId);
-                            @let compacto = rodapeCompacto(mensagem);
-                            <div
-                                class="conversa-direta__linha"
-                                [class.conversa-direta__linha--minha]="minha"
-                                [class.conversa-direta__linha--emendada]="emenda?.comAnterior"
-                            >
-                                <div
-                                    class="conversa-direta__balao"
+                } @else if (conversa.mensagens.length === 0) {
+                    <div class="conversa-direta__estado">
+                        <p class="conversa-direta__estado-titulo">Nenhuma mensagem ainda</p>
+                        <p class="conversa-direta__estado-texto">
+                            Diga olá para {{ conversa.usuarioNome }}.
+                        </p>
+                    </div>
+                } @else {
+                    @if (conversa.carregandoMais) {
+                        <div class="conversa-direta__mais" aria-busy="true">
+                            <i class="pi pi-spinner pi-spin" aria-hidden="true"></i> Carregando
+                            mensagens anteriores…
+                        </div>
+                    }
+                    @for (grupo of grupos(); track grupo.rotulo) {
+                        <div class="conversa-direta__dia">{{ grupo.rotulo }}</div>
+                        @for (mensagem of grupo.mensagens; track mensagem.mensagemId) {
+                            @if (mensagem.autor === "SISTEMA") {
+                                <p
+                                    class="conversa-direta__sistema"
                                     [attr.data-mensagem-id]="mensagem.mensagemId"
-                                    [class.conversa-direta__balao--destacado]="
-                                        destacadaId() === mensagem.mensagemId
-                                    "
-                                    [class.conversa-direta__balao--minha]="minha"
-                                    [class.conversa-direta__balao--enviando]="
-                                        mensagem.situacao === 'ENVIANDO'
-                                    "
-                                    [class.conversa-direta__balao--falhou]="
-                                        mensagem.situacao === 'FALHOU'
-                                    "
-                                    (contextmenu)="abrirMenu($event, mensagem)"
-                                    (dblclick)="aoDarDoisCliques($event, mensagem)"
                                 >
-                                    @if (mensagem.respondeA; as citacao) {
-                                        <button
-                                            type="button"
-                                            class="conversa-direta__citacao"
-                                            [attr.aria-label]="
-                                                'Ir para a mensagem de ' + nomeDaCitacao(citacao)
-                                            "
-                                            (click)="irParaOriginal(citacao.mensagemId)"
-                                        >
-                                            <span class="conversa-direta__citacao-nome">{{
-                                                nomeDaCitacao(citacao)
-                                            }}</span>
-                                            <span class="conversa-direta__citacao-trecho">{{
-                                                citacao.trecho
-                                            }}</span>
-                                        </button>
-                                    }
-                                    <app-markdown-visualizador
-                                        [texto]="mensagem.texto"
-                                        [destaques]="destaquesDe(mensagem)"
-                                        [comTabelas]="false"
-                                    />
-                                    @for (
-                                        referencia of mensagem.referencias;
-                                        track referencia.tipo + referencia.id
-                                    ) {
-                                        <app-mensagem-direta-referencia-cartao
-                                            [tipo]="referencia.tipo"
-                                            [id]="referencia.id"
-                                        />
-                                    }
-                                </div>
+                                    {{ mensagem.texto }} · {{ hora(mensagem.createdDate) }}
+                                </p>
+                            } @else {
+                                @let minha = mensagem.autorUsuarioId === meuId();
+                                @let emenda = emendas().get(mensagem.mensagemId);
+                                @let compacto = rodapeCompacto(mensagem);
                                 <div
-                                    class="conversa-direta__rodape"
-                                    [class.conversa-direta__rodape--compacto]="compacto"
-                                    [class.conversa-direta__rodape--falhou]="
-                                        mensagem.situacao === 'FALHOU'
-                                    "
+                                    class="conversa-direta__linha"
+                                    [class.conversa-direta__linha--minha]="minha"
+                                    [class.conversa-direta__linha--emendada]="emenda?.comAnterior"
                                 >
-                                    @switch (mensagem.situacao) {
-                                        @case ("FALHOU") {
-                                            <i
-                                                class="pi pi-exclamation-circle"
-                                                aria-hidden="true"
-                                            ></i>
-                                            <span class="conversa-direta__rodape-forte"
-                                                >Não enviada</span
-                                            >
+                                    <div
+                                        class="conversa-direta__balao"
+                                        [attr.data-mensagem-id]="mensagem.mensagemId"
+                                        [class.conversa-direta__balao--destacado]="
+                                            destacadaId() === mensagem.mensagemId
+                                        "
+                                        [class.conversa-direta__balao--minha]="minha"
+                                        [class.conversa-direta__balao--enviando]="
+                                            mensagem.situacao === 'ENVIANDO'
+                                        "
+                                        [class.conversa-direta__balao--falhou]="
+                                            mensagem.situacao === 'FALHOU'
+                                        "
+                                        (contextmenu)="abrirMenu($event, mensagem)"
+                                        (dblclick)="aoDarDoisCliques($event, mensagem)"
+                                    >
+                                        @if (mensagem.respondeA; as citacao) {
                                             <button
                                                 type="button"
-                                                class="conversa-direta__link"
-                                                (click)="tentarDeNovo(mensagem.mensagemId)"
+                                                class="conversa-direta__citacao"
+                                                [attr.aria-label]="
+                                                    'Ir para a mensagem de ' +
+                                                    nomeDaCitacao(citacao)
+                                                "
+                                                (click)="irParaOriginal(citacao.mensagemId)"
                                             >
-                                                Tentar de novo
-                                            </button>
-                                            <button
-                                                type="button"
-                                                class="conversa-direta__link conversa-direta__link--discreto"
-                                                (click)="excluir(mensagem.mensagemId)"
-                                            >
-                                                Excluir
+                                                <span class="conversa-direta__citacao-nome">{{
+                                                    nomeDaCitacao(citacao)
+                                                }}</span>
+                                                <span class="conversa-direta__citacao-trecho">{{
+                                                    citacao.trecho
+                                                }}</span>
                                             </button>
                                         }
-                                        @case ("ENVIANDO") {
-                                            <i class="pi pi-clock" aria-hidden="true"></i>
-                                            <span>Enviando…</span>
+                                        <app-markdown-visualizador
+                                            [texto]="mensagem.texto"
+                                            [destaques]="destaquesDe(mensagem)"
+                                            [comTabelas]="false"
+                                        />
+                                        @for (
+                                            referencia of mensagem.referencias;
+                                            track referencia.tipo + referencia.id
+                                        ) {
+                                            <app-mensagem-direta-referencia-cartao
+                                                [tipo]="referencia.tipo"
+                                                [id]="referencia.id"
+                                            />
                                         }
-                                        @default {
-                                            @if (!compacto) {
-                                                <span class="conversa-direta__horario"
-                                                    >{{ hora(mensagem.createdDate) }}
-                                                    @if (
-                                                        minha && mensagem.mensagemId === lidaId()
-                                                    ) {
-                                                        <span class="conversa-direta__lida"
-                                                            ><i
-                                                                class="pi pi-check"
-                                                                aria-hidden="true"
-                                                            ></i
-                                                            ><i
-                                                                class="pi pi-check conversa-direta__lida-segundo"
-                                                                aria-hidden="true"
-                                                            ></i>
-                                                            Lida</span
-                                                        >
-                                                    } @else if (
-                                                        minha &&
-                                                        mensagem.mensagemId === ultimaMinhaId()
-                                                    ) {
-                                                        <span>· Enviada</span>
-                                                    }
-                                                </span>
-                                            }
-                                            <button
-                                                type="button"
-                                                class="conversa-direta__acoes"
-                                                [class.conversa-direta__acoes--visivel]="
-                                                    mensagemDoMenu() === mensagem.mensagemId ||
-                                                    copiadaId() === mensagem.mensagemId
-                                                "
-                                                aria-label="Ações da mensagem"
-                                                aria-haspopup="menu"
-                                                [attr.aria-expanded]="
-                                                    mensagemDoMenu() === mensagem.mensagemId
-                                                "
-                                                [pTooltip]="
-                                                    copiadaId() === mensagem.mensagemId
-                                                        ? 'Copiado'
-                                                        : 'Ações da mensagem'
-                                                "
-                                                tooltipPosition="top"
-                                                (click)="abrirMenu($event, mensagem, true)"
-                                            >
+                                    </div>
+                                    <app-mensagem-direta-reacoes
+                                        [reacoes]="mensagem.reacoes"
+                                        [meuId]="meuId()"
+                                        [nomeDe]="nomeDeQuemReagiu"
+                                        [barraAberta]="reagindoId() === mensagem.mensagemId"
+                                        (reagir)="reagir(mensagem.mensagemId, $event)"
+                                        (abrirSeletor)="abrirSeletorDaReacao(mensagem.mensagemId)"
+                                        (fecharBarra)="reagindoId.set(null)"
+                                    />
+                                    <div
+                                        class="conversa-direta__rodape"
+                                        [class.conversa-direta__rodape--compacto]="compacto"
+                                        [class.conversa-direta__rodape--falhou]="
+                                            mensagem.situacao === 'FALHOU'
+                                        "
+                                    >
+                                        @switch (mensagem.situacao) {
+                                            @case ("FALHOU") {
                                                 <i
-                                                    [class]="
-                                                        copiadaId() === mensagem.mensagemId
-                                                            ? 'pi pi-check'
-                                                            : 'pi pi-ellipsis-h'
-                                                    "
+                                                    class="pi pi-exclamation-circle"
                                                     aria-hidden="true"
                                                 ></i>
-                                            </button>
+                                                <span class="conversa-direta__rodape-forte"
+                                                    >Não enviada</span
+                                                >
+                                                <button
+                                                    type="button"
+                                                    class="conversa-direta__link"
+                                                    (click)="tentarDeNovo(mensagem.mensagemId)"
+                                                >
+                                                    Tentar de novo
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    class="conversa-direta__link conversa-direta__link--discreto"
+                                                    (click)="excluir(mensagem.mensagemId)"
+                                                >
+                                                    Excluir
+                                                </button>
+                                            }
+                                            @case ("ENVIANDO") {
+                                                <i class="pi pi-clock" aria-hidden="true"></i>
+                                                <span>Enviando…</span>
+                                            }
+                                            @default {
+                                                @if (!compacto) {
+                                                    <span class="conversa-direta__horario"
+                                                        >{{ hora(mensagem.createdDate) }}
+                                                        @if (mensagem.editadaDate) {
+                                                            <span
+                                                                class="conversa-direta__editada"
+                                                                [attr.title]="
+                                                                    'Editada às ' +
+                                                                    hora(mensagem.editadaDate)
+                                                                "
+                                                                >· editada</span
+                                                            >
+                                                        }
+                                                        @if (
+                                                            minha &&
+                                                            mensagem.mensagemId === lidaId()
+                                                        ) {
+                                                            <span class="conversa-direta__lida"
+                                                                ><i
+                                                                    class="pi pi-check"
+                                                                    aria-hidden="true"
+                                                                ></i
+                                                                ><i
+                                                                    class="pi pi-check conversa-direta__lida-segundo"
+                                                                    aria-hidden="true"
+                                                                ></i>
+                                                                Lida</span
+                                                            >
+                                                        } @else if (
+                                                            minha &&
+                                                            mensagem.mensagemId === ultimaMinhaId()
+                                                        ) {
+                                                            <span>· Enviada</span>
+                                                        }
+                                                    </span>
+                                                }
+                                                <button
+                                                    type="button"
+                                                    class="conversa-direta__acoes"
+                                                    [class.conversa-direta__acoes--visivel]="
+                                                        reagindoId() === mensagem.mensagemId
+                                                    "
+                                                    aria-label="Reagir"
+                                                    pTooltip="Reagir"
+                                                    tooltipPosition="top"
+                                                    (click)="abrirReacao(mensagem.mensagemId)"
+                                                >
+                                                    <i
+                                                        class="pi pi-face-smile"
+                                                        aria-hidden="true"
+                                                    ></i>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    class="conversa-direta__acoes"
+                                                    [class.conversa-direta__acoes--visivel]="
+                                                        mensagemDoMenu() === mensagem.mensagemId ||
+                                                        copiadaId() === mensagem.mensagemId
+                                                    "
+                                                    aria-label="Ações da mensagem"
+                                                    aria-haspopup="menu"
+                                                    [attr.aria-expanded]="
+                                                        mensagemDoMenu() === mensagem.mensagemId
+                                                    "
+                                                    [pTooltip]="
+                                                        copiadaId() === mensagem.mensagemId
+                                                            ? 'Copiado'
+                                                            : 'Ações da mensagem'
+                                                    "
+                                                    tooltipPosition="top"
+                                                    (click)="abrirMenu($event, mensagem, true)"
+                                                >
+                                                    <i
+                                                        [class]="
+                                                            copiadaId() === mensagem.mensagemId
+                                                                ? 'pi pi-check'
+                                                                : 'pi pi-ellipsis-h'
+                                                        "
+                                                        aria-hidden="true"
+                                                    ></i>
+                                                </button>
+                                            }
                                         }
-                                    }
+                                    </div>
                                 </div>
-                            </div>
+                            }
                         }
                     }
-                }
-                @if (estaDigitando()) {
-                    <div
-                        class="conversa-direta__linha conversa-direta__linha--digitando"
-                        role="status"
-                        aria-label="digitando"
-                    >
-                        <div class="conversa-direta__balao conversa-direta__balao--digitando">
-                            <span class="conversa-direta__pontos" aria-hidden="true"
-                                ><span></span><span></span><span></span
-                            ></span>
+                    @if (estaDigitando()) {
+                        <div
+                            class="conversa-direta__linha conversa-direta__linha--digitando"
+                            role="status"
+                            aria-label="digitando"
+                        >
+                            <div class="conversa-direta__balao conversa-direta__balao--digitando">
+                                <span class="conversa-direta__pontos" aria-hidden="true"
+                                    ><span></span><span></span><span></span
+                                ></span>
+                            </div>
                         </div>
-                    </div>
+                    }
                 }
+            </div>
+            @if (longeDoFim()) {
+                <button
+                    type="button"
+                    class="conversa-direta__voltar-ao-atual"
+                    aria-label="Voltar para as mensagens mais recentes"
+                    pTooltip="Voltar ao atual"
+                    tooltipPosition="left"
+                    (click)="irParaOAtual()"
+                >
+                    <i class="pi pi-arrow-down" aria-hidden="true"></i>
+                </button>
             }
         </div>
 
@@ -332,10 +384,28 @@
             </p>
         }
 
+        @if (estado.erroNaReacao(); as motivo) {
+            <p class="conversa-direta__faixa" role="alert">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i
+                ><span>{{ motivo }}</span>
+            </p>
+        }
+
+        @if (seletorDaReacaoId(); as alvoDaReacao) {
+            <app-mensagem-direta-emoji-seletor
+                (escolher)="reagir(alvoDaReacao, $event)"
+                (fechar)="seletorDaReacaoId.set(null)"
+            />
+        }
+
         <app-mensagem-direta-compositor
             [pessoas]="pessoasMencionaveis()"
             [resposta]="respostaEmPreparo()"
             (cancelarResposta)="estado.cancelarResposta()"
+            [edicao]="edicaoEmPreparo()"
+            (cancelarEdicao)="estado.cancelarEdicao()"
+            [salvando]="estado.salvandoEdicao()"
+            [erroDaEdicao]="estado.erroNaEdicao()"
             [chave]="pessoaAberta()"
             [codigoInicial]="estado.rascunhoDoDesktop()"
             (textoAplicado)="estado.rascunhoDoDesktop.set(null)"

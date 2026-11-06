@@ -15,6 +15,7 @@ export interface ClienteElasticsearchMensagemDireta {
     };
     index(parametros: { index: string; id: string; document: unknown; refresh: 'wait_for'; op_type: 'create' }): Promise<unknown>;
     get(parametros: { index: string; id: string }): Promise<{ _source?: MensagemDiretaFonte }>;
+    update(parametros: { index: string; id: string; doc: Partial<MensagemDiretaFonte>; refresh: 'wait_for' }): Promise<unknown>;
     search(parametros: { index: string } & Record<string, unknown>): Promise<{
         hits: { hits: { _source?: MensagemDiretaFonte }[] };
         aggregations?: {
@@ -70,6 +71,10 @@ export class MensagemDiretaElasticsearchRepository extends MensagemDiretaIndiceR
             if (this.ehNaoEncontrado(erro)) return null;
             throw erro;
         }
+    }
+
+    protected async atualizarDocumento(indice: string, id: string, campos: Partial<MensagemDiretaFonte>): Promise<void> {
+        await this.cliente.update({ index: indice, id, doc: campos, refresh: 'wait_for' });
     }
 
     protected async pesquisar(indice: string, consulta: unknown): Promise<ResultadoDaPesquisaDireta> {

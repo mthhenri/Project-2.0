@@ -1,4 +1,5 @@
 import { IsBoolean, IsDateString, IsEnum, IsString, Matches, MaxLength, ValidateIf } from 'class-validator';
+import { PosicaoBarraChatEnum } from '../../enums/posicao-barra-chat.enum';
 import { PosicaoPopupChatEnum } from '../../enums/posicao-popup-chat.enum';
 import { LIMITE_ATALHO_GLOBAL, REGEX_ATALHO_GLOBAL } from '../../utils/mensagem-direta';
 
@@ -28,4 +29,8 @@ export class MensagemDiretaPreferenciaAlterarDto {
     /** Onde o popup do chat abre na tela (task 221). */
     @IsEnum(PosicaoPopupChatEnum)
     posicaoPopup: PosicaoPopupChatEnum;
+
+    /** Onde fica a barra de conversas da conversa aberta (task 318). */
+    @IsEnum(PosicaoBarraChatEnum)
+    posicaoBarra: PosicaoBarraChatEnum;
 }

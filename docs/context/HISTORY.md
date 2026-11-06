@@ -12,6 +12,58 @@
 
 ---
 
+## 2026-11-06 — Task 316 (ajustes): paleta das tags na cor da bolinha e ícone do chat de volta
+
+O autor achou o seletor de cor do perfil deslocado e pediu as mesmas cores das tags. O perfil deixou de ter o seletor aberto: ganhou a linha "Minha cor" com o botão **"Editar cor"**, que abre o diálogo `usuario-cor-dialog` (seletor à esquerda e, à direita, prévias reais da bolinha na lista de conversas, no cabeçalho, na barra e no aviso, com Cancelar e Salvar; nada grava antes do Salvar). O seletor e o diálogo do gestor passaram a usar o `app-seletor-cor` (modo compacto: as 28 cores da paleta das tags e "Outra cor…" com roda e hexadecimal), com a entrada nova `aceitaSemCor` (aditiva: sem ela, `null` segue virando o azul de Tags e Projetos). A troca do ícone do chat entre colegas por envelope foi **desfeita** a pedido do autor (volta `pi-comments`); a dificuldade de distinguir os dois chats ficou registrada como problema (ver PROBLEMS.md). Isto não reescreve o bloco anterior, que descreve o envelope como foi entregue.
+
+## 2026-11-06 — Task 316: cor da bolinha escolhida pela pessoa (e ícone próprio do chat entre colegas)
+
+**Pedido e decisões do autor.** Cada pessoa escolhe a cor da própria bolinha; a cor é do usuário, e o gestor pode alterar a de qualquer um. Escolha livre (qualquer cor), sem tempo real (vale no F5),
+gestor só pela tela de Usuários, a própria cor no perfil (popover da barra de cima) e não nas configurações do chat. O restante do escopo (demais avatares do sistema) ficou na spec **319**, só a spec no backlog.
+
+**O que mudou.** Coluna `usuario.cor_avatar VARCHAR(7)` anulável (migration `0084`); `shared`: `cor-avatar.ts` (`ehCorAvatarValida`, `corDoTextoSobre` pela luminância WCAG) e `UsuarioCor*Dto`; `corAvatar` nos DTOs de
+usuário e nos do chat (pessoa, conversa, supervisão). Rota `PUT /usuario/cor` (qualquer autenticado, grava só a própria) antes de `PUT /usuario/:id`; o gestor usa a edição existente. A service do chat junta a cor lida de `usuario`
+(nada na mensagem; o contrato dos três armazenamentos não mudou). Frontend: `mensagem-direta-avatar` recebe `cor`; `usuario-cor-seletor` serve ao perfil (com "Aplicar") e ao diálogo do gestor; `estado.corDe(usuarioId)` cobre
+barra, aviso, menção e achados da busca. Avulso, pedido na mesma sessão: o chat entre colegas ganhou o ícone de envelope, para não se confundir com o balão do Chat da IA.
+
+**Testes.** `shared` 332, `backend` 1691, integração 381, `frontend` 2621; `lint:tudo` limpo. **Ao vivo:** API, lista de conversas nos cinco formatos e dois temas, perfil e diálogo do gestor (spec, seção Verificação).
+
+**Achados.** (1) O lint de SQL acusava três arquivos da 314 fora do padrão (o commit da 314 passou sem isso); formatados nesta entrega. (2) Dois testes novos montavam dois componentes no mesmo `it` (o TestBed não aceita);
+foram separados. (3) O login não devolve a cor; ela chega pelo `atualizarSessao`.
+
+## 2026-11-06 — Task 314: reações nas mensagens do chat entre colaboradores e seletor de emoji
+
+Cada mensagem de pessoa (a do sistema não) ganha "Reagir" (menu da mensagem e botão ao passar o mouse): seis atalhos (👍 ❤️ 😂 😮 😢 🙏) e um "+" que abre o seletor completo, então vale **qualquer emoji**. Uma reação por pessoa por mensagem: outro emoji troca, o mesmo tira. Pílulas sob o balão (a minha destacada), em tempo real nas duas pontas. O autor da mensagem recebe o cartão de aviso "<PESSOA> reagiu à sua mensagem com <EMOJI>" (respeita silêncio, conversa silenciada, conversa à vista e Desktop); **nada entra na conversa** e o cartão não conta como mensagem nova. O mesmo seletor, com busca em português, está no compositor.
+- **Modelagem (decidida pelo autor):** tabela nova `mensagem_direta_reacao` (migration `0083`, `reacao` guarda o próprio emoji), não o documento da mensagem; as três implementações do armazenamento e o contrato **não mudaram**. A `MensagemDiretaService` junta as reações à página numa consulta só (`juntarReacoes`); `MensagemDiretaResumoDto.reacoes` vem sempre (o armazenamento devolve `[]`). `PUT /mensagem-direta/reacao`, evento `REACAO` no stream. Regra pura `ehReacaoValida` (exatamente um emoji) no `shared`.
+- **Catálogo do seletor:** gerado uma vez de `emojibase-data` 16.0.3 (idioma `pt`) em `utils/emoji-catalogo.json` (1.906 emojis, nove categorias), sem dependência nova; o `tsconfig` do frontend ganhou `resolveJsonModule`.
+- **Front:** componentes novos `mensagem-direta-reacoes` (pílulas e faixa) e `mensagem-direta-emoji-seletor`; o estado ganhou `reagir`, `erroNaReacao` e o caso `REACAO` (a reação não entrou no `MensagemDiretaConversaComponent` além do que o menu e a faixa pedem). O estado do chat segue extenso: o acréscimo é pequeno (três métodos) e a extração pediria expor `atualizarConversaAberta`; fica como candidato a divisão.
+- Testes e verificação: ver a seção "Verificação" da spec em `done/`. Achado só no ao vivo: nenhum defeito; o aviso da troca de reação não reaparece com a conversa à vista (esperado).
+
+## 2026-11-06 — Configurações do chat viram uma tela dentro do popup (pedido do autor)
+
+O sino do cabeçalho abria um menu de notificações que já não comportava só notificações (silêncio, posição da barra, posição do popup, atalho do Desktop). Agora há uma **engrenagem** no lugar do sino (cabeçalho da lista e fim da barra de conversas) que abre uma **tela** no próprio popup (`visao` `CONFIGURACOES`, com Voltar e Ocultar), não um menu.
+- `MensagemDiretaNotificacoesComponent` virou `MensagemDiretaConfiguracoesComponent` (a tela; classes `config-direta*`, grupos `role="radiogroup"` com `role="radio"`) e nasceu `MensagemDiretaConfiguracoesBotaoComponent` (a engrenagem, laranja com o chat silenciado ou os avisos desligados). O estado ganhou `abrirConfiguracoes` e `fecharConfiguracoes`, que devolve à conversa ou à lista de onde a pessoa veio. Nada de backend, `shared` ou banco mudou.
+- Testes: frontend 2581 (211 arquivos) e `lint:tudo` limpos, build do frontend ok. Ao vivo (Playwright, API e SPA reais): tela aberta e Voltar nos cinco formatos (1920×1080, 1366×768, 1080×1920, 720×1280, 960×1080), tema claro e escuro. Achado só ali: na tela o ✓ da posição escolhida ficava colado ao texto (o botão não ocupava a largura); corrigido com `width: 100%`. O corpo da tela rola quando passa da altura do popup (753 px de conteúdo para 544 px visíveis).
+- Limite: o Project Desktop não foi exercitado (a seção do atalho só aparece lá; coberta por teste de componente).
+
+## 2026-11-06 — Chat entre colaboradores: editar mensagem (task 313)
+
+Só o autor edita a própria mensagem, até 1 hora depois do envio (contada em `created_date`); a mensagem editada mostra "editada" (com a hora da edição no `title`) nos dois lados, em tempo real, sem recarregar. **Modelagem decidida com o autor:** campo `editada_date` no próprio documento/tabela (migration `0082`, coluna anulável; `MensagemDiretaResumoDto.editadaDate`); o texto original **não** é guardado (o autor primeiro pediu, depois retirou: virou a I-052). Contrato `alterarMensagem` nas três implementações (PostgreSQL com `UPDATE ... RETURNING`; OpenSearch e Elasticsearch por atualização parcial); `PATCH /mensagem-direta/mensagem`; evento `EDICAO` no stream e no barramento (as duas datas voltam como `Date`; texto grande demais para o `NOTIFY` vira `SINCRONIZAR`); regra pura `avaliarEdicaoDeMensagemDireta` no `shared`, usada pela service (autoridade) e pela tela (só mostra a opção). No front: "Editar" no menu da mensagem própria, barra "Editando mensagem" no compositor (Esc e X cancelam), salvar pelo mesmo botão de enviar; se o servidor recusar, a barra mostra o motivo e o texto digitado fica. Texto igual ao atual não grava. Três invariantes de teste antigos ("não expõe alteração de mensagem") foram trocados por "a única alteração é a edição do texto".
+
+Testes: shared 324, backend 1679, integração 375 (contrato com o cenário de edição), frontend 2578; lint limpo. Ao vivo com dois navegadores e pela API (detalhes e limites em `docs/specs/done/313-chat-editar-mensagem.spec.md`). Limite principal: o contrato do OpenSearch e do Elasticsearch reais não rodou (sem serviço no ambiente). Achado na verificação: o teste do contrato supunha conversa vazia, mas os cenários anteriores já gravam na mesma conversa (agora compara ordem e total antes e depois).
+
+## 2026-11-06 — Chat entre colaboradores: posição da barra, engrenagem e "voltar ao atual" (task 318) e spec da 313
+
+Ao ver a barra de bolinhas (312) à esquerda, o autor sugeriu a direita; ficou configurável. A 318 acrescenta à preferência do chat a posição da barra (esquerda, direita, acima, abaixo; **no banco**, decisão do autor: coluna `posicao_barra` em `mensagem_direta_preferencia`, migration `0081`, enum `PosicaoBarraChatEnum`, campo `posicaoBarra` nos quatro DTOs de preferência), uma engrenagem no fim da barra que abre o mesmo menu do sino (agora com a seção "Barra de conversas") e, a pedido do autor no meio da tarefa, uma setinha "voltar ao atual" na conversa (só front). A spec da 313 (editar mensagem) também foi escrita: editar só marca `editada_date`; **guardar o texto original para a supervisão foi retirado pelo autor e virou a I-052**; a migration da 313 passa a ser a `0082`. A I-043 foi dada como verificada pelo autor (bloco abaixo).
+
+Testes: shared 318, backend 1664, integração 374, frontend 2565 (209 arquivos); lint limpo. Ao vivo nas quatro posições, claro e escuro, e nos cinco formatos (detalhes e limites em `docs/specs/done/318-chat-posicao-da-barra-e-engrenagem.spec.md`). Achados na verificação: `networkidle` nunca fecha com o stream de eventos (usar `load` e esperar o botão); o seletor de texto do popup precisa ser escopado, porque a página de fundo pode ter o mesmo nome. Impacto: o menu do sino e o do chat ganharam grupos `role="group"`, e dois testes antigos foram escopados ao grupo "Posição do chat".
+
+---
+
+## 2026-11-06 — I-043 encerrada: chamadas reais aos provedores conferidas pelo autor
+
+O autor informou que testou uma chamada real a cada provedor depois da atualização dos pacotes de 2026-11-04 (bloco abaixo, que deixara isso pendente) e que está tudo certo. A I-043 saiu de `IDEAS.md` e de `PRIORITIES.md`. A pergunta "a atualização vira rotina?" não teve decisão registrada; segue sem rotina, e uma nova subida de versão volta como ideia se for preciso. Verificação feita pelo autor, não por este agente.
+
 ## 2026-11-06 — Chat entre colaboradores: links soltos, duplo clique para responder e barra de bolinhas (tasks 310–312)
 
 Depois do ajuste das mensagens coladas, o autor listou a evolução do chat (editar, reações e emoji, `@IA`, cor da bolinha, volume do aviso) e decidiu cada ponto; as decisões e a ordem estão em `docs/specs/backlog/chat-colaboradores-evolucao.spec.md` (tasks 310–317 reservadas) e as três primeiras, sem modelagem, foram feitas: endereço solto vira link no visualizador de Markdown (regra pura no `shared`, vale para todo o sistema), dois cliques no balão respondem à mensagem, e a lista vira uma barra vertical de bolinhas quando há conversa aberta. Detalhes, testes (shared 316, frontend 2555, backend 1664; lint limpo) e a verificação ao vivo nos cinco formatos e nos dois temas em `docs/specs/done/310-312-chat-links-duplo-clique-e-barra.spec.md`. O pedido de volume do aviso (1 a 5) entrou como task 317 e aguarda decisão de modelagem. Impacto avisado: o link solto muda o texto de todas as telas que usam o visualizador.

@@ -27,8 +27,14 @@
         }
     }
 
-    &__codigo {
+    &__codigo,
+    &__emoji {
         flex-shrink: 0;
+    }
+
+    // O seletor de emoji (task 314) ocupa a largura do compositor, acima da caixa do campo.
+    &__emojis {
+        margin: 0 -0.75rem;
     }
 
     // A citação da mensagem respondida, logo acima da barra.
@@ -52,6 +58,11 @@
         font-size: 0.6875rem;
         font-weight: 600;
         color: var(--p-primary-color);
+    }
+
+    &__resposta-erro {
+        font-size: 0.6875rem;
+        color: var(--p-red-500);
     }
 
     &__resposta-trecho {

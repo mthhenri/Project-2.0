@@ -1,4 +1,5 @@
 import { MensagemDiretaResumoDto } from './MensagemDiretaResumoDto';
+import { ReacaoMensagemDiretaDto } from './ReacaoMensagemDiretaDto';
 
 /**
  * Evento do stream do chat entre colaboradores (`GET /mensagem-direta/eventos`, `text/event-stream`, um JSON por evento).
@@ -9,6 +10,13 @@ export type MensagemDiretaEventoDto =
   | { tipo: 'ABERTURA'; onlineUsuarioIds: number[] }
   /** Uma mensagem nova em conversa do usuário (inclusive as que ele mesmo enviou em outra aba). */
   | { tipo: 'MENSAGEM'; mensagem: MensagemDiretaResumoDto }
+  /** Uma mensagem da conversa foi editada pelo autor (task 313): quem a tem na tela troca o texto e mostra "editada". Não avisa nem toca som. */
+  | { tipo: 'EDICAO'; mensagem: MensagemDiretaResumoDto }
+  /**
+   * Alguém reagiu (ou trocou ou tirou a reação) a uma mensagem (task 314). `reacoes` é a lista completa da mensagem depois da mudança. `reacao` é a nova reação
+   * de `reatorUsuarioId` (`null` ao remover): só quando há `reacao` e o reator não é o autor a tela avisa o `autorUsuarioId`. Não conta como mensagem nova.
+   */
+  | { tipo: 'REACAO'; conversaId: string; mensagemId: string; reacoes: ReacaoMensagemDiretaDto[]; reatorUsuarioId: number; autorUsuarioId: number; reacao: string | null }
   /** Alguém marcou a conversa como lida até `lidaAteDate` (a data da última mensagem que viu): é daí que sai o "Lida". */
   | { tipo: 'LEITURA'; conversaId: string; usuarioId: number; lidaAteDate: Date }
   | { tipo: 'PRESENCA'; usuarioId: number; online: boolean }

@@ -23,6 +23,9 @@ export class UsuarioRecuperadoDto {
     @ApiProperty({ example: 8 })
     horasDiariasNecessarias: number;
 
+    @ApiProperty({ example: '#1E3A8A', nullable: true, description: 'Cor da bolinha escolhida; null = cor padrão' })
+    corAvatar: string | null;
+
     @ApiProperty({ example: '2026-06-13T12:00:00.000Z' })
     createdDate: Date;
 }

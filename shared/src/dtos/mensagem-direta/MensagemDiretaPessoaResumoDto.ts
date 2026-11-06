@@ -7,4 +7,6 @@ export interface MensagemDiretaPessoaResumoDto {
     tipo: TipoUsuarioEnum;
     /** Tem o stream de eventos aberto agora (em qualquer instância da API). */
     online: boolean;
+    /** Cor da bolinha escolhida; `null` = cor padrão. */
+    corAvatar: string | null;
 }

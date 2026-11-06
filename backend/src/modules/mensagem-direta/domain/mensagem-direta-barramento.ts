@@ -26,7 +26,7 @@ function ehListaDeIds(valor: unknown): valor is number[] {
     return Array.isArray(valor) && valor.every((item) => Number.isInteger(item));
 }
 
-const TIPOS_SEM_DATA = new Set(['SINCRONIZAR', 'PRESENCA', 'BATIMENTO', 'ENCERRANDO', 'ABERTURA', 'DIGITANDO']);
+const TIPOS_SEM_DATA = new Set(['SINCRONIZAR', 'PRESENCA', 'BATIMENTO', 'ENCERRANDO', 'ABERTURA', 'DIGITANDO', 'REACAO']);
 
 /** Lê o que `codificarMensagemDoBarramento` escreveu (as datas voltam a ser `Date`); texto estranho devolve `null` em vez de derrubar a escuta. */
 export function decodificarMensagemDoBarramento(texto: string): MensagemDoBarramento | null {
@@ -47,10 +47,12 @@ export function decodificarMensagemDoBarramento(texto: string): MensagemDoBarram
     if (bruto.tipo === 'ENTREGA') {
         if (!ehListaDeIds(bruto.usuarioIds) || !bruto.evento || typeof bruto.evento !== 'object') return null;
         const evento = bruto.evento;
-        if (evento.tipo === 'MENSAGEM') {
+        if (evento.tipo === 'MENSAGEM' || evento.tipo === 'EDICAO') {
             const criadaEm = lerData(evento.mensagem?.createdDate);
             if (!criadaEm) return null;
-            return { tipo: 'ENTREGA', usuarioIds: bruto.usuarioIds, evento: { tipo: 'MENSAGEM', mensagem: { ...evento.mensagem, createdDate: criadaEm } } };
+            // `editadaDate` é nula na mensagem nova e uma data na editada; qualquer outra coisa vira nula em vez de um `Invalid Date`.
+            const editadaEm = lerData(evento.mensagem?.editadaDate);
+            return { tipo: 'ENTREGA', usuarioIds: bruto.usuarioIds, evento: { tipo: evento.tipo, mensagem: { ...evento.mensagem, createdDate: criadaEm, editadaDate: editadaEm } } };
         }
         if (evento.tipo === 'LEITURA') {
             const lidaAte = lerData(evento.lidaAteDate);
@@ -73,7 +75,7 @@ export function prepararParaNotify(mensagem: MensagemDoBarramento): string {
     const completa = codificarMensagemDoBarramento(mensagem);
     if (Buffer.byteLength(completa, 'utf8') <= LIMITE_DO_NOTIFY_EM_BYTES) return completa;
 
-    if (mensagem.tipo === 'ENTREGA' && mensagem.evento.tipo === 'MENSAGEM') {
+    if (mensagem.tipo === 'ENTREGA' && (mensagem.evento.tipo === 'MENSAGEM' || mensagem.evento.tipo === 'EDICAO')) {
         const resumida = codificarMensagemDoBarramento({
             tipo: 'ENTREGA',
             usuarioIds: mensagem.usuarioIds,

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { AutorMensagemDiretaEnum, CitacaoMensagemDto, ReferenciaMensagemDiretaEnum, trechoDaMensagemDireta } from '@project20/shared';
+import { AutorMensagemDiretaEnum, CitacaoMensagemDto, ReferenciaMensagemDiretaEnum, podeEditarMensagemDireta, trechoDaMensagemDireta } from '@project20/shared';
 import { MenuItem, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ContextMenu } from 'primeng/contextmenu';
@@ -10,13 +10,18 @@ import { TEMPO_DO_COPIADO_MS } from '../../../../shared/components/markdown-bloc
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-referencia.service';
 import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
+import { EdicaoEmPreparo } from '../../utils/compositor.util';
 import { AVISO_DE_LEITURA_DAS_CONVERSAS, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa, marcarEmendas } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
+import { MensagemDiretaEmojiSeletorComponent } from '../mensagem-direta-emoji-seletor/mensagem-direta-emoji-seletor.component';
+import { MensagemDiretaReacoesComponent } from '../mensagem-direta-reacoes/mensagem-direta-reacoes.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
 
 /** Distância do fim (px) até a qual a conversa continua acompanhando as mensagens que chegam. */
 const MARGEM_DO_FIM_PX = 80;
+/** Quanto o usuário precisa ter subido (px) para o botão "voltar ao atual" aparecer. */
+const DISTANCIA_DO_BOTAO_PX = 200;
 /** Quantas páginas mais antigas a citação carrega, no máximo, ao procurar a mensagem original (task 220). */
 const PAGINAS_PARA_ACHAR_A_ORIGINAL = 5;
 /** Quanto tempo a mensagem original fica realçada depois de a citação levar até ela. */
@@ -33,7 +38,7 @@ const MARGEM_DO_TOPO_PX = 40;
 @Component({
     selector: 'app-mensagem-direta-conversa',
     standalone: true,
-    imports: [ButtonModule, ContextMenu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent],
+    imports: [ButtonModule, ContextMenu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent, MensagemDiretaReacoesComponent, MensagemDiretaEmojiSeletorComponent],
     templateUrl: './mensagem-direta-conversa.component.html',
     styleUrl: './mensagem-direta-conversa.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,7 +59,7 @@ export class MensagemDiretaConversaComponent {
     /** Só a outra pessoa da conversa pode ser mencionada (a regra do servidor: quem não lê a conversa não é avisado dela). */
     protected readonly pessoasMencionaveis = computed(() => {
         const aberta = this.aberta();
-        return aberta ? [{ usuarioId: aberta.usuarioId, nome: aberta.usuarioNome }] : [];
+        return aberta ? [{ usuarioId: aberta.usuarioId, nome: aberta.usuarioNome, corAvatar: this.estado.corDe(aberta.usuarioId) }] : [];
     });
     protected readonly estaDigitando = computed(() => {
         const aberta = this.aberta();
@@ -92,6 +97,16 @@ export class MensagemDiretaConversaComponent {
         if (!respondida || respondida.autorUsuarioId === null) return null;
         return { nome: this.nomeDoAutor(respondida.autorUsuarioId), trecho: trechoDaMensagemDireta(respondida.texto) };
     });
+    /** A mensagem própria em edição, no formato do compositor (task 313): o texto, as menções e as referências com o nome que o texto traz. */
+    protected readonly edicaoEmPreparo = computed<EdicaoEmPreparo | null>(() => {
+        const editando = this.estado.editando();
+        if (!editando) return null;
+        const referencias = editando.referencias.flatMap((referencia) => {
+            const nome = this.nomesDasReferencias().get(`${referencia.tipo}:${referencia.id}`);
+            return nome ? [{ ...referencia, nome }] : [];
+        });
+        return { mensagemId: editando.mensagemId, texto: editando.texto, mencoes: editando.mencoes, referencias };
+    });
     /** A mensagem realçada depois de a citação levar até ela, e o aviso quando ela não foi achada. */
     protected readonly destacadaId = signal<string | null>(null);
     protected readonly avisoDaOriginal = signal<string | null>(null);
@@ -103,6 +118,12 @@ export class MensagemDiretaConversaComponent {
     private temporizadorDoCopiado: ReturnType<typeof setTimeout> | null = null;
 
     private colarNoFim = true;
+    /** O usuário subiu na conversa: mostra a setinha que leva de volta à mensagem mais recente. */
+    protected readonly longeDoFim = signal(false);
+    /** A mensagem cuja faixa de reações está aberta e a que está escolhendo o emoji no seletor completo (task 314); no máximo uma de cada. */
+    protected readonly reagindoId = signal<string | null>(null);
+    protected readonly seletorDaReacaoId = signal<string | null>(null);
+    protected readonly nomeDeQuemReagiu = (usuarioId: number): string => this.nomeDoAutor(usuarioId);
     private alturaAntes: number | null = null;
     private topoAntes = 0;
     private totalAntes = 0;
@@ -113,6 +134,9 @@ export class MensagemDiretaConversaComponent {
             this.pessoaAberta();
             this.menuAcoes()?.hide();
             this.mensagemDoMenu.set(null);
+            this.longeDoFim.set(false);
+            this.reagindoId.set(null);
+            this.seletorDaReacaoId.set(null);
         });
         // Quando o NÚMERO de mensagens muda: acompanha o fim se o usuário está lá, ou mantém o ponto que ele lia quando chega uma página mais antiga.
         effect(() => {
@@ -168,6 +192,12 @@ export class MensagemDiretaConversaComponent {
         this.nomesDasReferencias.update((atuais) => new Map(atuais).set(chave, dados.nome as string));
     }
 
+    /** A opção "Editar" só aparece na mensagem própria enviada, dentro do prazo de 1 hora (a mesma regra pura da service, que é quem decide de verdade). */
+    protected podeEditar(mensagem: MensagemNaConversa): boolean {
+        const meuId = this.sessao.id();
+        return meuId !== undefined && mensagem.situacao === 'ENVIADA' && podeEditarMensagemDireta({ ...mensagem, usuarioId: meuId, agora: new Date() });
+    }
+
     /** Menu da mensagem enviada: o botão direito e os três pontos oferecem as mesmas ações. */
     protected abrirMenu(evento: MouseEvent, mensagem: MensagemNaConversa, peloBotao = false): void {
         if (mensagem.situacao !== 'ENVIADA' || mensagem.autor !== AutorMensagemDiretaEnum.USUARIO) return;
@@ -180,6 +210,8 @@ export class MensagemDiretaConversaComponent {
         this.mensagemDoMenu.set(mensagem.mensagemId);
         this.itensMenu.set([
             { label: 'Responder', icon: 'pi pi-reply', command: () => this.estado.responder(mensagem) },
+            { label: 'Reagir', icon: 'pi pi-face-smile', command: () => this.abrirReacao(mensagem.mensagemId) },
+            ...(this.podeEditar(mensagem) ? [{ label: 'Editar', icon: 'pi pi-pencil', command: () => this.estado.editar(mensagem) }] : []),
             { label: 'Copiar texto', icon: 'pi pi-copy', command: () => void this.copiar(mensagem.mensagemId, mensagem.texto) },
         ]);
         // Cliques de teclado têm coordenadas zero: ancorar o menu no botão também atende Enter/Espaço.
@@ -206,6 +238,24 @@ export class MensagemDiretaConversaComponent {
         evento.preventDefault();
         alvo?.ownerDocument.defaultView?.getSelection()?.removeAllRanges();
         this.estado.responder(mensagem);
+    }
+
+    /** Abre (ou fecha, se já estava aberta) a faixa de reações da mensagem. */
+    protected abrirReacao(mensagemId: string): void {
+        this.seletorDaReacaoId.set(null);
+        this.reagindoId.set(this.reagindoId() === mensagemId ? null : mensagemId);
+    }
+
+    protected abrirSeletorDaReacao(mensagemId: string): void {
+        this.reagindoId.set(null);
+        this.seletorDaReacaoId.set(mensagemId);
+    }
+
+    /** Reage com o emoji escolhido (o mesmo da minha reação tira, outro troca) e fecha a faixa e o seletor. */
+    protected reagir(mensagemId: string, emoji: string): void {
+        this.reagindoId.set(null);
+        this.seletorDaReacaoId.set(null);
+        void this.estado.reagir(mensagemId, emoji);
     }
 
     /** Copia o texto da mensagem como foi escrito (o Markdown), inclusive blocos de código. */
@@ -280,7 +330,9 @@ export class MensagemDiretaConversaComponent {
     protected aoRolar(): void {
         const elementoAtual = this.rolagem()?.nativeElement;
         if (!elementoAtual) return;
-        this.colarNoFim = elementoAtual.scrollHeight - elementoAtual.scrollTop - elementoAtual.clientHeight < MARGEM_DO_FIM_PX;
+        const distanciaDoFim = elementoAtual.scrollHeight - elementoAtual.scrollTop - elementoAtual.clientHeight;
+        this.colarNoFim = distanciaDoFim < MARGEM_DO_FIM_PX;
+        this.longeDoFim.set(distanciaDoFim >= DISTANCIA_DO_BOTAO_PX);
         const aberta = this.aberta();
         if (elementoAtual.scrollTop < MARGEM_DO_TOPO_PX && aberta?.proximoCursor && !aberta.carregandoMais && !aberta.carregando) {
             this.alturaAntes = elementoAtual.scrollHeight;
@@ -309,6 +361,14 @@ export class MensagemDiretaConversaComponent {
         if (this.colarNoFim && cresceu) elemento.scrollTop = elemento.scrollHeight;
     }
 
+    protected irParaOAtual(): void {
+        const elemento = this.rolagem()?.nativeElement;
+        if (!elemento) return;
+        this.colarNoFim = true;
+        if (elemento.scrollTo) elemento.scrollTo({ top: elemento.scrollHeight, behavior: 'smooth' });
+        else elemento.scrollTop = elemento.scrollHeight;
+    }
+
     private acompanharOFim(): void {
         const elemento = this.rolagem()?.nativeElement;
         if (elemento && this.colarNoFim) elemento.scrollTop = elemento.scrollHeight;
@@ -316,7 +376,7 @@ export class MensagemDiretaConversaComponent {
 
     /** O rodapé (horário, "Lida", menu) só aparece na última mensagem da sequência, salvo quando carrega um estado que não pode sumir. */
     protected rodapeCompacto(mensagem: MensagemNaConversa): boolean {
-        return !!this.emendas().get(mensagem.mensagemId)?.comProxima && mensagem.situacao === 'ENVIADA' && mensagem.mensagemId !== this.lidaId() && mensagem.mensagemId !== this.ultimaMinhaId();
+        return !!this.emendas().get(mensagem.mensagemId)?.comProxima && mensagem.situacao === 'ENVIADA' && !mensagem.editadaDate && mensagem.mensagemId !== this.lidaId() && mensagem.mensagemId !== this.ultimaMinhaId();
     }
 
     protected aoDigitar(): void {
@@ -325,6 +385,11 @@ export class MensagemDiretaConversaComponent {
     }
 
     protected aoEnviar(envio: EnvioDoCompositor): void {
+        // Com uma mensagem em edição, enviar é salvar a edição (nada de mensagem nova).
+        if (this.estado.editando()) {
+            void this.estado.confirmarEdicao(envio);
+            return;
+        }
         this.colarNoFim = true;
         void this.estado.enviar(envio);
     }

@@ -45,7 +45,7 @@ function mensagemDe(autorUsuarioId: number, texto: string, parcial: Record<strin
 }
 
 function conversaDaLista(usuarioId: number, nome: string, silenciada = false) {
-    return normalizarConversa({ conversaId: `1-${usuarioId}`, usuarioId, usuarioNome: nome, ultimaMensagem: null, naoLidas: 0, silenciada, online: false });
+    return normalizarConversa({ conversaId: `1-${usuarioId}`, usuarioId, usuarioNome: nome, corAvatar: null, ultimaMensagem: null, naoLidas: 0, silenciada, online: false });
 }
 
 describe('MensagemDiretaAvisosComponent', () => {
@@ -213,7 +213,7 @@ describe('MensagemDiretaAvisosComponent', () => {
         estado.aplicarEvento({ tipo: 'MENSAGEM', mensagem: mensagemDe(15, 'oi de quem eu não conhecia') as never });
         await vi.advanceTimersByTimeAsync(0);
         responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversas'), {
-            conversas: [{ conversaId: '1-15', usuarioId: 15, usuarioNome: 'Rafael Lima', ultimaMensagem: null, naoLidas: 1, silenciada: false, online: false }],
+            conversas: [{ conversaId: '1-15', usuarioId: 15, usuarioNome: 'Rafael Lima', corAvatar: null, ultimaMensagem: null, naoLidas: 1, silenciada: false, online: false }],
         });
         await vi.advanceTimersByTimeAsync(0);
         await tela.atualizar();

@@ -79,6 +79,45 @@
         color: var(--p-text-color);
     }
 
+    // A área da rolagem: o botão "voltar ao atual" flutua sobre as mensagens, no canto inferior direito.
+    &__area {
+        position: relative;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    &__voltar-ao-atual {
+        position: absolute;
+        right: 0.875rem;
+        bottom: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border: 1px solid var(--app-surface-300);
+        border-radius: 50%;
+        background: var(--app-surface-0);
+        color: var(--app-surface-700);
+        box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+        cursor: pointer;
+        transition:
+            background-color 0.15s,
+            color 0.15s;
+
+        &:hover {
+            background: var(--app-surface-100);
+            color: var(--p-primary-color);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--p-primary-color);
+            outline-offset: 2px;
+        }
+    }
+
     &__mensagens {
         flex: 1;
         min-height: 0;

@@ -1,0 +1,24 @@
+<div class="cor-seletor">
+    <div class="cor-seletor__previa">
+        <app-mensagem-direta-avatar [nome]="nome()" [cor]="cor()" />
+        <span class="cor-seletor__dica">{{ cor() ?? "Cor padrão" }}</span>
+    </div>
+
+    <app-seletor-cor
+        [compacto]="true"
+        [aceitaSemCor]="true"
+        [ngModel]="cor()"
+        (ngModelChange)="aoEscolher($event)"
+    />
+
+    <div class="cor-seletor__acoes">
+        <button
+            type="button"
+            class="cor-seletor__padrao"
+            [disabled]="cor() === null"
+            (click)="voltarAoPadrao()"
+        >
+            Voltar à cor padrão
+        </button>
+    </div>
+</div>

@@ -13,7 +13,7 @@ import {
     PaginaDeMensagensDiretas,
     ResumoDeConversaDireta,
 } from '../domain/mensagem-direta-consultas';
-import { MensagemDiretaNova } from '../domain/mensagem-direta.documento';
+import { MensagemDiretaAlterar, MensagemDiretaNova } from '../domain/mensagem-direta.documento';
 import { criarClienteElasticsearchMensagemDireta, MensagemDiretaElasticsearchRepository } from './mensagem-direta-elasticsearch.repository';
 import { criarClienteOpenSearchMensagemDireta, MensagemDiretaOpenSearchRepository } from './mensagem-direta-opensearch.repository';
 import { MensagemDiretaPostgresRepository } from './mensagem-direta-postgres.repository';
@@ -21,7 +21,7 @@ import { MensagemDiretaPostgresRepository } from './mensagem-direta-postgres.rep
 /**
  * O contrato do armazenamento das mensagens entre colaboradores (task 206). A service (task 208) só conhece isto; a implementação vem de
  * `CHAT_ARMAZENAMENTO`, a mesma variável do chat da IA: OpenSearch no desenvolvimento, Elasticsearch na produção final e, na produção de
- * teste, a tabela provisória do Postgres (task 207). Não há exclusão nem alteração de mensagem: elas são gravadas uma vez.
+ * teste, a tabela provisória do Postgres (task 207). Não há exclusão de mensagem; a alteração é só a edição do texto pelo autor (task 313).
  *
  * Quem pode ler o quê é decidido na service: o armazenamento recebe filtros explícitos e não conhece permissão.
  */
@@ -31,6 +31,11 @@ export interface ArmazenamentoDeMensagemDireta {
    * estava gravada (`jaExistia`); um `mensagemId` já usado por outro autor ou em outra conversa é recusado.
    */
     gravar(mensagem: MensagemDiretaNova): Promise<MensagemDiretaEnviadaDto>;
+    /**
+   * Troca o texto de uma mensagem própria (task 313) e grava `editada_date`; a data de envio, a ordem e a resposta não mudam. Devolve a mensagem
+   * já alterada, ou `null` quando ela não existe, é de outra conversa ou **não é do autor** (o prazo de 1 hora é conferido pela service).
+   */
+    alterarMensagem(alteracao: MensagemDiretaAlterar): Promise<MensagemDiretaResumoDto | null>;
     /** A mensagem com esse id **se for desta conversa**; de outra conversa, apagada ou inexistente, `null`. */
     recuperarMensagem(consulta: ConsultaMensagemDireta): Promise<MensagemDiretaResumoDto | null>;
     /** Uma página da conversa, da mais nova para a mais antiga. */

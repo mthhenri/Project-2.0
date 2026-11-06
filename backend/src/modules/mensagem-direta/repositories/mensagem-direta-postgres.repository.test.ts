@@ -74,9 +74,10 @@ describe('MensagemDiretaPostgresRepository (sem banco)', () => {
         await recusa(repositorio.listarTodasConversas({ usuarioIdsExcluidos: [], pagina: 1, porPagina: 10 }));
     });
 
-    it('não expõe exclusão nem alteração de mensagem', () => {
+    it('não expõe exclusão; a única alteração é a edição do texto (task 313)', () => {
     // Só os métodos do próprio repository: o `executarSoftDelete` herdado de `BaseRepository` existe, mas este não o usa.
         const metodos = Object.getOwnPropertyNames(MensagemDiretaPostgresRepository.prototype);
-        assert.deepEqual(metodos.filter((nome) => /exclu|delet|remov|apag|alter|atualiz|update/i.test(nome)), []);
+        assert.deepEqual(metodos.filter((nome) => /exclu|delet|remov|apag/i.test(nome)), []);
+        assert.deepEqual(metodos.filter((nome) => /alter|atualiz|update/i.test(nome)), ['alterarMensagem']);
     });
 });

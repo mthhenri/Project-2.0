@@ -14,7 +14,8 @@ const COLUNAS_DA_PREFERENCIA = `
     som_ativo AS "somAtivo",
     silenciado_ate_date AS "silenciadoAteDate",
     atalho_global AS "atalhoGlobal",
-    posicao_popup AS "posicaoPopup"
+    posicao_popup AS "posicaoPopup",
+    posicao_barra AS "posicaoBarra"
 `;
 
 /** As preferências do chat entre colaboradores (task 208): uma linha por usuário, criada na primeira alteração. */
@@ -56,7 +57,8 @@ export class MensagemDiretaPreferenciaRepository extends BaseRepository<Mensagem
                         som_ativo,
                         silenciado_ate_date,
                         atalho_global,
-                        posicao_popup
+                        posicao_popup,
+                        posicao_barra
                     )
                 SELECT
                     NOW(),
@@ -68,7 +70,8 @@ export class MensagemDiretaPreferenciaRepository extends BaseRepository<Mensagem
                     :somAtivo,
                     CAST(:silenciadoAteDate AS timestamptz),
                     :atalhoGlobal,
-                    :posicaoPopup
+                    :posicaoPopup,
+                    :posicaoBarra
                 ON CONFLICT (usuario_id)
                 WHERE
                     is_deleted = false DO UPDATE
@@ -78,7 +81,8 @@ export class MensagemDiretaPreferenciaRepository extends BaseRepository<Mensagem
                     som_ativo = EXCLUDED.som_ativo,
                     silenciado_ate_date = EXCLUDED.silenciado_ate_date,
                     atalho_global = EXCLUDED.atalho_global,
-                    posicao_popup = EXCLUDED.posicao_popup
+                    posicao_popup = EXCLUDED.posicao_popup,
+                    posicao_barra = EXCLUDED.posicao_barra
                 RETURNING
                     ${COLUNAS_DA_PREFERENCIA}
             `,

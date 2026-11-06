@@ -20,6 +20,7 @@ export * from './assunto-chat.enum';
 export * from './tipo-proposta-ia.enum';
 export * from './status-proposta-ia.enum';
 export * from './autor-mensagem-direta.enum';
+export * from './posicao-barra-chat.enum';
 export * from './posicao-popup-chat.enum';
 export * from './referencia-mensagem-direta.enum';
 export * from './trecho-diff-tipo.enum';

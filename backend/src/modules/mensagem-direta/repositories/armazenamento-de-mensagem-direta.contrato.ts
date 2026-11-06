@@ -287,5 +287,53 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
             assert.equal(await armazenamento.recuperarMensagem({ conversaId: conversaAnaBruno, mensagemId: 'nao-e-uuid' }), null);
             await assert.rejects(armazenamento.recuperarMensagem({ conversaId: 'nao-e-conversa', mensagemId: primeira.mensagemId }), (erro) => erro instanceof BusinessException);
         });
+
+        it('alterarMensagem: troca o texto do autor e marca "editada", sem mudar a data de envio, a ordem nem a resposta; quem não é o autor não altera', async () => {
+            const original = (await armazenamento.gravar(mensagem(conversaAnaDavi, ana, 'Texto antes da edição'))).mensagem;
+            await espera(15);
+            const citacao = { mensagemId: original.mensagemId, autorUsuarioId: ana, trecho: 'Texto antes da edição' };
+            const resposta = (await armazenamento.gravar(mensagem(conversaAnaDavi, davi, 'Resposta do Davi', { respondeA: citacao }))).mensagem;
+            assert.equal(original.editadaDate, null);
+            const antes = await armazenamento.listarConversa({ conversaId: conversaAnaDavi, limite: 50 });
+            const totalAntes = (await armazenamento.listarConversasDoUsuario({ usuarioId: ana })).find((conversa) => conversa.conversaId === conversaAnaDavi)!.totalMensagens;
+
+            const editada = await armazenamento.alterarMensagem({
+                mensagemId: original.mensagemId,
+                conversaId: conversaAnaDavi,
+                autorUsuarioId: ana,
+                texto: `Texto depois da edição ${marca}`,
+                contemCodigo: true,
+                mencoes: [davi],
+                referencias: [{ tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 57 }],
+            });
+            assert.ok(editada);
+            assert.equal(editada.texto, `Texto depois da edição ${marca}`);
+            assert.ok(editada.editadaDate instanceof Date);
+            assert.equal(editada.createdDate.getTime(), original.createdDate.getTime(), 'a data de envio não muda');
+
+            const pagina = await armazenamento.listarConversa({ conversaId: conversaAnaDavi, limite: 50 });
+            assert.deepEqual(ids(pagina.mensagens), ids(antes.mensagens), 'a ordem não muda');
+            const lida = pagina.mensagens.find((item) => item.mensagemId === original.mensagemId)!;
+            assert.equal(lida.texto, `Texto depois da edição ${marca}`);
+            assert.equal(lida.contemCodigo, true, 'o que deriva do texto é recalculado');
+            assert.deepEqual(lida.mencoes, [davi]);
+            assert.deepEqual(lida.referencias, [{ tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 57 }]);
+            assert.ok(lida.editadaDate instanceof Date, 'a leitura traz a data da edição');
+            assert.equal(pagina.mensagens.find((item) => item.mensagemId === resposta.mensagemId)!.editadaDate, null, 'a outra continua sem edição');
+            assert.deepEqual(pagina.mensagens.find((item) => item.mensagemId === resposta.mensagemId)!.respondeA, citacao, 'a citação da resposta não é reescrita');
+
+            assert.equal((await armazenamento.buscar({ usuarioId: ana, texto: `depois da edição ${marca}` })).length, 1, 'a busca vê o texto novo');
+            assert.equal((await armazenamento.buscar({ usuarioId: ana, texto: `antes da edição ${marca}` })).length, 0, 'e não o antigo');
+
+            const total = (await armazenamento.listarConversasDoUsuario({ usuarioId: ana })).find((conversa) => conversa.conversaId === conversaAnaDavi)!;
+            assert.equal(total.totalMensagens, totalAntes, 'editar não cria mensagem nova');
+
+            const base = { mensagemId: original.mensagemId, conversaId: conversaAnaDavi, texto: 'tentativa', contemCodigo: false, mencoes: [], referencias: [] };
+            assert.equal(await armazenamento.alterarMensagem({ ...base, autorUsuarioId: davi }), null, 'só o autor altera');
+            assert.equal(await armazenamento.alterarMensagem({ ...base, autorUsuarioId: ana, conversaId: conversaAnaCarla }), null, 'de outra conversa');
+            assert.equal(await armazenamento.alterarMensagem({ ...base, autorUsuarioId: ana, mensagemId: randomUUID() }), null, 'inexistente');
+            await assert.rejects(armazenamento.alterarMensagem({ ...base, autorUsuarioId: ana, texto: '  ' }), (erro) => erro instanceof BusinessException);
+            assert.equal((await armazenamento.recuperarMensagem({ conversaId: conversaAnaDavi, mensagemId: original.mensagemId }))?.texto, `Texto depois da edição ${marca}`, 'a tentativa recusada não gravou');
+        });
     });
 }

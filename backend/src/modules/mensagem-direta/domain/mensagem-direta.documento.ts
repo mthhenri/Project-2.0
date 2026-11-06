@@ -28,6 +28,18 @@ export interface MensagemDiretaNova {
     respondeA?: CitacaoMensagemDto | null;
 }
 
+/** A edição de uma mensagem própria (task 313): o texto novo e o que deriva dele; o resto da mensagem (data de envio, resposta, autor) não muda. */
+export interface MensagemDiretaAlterar {
+    mensagemId: string;
+    conversaId: string;
+    /** Quem edita: o armazenamento só altera a mensagem se ele for o autor. */
+    autorUsuarioId: number;
+    texto: string;
+    contemCodigo: boolean;
+    mencoes: number[];
+    referencias: ReferenciaMensagemDto[];
+}
+
 /** Forma do documento no índice `mensagem-direta` (nomes da modelagem). */
 export interface MensagemDiretaFonte {
     mensagem_id: string;
@@ -46,6 +58,8 @@ export interface MensagemDiretaFonte {
     responde_a_autor_usuario_id?: number | null;
     responde_a_trecho?: string | null;
     created_date: string;
+    /** Quando o autor editou a mensagem pela última vez (task 313); ausente ou `null` quando nunca foi editada. */
+    editada_date?: string | null;
 }
 
 export const REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -76,6 +90,25 @@ export function validarMensagemDiretaNova(mensagem: MensagemDiretaNova): void {
             throw new BusinessException(`O trecho da resposta deve ter de 1 a ${LIMITE_TRECHO_MENSAGEM_DIRETA} caracteres`);
         }
     }
+}
+
+/** Defesa do armazenamento para a edição (a service valida o pedido): conversa e id válidos e texto não vazio. */
+export function validarMensagemDiretaAlterar(alteracao: MensagemDiretaAlterar): void {
+    if (!lerConversaDiretaId(alteracao.conversaId)) throw new BusinessException('Conversa direta inválida');
+    if (!REGEX_UUID.test(alteracao.mensagemId)) throw new BusinessException('O identificador da mensagem deve ser um UUID');
+    if (!Number.isInteger(alteracao.autorUsuarioId) || alteracao.autorUsuarioId < 1) throw new BusinessException('Quem edita a mensagem precisa ser um usuário');
+    if (!alteracao.texto || !alteracao.texto.trim()) throw new BusinessException('A mensagem não pode ficar vazia');
+}
+
+/** Os campos do documento que a edição troca. A data de envio, a resposta e o autor ficam como estavam. */
+export function paraCamposDeEdicao(alteracao: MensagemDiretaAlterar, editadaEm: Date): Pick<MensagemDiretaFonte, 'texto' | 'contem_codigo' | 'mencoes' | 'referencias' | 'editada_date'> {
+    return {
+        texto: alteracao.texto,
+        contem_codigo: alteracao.contemCodigo,
+        mencoes: alteracao.mencoes,
+        referencias: alteracao.referencias.map(formatarReferenciaDireta),
+        editada_date: editadaEm.toISOString(),
+    };
 }
 
 /** O reenvio de um `mensagemId` só devolve o que já estava gravado se for o mesmo autor, na mesma conversa; senão vazaria a mensagem de outra pessoa. */
@@ -125,5 +158,8 @@ export function deFonteDireta(fonte: MensagemDiretaFonte): MensagemDiretaResumoD
           ? { mensagemId: fonte.responde_a_mensagem_id, autorUsuarioId: fonte.responde_a_autor_usuario_id, trecho: fonte.responde_a_trecho }
           : null,
         createdDate: new Date(fonte.created_date),
+        editadaDate: fonte.editada_date ? new Date(fonte.editada_date) : null,
+        // As reações vêm da tabela `mensagem_direta_reacao`: quem junta é a service.
+        reacoes: [],
     };
 }

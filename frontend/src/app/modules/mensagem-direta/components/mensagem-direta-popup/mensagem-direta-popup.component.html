@@ -26,10 +26,18 @@
             @switch (estado.visao()) {
                 @case ("CONVERSA") {
                     <!-- Com uma conversa aberta a lista vira a barra de bolinhas (a lista completa continua no "voltar"). -->
-                    <div class="popup-direto__conversa-com-barra">
+                    <div
+                        class="popup-direto__conversa-com-barra"
+                        [class]="
+                            'popup-direto__conversa-com-barra--' + posicaoDaBarra().toLowerCase()
+                        "
+                    >
                         <app-mensagem-direta-barra />
                         <app-mensagem-direta-conversa />
                     </div>
+                }
+                @case ("CONFIGURACOES") {
+                    <app-mensagem-direta-configuracoes />
                 }
                 @case ("NOVA") {
                     <app-mensagem-direta-nova />

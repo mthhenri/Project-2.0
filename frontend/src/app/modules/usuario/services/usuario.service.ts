@@ -10,6 +10,8 @@ import {
     UsuarioAlterarDto,
     UsuarioAlteradoDto,
     UsuarioSenhaAlterarDto,
+    UsuarioCorAlterarDto,
+    UsuarioCorAlteradaDto,
     UsuarioSenhaAlteradaDto,
     StandardResponse,
     PaginatedResult,
@@ -44,6 +46,11 @@ export class UsuarioService {
 
     alterar(id: number, dto: UsuarioAlterarDto): Observable<StandardResponse<UsuarioAlteradoDto>> {
         return this.httpClient.put<StandardResponse<UsuarioAlteradoDto>>(`${this.urlBase}/${id}`, dto);
+    }
+
+    /** A própria pessoa escolhendo a cor da bolinha (`null` volta à cor padrão). */
+    alterarCor(dto: UsuarioCorAlterarDto): Observable<StandardResponse<UsuarioCorAlteradaDto>> {
+        return this.httpClient.put<StandardResponse<UsuarioCorAlteradaDto>>(`${this.urlBase}/cor`, dto);
     }
 
     excluir(id: number): Observable<StandardResponse<void>> {
