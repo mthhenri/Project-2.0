@@ -86,7 +86,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 14. tipo_prompt, prompt (migration `0034`)
 15. tipo_proposta_ia, tipo_proposta_ia_status, proposta_ia (migration `0035`; `0055` acrescenta `aplicada_pela_ia`)
 16. tipo_atividade_prioridade e `atividade.tipo_atividade_prioridade_id` (migration `0036`)
-17. mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao (migration `0050`; só dependem de `usuario`)
+17. mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao (migration `0050`; só dependem de `usuario`) e mensagem_direta_reacao (migration `0083`, task 314; depende de `usuario`)
 18. mensagem_direta (migration `0051`, provisória; sem FK, depende só das funções `fn_chat_texto_*` da `0038`)
 19. modelagem_grupo, modelagem_tabela (migrations `0052` e `0053`; `modelagem_tabela` referencia `modelagem_grupo`)
 ```
@@ -852,6 +852,9 @@ dois usuários). Colunas de `BaseEntity` mais: `leitor_usuario_id`, `conversa_id
 `participantes_avisados` (esta abertura gerou o aviso na conversa; o aviso sai uma vez por leitor, conversa e dia). `created_date` é o instante da abertura. Índice em
 (`leitor_usuario_id`, `conversa_id`, `created_date`).
 
+#### `mensagem_direta_reacao` (task 314)
+As reações às mensagens do chat entre colaboradores, uma por pessoa por mensagem. Fica no PostgreSQL **para as três implementações do armazenamento** (a mensagem pode viver no índice), e a service junta as reações à página de mensagens. Colunas de `BaseEntity` mais: `mensagem_id` (`UUID`, **sem FK**: a mensagem pode estar fora do PostgreSQL), `conversa_id` (`VARCHAR(21)`, `<menorId>-<maiorId>`, com `CHECK` do formato), `usuario_id` (FK para `usuario`, quem reagiu) e `reacao` (`VARCHAR(32)`: o **próprio emoji**, um só, conferido pela regra `ehReacaoValida` do `shared`). Índice único parcial em (`mensagem_id`, `usuario_id`) onde `is_deleted = false` e índice em `conversa_id`. Trocar a reação é `UPDATE`; tirar é soft delete, e reagir de novo depois cria uma linha nova.
+
 ### Tabelas provisórias — migrations `0038` (task 162) e `0051` (task 207)
 
 > **Não fazem parte do modelo definitivo.** Existem só para o ambiente de teste (`CHAT_ARMAZENAMENTO=postgres`) guardar as mensagens do
@@ -901,7 +904,7 @@ projeto ─── demanda
 
 dia_nao_util  [standalone, consultado pelo módulo ponto]
 
-usuario ─── mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao
+usuario ─── mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao, mensagem_direta_reacao
             [chat entre colaboradores; as mensagens ficam no índice, não no PostgreSQL]
 
 projeto ─── plano ─── plano_demanda ─── demanda

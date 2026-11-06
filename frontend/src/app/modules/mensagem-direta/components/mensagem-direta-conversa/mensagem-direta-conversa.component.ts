@@ -14,6 +14,8 @@ import { EdicaoEmPreparo } from '../../utils/compositor.util';
 import { AVISO_DE_LEITURA_DAS_CONVERSAS, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa, marcarEmendas } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
+import { MensagemDiretaEmojiSeletorComponent } from '../mensagem-direta-emoji-seletor/mensagem-direta-emoji-seletor.component';
+import { MensagemDiretaReacoesComponent } from '../mensagem-direta-reacoes/mensagem-direta-reacoes.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
 
 /** Distância do fim (px) até a qual a conversa continua acompanhando as mensagens que chegam. */
@@ -36,7 +38,7 @@ const MARGEM_DO_TOPO_PX = 40;
 @Component({
     selector: 'app-mensagem-direta-conversa',
     standalone: true,
-    imports: [ButtonModule, ContextMenu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent],
+    imports: [ButtonModule, ContextMenu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent, MensagemDiretaReacoesComponent, MensagemDiretaEmojiSeletorComponent],
     templateUrl: './mensagem-direta-conversa.component.html',
     styleUrl: './mensagem-direta-conversa.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -118,6 +120,10 @@ export class MensagemDiretaConversaComponent {
     private colarNoFim = true;
     /** O usuário subiu na conversa: mostra a setinha que leva de volta à mensagem mais recente. */
     protected readonly longeDoFim = signal(false);
+    /** A mensagem cuja faixa de reações está aberta e a que está escolhendo o emoji no seletor completo (task 314); no máximo uma de cada. */
+    protected readonly reagindoId = signal<string | null>(null);
+    protected readonly seletorDaReacaoId = signal<string | null>(null);
+    protected readonly nomeDeQuemReagiu = (usuarioId: number): string => this.nomeDoAutor(usuarioId);
     private alturaAntes: number | null = null;
     private topoAntes = 0;
     private totalAntes = 0;
@@ -129,6 +135,8 @@ export class MensagemDiretaConversaComponent {
             this.menuAcoes()?.hide();
             this.mensagemDoMenu.set(null);
             this.longeDoFim.set(false);
+            this.reagindoId.set(null);
+            this.seletorDaReacaoId.set(null);
         });
         // Quando o NÚMERO de mensagens muda: acompanha o fim se o usuário está lá, ou mantém o ponto que ele lia quando chega uma página mais antiga.
         effect(() => {
@@ -202,6 +210,7 @@ export class MensagemDiretaConversaComponent {
         this.mensagemDoMenu.set(mensagem.mensagemId);
         this.itensMenu.set([
             { label: 'Responder', icon: 'pi pi-reply', command: () => this.estado.responder(mensagem) },
+            { label: 'Reagir', icon: 'pi pi-face-smile', command: () => this.abrirReacao(mensagem.mensagemId) },
             ...(this.podeEditar(mensagem) ? [{ label: 'Editar', icon: 'pi pi-pencil', command: () => this.estado.editar(mensagem) }] : []),
             { label: 'Copiar texto', icon: 'pi pi-copy', command: () => void this.copiar(mensagem.mensagemId, mensagem.texto) },
         ]);
@@ -229,6 +238,24 @@ export class MensagemDiretaConversaComponent {
         evento.preventDefault();
         alvo?.ownerDocument.defaultView?.getSelection()?.removeAllRanges();
         this.estado.responder(mensagem);
+    }
+
+    /** Abre (ou fecha, se já estava aberta) a faixa de reações da mensagem. */
+    protected abrirReacao(mensagemId: string): void {
+        this.seletorDaReacaoId.set(null);
+        this.reagindoId.set(this.reagindoId() === mensagemId ? null : mensagemId);
+    }
+
+    protected abrirSeletorDaReacao(mensagemId: string): void {
+        this.reagindoId.set(null);
+        this.seletorDaReacaoId.set(mensagemId);
+    }
+
+    /** Reage com o emoji escolhido (o mesmo da minha reação tira, outro troca) e fecha a faixa e o seletor. */
+    protected reagir(mensagemId: string, emoji: string): void {
+        this.reagindoId.set(null);
+        this.seletorDaReacaoId.set(null);
+        void this.estado.reagir(mensagemId, emoji);
     }
 
     /** Copia o texto da mensagem como foi escrito (o Markdown), inclusive blocos de código. */

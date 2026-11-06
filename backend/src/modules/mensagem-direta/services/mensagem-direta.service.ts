@@ -17,6 +17,8 @@ import {
     MensagemDiretaListadasDto,
     MensagemDiretaListarDto,
     MensagemDiretaPreferenciaAlteradaDto,
+    MensagemDiretaReagidaDto,
+    MensagemDiretaReagirDto,
     MensagemDiretaPreferenciaAlterarDto,
     MensagemDiretaPessoasListadasDto,
     MensagemDiretaReferenciaBuscarDto,
@@ -28,11 +30,14 @@ import {
     MensagemDiretaSilencioAlteradoDto,
     MensagemDiretaSilencioAlterarDto,
     PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA,
+    ReacaoMensagemDiretaDto,
     ReferenciaMensagemDiretaEnum,
     ReferenciaMensagemDto,
+    MensagemDiretaResumoDto,
     StandardResponse,
     avaliarEdicaoDeMensagemDireta,
     contemBlocoDeCodigo,
+    ehReacaoValida,
     montarConversaDiretaId,
     outroParticipanteDaConversaDireta,
     trechoDaMensagemDireta,
@@ -56,6 +61,7 @@ import {
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, ArmazenamentoDeMensagemDireta } from '../repositories/armazenamento-de-mensagem-direta';
 import { MensagemDiretaLeituraRepository } from '../repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPreferenciaRepository } from '../repositories/mensagem-direta-preferencia.repository';
+import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-reacao.repository';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 
 const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
@@ -76,6 +82,7 @@ export class MensagemDiretaService {
         @Inject(ARMAZENAMENTO_DE_MENSAGEM_DIRETA) private readonly armazenamento: ArmazenamentoDeMensagemDireta,
         private readonly leituraRepositorio: MensagemDiretaLeituraRepository,
         private readonly preferenciaRepositorio: MensagemDiretaPreferenciaRepository,
+        private readonly reacaoRepositorio: MensagemDiretaReacaoRepository,
         private readonly usuarioRepositorio: UsuarioRepository,
         private readonly demandaRepositorio: DemandaRepository,
         private readonly atividadeRepositorio: AtividadeRepository,
@@ -107,6 +114,9 @@ export class MensagemDiretaService {
             referencias,
             respondeA,
         });
+
+        // O reenvio de uma mensagem que já estava gravada pode já ter reações; a nova não tem.
+        if (enviada.jaExistia) enviada.mensagem = (await this.juntarReacoes([enviada.mensagem]))[0];
 
         // O reenvio de uma mensagem que já estava gravada não avisa de novo. As duas pontas recebem (a do remetente cobre as outras abas dele).
         if (!enviada.jaExistia) {
@@ -144,7 +154,7 @@ export class MensagemDiretaService {
         }
 
         if (existente.texto === dto.texto) {
-            return { sucesso: true, dados: { mensagem: existente }, mensagem: 'Mensagem sem alterações' };
+            return { sucesso: true, dados: { mensagem: (await this.juntarReacoes([existente]))[0] }, mensagem: 'Mensagem sem alterações' };
         }
 
         const mencoes = normalizarMencoes(dto.mencoes, [usuarioAtivo.sub, dto.destinatarioId]);
@@ -163,10 +173,56 @@ export class MensagemDiretaService {
             referencias,
         });
         if (!alterada) throw new ResourceNotFoundException('Mensagem');
+        const [comReacoes] = await this.juntarReacoes([alterada]);
 
-        await this.eventosService.publicarParaUsuarios({ usuarioIds: [usuarioAtivo.sub, dto.destinatarioId], evento: { tipo: 'EDICAO', mensagem: alterada } });
+        await this.eventosService.publicarParaUsuarios({ usuarioIds: [usuarioAtivo.sub, dto.destinatarioId], evento: { tipo: 'EDICAO', mensagem: comReacoes } });
 
-        return { sucesso: true, dados: { mensagem: alterada }, mensagem: 'Mensagem editada com sucesso' };
+        return { sucesso: true, dados: { mensagem: comReacoes }, mensagem: 'Mensagem editada com sucesso' };
+    }
+
+    // ---------------------------------------------------------------------------
+    // Reagir (task 314)
+    // ---------------------------------------------------------------------------
+
+    /**
+     * A pessoa reage a uma mensagem de **pessoa** da conversa (a dela ou a da outra; a do sistema não tem reação): um só emoji, uma reação por pessoa por mensagem.
+     * O mesmo emoji de antes (ou `null`) tira a reação; outro troca. As duas pontas recebem `REACAO` com a lista completa. O aviso ao autor é do cliente, a partir
+     * do evento: nada entra na conversa nem nas não lidas.
+     */
+    async reagirMensagem(dto: MensagemDiretaReagirDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaReagidaDto>> {
+        await this.validarOutraPessoa(dto.destinatarioId, usuarioAtivo);
+        const reacao = dto.reacao ?? null;
+        if (reacao !== null && !ehReacaoValida(reacao)) throw new BusinessException('A reação deve ser um único emoji');
+        const conversaId = montarConversaDiretaId(usuarioAtivo.sub, dto.destinatarioId);
+        const mensagemId = dto.mensagemId.toLowerCase();
+        const original = await this.armazenamento.recuperarMensagem({ conversaId, mensagemId });
+        if (!original) throw new ResourceNotFoundException('Mensagem');
+        if (original.autor !== AutorMensagemDiretaEnum.USUARIO || original.autorUsuarioId === null) throw new BusinessException('A mensagem do sistema não recebe reação');
+
+        const atuais = await this.reacaoRepositorio.listarPorMensagens({ mensagemIds: [mensagemId] });
+        const minhaAtual = atuais.find((atual) => atual.usuarioId === usuarioAtivo.sub)?.reacao ?? null;
+        const nova = reacao !== null && reacao !== minhaAtual ? reacao : null;
+        if (nova === null) await this.reacaoRepositorio.remover({ mensagemId, usuarioId: usuarioAtivo.sub });
+        else await this.reacaoRepositorio.definir({ mensagemId, conversaId, usuarioId: usuarioAtivo.sub, reacao: nova });
+
+        const reacoes = (await this.reacaoRepositorio.listarPorMensagens({ mensagemIds: [mensagemId] })).map(({ usuarioId, reacao: emoji }): ReacaoMensagemDiretaDto => ({ usuarioId, reacao: emoji }));
+        await this.eventosService.publicarParaUsuarios({
+            usuarioIds: [usuarioAtivo.sub, dto.destinatarioId],
+            evento: { tipo: 'REACAO', conversaId, mensagemId, reacoes, reatorUsuarioId: usuarioAtivo.sub, autorUsuarioId: original.autorUsuarioId, reacao: nova },
+        });
+        return { sucesso: true, dados: { mensagemId, reacoes }, mensagem: nova === null ? 'Reação removida' : 'Reação registrada' };
+    }
+
+    /** Põe as reações (tabela do PostgreSQL) nas mensagens que o armazenamento devolveu, numa consulta só. O armazenamento sempre devolve `reacoes: []`. */
+    private async juntarReacoes(mensagens: MensagemDiretaResumoDto[]): Promise<MensagemDiretaResumoDto[]> {
+        const reacoes = await this.reacaoRepositorio.listarPorMensagens({ mensagemIds: mensagens.map((mensagem) => mensagem.mensagemId) });
+        if (reacoes.length === 0) return mensagens;
+        return mensagens.map((mensagem) => ({
+            ...mensagem,
+            reacoes: reacoes
+                .filter((reacao) => reacao.mensagemId === mensagem.mensagemId.toLowerCase())
+                .map(({ usuarioId, reacao }): ReacaoMensagemDiretaDto => ({ usuarioId, reacao })),
+        }));
     }
 
     // ---------------------------------------------------------------------------
@@ -186,7 +242,7 @@ export class MensagemDiretaService {
 
         return {
             sucesso: true,
-            dados: { mensagens: pagina.mensagens, proximoCursor: pagina.proximoCursor, lidaAteDate: marcadorDoOutro?.lidaAteDate ?? null },
+            dados: { mensagens: await this.juntarReacoes(pagina.mensagens), proximoCursor: pagina.proximoCursor, lidaAteDate: marcadorDoOutro?.lidaAteDate ?? null },
             mensagem: 'Conversa recuperada com sucesso',
         };
     }

@@ -1,0 +1,54 @@
+<div
+    class="emoji-seletor"
+    role="dialog"
+    aria-label="Escolher emoji"
+    (keydown.escape)="aoApertarEsc($event)"
+>
+    <div class="emoji-seletor__busca">
+        <i class="pi pi-search emoji-seletor__busca-icone" aria-hidden="true"></i>
+        <input
+            #campoDeBusca
+            pInputText
+            type="text"
+            class="emoji-seletor__busca-campo"
+            [formControl]="controleBusca"
+            placeholder="Buscar emoji"
+            aria-label="Buscar emoji"
+            maxlength="40"
+        />
+    </div>
+    @if (!emBusca()) {
+        <div class="emoji-seletor__abas" role="tablist" aria-label="Categorias de emoji">
+            @for (categoria of categorias; track categoria.codigo) {
+                <button
+                    type="button"
+                    role="tab"
+                    class="emoji-seletor__aba"
+                    [class.emoji-seletor__aba--ativa]="categoria.codigo === categoriaAtiva()"
+                    [attr.aria-selected]="categoria.codigo === categoriaAtiva()"
+                    [attr.aria-label]="categoria.rotulo"
+                    [pTooltip]="categoria.rotulo"
+                    tooltipPosition="top"
+                    (click)="escolherCategoria(categoria.codigo)"
+                >
+                    {{ categoria.emojis[0].emoji }}
+                </button>
+            }
+        </div>
+    }
+    <div class="emoji-seletor__grade" role="group" [attr.aria-label]="rotuloDaCategoria()">
+        @for (item of visiveis(); track item.emoji) {
+            <button
+                type="button"
+                class="emoji-seletor__emoji"
+                [attr.aria-label]="item.nome"
+                [attr.title]="item.nome"
+                (click)="escolher.emit(item.emoji)"
+            >
+                {{ item.emoji }}
+            </button>
+        } @empty {
+            <p class="emoji-seletor__vazio" role="status">Nenhum emoji encontrado.</p>
+        }
+    </div>
+</div>

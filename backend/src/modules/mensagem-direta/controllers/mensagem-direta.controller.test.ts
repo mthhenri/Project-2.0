@@ -9,7 +9,7 @@ import { MensagemDiretaController } from './mensagem-direta.controller';
 
 const USUARIO = { sub: 4, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das dezesseis rotas', () => {
+test('verbos e caminhos das dezessete rotas', () => {
     assert.deepEqual(
         Object.values(rotasPorNome(MensagemDiretaController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
         [
@@ -28,6 +28,7 @@ test('verbos e caminhos das dezesseis rotas', () => {
             'POST conversa/:usuarioId/digitando',
             'PUT conversa/:usuarioId/leitura',
             'PUT conversa/:usuarioId/silencio',
+            'PUT reacao',
             'PUT preferencia',
         ].sort(),
     );

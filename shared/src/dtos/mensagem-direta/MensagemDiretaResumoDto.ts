@@ -1,5 +1,6 @@
 import { AutorMensagemDiretaEnum } from '../../enums/autor-mensagem-direta.enum';
 import { CitacaoMensagemDto } from './CitacaoMensagemDto';
+import { ReacaoMensagemDiretaDto } from './ReacaoMensagemDiretaDto';
 import { ReferenciaMensagemDto } from './ReferenciaMensagemDto';
 
 /** Uma mensagem de uma conversa entre duas pessoas. Só o autor a reescreve, até 1 hora depois do envio (task 313): `editadaDate` diz quando. */
@@ -22,4 +23,6 @@ export interface MensagemDiretaResumoDto {
     createdDate: Date;
     /** Quando a mensagem foi editada pela última vez; `null` quando nunca foi editada (o original não é guardado, I-052). */
     editadaDate: Date | null;
+    /** As reações das duas pessoas (task 314); vazia quando não há. Vêm da tabela `mensagem_direta_reacao`, juntadas pela service: o armazenamento devolve sempre `[]`. */
+    reacoes: ReacaoMensagemDiretaDto[];
 }

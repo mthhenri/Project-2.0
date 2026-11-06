@@ -1,0 +1,96 @@
+:host {
+    display: block;
+    max-width: 100%;
+}
+
+.reacoes {
+    &__pilulas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin-top: 0.1875rem;
+    }
+
+    &__pilula {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.0625rem 0.4375rem;
+        border: 1px solid var(--app-surface-200);
+        border-radius: 999px;
+        background: var(--app-surface-0);
+        font: inherit;
+        font-size: 0.75rem;
+        color: var(--p-text-color);
+        cursor: pointer;
+
+        &:hover {
+            background: var(--p-content-hover-background);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--p-primary-color);
+            outline-offset: 1px;
+        }
+
+        &--minha {
+            border-color: var(--p-primary-color);
+            background: color-mix(in srgb, var(--p-primary-color) 12%, var(--app-surface-0));
+        }
+    }
+
+    &__emoji {
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+
+    &__total {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__barra {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.125rem;
+        margin-top: 0.25rem;
+        padding: 0.1875rem 0.25rem;
+        border: 1px solid var(--app-surface-200);
+        border-radius: 999px;
+        background: var(--app-surface-0);
+        box-shadow: 0 2px 8px color-mix(in srgb, black 12%, transparent);
+    }
+
+    &__atalho,
+    &__mais {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        font-size: 1.125rem;
+        line-height: 1;
+        cursor: pointer;
+
+        &:hover {
+            background: var(--p-content-hover-background);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--p-primary-color);
+            outline-offset: -2px;
+        }
+    }
+
+    &__atalho--minha {
+        background: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
+    }
+
+    &__mais {
+        font-size: 0.75rem;
+        color: var(--p-text-muted-color);
+    }
+}

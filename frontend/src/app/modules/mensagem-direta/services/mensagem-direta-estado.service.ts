@@ -4,6 +4,7 @@ import {
     AutorMensagemDiretaEnum,
     MensagemDiretaEventoDto,
     MensagemDiretaPessoaResumoDto,
+    ReacaoMensagemDiretaDto,
     ReferenciaMensagemDto,
     montarConversaDiretaId,
     podeEditarMensagemDireta,
@@ -29,6 +30,7 @@ import {
     zerarNaoLidas,
 } from '../utils/mensagem-direta.util';
 import { pareceCodigo } from '../utils/compositor.util';
+import { aplicarReacoesNaMensagem, textoDoAvisoDeReacao } from '../utils/reacoes.util';
 import { MensagemDiretaAvisosService } from './mensagem-direta-avisos.service';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 import { MensagemDiretaReferenciaService } from './mensagem-direta-referencia.service';
@@ -100,6 +102,8 @@ export class MensagemDiretaEstadoService {
     readonly salvandoEdicao = signal(false);
     /** O motivo de a edição não ter sido salva (o servidor recusa depois do prazo, por exemplo); a edição continua aberta para o usuário decidir. */
     readonly erroNaEdicao = signal<string | null>(null);
+    /** O motivo da última reação recusada (task 314); some na próxima tentativa. */
+    readonly erroNaReacao = signal<string | null>(null);
     /** O código que o usuário copiou antes de apertar o atalho do Desktop (task 213): vira bloco no campo da próxima conversa aberta e some. */
     readonly rascunhoDoDesktop = signal<string | null>(null);
 
@@ -445,6 +449,52 @@ export class MensagemDiretaEstadoService {
         }
     }
 
+    // ---------------------------------------------------------------------------
+    // Reações (task 314)
+    // ---------------------------------------------------------------------------
+
+    /** Reage à mensagem da conversa aberta com um emoji (o mesmo de antes tira a reação; outro troca). A tela segue a resposta do servidor, não adivinha. */
+    async reagir(mensagemId: string, reacao: string | null): Promise<void> {
+        const aberta = this.conversaAberta();
+        if (!aberta) return;
+        const sessao = this.geracaoDaSessao;
+        this.erroNaReacao.set(null);
+        try {
+            const resposta = await firstValueFrom(this.api.reagirMensagem({ destinatarioId: aberta.usuarioId, mensagemId, reacao }));
+            if (sessao !== this.geracaoDaSessao) return;
+            this.aplicarReacoes(aberta.conversaId, mensagemId, resposta.dados!.reacoes);
+        } catch (erro) {
+            if (sessao !== this.geracaoDaSessao) return;
+            const motivo = (erro as { error?: { mensagem?: unknown } })?.error?.mensagem;
+            this.erroNaReacao.set(typeof motivo === 'string' && motivo ? motivo : 'Não foi possível reagir. Tente de novo.');
+        }
+    }
+
+    /** A lista completa de reações da mensagem (resposta do meu PUT ou evento `REACAO`); não avisa, não conta como não lida e não mexe na ordem. */
+    private aplicarReacoes(conversaId: string, mensagemId: string, reacoes: ReacaoMensagemDiretaDto[]): void {
+        const aberta = this.conversaAberta();
+        if (!aberta || aberta.conversaId !== conversaId) return;
+        this.atualizarConversaAberta(aberta.usuarioId, (atual) => ({ mensagens: aplicarReacoesNaMensagem(atual.mensagens, mensagemId, reacoes) }));
+    }
+
+    /** Avisa o autor da mensagem de que alguém reagiu a ela: o mesmo cartão e as mesmas regras dos avisos de mensagem, sem contar como mensagem nova. */
+    private avisarDaReacao(evento: Extract<MensagemDiretaEventoDto, { tipo: 'REACAO' }>, reacao: string): void {
+        const aberta = this.conversaAberta();
+        const naConversaAberta = aberta?.conversaId === evento.conversaId;
+        const nome = this.conversas().find((conversa) => conversa.conversaId === evento.conversaId)?.usuarioNome ?? (naConversaAberta ? aberta?.usuarioNome : undefined) ?? 'Alguém';
+        this.avisos.avisar({
+            conversaId: evento.conversaId,
+            usuarioId: evento.reatorUsuarioId,
+            usuarioNome: nome,
+            texto: textoDoAvisoDeReacao(reacao),
+            mensagemMinha: false,
+            mencionaVoce: false,
+            conversaSilenciada: this.estaSilenciada(evento.reatorUsuarioId),
+            conversaAVista: naConversaAberta && this.aVista(),
+            semContar: true,
+        });
+    }
+
     /** A mensagem editada (resposta do meu PATCH ou evento `EDICAO`) substitui a que a tela tinha; não avisa, não conta como não lida e não muda a ordem. */
     private aplicarEdicao(mensagem: MensagemNaConversa): void {
         const aberta = this.conversaAberta();
@@ -488,6 +538,7 @@ export class MensagemDiretaEstadoService {
             respondeA,
             createdDate: new Date(),
             editadaDate: null,
+            reacoes: [],
             situacao: 'ENVIANDO',
         };
         this.guardarPendente(aberta.usuarioId, local);
@@ -617,6 +668,13 @@ export class MensagemDiretaEstadoService {
             case 'EDICAO':
                 this.aplicarEdicao(normalizarMensagem(evento.mensagem));
                 break;
+            case 'REACAO': {
+                this.aplicarReacoes(evento.conversaId, evento.mensagemId, evento.reacoes);
+                // Só quem escreveu a mensagem é avisado, e só de reação nova (trocar avisa de novo; tirar e reagir à própria mensagem, não).
+                const meuId = this.sessao.id();
+                if (evento.reacao !== null && meuId !== undefined && evento.autorUsuarioId === meuId && evento.reatorUsuarioId !== meuId) this.avisarDaReacao(evento, evento.reacao);
+                break;
+            }
             case 'LEITURA': {
                 const aberta = this.conversaAberta();
                 if (aberta && aberta.conversaId === evento.conversaId && evento.usuarioId === aberta.usuarioId) {

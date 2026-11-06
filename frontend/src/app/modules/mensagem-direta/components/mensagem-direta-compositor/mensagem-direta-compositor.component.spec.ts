@@ -88,6 +88,38 @@ describe('MensagemDiretaCompositorComponent', () => {
         expect(avisos).toBe(2);
     });
 
+    // --- emoji (task 314) ------------------------------------------------------------------------------------------------
+
+    it('o botão de emoji abre o seletor; escolher um emoji o põe no cursor, fecha o seletor e mantém o texto', async () => {
+        await digitar('Valeu');
+        expect(tela.elemento.querySelector('app-mensagem-direta-emoji-seletor')).toBeNull();
+        tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Inserir emoji"]')!.click();
+        await tela.atualizar();
+        expect(tela.elemento.querySelector('app-mensagem-direta-emoji-seletor')).not.toBeNull();
+
+        tela.elemento.querySelector<HTMLButtonElement>('.emoji-seletor__emoji[aria-label="rosto risonho"]')!.click();
+        await tela.atualizar();
+        expect(markdown()).toContain('Valeu');
+        expect(markdown()).toContain('😀');
+        expect(tela.elemento.querySelector('app-mensagem-direta-emoji-seletor')).toBeNull();
+    });
+
+    it('o botão de emoji alterna o seletor, e Esc nele o fecha sem enviar nada', async () => {
+        const botao = () => tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Inserir emoji"]')!;
+        botao().click();
+        await tela.atualizar();
+        botao().click();
+        await tela.atualizar();
+        expect(tela.elemento.querySelector('app-mensagem-direta-emoji-seletor')).toBeNull();
+
+        botao().click();
+        await tela.atualizar();
+        tela.elemento.querySelector('.emoji-seletor')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        await tela.atualizar();
+        expect(tela.elemento.querySelector('app-mensagem-direta-emoji-seletor')).toBeNull();
+        expect(envios).toEqual([]);
+    });
+
     // --- enviar e quebrar linha -----------------------------------------------------------------------------------------
 
     it('Enter envia o texto; texto em branco não envia; depois de enviar o campo esvazia', async () => {

@@ -92,7 +92,7 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
             tipo: 'MENSAGEM',
             mensagem: {
                 mensagemId: 'm-1', conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: 'oi',
-                contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, createdDate: new Date().toISOString() as never,
+                contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, reacoes: [], createdDate: new Date().toISOString() as never,
             },
         });
         await redesenhar();
@@ -103,7 +103,7 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
         const base = new Date(2026, 9, 21, 10, 0).getTime();
         const mensagemDeCamila = (mensagemId: string, minutos: number) => ({
             mensagemId, conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: mensagemId,
-            contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, createdDate: new Date(base + minutos * 60_000), situacao: 'ENVIADA' as const,
+            contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, reacoes: [], createdDate: new Date(base + minutos * 60_000), situacao: 'ENVIADA' as const,
         });
         estado.conversaAberta.update((aberta) => aberta && { ...aberta, mensagens: [mensagemDeCamila('a', 0), mensagemDeCamila('b', 2), mensagemDeCamila('c', 9)] });
         await redesenhar();
@@ -123,7 +123,7 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
         const base = new Date(2026, 9, 21, 10, 0).getTime();
         const mensagemDeCamila = (mensagemId: string, minutos: number) => ({
             mensagemId, conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: mensagemId,
-            contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, createdDate: new Date(base + minutos * 60_000), situacao: 'ENVIADA' as const,
+            contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, reacoes: [], createdDate: new Date(base + minutos * 60_000), situacao: 'ENVIADA' as const,
         });
         estado.conversaAberta.update((aberta) => aberta && { ...aberta, mensagens: [mensagemDeCamila('a', 0), mensagemDeCamila('b', 2), mensagemDeCamila('c', 9)] });
         await redesenhar();
@@ -159,7 +159,7 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
             mensagens: [
                 {
                     mensagemId: 'm-2', conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: '**oi**\n\n```ts\nconst a = 1;\n```',
-                    contemCodigo: true, mencoes: [], referencias: [], respondeA: null, editadaDate: null, createdDate: new Date(), situacao: 'ENVIADA',
+                    contemCodigo: true, mencoes: [], referencias: [], respondeA: null, editadaDate: null, reacoes: [], createdDate: new Date(), situacao: 'ENVIADA',
                 },
             ],
         }));
@@ -188,7 +188,7 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
     });
     it('dois cliques no balão respondem à mensagem; em link, código ou mensagem não enviada não', async () => {
         const mensagem = (mensagemId: string, texto: string, situacao: 'ENVIADA' | 'ENVIANDO' = 'ENVIADA') => ({
-            mensagemId, conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto, contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, createdDate: new Date(), situacao,
+            mensagemId, conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto, contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, reacoes: [], createdDate: new Date(), situacao,
         });
         estado.conversaAberta.update((aberta) => ({ ...aberta!, mensagens: [mensagem('texto', 'Oi, tudo bem?'), mensagem('link', 'veja https://exemplo.com/a'), mensagem('pendente', 'ainda indo', 'ENVIANDO')] }));
         await redesenhar();
@@ -212,8 +212,8 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
         const escrever = vi.fn().mockResolvedValue(undefined);
         Object.defineProperty(navigator, 'clipboard', { value: { writeText: escrever }, configurable: true });
         estado.conversaAberta.update((aberta) => ({ ...aberta!, mensagens: [
-            { mensagemId: 'minha', conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 1, texto: 'Meu texto', contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, createdDate: new Date(), situacao: 'ENVIADA' },
-            { mensagemId: 'recebida', conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: 'Texto da Camila', contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, createdDate: new Date(), situacao: 'ENVIADA' },
+            { mensagemId: 'minha', conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 1, texto: 'Meu texto', contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, reacoes: [], createdDate: new Date(), situacao: 'ENVIADA' },
+            { mensagemId: 'recebida', conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: 'Texto da Camila', contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, reacoes: [], createdDate: new Date(), situacao: 'ENVIADA' },
         ] }));
         await redesenhar();
         const mensagens = tela.elemento.querySelectorAll<HTMLElement>('.conversa-direta__balao');
@@ -256,7 +256,7 @@ describe('MensagemDiretaConversaComponent — aviso do sistema', () => {
             conversaId: '1-9',
             mensagens: [{
                 mensagemId: 'sistema-1', conversaId: '1-9', autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null, texto: 'Carla, gestor, leu esta conversa',
-                contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, createdDate: new Date('2026-10-21T14:05:00.000Z'), situacao: 'ENVIADA',
+                contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, reacoes: [], createdDate: new Date('2026-10-21T14:05:00.000Z'), situacao: 'ENVIADA',
             }],
             lidaPeloOutroAte: null,
             proximoCursor: null,

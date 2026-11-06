@@ -26,7 +26,7 @@ const DA_CAMILA_ID = '99999999-2222-4333-8444-555555555555';
 function mensagem(mensagemId: string, autorUsuarioId: number, texto: string, parcial: Partial<MensagemNaConversa> = {}): MensagemNaConversa {
     return {
         mensagemId, conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId, texto, contemCodigo: false, mencoes: [], referencias: [],
-        respondeA: null, editadaDate: null, createdDate: ENVIADA_EM, situacao: 'ENVIADA', ...parcial,
+        respondeA: null, editadaDate: null, reacoes: [], createdDate: ENVIADA_EM, situacao: 'ENVIADA', ...parcial,
     };
 }
 
@@ -83,11 +83,11 @@ describe('MensagemDiretaConversaComponent — editar', () => {
 
     it('oferece Editar só na mensagem própria; a da outra pessoa não tem a opção', async () => {
         await abrirMenuDaMensagem(0); // a da Camila
-        expect(itensDoMenu()).toEqual(['Responder', 'Copiar texto']);
+        expect(itensDoMenu()).toEqual(['Responder', 'Reagir', 'Copiar texto']);
         document.body.click();
         await redesenhar();
         await abrirMenuDaMensagem(1); // a minha
-        expect(itensDoMenu()).toEqual(['Responder', 'Editar', 'Copiar texto']);
+        expect(itensDoMenu()).toEqual(['Responder', 'Reagir', 'Editar', 'Copiar texto']);
     });
 
     it('depois de 1 hora do envio a opção some; no limite ainda aparece', async () => {

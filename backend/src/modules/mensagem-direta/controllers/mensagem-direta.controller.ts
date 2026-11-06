@@ -8,6 +8,7 @@ import {
     MensagemDiretaLeituraAlterarDto,
     MensagemDiretaListarDto,
     MensagemDiretaPreferenciaAlterarDto,
+    MensagemDiretaReagirDto,
     MensagemDiretaReferenciaBuscarDto,
     MensagemDiretaSilencioAlterarDto,
     MensagemDiretaSupervisaoLerDto,
@@ -96,6 +97,12 @@ export class MensagemDiretaController {
     @Patch('mensagem')
     alterarMensagem(@Body() dto: MensagemDiretaEditarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
         return this.mensagemDiretaService.alterarMensagem(dto, usuarioAtivo);
+    }
+
+    /** Reage a uma mensagem da conversa com um emoji (o mesmo de antes tira a reação, outro troca). */
+    @Put('reacao')
+    reagirMensagem(@Body() dto: MensagemDiretaReagirDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.mensagemDiretaService.reagirMensagem(dto, usuarioAtivo);
     }
 
     @Put('conversa/:usuarioId/leitura')

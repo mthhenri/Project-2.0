@@ -28,6 +28,22 @@ export const LIMITE_ATALHO_GLOBAL = 40;
 /** Quanto tempo depois do envio o autor ainda pode editar a mensagem (task 313): 1 hora. */
 export const PRAZO_PARA_EDITAR_MENSAGEM_DIRETA_MS = 3_600_000;
 
+/** Os seis atalhos da faixa de reações (task 314); a pessoa pode reagir com qualquer outro emoji pelo seletor. */
+export const REACOES_RAPIDAS_MENSAGEM_DIRETA = ['👍', '❤️', '😂', '😮', '😢', '🙏'] as const;
+/** Caracteres (unidades UTF-16) que um emoji, com todas as suas partes, pode ter na reação; cabe a família com tons de pele e a bandeira com tags. */
+export const LIMITE_REACAO_MENSAGEM_DIRETA = 32;
+
+/**
+ * Exatamente **um** emoji: o pictograma com variação e tom de pele opcionais, emojis ligados por ZWJ (família, profissão), a bandeira (duas letras regionais),
+ * a bandeira com tags (Inglaterra) e o teclado (`1️⃣`). Texto, espaço, vazio e dois emojis não passam.
+ */
+export const REGEX_REACAO_MENSAGEM_DIRETA =
+    /^(?:[0-9#*]\uFE0F?\u20E3|\p{Regional_Indicator}{2}|\p{Extended_Pictographic}[\u{E0020}-\u{E007E}]+\u{E007F}|\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?)*)$/u;
+
+export function ehReacaoValida(reacao: string): boolean {
+    return reacao.length <= LIMITE_REACAO_MENSAGEM_DIRETA && REGEX_REACAO_MENSAGEM_DIRETA.test(reacao);
+}
+
 /** "Silenciar por 1 hora", para a reunião. */
 export const DURACAO_DO_SILENCIO_DE_REUNIAO_MINUTOS = 60;
 

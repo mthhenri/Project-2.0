@@ -159,5 +159,7 @@ export function deFonteDireta(fonte: MensagemDiretaFonte): MensagemDiretaResumoD
           : null,
         createdDate: new Date(fonte.created_date),
         editadaDate: fonte.editada_date ? new Date(fonte.editada_date) : null,
+        // As reações vêm da tabela `mensagem_direta_reacao`: quem junta é a service.
+        reacoes: [],
     };
 }

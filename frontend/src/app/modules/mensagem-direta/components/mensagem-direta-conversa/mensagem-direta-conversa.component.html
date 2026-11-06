@@ -214,6 +214,15 @@
                                             />
                                         }
                                     </div>
+                                    <app-mensagem-direta-reacoes
+                                        [reacoes]="mensagem.reacoes"
+                                        [meuId]="meuId()"
+                                        [nomeDe]="nomeDeQuemReagiu"
+                                        [barraAberta]="reagindoId() === mensagem.mensagemId"
+                                        (reagir)="reagir(mensagem.mensagemId, $event)"
+                                        (abrirSeletor)="abrirSeletorDaReacao(mensagem.mensagemId)"
+                                        (fecharBarra)="reagindoId.set(null)"
+                                    />
                                     <div
                                         class="conversa-direta__rodape"
                                         [class.conversa-direta__rodape--compacto]="compacto"
@@ -290,6 +299,22 @@
                                                     type="button"
                                                     class="conversa-direta__acoes"
                                                     [class.conversa-direta__acoes--visivel]="
+                                                        reagindoId() === mensagem.mensagemId
+                                                    "
+                                                    aria-label="Reagir"
+                                                    pTooltip="Reagir"
+                                                    tooltipPosition="top"
+                                                    (click)="abrirReacao(mensagem.mensagemId)"
+                                                >
+                                                    <i
+                                                        class="pi pi-face-smile"
+                                                        aria-hidden="true"
+                                                    ></i>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    class="conversa-direta__acoes"
+                                                    [class.conversa-direta__acoes--visivel]="
                                                         mensagemDoMenu() === mensagem.mensagemId ||
                                                         copiadaId() === mensagem.mensagemId
                                                     "
@@ -356,6 +381,20 @@
                 <i class="pi pi-info-circle" aria-hidden="true"></i
                 ><span>{{ avisoDaOriginal() }}</span>
             </p>
+        }
+
+        @if (estado.erroNaReacao(); as motivo) {
+            <p class="conversa-direta__faixa" role="alert">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i
+                ><span>{{ motivo }}</span>
+            </p>
+        }
+
+        @if (seletorDaReacaoId(); as alvoDaReacao) {
+            <app-mensagem-direta-emoji-seletor
+                (escolher)="reagir(alvoDaReacao, $event)"
+                (fechar)="seletorDaReacaoId.set(null)"
+            />
         }
 
         <app-mensagem-direta-compositor

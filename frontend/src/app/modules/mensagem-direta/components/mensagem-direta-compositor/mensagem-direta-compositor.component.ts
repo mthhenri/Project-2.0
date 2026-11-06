@@ -22,6 +22,7 @@ import { filtrarPessoasPorNome } from '../../utils/mensagem-direta.util';
 import type { BlocoAtual } from '../../../../shared/components/markdown-editor/markdown-formatado';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { CodigoEscolhido, MensagemDiretaCodigoPainelComponent } from '../mensagem-direta-codigo-painel/mensagem-direta-codigo-painel.component';
+import { MensagemDiretaEmojiSeletorComponent } from '../mensagem-direta-emoji-seletor/mensagem-direta-emoji-seletor.component';
 import { EditorMensagemComponent } from '../../../../shared/components/editor-mensagem/editor-mensagem.component';
 
 const ATRASO_DA_BUSCA_MS = 250;
@@ -65,7 +66,7 @@ function consumir(evento: Event): void {
 @Component({
     selector: 'app-mensagem-direta-compositor',
     standalone: true,
-    imports: [ButtonModule, TooltipModule, MensagemDiretaAvatarComponent, MensagemDiretaCodigoPainelComponent, EditorMensagemComponent],
+    imports: [ButtonModule, TooltipModule, MensagemDiretaAvatarComponent, MensagemDiretaCodigoPainelComponent, MensagemDiretaEmojiSeletorComponent, EditorMensagemComponent],
     templateUrl: './mensagem-direta-compositor.component.html',
     styleUrl: './mensagem-direta-compositor.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -102,6 +103,8 @@ export class MensagemDiretaCompositorComponent {
     protected readonly limiteDoTexto = LIMITE_TEXTO_MENSAGEM_DIRETA;
     /** O Markdown da mensagem. */
     protected readonly texto = signal('');
+    /** O seletor de emoji (task 314), aberto pelo botão do rosto: o emoji escolhido entra no cursor do campo. */
+    protected readonly seletorDeEmojiAberto = signal(false);
     /** O painel do mini editor de código (task 216), aberto pelo botão `</>`: guarda o trecho que estava selecionado. `null` = fechado. */
     protected readonly painelDeCodigo = signal<{ selecionado: string } | null>(null);
     /** O bloco de texto do cursor, atualizado a cada mudança do texto ou do cursor. */
@@ -402,6 +405,23 @@ export class MensagemDiretaCompositorComponent {
         if (this.texto().length + colado.length + FOLGA_DA_CERCA_DO_CODIGO > LIMITE_TEXTO_MENSAGEM_DIRETA) return;
         consumir(evento);
         editor.inserirBlocoDeCodigo(colado, null);
+    }
+
+    protected alternarSeletorDeEmoji(): void {
+        this.seletorDeEmojiAberto.update((aberto) => !aberto);
+    }
+
+    protected fecharSeletorDeEmoji(): void {
+        this.seletorDeEmojiAberto.set(false);
+        this.campo().focar();
+    }
+
+    /** Põe o emoji no cursor (ou no lugar da seleção), fecha o seletor e devolve o foco ao campo. */
+    protected inserirEmoji(emoji: string): void {
+        const editor = this.campo().editor();
+        if (!editor) return;
+        editor.inserirTexto(emoji);
+        this.fecharSeletorDeEmoji();
     }
 
     /** O botão `</>` abre o mini editor; o trecho selecionado no campo (se houver) já vem nele. */

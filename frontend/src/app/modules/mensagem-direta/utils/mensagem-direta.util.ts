@@ -86,7 +86,7 @@ export function devePublicarDigitacao(ultimoAvisoEm: number | null, agora: numbe
 
 /** O servidor manda as datas como texto ISO; a tela trabalha com `Date`. */
 export function normalizarMensagem(mensagem: MensagemDiretaResumoDto, situacao: SituacaoDaMensagem = 'ENVIADA'): MensagemNaConversa {
-    return { ...mensagem, createdDate: new Date(mensagem.createdDate), editadaDate: mensagem.editadaDate ? new Date(mensagem.editadaDate) : null, situacao };
+    return { ...mensagem, createdDate: new Date(mensagem.createdDate), editadaDate: mensagem.editadaDate ? new Date(mensagem.editadaDate) : null, reacoes: mensagem.reacoes ?? [], situacao };
 }
 
 function ordemDaConversa(mensagemNaConversa: MensagemNaConversa, segundo: MensagemNaConversa): number {

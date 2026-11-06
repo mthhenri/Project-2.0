@@ -107,6 +107,17 @@ describe('normalizarPreferencia', () => {
 describe('somarAviso', () => {
     const mensagem = (conversaId: string, texto: string, mencionaVoce = false, agora = 1) => ({ conversaId, usuarioId: Number(conversaId.split('-')[1]), usuarioNome: `Pessoa ${conversaId}`, texto, mencionaVoce, agora });
 
+    it('aviso que não é mensagem nova (reação, task 314) atualiza o cartão sem somar à contagem; sozinho vale zero', () => {
+        let avisos: AvisoNaTela[] = somarAviso([], mensagem('1-2', 'primeira', false, 1));
+        avisos = somarAviso(avisos, { ...mensagem('1-2', 'reagiu à sua mensagem com 👍', false, 2), semContar: true });
+        expect(avisos[0]).toMatchObject({ quantidade: 1, texto: 'reagiu à sua mensagem com 👍', atualizadoEm: 2 });
+
+        const soReacao = somarAviso([], { ...mensagem('1-3', 'reagiu à sua mensagem com ❤️'), semContar: true });
+        expect(soReacao[0].quantidade).toBe(0);
+        expect(rotuloDaQuantidade(soReacao[0].quantidade)).toBe('');
+        expect(somarAviso(soReacao, mensagem('1-3', 'oi', false, 5))[0].quantidade).toBe(1);
+    });
+
     it('conversa nova entra no topo', () => {
         const avisos = somarAviso(somarAviso([], mensagem('1-2', 'oi')), mensagem('1-3', 'olá', false, 2));
         expect(avisos.map((avisoNaTelaSeguinte) => avisoNaTelaSeguinte.id)).toEqual(['1-3', '1-2']);

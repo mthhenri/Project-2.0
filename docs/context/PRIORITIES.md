@@ -21,11 +21,10 @@ Triagem de 2026-10-31, com o autor; chat entre colaboradores no topo de "Agora" 
 
 Resolver primeiro; o autor considera simples ou próximo.
 
-**Evolução do chat entre colaboradores** (guarda-chuva `chat-colaboradores-evolucao.spec.md`, tasks 314–317; as 310–313 e a 318 já foram feitas). Nesta ordem, decidida pelo autor (2026-11-06):
+**Evolução do chat entre colaboradores** (guarda-chuva `chat-colaboradores-evolucao.spec.md`, tasks 315–317; as 310–314 e a 318 já foram feitas). Nesta ordem, decidida pelo autor (2026-11-06):
 
-1. **314** — reações nas mensagens e seletor de emoji (uma por pessoa, aviso ao autor).
-2. **316** — cor da bolinha escolhida pela pessoa, só no chat por ora; vem antes do `@IA` (2026-11-06).
-3. **315** — `@IA` no chat entre colaboradores (spec própria e decisão de privacidade antes de qualquer código).
+1. **316** — cor da bolinha escolhida pela pessoa, só no chat por ora; vem antes do `@IA` (2026-11-06).
+2. **315** — `@IA` no chat entre colaboradores (spec própria e decisão de privacidade antes de qualquer código).
 
 - **P-073** — Defender barra o executável do Project Desktop; a correção de fundo é assinar o `.exe` (I-049). Bloqueia a distribuição (2026-11-03).
 

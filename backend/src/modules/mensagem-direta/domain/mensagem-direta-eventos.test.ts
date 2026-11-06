@@ -23,7 +23,7 @@ function mensagem(texto = 'oi'): MensagemDiretaResumoDto {
         referencias: [],
         respondeA: null,
         createdDate: new Date('2026-10-21T14:05:11.482Z'),
-        editadaDate: null,
+        editadaDate: null, reacoes: [],
     };
 }
 
@@ -51,6 +51,14 @@ test('barramento: a EDICAO de texto grande demais para o NOTIFY vira SINCRONIZAR
     const grande: MensagemDoBarramento = { tipo: 'ENTREGA', usuarioIds: [4, 9], evento: { tipo: 'EDICAO', mensagem: mensagem('x'.repeat(9_000)) } };
     const preparada = decodificarMensagemDoBarramento(prepararParaNotify(grande));
     assert.deepEqual(preparada, { tipo: 'ENTREGA', usuarioIds: [4, 9], evento: { tipo: 'SINCRONIZAR', conversaId: '4-9' } });
+});
+
+test('barramento: a REACAO passa como está (emoji composto inteiro) e cabe no NOTIFY', () => {
+    const reacao: MensagemDoBarramento = {
+        tipo: 'ENTREGA', usuarioIds: [4, 9],
+        evento: { tipo: 'REACAO', conversaId: '4-9', mensagemId: '7f0c2b9e-4c1a-4e6a-9d55-2f6c0d1b8a10', reacoes: [{ usuarioId: 9, reacao: '👨‍👩‍👧' }, { usuarioId: 4, reacao: '🇧🇷' }], reatorUsuarioId: 9, autorUsuarioId: 4, reacao: '👨‍👩‍👧' },
+    };
+    assert.deepEqual(decodificarMensagemDoBarramento(prepararParaNotify(reacao)), reacao);
 });
 
 test('barramento: LEITURA volta com Date; os eventos sem data e a PRESENCA passam como estão', () => {

@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-11-06 — Task 314: reações nas mensagens do chat entre colaboradores e seletor de emoji
+
+Cada mensagem de pessoa (a do sistema não) ganha "Reagir" (menu da mensagem e botão ao passar o mouse): seis atalhos (👍 ❤️ 😂 😮 😢 🙏) e um "+" que abre o seletor completo, então vale **qualquer emoji**. Uma reação por pessoa por mensagem: outro emoji troca, o mesmo tira. Pílulas sob o balão (a minha destacada), em tempo real nas duas pontas. O autor da mensagem recebe o cartão de aviso "<PESSOA> reagiu à sua mensagem com <EMOJI>" (respeita silêncio, conversa silenciada, conversa à vista e Desktop); **nada entra na conversa** e o cartão não conta como mensagem nova. O mesmo seletor, com busca em português, está no compositor.
+- **Modelagem (decidida pelo autor):** tabela nova `mensagem_direta_reacao` (migration `0083`, `reacao` guarda o próprio emoji), não o documento da mensagem; as três implementações do armazenamento e o contrato **não mudaram**. A `MensagemDiretaService` junta as reações à página numa consulta só (`juntarReacoes`); `MensagemDiretaResumoDto.reacoes` vem sempre (o armazenamento devolve `[]`). `PUT /mensagem-direta/reacao`, evento `REACAO` no stream. Regra pura `ehReacaoValida` (exatamente um emoji) no `shared`.
+- **Catálogo do seletor:** gerado uma vez de `emojibase-data` 16.0.3 (idioma `pt`) em `utils/emoji-catalogo.json` (1.906 emojis, nove categorias), sem dependência nova; o `tsconfig` do frontend ganhou `resolveJsonModule`.
+- **Front:** componentes novos `mensagem-direta-reacoes` (pílulas e faixa) e `mensagem-direta-emoji-seletor`; o estado ganhou `reagir`, `erroNaReacao` e o caso `REACAO` (a reação não entrou no `MensagemDiretaConversaComponent` além do que o menu e a faixa pedem). O estado do chat segue extenso: o acréscimo é pequeno (três métodos) e a extração pediria expor `atualizarConversaAberta`; fica como candidato a divisão.
+- Testes e verificação: ver a seção "Verificação" da spec em `done/`. Achado só no ao vivo: nenhum defeito; o aviso da troca de reação não reaparece com a conversa à vista (esperado).
+
 ## 2026-11-06 — Configurações do chat viram uma tela dentro do popup (pedido do autor)
 
 O sino do cabeçalho abria um menu de notificações que já não comportava só notificações (silêncio, posição da barra, posição do popup, atalho do Desktop). Agora há uma **engrenagem** no lugar do sino (cabeçalho da lista e fim da barra de conversas) que abre uma **tela** no próprio popup (`visao` `CONFIGURACOES`, com Voltar e Ocultar), não um menu.

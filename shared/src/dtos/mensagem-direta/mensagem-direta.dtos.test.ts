@@ -14,6 +14,7 @@ import { MensagemDiretaEditarDto } from './MensagemDiretaEditarDto';
 import { MensagemDiretaEnviarDto } from './MensagemDiretaEnviarDto';
 import { MensagemDiretaLeituraAlterarDto } from './MensagemDiretaLeituraAlterarDto';
 import { MensagemDiretaListarDto } from './MensagemDiretaListarDto';
+import { MensagemDiretaReagirDto } from './MensagemDiretaReagirDto';
 import { PosicaoBarraChatEnum } from '../../enums/posicao-barra-chat.enum';
 import { PosicaoPopupChatEnum } from '../../enums/posicao-popup-chat.enum';
 import { MensagemDiretaPreferenciaAlterarDto } from './MensagemDiretaPreferenciaAlterarDto';
@@ -228,4 +229,18 @@ test('MensagemDiretaReferenciaBuscarDto: aparar os espaços vem ANTES do mínimo
     assert.ok((await validar('x'.repeat(101))).length > 0);
     assert.ok((await validar(undefined)).length > 0);
     assert.equal(plainToInstance(MensagemDiretaReferenciaBuscarDto, { texto: '  filtro ' }).texto, 'filtro');
+});
+
+// --- MensagemDiretaReagirDto (task 314) ---------------------------------------
+
+test('reagir: destinatário, mensagem e um único emoji; null (ou ausente) remove a reação', async () => {
+    const base = { destinatarioId: 9, mensagemId: UUID };
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, reacao: '👍' }), []);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, reacao: '🇧🇷' }), []);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, reacao: null }), []);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, base), []);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, reacao: 'ok' }), ['reacao']);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, reacao: '👍👍' }), ['reacao']);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { ...base, mensagemId: 'x', reacao: '👍' }), ['mensagemId']);
+    assert.deepEqual(await erros(MensagemDiretaReagirDto, { destinatarioId: 0, mensagemId: UUID, reacao: '👍' }), ['destinatarioId']);
 });

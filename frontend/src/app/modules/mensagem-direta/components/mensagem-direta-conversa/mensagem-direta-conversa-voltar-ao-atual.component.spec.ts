@@ -19,7 +19,7 @@ class EventosFalso {
 
 const mensagem = (mensagemId: string, texto: string): MensagemNaConversa => ({
     mensagemId, conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto, contemCodigo: false, mencoes: [], referencias: [],
-    respondeA: null, editadaDate: null, createdDate: new Date('2026-10-26T14:00:00'), situacao: 'ENVIADA',
+    respondeA: null, editadaDate: null, reacoes: [], createdDate: new Date('2026-10-26T14:00:00'), situacao: 'ENVIADA',
 });
 
 describe('MensagemDiretaConversaComponent — voltar ao atual', () => {

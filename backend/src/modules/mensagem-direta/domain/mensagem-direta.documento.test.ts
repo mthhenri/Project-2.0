@@ -85,7 +85,7 @@ test('ler o documento devolve o resumo, com as referências de volta como objeto
         referencias: [{ tipo: ReferenciaMensagemDiretaEnum.DEMANDA, id: 212 }],
         respondeA: null,
         createdDate: new Date('2026-10-21T14:05:11.482Z'),
-        editadaDate: null,
+        editadaDate: null, reacoes: [],
     });
 });
 

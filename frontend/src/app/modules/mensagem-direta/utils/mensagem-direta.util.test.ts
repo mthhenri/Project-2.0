@@ -44,7 +44,7 @@ function mensagem(id: string, minutos: number, autor = OUTRO, parcial: Partial<M
         referencias: [],
         respondeA: null,
         createdDate: new Date(2026, 9, 21, 14, minutos),
-        editadaDate: null,
+        editadaDate: null, reacoes: [],
         situacao: 'ENVIADA',
         ...parcial,
     };
@@ -229,7 +229,7 @@ describe('lista de conversas', () => {
         const resumo = { ...mensagem('e1', 0), createdDate: '2026-10-21T14:00:00.000Z' as never, editadaDate: '2026-10-21T14:20:00.000Z' as never };
         const { situacao: _situacao, ...semSituacao } = resumo;
         expect(normalizarMensagem(semSituacao).editadaDate).toEqual(new Date('2026-10-21T14:20:00.000Z'));
-        expect(normalizarMensagem({ ...semSituacao, editadaDate: null }).editadaDate).toBeNull();
+        expect(normalizarMensagem({ ...semSituacao, editadaDate: null, reacoes: [] }).editadaDate).toBeNull();
         const lista = normalizarConversa({
             conversaId: '4-9', usuarioId: 9, usuarioNome: 'Pessoa', naoLidas: 0, silenciada: false, online: false,
             ultimaMensagem: { ...semSituacao, editadaDate: '2026-10-21T14:20:00.000Z' as never },
