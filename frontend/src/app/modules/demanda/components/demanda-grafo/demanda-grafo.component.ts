@@ -147,7 +147,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     /** Enquadra o projeto todo na tela, sem aproximar além do tamanho normal. */
-    private ajustarAoGrafo(): void {
+    private ajustarAoGrafo(animar = true): void {
         if (!this.svgSelecao || !this.comportamentoZoom) return;
         const dentro = this.nosSimulados.filter((no) => no.x !== undefined && no.y !== undefined);
         if (!dentro.length) return;
@@ -164,7 +164,8 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             .translate(largura / 2, altura / 2)
             .scale(escala)
             .translate(-(minX + maxX) / 2, -(minY + maxY) / 2);
-        this.svgSelecao.transition().duration(350).call(this.comportamentoZoom.transform, transformacao);
+        if (animar) this.svgSelecao.transition().duration(350).call(this.comportamentoZoom.transform, transformacao);
+        else this.svgSelecao.call(this.comportamentoZoom.transform, transformacao);
     }
 
     /** A marca do status dentro do nó: ponto (planejada), ✓ (concluída) e risco (cancelada); a pendente fica vazia. */
@@ -429,6 +430,18 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
                 this.ajustarAoGrafo();
             }
         });
+
+        // Recorte da aba Conexões: poucos nós e o foco fixo. Assenta o layout de uma vez, sem a animação em que os nós nascem juntos e
+        // se afastam "como uma mola", e desenha já enquadrado.
+        if (this.modo === 'recorte') {
+            this.simulacao.stop();
+            this.simulacao.tick(300);
+            this.simulacao.on('tick')?.call(this.simulacao);
+            this.ajusteInicialFeito = true;
+            this.ajusteFinalFeito = true;
+            this.ajustarAoGrafo(false);
+            return;
+        }
 
         // A repulsão continua afastando os blocos desconectados depois do primeiro enquadramento: ao assentar, enquadra de novo (P-060).
         this.simulacao.on('end', () => {
