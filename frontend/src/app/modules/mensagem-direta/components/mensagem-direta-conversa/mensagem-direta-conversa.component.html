@@ -157,9 +157,12 @@
                             </p>
                         } @else {
                             @let minha = mensagem.autorUsuarioId === meuId();
+                            @let emenda = emendas().get(mensagem.mensagemId);
+                            @let compacto = rodapeCompacto(mensagem);
                             <div
                                 class="conversa-direta__linha"
                                 [class.conversa-direta__linha--minha]="minha"
+                                [class.conversa-direta__linha--emendada]="emenda?.comAnterior"
                             >
                                 <div
                                     class="conversa-direta__balao"
@@ -175,6 +178,7 @@
                                         mensagem.situacao === 'FALHOU'
                                     "
                                     (contextmenu)="abrirMenu($event, mensagem)"
+                                    (dblclick)="aoDarDoisCliques($event, mensagem)"
                                 >
                                     @if (mensagem.respondeA; as citacao) {
                                         <button
@@ -210,6 +214,7 @@
                                 </div>
                                 <div
                                     class="conversa-direta__rodape"
+                                    [class.conversa-direta__rodape--compacto]="compacto"
                                     [class.conversa-direta__rodape--falhou]="
                                         mensagem.situacao === 'FALHOU'
                                     "
@@ -243,26 +248,31 @@
                                             <span>Enviando…</span>
                                         }
                                         @default {
-                                            <span class="conversa-direta__horario"
-                                                >{{ hora(mensagem.createdDate) }}
-                                                @if (minha && mensagem.mensagemId === lidaId()) {
-                                                    <span class="conversa-direta__lida"
-                                                        ><i
-                                                            class="pi pi-check"
-                                                            aria-hidden="true"
-                                                        ></i
-                                                        ><i
-                                                            class="pi pi-check conversa-direta__lida-segundo"
-                                                            aria-hidden="true"
-                                                        ></i>
-                                                        Lida</span
-                                                    >
-                                                } @else if (
-                                                    minha && mensagem.mensagemId === ultimaMinhaId()
-                                                ) {
-                                                    <span>· Enviada</span>
-                                                }
-                                            </span>
+                                            @if (!compacto) {
+                                                <span class="conversa-direta__horario"
+                                                    >{{ hora(mensagem.createdDate) }}
+                                                    @if (
+                                                        minha && mensagem.mensagemId === lidaId()
+                                                    ) {
+                                                        <span class="conversa-direta__lida"
+                                                            ><i
+                                                                class="pi pi-check"
+                                                                aria-hidden="true"
+                                                            ></i
+                                                            ><i
+                                                                class="pi pi-check conversa-direta__lida-segundo"
+                                                                aria-hidden="true"
+                                                            ></i>
+                                                            Lida</span
+                                                        >
+                                                    } @else if (
+                                                        minha &&
+                                                        mensagem.mensagemId === ultimaMinhaId()
+                                                    ) {
+                                                        <span>· Enviada</span>
+                                                    }
+                                                </span>
+                                            }
                                             <button
                                                 type="button"
                                                 class="conversa-direta__acoes"
@@ -298,6 +308,19 @@
                             </div>
                         }
                     }
+                }
+                @if (estaDigitando()) {
+                    <div
+                        class="conversa-direta__linha conversa-direta__linha--digitando"
+                        role="status"
+                        aria-label="digitando"
+                    >
+                        <div class="conversa-direta__balao conversa-direta__balao--digitando">
+                            <span class="conversa-direta__pontos" aria-hidden="true"
+                                ><span></span><span></span><span></span
+                            ></span>
+                        </div>
+                    </div>
                 }
             }
         </div>

@@ -484,6 +484,32 @@ function esquemaPermitido(url: string): boolean {
     return ESQUEMAS_PERMITIDOS.test(url) && url.replace(ESQUEMAS_PERMITIDOS, '').length > 0;
 }
 
+/** Pontuação que, no fim de um endereço solto, pertence à frase e não ao endereço. */
+const PONTUACAO_FINAL_DO_ENDERECO = /[.,;:!?'"\]]$/;
+
+/**
+ * Endereço solto no texto (`https://…`, `http://…` ou `www.…`) que começa em `inicio`: o link que o autor escreveu sem a sintaxe `[texto](url)`.
+ * Termina no primeiro espaço, `<` ou `>`; a pontuação da frase e o `)` sem o `(` correspondente ficam de fora. `www.` ganha `https://`.
+ */
+function enderecoSoltoEm(texto: string, inicio: number): { url: string; tamanho: number } | null {
+    const resto = texto.slice(inicio, inicio + 2048);
+    const comEsquema = /^https?:\/\//i.test(resto);
+    if (!comEsquema && !/^www\./i.test(resto)) return null;
+    let fim = resto.search(/[\s<>]/);
+    if (fim === -1) fim = resto.length;
+    let endereco = resto.slice(0, fim);
+    for (;;) {
+        if (PONTUACAO_FINAL_DO_ENDERECO.test(endereco)) endereco = endereco.slice(0, -1);
+        else if (endereco.endsWith(')') && endereco.split(')').length > endereco.split('(').length) endereco = endereco.slice(0, -1);
+        else break;
+    }
+    const semEsquema = endereco.replace(/^https?:\/\//i, '');
+    // Precisa de um domínio depois do esquema (`www.` e `https://` sozinhos não são endereço).
+    if (!/^([^\s./]+\.[^\s./]+|localhost(:\d+)?(\/|$))/i.test(semEsquema)) return null;
+    const url = comEsquema ? endereco : `https://${endereco}`;
+    return esquemaPermitido(url) ? { url, tamanho: endereco.length } : null;
+}
+
 function interpretarInline(texto: string, permitirLinks = true): MarkdownInlineNo[] {
     const tokens = tokenizarInline(texto, permitirLinks);
     return montarInline(tokens);
@@ -604,6 +630,19 @@ function tokenizarInline(texto: string, permitirLinks: boolean): Token[] {
             buffer += c;
             indiceAtual++;
             continue;
+        }
+
+        if ((c === 'h' || c === 'w') && permitirLinks && (indiceAtual === 0 || !ehAlfanumerico(texto[indiceAtual - 1]))) {
+            const enderecoSolto = enderecoSoltoEm(texto, indiceAtual);
+            if (enderecoSolto) {
+                descarregar();
+                tokens.push({
+                    k: 'no',
+                    no: { tipo: 'link', url: enderecoSolto.url, filhos: [{ tipo: 'texto', valor: texto.slice(indiceAtual, indiceAtual + enderecoSolto.tamanho) }] },
+                });
+                indiceAtual += enderecoSolto.tamanho;
+                continue;
+            }
         }
 
         if (c === '*' || c === '_' || c === '~') {

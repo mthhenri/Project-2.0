@@ -2,6 +2,7 @@
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-width: 0;
     min-height: 0;
 }
 
@@ -124,6 +125,45 @@
         &--minha {
             align-self: flex-end;
             align-items: flex-end;
+        }
+    }
+
+    // Mensagem emendada na anterior (mesma pessoa, menos de 5 min): cola nela, anulando o espaço entre as linhas.
+    &__linha--emendada {
+        margin-top: -0.4375rem;
+    }
+
+    &__linha {
+        position: relative;
+    }
+
+    &__rodape--compacto {
+        position: absolute;
+        top: 0.375rem;
+        right: 100%;
+        padding: 0;
+    }
+
+    &__linha:not(&__linha--minha) &__rodape--compacto {
+        right: auto;
+        left: 100%;
+    }
+
+    // O "digitando" como balão no fim da conversa, igual ao do WhatsApp.
+    &__balao--digitando {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.625rem 0.75rem;
+        color: var(--p-text-muted-color);
+
+        .conversa-direta__pontos {
+            margin-left: 0;
+            gap: 0.25rem;
+
+            span {
+                width: 0.375rem;
+                height: 0.375rem;
+            }
         }
     }
 

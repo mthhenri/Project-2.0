@@ -99,6 +99,38 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
         expect(status()).toBe('Offline');
     });
 
+    it('o "digitando…" também aparece como balão no fim da conversa e some junto com o aviso', async () => {
+        const base = new Date(2026, 9, 21, 10, 0).getTime();
+        const mensagemDeCamila = (mensagemId: string, minutos: number) => ({
+            mensagemId, conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: mensagemId,
+            contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: new Date(base + minutos * 60_000), situacao: 'ENVIADA' as const,
+        });
+        estado.conversaAberta.update((aberta) => aberta && { ...aberta, mensagens: [mensagemDeCamila('a', 0), mensagemDeCamila('b', 2), mensagemDeCamila('c', 9)] });
+        await redesenhar();
+        const balao = () => tela.elemento.querySelector('.conversa-direta__balao--digitando');
+        expect(balao()).toBeNull();
+
+        estado.aplicarEvento({ tipo: 'DIGITANDO', conversaId: '1-9', usuarioId: 9 });
+        await redesenhar();
+        expect(balao()).not.toBeNull();
+
+        await vi.advanceTimersByTimeAsync(VALIDADE_DO_DIGITANDO_MS);
+        await tela.atualizar();
+        expect(balao()).toBeNull();
+    });
+
+    it('mensagens seguidas da mesma pessoa a menos de 5 minutos ficam coladas e só a última mostra o horário', async () => {
+        const base = new Date(2026, 9, 21, 10, 0).getTime();
+        const mensagemDeCamila = (mensagemId: string, minutos: number) => ({
+            mensagemId, conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: mensagemId,
+            contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: new Date(base + minutos * 60_000), situacao: 'ENVIADA' as const,
+        });
+        estado.conversaAberta.update((aberta) => aberta && { ...aberta, mensagens: [mensagemDeCamila('a', 0), mensagemDeCamila('b', 2), mensagemDeCamila('c', 9)] });
+        await redesenhar();
+        expect(tela.elemento.querySelectorAll('.conversa-direta__linha--emendada').length).toBe(1);
+        expect(tela.elemento.querySelectorAll('.conversa-direta__horario').length).toBe(2);
+    });
+
     it('quem digita avisa a outra pessoa uma vez e só de novo depois da espera; enviar zera a espera', async () => {
         await esperarCampoDeMensagem(tela.fixture, async () => {
             await vi.advanceTimersByTimeAsync(0);
@@ -154,6 +186,28 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
         await tela.atualizar();
         expect(botao().querySelector('.pi-ellipsis-h')).not.toBeNull();
     });
+    it('dois cliques no balão respondem à mensagem; em link, código ou mensagem não enviada não', async () => {
+        const mensagem = (mensagemId: string, texto: string, situacao: 'ENVIADA' | 'ENVIANDO' = 'ENVIADA') => ({
+            mensagemId, conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto, contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: new Date(), situacao,
+        });
+        estado.conversaAberta.update((aberta) => ({ ...aberta!, mensagens: [mensagem('texto', 'Oi, tudo bem?'), mensagem('link', 'veja https://exemplo.com/a'), mensagem('pendente', 'ainda indo', 'ENVIANDO')] }));
+        await redesenhar();
+        const dobrar = async (alvo: Element) => {
+            alvo.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+            await redesenhar();
+        };
+        const balao = (id: string) => tela.elemento.querySelector(`[data-mensagem-id="${id}"]`)!;
+
+        await dobrar(balao('link').querySelector('a')!);
+        expect(estado.respondendoA()).toBeNull();
+        await dobrar(balao('pendente'));
+        expect(estado.respondendoA()).toBeNull();
+        await dobrar(balao('texto'));
+        expect(estado.respondendoA()?.mensagemId).toBe('texto');
+        await dobrar(balao('link'));
+        expect(estado.respondendoA()?.mensagemId).toBe('link');
+    });
+
     it('o botão direito abre as ações da mensagem escolhida e trocar de conversa fecha o menu', async () => {
         const escrever = vi.fn().mockResolvedValue(undefined);
         Object.defineProperty(navigator, 'clipboard', { value: { writeText: escrever }, configurable: true });

@@ -10,7 +10,7 @@ import { TEMPO_DO_COPIADO_MS } from '../../../../shared/components/markdown-bloc
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-referencia.service';
 import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
-import { AVISO_DE_LEITURA_DAS_CONVERSAS, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa } from '../../utils/mensagem-direta.util';
+import { AVISO_DE_LEITURA_DAS_CONVERSAS, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa, marcarEmendas } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
@@ -23,6 +23,8 @@ const PAGINAS_PARA_ACHAR_A_ORIGINAL = 5;
 const TEMPO_DO_REALCE_MS = 1_500;
 const TEMPO_DO_AVISO_MS = 4_000;
 const AVISO_ORIGINAL_NAO_ACHADA = 'Mensagem antiga demais para localizar.';
+/** Onde o duplo clique mantém o comportamento próprio (selecionar texto, abrir, copiar) em vez de responder. */
+const SELETOR_DO_QUE_NAO_RESPONDE_COM_DOIS_CLIQUES = 'a, button, pre, code, app-mensagem-direta-referencia-cartao';
 const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
 /** Distância do topo (px) a partir da qual se pede a página mais antiga. */
 const MARGEM_DO_TOPO_PX = 40;
@@ -63,6 +65,7 @@ export class MensagemDiretaConversaComponent {
         return aberta ? this.estado.online().has(aberta.usuarioId) : false;
     });
 
+    protected readonly emendas = computed(() => marcarEmendas(this.aberta()?.mensagens ?? []));
     protected readonly grupos = computed(() => agruparPorDia(this.aberta()?.mensagens ?? [], new Date()));
     protected readonly lidaId = computed(() => {
         const aberta = this.aberta();
@@ -115,6 +118,11 @@ export class MensagemDiretaConversaComponent {
         effect(() => {
             this.totalDeMensagens();
             setTimeout(() => this.ajustarRolagem(), 0);
+        });
+
+        // O balão de "digitando" ocupa o fim da conversa: quem lê o fim continua vendo-o sem rolar.
+        effect(() => {
+            if (this.estaDigitando()) setTimeout(() => this.acompanharOFim(), 0);
         });
 
         inject(DestroyRef).onDestroy(() => {
@@ -184,6 +192,20 @@ export class MensagemDiretaConversaComponent {
             preventDefault: () => evento.preventDefault(),
             stopPropagation: () => evento.stopPropagation(),
         } : evento);
+    }
+
+    /**
+     * Dois cliques no balão respondem à mensagem (como no WhatsApp). Ficam de fora o duplo clique em link, botão, código e cartão de referência (que
+     * têm o seu uso próprio e onde o duplo clique seleciona texto) e a mensagem que ainda não foi enviada. O duplo clique selecionaria uma palavra:
+     * a seleção é desfeita, porque o gesto aqui é o de responder.
+     */
+    protected aoDarDoisCliques(evento: MouseEvent, mensagem: MensagemNaConversa): void {
+        if (mensagem.situacao !== 'ENVIADA' || mensagem.autor !== AutorMensagemDiretaEnum.USUARIO) return;
+        const alvo = evento.target instanceof Element ? evento.target : null;
+        if (alvo?.closest(SELETOR_DO_QUE_NAO_RESPONDE_COM_DOIS_CLIQUES)) return;
+        evento.preventDefault();
+        alvo?.ownerDocument.defaultView?.getSelection()?.removeAllRanges();
+        this.estado.responder(mensagem);
     }
 
     /** Copia o texto da mensagem como foi escrito (o Markdown), inclusive blocos de código. */
@@ -285,6 +307,16 @@ export class MensagemDiretaConversaComponent {
             return;
         }
         if (this.colarNoFim && cresceu) elemento.scrollTop = elemento.scrollHeight;
+    }
+
+    private acompanharOFim(): void {
+        const elemento = this.rolagem()?.nativeElement;
+        if (elemento && this.colarNoFim) elemento.scrollTop = elemento.scrollHeight;
+    }
+
+    /** O rodapé (horário, "Lida", menu) só aparece na última mensagem da sequência, salvo quando carrega um estado que não pode sumir. */
+    protected rodapeCompacto(mensagem: MensagemNaConversa): boolean {
+        return !!this.emendas().get(mensagem.mensagemId)?.comProxima && mensagem.situacao === 'ENVIADA' && mensagem.mensagemId !== this.lidaId() && mensagem.mensagemId !== this.ultimaMinhaId();
     }
 
     protected aoDigitar(): void {
