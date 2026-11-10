@@ -64,7 +64,11 @@
                         [severity]="severidadeStatus(atividade.status)"
                     />
                     <span class="atividade-detalhe__executor">
-                        <span class="atividade-detalhe__avatar">{{ iniciais() }}</span>
+                        <app-avatar-usuario
+                            [nome]="atividade.nomeUsuario"
+                            [cor]="atividade.corAvatar"
+                            tamanho="1.75rem"
+                        />
                         {{ atividade.nomeUsuario }}
                     </span>
                     <span class="text-muted-color"
@@ -319,13 +323,13 @@
                                     execucao.fimData === null
                                 "
                             >
-                                <span
-                                    class="atividade-detalhe__avatar"
+                                <app-avatar-usuario
+                                    [nome]="execucao.nomeUsuario"
+                                    [cor]="execucao.corAvatar"
+                                    tamanho="1.75rem"
                                     [pTooltip]="execucao.nomeUsuario"
                                     tooltipPosition="top"
-                                >
-                                    {{ iniciaisDe(execucao.nomeUsuario) }}
-                                </span>
+                                />
                                 <div class="atividade-detalhe__execucao-info">
                                     <span class="atividade-detalhe__execucao-descricao">{{
                                         execucao.descricao || "Sem descrição"

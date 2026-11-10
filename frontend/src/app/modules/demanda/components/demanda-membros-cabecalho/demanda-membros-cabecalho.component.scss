@@ -35,20 +35,6 @@
         color: var(--p-text-color);
     }
 
-    &__avatar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.9rem;
-        height: 1.9rem;
-        border: 2px solid var(--app-surface-0);
-        border-radius: 50%;
-        background: var(--app-avatar-fundo);
-        color: var(--app-avatar-cor);
-        font-size: 0.7rem;
-        font-weight: 600;
-    }
-
     // O "x" de remover só aparece com o mouse (ou o foco do teclado) sobre o avatar.
     &__remover {
         position: absolute;

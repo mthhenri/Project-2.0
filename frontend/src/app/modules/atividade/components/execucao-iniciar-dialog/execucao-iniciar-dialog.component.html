@@ -16,9 +16,11 @@
         </p>
         @if (sessao.temVisaoTotal()) {
             <div class="execucao-iniciar__executor">
-                <span class="execucao-iniciar__avatar">{{
-                    iniciais(atividadeAberta.nomeUsuario)
-                }}</span>
+                <app-avatar-usuario
+                    [nome]="atividadeAberta.nomeUsuario"
+                    [cor]="atividadeAberta.corAvatar ?? null"
+                    tamanho="1.75rem"
+                />
                 <span class="text-color">{{ atividadeAberta.nomeUsuario }}</span>
             </div>
         }

@@ -7,7 +7,7 @@ describe('UsuarioCorSeletorComponent', () => {
 
     it('mostra a prévia com as iniciais e "Cor padrão" quando não há cor', async () => {
         const tela = await montarComponente(UsuarioCorSeletorComponent, { entradas: { nome: 'Camila Duarte' } });
-        expect(tela.elemento.querySelector('.avatar-direto')?.textContent?.trim()).toBe('CD');
+        expect(tela.elemento.querySelector('.avatar-usuario')?.textContent?.trim()).toBe('CD');
         expect(tela.elemento.querySelector('.cor-seletor__dica')?.textContent?.trim()).toBe('Cor padrão');
         expect(botaoPadrao(tela.elemento).disabled).toBe(true);
     });

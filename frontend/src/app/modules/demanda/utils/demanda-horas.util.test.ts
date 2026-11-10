@@ -6,7 +6,6 @@ import {
     corDaBarraHoras,
     executoresUnicos,
     haQuantoTempo,
-    iniciaisDoNome,
     linhasVisiveisDeHoras,
     montarArvoreDeHoras,
     percentualDeHoras,
@@ -149,17 +148,11 @@ describe('quem executa agora', () => {
         expect(haQuantoTempo('xx', agora)).toBe('');
     });
 
-    it('iniciais: primeiro e último nome', () => {
-        expect(iniciaisDoNome('Maria da Silva')).toBe('MS');
-        expect(iniciaisDoNome('maria')).toBe('M');
-        expect(iniciaisDoNome('  ')).toBe('?');
-    });
-
     it('executoresUnicos junta a mesma pessoa e guarda o início mais antigo', () => {
         const unicos = executoresUnicos([
-            { usuarioId: 1, nomeCompleto: 'Ana', inicioData: new Date('2026-10-25T10:00:00Z') },
-            { usuarioId: 2, nomeCompleto: 'Bia', inicioData: new Date('2026-10-25T09:00:00Z') },
-            { usuarioId: 1, nomeCompleto: 'Ana', inicioData: new Date('2026-10-25T08:00:00Z') },
+            { usuarioId: 1, nomeCompleto: 'Ana', corAvatar: null, inicioData: new Date('2026-10-25T10:00:00Z') },
+            { usuarioId: 2, nomeCompleto: 'Bia', corAvatar: null, inicioData: new Date('2026-10-25T09:00:00Z') },
+            { usuarioId: 1, nomeCompleto: 'Ana', corAvatar: null, inicioData: new Date('2026-10-25T08:00:00Z') },
         ]);
         expect(unicos.map((pessoa) => pessoa.usuarioId)).toEqual([1, 2]);
         expect(new Date(unicos[0].inicioData).toISOString()).toBe('2026-10-25T08:00:00.000Z');

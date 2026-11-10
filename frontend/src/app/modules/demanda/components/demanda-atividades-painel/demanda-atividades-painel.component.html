@@ -140,9 +140,11 @@
                         </div>
                         <div class="demanda-atividades__meta">
                             <span class="demanda-atividades__executor">
-                                <span class="demanda-atividades__avatar">{{
-                                    iniciaisUsuario(atividade.nomeUsuario)
-                                }}</span>
+                                <app-avatar-usuario
+                                    [nome]="atividade.nomeUsuario"
+                                    [cor]="atividade.corAvatar"
+                                    tamanho="1.5rem"
+                                />
                                 {{ atividade.nomeUsuario }}
                             </span>
                         </div>

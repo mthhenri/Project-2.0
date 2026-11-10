@@ -16,7 +16,7 @@ Ordem de execução (decidida em 2026-11-06): **318**, 313, 314, **316 antes da 
 | 314 | Reações nas mensagens e seletor de emoji | sim (tabela `mensagem_direta_reacao`, migration 0083) | feita em 2026-11-06 (`done/`) |
 | 315 | `@IA` no chat entre colaboradores | sim | reservada, spec própria antes de qualquer código |
 | 316 | Cor da bolinha escolhida pela pessoa (só no chat por ora) | sim (`usuario.cor_avatar`, migration 0084) | feita em 2026-11-06 (`done/`); a 319 leva a cor aos demais avatares |
-| 319 | Cor da bolinha nos demais avatares do sistema (depende da 316) | não | spec no backlog (`319-cor-da-bolinha-em-todo-o-sistema.spec.md`) |
+| 319 | Cor da bolinha nos demais avatares do sistema (depende da 316) | não | feita em 2026-11-10 (`done/`) |
 | 317 | Volume do aviso do chat de 1 a 5 (3 é o atual) e, depois, escolher o som | sim (preferência do usuário) | pedido em 2026-11-06, a especificar |
 | 318 | Posição da barra de conversas (esquerda, direita, acima, abaixo) e engrenagem de configurações na barra | sim (`posicao_barra`, migration 0081) | feita em 2026-11-06 (`done/`); inclui a setinha "voltar ao atual" |
 

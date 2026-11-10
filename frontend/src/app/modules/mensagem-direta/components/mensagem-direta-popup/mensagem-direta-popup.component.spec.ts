@@ -266,13 +266,13 @@ describe('MensagemDiretaPopupComponent', () => {
         await montar();
         eventos.ouvintes!.aoEvento({ tipo: 'ABERTURA', onlineUsuarioIds: [9] });
         await tela.atualizar();
-        expect(tela.elemento.querySelectorAll('.avatar-direto__presenca--online').length).toBe(1);
+        expect(tela.elemento.querySelectorAll('.avatar-usuario__presenca--online').length).toBe(1);
         eventos.ouvintes!.aoEvento({ tipo: 'PRESENCA', usuarioId: 15, online: true });
         await tela.atualizar();
-        expect(tela.elemento.querySelectorAll('.avatar-direto__presenca--online').length).toBe(2);
+        expect(tela.elemento.querySelectorAll('.avatar-usuario__presenca--online').length).toBe(2);
         eventos.ouvintes!.aoEvento({ tipo: 'PRESENCA', usuarioId: 9, online: false });
         await tela.atualizar();
-        expect(tela.elemento.querySelectorAll('.avatar-direto__presenca--online').length).toBe(1);
+        expect(tela.elemento.querySelectorAll('.avatar-usuario__presenca--online').length).toBe(1);
     });
 
     it('SINCRONIZAR e a reconexão do stream releem a lista e a conversa aberta', async () => {

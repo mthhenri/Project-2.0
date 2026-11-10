@@ -170,7 +170,7 @@ describe('PontoMesDiaComponent: justificativa', () => {
 
 describe('PontoMesDiaComponent: expandir o dia', () => {
     const detalhe = (): PontoDiarioDto => ({
-        data: '2026-03-02', usuarioId: 3, nomeUsuario: 'Ana', ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480,
+        data: '2026-03-02', usuarioId: 3, nomeUsuario: 'Ana', corAvatar: null, ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480,
         minutosTrabalhadosDiaUtil: 420, minutosTrabalhadosExtra: 0, totalMinutosTrabalhados: 420, saldoMinutos: -60,
         intervalos: INTERVALO_DO_ALMOCO,
         execucoes: [{
@@ -248,7 +248,7 @@ describe('PontoMesDiaComponent: expandir o dia', () => {
 });
 
 const detalheVazio = (): PontoDiarioDto => ({
-    data: '2026-03-02', usuarioId: 3, nomeUsuario: 'Ana', ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480, minutosTrabalhadosDiaUtil: 0,
+    data: '2026-03-02', usuarioId: 3, nomeUsuario: 'Ana', corAvatar: null, ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480, minutosTrabalhadosDiaUtil: 0,
     minutosTrabalhadosExtra: 0, totalMinutosTrabalhados: 0, saldoMinutos: 0, intervalos: [], execucoes: [],
 });
 
@@ -315,7 +315,7 @@ describe('PontoMesDiaComponent: resumo da linha (P-054)', () => {
         const montado = await montar(comRegistro({ data: dataRelativa(-3), totalMinutosTrabalhados: 400, saldoMinutos: -80 }));
         (montado.elemento.querySelector('.ponto-mes-dia__linha') as HTMLElement).click();
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/ponto/diario'), {
-            data: '2026-03-02', usuarioId: 3, nomeUsuario: 'Ana', ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480, minutosTrabalhadosDiaUtil: 400,
+            data: '2026-03-02', usuarioId: 3, nomeUsuario: 'Ana', corAvatar: null, ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480, minutosTrabalhadosDiaUtil: 400,
             minutosTrabalhadosExtra: 0, totalMinutosTrabalhados: 400, saldoMinutos: -80, intervalos: [], execucoes: [],
         });
         await montado.atualizar();

@@ -22,6 +22,7 @@ import { DialogFormularioDirective } from '../../../../shared/directives/dialog-
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { AtividadeService } from '../../services/atividade.service';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /** A atividade que se vai iniciar: só o que o diálogo mostra e usa. */
 export interface AtividadeParaIniciar {
@@ -29,6 +30,7 @@ export interface AtividadeParaIniciar {
     nome: string;
     nomeProjeto: string;
     nomeUsuario: string;
+    corAvatar?: string | null;
     usuarioTipo: TipoUsuarioEnum;
 }
 
@@ -41,6 +43,7 @@ export interface AtividadeParaIniciar {
     selector: 'app-execucao-iniciar-dialog',
     standalone: true,
     imports: [
+        AvatarUsuarioComponent,
         ReactiveFormsModule,
         ButtonModule,
         DialogModule,
@@ -89,10 +92,6 @@ export class ExecucaoIniciarDialogComponent {
         controle.updateValueAndValidity();
         this.carregarExecucoes(atividade.id);
         this.visivel.set(true);
-    }
-
-    iniciais(nome: string): string {
-        return (nome ?? '').split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
     }
 
     confirmar(): void {

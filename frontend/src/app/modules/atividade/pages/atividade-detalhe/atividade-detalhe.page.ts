@@ -34,6 +34,7 @@ import { AtividadeTagsPopoverComponent } from '../../components/atividade-tags-p
 import { ExecucaoRegistroDialogComponent } from '../../components/execucao-registro-dialog/execucao-registro-dialog.component';
 import { ATIVIDADE_STATUS_OPCOES, severidadeStatusAtividade, rotuloStatusAtividade } from '../../models/atividade.model';
 import { estadoDaFaixaDeExecucao, formatarIntervaloDaExecucao } from '../../utils/faixa-execucao.util';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /** Quantas execuções o detalhe mostra; o histórico completo fica na tela de Execuções. */
 const EXECUCOES_RECENTES = 5;
@@ -47,6 +48,7 @@ const EXECUCOES_RECENTES = 5;
     selector: 'app-atividade-detalhe',
     standalone: true,
     imports: [
+        AvatarUsuarioComponent,
         PrioridadeSeloComponent,
         AtividadeTagsPopoverComponent,
         ExecucaoRegistroDialogComponent,
@@ -103,12 +105,6 @@ export class AtividadeDetalhePage implements OnInit {
 
     /** "O que você vai fazer?" da faixa de início rápido; a obrigatoriedade depende do dono (ver `descricaoObrigatoria`). */
     readonly descricaoInicio = new FormControl<string>('', { nonNullable: true, validators: [Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)] });
-
-    readonly iniciais = computed(() => this.iniciaisDe(this.atividade()?.nomeUsuario ?? ''));
-
-    iniciaisDe(nome: string): string {
-        return nome.split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
-    }
 
     /** Auxiliar, gestor ou o dono da atividade: quem pode iniciar, pausar, trocar status e mexer nas tags. */
     readonly podeAgir = computed(() => {

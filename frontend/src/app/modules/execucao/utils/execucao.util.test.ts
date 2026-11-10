@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
-import { dataParaIso, isoParaData, mesmoDia, rotuloDoDia, horasCompactas, resumoDoDia, separarExecucoes, mensagemInicialDoChat, iniciaisDoNome } from './execucao.util';
+import { dataParaIso, isoParaData, mesmoDia, rotuloDoDia, horasCompactas, resumoDoDia, separarExecucoes, mensagemInicialDoChat } from './execucao.util';
 
 const hoje = new Date(2026, 6, 10);
 
@@ -86,11 +86,4 @@ test('separarExecucoes tira a ativa da lista das encerradas e preserva a ordem',
 test('mensagemInicialDoChat retoma de onde parou só quando já houve execução no dia', () => {
     assert.equal(mensagemInicialDoChat(true), 'De onde paramos?');
     assert.equal(mensagemInicialDoChat(false), 'O que temos pra fazer?');
-});
-
-test('iniciaisDoNome pega as duas primeiras iniciais e tolera espaços e nome vazio', () => {
-    assert.equal(iniciaisDoNome('Matheus Henrique'), 'MH');
-    assert.equal(iniciaisDoNome('  ana   souza lima '), 'AS');
-    assert.equal(iniciaisDoNome('Carlos'), 'C');
-    assert.equal(iniciaisDoNome(''), '');
 });

@@ -12,6 +12,36 @@
 
 ---
 
+## 2026-11-10 — Task 319 (ajustes): iniciais padronizadas e prévias do diálogo de cor em todos os lugares
+
+**Pedido do autor**, ao ler as duas decisões abertas do fecho da 319: (1) padronizar as iniciais pela **primeira e última palavra** do nome ("Matheus Henrique Silva" → MS), (2) aceitar o Controle de horas no fundo de avatar do tema, e (3) perguntou se o diálogo de troca de cor mostra todos os exemplos — não mostrava, só os quatro do chat.
+
+**O que mudou.** `iniciaisDoNome` mora só em `avatar-usuario.component.ts` e o componente deixou de aceitar `iniciais` de fora: saíram os nove helpers repetidos nas telas (`iniciais`, `iniciaisDe`, `iniciaisUsuario`) e as três funções `iniciaisDoNome` dos utils de usuário, execução e demanda, com os testes migrados. Quem tinha duas primeiras palavras (atividade, execução, ponto, cartão de usuário, login e barra de cima) passa a mostrar primeira e última. O diálogo "Cor da minha bolinha" ganhou a seção **"No resto do sistema"** ao lado de "No chat", com seis prévias: Barra de cima, Atividades e execuções, Membros da demanda (pilha com contorno), Ponto da equipe, Em andamento agora e Tela de entrada; a largura passou de 46 para 64rem.
+
+**Testado.** `frontend` 218 arquivos, 2625 testes ok (o do diálogo agora confere as dez prévias e 11 bolinhas na cor em escolha); `lint:tudo` e build do frontend ok.
+
+**Verificado ao vivo.** O diálogo nos cinco formatos e nos dois temas (evidência em `.artifacts/319/dialogo-*.png`): lado a lado a partir de 960px e em coluna com rolagem em 720×1280.
+
+---
+
+## 2026-11-10 — Task 319: a cor da bolinha escolhida pela pessoa em todos os avatares do sistema
+
+**Pedido.** Levar a cor da 316 (`usuario.cor_avatar`) para além do chat: atividades (listagem, detalhe, diálogos de iniciar, registrar e encerrar execução), demandas (membros, cabeçalho de membros, painel de atividades, Controle de horas), cartão de usuário, Ponto, "Execução agora", login e a barra de cima. Sem tempo real: vale na próxima carga. Foi o autor quem pediu para seguir com a 319.
+
+**Decisão do componente (registrada ao abrir a task).** Em vez de um segundo componente, o `app-mensagem-direta-avatar` foi **generalizado e movido** para `frontend/src/app/shared/components/avatar-usuario/` (`app-avatar-usuario`, `AvatarUsuarioComponent`). Entradas: `nome`, `cor`, `online`, `pequeno`, `tamanho` (diâmetro em qualquer medida CSS; a fonte acompanha em 35%), `contorno` (anel na cor da superfície, para avatares empilhados) e `iniciais` (opcional, para a tela manter as iniciais que já mostrava). `iniciaisDoNome` (primeira e última palavra) mora ao lado do componente; o `iniciais` do util do chat saiu, com o teste migrado. Os 11 blocos `__avatar` repetidos em SCSS (e o `--resto` do Controle de horas, que virou `__resto`, o "+N") foram removidos. O CSS global `--app-avatar-fundo`/`--app-avatar-cor` continua, porque o componente o usa quando a pessoa não escolheu cor.
+
+**Contrato (DTOs com `corAvatar: string | null`).** `AtividadeResumoDto`, `AtividadeRecuperadaDto`, `ExecucaoItemDto`, `DemandaMembroDto`, `DemandaUsuarioAtribuidoDto`, `ExecutorAtivoDto`, `PontoDiarioDto`, `PontoMensalDto`, `UsuarioResumoDto` e o `usuario` do `AutenticacaoTokenDto`. Sem migration e sem coluna nova: só `usuario.cor_avatar AS "corAvatar"` nos SELECTs de atividade (listar e recuperar), execução (listar), demanda (membros e executores ativos do planejamento), usuário (listar e `listarAtivosComMeta`) e nas services de ponto, atribuição de membro e login. O login lembrado (`ultimo_login` no navegador) passa a guardar `corAvatar`, para a bolinha da tela "Bem-vindo de volta" ter a cor; ela só se atualiza no login seguinte.
+
+**Testado.** `shared` 332 ok; `backend` unitários 1691 ok; integração (PostgreSQL 16 local na 5433) 381 ok, com asserções novas de `corAvatar` em atividade, execução, demanda (membros e executores) e usuário; `frontend` 218 arquivos, 2630 testes ok (spec do avatar com cor, sem cor, iniciais da tela e tamanho; login lembrado com cor; cartão do ponto com cor; fixtures ajustadas); `lint:tudo` limpo; build do backend e do frontend ok.
+
+**Verificado ao vivo** (Playwright, app real, gestor vermelho `#B91C1C` e desenvolvedor azul `#1E3A8A`, execução aberta do desenvolvedor): Atividades, detalhe da atividade, Usuários, Ponto (equipe), Execuções ("Em andamento agora"), Demandas (Árvore e Controle de horas) e o login lembrado, nos cinco formatos (1920×1080, 1366×768, 1080×1920, 720×1280, 960×1080) e nos dois temas. Relatório em `docs/specs/done/319-cor-da-bolinha-em-todo-o-sistema/VERIFICACAO.md`.
+
+**Achado só na verificação.** O login lembrado saía azul: a resposta do login não trazia `corAvatar` e a sessão só a recebia na leitura seguinte, depois de `guardarUsuarioLembrado()`. Corrigido levando a cor no `AutenticacaoTokenDto.usuario`.
+
+**Fica para o autor decidir (não mudei).** (1) As iniciais: as telas de atividade, execução, ponto e cartão usam as **duas primeiras** palavras ("Matheus Henrique Silva" → MH) e o chat e o Controle de horas, a **primeira e a última** (MS). Mantive cada tela como estava, passando `iniciais` ao componente; unificar tiraria nove helpers repetidos e mudaria as iniciais de quem tem três nomes ou mais. (2) O Controle de horas mostrava os executores no realce primário e agora, sem cor escolhida, usa o fundo de avatar do tema (como as outras telas).
+
+---
+
 ## 2026-11-06 — Task 316 (ajustes): paleta das tags na cor da bolinha e ícone do chat de volta
 
 O autor achou o seletor de cor do perfil deslocado e pediu as mesmas cores das tags. O perfil deixou de ter o seletor aberto: ganhou a linha "Minha cor" com o botão **"Editar cor"**, que abre o diálogo `usuario-cor-dialog` (seletor à esquerda e, à direita, prévias reais da bolinha na lista de conversas, no cabeçalho, na barra e no aviso, com Cancelar e Salvar; nada grava antes do Salvar). O seletor e o diálogo do gestor passaram a usar o `app-seletor-cor` (modo compacto: as 28 cores da paleta das tags e "Outra cor…" com roda e hexadecimal), com a entrada nova `aceitaSemCor` (aditiva: sem ela, `null` segue virando o azul de Tags e Projetos). A troca do ícone do chat entre colegas por envelope foi **desfeita** a pedido do autor (volta `pi-comments`); a dificuldade de distinguir os dois chats ficou registrada como problema (ver PROBLEMS.md). Isto não reescreve o bloco anterior, que descreve o envelope como foi entregue.

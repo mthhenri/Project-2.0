@@ -296,6 +296,7 @@ testarComBanco('recuperar: traz demanda, projeto, executor e prioridade; ativida
     const repositorio = repositorioDe(conexao);
 
     const recuperada = await repositorio.recuperar({ id: atividade.id });
+    assert.equal(recuperada?.corAvatar, null, 'sem cor escolhida');
     assert.equal(recuperada?.nome, 'Detalhe');
     assert.equal(recuperada?.nomeDemanda, 'Demanda Beta');
     assert.equal(recuperada?.projetoId, projeto.id);

@@ -61,29 +61,30 @@
         align-items: center;
     }
 
-    &__avatar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.75rem;
-        height: 1.75rem;
+    // Os avatares empilham sobrepostos; o "+N" é o último da pilha.
+    &__avatar,
+    &__resto {
         margin-left: -0.4rem;
-        border: 2px solid var(--app-surface-0);
-        border-radius: 50%;
-        background: var(--app-realce-primario);
-        color: var(--p-primary-contrast-color);
-        font-size: 0.65rem;
-        font-weight: 600;
         cursor: default;
 
         &:first-child {
             margin-left: 0;
         }
+    }
 
-        &--resto {
-            background: var(--app-surface-300);
-            color: var(--p-text-color);
-        }
+    &__resto {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        box-sizing: border-box;
+        border: 2px solid var(--app-surface-0);
+        border-radius: 50%;
+        background: var(--app-surface-300);
+        color: var(--p-text-color);
+        font-size: 0.65rem;
+        font-weight: 600;
     }
 
     &__arvore {

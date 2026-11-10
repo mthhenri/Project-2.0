@@ -98,7 +98,7 @@ describe('DemandaControleHorasPainelComponent', () => {
     });
 
     it('o executor aparece na linha da demanda e uma só vez no resumo, mesmo executando em duas', async () => {
-        const executor = (usuarioId: number, nome: string, inicio: Date) => ({ usuarioId, nomeCompleto: nome, inicioData: inicio });
+        const executor = (usuarioId: number, nome: string, inicio: Date) => ({ usuarioId, nomeCompleto: nome, corAvatar: null, inicioData: inicio });
         const { montado } = await montar({
             itens: [
                 criarLinha(2, { executoresAtivos: [executor(1, 'Ana Souza', haDias(0.1))] }),
@@ -113,7 +113,7 @@ describe('DemandaControleHorasPainelComponent', () => {
     });
 
     it('mais de quatro executores: quatro bolinhas e o excedente em "+N"', async () => {
-        const pessoas = [1, 2, 3, 4, 5, 6].map((usuarioId) => ({ usuarioId, nomeCompleto: `Pessoa ${usuarioId}`, inicioData: haDias(0.1) }));
+        const pessoas = [1, 2, 3, 4, 5, 6].map((usuarioId) => ({ usuarioId, nomeCompleto: `Pessoa ${usuarioId}`, corAvatar: null, inicioData: haDias(0.1) }));
         const { montado } = await montar({ itens: [criarLinha(2, { executoresAtivos: pessoas })] });
         expect(montado.componente.executoresNoResumo()).toHaveLength(4);
         expect(montado.componente.executoresExcedentes()).toHaveLength(2);

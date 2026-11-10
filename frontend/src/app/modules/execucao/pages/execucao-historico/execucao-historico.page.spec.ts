@@ -24,7 +24,7 @@ function criarExecucao(id: number, sobrescritas: Partial<ExecucaoItemDto> = {}):
     return {
         id, atividadeId: 20 + id, nomeAtividade: `Atividade ${id}`, demandaId: 10, nomeDemanda: 'Demanda dez',
         projetoId: 5, nomeProjeto: 'Portal', descricao: `Descrição ${id}`, inicioData: inicio, fimData: fim,
-        duracaoMinutos: 90, usuarioId: 1, nomeUsuario: 'Maria Souza', ...sobrescritas,
+        duracaoMinutos: 90, usuarioId: 1, nomeUsuario: 'Maria Souza', corAvatar: null, ...sobrescritas,
     };
 }
 
@@ -151,13 +151,13 @@ describe('ExecucaoHistoricoPage: carregamento e estados', () => {
         expect(bloco.querySelectorAll('article').length).toBe(2);
         expect(bloco.textContent).toContain('Em andamento agora · 2');
         expect(bloco.textContent).toContain('João Lima');
-        expect(bloco.querySelector('.execucao-agora__avatar')?.textContent?.trim()).toBe('MS');
+        expect(bloco.querySelector('.avatar-usuario')?.textContent?.trim()).toBe('MS');
     });
 
     it('gestor filtrado em um usuário vê o cartão sem avatar', async () => {
         const { montado } = await montarPagina({ consulta: { usuario: '1' } });
         await carregar(montado, [criarExecucao(1, { fimData: null, duracaoMinutos: null })]);
-        expect(montado.elemento.querySelector('.execucao-agora__avatar')).toBeNull();
+        expect(montado.elemento.querySelector('.avatar-usuario')).toBeNull();
     });
 
     it('sem execução ativa o gestor vê o estado vazio e nenhum botão de iniciar', async () => {

@@ -45,7 +45,7 @@ describe('PontoUsuarioCardComponent', () => {
     }) as ExecucaoItemDto;
 
     const ponto = (sobrescrita: Partial<PontoDiarioDto> = {}): PontoDiarioDto => ({
-        data: '2026-03-02', usuarioId: 3, nomeUsuario: 'Ana Maria Souza', ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480,
+        data: '2026-03-02', usuarioId: 3, nomeUsuario: 'Ana Maria Souza', corAvatar: null, ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480,
         minutosTrabalhadosDiaUtil: 90, minutosTrabalhadosExtra: 0, totalMinutosTrabalhados: 90, saldoMinutos: -390,
         intervalos: [], execucoes: [execucao(1)], ...sobrescrita,
     });
@@ -55,11 +55,19 @@ describe('PontoUsuarioCardComponent', () => {
         return montarComponente(PontoUsuarioCardComponent, { usuario: TipoUsuarioEnum.GESTOR, entradas: { ponto: valor } });
     };
 
-    it('mostra o nome, as iniciais (duas primeiras partes), o total e a execução do dia', async () => {
+    it('a bolinha usa a cor que a pessoa escolheu', async () => {
+        const montado = await montar(ponto({ corAvatar: '#FDE047' }));
+        const bolinha = montado.elemento.querySelector<HTMLElement>('.avatar-usuario')!;
+        expect(bolinha.style.background).toBe('rgb(253, 224, 71)');
+        expect(bolinha.style.color).toBe('rgb(17, 24, 39)');
+    });
+
+    it('mostra o nome, as iniciais (primeira e última palavra), o total e a execução do dia', async () => {
         const montado = await montar(ponto());
         const html = montado.elemento;
         expect(texto(html)).toContain('Ana Maria Souza');
-        expect(html.querySelector('.ponto-usuario-card__avatar')!.textContent).toBe('AM');
+        expect(html.querySelector('.avatar-usuario')!.textContent?.trim()).toBe('AS');
+        expect(html.querySelector<HTMLElement>('.avatar-usuario')!.style.background).toBe('');
         expect(texto(html)).toContain('1h 30min');
         expect(texto(html)).toContain('09:00');
         expect(texto(html)).toContain('10:30');

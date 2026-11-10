@@ -24,6 +24,7 @@ export class AutenticacaoController {
                         login: 'joao.silva',
                         nomeCompleto: 'João Silva',
                         tipo: 'GESTOR',
+                        corAvatar: '#1E3A8A',
                     },
                 },
                 mensagem: 'Login realizado com sucesso',

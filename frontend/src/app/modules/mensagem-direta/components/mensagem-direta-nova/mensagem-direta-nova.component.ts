@@ -8,13 +8,13 @@ import { TooltipModule } from 'primeng/tooltip';
 import { rotuloTipoUsuario } from '../../../../core/utils/tipo-usuario';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { filtrarPessoasPorNome } from '../../utils/mensagem-direta.util';
-import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /** Escolher com quem conversar: todas as pessoas ativas, com a presença. A lista vem de `GET /mensagem-direta/pessoas` (qualquer usuário). */
 @Component({
     selector: 'app-mensagem-direta-nova',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TooltipModule, MensagemDiretaAvatarComponent],
+    imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TooltipModule, AvatarUsuarioComponent],
     templateUrl: './mensagem-direta-nova.component.html',
     styleUrl: './mensagem-direta-nova.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,

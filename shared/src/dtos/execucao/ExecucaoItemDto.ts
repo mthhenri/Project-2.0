@@ -12,4 +12,6 @@ export class ExecucaoItemDto {
     duracaoMinutos: number | null;
     usuarioId: number;
     nomeUsuario: string;
+    /** Cor da bolinha escolhida pela pessoa (`#RRGGBB`); `null` = cor padrão do tema. */
+    corAvatar: string | null;
 }

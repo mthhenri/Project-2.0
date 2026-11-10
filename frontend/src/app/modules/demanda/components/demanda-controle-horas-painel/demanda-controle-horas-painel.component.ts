@@ -24,11 +24,11 @@ import {
     ancestraisDe,
     executoresUnicos,
     haQuantoTempo,
-    iniciaisDoNome,
     linhasVisiveisDeHoras,
     montarArvoreDeHoras,
     resumirHoras,
 } from '../../utils/demanda-horas.util';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /** Quantas bolinhas de quem executa cabem no resumo antes do "+N". */
 const EXECUTORES_VISIVEIS_NO_RESUMO = 4;
@@ -59,6 +59,7 @@ interface CartaoParada {
     selector: 'app-demanda-controle-horas-painel',
     standalone: true,
     imports: [
+        AvatarUsuarioComponent,
         ReactiveFormsModule,
         ButtonModule,
         InputNumberModule,
@@ -286,10 +287,6 @@ export class DemandaControleHorasPainelComponent {
     // ---------------------------------------------------------------------------
     // Apresentação
     // ---------------------------------------------------------------------------
-
-    iniciais(nomeCompleto: string): string {
-        return iniciaisDoNome(nomeCompleto);
-    }
 
     haQuantoTempo(data: Date | string): string {
         return haQuantoTempo(data);

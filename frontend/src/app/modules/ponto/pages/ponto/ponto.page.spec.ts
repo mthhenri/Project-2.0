@@ -22,7 +22,7 @@ const execucao = (id: number, aberta = false) => ({
 }) as unknown as ExecucaoItemDto;
 
 const pontoDiario = (usuarioId: number, nomeUsuario: string, execucoes: ExecucaoItemDto[] = []): PontoDiarioDto => ({
-    data: dataParaIso(hojeNoFuso(ambiente.fusoHorario)), usuarioId, nomeUsuario, ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480,
+    data: dataParaIso(hojeNoFuso(ambiente.fusoHorario)), usuarioId, nomeUsuario, corAvatar: null, ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480,
     minutosTrabalhadosDiaUtil: 60, minutosTrabalhadosExtra: 0, totalMinutosTrabalhados: execucoes.length * 60,
     saldoMinutos: -420, intervalos: [], execucoes,
 });
@@ -38,7 +38,7 @@ function mensalDoMesAtual(usuarioId = 1): PontoMensalDto {
     const dias = [dia(1, -100)];
     if (agora.getDate() > 1) dias.push(dia(agora.getDate(), 30));
     return {
-        usuarioId, nomeUsuario: 'Maria Souza', ano: agora.getFullYear(), mes: agora.getMonth() + 1, diasUteisMes: 21,
+        usuarioId, nomeUsuario: 'Maria Souza', corAvatar: null, ano: agora.getFullYear(), mes: agora.getMonth() + 1, diasUteisMes: 21,
         metaMinutosMes: 10080, totalMinutosTrabalhadosMes: 3000, saldoMinutosMes: -7080, dias,
     };
 }

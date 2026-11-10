@@ -83,7 +83,11 @@
                 [attr.aria-label]="'Menu de ' + sessao.nomeCompleto()"
                 (click)="perfilPopover.toggle($event)"
             >
-                <span class="topbar__avatar" aria-hidden="true">{{ iniciais() }}</span>
+                <app-avatar-usuario
+                    [nome]="sessao.nomeCompleto() ?? ''"
+                    [cor]="sessao.corAvatar()"
+                    tamanho="2rem"
+                />
                 <span class="topbar__perfil-nome">{{ primeiroNome() }}</span>
                 <i class="pi pi-angle-down text-xs topbar__perfil-seta"></i>
             </button>
@@ -114,7 +118,7 @@
                     <p-divider class="my-0" />
                     <div class="topbar__linha-switch text-sm">
                         <span class="topbar__minha-cor">
-                            <app-mensagem-direta-avatar
+                            <app-avatar-usuario
                                 [nome]="sessao.nomeCompleto() ?? ''"
                                 [cor]="sessao.corAvatar()"
                                 [pequeno]="true"

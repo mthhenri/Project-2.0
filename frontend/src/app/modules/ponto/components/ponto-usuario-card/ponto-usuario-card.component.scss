@@ -44,19 +44,6 @@
         white-space: nowrap;
     }
 
-    &__avatar {
-        display: inline-flex;
-        flex: none;
-        align-items: center;
-        justify-content: center;
-        width: 1.75rem;
-        height: 1.75rem;
-        border-radius: 50%;
-        background: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
-        color: var(--p-primary-color);
-        font-size: 0.6875rem;
-    }
-
     &__estado {
         display: inline-flex;
         align-items: center;

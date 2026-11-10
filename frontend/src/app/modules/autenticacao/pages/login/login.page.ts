@@ -13,11 +13,14 @@ import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibi
 import { destinoPosLogin } from '../../../../core/utils/destino-pos-login';
 import { urlRetornoSegura } from '../../../../core/utils/url-retorno';
 import { AutenticacaoLoginDto } from '@project20/shared';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /** Só o login e o nome ficam no navegador — a senha nunca é persistida (task 94). */
 interface UsuarioLembrado {
     login: string;
     nomeCompleto: string;
+    /** A cor da bolinha na última entrada (`null` = a do tema). */
+    corAvatar: string | null;
 }
 
 const CHAVE_ULTIMO_LOGIN = 'ultimo_login';
@@ -25,7 +28,7 @@ const CHAVE_ULTIMO_LOGIN = 'ultimo_login';
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [ReactiveFormsModule, CardModule, InputTextModule, ButtonModule],
+    imports: [AvatarUsuarioComponent, ReactiveFormsModule, CardModule, InputTextModule, ButtonModule],
     templateUrl: './login.page.html',
     styleUrl: './login.page.scss',
 })
@@ -66,16 +69,6 @@ export class LoginPage implements OnInit {
 
     /** Estado A (usuário lembrado, só a senha) ou B (formulário completo). */
     readonly modoLembrado = computed(() => this.usuarioLembrado() !== null && !this.usandoOutroUsuario());
-    readonly iniciais = computed(() =>
-        (this.usuarioLembrado()?.nomeCompleto ?? '')
-            .split(' ')
-            .filter(Boolean)
-            .slice(0, 2)
-            .map((parte) => parte[0])
-            .join('')
-            .toUpperCase(),
-    );
-
     constructor() {
         afterNextRender(() => this.focarCampoInicial());
     }
@@ -179,7 +172,7 @@ export class LoginPage implements OnInit {
                 localStorage.removeItem(CHAVE_ULTIMO_LOGIN);
                 return;
             }
-            this.usuarioLembrado.set({ login: dados.login, nomeCompleto: dados.nomeCompleto });
+            this.usuarioLembrado.set({ login: dados.login, nomeCompleto: dados.nomeCompleto, corAvatar: dados.corAvatar ?? null });
         } catch {
             localStorage.removeItem(CHAVE_ULTIMO_LOGIN);
         }
@@ -190,7 +183,7 @@ export class LoginPage implements OnInit {
         const nomeCompleto = this.sessao.nomeCompleto();
         const login = this.sessao.login();
         if (nomeCompleto && login) {
-            localStorage.setItem(CHAVE_ULTIMO_LOGIN, JSON.stringify({ login, nomeCompleto }));
+            localStorage.setItem(CHAVE_ULTIMO_LOGIN, JSON.stringify({ login, nomeCompleto, corAvatar: this.sessao.corAvatar() }));
         }
     }
 }

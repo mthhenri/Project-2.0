@@ -14,11 +14,13 @@ import { rotuloTipoUsuario, severidadeTipoUsuario } from '../../../../core/utils
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 @Component({
     selector: 'app-demanda-membro-lista',
     standalone: true,
     imports: [
+        AvatarUsuarioComponent,
         DialogFormularioDirective,
         DialogDicaAtalhosComponent,
         ReactiveFormsModule,
@@ -125,15 +127,6 @@ export class DemandaMembroListaComponent implements OnInit {
         const usuarioId = this.sessao.id();
         const membro = this.membros().find((item) => item.usuarioId === usuarioId);
         if (membro) this.retirarMembro(membro);
-    }
-
-    iniciais(nomeCompleto: string): string {
-        return nomeCompleto
-            .split(' ')
-            .slice(0, 2)
-            .map((parte) => parte[0])
-            .join('')
-            .toUpperCase();
     }
 
     rotuloTipo(tipo: TipoUsuarioEnum): string {

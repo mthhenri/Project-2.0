@@ -75,7 +75,7 @@ describe('UsuarioSessaoService', () => {
 describe('AutenticacaoService', () => {
     const RESPOSTA = {
         sucesso: true, mensagem: 'ok',
-        dados: { accessToken: 'token-novo', tipo: 'Bearer', usuario: { id: 1, login: 'maria', nomeCompleto: 'Maria', tipo: TipoUsuarioEnum.GESTOR } },
+        dados: { accessToken: 'token-novo', tipo: 'Bearer', usuario: { id: 1, login: 'maria', nomeCompleto: 'Maria', tipo: TipoUsuarioEnum.GESTOR, corAvatar: null } },
     };
 
     it('login chama o endpoint com o corpo certo e guarda o token e a sessão', () => {

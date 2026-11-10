@@ -10,7 +10,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
-import { MensagemDiretaAvatarComponent } from '../../components/mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../../components/mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
 import { MensagemDiretaService } from '../../services/mensagem-direta.service';
 import {
@@ -53,7 +53,7 @@ interface ConversaAberta {
         ToggleSwitchModule,
         TooltipModule,
         MarkdownVisualizadorComponent,
-        MensagemDiretaAvatarComponent,
+        AvatarUsuarioComponent,
         MensagemDiretaReferenciaCartaoComponent,
     ],
     templateUrl: './supervisao-chat.page.html',

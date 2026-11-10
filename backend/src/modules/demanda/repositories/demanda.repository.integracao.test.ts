@@ -470,7 +470,9 @@ testarComBanco('membros: atribuir, listar com tipo e cargo, validar, contar e re
     await repositorio.atribuirMembroDemanda({ demandaId: demanda.id, usuarioId: beto.id });
     await assert.rejects(() => conexao.transaction((transacao) => criarRepositorio(DemandaRepository, transacao).atribuirMembroDemanda({ demandaId: demanda.id, usuarioId: ana.id })), /uix_demanda_usuario_ativo|duplicate/i);
 
+    await conexao.raw('UPDATE usuario SET cor_avatar = ?, updated_date = NOW() WHERE id = ?', ['#1E3A8A', ana.id]);
     const membros = await repositorio.listarMembrosDemanda({ demandaId: demanda.id });
+    assert.deepEqual(membros.map((membro) => [membro.nomeCompleto, membro.corAvatar]).sort(), [['Ana', '#1E3A8A'], ['Beto', null]], 'a cor escolhida vai junto');
     assert.deepEqual(membros.map((membro) => [membro.nomeCompleto, membro.tipo]).sort(), [['Ana', 'DESENVOLVEDOR'], ['Beto', 'GESTOR']]);
     assert.equal(await repositorio.contarMembrosDemanda({ demandaId: demanda.id }), 2);
 
@@ -570,6 +572,7 @@ testarComBanco('listarPlanejamento: só PENDENTE e PLANEJADA, com caminho, minut
     const filha = await criarDemanda(conexao, { projetoId: projeto.id, demandaPaiId: pai.id, nome: 'Filha', statusCodigo: 'PENDENTE' });
     await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Feita', statusCodigo: 'CONCLUIDA' });
     const executor = await criarDesenvolvedor(conexao, { nomeCompleto: 'Executora' });
+    await conexao.raw('UPDATE usuario SET cor_avatar = ?, updated_date = NOW() WHERE id = ?', ['#FDE047', executor.id]);
     const atividade = await criarAtividade(conexao, { demandaId: filha.id, usuarioId: executor.id });
     await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-01-15T09:00:00-03:00', fimData: '2026-01-15T10:00:00-03:00' });
     await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-01-15T11:00:00-03:00', fimData: null });
@@ -579,7 +582,7 @@ testarComBanco('listarPlanejamento: só PENDENTE e PLANEJADA, com caminho, minut
     const dela = linhas.find((linha) => linha.demandaId === filha.id)!;
     assert.match(dela.caminho, /Pai.+Filha$/);
     assert.ok(dela.minutosExecutados >= 60, 'a execução aberta conta até agora');
-    assert.deepEqual(dela.executoresAtivos.map((pessoa) => pessoa.nomeCompleto), ['Executora']);
+    assert.deepEqual(dela.executoresAtivos.map((pessoa) => [pessoa.nomeCompleto, pessoa.corAvatar]), [['Executora', '#FDE047']]);
     assert.equal(new Date(dela.executoresAtivos[0].inicioData).toISOString(), '2026-01-15T14:00:00.000Z', 'o início da execução aberta');
     assert.equal(new Date(dela.ultimaExecucaoData!).toISOString(), '2026-01-15T14:00:00.000Z', 'a aberta conta pelo início');
     assert.ok(!Number.isNaN(new Date(dela.criadaData).getTime()), 'traz a data de criação');

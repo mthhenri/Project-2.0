@@ -14,13 +14,13 @@ import {
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import { AtividadeService } from '../../../modules/atividade/services/atividade.service';
 import { ExecucaoService } from '../../../modules/execucao/services/execucao.service';
-import { iniciaisDoNome } from '../../../modules/execucao/utils/execucao.util';
 import { AssistenteDescricaoComponent } from '../assistente-descricao/assistente-descricao.component';
 import { DialogDicaAtalhosComponent } from '../dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { BloquearCaracteresProibidosDirective } from '../../directives/bloquear-caracteres-proibidos.directive';
 import { DialogFormularioDirective } from '../../directives/dialog-formulario.directive';
 import { DataBrasileiraPipe } from '../../pipes/data-brasileira.pipe';
 import { MinutosParaHorasPipe } from '../../pipes/minutos-para-horas.pipe';
+import { AvatarUsuarioComponent } from '../avatar-usuario/avatar-usuario.component';
 
 /** Dados de uma execução em andamento que o diálogo precisa para encerrá-la. */
 export interface ExecucaoEncerrarAbertura {
@@ -40,6 +40,7 @@ export interface ExecucaoEncerrarAbertura {
     selector: 'app-execucao-encerrar-dialog',
     standalone: true,
     imports: [
+        AvatarUsuarioComponent,
         ReactiveFormsModule,
         ButtonModule,
         DialogModule,
@@ -91,10 +92,6 @@ export class ExecucaoEncerrarDialogComponent {
         this.formulario.controls.descricao.updateValueAndValidity();
         this.carregarExecucoes(abertura.atividadeId);
         this.visivel.set(true);
-    }
-
-    iniciais(nomeCompleto: string): string {
-        return iniciaisDoNome(nomeCompleto);
     }
 
     campoInvalido(): boolean {

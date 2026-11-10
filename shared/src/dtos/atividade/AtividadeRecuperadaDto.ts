@@ -10,6 +10,8 @@ export class AtividadeRecuperadaDto {
     nomeProjeto: string;
     usuarioId: number;
     nomeUsuario: string;
+    /** Cor da bolinha escolhida pela pessoa (`#RRGGBB`); `null` = cor padrão do tema. */
+    corAvatar: string | null;
     /** Tipo do dono da atividade. Define se a descrição da execução é obrigatória. */
     usuarioTipo: TipoUsuarioEnum;
     nome: string;

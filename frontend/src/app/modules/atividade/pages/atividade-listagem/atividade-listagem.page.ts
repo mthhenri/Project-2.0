@@ -71,11 +71,13 @@ import {
     lerFiltrosDaUrl,
     paraParametrosDaUrl,
 } from '../../utils/filtros-atividade.util';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 @Component({
     selector: 'app-atividade-listagem',
     standalone: true,
     imports: [
+        AvatarUsuarioComponent,
         TagListaComponent,
         PrioridadeSeloComponent,
         SkeletonListaComponent,
@@ -714,15 +716,6 @@ export class AtividadeListagemPage implements OnInit {
     // ---------------------------------------------------------------------------
     // Auxiliares de tabela
     // ---------------------------------------------------------------------------
-
-    iniciais(nome: string): string {
-        return (nome ?? '')
-            .split(' ')
-            .slice(0, 2)
-            .map((parte) => parte[0])
-            .join('')
-            .toUpperCase();
-    }
 
     /** Exclusão imediata (task 99): a linha sai na hora e o toast oferece "Desfazer". */
     excluir(atividade: AtividadeResumoDto): void {

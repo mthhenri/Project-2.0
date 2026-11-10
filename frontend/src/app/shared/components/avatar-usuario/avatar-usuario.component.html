@@ -1,0 +1,17 @@
+<span
+    class="avatar-usuario"
+    [class.avatar-usuario--pequeno]="pequeno()"
+    [class.avatar-usuario--contorno]="contorno()"
+    [style.--avatar-tamanho]="tamanho()"
+    [style.background]="fundo()"
+    [style.color]="corDoTexto()"
+    aria-hidden="true"
+>
+    {{ iniciaisExibidas() }}
+    @if (online() !== null) {
+        <span
+            class="avatar-usuario__presenca"
+            [class.avatar-usuario__presenca--online]="online()"
+        ></span>
+    }
+</span>

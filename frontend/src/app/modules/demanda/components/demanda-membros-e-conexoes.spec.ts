@@ -160,9 +160,8 @@ describe('DemandaMembroListaComponent', () => {
         expect(esperarRequisicao(montado.http, 'POST', '/demanda/10/membro').request.body).toEqual({ usuarioId: EU });
     });
 
-    it('iniciais em maiúsculas e rótulo curto do tipo', async () => {
+    it('rótulo curto do tipo', async () => {
         const montado = await montar(TipoUsuarioEnum.GESTOR, []);
-        expect(montado.componente.iniciais('maria clara souza')).toBe('MC');
         expect(montado.componente.rotuloTipo(TipoUsuarioEnum.DESENVOLVEDOR)).toBe('Dev');
     });
 });

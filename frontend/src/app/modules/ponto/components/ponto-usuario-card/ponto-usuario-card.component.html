@@ -7,7 +7,11 @@
             tooltipPosition="top"
             (click)="usuarioSelecionado.emit(ponto.usuarioId)"
         >
-            <span class="ponto-usuario-card__avatar" aria-hidden="true">{{ iniciais }}</span>
+            <app-avatar-usuario
+                [nome]="ponto.nomeUsuario"
+                [cor]="ponto.corAvatar"
+                tamanho="1.75rem"
+            />
             <span class="ponto-usuario-card__nome-texto">{{ ponto.nomeUsuario }}</span>
         </button>
         <span

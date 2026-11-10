@@ -9,19 +9,23 @@ async function montar() {
     return montado;
 }
 
-const fundos = () => Array.from(document.body.querySelectorAll<HTMLElement>('.avatar-direto')).map((avatar) => avatar.style.background);
+const fundos = () => Array.from(document.body.querySelectorAll<HTMLElement>('.avatar-usuario')).map((avatar) => avatar.style.background);
 
 describe('UsuarioCorDialogComponent', () => {
-    it('abre com a cor atual da pessoa e mostra as prévias dos lugares do chat', async () => {
+    it('abre com a cor atual da pessoa e mostra as prévias dos lugares do chat e do resto do sistema', async () => {
         const montado = await montar();
         montado.componente.sessao.definirCorAvatar('#1E3A8A');
         montado.componente.abrir();
         await montado.atualizar();
         expect(montado.componente.cor()).toBe('#1E3A8A');
         const texto = document.body.textContent ?? '';
-        for (const lugar of ['Lista de conversas', 'Cabeçalho da conversa', 'Barra de conversas', 'Aviso de mensagem nova']) expect(texto).toContain(lugar);
-        // a bolinha do seletor e as quatro prévias da pessoa usam a cor em escolha; as outras duas da barra ficam no padrão
-        expect(fundos().filter((fundo) => fundo === 'rgb(30, 58, 138)').length).toBe(5);
+        const lugares = [
+            'Lista de conversas', 'Cabeçalho da conversa', 'Barra de conversas', 'Aviso de mensagem nova',
+            'Barra de cima', 'Atividades e execuções', 'Membros da demanda', 'Ponto da equipe', 'Em andamento agora', 'Tela de entrada',
+        ];
+        for (const lugar of lugares) expect(texto).toContain(lugar);
+        // a bolinha do seletor e as dez prévias da pessoa usam a cor em escolha; as outras da barra e da pilha de membros ficam no padrão
+        expect(fundos().filter((fundo) => fundo === 'rgb(30, 58, 138)').length).toBe(11);
     });
 
     it('escolher outra cor muda as prévias na hora, sem gravar', async () => {
@@ -29,7 +33,7 @@ describe('UsuarioCorDialogComponent', () => {
         montado.componente.abrir();
         montado.componente.cor.set('#FDE047');
         await montado.atualizar();
-        expect(fundos().filter((fundo) => fundo === 'rgb(253, 224, 71)').length).toBe(5);
+        expect(fundos().filter((fundo) => fundo === 'rgb(253, 224, 71)').length).toBe(11);
         montado.http.expectNone((requisicao) => requisicao.url.includes('/usuario/cor'));
     });
 

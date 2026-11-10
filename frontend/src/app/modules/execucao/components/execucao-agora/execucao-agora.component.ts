@@ -5,7 +5,7 @@ import { ExecucaoItemDto, horaNoFuso } from '@project20/shared';
 import { ambiente } from '../../../../../environments/environment';
 import { ExecucaoEncerrarDialogComponent } from '../../../../shared/components/execucao-encerrar-dialog/execucao-encerrar-dialog.component';
 import { ExecucaoTimerComponent } from '../execucao-timer/execucao-timer.component';
-import { iniciaisDoNome } from '../../utils/execucao.util';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /**
  * Bloco "Em andamento agora" da tela Execuções (task 252): a execução ativa fica fora da tabela, que lista só o que já fechou.
@@ -15,7 +15,7 @@ import { iniciaisDoNome } from '../../utils/execucao.util';
 @Component({
     selector: 'app-execucao-agora',
     standalone: true,
-    imports: [ButtonModule, TooltipModule, ExecucaoTimerComponent, ExecucaoEncerrarDialogComponent],
+    imports: [AvatarUsuarioComponent, ButtonModule, TooltipModule, ExecucaoTimerComponent, ExecucaoEncerrarDialogComponent],
     templateUrl: './execucao-agora.component.html',
     styleUrl: './execucao-agora.component.scss',
 })
@@ -39,10 +39,6 @@ export class ExecucaoAgoraComponent {
     readonly textoVazio = computed(() =>
         this.mostrarUsuario() ? 'Ninguém está executando agora.' : 'Nenhuma execução em andamento.',
     );
-
-    iniciais(nomeCompleto: string): string {
-        return iniciaisDoNome(nomeCompleto);
-    }
 
     horaDeInicio(execucao: ExecucaoItemDto): string {
         return horaNoFuso(new Date(execucao.inicioData), ambiente.fusoHorario);

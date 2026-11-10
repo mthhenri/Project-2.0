@@ -16,7 +16,11 @@
     @if (atividade(); as alvo) {
         <p class="execucao-registro-dialog__atividade">{{ alvo.nomeProjeto }} · {{ alvo.nome }}</p>
         <div class="execucao-registro-dialog__executor">
-            <span class="execucao-registro-dialog__avatar">{{ iniciais(alvo.nomeUsuario) }}</span>
+            <app-avatar-usuario
+                [nome]="alvo.nomeUsuario"
+                [cor]="alvo.corAvatar ?? null"
+                tamanho="1.75rem"
+            />
             <span class="text-color">{{ alvo.nomeUsuario }}</span>
         </div>
     }

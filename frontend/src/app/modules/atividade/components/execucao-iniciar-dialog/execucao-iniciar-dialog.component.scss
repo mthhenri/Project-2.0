@@ -13,19 +13,6 @@
         white-space: nowrap;
     }
 
-    &__avatar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: var(--app-avatar-fundo);
-        color: var(--app-avatar-cor);
-        font-size: 0.7rem;
-        font-weight: 700;
-    }
-
     &__form {
         display: flex;
         flex-direction: column;

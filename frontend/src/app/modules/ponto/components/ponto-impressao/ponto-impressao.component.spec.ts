@@ -16,7 +16,7 @@ const dia = (data: string, sobrescrita: Partial<PontoDiaResumoDto> = {}): PontoD
 }) as PontoDiaResumoDto;
 
 const mensal: PontoMensalDto = {
-    usuarioId: 3, nomeUsuario: 'Ana Souza', ano: 2026, mes: 3, diasUteisMes: 21, metaMinutosMes: 10080,
+    usuarioId: 3, nomeUsuario: 'Ana Souza', corAvatar: null, ano: 2026, mes: 3, diasUteisMes: 21, metaMinutosMes: 10080,
     totalMinutosTrabalhadosMes: 540, saldoMinutosMes: -9540,
     dias: [
         dia('2026-03-02', {

@@ -7,6 +7,7 @@ import { DemandaService } from '../../services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { normalizarTexto } from '../../utils/demanda-filtro.util';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /**
  * Membros da demanda no cabeçalho do detalhe (task 108): pilha de avatares, `+` com autocomplete inline
@@ -16,7 +17,7 @@ import { normalizarTexto } from '../../utils/demanda-filtro.util';
 @Component({
     selector: 'app-demanda-membros-cabecalho',
     standalone: true,
-    imports: [FormsModule, AutoComplete, TooltipModule],
+    imports: [AvatarUsuarioComponent, FormsModule, AutoComplete, TooltipModule],
     templateUrl: './demanda-membros-cabecalho.component.html',
     styleUrl: './demanda-membros-cabecalho.component.scss',
 })
@@ -38,10 +39,6 @@ export class DemandaMembrosCabecalhoComponent {
     termoBusca: UsuarioResumoDto | string | null = null;
 
     readonly souMembro = computed(() => this.membros().some((membro) => membro.usuarioId === this.sessao.id()));
-
-    iniciais(nomeCompleto: string): string {
-        return (nomeCompleto ?? '').split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
-    }
 
     abrirBusca(): void {
         this.termoBusca = null;
@@ -71,6 +68,7 @@ export class DemandaMembrosCabecalhoComponent {
         const novo: DemandaMembroDto = {
             usuarioId: usuario.id,
             nomeCompleto: usuario.nomeCompleto,
+            corAvatar: usuario.corAvatar,
             login: usuario.login,
             tipo: usuario.tipo,
             cargoTitulo: usuario.cargoTitulo,

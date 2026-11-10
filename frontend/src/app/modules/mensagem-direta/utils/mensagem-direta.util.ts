@@ -229,14 +229,6 @@ export function normalizarConversa(conversa: ConversaDiretaResumoDto): ConversaN
     };
 }
 
-export function iniciais(nome: string): string {
-    const partes = nome.trim().split(/\s+/).filter(Boolean);
-    if (partes.length === 0) return '?';
-    const primeira = partes[0][0];
-    const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';
-    return (primeira + ultima).toUpperCase();
-}
-
 /** A prévia da última mensagem na lista: sem marcação, o bloco de código vira `[código]` e a minha começa com `Você:`. */
 export function previaDaMensagem(texto: string, contemCodigo: boolean, souEuQuemEscreveu: boolean): string {
     const corpo = textoSimplesDaMensagemDireta(texto, contemCodigo);

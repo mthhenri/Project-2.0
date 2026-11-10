@@ -69,13 +69,3 @@ export function separarExecucoes<T extends { fimData: Date | string | null }>(li
 export function mensagemInicialDoChat(houveExecucaoNoDia: boolean): string {
     return houveExecucaoNoDia ? 'De onde paramos?' : 'O que temos pra fazer?';
 }
-
-/** "Matheus Henrique" → "MH" (as duas primeiras iniciais), para o avatar do cartão. */
-export function iniciaisDoNome(nomeCompleto: string): string {
-    return nomeCompleto
-        .split(/\s+/)
-        .filter((parte) => parte.length > 0)
-        .slice(0, 2)
-        .map((parte) => parte[0].toUpperCase())
-        .join('');
-}

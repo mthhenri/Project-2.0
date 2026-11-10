@@ -7,17 +7,17 @@ import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
-import { MensagemDiretaAvatarComponent } from '../../../mensagem-direta/components/mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 import { UsuarioCorSeletorComponent } from '../usuario-cor-seletor/usuario-cor-seletor.component';
 
 /**
  * A pessoa escolhendo a cor da própria bolinha (task 316), aberto pelo "Editar cor" do perfil. À direita do seletor, prévias dos lugares
- * onde a bolinha aparece no chat, com a cor em escolha, para ver o resultado antes de salvar.
+ * onde a bolinha aparece (no chat e no resto do sistema), com a cor em escolha, para ver o resultado antes de salvar.
  */
 @Component({
     selector: 'app-usuario-cor-dialog',
     standalone: true,
-    imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ButtonModule, DialogModule, MensagemDiretaAvatarComponent, UsuarioCorSeletorComponent],
+    imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ButtonModule, DialogModule, AvatarUsuarioComponent, UsuarioCorSeletorComponent],
     templateUrl: './usuario-cor-dialog.component.html',
     styleUrl: './usuario-cor-dialog.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +32,8 @@ export class UsuarioCorDialogComponent {
     /** A cor em escolha (`#RRGGBB`); só vale depois de "Salvar". `null` = cor padrão do tema. */
     readonly cor = signal<string | null>(null);
     readonly nome = computed(() => this.sessao.nomeCompleto() ?? '');
+    readonly primeiroNome = computed(() => this.nome().split(' ')[0]);
+    readonly login = computed(() => this.sessao.login() ?? '');
 
     /** Abre com a cor atual da pessoa já no seletor. */
     abrir(): void {

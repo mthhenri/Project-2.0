@@ -148,19 +148,6 @@
         text-align: left;
     }
 
-    &__avatar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: none;
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50%;
-        background: var(--p-primary-color);
-        color: var(--p-primary-contrast-color);
-        font-weight: 600;
-    }
-
     &__identidade-texto {
         display: flex;
         flex-direction: column;

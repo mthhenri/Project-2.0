@@ -54,6 +54,7 @@ export class AutenticacaoService {
                 login:        usuario.login,
                 nomeCompleto: usuario.nomeCompleto,
                 tipo:         usuario.tipo,
+                corAvatar:    usuario.corAvatar,
             },
         };
     }

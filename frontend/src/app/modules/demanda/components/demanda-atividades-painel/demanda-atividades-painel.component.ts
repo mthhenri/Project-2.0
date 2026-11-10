@@ -15,6 +15,7 @@ import { VisualizacaoTempoService } from '../../../../core/services/visualizacao
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 import { DemandaBarraHorasComponent } from '../demanda-barra-horas/demanda-barra-horas.component';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /**
  * As atividades de uma demanda (a aba Atividades do diálogo de detalhe e da demanda aberta da Árvore, tasks 239 e 304): o total consumido pela
@@ -26,7 +27,7 @@ import { DemandaBarraHorasComponent } from '../demanda-barra-horas/demanda-barra
 @Component({
     selector: 'app-demanda-atividades-painel',
     standalone: true,
-    imports: [FormsModule, ButtonModule, SelectButtonModule, TooltipModule, AtividadeEmExecucaoComponent, AtividadeStatusIconeComponent, DemandaBarraHorasComponent, ExecucaoEncerrarDialogComponent, ExecucaoIniciarDialogComponent, PrioridadeSeloComponent, TempoExibicaoPipe],
+    imports: [AvatarUsuarioComponent, FormsModule, ButtonModule, SelectButtonModule, TooltipModule, AtividadeEmExecucaoComponent, AtividadeStatusIconeComponent, DemandaBarraHorasComponent, ExecucaoEncerrarDialogComponent, ExecucaoIniciarDialogComponent, PrioridadeSeloComponent, TempoExibicaoPipe],
     templateUrl: './demanda-atividades-painel.component.html',
     styleUrl: './demanda-atividades-painel.component.scss',
 })
@@ -99,7 +100,4 @@ export class DemandaAtividadesPainelComponent {
         return this.fatiaPorAtividade().get(atividadeId) ?? { atividadeId, minutos: 0, percentual: 0 };
     }
 
-    iniciaisUsuario(nome: string): string {
-        return (nome ?? '').split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
-    }
 }

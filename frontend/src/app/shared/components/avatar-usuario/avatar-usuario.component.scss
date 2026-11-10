@@ -3,25 +3,30 @@
     flex-shrink: 0;
 }
 
-.avatar-direto {
+.avatar-usuario {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: var(--avatar-tamanho, 2.5rem);
+    height: var(--avatar-tamanho, 2.5rem);
     border-radius: 50%;
     background: var(--app-avatar-fundo);
     color: var(--app-avatar-cor);
-    font-size: 0.875rem;
+    font-size: calc(var(--avatar-tamanho, 2.5rem) * 0.35);
     font-weight: 600;
     line-height: 1;
     user-select: none;
 
     &--pequeno {
-        width: 2.25rem;
-        height: 2.25rem;
-        font-size: 0.8125rem;
+        width: var(--avatar-tamanho, 2.25rem);
+        height: var(--avatar-tamanho, 2.25rem);
+        font-size: calc(var(--avatar-tamanho, 2.25rem) * 0.36);
+    }
+
+    &--contorno {
+        box-sizing: border-box;
+        border: 2px solid var(--app-surface-0);
     }
 
     &__presenca {

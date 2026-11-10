@@ -11,9 +11,11 @@
                     [class.execucao-agora__cartao--compacto]="mostrarUsuario()"
                 >
                     @if (mostrarUsuario()) {
-                        <span class="execucao-agora__avatar" aria-hidden="true">{{
-                            iniciais(execucao.nomeUsuario)
-                        }}</span>
+                        <app-avatar-usuario
+                            [nome]="execucao.nomeUsuario"
+                            [cor]="execucao.corAvatar"
+                            tamanho="2.125rem"
+                        />
                     }
                     <div class="execucao-agora__corpo">
                         <span class="execucao-agora__atividade">{{ execucao.nomeAtividade }}</span>

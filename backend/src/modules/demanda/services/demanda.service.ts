@@ -882,6 +882,7 @@ export class DemandaService {
                 demandaId,
                 usuarioId:   usuarioEncontrado.id,
                 nomeUsuario: usuarioEncontrado.nomeCompleto,
+                corAvatar:   usuarioEncontrado.corAvatar,
                 login:       usuarioEncontrado.login,
                 tipo:        usuarioEncontrado.tipo,
             },
