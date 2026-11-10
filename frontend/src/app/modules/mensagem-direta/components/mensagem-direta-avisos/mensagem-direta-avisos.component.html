@@ -9,7 +9,7 @@
             (focusout)="retomar(aviso.id, 'foco')"
         >
             <button type="button" class="aviso-direto__conteudo" (click)="abrir(aviso)">
-                <app-mensagem-direta-avatar
+                <app-avatar-usuario
                     [nome]="aviso.usuarioNome"
                     [cor]="estado.corDe(aviso.usuarioId)"
                     [pequeno]="true"

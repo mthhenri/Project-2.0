@@ -45,7 +45,7 @@ describe('MensagemDiretaBarraComponent', () => {
     it('a bolinha usa a cor que a pessoa escolheu e a cor padrão quando ela não escolheu', async () => {
         estado.conversas.update((lista) => lista.map((item) => (item.usuarioId === 9 ? { ...item, corAvatar: '#1E3A8A' } : item)));
         await tela.atualizar();
-        const fundo = (indice: number) => bolinhas()[indice].querySelector<HTMLElement>('.avatar-direto')!.style.background;
+        const fundo = (indice: number) => bolinhas()[indice].querySelector<HTMLElement>('.avatar-usuario')!.style.background;
         expect(fundo(0)).toBe('rgb(30, 58, 138)');
         expect(fundo(1)).toBe('');
         expect(estado.corDe(9)).toBe('#1E3A8A');

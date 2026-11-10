@@ -34,6 +34,7 @@ import { AtividadeTagsPopoverComponent } from '../../components/atividade-tags-p
 import { ExecucaoRegistroDialogComponent } from '../../components/execucao-registro-dialog/execucao-registro-dialog.component';
 import { ATIVIDADE_STATUS_OPCOES, severidadeStatusAtividade, rotuloStatusAtividade } from '../../models/atividade.model';
 import { estadoDaFaixaDeExecucao, formatarIntervaloDaExecucao } from '../../utils/faixa-execucao.util';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /** Quantas execuções o detalhe mostra; o histórico completo fica na tela de Execuções. */
 const EXECUCOES_RECENTES = 5;
@@ -47,6 +48,7 @@ const EXECUCOES_RECENTES = 5;
     selector: 'app-atividade-detalhe',
     standalone: true,
     imports: [
+        AvatarUsuarioComponent,
         PrioridadeSeloComponent,
         AtividadeTagsPopoverComponent,
         ExecucaoRegistroDialogComponent,

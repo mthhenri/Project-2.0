@@ -19,7 +19,7 @@
             <div class="usuario-cor-dialog__previa">
                 <span class="usuario-cor-dialog__legenda">Lista de conversas</span>
                 <div class="usuario-cor-dialog__linha">
-                    <app-mensagem-direta-avatar [nome]="nome()" [cor]="cor()" [online]="true" />
+                    <app-avatar-usuario [nome]="nome()" [cor]="cor()" [online]="true" />
                     <span class="usuario-cor-dialog__texto">
                         <span class="usuario-cor-dialog__nome">{{ nome() }}</span>
                         <span class="usuario-cor-dialog__trecho">Consegue olhar o PR de hoje?</span>
@@ -31,7 +31,7 @@
             <div class="usuario-cor-dialog__previa">
                 <span class="usuario-cor-dialog__legenda">Cabeçalho da conversa</span>
                 <div class="usuario-cor-dialog__linha">
-                    <app-mensagem-direta-avatar
+                    <app-avatar-usuario
                         [nome]="nome()"
                         [cor]="cor()"
                         [online]="true"
@@ -47,29 +47,21 @@
             <div class="usuario-cor-dialog__previa">
                 <span class="usuario-cor-dialog__legenda">Barra de conversas</span>
                 <div class="usuario-cor-dialog__barra">
-                    <app-mensagem-direta-avatar
-                        nome="Ana Souza"
-                        [online]="false"
-                        [pequeno]="true"
-                    />
-                    <app-mensagem-direta-avatar
+                    <app-avatar-usuario nome="Ana Souza" [online]="false" [pequeno]="true" />
+                    <app-avatar-usuario
                         [nome]="nome()"
                         [cor]="cor()"
                         [online]="true"
                         [pequeno]="true"
                     />
-                    <app-mensagem-direta-avatar
-                        nome="Bruno Lima"
-                        [online]="true"
-                        [pequeno]="true"
-                    />
+                    <app-avatar-usuario nome="Bruno Lima" [online]="true" [pequeno]="true" />
                 </div>
             </div>
 
             <div class="usuario-cor-dialog__previa">
                 <span class="usuario-cor-dialog__legenda">Aviso de mensagem nova</span>
                 <div class="usuario-cor-dialog__aviso">
-                    <app-mensagem-direta-avatar [nome]="nome()" [cor]="cor()" [pequeno]="true" />
+                    <app-avatar-usuario [nome]="nome()" [cor]="cor()" [pequeno]="true" />
                     <span class="usuario-cor-dialog__texto">
                         <span class="usuario-cor-dialog__nome">{{ nome() }}</span>
                         <span class="usuario-cor-dialog__trecho">Oi! Pode revisar o cadastro?</span>

@@ -43,6 +43,7 @@ interface InfoDia {
 interface UsuarioPonto {
     id: number;
     nomeCompleto: string;
+    corAvatar: string | null;
     horasDiariasNecessarias: number;
     /** Quando o usuário foi cadastrado: os dias anteriores (no fuso do sistema) não têm meta. */
     createdDate: Date;
@@ -224,6 +225,7 @@ export class PontoService {
         return {
             usuarioId,
             nomeUsuario: usuarioEncontrado.nomeCompleto,
+            corAvatar: usuarioEncontrado.corAvatar,
             ano,
             mes,
             diasUteisMes,
@@ -333,6 +335,7 @@ export class PontoService {
             data,
             usuarioId: usuario.id,
             nomeUsuario: usuario.nomeCompleto,
+            corAvatar: usuario.corAvatar,
             ehDiaUtil,
             motivoNaoUtil: infoDia.motivoNaoUtil,
             metaMinutos,

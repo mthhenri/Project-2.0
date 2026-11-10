@@ -108,19 +108,6 @@
         }
     }
 
-    &__avatar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 2rem;
-        height: 2rem;
-        border-radius: 50%;
-        background: var(--p-primary-color);
-        color: var(--p-primary-contrast-color);
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
     &__perfil-nome {
         font-size: 0.875rem;
         font-weight: 500;

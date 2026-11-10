@@ -22,7 +22,7 @@ const PADRAO = ['PLANEJADA', 'PENDENTE', 'DESENVOLVENDO'];
 function criarAtividade(id: number, sobrescritas: Partial<AtividadeResumoDto> = {}): AtividadeResumoDto {
     return {
         id, nome: `Atividade ${id}`, status: TipoAtividadeStatusEnum.PLANEJADA, prioridade: PRIORIDADE,
-        usuarioId: 1, nomeUsuario: 'Maria Souza', usuarioTipo: TipoUsuarioEnum.DESENVOLVEDOR,
+        usuarioId: 1, nomeUsuario: 'Maria Souza', corAvatar: null, usuarioTipo: TipoUsuarioEnum.DESENVOLVEDOR,
         demandaId: 10, nomeDemanda: 'Demanda dez', demandaTemDescricaoCliente: false, demandaTemDescricaoTecnica: false, demandaTemDocumentacao: false,
         projetoId: 5, nomeProjeto: 'Portal', totalMinutosExecutados: 90, totalExecucoes: 2, execucaoAtivaId: null, execucaoAtivaDescricao: null, execucaoAtivaInicioData: null,
         tags: [], createdDate: new Date('2026-02-01T12:00:00.000Z'), ...sobrescritas,

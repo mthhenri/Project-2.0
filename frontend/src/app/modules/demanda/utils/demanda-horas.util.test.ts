@@ -157,9 +157,9 @@ describe('quem executa agora', () => {
 
     it('executoresUnicos junta a mesma pessoa e guarda o início mais antigo', () => {
         const unicos = executoresUnicos([
-            { usuarioId: 1, nomeCompleto: 'Ana', inicioData: new Date('2026-10-25T10:00:00Z') },
-            { usuarioId: 2, nomeCompleto: 'Bia', inicioData: new Date('2026-10-25T09:00:00Z') },
-            { usuarioId: 1, nomeCompleto: 'Ana', inicioData: new Date('2026-10-25T08:00:00Z') },
+            { usuarioId: 1, nomeCompleto: 'Ana', corAvatar: null, inicioData: new Date('2026-10-25T10:00:00Z') },
+            { usuarioId: 2, nomeCompleto: 'Bia', corAvatar: null, inicioData: new Date('2026-10-25T09:00:00Z') },
+            { usuarioId: 1, nomeCompleto: 'Ana', corAvatar: null, inicioData: new Date('2026-10-25T08:00:00Z') },
         ]);
         expect(unicos.map((pessoa) => pessoa.usuarioId)).toEqual([1, 2]);
         expect(new Date(unicos[0].inicioData).toISOString()).toBe('2026-10-25T08:00:00.000Z');

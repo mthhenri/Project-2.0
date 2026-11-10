@@ -71,11 +71,13 @@ import {
     lerFiltrosDaUrl,
     paraParametrosDaUrl,
 } from '../../utils/filtros-atividade.util';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 @Component({
     selector: 'app-atividade-listagem',
     standalone: true,
     imports: [
+        AvatarUsuarioComponent,
         TagListaComponent,
         PrioridadeSeloComponent,
         SkeletonListaComponent,

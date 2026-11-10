@@ -12,19 +12,6 @@
         margin-bottom: 1rem;
     }
 
-    &__avatar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.75rem;
-        height: 1.75rem;
-        border-radius: 50%;
-        background: color-mix(in srgb, var(--p-primary-color) 16%, transparent);
-        color: var(--p-primary-700);
-        font-size: 0.7rem;
-        font-weight: 600;
-    }
-
     &__form {
         display: flex;
         flex-direction: column;

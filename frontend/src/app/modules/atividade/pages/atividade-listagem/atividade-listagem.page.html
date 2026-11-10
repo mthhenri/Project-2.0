@@ -274,9 +274,12 @@
                             @if (sessao.temVisaoTotal()) {
                                 <td>
                                     <div class="atividade-listagem__executor">
-                                        <span class="atividade-listagem__avatar">{{
-                                            iniciais(atividade.nomeUsuario)
-                                        }}</span>
+                                        <app-avatar-usuario
+                                            [nome]="atividade.nomeUsuario"
+                                            [cor]="atividade.corAvatar"
+                                            [iniciais]="iniciais(atividade.nomeUsuario)"
+                                            tamanho="1.75rem"
+                                        />
                                         <span class="text-color">{{ atividade.nomeUsuario }}</span>
                                     </div>
                                 </td>

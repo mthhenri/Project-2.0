@@ -3,7 +3,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { ladoDoTooltipDaBarra } from '../../utils/posicao-barra.util';
-import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 import { MensagemDiretaConfiguracoesBotaoComponent } from '../mensagem-direta-configuracoes-botao/mensagem-direta-configuracoes-botao.component';
 
 /** Uma bolinha da barra: a pessoa da conversa, com o que a barra mostra dela (presença e não lidas). */
@@ -24,7 +24,7 @@ interface BolinhaDaBarra {
 @Component({
     selector: 'app-mensagem-direta-barra',
     standalone: true,
-    imports: [TooltipModule, MensagemDiretaAvatarComponent, MensagemDiretaConfiguracoesBotaoComponent],
+    imports: [TooltipModule, AvatarUsuarioComponent, MensagemDiretaConfiguracoesBotaoComponent],
     templateUrl: './mensagem-direta-barra.component.html',
     styleUrl: './mensagem-direta-barra.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,

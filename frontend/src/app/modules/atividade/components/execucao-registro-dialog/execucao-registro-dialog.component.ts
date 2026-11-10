@@ -20,6 +20,7 @@ import { BloquearCaracteresProibidosDirective } from '../../../../shared/directi
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DURACOES_REGISTRO, intervaloDaManha, intervaloRetroativo, minutosDoIntervalo } from '../../utils/intervalo-registro.util';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /** A atividade para a qual se registra a execução: só o que o dialog mostra e usa. */
 export interface AtividadeParaRegistro {
@@ -27,6 +28,7 @@ export interface AtividadeParaRegistro {
     nome: string;
     nomeProjeto: string;
     nomeUsuario: string;
+    corAvatar?: string | null;
 }
 
 /**
@@ -37,6 +39,7 @@ export interface AtividadeParaRegistro {
     selector: 'app-execucao-registro-dialog',
     standalone: true,
     imports: [
+        AvatarUsuarioComponent,
         ReactiveFormsModule,
         ButtonModule,
         DatePickerModule,

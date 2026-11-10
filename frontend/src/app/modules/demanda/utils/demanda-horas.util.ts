@@ -204,6 +204,7 @@ export function iniciaisDoNome(nomeCompleto: string): string {
 export interface ExecutorDoResumo {
     usuarioId: number;
     nomeCompleto: string;
+    corAvatar: string | null;
     /** Início mais antigo entre as execuções abertas dele. */
     inicioData: Date | string;
 }
@@ -214,7 +215,7 @@ export function executoresUnicos(executores: readonly ExecutorAtivoDto[]): Execu
     for (const executor of executores) {
         const existente = porUsuario.get(executor.usuarioId);
         if (!existente || new Date(executor.inicioData) < new Date(existente.inicioData)) {
-            porUsuario.set(executor.usuarioId, { usuarioId: executor.usuarioId, nomeCompleto: executor.nomeCompleto, inicioData: executor.inicioData });
+            porUsuario.set(executor.usuarioId, { usuarioId: executor.usuarioId, nomeCompleto: executor.nomeCompleto, corAvatar: executor.corAvatar, inicioData: executor.inicioData });
         }
     }
     return [...porUsuario.values()];

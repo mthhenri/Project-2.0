@@ -162,6 +162,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                     usuario.cargo_titulo AS "cargoTitulo",
                     tipo_usuario.codigo AS tipo,
                     usuario.ativo,
+                    usuario.cor_avatar AS "corAvatar",
                     (
                         EXISTS (
                             SELECT
@@ -574,11 +575,12 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
    * para montar o resumo diário de cada usuário na visão "todos hoje".
    */
     async listarAtivosComMeta(): Promise<
-        { id: number; nomeCompleto: string; horasDiariasNecessarias: number; createdDate: Date }[]
+        { id: number; nomeCompleto: string; corAvatar: string | null; horasDiariasNecessarias: number; createdDate: Date }[]
     > {
         return this.executarConsulta<{
             id: number;
             nomeCompleto: string;
+            corAvatar: string | null;
             horasDiariasNecessarias: number;
             createdDate: Date;
         }>(
@@ -586,6 +588,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                 SELECT
                     usuario.id,
                     usuario.nome_completo AS "nomeCompleto",
+                    usuario.cor_avatar AS "corAvatar",
                     usuario.horas_diarias_necessarias AS "horasDiariasNecessarias",
                     usuario.created_date AS "createdDate"
                 FROM

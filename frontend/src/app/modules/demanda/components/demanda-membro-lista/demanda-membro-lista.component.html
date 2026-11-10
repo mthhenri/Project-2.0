@@ -51,9 +51,12 @@
         <div class="demanda-membro-lista__lista">
             @for (membro of membros(); track membro.usuarioId) {
                 <div class="demanda-membro-lista__item">
-                    <div class="demanda-membro-lista__avatar">
-                        {{ iniciais(membro.nomeCompleto) }}
-                    </div>
+                    <app-avatar-usuario
+                        [nome]="membro.nomeCompleto"
+                        [cor]="membro.corAvatar"
+                        [iniciais]="iniciais(membro.nomeCompleto)"
+                        tamanho="2.125rem"
+                    />
                     <div class="demanda-membro-lista__info">
                         <span class="demanda-membro-lista__nome">{{ membro.nomeCompleto }}</span>
                         <span class="demanda-membro-lista__cargo">{{ membro.cargoTitulo }}</span>

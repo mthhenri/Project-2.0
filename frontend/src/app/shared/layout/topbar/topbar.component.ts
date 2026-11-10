@@ -28,7 +28,7 @@ import { MensagemDiretaEstadoService } from '../../../modules/mensagem-direta/se
 import { ChipExecucaoAtivaComponent } from './chip-execucao-ativa/chip-execucao-ativa.component';
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 import { UsuarioCorDialogComponent } from '../../../modules/usuario/components/usuario-cor-dialog/usuario-cor-dialog.component';
-import { MensagemDiretaAvatarComponent } from '../../../modules/mensagem-direta/components/mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { AvatarUsuarioComponent } from '../../components/avatar-usuario/avatar-usuario.component';
 import { CheckinProximoComponent } from '../../../modules/checkin/components/checkin-proximo/checkin-proximo.component';
 
 @Component({
@@ -36,7 +36,7 @@ import { CheckinProximoComponent } from '../../../modules/checkin/components/che
     standalone: true,
     imports: [
         UsuarioCorDialogComponent,
-        MensagemDiretaAvatarComponent,
+        AvatarUsuarioComponent,
         ReactiveFormsModule,
         FormsModule,
         ToggleSwitchModule,

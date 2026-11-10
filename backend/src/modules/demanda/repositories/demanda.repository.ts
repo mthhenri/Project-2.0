@@ -714,6 +714,8 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                                         usuario.id,
                                         'nomeCompleto',
                                         usuario.nome_completo,
+                                        'corAvatar',
+                                        usuario.cor_avatar,
                                         'inicioData',
                                         execucao.inicio_data
                                     )
@@ -1731,6 +1733,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                 SELECT
                     usuario.id AS "usuarioId",
                     usuario.nome_completo AS "nomeCompleto",
+                    usuario.cor_avatar AS "corAvatar",
                     usuario.login,
                     tipo_usuario.codigo AS tipo,
                     usuario.cargo_titulo AS "cargoTitulo"

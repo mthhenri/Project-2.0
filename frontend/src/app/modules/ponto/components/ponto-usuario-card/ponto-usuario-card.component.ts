@@ -6,11 +6,12 @@ import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-hora
 import { ExecucaoTimerComponent } from '../../../execucao/components/execucao-timer/execucao-timer.component';
 import { formatarSaldoMinutos } from '../../models/ponto.model';
 import { ambiente } from '../../../../../environments/environment';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 @Component({
     selector: 'app-ponto-usuario-card',
     standalone: true,
-    imports: [DatePipe, TooltipModule, MinutosParaHorasPipe, ExecucaoTimerComponent],
+    imports: [AvatarUsuarioComponent, DatePipe, TooltipModule, MinutosParaHorasPipe, ExecucaoTimerComponent],
     templateUrl: './ponto-usuario-card.component.html',
     styleUrl: './ponto-usuario-card.component.scss',
 })

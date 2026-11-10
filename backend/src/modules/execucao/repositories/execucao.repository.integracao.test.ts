@@ -221,6 +221,7 @@ testarComBanco('listar: ordena por nome do usuário e depois por início, e devo
 
     const { itens, total } = await repositorioDe(conexao).listar({ data: '2026-03-10' });
     assert.deepEqual(ids(itens), [ana1.id, bruno1.id, bruno2.id]);
+    assert.equal(itens[0].corAvatar, null, 'sem cor escolhida');
     assert.equal(total, 3);
     assert.equal(itens[0].nomeUsuario, 'Ana');
     assert.equal(itens[0].nomeAtividade, 'Atividade Gama');

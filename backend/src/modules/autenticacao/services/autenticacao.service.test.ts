@@ -20,7 +20,7 @@ async function criarServico(usuarios: Array<Record<string, unknown>>) {
     return { servico: new AutenticacaoService(repositorio as never, jwt), jwt };
 }
 
-const ATIVO = { id: 7, login: 'maria', nomeCompleto: 'Maria', tipo: TipoUsuarioEnum.GESTOR, ativo: true };
+const ATIVO = { id: 7, login: 'maria', nomeCompleto: 'Maria', tipo: TipoUsuarioEnum.GESTOR, ativo: true, corAvatar: '#1E3A8A' };
 
 test('credencial válida gera token com o JwtPayload esperado (sub, login, tipo) e devolve o usuário sem dado sensível', async () => {
     const { servico, jwt } = await criarServico([ATIVO]);
@@ -28,7 +28,7 @@ test('credencial válida gera token com o JwtPayload esperado (sub, login, tipo)
 
     assert.equal(resposta.sucesso, true);
     assert.equal(resposta.dados?.tipo, 'Bearer');
-    assert.deepEqual(resposta.dados?.usuario, { id: 7, login: 'maria', nomeCompleto: 'Maria', tipo: TipoUsuarioEnum.GESTOR });
+    assert.deepEqual(resposta.dados?.usuario, { id: 7, login: 'maria', nomeCompleto: 'Maria', tipo: TipoUsuarioEnum.GESTOR, corAvatar: '#1E3A8A' });
 
     const payload = await jwt.verifyAsync(resposta.dados!.accessToken);
     assert.equal(payload.sub, 7);

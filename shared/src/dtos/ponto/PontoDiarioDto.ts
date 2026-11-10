@@ -5,6 +5,8 @@ export class PontoDiarioDto {
     data: string;
     usuarioId: number;
     nomeUsuario: string;
+    /** Cor da bolinha escolhida pela pessoa (`#RRGGBB`); `null` = cor padrão do tema. */
+    corAvatar: string | null;
     ehDiaUtil: boolean;
     motivoNaoUtil: string | null;
     metaMinutos: number;

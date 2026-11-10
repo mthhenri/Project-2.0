@@ -49,7 +49,7 @@ describe('TopbarComponent — conteúdo', () => {
     it('mostra as iniciais (duas primeiras palavras) e o primeiro nome do usuário', async () => {
         const montado = await montarBarra(TipoUsuarioEnum.GESTOR);
         expect(montado.componente.iniciais()).toBe('UG');
-        expect(montado.elemento.querySelector('.topbar__avatar')?.textContent?.trim()).toBe('UG');
+        expect(montado.elemento.querySelector('.avatar-usuario')?.textContent?.trim()).toBe('UG');
         expect(montado.elemento.querySelector('.topbar__perfil-nome')?.textContent?.trim()).toBe('Usuário');
         expect(porRotulo(montado, 'Menu de Usuário GESTOR')).not.toBeNull();
     });

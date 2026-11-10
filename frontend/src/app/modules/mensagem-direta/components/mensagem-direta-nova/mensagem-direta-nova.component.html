@@ -77,7 +77,7 @@
                     class="nova-direta__linha"
                     (click)="escolher(pessoa.usuarioId, pessoa.usuarioNome)"
                 >
-                    <app-mensagem-direta-avatar
+                    <app-avatar-usuario
                         [nome]="pessoa.usuarioNome"
                         [cor]="pessoa.corAvatar"
                         [online]="estado.online().has(pessoa.usuarioId)"

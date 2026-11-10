@@ -12,7 +12,7 @@ import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-
 import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { EdicaoEmPreparo } from '../../utils/compositor.util';
 import { AVISO_DE_LEITURA_DAS_CONVERSAS, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa, marcarEmendas } from '../../utils/mensagem-direta.util';
-import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
 import { MensagemDiretaEmojiSeletorComponent } from '../mensagem-direta-emoji-seletor/mensagem-direta-emoji-seletor.component';
 import { MensagemDiretaReacoesComponent } from '../mensagem-direta-reacoes/mensagem-direta-reacoes.component';
@@ -38,7 +38,7 @@ const MARGEM_DO_TOPO_PX = 40;
 @Component({
     selector: 'app-mensagem-direta-conversa',
     standalone: true,
-    imports: [ButtonModule, ContextMenu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent, MensagemDiretaReacoesComponent, MensagemDiretaEmojiSeletorComponent],
+    imports: [ButtonModule, ContextMenu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarUsuarioComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent, MensagemDiretaReacoesComponent, MensagemDiretaEmojiSeletorComponent],
     templateUrl: './mensagem-direta-conversa.component.html',
     styleUrl: './mensagem-direta-conversa.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,

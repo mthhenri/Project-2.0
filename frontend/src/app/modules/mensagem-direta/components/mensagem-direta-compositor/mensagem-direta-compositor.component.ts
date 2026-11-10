@@ -20,7 +20,7 @@ import {
 } from '../../utils/compositor.util';
 import { filtrarPessoasPorNome } from '../../utils/mensagem-direta.util';
 import type { BlocoAtual } from '../../../../shared/components/markdown-editor/markdown-formatado';
-import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 import { CodigoEscolhido, MensagemDiretaCodigoPainelComponent } from '../mensagem-direta-codigo-painel/mensagem-direta-codigo-painel.component';
 import { MensagemDiretaEmojiSeletorComponent } from '../mensagem-direta-emoji-seletor/mensagem-direta-emoji-seletor.component';
 import { EditorMensagemComponent } from '../../../../shared/components/editor-mensagem/editor-mensagem.component';
@@ -67,7 +67,7 @@ function consumir(evento: Event): void {
 @Component({
     selector: 'app-mensagem-direta-compositor',
     standalone: true,
-    imports: [ButtonModule, TooltipModule, MensagemDiretaAvatarComponent, MensagemDiretaCodigoPainelComponent, MensagemDiretaEmojiSeletorComponent, EditorMensagemComponent],
+    imports: [ButtonModule, TooltipModule, AvatarUsuarioComponent, MensagemDiretaCodigoPainelComponent, MensagemDiretaEmojiSeletorComponent, EditorMensagemComponent],
     templateUrl: './mensagem-direta-compositor.component.html',
     styleUrl: './mensagem-direta-compositor.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,

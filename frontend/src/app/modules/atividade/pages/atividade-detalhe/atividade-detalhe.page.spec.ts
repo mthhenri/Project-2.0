@@ -20,7 +20,7 @@ const PRIORIDADE = { codigo: TipoAtividadePrioridadeEnum.MEDIA, descricao: 'Méd
 
 function criarAtividade(sobrescritas: Partial<AtividadeRecuperadaDto> = {}): AtividadeRecuperadaDto {
     return {
-        id: 7, demandaId: 10, nomeDemanda: 'Demanda dez', projetoId: 5, nomeProjeto: 'Portal', usuarioId: 1, nomeUsuario: 'Maria Souza',
+        id: 7, demandaId: 10, nomeDemanda: 'Demanda dez', projetoId: 5, nomeProjeto: 'Portal', usuarioId: 1, nomeUsuario: 'Maria Souza', corAvatar: null,
         usuarioTipo: TipoUsuarioEnum.DESENVOLVEDOR, nome: 'Implementar login', status: TipoAtividadeStatusEnum.PLANEJADA, prioridade: PRIORIDADE,
         posicaoAtividadeUsuario: 1, createdDate: new Date('2026-02-01T12:00:00.000Z'), ...sobrescritas,
     };
@@ -30,7 +30,7 @@ function criarExecucao(id: number, sobrescritas: Partial<ExecucaoItemDto> = {}):
     return {
         id, atividadeId: 7, nomeAtividade: 'Implementar login', demandaId: 10, nomeDemanda: 'Demanda dez', projetoId: 5, nomeProjeto: 'Portal',
         descricao: `Execução ${id}`, inicioData: new Date('2026-02-02T10:00:00.000Z'), fimData: new Date('2026-02-02T11:00:00.000Z'), duracaoMinutos: 60,
-        usuarioId: 1, nomeUsuario: 'Maria Souza', ...sobrescritas,
+        usuarioId: 1, nomeUsuario: 'Maria Souza', corAvatar: null, ...sobrescritas,
     };
 }
 

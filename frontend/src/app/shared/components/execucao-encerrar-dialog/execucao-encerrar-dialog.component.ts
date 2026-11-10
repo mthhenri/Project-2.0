@@ -21,6 +21,7 @@ import { BloquearCaracteresProibidosDirective } from '../../directives/bloquear-
 import { DialogFormularioDirective } from '../../directives/dialog-formulario.directive';
 import { DataBrasileiraPipe } from '../../pipes/data-brasileira.pipe';
 import { MinutosParaHorasPipe } from '../../pipes/minutos-para-horas.pipe';
+import { AvatarUsuarioComponent } from '../avatar-usuario/avatar-usuario.component';
 
 /** Dados de uma execução em andamento que o diálogo precisa para encerrá-la. */
 export interface ExecucaoEncerrarAbertura {
@@ -40,6 +41,7 @@ export interface ExecucaoEncerrarAbertura {
     selector: 'app-execucao-encerrar-dialog',
     standalone: true,
     imports: [
+        AvatarUsuarioComponent,
         ReactiveFormsModule,
         ButtonModule,
         DialogModule,

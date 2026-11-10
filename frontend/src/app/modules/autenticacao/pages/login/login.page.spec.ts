@@ -11,7 +11,7 @@ type Montado = ComponenteMontado<LoginPage>;
 
 const RESPOSTA_LOGIN = {
     accessToken: 'token', tipo: 'Bearer',
-    usuario: { id: 1, login: 'maria', nomeCompleto: 'Maria Souza', tipo: TipoUsuarioEnum.GESTOR },
+    usuario: { id: 1, login: 'maria', nomeCompleto: 'Maria Souza', tipo: TipoUsuarioEnum.GESTOR, corAvatar: '#1E3A8A' },
 };
 
 async function montarLogin(): Promise<{ montado: Montado; irPara: ReturnType<typeof vi.fn> }> {
@@ -139,7 +139,7 @@ describe('LoginPage', () => {
         const { montado } = await montarLogin();
         await entrarComSucesso(montado, EstadoIaEnum.DESLIGADA);
         const guardado = JSON.parse(localStorage.getItem('ultimo_login')!);
-        expect(guardado).toEqual({ login: 'maria', nomeCompleto: 'Maria Souza' });
+        expect(guardado).toEqual({ login: 'maria', nomeCompleto: 'Maria Souza', corAvatar: '#1E3A8A' });
         expect(JSON.stringify(guardado)).not.toContain('segredo');
     });
 
@@ -155,6 +155,11 @@ describe('LoginPage', () => {
         expect(montado.elemento.querySelector('#login-input')).not.toBeNull();
     });
 
+    it('usuário lembrado com cor própria mostra a bolinha dessa cor', async () => {
+        const montado = await montarComponente(LoginPage, { armazenamento: { ultimo_login: JSON.stringify({ login: 'maria', nomeCompleto: 'Maria Souza', corAvatar: '#1E3A8A' }) } });
+        expect(montado.elemento.querySelector<HTMLElement>('.avatar-usuario')!.style.background).toBe('rgb(30, 58, 138)');
+    });
+
     it('formato antigo do usuário lembrado (com senha) é descartado na hora, sem reaproveitar nada', async () => {
         const montado = await montarComponente(LoginPage, { armazenamento: { ultimo_login: JSON.stringify({ login: 'maria', nomeCompleto: 'Maria', senha: 'antiga' }) } });
         expect(localStorage.getItem('ultimo_login')).toBeNull();
@@ -165,7 +170,7 @@ describe('LoginPage', () => {
         const { montado } = await montarLogin();
         localStorage.setItem('ultimo_login', JSON.stringify({ login: 'antigo', nomeCompleto: 'Antigo' }));
         await entrarComSucesso(montado, EstadoIaEnum.DESLIGADA);
-        expect(JSON.parse(localStorage.getItem('ultimo_login')!)).toEqual({ login: 'maria', nomeCompleto: 'Maria Souza' });
+        expect(JSON.parse(localStorage.getItem('ultimo_login')!)).toEqual({ login: 'maria', nomeCompleto: 'Maria Souza', corAvatar: '#1E3A8A' });
     });
 
     it('não tem mais o checkbox de lembrar e avisa que a sessão dura 7 dias', async () => {

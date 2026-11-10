@@ -46,19 +46,6 @@
         }
     }
 
-    &__avatar {
-        display: grid;
-        place-items: center;
-        flex: none;
-        width: 2.125rem;
-        height: 2.125rem;
-        border-radius: 50%;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--p-primary-600);
-        background: var(--p-primary-50);
-    }
-
     &__corpo {
         display: flex;
         flex: 1;

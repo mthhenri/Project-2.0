@@ -23,9 +23,11 @@
             <form [formGroup]="formulario" (ngSubmit)="entrar()">
                 @if (modoLembrado()) {
                     <div class="login-pagina__identidade">
-                        <span class="login-pagina__avatar" aria-hidden="true">{{
-                            iniciais()
-                        }}</span>
+                        <app-avatar-usuario
+                            [nome]="usuarioLembrado()!.nomeCompleto"
+                            [cor]="usuarioLembrado()!.corAvatar"
+                            [iniciais]="iniciais()"
+                        />
                         <div class="login-pagina__identidade-texto">
                             <strong class="login-pagina__identidade-nome">{{
                                 usuarioLembrado()!.nomeCompleto

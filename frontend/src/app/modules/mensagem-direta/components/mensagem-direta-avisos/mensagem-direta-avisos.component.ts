@@ -5,7 +5,7 @@ import { MarkdownVisualizadorComponent } from '../../../../shared/components/mar
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { AvisoNaTela, DURACAO_DO_AVISO_MS, rotuloDaQuantidade } from '../../utils/avisos.util';
-import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /** O tempo mínimo que sobra de um cartão que o mouse largou: não some no mesmo instante em que o usuário tira o ponteiro. */
 const TEMPO_MINIMO_DEPOIS_DE_PAUSAR_MS = 2_000;
@@ -26,7 +26,7 @@ interface Temporizador {
 @Component({
     selector: 'app-mensagem-direta-avisos',
     standalone: true,
-    imports: [ButtonModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent],
+    imports: [ButtonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarUsuarioComponent],
     templateUrl: './mensagem-direta-avisos.component.html',
     styleUrl: './mensagem-direta-avisos.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,

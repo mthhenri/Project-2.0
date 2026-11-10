@@ -20,6 +20,9 @@ export class UsuarioResumoDto {
     @ApiProperty({ example: true })
     ativo: boolean;
 
+    @ApiProperty({ example: '#1E3A8A', nullable: true, description: 'Cor da bolinha escolhida pela pessoa; null = cor padrão do tema' })
+    corAvatar: string | null;
+
     @ApiProperty({ example: true, description: 'Indica se o usuário possui anotações registradas' })
     temAnotacoes: boolean;
 }

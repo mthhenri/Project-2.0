@@ -16,7 +16,7 @@ function criarAtiva(id: number, sobrescritas: Partial<ExecucaoItemDto> = {}): Ex
     return {
         id, atividadeId: 20 + id, nomeAtividade: `Atividade ${id}`, demandaId: 10, nomeDemanda: 'Demanda dez',
         projetoId: 5, nomeProjeto: 'Portal', descricao: `Descrição ${id}`, inicioData: new Date(Date.now() - 600_000), fimData: null,
-        duracaoMinutos: null, usuarioId: 1, nomeUsuario: 'Maria Souza', ...sobrescritas,
+        duracaoMinutos: null, usuarioId: 1, nomeUsuario: 'Maria Souza', corAvatar: null, ...sobrescritas,
     };
 }
 

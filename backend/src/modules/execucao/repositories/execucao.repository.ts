@@ -372,7 +372,8 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
                             )
                     )::int / 60 AS "duracaoMinutos",
                     atividade.usuario_id AS "usuarioId",
-                    usuario.nome_completo AS "nomeUsuario"
+                    usuario.nome_completo AS "nomeUsuario",
+                    usuario.cor_avatar AS "corAvatar"
                 FROM
                     execucao
                     INNER JOIN atividade ON atividade.id = execucao.atividade_id

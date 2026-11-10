@@ -6,9 +6,13 @@
                 [pTooltip]="membro.nomeCompleto + ' · ' + membro.cargoTitulo"
                 tooltipPosition="bottom"
             >
-                <span class="demanda-membros-cabecalho__avatar">{{
-                    iniciais(membro.nomeCompleto)
-                }}</span>
+                <app-avatar-usuario
+                    [nome]="membro.nomeCompleto"
+                    [cor]="membro.corAvatar"
+                    [iniciais]="iniciais(membro.nomeCompleto)"
+                    tamanho="1.9rem"
+                    [contorno]="true"
+                />
                 @if (comNome()) {
                     <span class="demanda-membros-cabecalho__nome">{{ membro.nomeCompleto }}</span>
                 }

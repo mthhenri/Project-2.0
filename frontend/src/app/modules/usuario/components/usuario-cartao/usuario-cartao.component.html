@@ -1,5 +1,10 @@
 <div class="usuario-cartao">
-    <div class="usuario-cartao__avatar" aria-hidden="true">{{ iniciais() }}</div>
+    <app-avatar-usuario
+        [nome]="usuario().nomeCompleto"
+        [cor]="usuario().corAvatar"
+        [iniciais]="iniciais()"
+        tamanho="2rem"
+    />
     <div class="usuario-cartao__info">
         <span class="usuario-cartao__nome">{{ usuario().nomeCompleto }}</span>
         <span class="usuario-cartao__login">{{ usuario().login }}</span>

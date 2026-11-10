@@ -9,7 +9,7 @@ async function montar() {
     return montado;
 }
 
-const fundos = () => Array.from(document.body.querySelectorAll<HTMLElement>('.avatar-direto')).map((avatar) => avatar.style.background);
+const fundos = () => Array.from(document.body.querySelectorAll<HTMLElement>('.avatar-usuario')).map((avatar) => avatar.style.background);
 
 describe('UsuarioCorDialogComponent', () => {
     it('abre com a cor atual da pessoa e mostra as prévias dos lugares do chat', async () => {

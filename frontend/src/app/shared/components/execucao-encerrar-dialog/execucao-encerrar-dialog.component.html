@@ -16,9 +16,12 @@
         </p>
         @if (sessao.temVisaoTotal()) {
             <div class="execucao-encerrar__executor">
-                <span class="execucao-encerrar__avatar" aria-hidden="true">{{
-                    iniciais(execucao.nomeUsuario)
-                }}</span>
+                <app-avatar-usuario
+                    [nome]="execucao.nomeUsuario"
+                    [cor]="execucao.corAvatar"
+                    [iniciais]="iniciais(execucao.nomeUsuario)"
+                    tamanho="1.75rem"
+                />
                 <span class="text-color">{{ execucao.nomeUsuario }}</span>
             </div>
         }

@@ -48,16 +48,20 @@
                     @if (executoresDoProjeto().length) {
                         <span class="controle-horas__pilha">
                             @for (executor of executoresNoResumo(); track executor.usuarioId) {
-                                <span
+                                <app-avatar-usuario
                                     class="controle-horas__avatar"
+                                    [nome]="executor.nomeCompleto"
+                                    [cor]="executor.corAvatar"
+                                    [iniciais]="iniciais(executor.nomeCompleto)"
+                                    tamanho="1.75rem"
+                                    [contorno]="true"
                                     [pTooltip]="dicaDoExecutor(executor)"
                                     tooltipPosition="top"
-                                    >{{ iniciais(executor.nomeCompleto) }}</span
-                                >
+                                />
                             }
                             @if (executoresExcedentes().length) {
                                 <span
-                                    class="controle-horas__avatar controle-horas__avatar--resto"
+                                    class="controle-horas__resto"
                                     [pTooltip]="dicaDosExecutores(executoresExcedentes())"
                                     tooltipPosition="top"
                                     >+{{ executoresExcedentes().length }}</span

@@ -42,7 +42,7 @@ describe('ExecucaoRegistroDialogComponent — abrir', () => {
         await abrirDialog();
         expect(document.body.textContent).toContain('Portal · Corrigir bug');
         expect(document.body.textContent).toContain('Ana Souza');
-        expect(document.body.querySelector('.execucao-registro-dialog__avatar')?.textContent?.trim()).toBe('AS');
+        expect(document.body.querySelector('.avatar-usuario')?.textContent?.trim()).toBe('AS');
     });
 
     it('reabrir descarta o que foi digitado antes', async () => {

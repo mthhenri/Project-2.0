@@ -9,7 +9,7 @@ export class AutenticacaoTokenDto {
     tipo: string;
 
     @ApiProperty({
-        example: { id: 1, login: 'joao.silva', nomeCompleto: 'João Silva', tipo: 'GESTOR' },
+        example: { id: 1, login: 'joao.silva', nomeCompleto: 'João Silva', tipo: 'GESTOR', corAvatar: '#1E3A8A' },
     })
-    usuario: { id: number; login: string; nomeCompleto: string; tipo: TipoUsuarioEnum };
+    usuario: { id: number; login: string; nomeCompleto: string; tipo: TipoUsuarioEnum; corAvatar: string | null };
 }

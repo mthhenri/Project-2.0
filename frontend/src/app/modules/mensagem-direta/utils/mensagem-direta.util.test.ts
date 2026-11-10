@@ -16,7 +16,6 @@ import {
     filtrarPessoasPorNome,
     gerarMensagemId,
     idDaUltimaLidaPelaOutraPessoa,
-    iniciais,
     mesclarMensagens,
     normalizarConversa,
     normalizarMensagem,
@@ -209,13 +208,6 @@ describe('lista de conversas', () => {
         const lida = normalizarConversa({ ...conversa('9'), ultimaMensagem: { ...mensagem('a', 0), createdDate: '2026-10-21T14:05:11.482Z' as never } });
         expect(lida.ultimaMensagem?.createdDate).toBeInstanceOf(Date);
         expect(normalizarConversa({ ...conversa('9'), ultimaMensagem: null }).ultimaMensagem).toBeNull();
-    });
-
-    it('iniciais: primeira e última palavra, em maiúsculas', () => {
-        expect(iniciais('Camila Duarte')).toBe('CD');
-        expect(iniciais('  rafael   de souza lima ')).toBe('RL');
-        expect(iniciais('Madonna')).toBe('M');
-        expect(iniciais('   ')).toBe('?');
     });
 
     it('previaDaMensagem: sem marcação, código vira [código], a minha começa com Você:', () => {

@@ -7,7 +7,7 @@ import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
-import { MensagemDiretaAvatarComponent } from '../../../mensagem-direta/components/mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 import { UsuarioCorSeletorComponent } from '../usuario-cor-seletor/usuario-cor-seletor.component';
 
 /**
@@ -17,7 +17,7 @@ import { UsuarioCorSeletorComponent } from '../usuario-cor-seletor/usuario-cor-s
 @Component({
     selector: 'app-usuario-cor-dialog',
     standalone: true,
-    imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ButtonModule, DialogModule, MensagemDiretaAvatarComponent, UsuarioCorSeletorComponent],
+    imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ButtonModule, DialogModule, AvatarUsuarioComponent, UsuarioCorSeletorComponent],
     templateUrl: './usuario-cor-dialog.component.html',
     styleUrl: './usuario-cor-dialog.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,

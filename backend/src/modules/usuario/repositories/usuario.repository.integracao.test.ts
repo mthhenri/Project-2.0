@@ -343,6 +343,8 @@ testarComBanco('cor da bolinha: nasce sem cor, alterarCor grava e limpa só a do
     assert.equal(nomes.find((usuario) => usuario.id === dono.id)!.corAvatar, '#1E3A8A');
     assert.equal(nomes.find((usuario) => usuario.id === outro.id)!.corAvatar, null);
     assert.equal((await repositorio.listarAtivos()).find((usuario) => usuario.id === dono.id)!.corAvatar, '#1E3A8A');
+    assert.equal((await repositorio.listarAtivosComMeta()).find((usuario) => usuario.id === dono.id)!.corAvatar, '#1E3A8A');
+    assert.equal((await repositorio.listar({ itensPorPagina: 100 })).itens.find((usuario) => usuario.id === dono.id)!.corAvatar, '#1E3A8A', 'a listagem de usuários também');
     assert.equal((await repositorio.listarTiposPorIds({ usuarioIds: [dono.id] }))[0].corAvatar, '#1E3A8A');
 
     assert.deepEqual(await repositorio.alterarCor({ id: dono.id, corAvatar: null }), { corAvatar: null });

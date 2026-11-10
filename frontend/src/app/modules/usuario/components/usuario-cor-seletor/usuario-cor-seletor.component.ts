@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
-import { MensagemDiretaAvatarComponent } from '../../../mensagem-direta/components/mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /**
  * Escolher a cor da bolinha de uma pessoa (task 316): a prévia com as iniciais, o seletor livre de cor e "Voltar à cor padrão". Serve ao próprio perfil
@@ -10,7 +10,7 @@ import { MensagemDiretaAvatarComponent } from '../../../mensagem-direta/componen
 @Component({
     selector: 'app-usuario-cor-seletor',
     standalone: true,
-    imports: [FormsModule, SeletorCorComponent, MensagemDiretaAvatarComponent],
+    imports: [FormsModule, SeletorCorComponent, AvatarUsuarioComponent],
     templateUrl: './usuario-cor-seletor.component.html',
     styleUrl: './usuario-cor-seletor.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
