@@ -156,10 +156,4 @@ describe('ExecucaoRegistroDialogComponent — salvar', () => {
         montado.componente.aceitarDescricaoAssistente('Texto melhorado pela IA');
         expect(montado.componente.formulario.controls.descricao.value).toBe('Texto melhorado pela IA');
     });
-
-    it('iniciais usa as duas primeiras palavras do nome', async () => {
-        const { montado } = await abrirDialog();
-        expect(montado.componente.iniciais('maria da silva')).toBe('MD');
-        expect(montado.componente.iniciais('Ana')).toBe('A');
-    });
 });

@@ -62,11 +62,11 @@ describe('PontoUsuarioCardComponent', () => {
         expect(bolinha.style.color).toBe('rgb(17, 24, 39)');
     });
 
-    it('mostra o nome, as iniciais (duas primeiras partes), o total e a execução do dia', async () => {
+    it('mostra o nome, as iniciais (primeira e última palavra), o total e a execução do dia', async () => {
         const montado = await montar(ponto());
         const html = montado.elemento;
         expect(texto(html)).toContain('Ana Maria Souza');
-        expect(html.querySelector('.avatar-usuario')!.textContent?.trim()).toBe('AM');
+        expect(html.querySelector('.avatar-usuario')!.textContent?.trim()).toBe('AS');
         expect(html.querySelector<HTMLElement>('.avatar-usuario')!.style.background).toBe('');
         expect(texto(html)).toContain('1h 30min');
         expect(texto(html)).toContain('09:00');

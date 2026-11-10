@@ -100,7 +100,4 @@ export class DemandaAtividadesPainelComponent {
         return this.fatiaPorAtividade().get(atividadeId) ?? { atividadeId, minutos: 0, percentual: 0 };
     }
 
-    iniciaisUsuario(nome: string): string {
-        return (nome ?? '').split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
-    }
 }

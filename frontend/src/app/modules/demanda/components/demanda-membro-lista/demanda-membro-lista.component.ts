@@ -129,15 +129,6 @@ export class DemandaMembroListaComponent implements OnInit {
         if (membro) this.retirarMembro(membro);
     }
 
-    iniciais(nomeCompleto: string): string {
-        return nomeCompleto
-            .split(' ')
-            .slice(0, 2)
-            .map((parte) => parte[0])
-            .join('')
-            .toUpperCase();
-    }
-
     rotuloTipo(tipo: TipoUsuarioEnum): string {
         return rotuloTipoUsuario(tipo, true);
     }

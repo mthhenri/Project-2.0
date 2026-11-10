@@ -32,10 +32,6 @@ export class PontoUsuarioCardComponent {
         return { trabalhando: 'Trabalhando agora', pausado: 'Pausado', 'sem-registros': 'Sem registros hoje' }[this.estado];
     }
 
-    get iniciais(): string {
-        return this.ponto.nomeUsuario.split(' ').filter(Boolean).slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
-    }
-
     formatarSaldo(saldoMinutos: number): string {
         return formatarSaldoMinutos(saldoMinutos);
     }

@@ -96,15 +96,6 @@ export class TopbarComponent {
         { nonNullable: true },
     );
 
-    readonly iniciais = computed(() =>
-        (this.sessao.nomeCompleto() ?? '')
-            .split(' ')
-            .filter(Boolean)
-            .slice(0, 2)
-            .map((parte) => parte[0])
-            .join('')
-            .toUpperCase(),
-    );
     readonly primeiroNome = computed(() => (this.sessao.nomeCompleto() ?? '').split(' ')[0]);
 
     // --- Atalho global: `n` abre as anotações (task 96); `g` + letra vive na barra lateral ---

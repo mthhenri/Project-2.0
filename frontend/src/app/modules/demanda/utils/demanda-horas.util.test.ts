@@ -6,7 +6,6 @@ import {
     corDaBarraHoras,
     executoresUnicos,
     haQuantoTempo,
-    iniciaisDoNome,
     linhasVisiveisDeHoras,
     montarArvoreDeHoras,
     percentualDeHoras,
@@ -147,12 +146,6 @@ describe('quem executa agora', () => {
         expect(haQuantoTempo('2026-10-24T10:00:00Z', agora)).toBe('há 1 dia');
         expect(haQuantoTempo('2026-10-20T10:00:00Z', agora)).toBe('há 5 dias');
         expect(haQuantoTempo('xx', agora)).toBe('');
-    });
-
-    it('iniciais: primeiro e último nome', () => {
-        expect(iniciaisDoNome('Maria da Silva')).toBe('MS');
-        expect(iniciaisDoNome('maria')).toBe('M');
-        expect(iniciaisDoNome('  ')).toBe('?');
     });
 
     it('executoresUnicos junta a mesma pessoa e guarda o início mais antigo', () => {

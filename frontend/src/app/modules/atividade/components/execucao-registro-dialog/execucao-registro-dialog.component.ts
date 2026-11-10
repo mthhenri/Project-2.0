@@ -161,7 +161,4 @@ export class ExecucaoRegistroDialogComponent {
         return !!(controle?.invalid && controle?.touched);
     }
 
-    iniciais(nome: string): string {
-        return (nome ?? '').split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
-    }
 }

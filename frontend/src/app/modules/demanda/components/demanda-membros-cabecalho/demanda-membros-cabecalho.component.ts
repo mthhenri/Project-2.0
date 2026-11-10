@@ -40,10 +40,6 @@ export class DemandaMembrosCabecalhoComponent {
 
     readonly souMembro = computed(() => this.membros().some((membro) => membro.usuarioId === this.sessao.id()));
 
-    iniciais(nomeCompleto: string): string {
-        return (nomeCompleto ?? '').split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
-    }
-
     abrirBusca(): void {
         this.termoBusca = null;
         this.adicionando.set(true);

@@ -12,7 +12,7 @@ import { UsuarioCorSeletorComponent } from '../usuario-cor-seletor/usuario-cor-s
 
 /**
  * A pessoa escolhendo a cor da própria bolinha (task 316), aberto pelo "Editar cor" do perfil. À direita do seletor, prévias dos lugares
- * onde a bolinha aparece no chat, com a cor em escolha, para ver o resultado antes de salvar.
+ * onde a bolinha aparece (no chat e no resto do sistema), com a cor em escolha, para ver o resultado antes de salvar.
  */
 @Component({
     selector: 'app-usuario-cor-dialog',
@@ -32,6 +32,8 @@ export class UsuarioCorDialogComponent {
     /** A cor em escolha (`#RRGGBB`); só vale depois de "Salvar". `null` = cor padrão do tema. */
     readonly cor = signal<string | null>(null);
     readonly nome = computed(() => this.sessao.nomeCompleto() ?? '');
+    readonly primeiroNome = computed(() => this.nome().split(' ')[0]);
+    readonly login = computed(() => this.sessao.login() ?? '');
 
     /** Abre com a cor atual da pessoa já no seletor. */
     abrir(): void {

@@ -14,7 +14,6 @@ import {
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import { AtividadeService } from '../../../modules/atividade/services/atividade.service';
 import { ExecucaoService } from '../../../modules/execucao/services/execucao.service';
-import { iniciaisDoNome } from '../../../modules/execucao/utils/execucao.util';
 import { AssistenteDescricaoComponent } from '../assistente-descricao/assistente-descricao.component';
 import { DialogDicaAtalhosComponent } from '../dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { BloquearCaracteresProibidosDirective } from '../../directives/bloquear-caracteres-proibidos.directive';
@@ -93,10 +92,6 @@ export class ExecucaoEncerrarDialogComponent {
         this.formulario.controls.descricao.updateValueAndValidity();
         this.carregarExecucoes(abertura.atividadeId);
         this.visivel.set(true);
-    }
-
-    iniciais(nomeCompleto: string): string {
-        return iniciaisDoNome(nomeCompleto);
     }
 
     campoInvalido(): boolean {

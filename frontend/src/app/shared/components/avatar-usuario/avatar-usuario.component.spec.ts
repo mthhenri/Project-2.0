@@ -23,11 +23,6 @@ describe('AvatarUsuarioComponent', () => {
         expect(circulo(tela.elemento).style.color).toBe('rgb(17, 24, 39)');
     });
 
-    it('iniciais da tela têm precedência sobre as do nome', async () => {
-        const tela = await montarComponente(AvatarUsuarioComponent, { entradas: { nome: 'Matheus Henrique Silva', iniciais: 'MH' } });
-        expect(circulo(tela.elemento).textContent?.trim()).toBe('MH');
-    });
-
     it('o tamanho da tela vira a variável do diâmetro', async () => {
         const tela = await montarComponente(AvatarUsuarioComponent, { entradas: { nome: 'Camila Duarte', tamanho: '1.75rem' } });
         expect(circulo(tela.elemento).style.getPropertyValue('--avatar-tamanho')).toBe('1.75rem');

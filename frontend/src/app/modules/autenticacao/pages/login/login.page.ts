@@ -69,16 +69,6 @@ export class LoginPage implements OnInit {
 
     /** Estado A (usuário lembrado, só a senha) ou B (formulário completo). */
     readonly modoLembrado = computed(() => this.usuarioLembrado() !== null && !this.usandoOutroUsuario());
-    readonly iniciais = computed(() =>
-        (this.usuarioLembrado()?.nomeCompleto ?? '')
-            .split(' ')
-            .filter(Boolean)
-            .slice(0, 2)
-            .map((parte) => parte[0])
-            .join('')
-            .toUpperCase(),
-    );
-
     constructor() {
         afterNextRender(() => this.focarCampoInicial());
     }

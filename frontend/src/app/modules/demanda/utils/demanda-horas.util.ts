@@ -193,14 +193,6 @@ export function haQuantoTempo(data: Date | string, agora: Date = new Date()): st
 }
 
 /** As iniciais do nome para a bolinha do executor ("Maria Silva" → "MS"). */
-export function iniciaisDoNome(nomeCompleto: string): string {
-    const partes = nomeCompleto.trim().split(/\s+/).filter(Boolean);
-    if (partes.length === 0) return '?';
-    const primeira = partes[0][0];
-    const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';
-    return (primeira + ultima).toUpperCase();
-}
-
 export interface ExecutorDoResumo {
     usuarioId: number;
     nomeCompleto: string;

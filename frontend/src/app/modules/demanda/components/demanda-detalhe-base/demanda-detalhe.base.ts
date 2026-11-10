@@ -306,15 +306,6 @@ export abstract class DemandaDetalheBase {
         if (demandaAtual) this.tagsAlteradas.emit({ demandaId: demandaAtual.id, tags });
     }
 
-    iniciaisUsuario(nome: string): string {
-        return (nome ?? '')
-            .split(' ')
-            .slice(0, 2)
-            .map((parte) => parte[0])
-            .join('')
-            .toUpperCase();
-    }
-
     protected carregarAtividades(demandaId: number): void {
         this.carregandoAtividades.set(true);
         this.atividades.set([]);

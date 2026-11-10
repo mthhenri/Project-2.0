@@ -106,12 +106,6 @@ export class AtividadeDetalhePage implements OnInit {
     /** "O que você vai fazer?" da faixa de início rápido; a obrigatoriedade depende do dono (ver `descricaoObrigatoria`). */
     readonly descricaoInicio = new FormControl<string>('', { nonNullable: true, validators: [Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)] });
 
-    readonly iniciais = computed(() => this.iniciaisDe(this.atividade()?.nomeUsuario ?? ''));
-
-    iniciaisDe(nome: string): string {
-        return nome.split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
-    }
-
     /** Auxiliar, gestor ou o dono da atividade: quem pode iniciar, pausar, trocar status e mexer nas tags. */
     readonly podeAgir = computed(() => {
         const atividade = this.atividade();

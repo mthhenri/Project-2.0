@@ -24,7 +24,6 @@ import {
     ancestraisDe,
     executoresUnicos,
     haQuantoTempo,
-    iniciaisDoNome,
     linhasVisiveisDeHoras,
     montarArvoreDeHoras,
     resumirHoras,
@@ -288,10 +287,6 @@ export class DemandaControleHorasPainelComponent {
     // ---------------------------------------------------------------------------
     // Apresentação
     // ---------------------------------------------------------------------------
-
-    iniciais(nomeCompleto: string): string {
-        return iniciaisDoNome(nomeCompleto);
-    }
 
     haQuantoTempo(data: Date | string): string {
         return haQuantoTempo(data);

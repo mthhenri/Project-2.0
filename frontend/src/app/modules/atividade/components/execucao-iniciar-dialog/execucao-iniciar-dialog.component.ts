@@ -94,10 +94,6 @@ export class ExecucaoIniciarDialogComponent {
         this.visivel.set(true);
     }
 
-    iniciais(nome: string): string {
-        return (nome ?? '').split(' ').slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
-    }
-
     confirmar(): void {
         if (this.formulario.invalid) {
             this.formulario.markAllAsTouched();

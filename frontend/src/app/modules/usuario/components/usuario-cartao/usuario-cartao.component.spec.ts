@@ -3,12 +3,12 @@ import { TestBed } from '@angular/core/testing';
 import { UsuarioCartaoComponent } from './usuario-cartao.component';
 
 describe('UsuarioCartaoComponent', () => {
-    it('mostra as iniciais, o nome e o login', () => {
+    it('mostra as iniciais (primeira e última palavra), o nome e o login', () => {
         const fixture = TestBed.createComponent(UsuarioCartaoComponent);
         fixture.componentRef.setInput('usuario', { nomeCompleto: 'maria clara souza', login: 'maria.souza' });
         fixture.detectChanges();
         const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
-        expect(texto).toContain('MC');
+        expect(texto).toContain('MS');
         expect(texto).toContain('maria clara souza');
         expect(texto).toContain('maria.souza');
     });
@@ -19,6 +19,6 @@ describe('UsuarioCartaoComponent', () => {
         fixture.detectChanges();
         fixture.componentRef.setInput('usuario', { nomeCompleto: 'Bruno Reis', login: 'bruno' });
         fixture.detectChanges();
-        expect(fixture.componentInstance.iniciais()).toBe('BR');
+        expect(fixture.nativeElement.querySelector('.avatar-usuario').textContent.trim()).toBe('BR');
     });
 });

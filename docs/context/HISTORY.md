@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-11-10 — Task 319 (ajustes): iniciais padronizadas e prévias do diálogo de cor em todos os lugares
+
+**Pedido do autor**, ao ler as duas decisões abertas do fecho da 319: (1) padronizar as iniciais pela **primeira e última palavra** do nome ("Matheus Henrique Silva" → MS), (2) aceitar o Controle de horas no fundo de avatar do tema, e (3) perguntou se o diálogo de troca de cor mostra todos os exemplos — não mostrava, só os quatro do chat.
+
+**O que mudou.** `iniciaisDoNome` mora só em `avatar-usuario.component.ts` e o componente deixou de aceitar `iniciais` de fora: saíram os nove helpers repetidos nas telas (`iniciais`, `iniciaisDe`, `iniciaisUsuario`) e as três funções `iniciaisDoNome` dos utils de usuário, execução e demanda, com os testes migrados. Quem tinha duas primeiras palavras (atividade, execução, ponto, cartão de usuário, login e barra de cima) passa a mostrar primeira e última. O diálogo "Cor da minha bolinha" ganhou a seção **"No resto do sistema"** ao lado de "No chat", com seis prévias: Barra de cima, Atividades e execuções, Membros da demanda (pilha com contorno), Ponto da equipe, Em andamento agora e Tela de entrada; a largura passou de 46 para 64rem.
+
+**Testado.** `frontend` 218 arquivos, 2625 testes ok (o do diálogo agora confere as dez prévias e 11 bolinhas na cor em escolha); `lint:tudo` e build do frontend ok.
+
+**Verificado ao vivo.** O diálogo nos cinco formatos e nos dois temas (evidência em `.artifacts/319/dialogo-*.png`): lado a lado a partir de 960px e em coluna com rolagem em 720×1280.
+
+---
+
 ## 2026-11-10 — Task 319: a cor da bolinha escolhida pela pessoa em todos os avatares do sistema
 
 **Pedido.** Levar a cor da 316 (`usuario.cor_avatar`) para além do chat: atividades (listagem, detalhe, diálogos de iniciar, registrar e encerrar execução), demandas (membros, cabeçalho de membros, painel de atividades, Controle de horas), cartão de usuário, Ponto, "Execução agora", login e a barra de cima. Sem tempo real: vale na próxima carga. Foi o autor quem pediu para seguir com a 319.

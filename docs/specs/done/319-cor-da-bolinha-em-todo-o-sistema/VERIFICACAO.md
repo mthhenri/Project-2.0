@@ -24,6 +24,10 @@ Data: 2026-11-10. App real: backend e frontend de desenvolvimento, PostgreSQL 16
 
 Formatos: 1920×1080, 1366×768, 1080×1920, 720×1280 e 960×1080, cada um nos temas claro e escuro. Sem texto cortado nem sobreposição nas bolinhas; a barra lateral recolhe como antes no 720×1280.
 
+## Diálogo "Cor da minha bolinha" (ajuste do mesmo dia)
+
+Aberto pelo perfil da barra de cima nos cinco formatos e nos dois temas: seletor, "No chat" (4 prévias) e "No resto do sistema" (6 prévias) lado a lado a partir de 960px; em 720×1280 o diálogo vira coluna e rola. Todas as bolinhas da pessoa mudam com a cor em escolha.
+
 ## Limites
 
 - Não percorridos ao vivo: diálogos de iniciar, registrar e encerrar execução, painel de atividades dentro da demanda aberta e a lista de membros da demanda; só cobertos por build e testes de componente (o diálogo de iniciar e o de registrar usam o mesmo componente e o mesmo mapeamento da listagem).

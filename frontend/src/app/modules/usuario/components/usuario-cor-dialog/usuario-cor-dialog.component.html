@@ -5,7 +5,7 @@
     (dialogEnviar)="salvar()"
     [(visible)]="mostrarDialog"
     [modal]="true"
-    [style]="{ width: '46rem', maxWidth: '95vw' }"
+    [style]="{ width: '64rem', maxWidth: '95vw' }"
     [draggable]="false"
 >
     <div class="usuario-cor-dialog">
@@ -14,7 +14,7 @@
         </section>
 
         <section class="usuario-cor-dialog__previas" aria-label="Como fica no chat">
-            <h3 class="usuario-cor-dialog__titulo">Como as pessoas veem você</h3>
+            <h3 class="usuario-cor-dialog__titulo">No chat</h3>
 
             <div class="usuario-cor-dialog__previa">
                 <span class="usuario-cor-dialog__legenda">Lista de conversas</span>
@@ -65,6 +65,78 @@
                     <span class="usuario-cor-dialog__texto">
                         <span class="usuario-cor-dialog__nome">{{ nome() }}</span>
                         <span class="usuario-cor-dialog__trecho">Oi! Pode revisar o cadastro?</span>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <section class="usuario-cor-dialog__previas" aria-label="Como fica no resto do sistema">
+            <h3 class="usuario-cor-dialog__titulo">No resto do sistema</h3>
+
+            <div class="usuario-cor-dialog__previa">
+                <span class="usuario-cor-dialog__legenda">Barra de cima</span>
+                <div class="usuario-cor-dialog__barra">
+                    <app-avatar-usuario [nome]="nome()" [cor]="cor()" tamanho="2rem" />
+                    <span class="usuario-cor-dialog__nome">{{ primeiroNome() }}</span>
+                </div>
+            </div>
+
+            <div class="usuario-cor-dialog__previa">
+                <span class="usuario-cor-dialog__legenda">Atividades e execuções</span>
+                <div class="usuario-cor-dialog__linha">
+                    <app-avatar-usuario [nome]="nome()" [cor]="cor()" tamanho="1.75rem" />
+                    <span class="usuario-cor-dialog__texto">
+                        <span class="usuario-cor-dialog__nome">{{ nome() }}</span>
+                        <span class="usuario-cor-dialog__trecho">Montar o formulário</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="usuario-cor-dialog__previa">
+                <span class="usuario-cor-dialog__legenda">Membros da demanda</span>
+                <div class="usuario-cor-dialog__pilha">
+                    <app-avatar-usuario nome="Ana Souza" tamanho="1.9rem" [contorno]="true" />
+                    <app-avatar-usuario
+                        [nome]="nome()"
+                        [cor]="cor()"
+                        tamanho="1.9rem"
+                        [contorno]="true"
+                    />
+                    <app-avatar-usuario nome="Bruno Lima" tamanho="1.9rem" [contorno]="true" />
+                </div>
+            </div>
+
+            <div class="usuario-cor-dialog__previa">
+                <span class="usuario-cor-dialog__legenda">Ponto da equipe</span>
+                <div class="usuario-cor-dialog__linha">
+                    <app-avatar-usuario [nome]="nome()" [cor]="cor()" tamanho="1.75rem" />
+                    <span class="usuario-cor-dialog__texto">
+                        <span class="usuario-cor-dialog__nome">{{ nome() }}</span>
+                        <span class="usuario-cor-dialog__trecho">Trabalhando agora</span>
+                    </span>
+                    <span class="usuario-cor-dialog__hora">6h 20min</span>
+                </div>
+            </div>
+
+            <div class="usuario-cor-dialog__previa">
+                <span class="usuario-cor-dialog__legenda">Em andamento agora</span>
+                <div class="usuario-cor-dialog__linha">
+                    <app-avatar-usuario [nome]="nome()" [cor]="cor()" tamanho="2.125rem" />
+                    <span class="usuario-cor-dialog__texto">
+                        <span class="usuario-cor-dialog__nome">Tratar erro de credencial</span>
+                        <span class="usuario-cor-dialog__trecho">{{ nome() }} · Tela de login</span>
+                    </span>
+                    <span class="usuario-cor-dialog__hora">00:42:10</span>
+                </div>
+            </div>
+
+            <div class="usuario-cor-dialog__previa">
+                <span class="usuario-cor-dialog__legenda">Tela de entrada</span>
+                <div class="usuario-cor-dialog__linha">
+                    <app-avatar-usuario [nome]="nome()" [cor]="cor()" />
+                    <span class="usuario-cor-dialog__texto">
+                        <span class="usuario-cor-dialog__nome">{{ nome() }}</span>
+                        <span class="usuario-cor-dialog__trecho">&#64;{{ login() }}</span>
                     </span>
                 </div>
             </div>

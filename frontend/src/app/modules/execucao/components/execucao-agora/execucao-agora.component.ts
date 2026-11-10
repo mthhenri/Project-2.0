@@ -5,7 +5,6 @@ import { ExecucaoItemDto, horaNoFuso } from '@project20/shared';
 import { ambiente } from '../../../../../environments/environment';
 import { ExecucaoEncerrarDialogComponent } from '../../../../shared/components/execucao-encerrar-dialog/execucao-encerrar-dialog.component';
 import { ExecucaoTimerComponent } from '../execucao-timer/execucao-timer.component';
-import { iniciaisDoNome } from '../../utils/execucao.util';
 import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 
 /**
@@ -40,10 +39,6 @@ export class ExecucaoAgoraComponent {
     readonly textoVazio = computed(() =>
         this.mostrarUsuario() ? 'Ninguém está executando agora.' : 'Nenhuma execução em andamento.',
     );
-
-    iniciais(nomeCompleto: string): string {
-        return iniciaisDoNome(nomeCompleto);
-    }
 
     horaDeInicio(execucao: ExecucaoItemDto): string {
         return horaNoFuso(new Date(execucao.inicioData), ambiente.fusoHorario);

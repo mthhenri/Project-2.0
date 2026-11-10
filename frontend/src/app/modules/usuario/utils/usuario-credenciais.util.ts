@@ -34,13 +34,3 @@ export function sugerirSenha(nomeCompleto: string): string {
     const resto = partes.length === 1 ? comInicialMaiuscula(partes[0]) : `${partes[0][0].toUpperCase()}${comInicialMaiuscula(partes[partes.length - 1])}`;
     return `Dev@${resto}!`;
 }
-
-export function iniciaisDoNome(nomeCompleto: string): string {
-    return nomeCompleto
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((parte) => parte[0])
-        .join('')
-        .toUpperCase();
-}

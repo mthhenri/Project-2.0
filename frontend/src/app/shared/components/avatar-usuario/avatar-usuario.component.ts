@@ -23,10 +23,7 @@ export class AvatarUsuarioComponent {
     readonly contorno = input(false);
     /** A cor escolhida pela pessoa (`#RRGGBB`); `null` usa a cor de acento do tema. */
     readonly cor = input<string | null>(null);
-    /** Iniciais já decididas pela tela; sem elas valem a primeira e a última palavra do nome. */
-    readonly iniciais = input<string | null>(null);
-
-    readonly iniciaisExibidas = computed(() => this.iniciais() ?? iniciaisDoNome(this.nome()));
+    readonly iniciaisExibidas = computed(() => iniciaisDoNome(this.nome()));
     protected readonly fundo = computed(() => this.cor());
     protected readonly corDoTexto = computed(() => {
         const cor = this.cor();

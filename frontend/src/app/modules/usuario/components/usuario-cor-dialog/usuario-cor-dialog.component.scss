@@ -1,6 +1,6 @@
 .usuario-cor-dialog {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
     gap: 1.5rem;
 
     &__escolha {
@@ -56,6 +56,19 @@
 
     &__barra {
         width: fit-content;
+    }
+
+    &__pilha {
+        display: flex;
+        align-items: center;
+        width: fit-content;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        background: var(--p-content-background);
+
+        app-avatar-usuario + app-avatar-usuario {
+            margin-left: -0.4rem;
+        }
     }
 
     &__texto {

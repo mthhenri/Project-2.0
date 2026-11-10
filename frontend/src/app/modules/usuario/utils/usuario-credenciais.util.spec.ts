@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { iniciaisDoNome, sugerirLogin, sugerirSenha } from './usuario-credenciais.util';
+import { sugerirLogin, sugerirSenha } from './usuario-credenciais.util';
 
 describe('sugerirLogin', () => {
     it('usa primeiro e último nome, sem acento e em minúsculas', () => {
@@ -34,13 +34,5 @@ describe('sugerirSenha', () => {
         expect(sugerirSenha('Madonna')).toBe('Dev@Madonna!');
         expect(sugerirSenha('')).toBe('');
         expect(sugerirSenha('!!! ???')).toBe('');
-    });
-});
-
-describe('iniciaisDoNome', () => {
-    it('pega as duas primeiras iniciais em maiúsculas', () => {
-        expect(iniciaisDoNome('maria clara souza')).toBe('MC');
-        expect(iniciaisDoNome('Madonna')).toBe('M');
-        expect(iniciaisDoNome('')).toBe('');
     });
 });
