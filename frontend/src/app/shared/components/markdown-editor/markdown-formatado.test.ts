@@ -1,5 +1,6 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
+import { Slice } from '@milkdown/kit/prose/model';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import { editorViewCtx } from '@milkdown/kit/core';
 import { EditorFormatado, normalizarMarkdown, semQuebraFinal } from './markdown-formatado';
@@ -411,4 +412,99 @@ test('tabela: fora de uma tabela os botões da tabela não fazem nada', async ()
         for (const acao of ['linhaNova', 'colunaNova', 'linhaExcluir', 'colunaExcluir', 'tabelaExcluir'] as const) editor.executar(acao);
         assert.equal(editor.obterMarkdown(), 'só texto');
     });
+});
+
+/** Simula a colagem: devolve se o editor tratou o evento (`handlePaste`), com o conteúdo dado em `text/plain` e `text/html`. */
+function colar(editor: EditorFormatado, conteudo: { texto: string; html?: string }): boolean {
+    let tratou = false;
+    editor.acao((contexto) => {
+        const view = contexto.get(editorViewCtx);
+        const evento = { clipboardData: { getData: (tipo: string) => (tipo === 'text/plain' ? conteudo.texto : tipo === 'text/html' ? (conteudo.html ?? '') : '') } } as unknown as ClipboardEvent;
+        tratou = view.someProp('handlePaste', (tratador) => tratador(view, evento, Slice.empty)) === true;
+    });
+    return tratou;
+}
+
+async function editorVazio(): Promise<EditorFormatado> {
+    const raiz = document.createElement('div');
+    document.body.appendChild(raiz);
+    return EditorFormatado.criar(raiz, '', SEM_OUVINTES);
+}
+
+test('colar Markdown puro formata: "**Olá!** Seja bem vindo" vira negrito (P-078)', async () => {
+    const editor = await editorVazio();
+    assert.equal(colar(editor, { texto: '**Olá!** Seja bem vindo' }), true);
+    assert.equal(editor.obterMarkdown(), '**Olá!** Seja bem vindo');
+    await editor.destruir();
+});
+
+test('colar uma tabela Markdown cria a tabela, com cabeçalho e linhas (P-078)', async () => {
+    const editor = await editorVazio();
+    assert.equal(colar(editor, { texto: '| Nome | Valor |\n| --- | --- |\n| a | 1 |\n| b | 2 |' }), true);
+    editor.acao((contexto) => {
+        const tipos = new Set<string>();
+        contexto.get(editorViewCtx).state.doc.descendants((no) => void tipos.add(no.type.name));
+        assert.ok(tipos.has('table') && tipos.has('table_header') && tipos.has('table_row'), [...tipos].join(','));
+    });
+    assert.match(editor.obterMarkdown(), /\| Nome \| Valor \|/);
+    assert.match(editor.obterMarkdown(), /\| b\s+\| 2\s+\|/);
+    await editor.destruir();
+});
+
+test('colar Markdown no meio de um parágrafo continua no mesmo parágrafo', async () => {
+    const editor = await editorVazio();
+    editor.inserirTexto('antes depois');
+    editor.acao((contexto) => {
+        const view = contexto.get(editorViewCtx);
+        view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 7)));
+    });
+    assert.equal(colar(editor, { texto: '**negrito**' }), true);
+    assert.equal(editor.obterMarkdown(), 'antes **negrito**depois');
+    await editor.destruir();
+});
+
+test('colar lista e título cria os blocos', async () => {
+    const editor = await editorVazio();
+    assert.equal(colar(editor, { texto: '## Plano\n\n- um\n- dois' }), true);
+    assert.equal(editor.obterMarkdown(), '## Plano\n\n- um\n- dois');
+    await editor.destruir();
+});
+
+test('texto puro sem sinal de Markdown fica com o caminho normal (não é tratado)', async () => {
+    const editor = await editorVazio();
+    assert.equal(colar(editor, { texto: 'linha um\nlinha dois' }), false);
+    await editor.destruir();
+});
+
+test('colar com HTML junto não é tratado: o ProseMirror interpreta o HTML', async () => {
+    const editor = await editorVazio();
+    assert.equal(colar(editor, { texto: '**Olá**', html: '<b>Olá</b>' }), false);
+    await editor.destruir();
+});
+
+test('dentro de um bloco de código, Markdown colado fica como texto', async () => {
+    const editor = await editorVazio();
+    const raiz = document.createElement('div');
+    document.body.appendChild(raiz);
+    const comCodigo = await EditorFormatado.criar(raiz, '```\nx\n```', SEM_OUVINTES);
+    comCodigo.acao((contexto) => {
+        const view = contexto.get(editorViewCtx);
+        view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 2)));
+    });
+    assert.equal(colar(comCodigo, { texto: '**negrito**' }), false);
+    await comCodigo.destruir();
+    await editor.destruir();
+});
+
+test('imagem em Markdown colado vira texto: nenhuma <img> é criada (P-078)', async () => {
+    const editor = await editorVazio();
+    const raiz = document.createElement('div');
+    document.body.appendChild(raiz);
+    const comImagem = await EditorFormatado.criar(raiz, '', SEM_OUVINTES);
+    assert.equal(colar(comImagem, { texto: '**veja** ![logo](https://exemplo.com/a.png) isto' }), true);
+    assert.ok(raiz.querySelector('img:not(.ProseMirror-separator)') === null, 'nenhuma <img>');
+    assert.match(comImagem.obterMarkdown(), /logo/);
+    assert.ok(!comImagem.obterMarkdown().includes('exemplo.com/a.png'));
+    await comImagem.destruir();
+    await editor.destruir();
 });

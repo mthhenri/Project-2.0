@@ -88,12 +88,11 @@
 - **Correção:** agendar a próxima consulta pelo `proximoCheckinData` da resposta e pelo início/fim de execução; não consultar sem execução ativa.
 - **Desde:** 2026-11-11 (auditoria de requisições).
 
-### P-078 — Textos de demanda fora de Markdown em algumas telas · `ABERTO` · frontend/demanda
-
-- **Sintoma:** relato do autor (2026-11-11): em alguns lugares que exibem o texto da demanda, por exemplo na tela de Atividades, o Markdown não aparece formatado. A suspeita é das descrições de cliente e da documentação.
-- **Causa:** não investigada. Texto rico deveria passar sempre por `app-markdown-visualizador` (`docs/CONVENTIONS.md`).
-- **Contorno:** nenhum.
-- **Correção:** percorrer todo lugar que exibe descrição técnica, descrição do cliente e documentação, conferir a renderização ao vivo e ajustar.
+### P-078 — Colar Markdown puro no editor formatado não formata, e a tabela não aparece · `ABERTO` · frontend/editor
+- **Sintoma:** relato do autor (2026-11-11): ao colar Markdown puro no editor formatado, o texto aparece literal (`**Olá!** Seja bem vindo` sem negrito) e uma tabela colada não vira tabela. O contorno era colar na visão de Markdown puro e voltar para a formatada.
+- **Causa:** o editor (`markdown-formatado.ts`) não interpretava a área de transferência: texto puro colado entrava como texto, e a tabela só nascia pelo botão da barra (I-003).
+- **Contorno:** colar na visão de Markdown puro e voltar para a formatada.
+- **Correção:** spec 324 (plugin de colar Markdown, com detecção e tabela). Código e testes prontos; falta a verificação ao vivo.
 - **Desde:** 2026-11-11 (relato do autor).
 
 ### P-077 — O Chat da IA e o chat entre colegas usam o mesmo ícone (balão duplo) · `ABERTO` · frontend/identidade visual
