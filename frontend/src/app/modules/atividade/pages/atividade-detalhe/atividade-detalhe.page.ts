@@ -338,7 +338,7 @@ export class AtividadeDetalhePage implements OnInit {
         forkJoin({
             atividade: this.atividadeService.recuperar(id),
             tags:      this.atividadeService.listarTags(id),
-            todasTags: this.tagService.listar(),
+            todasTags: this.tagService.listarCatalogo(),
             execucoes: this.atividadeService.listarExecucoesPorAtividade(id),
         })
             .pipe(finalize(() => {

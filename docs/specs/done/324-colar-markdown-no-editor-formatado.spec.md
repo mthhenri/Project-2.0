@@ -30,3 +30,7 @@ Nenhuma. Editor compartilhado: `npm run impacto` listou 3 consumidores (`markdow
 ## Riscos e Mitigação
 
 - Falso positivo da heurística: texto puro com `# comentário` (código) ou `- ` no começo da linha é lido como título ou lista. A colagem de código no chat é tratada antes pelo compositor; o desfazer (Ctrl+Z) desfaz a colagem.
+
+## Fecho
+
+Concluída em 2026-11-11. Plugin `colarMarkdown` no `markdown-formatado.ts` com a heurística `pareceMarkdown`, tabela inclusive; o copiar não mudou. Ao vivo: negrito, tabela com alinhamento e lista na descrição técnica da demanda, nos dois temas e nos cinco formatos (capturas em três, asserções de DOM nos outros). Relatório: [`verificacao-320-325.md`](../active/auditoria-requisicoes-telas/verificacao-320-325.md). Gates: frontend 2700 testes, backend 1733, shared 342, integração 425, `npm run lint:tudo` sem erro.

@@ -365,7 +365,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     private carregarTodasAsTags(): void {
         this.carregandoTags.set(true);
         this.tagService
-            .listar()
+            .listarCatalogo()
             .pipe(finalize(() => this.carregandoTags.set(false)))
             .subscribe({
                 next: (resposta) => {
@@ -380,7 +380,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
    * necessidade de atribuição em demanda_usuario (task 71).
    */
     private carregarUsuarios(): void {
-        this.usuarioService.listar({ allRows: true }).subscribe({
+        this.usuarioService.listarCatalogo().subscribe({
             next: (resposta) => {
                 if (resposta.sucesso && resposta.dados) {
                     this.usuariosDisponiveis.set(

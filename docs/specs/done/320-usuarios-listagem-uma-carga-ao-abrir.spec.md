@@ -24,3 +24,7 @@ Outras telas com carga dupla; mudar API, DTO ou layout da tela.
 ## Dependências
 
 Nenhuma.
+
+## Fecho
+
+Concluída em 2026-11-11. `ngOnInit` deixou de buscar; a carga inicial é do `onLazyLoad` da tabela. Teste de componente "ao abrir, pede a listagem uma única vez (P-082)" (falha sem a correção). Ao vivo: 1 `GET /usuario?pagina=1&itensPorPagina=10` ao abrir. Relatório: [`verificacao-320-325.md`](../active/auditoria-requisicoes-telas/verificacao-320-325.md). Gates: frontend 2700 testes, backend 1733, shared 342, integração 425, `npm run lint:tudo` sem erro.

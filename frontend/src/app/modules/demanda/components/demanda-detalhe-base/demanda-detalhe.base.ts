@@ -388,9 +388,9 @@ export abstract class DemandaDetalheBase {
         forkJoin({
             detalhe:    this.demandaService.recuperarDetalhe(identificador),
             arvore:     this.demandaService.recuperarArvore(identificador),
-            tags:       this.tagsDisponiveis().length ? of(null) : this.tagService.listar(),
+            tags:       this.tagsDisponiveis().length ? of(null) : this.tagService.listarCatalogo(),
             usuarios:   this.sessao.podeEditarDemanda() && this.todosUsuarios().length === 0
-                ? this.usuarioService.listar({ allRows: true })
+                ? this.usuarioService.listarCatalogo()
                 : of(null),
         })
             .pipe(finalize(() => this.carregando.set(false)))

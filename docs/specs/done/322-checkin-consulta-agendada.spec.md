@@ -24,3 +24,7 @@ Mudar o backend do check-in e o algoritmo do horário sorteado.
 ## Dependências
 
 Spec 321 (consulta da situação compartilhada entre os componentes).
+
+## Fecho
+
+Concluída em 2026-11-11. A sondagem de 20 s da janelinha virou: conferência ao abrir, no horário sorteado, ao voltar à aba, quando a execução muda e a situação conhecida diverge (`situacaoDivergeDaExecucao`, também no `checkin-proximo`, achado da verificação ao vivo) e a cada 5 min de segurança com execução; a `CheckinPage` não confere com a aba oculta. Ao vivo: 1 consulta em 70 s com execução ativa, 1 em 30 s sem execução. Relatório: [`verificacao-320-325.md`](../active/auditoria-requisicoes-telas/verificacao-320-325.md). Gates: frontend 2700 testes, backend 1733, shared 342, integração 425, `npm run lint:tudo` sem erro.
