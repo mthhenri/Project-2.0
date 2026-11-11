@@ -22,7 +22,9 @@ Resultado: **nenhum vazamento** (401 sem login nas 85 rotas; desenvolvedor receb
 
 Achado que só apareceu na verificação: a tela de login lembra o último usuário e muda o formulário, o que derrubou o roteiro de troca de perfil da primeira rodada; cada perfil passou a usar sessão de navegador nova.
 
-Pendente (por isso a spec não foi para `done/`): fluxos de IA, impedidos por falta de chave; Project Desktop; e fluxos disponíveis não percorridos (restaurar excluídos, ação em massa, anexos do pad, publicar plano, escrita como auxiliar e gestor, autorização das rotas de escrita). Lista completa na seção 6 do dossiê.
+Terceira rodada, no mesmo dia (roteiros 32 a 40): varredura de 63 chamadas de escrita por perfil, **sem escrita indevida**; teto das listas exercitado com 108 usuários (o seletor do Ponto perde quem passa de 100, o de Execuções não); ações em massa, desfazer exclusão e escrita do auxiliar pela interface. Três achados novos (R-14 a R-16) e dois agravados: a ação em massa faz uma requisição por atividade selecionada, e excluir uma demanda pede a demanda excluída e mostra "Não encontrado" depois de uma exclusão que deu certo. A causa da listagem dobrada de Usuários foi confirmada (`ngOnInit` mais o `onLazyLoad` inicial da tabela).
+
+Pendente (por isso a spec não foi para `done/`): fluxos de IA, impedidos por falta de chave; Project Desktop; e uma lista curta de fluxos disponíveis (salvar cor de prioridade, remover fonte/publicar/solo do plano, mover trecho do pad, silenciar conversa, preço dos modelos, editar tabela da Modelagem, gestor não administrador pela interface). Lista completa na seção 6 do dossiê. Os sete achados de impacto alto e médio foram registrados em `PROBLEMS.md` como P-079 a P-085.
 
 ## 2026-11-11 — Tasks 276 e 277: registro excluído é morto em todo o SQL, e o banco deixa de gravar `updated_date`
 

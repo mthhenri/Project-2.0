@@ -29,6 +29,65 @@
 
 ## Ativos
 
+> P-079 a P-085 vêm da auditoria de requisições das telas (2026-11-11). Medição, reprodução e recomendação de cada um em
+> [`DOSSIE.md`](../specs/active/auditoria-requisicoes-telas/DOSSIE.md), pelo código R-NN citado. Os achados de impacto baixo (R-06 a R-10, R-12, R-13, R-15, R-16) ficaram só no dossiê.
+
+### P-085 — Ação em massa nas atividades faz uma requisição por item · `ABERTO` · frontend/atividade
+
+- **Sintoma:** com N atividades selecionadas, "Mudar status", "Acrescentar tags", "Excluir" e "Desfazer" fazem N chamadas (`PUT`, `PUT .../tag`, `DELETE`, `PATCH .../restaurar`) e depois recarregam a lista. Se uma falhar, a operação fica pela metade (R-14).
+- **Causa:** não há rota em lote; a tela percorre a seleção chamando a rota de um item.
+- **Contorno:** nenhum.
+- **Correção:** rota em lote numa transação. Envolve contrato novo, decisão do autor.
+- **Desde:** 2026-11-11 (auditoria de requisições).
+
+### P-084 — Excluir uma demanda mostra "Não encontrado" e recarrega a tela inteira · `ABERTO` · frontend/demanda
+
+- **Sintoma:** depois de `DELETE /demanda/:id` com sucesso, a tela pede `GET /demanda/:id` da demanda excluída (404), mostra o aviso "Não encontrado: Registro não encontrado" e faz mais 11 requisições. Reproduzido três vezes (R-11). Desfazer a exclusão não recarrega nada (R-15).
+- **Causa:** não investigada no código; pelo tráfego, a seleção continua apontando para a demanda excluída quando a tela recarrega.
+- **Contorno:** ignorar o aviso; a exclusão foi feita.
+- **Correção:** trocar a seleção antes de recarregar e não pedir a demanda excluída.
+- **Desde:** 2026-11-11 (auditoria de requisições; já aparecia na captura de 2026-11-05).
+
+### P-083 — Seletores carregam uma página só e cortam itens acima do teto · `ABERTO` · frontend/listas
+
+- **Sintoma:** com 108 usuários ativos, o seletor de usuário do Ponto não mostra quem passa de 100, enquanto a tabela da mesma tela mostra os 108; o seletor de Execuções mostra todos (R-05). O mesmo padrão existe, sem ter sido exercitado, em `/projeto?itensPorPagina=100`, `/demanda?itensPorPagina=200`, `/atividade?demandaId&itensPorPagina=100` e `/execucao?atividadeId&itensPorPagina=200`.
+- **Causa:** as telas pedem `itensPorPagina=100` (ou 200) e usam só a primeira página; Execuções usa `allRows=true`.
+- **Contorno:** nenhum. Hoje não dói porque o volume real está abaixo do teto.
+- **Correção:** padronizar em `allRows` (ou num endpoint de opções) onde a tela precisa da lista inteira.
+- **Desde:** 2026-11-11 (auditoria de requisições).
+
+### P-082 — Tela de Usuários pede a listagem duas vezes ao abrir · `ABERTO` · frontend/usuario
+
+- **Sintoma:** `GET /usuario?pagina=1&itensPorPagina=10` duas vezes em toda abertura da tela (R-04).
+- **Causa:** `usuario-listagem.page.ts` chama `buscarUsuarios()` no `ngOnInit` e a tabela dispara o `onLazyLoad` inicial, que busca de novo.
+- **Contorno:** nenhum; só custo.
+- **Correção:** deixar a carga inicial com um dos dois.
+- **Desde:** 2026-11-11 (auditoria de requisições).
+
+### P-081 — `/ia/disponibilidade` e `/checkin/situacao` são pedidas em dobro em toda carga de página · `ABERTO` · frontend/layout
+
+- **Sintoma:** duas chamadas de cada na carga; três de `/ia/disponibilidade` no login e mais uma ao entrar no Chat (R-03).
+- **Causa:** `sidebar.component.ts` e `checkin-janelinha.component.ts` pedem a disponibilidade cada um por si; `checkin-janelinha` e `checkin-proximo` pedem a situação cada um por si.
+- **Contorno:** nenhum; só custo.
+- **Correção:** uma consulta compartilhada no serviço, com os componentes lendo o sinal.
+- **Desde:** 2026-11-11 (auditoria de requisições).
+
+### P-080 — Tela de Demandas: 13 requisições para abrir e 8 por demanda selecionada · `ABERTO` · frontend/demanda
+
+- **Sintoma:** abrir `/demanda` faz 13 chamadas e cada clique numa demanda faz 8, refeitas ao voltar a uma já vista; voltar ao modo Árvore ou trocar de projeto recarrega `/tag` e a lista de usuários; abrir a edição busca de novo o que já está na tela (R-02).
+- **Causa:** o detalhe é montado por rotas separadas (demanda, ancestrais, árvore, tags, membros, conexões, plano, atividades) e nada é reaproveitado entre seleções.
+- **Contorno:** nenhum; só custo, que cresce com a lista de usuários (16 KB com 100).
+- **Correção:** um detalhe agregado e catálogos mantidos em memória enquanto a tela está aberta. Detalhe agregado é contrato novo, decisão do autor.
+- **Desde:** 2026-11-11 (auditoria de requisições).
+
+### P-079 — Situação do check-in consultada a cada 20 s em toda aba, com ou sem execução · `ABERTO` · frontend/checkin
+
+- **Sintoma:** `GET /checkin/situacao` a cada 20 s para todo usuário logado, mesmo sem execução ativa e com a IA desligada (cerca de 180 por hora por aba); na janela `/checkin` o intervalo é de 3 s (R-01).
+- **Causa:** intervalo fixo em `checkin-janelinha.component.ts` (`INTERVALO_DA_CONFERENCIA_MS`) e em `checkin.page.ts` (`INTERVALO_DA_SITUACAO_MS`), sem condição.
+- **Contorno:** nenhum; só custo.
+- **Correção:** agendar a próxima consulta pelo `proximoCheckinData` da resposta e pelo início/fim de execução; não consultar sem execução ativa.
+- **Desde:** 2026-11-11 (auditoria de requisições).
+
 ### P-078 — Textos de demanda fora de Markdown em algumas telas · `ABERTO` · frontend/demanda
 
 - **Sintoma:** relato do autor (2026-11-11): em alguns lugares que exibem o texto da demanda, por exemplo na tela de Atividades, o Markdown não aparece formatado. A suspeita é das descrições de cliente e da documentação.

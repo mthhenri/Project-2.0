@@ -2,17 +2,17 @@
 
 Spec: `../auditoria-requisicoes-telas.spec.md`. Evidências brutas (ignoradas pelo Git): `.artifacts/auditoria-requisicoes-telas/`.
 
-**Estado: cobertura incompleta, a auditoria continua em `active/`.** O que falta está na seção 6.
+**Estado: cobertura incompleta, a auditoria continua em `active/`.** Faltam os fluxos de IA (impedidos pelo ambiente) e uma lista curta de fluxos disponíveis, na seção 6.
 
 ## 1. Como foi medido
 
 - Aplicação real num stack isolado: backend na porta 3015, frontend na 4215, banco descartável `project20_auditoria_requests_20261105`, chat em Postgres, IA sem chaves. O stack e o banco do autor (3000/4200, `project20`) não foram tocados.
 - Playwright em `1920×1080`, registrando por ação da interface cada chamada a `/api/`: método, URL, status e, na segunda fase, tamanho e formato (chaves) do corpo.
-- Duas fases. **Fase 1 (2026-11-05)**: 18 roteiros como administrador, só método/URL/status, banco na migration 0080 (`01-*.json` a `18-*.json`). **Fase 2 (2026-11-11)**: banco migrado até a 0085, checkout com as alterações locais das tasks 276/277, roteiros `19` a `31` com corpo das respostas, perfis desenvolvedor e auxiliar e varredura da API por perfil.
+- Três rodadas. **Fase 1 (2026-11-05)**: 18 roteiros como administrador, só método/URL/status, banco na migration 0080 (`01-*.json` a `18-*.json`). **Fase 2 (2026-11-11)**: banco migrado até a 0085, checkout com as alterações locais das tasks 276/277, roteiros `19` a `31` com corpo das respostas, perfis desenvolvedor e auxiliar e varredura das leituras da API por perfil. **Fase 3 (2026-11-11)**: roteiros `32` a `40`, com a varredura das rotas de escrita por perfil, o teste do teto das listas com 108 usuários, ações em massa, restaurar (desfazer) e escrita pela interface como auxiliar.
 - Dados de teste só no banco de auditoria (`20-fixtures.cjs`): 13 usuários, 2 projetos (um deles sem o desenvolvedor de teste), 7 demandas, 14 atividades, conversas diretas e marcadores `SEGREDO-*` nos textos do que o desenvolvedor não pode ver.
 - "Observado" é o que apareceu no tráfego. "Hipótese" é leitura de código não exercitada. Cada achado diz qual é.
 
-Limites: uma só resolução (a auditoria é de tráfego, não visual); volume pequeno, então custo por item foi medido mas não tempo de resposta sob carga; rotas de escrita não foram varridas por perfil (seção 4).
+Limites: uma só resolução (a auditoria é de tráfego, não visual); volume pequeno, então custo por item foi medido mas não tempo de resposta sob carga.
 
 ## 2. Matriz de cobertura
 
@@ -21,20 +21,19 @@ Legenda: ✅ percorrido com tráfego registrado · ◐ parcial · ⛔ impedido p
 | Tela | Fluxos percorridos | Estado | Roteiros |
 |---|---|---|---|
 | Login e sessão | login (3 perfis), carga inicial, logout, repouso, foco e aba oculta | ✅ | 19, 22, 23, 25 |
-| Usuários | abrir, criar, buscar, filtrar, paginar, editar, inativar/reativar, senha, excluir, ajuda dos tipos | ✅ | 01, 02, 14, 17, 18 |
-| Usuários › anotações do usuário | — | ✗ | — |
+| Usuários | abrir, criar, buscar, filtrar, paginar, editar, inativar/reativar, senha, excluir, ajuda dos tipos (ver e alterar o texto), anotações de um usuário (abrir e editar) | ✅ | 01, 02, 14, 17, 18, 35, 36 |
 | Projetos | abrir, criar, editar, buscar, filtrar por status, trocar status, aba Volume, vigência do volume | ✅ | 03, 13, 30 |
-| Demandas | abrir, criar, editar, excluir, selecionar, abas, membro, conexão (criar/remover), status, busca, filtro, Grafo, Controle de horas, trocar projeto | ✅ | 04, 13, 15, 17, 23, 30 |
-| Atividades | abrir, paginar, buscar, criar, excluir, prioridade, status, tags da linha, descrição da linha, detalhe | ◐ (sem ação em massa, sem restaurar) | 05, 15, 17, 24, 26 |
+| Demandas | abrir, criar, editar, excluir e desfazer, selecionar, abas, membro, conexão (criar/remover), status, busca, filtro, Grafo, Controle de horas, trocar projeto | ✅ | 04, 13, 15, 17, 23, 30, 35, 36 |
+| Atividades | abrir, paginar, buscar, criar, excluir, prioridade, status, tags da linha, descrição da linha, detalhe, filtro Minhas e por usuário, ação em massa (status, tags, excluir), excluir e desfazer | ◐ (salvar cor da prioridade ✗) | 05, 15, 17, 24, 26, 35, 36 |
 | Execuções | iniciar e encerrar (detalhe e lista), registrar, editar descrição, excluir, dia anterior, filtro Minhas e por usuário, atualizar | ✅ | 06, 09, 12, 28, 29, 30 |
 | Ponto | abrir (gestor e desenvolvedor), escolher usuário, trocar mês, justificativa (criar/excluir), imprimir | ✅ | 06, 14, 17, 23 |
 | Documentações e pad | abrir, selecionar demanda, gravar texto, editar pad, abrir/fechar drawer | ◐ (sem anexo, sem mover/feito, sem trecho com IA) | 07, 10 |
-| Calendário | abrir, criar, editar, excluir | ✅ | 09 |
+| Calendário | abrir, criar, editar, excluir e desfazer | ✅ | 09, 36 |
 | Tags | abrir, buscar, criar, editar, excluir | ✅ | 03, 30 |
 | Relatório | abrir, mês/ano, baixar CSV | ◐ (revisão com IA ⛔) | 12 |
 | Chat com a IA | abrir, histórico, lista de demandas | ⛔ envio, propostas, bom-dia, retomada | 07, 23, 28 |
-| Plano | criar, renomear, gravar, ponto (criar/resolver), fonte (criar), arquivar, atribuir projeto | ◐ (sem remover fonte, publicar, solo, excluir) | 11, 16 |
-| Chat entre colegas | abrir, nova conversa, buscar, enviar, digitando, reagir, preferências | ◐ (sem editar, responder, silenciar, referências) | 10, 24 |
+| Plano | criar, renomear, gravar, ponto (criar/resolver), fonte (criar e ver), arquivar, atribuir projeto, buscar, excluir, abrir "Ligar a uma demanda" | ◐ (remover fonte, publicar, solo e concluir a ligação ✗) | 11, 16, 37, 38 |
+| Chat entre colegas | abrir, nova conversa, buscar, enviar, digitando, reagir, responder, editar, referência a demanda, marcar leitura, preferências | ◐ (silenciar ✗) | 10, 24, 39 |
 | Supervisão do chat | abrir, abrir conversa, buscar, só com código | ✅ | 30 |
 | Configurações da IA | abrir, abas, salvar nova versão, rascunho de prompt, custos | ◐ (ativar/testar prompt ⛔, preço ✗) | 07, 16, 17 |
 | Modelagem | abrir, buscar, zoom, grupo (criar/editar/excluir) | ◐ (sem editar tabela) | 12, 17 |
@@ -42,8 +41,8 @@ Legenda: ✅ percorrido com tráfego registrado · ◐ parcial · ⛔ impedido p
 | Chat popup (`/chat-popup`) | abrir | ◐ | 19 |
 | Perfil | menu, cor do avatar, tema, sair | ◐ (download do Desktop ✗) | 25, 30 |
 | Perfil desenvolvedor | menu inteiro, URLs de gestor digitadas à mão, fluxos de atividade/execução/demanda/chat | ✅ | 19, 23–29 |
-| Perfil auxiliar | menu inteiro, URLs de gestor digitadas à mão | ◐ (só navegação) | 27 |
-| Perfil gestor (não administrador) | só pela API | ◐ | 21 |
+| Perfil auxiliar | menu inteiro, URLs de gestor digitadas à mão, prioridade e status de atividade alheia, iniciar e encerrar execução alheia, ponto de outro usuário, criar tag | ✅ | 27, 40 |
+| Perfil gestor (não administrador) | só pela API (leitura e escrita) | ◐ | 21, 32, 33 |
 
 ## 3. Achados de tráfego
 
@@ -70,12 +69,14 @@ Ordenados por impacto. Nenhum foi corrigido (fora de escopo).
 ### R-04 · Média · Usuários: a listagem é pedida duas vezes ao abrir
 
 - **Observado:** `GET /usuario?pagina=1&itensPorPagina=10` 2× em toda abertura da tela (roteiros 01, 02, 14, 17, 18, 22). Criar, filtrar e paginar fazem uma só.
-- **Causa:** hipótese, não confirmada: o `onLazyLoad` inicial da tabela somado à restauração dos filtros salvos.
+- **Causa (código):** `usuario-listagem.page.ts` chama `buscarUsuarios()` no `ngOnInit` e a tabela dispara o `onLazyLoad` inicial, que cai em `aoCarregarTabela` e busca de novo.
 
 ### R-05 · Média · Listas carregadas com teto fixo e sem paginação: acima do teto, itens somem em silêncio
 
 - **Observado:** seletores e painéis pedem uma página só: `/usuario?itensPorPagina=100`, `/projeto?itensPorPagina=100`, `/demanda?projetoId&itensPorPagina=200`, `/atividade?demandaId&itensPorPagina=100`, `/execucao?atividadeId&itensPorPagina=200`. Para a mesma finalidade (lista de usuários de um seletor) a tela de Execuções usa `allRows=true` e as de Atividades, Ponto e Demandas usam `itensPorPagina=100`.
-- **Impacto:** hipótese: com mais de 100 usuários, 100 projetos ou 200 demandas num projeto, o excedente não aparece e nada avisa. É o caso de "requisição a menos". Não foi exercitado com esse volume.
+- **Confirmado para usuários** (`34-teto-listas.cjs`, 108 usuários ativos): `/usuario?ativo=true&itensPorPagina=100` devolve 100 de 108 (`totalPaginas: 2`) e o seletor do Ponto não acha o último usuário em ordem alfabética; o de Execuções (`allRows=true`) acha. Na mesma tela do Ponto a tabela (`/ponto/todos`) traz os 108, então quem aparece na tabela pode faltar no seletor. É o caso de "requisição a menos".
+- **Hipótese, não exercitada:** o mesmo corte para mais de 100 projetos, 200 demandas num projeto, 100 atividades numa demanda ou 200 execuções numa atividade.
+- **Custo:** com 100 usuários a lista pesa 16,4 KB e é pedida de novo a cada entrada em Atividades, Ponto e Demandas (ver R-02 e R-08).
 - **Recomendação:** padronizar em `allRows` (ou num endpoint de opções) onde a tela precisa da lista inteira.
 
 ### R-06 · Baixa · Cada foco da janela dispara `GET /execucao/ativa`, sem intervalo mínimo
@@ -100,9 +101,10 @@ Ordenados por impacto. Nenhum foi corrigido (fora de escopo).
 
 - **Observado:** renomear, gravar, arquivar e atribuir projeto são seguidos de `GET /chat/conversas` e `GET /plano` (roteiros 11, 16).
 
-### R-11 · Baixa · Depois de excluir uma demanda, a tela pede a demanda excluída
+### R-11 · Média · Excluir uma demanda pede a demanda excluída, mostra erro e recarrega a tela inteira
 
-- **Observado:** `DELETE /demanda/2` 200 seguido de `GET /demanda/2` 404 (roteiro 17).
+- **Observado:** `DELETE /demanda/7` 200 seguido de `GET /demanda/7` 404, de um aviso "Não encontrado: Registro não encontrado" na tela e de mais 11 requisições que recarregam a demanda vizinha, `/tag` e `/usuario` (roteiros 17, 35, 36). Reproduzido três vezes.
+- **Impacto:** o usuário vê um erro logo depois de uma exclusão que deu certo.
 
 ### R-12 · Baixa · Texto de uma demanda na linha da atividade traz a demanda inteira
 
@@ -111,6 +113,21 @@ Ordenados por impacto. Nenhum foi corrigido (fora de escopo).
 ### R-13 · Informativo · Primeira mensagem de uma conversa nova recarrega a lista duas vezes
 
 - **Observado:** `POST /mensagem-direta/mensagem` seguido de 2× `GET /mensagem-direta/conversas` (roteiro 10). Em conversa já existente não há recarga (roteiro 24).
+
+### R-14 · Média · Ação em massa nas atividades faz uma requisição por item
+
+- **Observado:** com 3 atividades selecionadas, "Mudar status" faz 3 `PUT /atividade/:id`, "Acrescentar tags" 3 `PUT /atividade/:id/tag`, "Excluir" 3 `DELETE` e "Desfazer" um `PATCH .../restaurar` por item, cada grupo seguido de uma recarga da lista (roteiros 35, 36).
+- **Impacto:** cresce com a seleção e a operação pode ficar pela metade se uma das chamadas falhar.
+- **Recomendação:** rota em lote, numa transação.
+
+### R-15 · Baixa · Desfazer a exclusão de uma demanda não recarrega nada
+
+- **Observado:** `PATCH /demanda/7/restaurar` 200 e nenhuma leitura depois (roteiro 36). Em atividade e calendário o desfazer é seguido da recarga da lista.
+- **Hipótese:** a demanda restaurada só volta à árvore na próxima recarga; não conferido visualmente.
+
+### R-16 · Informativo · Iniciar execução em atividade alheia responde a regra de status antes da permissão
+
+- **Observado:** `POST /execucao` de um desenvolvedor sobre atividade de outro projeto, com a atividade em `PENDENTE`, responde 400 "Só é possível iniciar execução em atividades planejadas ou em desenvolvimento"; com a atividade em `PLANEJADA`, 403 (roteiros 32, 33). A execução nunca é criada, mas a primeira resposta revela o status de uma atividade que ele não vê.
 
 ### O que está bem resolvido
 
@@ -140,7 +157,20 @@ Comportamentos previstos em `SYSTEM.SPEC.md`, registrados para ciência do autor
 - O auxiliar lê tudo o que o gestor lê em projetos, demandas, atividades, execuções e ponto, e `GET /usuario` (lista com `login` e `tipo`) é aberto a ele.
 - `GET /demanda/:id/membro` devolve o `login` dos membros a quem vê a demanda.
 
-Limite: só leituras foram varridas. A autorização das rotas de escrita por perfil não foi testada aqui.
+### Escrita por perfil
+
+Varredura `32-varredura-escrita.cjs` e `33-escrita-complemento.cjs`: 63 chamadas de escrita como desenvolvedor, auxiliar, gestor e sem login. Corpo vazio onde a trava é por tipo (400 significa que passou da autorização sem gravar) e corpo válido onde a regra é da service.
+
+**Nenhuma escrita indevida.**
+
+- Sem login: 401 em todas.
+- Desenvolvedor: 403 ou 404 em tudo que é de gestor e em atividade, execução, demanda, membros, tags e pad de terceiros.
+- Auxiliar: bloqueado em usuários, projetos, calendário, justificativas, prioridades, modelagem, relatório, excluir/restaurar demanda, descrição do cliente e pad alheio; liberado no que a spec prevê (editar demanda e atividade alheias, iniciar e registrar execução, membros, tags). Ao criar atividade informando outro dono, a API cria para ele mesmo, sem avisar.
+- Gestor: bloqueado no que é só do administrador (Configurações da IA, prompts, preços, prioridades, textos dos tipos).
+- Plano privado e mensagem de conversa alheia: 404 para todos os outros, inclusive para editar e reagir.
+- Única ressalva: R-16.
+
+Limite: não foram testadas as rotas de IA (`/chat/*`, `/proposta-ia/*`, `/assistente/*`, `/checkin/mensagem`), que dependem de provedor.
 
 ## 5. Projeção das respostas
 
@@ -158,17 +188,16 @@ Limite: só leituras foram varridas. A autorização das rotas de escrita por pe
 - Project Desktop (Electron): janela, bandeja, aviso de atualização e download do instalador (81 MB).
 - Chat armazenado em OpenSearch (a auditoria usou Postgres).
 
-**Disponível e não percorrido:**
+**Disponível e não percorrido** (tentado nesta rodada sem o roteiro acertar o controle, ou não tentado):
 
-- Restaurar itens excluídos (usuário, projeto, demanda, atividade, tag, calendário).
-- Ação em massa nas atividades; anotações de um usuário pela tela de Usuários.
-- Pad: anexo, mover, marcar feito.
-- Plano: remover fonte, publicar, solo, vincular demanda, excluir.
-- Chat entre colegas: editar, responder, silenciar, referências a demanda e atividade.
-- Configurações da IA: preço dos modelos; editar prioridades; editar a ajuda dos tipos de usuário; editar tabela na Modelagem.
-- Perfis auxiliar e gestor não administrador: fluxos de escrita pela interface.
-- Varredura de autorização das rotas de escrita por perfil.
-- Causa de R-04 e exercício de R-05 com volume acima do teto.
+- Atividades: salvar a cor de uma prioridade.
+- Plano: remover fonte, publicar, marcar solo, concluir a ligação a uma demanda.
+- Pad: mover trecho entre seções (anexo e "feito" não têm chamada no frontend).
+- Chat entre colegas: silenciar conversa.
+- Configurações da IA: preço dos modelos. Modelagem: editar tabela.
+- Gestor não administrador pela interface (pela API está coberto).
+- Restaurar usuário, projeto e tag: não achei "desfazer" na interface para eles; as rotas só passaram pela varredura de escrita.
+- Projeção campo a campo (se cada chave devolvida é usada pela tela).
 
 ## 7. Como reproduzir
 
