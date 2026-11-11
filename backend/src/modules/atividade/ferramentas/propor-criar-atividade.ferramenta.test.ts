@@ -12,7 +12,6 @@ import { ProporCriarAtividadeFerramenta } from './propor-criar-atividade.ferrame
 
 const DESENVOLVEDOR = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 const GESTOR = { sub: 1, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as never;
-const AUXILIAR = { sub: 2, login: 'aux', tipo: TipoUsuarioEnum.AUXILIAR } as never;
 
 function montar(opcoes: { demanda?: unknown; dono?: Record<string, unknown> | null; ancestrais?: { id: number; nome: string; nivel: number }[] } = {}) {
     const propostas: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
@@ -69,12 +68,6 @@ test('gestor propõe para outra pessoa ativa, com o nome dela no cartão', async
     await ferramenta.executar({ demandaId: 9, nome: 'Ajustar login', usuarioId: 12 }, GESTOR);
     assert.equal(propostas[0].dados.usuarioId, 12);
     assert.equal(propostas[0].dados.usuarioNome, 'Bia');
-});
-
-test('auxiliar propõe para outra pessoa ativa', async () => {
-    const { ferramenta, propostas } = montar();
-    await ferramenta.executar({ demandaId: 9, nome: 'Ajustar login', usuarioId: 12 }, AUXILIAR);
-    assert.equal(propostas[0].dados.usuarioId, 12);
 });
 
 test('gestor não propõe para usuário inexistente nem inativo', async () => {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PropostaCriarAtividadeDadosDto, ProporCriarAtividadeDto, TipoPropostaIaEnum, podeEditarAtividadeDeOutro } from '@project20/shared';
+import { PropostaCriarAtividadeDadosDto, ProporCriarAtividadeDto, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
@@ -40,11 +40,11 @@ export class ProporCriarAtividadeFerramenta extends FerramentaPropostaIa<ProporC
         const demanda = await this.demandaRepositorio.recuperar({ id: entrada.demandaId });
         if (!demanda) throw new ResourceNotFoundException('Demanda');
 
-        // Para si mesmo, `usuarioId` é só ruído: some da proposta. Para outra pessoa, só quem edita atividade de outro (auxiliar, gestor); a pessoa precisa existir e estar ativa.
+        // Para si mesmo, `usuarioId` é só ruído: some da proposta. Para outra pessoa, só o gestor; a pessoa precisa existir e estar ativa.
         const { usuarioId, ...semUsuario } = entrada;
         let usuarioNome: string | undefined;
         if (usuarioId !== undefined && usuarioId !== usuarioAtivo.sub) {
-            if (!podeEditarAtividadeDeOutro(usuarioAtivo.tipo)) throw new BusinessException('Só o auxiliar ou o gestor cria atividade para outra pessoa. Crie a atividade para o próprio usuário.');
+            if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new BusinessException('Só o gestor cria atividade para outra pessoa. Crie a atividade para o próprio usuário.');
             const dono = (await this.usuarioService.recuperar({ id: usuarioId }, usuarioAtivo)).dados;
             if (!dono) throw new BusinessException('Usuário não encontrado');
             if (!dono.ativo) throw new BusinessException(`${dono.nomeCompleto} está inativo e não recebe atividades.`);

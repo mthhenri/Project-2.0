@@ -15,6 +15,7 @@ import {
     AtividadeTagsAtribuidasDto,
     TagResumoDto,
     TipoDemandaStatusEnum,
+    temPermissaoDeGestor,
     temVisibilidadeTotal,
     podeEditarAtividadeDeOutro,
 } from '@project20/shared';
@@ -50,7 +51,7 @@ export class AtividadeService {
         }
 
         const executorId =
-            podeEditarAtividadeDeOutro(usuarioAtivo.tipo)
+            temPermissaoDeGestor(usuarioAtivo.tipo)
                 ? (dto.usuarioId ?? usuarioAtivo.sub)
                 : usuarioAtivo.sub;
 

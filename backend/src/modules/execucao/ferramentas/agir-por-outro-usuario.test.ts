@@ -64,7 +64,7 @@ test('criar atividade: o gestor cria para outra pessoa e a proposta guarda o don
 
 test('criar atividade: desenvolvedor com usuarioId de outra pessoa e usuário inativo são recusados, sem proposta', async () => {
     const { ferramenta, propostas } = criarFerramentaDeCriar();
-    await assert.rejects(ferramenta.executar({ demandaId: 3, nome: 'Montar o formulário', usuarioId: 8 }, DESENVOLVEDOR), contem('Só o auxiliar ou o gestor'));
+    await assert.rejects(ferramenta.executar({ demandaId: 3, nome: 'Montar o formulário', usuarioId: 8 }, DESENVOLVEDOR), contem('Só o gestor'));
     await assert.rejects(ferramenta.executar({ demandaId: 3, nome: 'Montar o formulário', usuarioId: 10 }, GESTOR), contem('inativo'));
     assert.equal(propostas.length, 0);
 });
