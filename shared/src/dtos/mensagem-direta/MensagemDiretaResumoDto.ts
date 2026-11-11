@@ -25,4 +25,8 @@ export interface MensagemDiretaResumoDto {
     editadaDate: Date | null;
     /** As reações das duas pessoas (task 314); vazia quando não há. Vêm da tabela `mensagem_direta_reacao`, juntadas pela service: o armazenamento devolve sempre `[]`. */
     reacoes: ReacaoMensagemDiretaDto[];
+    /** Na resposta da IA (task 315): quem a chamou, o único que ela atende; `null` nas demais mensagens. */
+    chamadaPorUsuarioId: number | null;
+    /** Na resposta da IA: as propostas do turno, que só quem chamou resolve; vazia nas demais mensagens e quando não houve proposta. */
+    propostaIds: number[];
 }

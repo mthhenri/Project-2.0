@@ -2,20 +2,22 @@
 
 > Task 315 da guarda-chuva `chat-colaboradores-evolucao.spec.md` (decisão do autor de 2026-11-06: "`@IA` (315)"). Spec escrita em 2026-11-11, com as
 > decisões de privacidade e de modelagem respondidas pelo autor no mesmo dia (seção "Decisões do autor"). **Nenhum código antes de o autor aprovar
-> esta spec** (os contratos novos dos entregáveis 2, 3 e 7 são modelagem).
+> esta spec** (os contratos novos dos entregáveis 2, 3 e 7 são modelagem). Aprovada em 2026-11-11, com a troca da decisão 1: a IA pode criar **várias
+> propostas** por chamada. **Feita em 2026-11-11**: verificação em `315-chat-ia-no-chat-entre-colaboradores/verificacao.md` (ao lado desta spec), com os limites.
 
 ## Objetivo
 
-Numa conversa do chat entre colaboradores, qualquer pessoa escreve `@IA` e a IA atende **só quem a chamou**, com as permissões dessa pessoa, fazendo
-no máximo **uma** ação (uma proposta) por chamada. A resposta fica na conversa, visível às duas pessoas; a proposta segue o fluxo de hoje (cartão,
+Numa conversa do chat entre colaboradores, qualquer pessoa escreve `@IA` e a IA atende **só quem a chamou**, com as permissões dessa pessoa, podendo
+propor uma ou mais ações por chamada. A resposta fica na conversa, visível às duas pessoas; a proposta segue o fluxo de hoje (cartão,
 Aceitar/Descartar, autonomia por tipo), e quem não tem acesso ao alvo vê "Ação oculta por falta de acesso". O custo entra na aba Custos em nome de quem chamou.
 
 ## Decisões do autor
 
 Respondidas em 2026-11-11 (as três primeiras repetem a guarda-chuva, de 2026-11-06):
 
-1. **Quem a IA atende:** só quem a chamou, e só o pedido dessa pessoa. **Uma ação por chamada:** leituras livres, no máximo **uma proposta**. A
-   segunda ferramenta `propor_*` do mesmo turno é recusada pelo servidor (resultado de ferramenta com erro, e a IA segue sem ela).
+1. **Quem a IA atende:** só quem a chamou, e só o pedido dessa pessoa. **Quantas ações:** em 2026-11-06 era uma por chamada; em 2026-11-11, ao
+   aprovar a spec, o autor trocou para **mais de uma proposta por vez**, como no chat da IA (sem limite próprio; vale o limite de voltas do laço). Duas
+   ou mais propostas aparecem no grupo de propostas (task 227).
 2. **Permissões:** as de quem chamou, iguais às do chat da IA (o mesmo registro de ferramentas, `listarParaUsuario`).
 3. **Custo:** registrado pelo `IaUsoService` (contexto `USO_DE_IA`, task 260) em nome de quem chamou. Nenhuma tabela nova.
 4. **O que a IA lê (privacidade):** o pedido, mais as **20** mensagens anteriores da conversa, **das duas pessoas**, cada uma rotulada com o nome de
@@ -25,8 +27,7 @@ Respondidas em 2026-11-11 (as três primeiras repetem a guarda-chuva, de 2026-11
    dessa pessoa, com a orientação de não expor no texto o que ela não acessa. O cartão da proposta aparece para a outra pessoa só se ela tiver acesso
    ao alvo; senão, "Ação oculta por falta de acesso". Só quem chamou resolve a proposta (Aceitar, Ajustar, Descartar, Desfazer).
 6. **Onde a resposta vive:** é uma mensagem direta com autor novo `AutorMensagemDiretaEnum.IA` (`autorUsuarioId` `null`, como no `SISTEMA`). O
-   documento ganha `chamada_por_usuario_id` e o vínculo com a proposta. *Ajuste a confirmar:* a pergunta dizia `proposta_ids`; como é uma ação por
-   chamada, esta spec usa **`proposta_id`** (um só, anulável). Se o autor preferir a lista, troca-se antes do código.
+   documento ganha `chamada_por_usuario_id` e **`proposta_ids`** (a lista das propostas do turno, vazia quando não houve proposta).
 7. **`@IA` sozinho:** o pedido é a **próxima mensagem de quem chamou, em até 10 minutos**. O que a outra pessoa escreve nesse meio não conta. A regra
    é derivada das mensagens, sem estado gravado.
 8. **Enquanto a IA pensa:** as duas pessoas veem "IA digitando…" e a resposta chega **inteira** no fim. Sem streaming no chat entre colaboradores.
@@ -42,11 +43,12 @@ Respondidas em 2026-11-11 (as três primeiras repetem a guarda-chuva, de 2026-11
      mensagem `IA` com `chamada_por_usuario_id` igual depois dela).
 2. **Modelagem do documento da mensagem direta**, nos três armazenamentos:
    - `AutorMensagemDiretaEnum.IA = 'IA'`. Hoje o autor é texto no documento, sem tabela de referência, e o valor novo segue o mesmo padrão.
-   - Campos `chamada_por_usuario_id` (inteiro, anulável) e `proposta_id` (inteiro, anulável). Os dois só aparecem na mensagem `IA`.
-   - Nos índices OpenSearch e Elasticsearch, os campos entram no mapeamento. No PostgreSQL provisório, a migration **`0086`** acrescenta as duas
-     colunas anuláveis, sem `DEFAULT` e sem trigger.
+   - Campos `chamada_por_usuario_id` (inteiro, anulável) e `proposta_ids` (lista de inteiros). O primeiro só aparece na mensagem `IA`; o segundo é
+     vazio nas demais (documento anterior à task não o tem e é lido como vazio).
+   - Nos índices OpenSearch e Elasticsearch, os campos entram no mapeamento. No PostgreSQL provisório, a migration **`0086`** acrescenta
+     `chamada_por_usuario_id INTEGER` e `proposta_ids INTEGER[]`, as duas anuláveis (nulo é lido como vazio), sem `DEFAULT` e sem trigger.
    - `validarMensagemDiretaNova` passa a aceitar o autor `IA`: sem `autorUsuarioId`, com `chamadaPorUsuarioId` participante da conversa.
-   - `MensagemDiretaResumoDto` ganha `chamadaPorUsuarioId` e `propostaId`. Mensagem `IA` não é editada nem recebe reação (as regras das tasks 313
+   - `MensagemDiretaResumoDto` ganha `chamadaPorUsuarioId` e `propostaIds`. Mensagem `IA` não é editada nem recebe reação (as regras das tasks 313
      e 314 já recusam o que não é do próprio autor; confirmar o caso do autor nulo).
    - A suíte de contrato `armazenamento-de-mensagem-direta.contrato.ts` cobre gravar e ler a mensagem `IA` nas três implementações.
 3. **Evento efêmero `IA_DIGITANDO`** (`{ conversaId }`) em `MensagemDiretaEventoDto`, publicado às duas pontas ao começar o turno. O fim é a própria
@@ -58,13 +60,13 @@ Respondidas em 2026-11-11 (as três primeiras repetem a guarda-chuva, de 2026-11
      do sistema "A IA ainda está respondendo".
    - Contexto da chamada: as 20 mensagens anteriores, rotuladas como no plano (`[Nome] texto`); o pedido; e as instruções. As instruções são o prompt
      `CONVERSA` ativo, mais a orientação fixa no código (como `ORIENTACAO_DOS_PONTOS` do plano): quem chamou, quem mais lê (nome e tipo), que só
-     quem chamou é atendido, que há no máximo uma ação, e que o texto não pode expor o que a outra pessoa não acessa. **Sem prompt novo** e sem
+     quem chamou é atendido, e que o texto não pode expor o que a outra pessoa não acessa. **Sem prompt novo** e sem
      versão nova do `CONVERSA`.
    - Nível `RAPIDO`, como o chat da IA, e as ferramentas de `listarParaUsuario(quemChamou)`.
    - O laço de ferramentas é o do `ChatService` (`responderNoTurno` e `executarFerramentas`), **extraído para ser reaproveitado**, nunca copiado.
-     O laço passa a aceitar o limite de propostas por turno, e quem grava a resposta é quem chama o laço: o chat grava em `chat_mensagem` e esta
+     Quem grava a resposta é quem chama o laço: o chat grava em `chat_mensagem` e esta
      service grava em `mensagem_direta`.
-   - Fim do turno: grava a mensagem `IA` (texto, `chamadaPorUsuarioId`, `propostaId`), publica `MENSAGEM` às duas pontas e registra o uso no
+   - Fim do turno: grava a mensagem `IA` (texto, `chamadaPorUsuarioId`, `propostaIds`), publica `MENSAGEM` às duas pontas e registra o uso no
      `IaUsoService` (descrição "@IA no chat entre colaboradores", tokens e modelo do turno, `usuarioId` de quem chamou).
    - Falha, IA desligada ou IA fora do ar: grava e publica uma mensagem do sistema ("A IA não pôde responder: <motivo curto>"), como o
      `registrarFalha` do chat. O uso só é registrado se houve chamada ao provedor.
@@ -82,9 +84,12 @@ Respondidas em 2026-11-11 (as três primeiras repetem a guarda-chuva, de 2026-11
    - O `@` do compositor oferece **IA** como primeira opção. Ela só aparece com a IA disponível (`IaDisponibilidadeService`) e só é inserida como
      texto `@IA`, nunca em `mencoes`.
    - O balão da IA usa o avatar próprio da IA do chat e o rótulo "IA · para <Nome>", com o texto em Markdown (o visualizador de hoje).
-   - Abaixo do texto vai o cartão da proposta, `app-chat-proposta-cartao` (por `[propostaCarregada]`): com as ações para quem chamou, só leitura
-     para a outra pessoa com acesso, e a linha "Ação oculta por falta de acesso" sem acesso.
+   - Abaixo do texto vão as propostas. Para quem chamou: o cartão (`app-chat-proposta-cartao`) com uma proposta, ou o grupo
+     (`app-chat-proposta-grupo`, task 227) com duas ou mais, com as ações de hoje. Para a outra pessoa: cada proposta é lida pela rota do entregável 6
+     e vira o cartão só leitura (com acesso) ou a linha "Ação oculta por falta de acesso" (sem acesso).
    - "IA digitando…" no lugar do "digitando…" de hoje.
+   - O `@IA` no texto da mensagem aparece como o chip de `@pessoa`, com o ícone da IA antes do `@` (pedido do autor durante a task, em 2026-11-11). O
+     visualizador de Markdown ganha `iconesDosDestaques`, opcional e vazio por padrão.
    - Também no popup, na janela de chat do Project Desktop e na tela de supervisão (só leitura).
    - Análogo visual aprovado: a própria conversa do chat entre colaboradores (balões e "digitando…", tasks 210, 219 e 293) e os cartões de proposta
      do chat da IA (226).
@@ -96,17 +101,18 @@ Respondidas em 2026-11-11 (as três primeiras repetem a guarda-chuva, de 2026-11
 1. `shared`: testes da regra pura cobrem `@IA` no meio, no começo e sozinho; em maiúsculas e minúsculas; dentro de bloco e de trecho de código
    (não chama); colado a outra palavra (não chama); e o pedido pendente dentro e fora dos 10 minutos, com mensagem da outra pessoa no meio e já
    respondido.
-2. `backend` unitários: a service da chamada atende só quem chamou e usa as ferramentas dele; a segunda `propor_*` é recusada; a trava por conversa
-   funciona; falha e IA desligada gravam a mensagem do sistema; o uso é registrado em nome de quem chamou; as 20 mensagens vão rotuladas e sem as do
+2. `backend` unitários: a service da chamada atende só quem chamou e usa as ferramentas dele; a trava por conversa
+   funciona; falha e IA desligada gravam a mensagem do sistema; duas propostas no mesmo turno vão juntas em `proposta_ids`; o uso é registrado em nome de quem chamou; as 20 mensagens vão rotuladas e sem as do
    sistema; o `GET .../proposta/:id` dá 404 fora da conversa, `acessivel` correto para cada lado e `podeResolver` só para quem chamou.
 3. `npm run test:integracao`: a suíte de contrato grava e lê a mensagem `IA` nas três implementações, e a `0086` aplica e reverte.
-4. `frontend`: testes de componente do balão da IA (com cartão, só leitura e oculto) e da opção IA no `@`.
+4. `frontend`: testes de componente do balão da IA (com cartão, com grupo, só leitura e oculto) e da opção IA no `@`.
 5. `npm run lint:tudo` com zero erros; builds de `backend` e `frontend`; `npm test` na raiz.
 6. Ao vivo (skill `verify`), com o stack real, nos cinco formatos (`1920×1080`, `1366×768`, `1080×1920`, `720×1280` e `960×1080`) e nos dois temas,
    com dois usuários em duas sessões:
    - Um desenvolvedor chama `@IA` com pedido e as duas pontas veem "IA digitando…" e a resposta.
    - O gestor chama `@IA` sozinho e manda o pedido na mensagem seguinte.
    - Uma proposta de criar atividade em demanda que o desenvolvedor não vê aparece oculta para ele.
+   - Um pedido com duas ações mostra o grupo para quem chamou.
    - Aceitar só existe para quem chamou.
    - A aba Custos mostra o uso em nome de quem chamou.
    - A IA desligada gera a mensagem do sistema.

@@ -36,7 +36,7 @@ function mensagem(parcial: Partial<MensagemDiretaResumoDto> = {}): MensagemDiret
         referencias: [],
         respondeA: null,
         createdDate: new Date('2026-10-21T14:00:00.000Z'),
-        editadaDate: null, reacoes: [],
+        editadaDate: null, reacoes: [], chamadaPorUsuarioId: null, propostaIds: [],
         ...parcial,
     };
 }
@@ -144,8 +144,20 @@ function montar(cenario: Cenario = {}) {
         listarUsuariosOnline: () => new Set(cenario.online ?? []),
     };
 
+    const iaChatDireto = {
+        atenderSeChamada: async (dto: unknown) => { registrar('ia', dto); },
+    };
+
+    const propostaIa = {
+        recuperarParaParticipante: async (dto: { id: number; chamadaPorUsuarioId: number }, usuarioAtivo: { sub: number }) => {
+            registrar('proposta', { dto, usuarioAtivo });
+            return { propostaId: dto.id, acessivel: true, podeResolver: usuarioAtivo.sub === dto.chamadaPorUsuarioId, proposta: { id: dto.id } };
+        },
+    };
+
     const service = new MensagemDiretaService(
-        armazenamento as never, leitura as never, preferencia as never, reacao as never, usuario as never, demanda as never, atividade as never, eventos as never,
+        armazenamento as never, leitura as never, preferencia as never, reacao as never, usuario as never, demanda as never, atividade as never, eventos as never, iaChatDireto as never,
+        propostaIa as never,
     );
     return { service, chamadas };
 }
@@ -226,6 +238,38 @@ test('enviarMensagem: sem respondeAMensagemId não consulta a original', async (
     const { service, chamadas } = montar();
     await service.enviarMensagem(envio(), ANA);
     assert.equal(chamadas.recuperarMensagem, undefined);
+});
+
+test('enviarMensagem: a mensagem nova vai ao @IA (task 315) com quem a escreveu; o reenvio não', async () => {
+    const { service, chamadas } = montar();
+    await service.enviarMensagem(envio({ texto: '@IA cria a atividade' }), ANA);
+    assert.equal(chamadas.ia?.length, 1);
+    const avaliada = chamadas.ia![0] as { mensagem: MensagemDiretaResumoDto; usuarioAtivo: unknown };
+    assert.equal(avaliada.usuarioAtivo, ANA);
+    assert.equal(avaliada.mensagem.autorUsuarioId, 4);
+
+    const reenvio = montar({ jaExistia: true });
+    await reenvio.service.enviarMensagem(envio(), ANA);
+    assert.equal(reenvio.chamadas.ia, undefined);
+});
+
+test('recuperarProposta: lê a proposta da resposta da IA desta conversa, com o dono sendo quem chamou', async () => {
+    const daIa = mensagem({ autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, chamadaPorUsuarioId: BRUNO_ID, propostaIds: [31, 32] });
+    const { service, chamadas } = montar({ originais: [daIa] });
+    const resposta = await service.recuperarProposta({ usuarioId: BRUNO_ID, mensagemId: daIa.mensagemId, propostaId: 32 }, ANA);
+    assert.deepEqual(chamadas.proposta, [{ dto: { id: 32, chamadaPorUsuarioId: BRUNO_ID }, usuarioAtivo: ANA }]);
+    assert.equal(resposta.dados!.podeResolver, false, 'Ana não chamou a IA');
+});
+
+test('recuperarProposta: 404 quando a proposta não está na mensagem, a mensagem não é da IA ou não é desta conversa', async () => {
+    const daIa = mensagem({ autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, chamadaPorUsuarioId: 4, propostaIds: [31] });
+    const daPessoa = mensagem({ mensagemId: '11111111-2222-4333-8444-555555555555', propostaIds: [31] });
+    const deOutraConversa = mensagem({ mensagemId: '22222222-2222-4333-8444-555555555555', conversaId: '4-12', autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, chamadaPorUsuarioId: 4, propostaIds: [31] });
+    const { service, chamadas } = montar({ originais: [daIa, daPessoa, deOutraConversa] });
+    await assert.rejects(service.recuperarProposta({ usuarioId: BRUNO_ID, mensagemId: daIa.mensagemId, propostaId: 99 }, ANA), ResourceNotFoundException);
+    await assert.rejects(service.recuperarProposta({ usuarioId: BRUNO_ID, mensagemId: daPessoa.mensagemId, propostaId: 31 }, ANA), ResourceNotFoundException);
+    await assert.rejects(service.recuperarProposta({ usuarioId: BRUNO_ID, mensagemId: deOutraConversa.mensagemId, propostaId: 31 }, ANA), ResourceNotFoundException);
+    assert.equal(chamadas.proposta, undefined, 'nenhuma proposta foi lida');
 });
 
 test('enviarMensagem: reenviar devolve jaExistia com a mensagem já gravada', async () => {

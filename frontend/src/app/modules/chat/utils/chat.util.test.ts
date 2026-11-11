@@ -1,7 +1,7 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { StatusPropostaIaEnum, TipoPropostaIaEnum } from '@project20/shared';
-import { dataDaConversa, extrairEventos, formatarDuracao, LIMITE_MENSAGEM_CHAT, mensagemInicialDoLink, paresDosDados, rotuloDoDia, semMarcacaoMarkdown, sugestoesAposProposta, sugestoesIniciais } from './chat.util';
+import { dataDaConversa, extrairEventos, rotuloDoStatusDaProposta, ROTULO_STATUS_PROPOSTA, formatarDuracao, LIMITE_MENSAGEM_CHAT, mensagemInicialDoLink, paresDosDados, rotuloDoDia, semMarcacaoMarkdown, sugestoesAposProposta, sugestoesIniciais } from './chat.util';
 
 test('lê vários eventos de uma vez', () => {
     const texto = 'data: {"tipo":"trecho","texto":"Bom "}\n\ndata: {"tipo":"trecho","texto":"dia"}\n\n';
@@ -109,4 +109,12 @@ test('mensagemInicialDoLink apara o texto, tolera ausência e respeita o limite 
     assert.equal(mensagemInicialDoLink(undefined), '');
     assert.equal(mensagemInicialDoLink('   '), '');
     assert.equal(mensagemInicialDoLink('a'.repeat(LIMITE_MENSAGEM_CHAT + 10)).length, LIMITE_MENSAGEM_CHAT);
+});
+
+test('rotuloDoStatusDaProposta: só leitura (task 315) a pendente é "Pendente", não "Aguardando você"; as outras situações não mudam', () => {
+    assert.equal(rotuloDoStatusDaProposta(StatusPropostaIaEnum.PENDENTE, false), 'Aguardando você');
+    assert.equal(rotuloDoStatusDaProposta(StatusPropostaIaEnum.PENDENTE, true), 'Pendente');
+    for (const status of Object.values(StatusPropostaIaEnum).filter((status) => status !== StatusPropostaIaEnum.PENDENTE)) {
+        assert.equal(rotuloDoStatusDaProposta(status, true), ROTULO_STATUS_PROPOSTA[status]);
+    }
 });

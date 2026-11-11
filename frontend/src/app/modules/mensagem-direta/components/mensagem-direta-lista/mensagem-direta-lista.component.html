@@ -223,14 +223,17 @@
                                             previa(
                                                 ultima.texto,
                                                 ultima.contemCodigo,
-                                                ultima.autorUsuarioId
+                                                ultima.autorUsuarioId,
+                                                ultima.autor
                                             )
                                         }}</span>
                                     } @else {
                                         <span
                                             class="lista-direta__previa lista-direta__previa--markdown"
                                         >
-                                            @if (ultima.autorUsuarioId === meuId()) {
+                                            @if (ultima.autor === "IA") {
+                                                <span class="lista-direta__voce">IA:</span>
+                                            } @else if (ultima.autorUsuarioId === meuId()) {
                                                 <span class="lista-direta__voce">Você:</span>
                                             }
                                             <app-markdown-visualizador

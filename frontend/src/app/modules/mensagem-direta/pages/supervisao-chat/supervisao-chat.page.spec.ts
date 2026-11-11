@@ -12,7 +12,7 @@ const BRUNO = { usuarioId: 9, usuarioNome: 'Bruno Lima', tipo: TipoUsuarioEnum.D
 function mensagem(parcial: Record<string, unknown> = {}) {
     return {
         mensagemId: 'm1', conversaId: '4-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 4, texto: 'Alguém viu o bug do login?',
-        contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, reacoes: [], createdDate: '2026-10-21T14:00:00.000Z', ...parcial,
+        contemCodigo: false, mencoes: [], referencias: [], respondeA: null, editadaDate: null, reacoes: [], chamadaPorUsuarioId: null, propostaIds: [], createdDate: '2026-10-21T14:00:00.000Z', ...parcial,
     };
 }
 

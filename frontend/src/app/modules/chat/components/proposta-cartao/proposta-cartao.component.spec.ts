@@ -760,3 +760,44 @@ describe('PropostaCartaoComponent — alterar trecho do plano (task 234)', () =>
         expect(botao(montado, 'Confirmar')).toBeUndefined();
     });
 });
+
+describe('PropostaCartaoComponent — só leitura (task 315)', () => {
+    const rotulosDosBotoes = (montado: Montado) => Array.from(montado.elemento.querySelectorAll('button')).map((item) => item.getAttribute('aria-label') ?? item.textContent?.trim());
+
+    /** A outra pessoa da conversa do `@IA` recebe a proposta já lida pela conversa: o cartão não lê `/proposta-ia/:id` (que é só do dono). */
+    async function montarSoLeitura(carregada: ReturnType<typeof proposta>): Promise<Montado> {
+        const montado = await montarComponente(PropostaCartaoComponent, {
+            usuario: TipoUsuarioEnum.DESENVOLVEDOR,
+            entradas: { propostaId: ID, propostaCarregada: { ...carregada, usuarioId: 9 }, somenteLeitura: true },
+        });
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), PRIORIDADES);
+        detectar(montado);
+        await montado.fixture.whenStable();
+        detectar(montado);
+        montado.http.verify();
+        return montado;
+    }
+
+    it('pendente pequena: a linha mostra "Pendente" (não "Aguardando você") e só o botão de detalhes', async () => {
+        const montado = await montarSoLeitura(CRIAR_ATIVIDADE);
+        expect(texto(montado)).toContain('Montar o formulário');
+        expect(texto(montado)).toContain('Pendente');
+        expect(texto(montado)).not.toContain('Aguardando você');
+        expect(rotulosDosBotoes(montado)).toEqual(['Ver detalhes']);
+    });
+
+    it('pendente grande: o cartão mostra os dados e a situação, sem Confirmar, Ajustar nem Recusar', async () => {
+        const montado = await montarSoLeitura(
+            proposta(TipoPropostaIaEnum.DESCREVER_DEMANDA, StatusPropostaIaEnum.PENDENTE, { demandaId: 3, demandaNome: 'Cadastro', descricaoCliente: 'O cliente quer um cadastro.' }),
+        );
+        expect(montado.elemento.querySelector('.proposta-cartao')).not.toBeNull();
+        expect(texto(montado)).toContain('Pendente');
+        for (const acao of ['Confirmar', 'Ajustar', 'Recusar']) expect(botao(montado, acao)).toBeUndefined();
+    });
+
+    it('confirmada: a linha de "feito" sem Desfazer', async () => {
+        const montado = await montarSoLeitura(proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados));
+        expect(texto(montado)).toContain('Feito');
+        expect(botao(montado, 'Desfazer')).toBeUndefined();
+    });
+});

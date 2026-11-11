@@ -55,6 +55,8 @@ interface LinhaDeMensagemDireta {
     responde_a_trecho: string | null;
     created_date: Date;
     editada_date: Date | null;
+    chamada_por_usuario_id: number | null;
+    proposta_ids: number[] | null;
 }
 
 interface LinhaDeConversaDireta extends LinhaDeMensagemDireta {
@@ -81,7 +83,9 @@ const COLUNAS_DA_MENSAGEM = `
     responde_a_autor_usuario_id,
     responde_a_trecho,
     created_date,
-    editada_date
+    editada_date,
+    chamada_por_usuario_id,
+    proposta_ids
 `;
 
 /** A pessoa é um dos dois participantes da conversa. */
@@ -176,6 +180,7 @@ function deLinha(linha: LinhaDeMensagemDireta): MensagemDiretaFonte {
             : {}),
         created_date: linha.created_date.toISOString(),
         editada_date: linha.editada_date ? linha.editada_date.toISOString() : null,
+        ...(linha.autor === AutorMensagemDiretaEnum.IA ? { chamada_por_usuario_id: linha.chamada_por_usuario_id, proposta_ids: linha.proposta_ids ?? [] } : {}),
     };
 }
 
@@ -224,7 +229,9 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                             referencias,
                             responde_a_mensagem_id,
                             responde_a_autor_usuario_id,
-                            responde_a_trecho
+                            responde_a_trecho,
+                            chamada_por_usuario_id,
+                            proposta_ids
                         )
                     SELECT
                         :criadaEm,
@@ -242,7 +249,9 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                         CAST(:referencias AS text[]),
                         CAST(:respostaMensagemId AS uuid),
                         CAST(:respostaAutorUsuarioId AS integer),
-                        CAST(:respostaTrecho AS text)
+                        CAST(:respostaTrecho AS text),
+                        CAST(:chamadaPorUsuarioId AS integer),
+                        CAST(:propostaIds AS integer[])
                     ON CONFLICT (mensagem_id) DO NOTHING
                     RETURNING
                         id
@@ -262,6 +271,8 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                     respostaMensagemId: fonte.responde_a_mensagem_id ?? null,
                     respostaAutorUsuarioId: fonte.responde_a_autor_usuario_id ?? null,
                     respostaTrecho: fonte.responde_a_trecho ?? null,
+                    chamadaPorUsuarioId: fonte.chamada_por_usuario_id ?? null,
+                    propostaIds: fonte.proposta_ids ?? null,
                 },
             );
             if (inseridas.length > 0) return { mensagem: deFonteDireta(fonte), jaExistia: false };

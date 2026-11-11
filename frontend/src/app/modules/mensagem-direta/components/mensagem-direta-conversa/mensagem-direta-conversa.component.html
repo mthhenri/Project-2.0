@@ -157,6 +157,15 @@
                                 >
                                     {{ mensagem.texto }} · {{ hora(mensagem.createdDate) }}
                                 </p>
+                            } @else if (mensagem.autor === "IA") {
+                                <app-mensagem-direta-ia-resposta
+                                    [attr.data-mensagem-id]="mensagem.mensagemId"
+                                    [mensagem]="mensagem"
+                                    [outroUsuarioId]="conversa.usuarioId"
+                                    [meuId]="meuId()"
+                                    [nomeDeQuemChamou]="conversa.usuarioNome"
+                                    [horario]="hora(mensagem.createdDate)"
+                                />
                             } @else {
                                 @let minha = mensagem.autorUsuarioId === meuId();
                                 @let emenda = emendas().get(mensagem.mensagemId);
@@ -203,6 +212,7 @@
                                         <app-markdown-visualizador
                                             [texto]="mensagem.texto"
                                             [destaques]="destaquesDe(mensagem)"
+                                            [iconesDosDestaques]="iconesDosDestaques"
                                             [comTabelas]="false"
                                         />
                                         @for (
@@ -348,6 +358,25 @@
                             }
                         }
                     }
+                    @if (aguardandoPedidoDaIa()) {
+                        <p class="conversa-direta__sistema" role="status">
+                            A IA está esperando o seu pedido: a sua próxima mensagem vai para ela.
+                        </p>
+                    }
+                    @if (iaRespondendo()) {
+                        <div
+                            class="conversa-direta__linha conversa-direta__linha--digitando"
+                            role="status"
+                            aria-label="IA digitando"
+                        >
+                            <div class="conversa-direta__balao conversa-direta__balao--digitando">
+                                <span class="conversa-direta__ia-digitando">IA digitando</span>
+                                <span class="conversa-direta__pontos" aria-hidden="true"
+                                    ><span></span><span></span><span></span
+                                ></span>
+                            </div>
+                        </div>
+                    }
                     @if (estaDigitando()) {
                         <div
                             class="conversa-direta__linha conversa-direta__linha--digitando"
@@ -400,6 +429,7 @@
 
         <app-mensagem-direta-compositor
             [pessoas]="pessoasMencionaveis()"
+            [iaDisponivel]="iaDisponivel()"
             [resposta]="respostaEmPreparo()"
             (cancelarResposta)="estado.cancelarResposta()"
             [edicao]="edicaoEmPreparo()"

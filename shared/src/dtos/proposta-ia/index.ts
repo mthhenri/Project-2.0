@@ -13,3 +13,4 @@ export * from './PropostaIaGrupoRecusarDto';
 export * from './PropostaIaGrupoRecusadoDto';
 export * from './PropostaIaGrupoDesfazerDto';
 export * from './PropostaIaGrupoDesfeitoDto';
+export * from './PropostaIaParticipanteRecuperarDto';

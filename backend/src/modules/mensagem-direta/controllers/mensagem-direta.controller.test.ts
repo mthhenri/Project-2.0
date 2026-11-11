@@ -9,7 +9,7 @@ import { MensagemDiretaController } from './mensagem-direta.controller';
 
 const USUARIO = { sub: 4, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das dezessete rotas', () => {
+test('verbos e caminhos das dezoito rotas', () => {
     assert.deepEqual(
         Object.values(rotasPorNome(MensagemDiretaController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
         [
@@ -21,6 +21,7 @@ test('verbos e caminhos das dezessete rotas', () => {
             'GET supervisao/conversa/:conversaId',
             'GET supervisao/conversas',
             'GET conversa/:usuarioId',
+            'GET conversa/:usuarioId/mensagem/:mensagemId/proposta/:propostaId',
             'GET conversas',
             'GET preferencia',
             'PATCH mensagem',
@@ -62,7 +63,13 @@ test('o usuarioId da rota entra no DTO e vence qualquer valor vindo da query ou 
     const chamadas: Record<string, unknown[]> = {};
     const registrar = (nome: string) => async (...argumentos: unknown[]) => { chamadas[nome] = argumentos; return null; };
     const controller = new MensagemDiretaController(
-        { listarConversa: registrar('listarConversa'), alterarLeitura: registrar('alterarLeitura'), alterarSilencio: registrar('alterarSilencio'), avisarDigitacao: registrar('avisarDigitacao') } as never,
+        {
+            listarConversa: registrar('listarConversa'),
+            alterarLeitura: registrar('alterarLeitura'),
+            alterarSilencio: registrar('alterarSilencio'),
+            avisarDigitacao: registrar('avisarDigitacao'),
+            recuperarProposta: registrar('recuperarProposta'),
+        } as never,
         {} as never,
         {} as never,
     );
@@ -71,11 +78,13 @@ test('o usuarioId da rota entra no DTO e vence qualquer valor vindo da query ou 
     await controller.alterarLeitura(9, { usuarioId: 1000, lidaAteDate: '2026-10-21T10:00:00.000Z' } as never, USUARIO);
     await controller.alterarSilencio(9, { usuarioId: 1000, silenciada: true } as never, USUARIO);
     await controller.avisarDigitacao(9, USUARIO);
+    await controller.recuperarProposta(9, '7f0c2b9e-4c1a-4e6a-9d55-2f6c0d1b8a10', 31, USUARIO);
 
     assert.deepEqual(chamadas.listarConversa, [{ usuarioId: 9, limite: 10 }, USUARIO]);
     assert.deepEqual(chamadas.alterarLeitura, [{ usuarioId: 9, lidaAteDate: '2026-10-21T10:00:00.000Z' }, USUARIO]);
     assert.deepEqual(chamadas.alterarSilencio, [{ usuarioId: 9, silenciada: true }, USUARIO]);
     assert.deepEqual(chamadas.avisarDigitacao, [{ usuarioId: 9 }, USUARIO]);
+    assert.deepEqual(chamadas.recuperarProposta, [{ usuarioId: 9, mensagemId: '7f0c2b9e-4c1a-4e6a-9d55-2f6c0d1b8a10', propostaId: 31 }, USUARIO]);
 });
 
 test('as demais rotas repassam o DTO e o usuário do token', async () => {

@@ -22,6 +22,8 @@ export type MensagemDiretaEventoDto =
   | { tipo: 'PRESENCA'; usuarioId: number; online: boolean }
   /** `usuarioId` está digitando para quem recebe, na conversa `conversaId`. Efêmero: não é gravado nem recuperado; o cliente o deixa expirar em poucos segundos. */
   | { tipo: 'DIGITANDO'; conversaId: string; usuarioId: number }
+  /** A IA começou a responder a um `@IA` da conversa (task 315). Efêmero: o fim é a `MENSAGEM` da resposta (ou a do sistema, na falha); o cliente o deixa expirar em 2 minutos. */
+  | { tipo: 'IA_DIGITANDO'; conversaId: string }
   /** Reler a conversa (ou todas, com `conversaId: null`): o evento não coube no barramento ou a API perdeu o fio. */
   | { tipo: 'SINCRONIZAR'; conversaId: string | null }
   | { tipo: 'BATIMENTO' }

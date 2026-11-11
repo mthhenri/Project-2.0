@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { AutorMensagemDiretaEnum } from '@project20/shared';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -77,8 +78,8 @@ export class MensagemDiretaListaComponent {
         return rotuloDaLista(data, this.agora());
     }
 
-    protected previa(texto: string, contemCodigo: boolean, autorUsuarioId: number | null): string {
-        return previaDaMensagem(texto, contemCodigo, autorUsuarioId !== null && autorUsuarioId === this.sessao.id());
+    protected previa(texto: string, contemCodigo: boolean, autorUsuarioId: number | null, autor: AutorMensagemDiretaEnum): string {
+        return previaDaMensagem(texto, contemCodigo, autorUsuarioId !== null && autorUsuarioId === this.sessao.id(), autor === AutorMensagemDiretaEnum.IA);
     }
 
     /** O nome da outra pessoa de uma mensagem achada na busca: pela lista de conversas, depois pela lista de pessoas. */

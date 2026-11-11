@@ -22,6 +22,8 @@ import {
     MensagemDiretaPreferenciaAlterarDto,
     MensagemDiretaPessoasListadasDto,
     MensagemDiretaReferenciaBuscarDto,
+    MensagemDiretaPropostaRecuperadaDto,
+    MensagemDiretaPropostaRecuperarDto,
     MensagemDiretaReferenciaRecuperadaDto,
     MensagemDiretaReferenciaRecuperarDto,
     MensagemDiretaReferenciaResumoDto,
@@ -49,6 +51,7 @@ import { UnauthorizedAccessException } from '../../../core/exceptions/unauthoriz
 import { AtividadeRepository } from '../../atividade/repositories/atividade.repository';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
+import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import {
     LIMITE_DE_SUGESTOES_DE_REFERENCIA,
@@ -63,6 +66,7 @@ import { MensagemDiretaLeituraRepository } from '../repositories/mensagem-direta
 import { MensagemDiretaPreferenciaRepository } from '../repositories/mensagem-direta-preferencia.repository';
 import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-reacao.repository';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
+import { MensagemDiretaIaService } from './mensagem-direta-ia.service';
 
 const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
 
@@ -87,6 +91,8 @@ export class MensagemDiretaService {
         private readonly demandaRepositorio: DemandaRepository,
         private readonly atividadeRepositorio: AtividadeRepository,
         private readonly eventosService: MensagemDiretaEventosService,
+        private readonly iaChatDiretoService: MensagemDiretaIaService,
+        private readonly propostaIaService: PropostaIaService,
     ) {}
 
     // ---------------------------------------------------------------------------
@@ -121,6 +127,8 @@ export class MensagemDiretaService {
         // O reenvio de uma mensagem que já estava gravada não avisa de novo. As duas pontas recebem (a do remetente cobre as outras abas dele).
         if (!enviada.jaExistia) {
             await this.eventosService.publicarParaUsuarios({ usuarioIds: [usuarioAtivo.sub, dto.destinatarioId], evento: { tipo: 'MENSAGEM', mensagem: enviada.mensagem } });
+            // O `@IA` (task 315) responde fora da requisição: o envio volta sem esperar a IA, e a resposta chega pelo stream.
+            void this.iaChatDiretoService.atenderSeChamada({ mensagem: enviada.mensagem, usuarioAtivo });
         }
 
         return {
@@ -228,6 +236,21 @@ export class MensagemDiretaService {
     // ---------------------------------------------------------------------------
     // Ler
     // ---------------------------------------------------------------------------
+
+    /**
+     * Uma proposta da resposta do `@IA` (task 315) para quem está olhando a conversa. A proposta precisa estar na mensagem da IA indicada, **desta**
+     * conversa; senão, 404. Sem acesso ao alvo, `acessivel: false` e nenhum dado; só quem chamou a IA resolve (pelas rotas de `/proposta-ia`).
+     */
+    async recuperarProposta(dto: MensagemDiretaPropostaRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaPropostaRecuperadaDto>> {
+        await this.validarOutraPessoa(dto.usuarioId, usuarioAtivo);
+        const conversaId = montarConversaDiretaId(usuarioAtivo.sub, dto.usuarioId);
+        const resposta = await this.armazenamento.recuperarMensagem({ conversaId, mensagemId: dto.mensagemId });
+        if (!resposta || resposta.autor !== AutorMensagemDiretaEnum.IA || resposta.chamadaPorUsuarioId === null || !resposta.propostaIds.includes(dto.propostaId)) {
+            throw new ResourceNotFoundException('Proposta');
+        }
+        const dados = await this.propostaIaService.recuperarParaParticipante({ id: dto.propostaId, chamadaPorUsuarioId: resposta.chamadaPorUsuarioId }, usuarioAtivo);
+        return { sucesso: true, dados, mensagem: dados.acessivel ? 'Proposta recuperada com sucesso' : 'Ação oculta por falta de acesso' };
+    }
 
     async listarConversa(dto: MensagemDiretaListarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaListadasDto>> {
         await this.validarOutraPessoa(dto.usuarioId, usuarioAtivo);

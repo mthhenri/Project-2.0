@@ -15,6 +15,7 @@ import {
     MensagemDiretaPreferenciaAlterarDto,
     MensagemDiretaPreferenciaAlteradaDto,
     MensagemDiretaPreferenciaRecuperadaDto,
+    MensagemDiretaPropostaRecuperadaDto,
     MensagemDiretaReagidaDto,
     MensagemDiretaReagirDto,
     MensagemDiretaSilencioAlteradoDto,
@@ -90,6 +91,14 @@ export class MensagemDiretaService {
     /** O cartão de uma referência para quem está olhando: sem acesso, `acessivel: false` e nenhum dado. */
     recuperarReferencia(tipo: ReferenciaMensagemDiretaEnum, id: number): Observable<StandardResponse<MensagemDiretaReferenciaRecuperadaDto>> {
         return this.httpClient.get<StandardResponse<MensagemDiretaReferenciaRecuperadaDto>>(`${this.urlBase}/referencia/${tipo}/${id}`, comFeedbackProprioEErroTratado());
+    }
+
+    /** Uma proposta da resposta do `@IA` (task 315) para quem olha a conversa: sem acesso ao alvo, `acessivel: false` e nenhum dado. */
+    recuperarProposta(usuarioId: number, mensagemId: string, propostaId: number): Observable<StandardResponse<MensagemDiretaPropostaRecuperadaDto>> {
+        return this.httpClient.get<StandardResponse<MensagemDiretaPropostaRecuperadaDto>>(
+            `${this.urlBase}/conversa/${usuarioId}/mensagem/${mensagemId}/proposta/${propostaId}`,
+            comFeedbackProprioEErroTratado(),
+        );
     }
 
     /** As preferências de aviso do usuário; sem linha gravada o servidor devolve o padrão. */

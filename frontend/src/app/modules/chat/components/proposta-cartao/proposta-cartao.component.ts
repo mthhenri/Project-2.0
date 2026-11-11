@@ -23,7 +23,7 @@ import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { PropostaIaService } from '../../services/proposta-ia.service';
 import { ROTULO_ABA_DO_PLANO } from '../../utils/plano.util';
 import {
-    ROTULO_STATUS_PROPOSTA,
+    rotuloDoStatusDaProposta,
     ROTULO_TIPO_PROPOSTA,
     SEVERIDADE_STATUS_PROPOSTA,
     formatarDuracao,
@@ -63,6 +63,8 @@ export class PropostaCartaoComponent {
    * grupo faz nela (confirmar todas, recusar todas, desfazer todas). Sem ela, o cartão lê a proposta sozinho.
    */
     readonly propostaCarregada = input<PropostaIaResumoDto | null>(null);
+    /** Só leitura (task 315): a outra pessoa da conversa do `@IA` vê a proposta, sem Confirmar, Ajustar, Recusar nem Desfazer (só quem chamou a IA resolve). */
+    readonly somenteLeitura = input(false);
 
     readonly proposta = signal<PropostaIaResumoDto | null>(null);
     readonly erro = signal(false);
@@ -70,7 +72,7 @@ export class PropostaCartaoComponent {
 
     readonly Status = StatusPropostaIaEnum;
     readonly rotuloTipo = ROTULO_TIPO_PROPOSTA;
-    readonly rotuloStatus = ROTULO_STATUS_PROPOSTA;
+    readonly rotuloDaSituacao = rotuloDoStatusDaProposta;
     readonly severidade = SEVERIDADE_STATUS_PROPOSTA;
     readonly paresDosDados = paresDosDados;
     readonly Tipo = TipoPropostaIaEnum;

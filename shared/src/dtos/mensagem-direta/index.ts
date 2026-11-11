@@ -50,3 +50,5 @@ export * from './MensagemDiretaReacaoListarDto';
 export * from './MensagemDiretaReacaoRecuperadaDto';
 export * from './MensagemDiretaReacaoInternoDefinirDto';
 export * from './MensagemDiretaReacaoInternoRemoverDto';
+export * from './MensagemDiretaPropostaRecuperarDto';
+export * from './MensagemDiretaPropostaRecuperadaDto';

@@ -7,7 +7,7 @@ import { AtividadePrioridadeService } from '../../../../core/services/atividade-
 import { DiffPorPalavraComponent } from '../../../../shared/components/diff-por-palavra/diff-por-palavra.component';
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 import { ResumoDaProposta } from '../../utils/proposta-compacta.util';
-import { ROTULO_STATUS_PROPOSTA, SEVERIDADE_STATUS_PROPOSTA } from '../../utils/chat.util';
+import { SEVERIDADE_STATUS_PROPOSTA, rotuloDoStatusDaProposta } from '../../utils/chat.util';
 
 /** Como a linha se mostra: esperando o usuário, feita (com Desfazer) ou encerrada sem ação (recusada, expirada, desfeita). */
 export type ModoDaLinha = 'PENDENTE' | 'FEITA' | 'ENCERRADA';
@@ -36,6 +36,8 @@ export class PropostaLinhaComponent {
     readonly desfazerDisponivel = input(false);
     /** A IA executou sozinha (nível "Faz e avisa", task 228): a linha vira o aviso da IA, com o ícone dela, em vez do "feito" do usuário. */
     readonly feitaPelaIa = input(false);
+    /** Só leitura (task 315): a outra pessoa da conversa do `@IA` vê a proposta, mas só quem chamou a IA a resolve. Sem botões de ação; a pendente mostra a situação. */
+    readonly somenteLeitura = input(false);
 
     readonly confirmar = output<void>();
     readonly ajustar = output<void>();
@@ -43,7 +45,7 @@ export class PropostaLinhaComponent {
     readonly desfazer = output<void>();
     readonly detalhar = output<void>();
 
-    readonly rotuloStatus = ROTULO_STATUS_PROPOSTA;
+    readonly rotuloDoStatus = rotuloDoStatusDaProposta;
     readonly severidade = SEVERIDADE_STATUS_PROPOSTA;
     readonly rotuloDaLinha = computed(() => `Proposta: ${this.resumo().acao}`);
     /** O aviso da IA só existe na linha de "feito". */

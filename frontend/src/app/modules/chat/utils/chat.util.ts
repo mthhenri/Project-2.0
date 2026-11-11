@@ -107,6 +107,14 @@ export const ROTULO_STATUS_PROPOSTA: Record<StatusPropostaIaEnum, string> = {
     [StatusPropostaIaEnum.DESFEITA]: 'Desfeita',
 };
 
+/**
+ * A situação da proposta para quem só a vê (task 315): a outra pessoa da conversa do `@IA` não resolve a proposta, então a pendente não "aguarda você".
+ * As outras situações são as mesmas.
+ */
+export function rotuloDoStatusDaProposta(status: StatusPropostaIaEnum, somenteLeitura: boolean): string {
+    return somenteLeitura && status === StatusPropostaIaEnum.PENDENTE ? 'Pendente' : ROTULO_STATUS_PROPOSTA[status];
+}
+
 export const SEVERIDADE_STATUS_PROPOSTA: Record<StatusPropostaIaEnum, 'warn' | 'success' | 'secondary' | 'info'> = {
     [StatusPropostaIaEnum.PENDENTE]: 'warn',
     [StatusPropostaIaEnum.CONFIRMADA]: 'success',

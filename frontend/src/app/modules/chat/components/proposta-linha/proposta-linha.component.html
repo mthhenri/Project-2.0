@@ -80,14 +80,14 @@
     </span>
 
     <span class="proposta-linha__acoes">
-        @if (modo() === "ENCERRADA") {
+        @if (modo() === "ENCERRADA" || (somenteLeitura() && modo() === "PENDENTE")) {
             <p-tag
-                [value]="rotuloStatus[status()]"
+                [value]="rotuloDoStatus(status(), somenteLeitura())"
                 [severity]="severidade[status()]"
                 [rounded]="true"
             />
         }
-        @if (modo() === "PENDENTE") {
+        @if (!somenteLeitura() && modo() === "PENDENTE") {
             <p-button
                 icon="pi pi-check"
                 severity="success"
@@ -127,7 +127,7 @@
                 (onClick)="recusar.emit()"
             />
         }
-        @if (modo() === "FEITA" && desfazerDisponivel()) {
+        @if (!somenteLeitura() && modo() === "FEITA" && desfazerDisponivel()) {
             <p-button
                 label="Desfazer"
                 icon="pi pi-undo"

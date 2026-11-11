@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PropostaConectarDemandaDadosDto, TipoPropostaIaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { alvoAcessivel, idDoAlvo } from '../../proposta-ia/domain/alvo-acessivel';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
 import { DemandaService } from '../services/demanda.service';
@@ -16,6 +17,17 @@ export class ConectarDemandaExecutor implements ExecutorPropostaIa {
     readonly tipo = TipoPropostaIaEnum.CONECTAR_DEMANDA;
 
     constructor(private readonly demandaService: DemandaService) {}
+
+    /** Task 315: a outra pessoa da conversa vê a proposta se vê as duas demandas (as regras da service, com o usuário dela). */
+    async podeVer(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const origemId = idDoAlvo(dados, 'demandaOrigemId');
+        const destinoId = idDoAlvo(dados, 'demandaDestinoId');
+        if (origemId === null || destinoId === null) return false;
+        return alvoAcessivel(
+            () => this.demandaService.recuperar({ id: origemId }, usuarioAtivo),
+            () => this.demandaService.recuperar({ id: destinoId }, usuarioAtivo),
+        );
+    }
 
     validar(dados: Record<string, unknown>): void {
         validarDadosDaProposta(PropostaConectarDemandaDadosDto, dados);

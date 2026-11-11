@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PropostaCriarDemandaDadosDto, TipoDemandaStatusEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { alvoAcessivel, idDoAlvo } from '../../proposta-ia/domain/alvo-acessivel';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { idCriadoPelaProposta, recuperarPropostaReferenciada } from '../../proposta-ia/domain/proposta-referenciada';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
@@ -23,6 +24,13 @@ export class CriarDemandaExecutor implements ExecutorPropostaIa {
         private readonly demandaRepositorio: DemandaRepository,
         private readonly propostaIaService: PropostaIaService,
     ) {}
+
+    /** Task 315: a outra pessoa da conversa vê a proposta se vê a demanda-mãe (a demanda de topo, só no projeto, fica oculta para quem não tem visibilidade total) (as regras da service, com o usuário dela). */
+    async podeVer(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const demandaId = idDoAlvo(dados, 'demandaPaiId');
+        if (demandaId === null) return false;
+        return alvoAcessivel(() => this.demandaService.recuperar({ id: demandaId }, usuarioAtivo));
+    }
 
     validar(dados: Record<string, unknown>): void {
         validarDadosDaProposta(PropostaCriarDemandaDadosDto, dados);

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PropostaCriarAtividadeDadosDto, TipoAtividadePrioridadeEnum, TipoAtividadeStatusEnum, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { idDoAlvo } from '../../proposta-ia/domain/alvo-acessivel';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
 import { AtividadeRepository } from '../repositories/atividade.repository';
@@ -19,6 +20,13 @@ export class CriarAtividadeExecutor implements ExecutorPropostaIa {
         private readonly atividadeService: AtividadeService,
         private readonly atividadeRepositorio: AtividadeRepository,
     ) {}
+
+    /** Task 315: a outra pessoa da conversa vê a proposta se vê a demanda em que a atividade nasce (como membro, a regra das atividades) (as regras da service, com o usuário dela). */
+    async podeVer(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const demandaId = idDoAlvo(dados, 'demandaId');
+        if (demandaId === null) return false;
+        return this.atividadeRepositorio.validarAcessoDemanda({ demandaId, usuarioId: usuarioAtivo.sub }).catch(() => false);
+    }
 
     validar(dados: Record<string, unknown>): void {
         validarDadosDaProposta(PropostaCriarAtividadeDadosDto, dados);

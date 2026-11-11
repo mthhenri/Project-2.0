@@ -1,0 +1,52 @@
+<div class="ia-resposta">
+    <span class="ia-resposta__avatar" aria-hidden="true">IA</span>
+    <div class="ia-resposta__corpo">
+        <div class="ia-resposta__rotulo">{{ rotulo() }}</div>
+        <div class="ia-resposta__balao">
+            <app-markdown-visualizador [texto]="mensagem().texto" [comTabelas]="false" />
+        </div>
+        @if (mensagem().propostaIds.length > 0) {
+            <div class="ia-resposta__propostas">
+                @if (souQuemChamou()) {
+                    @if (mensagem().propostaIds.length === 1) {
+                        <app-chat-proposta-cartao [propostaId]="mensagem().propostaIds[0]" />
+                    } @else {
+                        <app-chat-proposta-grupo [propostaIds]="mensagem().propostaIds" />
+                    }
+                } @else {
+                    @for (vista of vistas(); track vista.propostaId) {
+                        @if (vista.situacao === "VISIVEL") {
+                            <app-chat-proposta-cartao
+                                [propostaId]="vista.propostaId"
+                                [propostaCarregada]="vista.proposta"
+                                [somenteLeitura]="true"
+                            />
+                        } @else if (vista.situacao === "OCULTA") {
+                            <div class="ia-resposta__aviso" role="note">
+                                <i class="pi pi-lock" aria-hidden="true"></i>
+                                <span>Ação oculta por falta de acesso</span>
+                            </div>
+                        } @else if (vista.situacao === "ERRO") {
+                            <div class="ia-resposta__aviso ia-resposta__aviso--erro" role="alert">
+                                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+                                <span>Não foi possível carregar a proposta.</span>
+                                <button
+                                    type="button"
+                                    class="ia-resposta__tentar"
+                                    (click)="tentarDeNovo()"
+                                >
+                                    Tentar de novo
+                                </button>
+                            </div>
+                        } @else {
+                            <p class="ia-resposta__carregando" role="status">
+                                Carregando proposta…
+                            </p>
+                        }
+                    }
+                }
+            </div>
+        }
+        <div class="ia-resposta__horario">{{ horario() }}</div>
+    </div>
+</div>

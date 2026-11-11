@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PropostaDescreverDemandaDadosDto, TipoPropostaIaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { alvoAcessivel, idDoAlvo } from '../../proposta-ia/domain/alvo-acessivel';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
 import { DemandaService } from '../services/demanda.service';
@@ -16,6 +17,13 @@ export class DescreverDemandaExecutor implements ExecutorPropostaIa {
     readonly tipo = TipoPropostaIaEnum.DESCREVER_DEMANDA;
 
     constructor(private readonly demandaService: DemandaService) {}
+
+    /** Task 315: a outra pessoa da conversa vê a proposta se vê a demanda (as regras da service, com o usuário dela). */
+    async podeVer(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const demandaId = idDoAlvo(dados, 'demandaId');
+        if (demandaId === null) return false;
+        return alvoAcessivel(() => this.demandaService.recuperar({ id: demandaId }, usuarioAtivo));
+    }
 
     validar(dados: Record<string, unknown>): void {
         const entrada = validarDadosDaProposta(PropostaDescreverDemandaDadosDto, dados);

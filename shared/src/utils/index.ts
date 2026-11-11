@@ -5,6 +5,7 @@ export * from './prazo-para-desfazer-proposta';
 export * from './versao';
 export * from './provedor-ia';
 export * from './mensagem-direta';
+export * from './mensagem-direta-ia';
 export * from './diff-por-palavra';
 export * from './proposta-dependencia';
 export * from './proposta-nivel';

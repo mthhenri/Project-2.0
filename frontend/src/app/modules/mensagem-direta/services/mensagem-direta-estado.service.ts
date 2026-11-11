@@ -2,6 +2,7 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
     AutorMensagemDiretaEnum,
+    VALIDADE_DO_IA_DIGITANDO_MS,
     MensagemDiretaEventoDto,
     MensagemDiretaPessoaResumoDto,
     ReacaoMensagemDiretaDto,
@@ -93,6 +94,8 @@ export class MensagemDiretaEstadoService {
     readonly conexao = this.stream.conectado;
     /** Quem está digitando para o usuário agora (o "digitando…"). Cada aviso vale `VALIDADE_DO_DIGITANDO_MS`; mensagem da pessoa e queda do stream o apagam antes. */
     readonly digitando = signal<ReadonlySet<number>>(new Set());
+    /** As conversas em que a IA está respondendo a um `@IA` (task 315): cada aviso vale `VALIDADE_DO_IA_DIGITANDO_MS`; a resposta (ou a mensagem do sistema da falha) e a queda do stream o apagam antes. */
+    readonly iaDigitando = signal<ReadonlySet<string>>(new Set());
 
     readonly conversaAberta = signal<ConversaAberta | null>(null);
     /** A mensagem a que o próximo envio responde (task 220): vale para a conversa aberta, sai ao enviar, cancelar ou abrir outra conversa. */
@@ -148,6 +151,7 @@ export class MensagemDiretaEstadoService {
     /** Quando o usuário avisou, por pessoa, que está digitando (para não avisar a cada tecla). */
     private ultimoAvisoDeDigitacao = new Map<number, number>();
     private temporizadoresDoDigitando = new Map<number, ReturnType<typeof setTimeout>>();
+    private temporizadoresDaIa = new Map<string, ReturnType<typeof setTimeout>>();
     /**
    * As mensagens que ainda não chegaram (`ENVIANDO`) ou falharam (`FALHOU`), por pessoa. Moram aqui, e não na conversa aberta, para não se perderem
    * quando o usuário volta para a lista ou abre outra pessoa: ao reabrir a conversa elas voltam, com "Tentar de novo".
@@ -555,6 +559,8 @@ export class MensagemDiretaEstadoService {
             createdDate: new Date(),
             editadaDate: null,
             reacoes: [],
+            chamadaPorUsuarioId: null,
+            propostaIds: [],
             situacao: 'ENVIANDO',
         };
         this.guardarPendente(aberta.usuarioId, local);
@@ -678,6 +684,9 @@ export class MensagemDiretaEstadoService {
             case 'DIGITANDO':
                 this.marcarDigitando(evento.usuarioId);
                 break;
+            case 'IA_DIGITANDO':
+                this.marcarIaDigitando(evento.conversaId);
+                break;
             case 'MENSAGEM':
                 this.receberMensagem(normalizarMensagem(evento.mensagem), true);
                 break;
@@ -729,6 +738,8 @@ export class MensagemDiretaEstadoService {
         this.removerPendente(mensagem.mensagemId);
         // Quem mandou a mensagem terminou de digitar.
         if (mensagem.autorUsuarioId !== null && mensagem.autorUsuarioId !== meuId) this.removerDigitando(mensagem.autorUsuarioId);
+        // A IA terminou: chegou a resposta dela ou o aviso do sistema de que ela não pôde responder.
+        if (mensagem.autor !== AutorMensagemDiretaEnum.USUARIO) this.removerIaDigitando(mensagem.conversaId);
 
         if (naConversaAberta && aberta) {
             this.atualizarConversaAberta(aberta.usuarioId, (atual) => ({ mensagens: mesclarMensagens(atual.mensagens, [mensagem]) }));
@@ -757,7 +768,7 @@ export class MensagemDiretaEstadoService {
             conversaId: mensagem.conversaId,
             usuarioId,
             usuarioNome: nomeNaLista() ?? 'Nova mensagem',
-            texto: previaDaMensagem(mensagem.texto, mensagem.contemCodigo, false),
+            texto: previaDaMensagem(mensagem.texto, mensagem.contemCodigo, false, mensagem.autor === AutorMensagemDiretaEnum.IA),
             markdown: mensagem.texto,
             mensagemMinha: mensagem.autorUsuarioId === meuId,
             mencionaVoce: mensagem.mencoes.includes(meuId),
@@ -798,10 +809,28 @@ export class MensagemDiretaEstadoService {
         this.digitando.set(proximo);
     }
 
+    private marcarIaDigitando(conversaId: string): void {
+        clearTimeout(this.temporizadoresDaIa.get(conversaId));
+        this.temporizadoresDaIa.set(conversaId, setTimeout(() => this.removerIaDigitando(conversaId), VALIDADE_DO_IA_DIGITANDO_MS));
+        if (!this.iaDigitando().has(conversaId)) this.iaDigitando.set(new Set(this.iaDigitando()).add(conversaId));
+    }
+
+    private removerIaDigitando(conversaId: string): void {
+        clearTimeout(this.temporizadoresDaIa.get(conversaId));
+        this.temporizadoresDaIa.delete(conversaId);
+        if (!this.iaDigitando().has(conversaId)) return;
+        const proximo = new Set(this.iaDigitando());
+        proximo.delete(conversaId);
+        this.iaDigitando.set(proximo);
+    }
+
     private limparDigitando(): void {
         for (const temporizador of this.temporizadoresDoDigitando.values()) clearTimeout(temporizador);
         this.temporizadoresDoDigitando.clear();
         this.digitando.set(new Set());
+        for (const temporizador of this.temporizadoresDaIa.values()) clearTimeout(temporizador);
+        this.temporizadoresDaIa.clear();
+        this.iaDigitando.set(new Set());
     }
 
     // ---------------------------------------------------------------------------

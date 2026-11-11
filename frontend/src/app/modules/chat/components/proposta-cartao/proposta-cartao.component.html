@@ -7,6 +7,7 @@
         [operando]="operando()"
         [desfazerDisponivel]="desfazerDisponivel()"
         [feitaPelaIa]="linhaAtual.feitaPelaIa"
+        [somenteLeitura]="somenteLeitura()"
         (confirmar)="confirmar()"
         (ajustar)="abrirAjuste()"
         (recusar)="recusar()"
@@ -35,7 +36,7 @@
                     />
                 }
                 <p-tag
-                    [value]="rotuloStatus[propostaAtual.status]"
+                    [value]="rotuloDaSituacao(propostaAtual.status, somenteLeitura())"
                     [severity]="severidade[propostaAtual.status]"
                     [rounded]="true"
                 />
@@ -907,6 +908,8 @@
                     />
                 </div>
             </form>
+        } @else if (somenteLeitura()) {
+            <!-- Só quem chamou a IA resolve a proposta (task 315): a outra pessoa só a vê. -->
         } @else if (propostaAtual.status === Status.PENDENTE) {
             <div class="proposta-cartao__acoes">
                 <p-button

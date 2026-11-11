@@ -86,7 +86,16 @@ export function devePublicarDigitacao(ultimoAvisoEm: number | null, agora: numbe
 
 /** O servidor manda as datas como texto ISO; a tela trabalha com `Date`. */
 export function normalizarMensagem(mensagem: MensagemDiretaResumoDto, situacao: SituacaoDaMensagem = 'ENVIADA'): MensagemNaConversa {
-    return { ...mensagem, createdDate: new Date(mensagem.createdDate), editadaDate: mensagem.editadaDate ? new Date(mensagem.editadaDate) : null, reacoes: mensagem.reacoes ?? [], situacao };
+    // Os campos da resposta do `@IA` (task 315) podem faltar numa API anterior a ela (deploy em andamento): valem nulo e vazio.
+    return {
+        ...mensagem,
+        createdDate: new Date(mensagem.createdDate),
+        editadaDate: mensagem.editadaDate ? new Date(mensagem.editadaDate) : null,
+        reacoes: mensagem.reacoes ?? [],
+        chamadaPorUsuarioId: mensagem.chamadaPorUsuarioId ?? null,
+        propostaIds: mensagem.propostaIds ?? [],
+        situacao,
+    };
 }
 
 function ordemDaConversa(mensagemNaConversa: MensagemNaConversa, segundo: MensagemNaConversa): number {
@@ -229,10 +238,23 @@ export function normalizarConversa(conversa: ConversaDiretaResumoDto): ConversaN
     };
 }
 
-/** A prévia da última mensagem na lista: sem marcação, o bloco de código vira `[código]` e a minha começa com `Você:`. */
-export function previaDaMensagem(texto: string, contemCodigo: boolean, souEuQuemEscreveu: boolean): string {
+/** A prévia da última mensagem na lista: sem marcação, o bloco de código vira `[código]`, a minha começa com `Você:` e a resposta do `@IA` com `IA:` (task 315). */
+export function previaDaMensagem(texto: string, contemCodigo: boolean, souEuQuemEscreveu: boolean, daIa = false): string {
     const corpo = textoSimplesDaMensagemDireta(texto, contemCodigo);
+    if (daIa) return `IA: ${corpo}`;
     return souEuQuemEscreveu ? `Você: ${corpo}` : corpo;
+}
+
+/** O ícone da IA (o mesmo da opção do `@` no compositor), antes do `@IA` destacado no texto da mensagem (task 315). */
+export const ICONE_DA_IA = 'pi pi-sparkles';
+/** As grafias de `@IA` que o servidor reconhece (sem diferenciar maiúsculas): o destaque do texto casa a grafia exata que a pessoa escreveu. */
+export const DESTAQUES_DA_IA: readonly string[] = ['@IA', '@ia', '@Ia', '@iA'];
+/** O ícone de cada grafia do `@IA`, para o visualizador de Markdown pôr antes do destaque. */
+export const ICONES_DOS_DESTAQUES_DA_IA: Readonly<Record<string, string>> = Object.fromEntries(DESTAQUES_DA_IA.map((destaque) => [destaque, ICONE_DA_IA]));
+
+/** Para quem a IA respondeu, no rótulo da resposta do `@IA` (task 315): `IA · para você` ou `IA · para <nome>`. */
+export function rotuloDaRespostaDaIa(nomeDeQuemChamou: string): string {
+    return `IA · para ${nomeDeQuemChamou}`;
 }
 
 export function totalNaoLidas(conversas: ConversaNaLista[]): number {
@@ -259,7 +281,9 @@ export function aplicarMensagemNaLista(
     if (!existente) return { conversas, conversaDesconhecida: true };
 
     const jaEraAUltima = existente.ultimaMensagem?.mensagemId === mensagem.mensagemId;
-    const naoLidasAMais = !jaEraAUltima && mensagem.autorUsuarioId !== meuId && mensagem.conversaId !== conversaAbertaId ? 1 : 0;
+    // A resposta do `@IA` (task 315) não conta como não lida, como no servidor (que só conta mensagens de pessoa).
+    const daOutraPessoa = mensagem.autor !== AutorMensagemDiretaEnum.IA && mensagem.autorUsuarioId !== meuId;
+    const naoLidasAMais = !jaEraAUltima && daOutraPessoa && mensagem.conversaId !== conversaAbertaId ? 1 : 0;
     const { situacao: _situacao, ...resumo } = mensagem;
     const ehMaisRecente = !existente.ultimaMensagem || mensagem.createdDate.getTime() >= existente.ultimaMensagem.createdDate.getTime();
     const atualizada: ConversaNaLista = {

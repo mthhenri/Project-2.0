@@ -1,20 +1,22 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { AutorMensagemDiretaEnum, CitacaoMensagemDto, ReferenciaMensagemDiretaEnum, podeEditarMensagemDireta, trechoDaMensagemDireta } from '@project20/shared';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, NgZone, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { AutorMensagemDiretaEnum, CitacaoMensagemDto, EstadoIaEnum, ReferenciaMensagemDiretaEnum, chamadaDaIa, pedidoPendenteDaIa, podeEditarMensagemDireta, trechoDaMensagemDireta } from '@project20/shared';
 import { MenuItem, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ContextMenu } from 'primeng/contextmenu';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
+import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { TEMPO_DO_COPIADO_MS } from '../../../../shared/components/markdown-bloco-codigo/markdown-bloco-codigo.component';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-referencia.service';
 import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { EdicaoEmPreparo } from '../../utils/compositor.util';
-import { AVISO_DE_LEITURA_DAS_CONVERSAS, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa, marcarEmendas } from '../../utils/mensagem-direta.util';
+import { AVISO_DE_LEITURA_DAS_CONVERSAS, DESTAQUES_DA_IA, ICONES_DOS_DESTAQUES_DA_IA, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa, marcarEmendas } from '../../utils/mensagem-direta.util';
 import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
 import { MensagemDiretaEmojiSeletorComponent } from '../mensagem-direta-emoji-seletor/mensagem-direta-emoji-seletor.component';
+import { MensagemDiretaIaRespostaComponent } from '../mensagem-direta-ia-resposta/mensagem-direta-ia-resposta.component';
 import { MensagemDiretaReacoesComponent } from '../mensagem-direta-reacoes/mensagem-direta-reacoes.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
 
@@ -33,12 +35,14 @@ const SELETOR_DO_QUE_NAO_RESPONDE_COM_DOIS_CLIQUES = 'a, button, pre, code, app-
 const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
 /** Distância do topo (px) a partir da qual se pede a página mais antiga. */
 const MARGEM_DO_TOPO_PX = 40;
+/** De quanto em quanto tempo a dica do `@IA` sozinho (task 315) confere se o prazo do pedido acabou. */
+const INTERVALO_DO_RELOGIO_DA_IA_MS = 30_000;
 
 /** A conversa com uma pessoa no popup (mockups 1 e 9): balões, "Enviada"/"Lida", falha com reenvio e o campo de mensagem. */
 @Component({
     selector: 'app-mensagem-direta-conversa',
     standalone: true,
-    imports: [ButtonModule, ContextMenu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarUsuarioComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent, MensagemDiretaReacoesComponent, MensagemDiretaEmojiSeletorComponent],
+    imports: [ButtonModule, ContextMenu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarUsuarioComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent, MensagemDiretaReacoesComponent, MensagemDiretaEmojiSeletorComponent, MensagemDiretaIaRespostaComponent],
     templateUrl: './mensagem-direta-conversa.component.html',
     styleUrl: './mensagem-direta-conversa.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,6 +68,24 @@ export class MensagemDiretaConversaComponent {
     protected readonly estaDigitando = computed(() => {
         const aberta = this.aberta();
         return aberta ? this.estado.digitando().has(aberta.usuarioId) : false;
+    });
+    private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
+    /** O `@IA` só é oferecido no compositor com a IA no ar (task 315); o servidor confere de novo e avisa na conversa se ela não puder responder. */
+    protected readonly iaDisponivel = computed(() => this.iaDisponibilidade.estadoReal() === EstadoIaEnum.NO_AR);
+    /** A IA está respondendo a um `@IA` desta conversa (task 315): as duas pessoas veem "IA digitando…". */
+    protected readonly iaRespondendo = computed(() => {
+        const aberta = this.aberta();
+        return aberta ? this.estado.iaDigitando().has(aberta.conversaId) : false;
+    });
+    /** O relógio da dica do `@IA` sozinho: o prazo do pedido acaba sem nenhuma mensagem nova chegar. */
+    private readonly relogioDaIa = signal(Date.now());
+    /** O usuário mandou só `@IA` há menos de 10 minutos: a próxima mensagem dele é o pedido (a mesma regra do servidor, no `shared`). */
+    protected readonly aguardandoPedidoDaIa = computed(() => {
+        const aberta = this.aberta();
+        const meuId = this.sessao.id();
+        if (!aberta || meuId === undefined || this.iaRespondendo()) return false;
+        const enviadas = aberta.mensagens.filter((mensagem) => mensagem.situacao === 'ENVIADA');
+        return pedidoPendenteDaIa(enviadas, meuId, new Date(this.relogioDaIa()));
     });
     protected readonly estaOnline = computed(() => {
         const aberta = this.aberta();
@@ -146,10 +168,15 @@ export class MensagemDiretaConversaComponent {
 
         // O balão de "digitando" ocupa o fim da conversa: quem lê o fim continua vendo-o sem rolar.
         effect(() => {
-            if (this.estaDigitando()) setTimeout(() => this.acompanharOFim(), 0);
+            if (this.estaDigitando() || this.iaRespondendo() || this.aguardandoPedidoDaIa()) setTimeout(() => this.acompanharOFim(), 0);
         });
+        // A janela de chat do Project Desktop não passa pelo layout, que é quem lê o estado da IA: lê aqui se ninguém leu ainda.
+        if (this.iaDisponibilidade.estadoReal() === null) this.iaDisponibilidade.carregar();
+        // Fora da zona do Angular: um intervalo permanente não pode impedir a tela de ficar estável (o signal ainda atualiza a tela).
+        const relogio = inject(NgZone).runOutsideAngular(() => setInterval(() => this.relogioDaIa.set(Date.now()), INTERVALO_DO_RELOGIO_DA_IA_MS));
 
         inject(DestroyRef).onDestroy(() => {
+            clearInterval(relogio);
             if (this.temporizadorDoCopiado) clearTimeout(this.temporizadorDoCopiado);
             if (this.temporizadorDoRealce) clearTimeout(this.temporizadorDoRealce);
             if (this.temporizadorDoAviso) clearTimeout(this.temporizadorDoAviso);
@@ -165,7 +192,10 @@ export class MensagemDiretaConversaComponent {
     }
 
     /** `@Nome` das pessoas mencionadas e `#Nome` das referências da mensagem: o que o texto mostra com destaque. */
-    protected destaquesDe(mensagem: { mencoes: number[]; referencias: { tipo: ReferenciaMensagemDiretaEnum; id: number }[] }): string[] {
+    /** O ícone da IA antes do `@IA` destacado (task 315): o `@IA` parece uma menção de pessoa, com o ícone na frente. */
+    protected readonly iconesDosDestaques = ICONES_DOS_DESTAQUES_DA_IA;
+
+    protected destaquesDe(mensagem: { texto: string; mencoes: number[]; referencias: { tipo: ReferenciaMensagemDiretaEnum; id: number }[] }): string[] {
         const aberta = this.aberta();
         const nomes = new Map<number, string>();
         if (aberta) nomes.set(aberta.usuarioId, aberta.usuarioNome);
@@ -181,6 +211,8 @@ export class MensagemDiretaConversaComponent {
             const nome = this.nomesDasReferencias().get(`${referencia.tipo}:${referencia.id}`);
             if (nome) destaques.push(`#${nome}`);
         }
+        // O `@IA` (task 315) ganha o mesmo destaque da menção quando a mensagem chama a IA (a regra do servidor, no `shared`: fora de código).
+        if (chamadaDaIa(mensagem.texto)) destaques.push(...DESTAQUES_DA_IA);
         return destaques;
     }
 

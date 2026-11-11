@@ -23,6 +23,8 @@ export class MarkdownVisualizadorComponent {
 
     /** Menções (`@Nome`) e referências (`#Nome`) conhecidas, que ganham um destaque no texto. Vazio, nada muda. */
     readonly destaques = input<readonly string[]>([]);
+    /** O ícone (classe do PrimeIcons) que vai antes de um destaque, por destaque (task 315: `@IA` com o ícone da IA). Vazio, os destaques ficam só com o texto. */
+    readonly iconesDosDestaques = input<Readonly<Record<string, string>>>({});
 
     /** O texto está sobre um fundo colorido (o balão da própria mensagem): herda cor e tamanho do entorno em vez de usar os do tema. */
     readonly herdaCor = input(false);
