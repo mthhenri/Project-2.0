@@ -216,6 +216,12 @@
         }
     }
 
+    &__erro-campo {
+        display: block;
+        margin-top: 0.25rem;
+        color: var(--p-red-500);
+    }
+
     &__vazio {
         display: flex;
         flex-direction: column;

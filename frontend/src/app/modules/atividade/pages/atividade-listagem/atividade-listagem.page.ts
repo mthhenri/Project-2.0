@@ -4,7 +4,7 @@ import { ExecucaoIniciarDialogComponent } from '../../components/execucao-inicia
 import { ExecucaoRegistroDialogComponent } from '../../components/execucao-registro-dialog/execucao-registro-dialog.component';
 import { ExecucaoEncerrarDialogComponent } from '../../../../shared/components/execucao-encerrar-dialog/execucao-encerrar-dialog.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, debounceTime, distinctUntilChanged, forkJoin, of, catchError, map, Observable } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
@@ -25,6 +25,8 @@ import {
     TipoAtividadeStatusEnum,
     AtividadeListarDto,
     AtividadeAlterarDto,
+    MENSAGEM_CARACTERES_PROIBIDOS,
+    REGEX_SEM_CARACTERES_PROIBIDOS,
     TagResumoDto,
     UsuarioResumoDto,
     temPermissaoDeGestor,
@@ -616,11 +618,59 @@ export class AtividadeListagemPage implements OnInit {
     /** Menu ⋮ do auxiliar e do gestor: registrar execução e excluir. Tags são editadas na própria célula da linha. */
     abrirMenu(evento: Event, atividade: AtividadeResumoDto): void {
         this.itensMenu = [
+            { label: 'Editar nome', icon: 'pi pi-pencil', command: () => this.abrirEdicaoDoNome(atividade) },
             { label: 'Registrar execução', icon: 'pi pi-calendar-plus', command: () => this.abrirDialogRegistro(atividade) },
             { separator: true },
             { label: 'Excluir', icon: 'pi pi-trash', styleClass: 'atividade-listagem__menu-excluir', command: () => this.excluir(atividade) },
         ];
         this.menuAcoes()?.toggle(evento);
+    }
+
+    // ---------------------------------------------------------------------------
+    // Editar o nome (menu ⋮: auxiliar e gestor)
+    // ---------------------------------------------------------------------------
+
+    readonly atividadeNomeEdicao = signal<AtividadeResumoDto | null>(null);
+    readonly salvandoNome = signal<boolean>(false);
+    readonly mensagemErroNome = `Informe de 3 a 255 caracteres. ${MENSAGEM_CARACTERES_PROIBIDOS}`;
+    readonly campoNome = new FormControl<string>('', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.minLength(3), Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)],
+    });
+
+    abrirEdicaoDoNome(atividade: AtividadeResumoDto): void {
+        this.campoNome.setValue(atividade.nome);
+        this.campoNome.markAsUntouched();
+        this.atividadeNomeEdicao.set(atividade);
+    }
+
+    fecharEdicaoDoNome(): void {
+        this.atividadeNomeEdicao.set(null);
+    }
+
+    salvarNome(): void {
+        const atividade = this.atividadeNomeEdicao();
+        if (!atividade) return;
+        if (this.campoNome.invalid) {
+            this.campoNome.markAsTouched();
+            return;
+        }
+        const nome = this.campoNome.value.trim();
+        if (nome === atividade.nome) {
+            this.fecharEdicaoDoNome();
+            return;
+        }
+        this.salvandoNome.set(true);
+        this.atividadeService
+            .alterar(atividade.id, { nome })
+            .pipe(finalize(() => this.salvandoNome.set(false)))
+            .subscribe({
+                next: () => {
+                    this.atividades.update((lista) => lista.map((item) => (item.id === atividade.id ? { ...item, nome } : item)));
+                    this.fecharEdicaoDoNome();
+                    this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Nome alterado' });
+                },
+            });
     }
 
     // ---------------------------------------------------------------------------

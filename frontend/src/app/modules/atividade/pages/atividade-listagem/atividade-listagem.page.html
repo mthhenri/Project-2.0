@@ -626,6 +626,38 @@
     (salvar)="salvarTagsDaLinha($event)"
 />
 
+<!-- Editar o nome da atividade (menu ⋮) -->
+<p-dialog
+    [visible]="atividadeNomeEdicao() !== null"
+    (visibleChange)="!$event && fecharEdicaoDoNome()"
+    header="Editar nome da atividade"
+    [modal]="true"
+    [style]="{ width: '32rem' }"
+    [draggable]="false"
+>
+    <input
+        pInputText
+        type="text"
+        class="w-full"
+        aria-label="Nome da atividade"
+        maxlength="255"
+        [formControl]="campoNome"
+        (keydown.enter)="salvarNome()"
+    />
+    @if (campoNome.touched && campoNome.invalid) {
+        <small class="atividade-listagem__erro-campo">{{ mensagemErroNome }}</small>
+    }
+    <ng-template pTemplate="footer">
+        <p-button
+            label="Cancelar"
+            [text]="true"
+            severity="secondary"
+            (onClick)="fecharEdicaoDoNome()"
+        />
+        <p-button label="Salvar" [loading]="salvandoNome()" (onClick)="salvarNome()" />
+    </ng-template>
+</p-dialog>
+
 <!-- Menu ⋮ da linha -->
 <p-menu #menuAcoes [model]="itensMenu" [popup]="true" appendTo="body" />
 
