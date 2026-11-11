@@ -49,7 +49,7 @@
     </div>
 
     <div class="nova-atividade__linha">
-        @if (sessao.eGestor()) {
+        @if (sessao.podeEditarAtividadeDeOutro()) {
             <div class="nova-atividade__campo">
                 <label for="nova-usuario" class="nova-atividade__rotulo">Responsável</label>
                 <p-select

@@ -85,10 +85,10 @@ test('criar: gestor e administrador não precisam de vínculo com a demanda e po
     }
 });
 
-test('criar: auxiliar não precisa de vínculo com a demanda, mas só cria para si (o dono pedido é ignorado)', async () => {
+test('criar: auxiliar não precisa de vínculo com a demanda e cria para o dono pedido', async () => {
     const repo = repositorio({ validarAcessoDemanda: async () => false });
     await criarServico(repo, tagExistente, demandaExistente).criar({ ...DADOS_CRIAR, usuarioId: 55 }, AUXILIAR);
-    assert.equal((repo.gravacoes[0].argumento as { usuarioId: number }).usuarioId, 5);
+    assert.equal((repo.gravacoes[0].argumento as { usuarioId: number }).usuarioId, 55);
 });
 
 test('criar: gestor sem dono informado é o dono da atividade', async () => {

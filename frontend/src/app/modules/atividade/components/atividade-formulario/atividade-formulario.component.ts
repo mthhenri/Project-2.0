@@ -84,7 +84,7 @@ export class AtividadeFormularioComponent implements OnInit {
         this.prioridadeService.carregar();
         this.carregarDemandasAtribuidas();
         this.carregarTodasAsTags();
-        if (this.sessao.eGestor()) this.carregarUsuarios();
+        if (this.sessao.podeEditarAtividadeDeOutro()) this.carregarUsuarios();
         // Com a demanda definida o foco vai para o nome; sem ela, para o seletor de demanda.
         setTimeout(() => (this.demandaIdInicial() ? this.campoNome()?.nativeElement.focus() : this.seletorDemanda()?.focus()));
     }
@@ -104,7 +104,7 @@ export class AtividadeFormularioComponent implements OnInit {
             status:    valor.status!,
             prioridade: valor.prioridade!,
         };
-        if (this.sessao.eGestor() && valor.usuarioId) dto.usuarioId = valor.usuarioId;
+        if (this.sessao.podeEditarAtividadeDeOutro() && valor.usuarioId) dto.usuarioId = valor.usuarioId;
         if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
 
         this.atividadeService
