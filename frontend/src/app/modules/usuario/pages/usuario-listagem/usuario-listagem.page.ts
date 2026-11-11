@@ -130,7 +130,7 @@ export class UsuarioListagemPage implements OnInit {
                 this.aoMudarFiltro();
             });
 
-        this.buscarUsuarios();
+        // A carga inicial é do `onLazyLoad` da tabela (ela emite ao montar, já com os filtros guardados acima); buscar aqui pediria a lista duas vezes (P-082).
         this.abrirAnotacoesDoLink();
     }
 

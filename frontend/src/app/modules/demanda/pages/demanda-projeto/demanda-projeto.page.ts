@@ -378,7 +378,7 @@ export class DemandaProjetoPage implements OnInit {
         this.carregandoProjetos.set(true);
         this.erroAoCarregarProjetos.set(false);
         this.projetoService
-            .listar({ itensPorPagina: 100 })
+            .listar({ allRows: true })
             .pipe(finalize(() => this.carregandoProjetos.set(false)))
             .subscribe({
                 next: (resposta) => {

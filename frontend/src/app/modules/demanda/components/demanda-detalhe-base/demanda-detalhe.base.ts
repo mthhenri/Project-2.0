@@ -311,7 +311,7 @@ export abstract class DemandaDetalheBase {
         this.atividades.set([]);
 
         // Gestor vê todas as atividades da demanda; desenvolvedor vê apenas as próprias.
-        const filtros: AtividadeListarDto = { demandaId, itensPorPagina: 100 };
+        const filtros: AtividadeListarDto = { demandaId, allRows: true };
         if (!this.sessao.podeEditarDemanda()) {
             const usuarioId = this.sessao.id();
             if (usuarioId !== undefined) filtros.usuarioId = usuarioId;
@@ -386,31 +386,28 @@ export abstract class DemandaDetalheBase {
         // gestor; sem este guard o forkJoin falharia inteiro com 403 para o desenvolvedor. Tags e usuários do
         // catálogo só são buscados uma vez por abertura (a navegação interna reaproveita).
         forkJoin({
-            demanda:    this.demandaService.recuperar(identificador),
-            ancestrais: this.demandaService.recuperarAncestral(identificador),
+            detalhe:    this.demandaService.recuperarDetalhe(identificador),
             arvore:     this.demandaService.recuperarArvore(identificador),
-            tagsDaDemanda: this.demandaService.listarTags(identificador),
-            membros:    this.demandaService.listarMembros(identificador),
-            conexoes:   this.demandaService.listarConexoes(identificador),
-            tags:       this.tagsDisponiveis().length ? of(null) : this.tagService.listar(),
+            tags:       this.tagsDisponiveis().length ? of(null) : this.tagService.listarCatalogo(),
             usuarios:   this.sessao.podeEditarDemanda() && this.todosUsuarios().length === 0
-                ? this.usuarioService.listar({ itensPorPagina: 100 })
+                ? this.usuarioService.listarCatalogo()
                 : of(null),
         })
             .pipe(finalize(() => this.carregando.set(false)))
             .subscribe({
-                next: ({ demanda, ancestrais, arvore, tagsDaDemanda, membros, conexoes, tags, usuarios }) => {
-                    if (demanda.sucesso && demanda.dados) {
-                        this.demanda.set(demanda.dados);
-                        this.carregarDemandasParaConexao(demanda.dados.projetoId);
+                next: ({ detalhe, arvore, tags, usuarios }) => {
+                    if (detalhe.sucesso && detalhe.dados) {
+                        const { demanda, ancestrais, tags: tagsDaDemanda, membros, conexoes } = detalhe.dados;
+                        this.demanda.set(demanda);
+                        this.ancestrais.set(ancestrais);
+                        this.tagsDaDemanda.set(tagsDaDemanda);
+                        this.membros.set(membros);
+                        this.conexoes.set(conexoes);
+                        this.carregarDemandasParaConexao(demanda.projetoId);
                         if (this.eMembro()) this.carregarAtividades(identificador);
                         else this.atividades.set([]);
                     }
-                    if (ancestrais.sucesso && ancestrais.dados) this.ancestrais.set(ancestrais.dados);
                     if (arvore.sucesso && arvore.dados) this.subDemandas.set(arvore.dados.filhos ?? []);
-                    if (tagsDaDemanda.sucesso && tagsDaDemanda.dados) this.tagsDaDemanda.set(tagsDaDemanda.dados);
-                    if (membros.sucesso && membros.dados) this.membros.set(membros.dados);
-                    if (conexoes.sucesso && conexoes.dados) this.conexoes.set(conexoes.dados);
                     if (tags && tags.sucesso && tags.dados) this.tagsDisponiveis.set(tags.dados);
                     if (usuarios && usuarios.sucesso && usuarios.dados) {
                         // Gestores não entram no autocomplete de membros: têm acesso total por serem gestores (task 71).
@@ -433,7 +430,7 @@ export abstract class DemandaDetalheBase {
     /** Demandas do projeto para o destino de uma conexão: só recarrega quando o projeto muda. */
     private carregarDemandasParaConexao(projetoId: number): void {
         if (projetoId === this.projetoDasDemandas) return;
-        this.demandaService.listar({ projetoId, itensPorPagina: 200 }).subscribe({
+        this.demandaService.listar({ projetoId, allRows: true }).subscribe({
             next: (resposta) => {
                 if (resposta.sucesso && resposta.dados) {
                     this.projetoDasDemandas = projetoId;

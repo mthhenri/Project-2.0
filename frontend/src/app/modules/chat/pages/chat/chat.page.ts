@@ -789,7 +789,7 @@ export class ChatPage implements OnInit {
     }
 
     private atualizarDisponibilidade(): void {
-        this.iaDisponibilidade.carregar();
+        this.iaDisponibilidade.carregar({ forcar: true });
     }
 
     /** Respondeu um modelo diferente do planejado (um item de contingência da cadeia): a mensagem antiga, sem o planejado, nunca acusa. */

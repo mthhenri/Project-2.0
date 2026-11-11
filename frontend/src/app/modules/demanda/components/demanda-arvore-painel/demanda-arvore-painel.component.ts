@@ -319,7 +319,7 @@ export class DemandaArvorePainelComponent {
         if (this.tagsDisponiveis().length > 0) {
             carregarTagsDemanda();
         } else {
-            this.tagService.listar().subscribe({
+            this.tagService.listarCatalogo().subscribe({
                 next: (resposta) => {
                     if (resposta.sucesso && resposta.dados) this.tagsDisponiveis.set(resposta.dados);
                     carregarTagsDemanda();
@@ -371,7 +371,7 @@ export class DemandaArvorePainelComponent {
         this.demandaIdMembros.set(demandaId);
 
         if (this.usuariosDisponiveis().length === 0) {
-            this.usuarioService.listar({ itensPorPagina: 100 }).subscribe({
+            this.usuarioService.listarCatalogo().subscribe({
                 next: (resposta) => {
                     if (resposta.sucesso && resposta.dados) {
                         // Gestores não entram no multiselect de membros: têm acesso total a

@@ -56,7 +56,7 @@ describe('DemandaProjetoPage', () => {
     it('pede os projetos ao abrir; com mais de um e sem contexto lembrado, espera a escolha (nada de grafo)', async () => {
         const { montado } = await montarPagina();
         const requisicao = requisicaoProjetos(montado);
-        expect(requisicao.request.params.get('itensPorPagina')).toBe('100');
+        expect(requisicao.request.params.get('allRows')).toBe('true');
         expect(montado.componente.carregandoProjetos()).toBe(true);
         responderSucesso(requisicao, { itens: PROJETOS, total: 2, pagina: 1, itensPorPagina: 100 });
         await montado.atualizar();

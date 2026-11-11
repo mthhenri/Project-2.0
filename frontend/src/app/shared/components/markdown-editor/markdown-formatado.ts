@@ -1,4 +1,4 @@
-import { Editor, defaultValueCtx, editorViewCtx, remarkStringifyOptionsCtx, rootCtx, serializerCtx } from '@milkdown/kit/core';
+import { Editor, defaultValueCtx, editorViewCtx, parserCtx, remarkStringifyOptionsCtx, rootCtx, schemaCtx, serializerCtx } from '@milkdown/kit/core';
 import {
     commonmark,
     wrapInBlockquoteCommand,
@@ -22,10 +22,13 @@ import { $prose, callCommand, getMarkdown, replaceAll } from '@milkdown/kit/util
 import { toggleLinkCommand, turnIntoTextCommand } from '@milkdown/kit/preset/commonmark';
 import { lift, liftEmptyBlock, splitBlock } from '@milkdown/kit/prose/commands';
 import { liftListItem, splitListItem } from '@milkdown/kit/prose/schema-list';
-import { Plugin, Selection, TextSelection } from '@milkdown/kit/prose/state';
+import { isTextOnlySlice } from '@milkdown/kit/prose';
+import { Plugin, PluginKey, Selection, TextSelection } from '@milkdown/kit/prose/state';
 import type { EditorState } from '@milkdown/kit/prose/state';
 import type { MilkdownPlugin } from '@milkdown/kit/ctx';
-import type { Node as NoProse, ResolvedPos } from '@milkdown/kit/prose/model';
+import { DOMParser as ConversorDeDom, DOMSerializer, Fragment } from '@milkdown/kit/prose/model';
+import type { Node as NoProse, ResolvedPos, Schema } from '@milkdown/kit/prose/model';
+import { pareceMarkdown } from './parece-markdown';
 
 /**
  * Edição formatada do Markdown (task 134). O texto guardado é sempre Markdown; o Milkdown (ProseMirror) só
@@ -71,6 +74,52 @@ const COLUNAS_DA_TABELA_NOVA = 3;
  * sem quebrar o editor e volta igual ao gravar.
  */
 const CRIACAO_FORA_DO_SUBCONJUNTO = /^(InputRule|PasteRule)<.*(table|image)|preserveEmptyLine/i;
+
+/** A imagem não nasce no editor: no texto colado ela vira o texto alternativo (ou o endereço), sem pedir o arquivo à rede. */
+function semImagens(fragmento: Fragment, esquema: Schema): Fragment {
+    const nos: NoProse[] = [];
+    fragmento.forEach((no) => {
+        if (no.type.name === 'image') {
+            const texto = String(no.attrs['alt'] || no.attrs['src'] || '');
+            if (texto) nos.push(esquema.text(texto));
+            return;
+        }
+        nos.push(no.isLeaf ? no : no.copy(semImagens(no.content, esquema)));
+    });
+    return Fragment.fromArray(nos);
+}
+
+/**
+ * Colar texto puro que parece Markdown (`**Olá!** Seja bem vindo`, uma tabela `| a | b |`) insere o conteúdo já formatado, em vez de literal (P-078).
+ * Colar com HTML junto (de uma página, do Word) segue o caminho normal do ProseMirror; dentro de bloco de código cola-se o texto como está.
+ */
+const colarMarkdown = $prose((contexto) => {
+    return new Plugin({
+        key: new PluginKey('COLAR_MARKDOWN'),
+        props: {
+            handlePaste: (visao, evento) => {
+                const dados = evento.clipboardData;
+                if (!visao.editable || !dados) return false;
+                if (visao.state.selection.$from.node().type.spec.code) return false;
+                if (dados.getData('text/html').length > 0) return false;
+                const texto = dados.getData('text/plain');
+                if (!pareceMarkdown(texto)) return false;
+                const documento = contexto.get(parserCtx)(texto);
+                if (!documento || typeof documento === 'string') return false;
+                const esquema = contexto.get(schemaCtx);
+                const dom = DOMSerializer.fromSchema(esquema).serializeFragment(semImagens(documento.content, esquema));
+                const fatia = ConversorDeDom.fromSchema(esquema).parseSlice(dom);
+                const no = isTextOnlySlice(fatia);
+                try {
+                    visao.dispatch(no ? visao.state.tr.replaceSelectionWith(no, true) : visao.state.tr.replaceSelection(fatia));
+                    return true;
+                } catch {
+                    return false;
+                }
+            },
+        },
+    });
+});
 
 function dentroDoSubconjunto(plugins: MilkdownPlugin[]): MilkdownPlugin[] {
     return plugins.filter((plugin) => {
@@ -153,6 +202,7 @@ function montar(raiz: HTMLElement | null, markdown: string, ouvintes?: OuvintesE
         .use(dentroDoSubconjunto(commonmark.flat()))
         .use(dentroDoSubconjunto(gfm.flat()))
         .use(history)
+        .use(colarMarkdown)
         .use(listener);
     const aoAplicar = ouvintes?.aoAplicar;
     if (aoAplicar) {

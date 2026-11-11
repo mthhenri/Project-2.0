@@ -523,6 +523,20 @@ describe('CheckinPage — conferência da situação', () => {
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ minutos: 51 }));
     });
 
+    it('com a aba oculta não confere; ao voltar, o tique seguinte confere (P-079)', async () => {
+        const montado = await montarCheckin({ temporizadoresSimulados: true });
+        const visibilidade = vi.spyOn(document, 'visibilityState', 'get');
+
+        visibilidade.mockReturnValue('hidden');
+        vi.advanceTimersByTime(9000);
+        montado.http.expectNone((requisicao) => requisicao.url.endsWith('/checkin/situacao'));
+
+        visibilidade.mockReturnValue('visible');
+        vi.advanceTimersByTime(3000);
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ minutos: 60 }));
+        visibilidade.mockRestore();
+    });
+
     it('execução trocada (descrição confirmada) vira "Check-in registrado" e a conferência para', async () => {
         const montado = await montarCheckin({ temporizadoresSimulados: true });
 

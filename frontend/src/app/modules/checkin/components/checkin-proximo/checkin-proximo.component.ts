@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnInit, computed, effect, inject, signal, untrac
 import { CheckinSituacaoConsultadaDto } from '@project20/shared';
 import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 import { CheckinService } from '../../services/checkin.service';
-import { textoDoProximoCheckin } from '../../utils/checkin.util';
+import { situacaoDivergeDaExecucao, textoDoProximoCheckin } from '../../utils/checkin.util';
 
 /**
  * Quanto falta para o próximo check-in, no menu do perfil da barra superior (task 303). Consulta a situação ao nascer e conta os segundos
@@ -34,7 +34,12 @@ export class CheckinProximoComponent implements OnInit {
         let execucaoAnterior: number | null | undefined;
         effect(() => {
             const execucaoAtual = this.execucaoAtiva.ativa()?.id ?? null;
-            if (execucaoAnterior !== undefined && execucaoAnterior !== execucaoAtual) untracked(() => this.consultar());
+            if (execucaoAnterior !== undefined && execucaoAnterior !== execucaoAtual) {
+                // A execução ativa costuma chegar logo depois da primeira consulta: só refaz se a situação já conhecida não a reconhece.
+                untracked(() => {
+                    if (situacaoDivergeDaExecucao(this.situacao() ?? null, execucaoAtual)) this.consultar();
+                });
+            }
             execucaoAnterior = execucaoAtual;
         });
     }

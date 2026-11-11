@@ -24,6 +24,16 @@ export function deveMostrarJanelinha(situacao: CheckinSituacaoConsultadaDto | nu
     return estadoDaIa === null || estadoDaIa === EstadoIaEnum.NO_AR;
 }
 
+/**
+ * O que o cliente sabe da execução em andamento (`execucaoAtivaId`, `null` sem execução) já não bate com a última situação do check-in: só então
+ * vale consultar de novo. Sem situação conhecida, consulta.
+ */
+export function situacaoDivergeDaExecucao(situacao: CheckinSituacaoConsultadaDto | null, execucaoAtivaId: number | null): boolean {
+    if (!situacao) return true;
+    const execucaoDaSituacao = situacao.haCheckin ? (situacao.execucao?.id ?? null) : null;
+    return execucaoDaSituacao !== execucaoAtivaId;
+}
+
 /** Em quanto tempo (ms) a janelinha deve conferir a situação para aparecer na hora do horário sorteado, ou `null` se não há horário. */
 export function esperaAteOCheckin(situacao: CheckinSituacaoConsultadaDto | null, agora: number): number | null {
     if (!situacao?.proximoCheckinData || situacao.disparado) return null;

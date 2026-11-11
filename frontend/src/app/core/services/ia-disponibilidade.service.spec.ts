@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -20,7 +20,7 @@ function criarServico(): IaDisponibilidadeService {
 }
 
 function carregarComEstado(servico: IaDisponibilidadeService, estado: EstadoIaEnum): void {
-    servico.carregar();
+    servico.carregar({ forcar: true });
     responderSucesso(esperarRequisicao(http, 'GET', '/ia/disponibilidade'), { estado });
 }
 
@@ -63,6 +63,55 @@ describe('IaDisponibilidadeService — consulta', () => {
         servico.carregar();
         responderErro(esperarRequisicao(http, 'GET', '/ia/disponibilidade'), 500, 'Falhou');
         expect(servico.estadoReal()).toBeNull();
+    });
+});
+
+describe('IaDisponibilidadeService — consulta única (P-081)', () => {
+    it('vários pedidos na mesma carga viram uma requisição só, e um pedido logo depois da resposta também', () => {
+        const servico = criarServico();
+        servico.carregar();
+        servico.carregar();
+        servico.carregar();
+        responderSucesso(esperarRequisicao(http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
+
+        servico.carregar();
+        http.expectNone((requisicao) => requisicao.url.endsWith('/ia/disponibilidade'));
+        expect(servico.estadoReal()).toBe(EstadoIaEnum.NO_AR);
+    });
+
+    it('depois da resposta do login, a barra lateral não pergunta de novo', () => {
+        const servico = criarServico();
+        servico.consultar().subscribe();
+        responderSucesso(esperarRequisicao(http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
+
+        servico.carregar();
+        http.expectNone((requisicao) => requisicao.url.endsWith('/ia/disponibilidade'));
+    });
+
+    it('forcar pula a janela de frescor, mas nunca duplica uma consulta em curso', () => {
+        const servico = criarServico();
+        servico.carregar();
+        responderSucesso(esperarRequisicao(http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
+
+        servico.carregar({ forcar: true });
+        servico.carregar({ forcar: true });
+        responderSucesso(esperarRequisicao(http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.FORA_DO_AR });
+        expect(servico.estadoReal()).toBe(EstadoIaEnum.FORA_DO_AR);
+    });
+
+    it('passada a janela, o intervalo da barra lateral consulta de novo', () => {
+        vi.useFakeTimers();
+        try {
+            const servico = criarServico();
+            servico.carregar();
+            responderSucesso(esperarRequisicao(http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
+            vi.advanceTimersByTime(6_000);
+
+            servico.carregar();
+            responderSucesso(esperarRequisicao(http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });
 

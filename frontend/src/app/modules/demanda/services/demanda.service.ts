@@ -7,6 +7,7 @@ import {
     DemandaListarDto,
     DemandaResumoDto,
     DemandaRecuperadaDto,
+    DemandaDetalheRecuperadoDto,
     DemandaAlterarDto,
     DemandaAlteradaDto,
     DemandaGrafoDto,
@@ -43,6 +44,7 @@ export class DemandaService {
         if (filtros.projetoId) params = params.set('projetoId', String(filtros.projetoId));
         if (filtros.pagina)    params = params.set('pagina', String(filtros.pagina));
         if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
+        if (filtros.allRows)   params = params.set('allRows', 'true');
         if (filtros.status)    params = params.set('status', filtros.status);
         if (filtros.estrutural !== undefined) params = params.set('estrutural', String(filtros.estrutural));
         return this.httpClient.get<StandardResponse<PaginatedResult<DemandaResumoDto>>>(this.urlBase, { params });
@@ -102,6 +104,11 @@ export class DemandaService {
 
     recuperarArvore(id: number): Observable<StandardResponse<DemandaArvoreItemDto>> {
         return this.httpClient.get<StandardResponse<DemandaArvoreItemDto>>(`${this.urlBase}/${id}/arvore`);
+    }
+
+    /** A demanda aberta na tela, com ancestrais, tags, membros e conexões, numa chamada só (P-080). */
+    recuperarDetalhe(id: number): Observable<StandardResponse<DemandaDetalheRecuperadoDto>> {
+        return this.httpClient.get<StandardResponse<DemandaDetalheRecuperadoDto>>(`${this.urlBase}/${id}/detalhe`);
     }
 
     recuperarAncestral(id: number): Observable<StandardResponse<DemandaAncestralDto[]>> {

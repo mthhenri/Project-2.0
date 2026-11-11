@@ -22,9 +22,11 @@ function responderPendentes(montado: Montado, podeEditar: boolean): string[] {
         const caminho = requisicao.request.url.replace(/^.*\/api\/v1/, '');
         respondidas.push(`${requisicao.request.method} ${caminho}`);
         let dados: unknown = [];
-        if (caminho === '/demanda/10') dados = { ...DEMANDA, podeEditar };
-        else if (caminho === '/demanda/10/arvore') dados = { id: 10, nome: 'Demanda de teste', filhos: [] };
-        else if (caminho === '/plano/demanda/10') dados = null;
+        // Qualquer id: o teste de troca de página também carrega a demanda 12 e não pode receber o `[]` padrão abaixo.
+        const detalhe = /^\/demanda\/(\d+)\/detalhe$/.exec(caminho);
+        if (detalhe) dados = { demanda: { ...DEMANDA, id: Number(detalhe[1]), podeEditar }, ancestrais: [], tags: [], membros: [], conexoes: [] };
+        else if (/^\/demanda\/\d+\/arvore$/.test(caminho)) dados = { id: Number(caminho.split('/')[2]), nome: 'Demanda de teste', filhos: [] };
+        else if (/^\/plano\/demanda\/\d+$/.test(caminho)) dados = null;
         else if (['/usuario', '/demanda', '/atividade'].includes(caminho)) dados = PAGINA([]);
         responderSucesso(requisicao, dados);
     }
@@ -61,8 +63,12 @@ describe('DemandaAbertaComponent — o que mostra', () => {
         expect(montado.componente.abaAtiva()).toBe('tecnica');
         expect(texto(montado)).toContain('texto tecnico');
         expect(editarDescricao(montado)).not.toBeNull();
-        for (const rota of ['GET /demanda/10', 'GET /demanda/10/ancestral', 'GET /demanda/10/tag', 'GET /demanda/10/membro', 'GET /demanda/10/conexao', 'GET /atividade']) {
+        for (const rota of ['GET /demanda/10/detalhe', 'GET /demanda/10/arvore', 'GET /atividade']) {
             expect(carga.filter((chamada) => chamada.startsWith(rota)).length, rota).toBeGreaterThan(0);
+        }
+        // O detalhe agregado substitui as cinco leituras avulsas (P-080).
+        for (const rota of ['GET /demanda/10', 'GET /demanda/10/ancestral', 'GET /demanda/10/tag', 'GET /demanda/10/membro', 'GET /demanda/10/conexao']) {
+            expect(carga.filter((chamada) => chamada === rota).length, rota).toBe(0);
         }
     });
 
@@ -138,7 +144,7 @@ describe('DemandaAbertaComponent — navegação e título', () => {
         montado.http.expectNone(() => true);
         montado.fixture.componentRef.setInput('demandaId', 12);
         montado.componente.ngOnChanges({ demandaId: { currentValue: 12, previousValue: 10, firstChange: false, isFirstChange: () => false } });
-        expect(montado.http.match((registro) => registro.url.endsWith('/demanda/12') && !registro.url.includes('/plano/')).length).toBe(1);
+        expect(montado.http.match((registro) => registro.url.endsWith('/demanda/12/detalhe')).length).toBe(1);
     });
 
     it('gestor edita o título pelo lápis: Enter salva (PUT), vazio é recusado', async () => {

@@ -73,4 +73,16 @@ describe('CheckinProximoComponent', () => {
         await montado.atualizar();
         expect(texto(montado)).toBe('Próximo check-in em 10:00');
     });
+
+    it('não refaz a consulta quando a execução ativa que chegou já é a da situação conhecida (P-079)', async () => {
+        const montado = await montar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao(new Date(AGORA.getTime() + 10 * 60_000)));
+        await montado.atualizar();
+
+        // `/execucao/ativa` responde depois da situação: a execução 9 já é a da situação, nada a conferir.
+        montado.fixture.debugElement.injector.get(ExecucaoAtivaService).definir({ id: 9, atividadeId: 1, descricao: 'x', inicioData: AGORA });
+        await montado.atualizar();
+        montado.http.expectNone((requisicao) => requisicao.url.includes('/checkin/situacao'));
+        expect(texto(montado)).toBe('Próximo check-in em 10:00');
+    });
 });

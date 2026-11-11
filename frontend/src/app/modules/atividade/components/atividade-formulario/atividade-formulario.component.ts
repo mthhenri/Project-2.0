@@ -181,7 +181,7 @@ export class AtividadeFormularioComponent implements OnInit {
     }
 
     private carregarUsuarios(): void {
-        this.usuarioService.listar({ ativo: true, itensPorPagina: 100 }).subscribe({
+        this.usuarioService.listar({ ativo: true, allRows: true }).subscribe({
             next: (resposta) => {
                 if (resposta.sucesso && resposta.dados) this.usuarios.set(resposta.dados.itens);
             },

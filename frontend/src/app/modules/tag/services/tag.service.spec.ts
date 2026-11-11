@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { Observable } from 'rxjs';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { SEM_OVERLAY_GLOBAL } from '../../../core/interceptors/loading.interceptor';
@@ -53,5 +54,40 @@ describe('TagService (frontend)', () => {
         pedido('DELETE', '/tag/4');
         servico.restaurar(4).subscribe();
         pedido('PATCH', '/tag/4/restaurar');
+    });
+
+    describe('listarCatalogo (P-080)', () => {
+        it('lê da memória na segunda vez, sem nova requisição', () => {
+            let resposta: unknown;
+            servico.listarCatalogo().subscribe();
+            pedido('GET', '/tag').flush({ sucesso: true, dados: [{ id: 1, nome: 'Infra', cor: '#abcdef' }], mensagem: 'ok' });
+
+            servico.listarCatalogo().subscribe((retorno) => (resposta = retorno));
+            http.expectNone((registro) => registro.url.endsWith('/tag'));
+            expect((resposta as { dados: unknown[] }).dados).toHaveLength(1);
+        });
+
+        it('listar continua indo ao servidor sempre (é a tela de manutenção)', () => {
+            servico.listarCatalogo().subscribe();
+            pedido('GET', '/tag').flush({ sucesso: true, dados: [], mensagem: 'ok' });
+            servico.listar().subscribe();
+            pedido('GET', '/tag');
+        });
+
+        it.each<[string, () => Observable<unknown>, string, string]>([
+            ['criar', () => servico.criar({ nome: 'Nova', cor: '#111111' }), 'POST', '/tag'],
+            ['alterar', () => servico.alterar(3, { nome: 'Outra' }), 'PUT', '/tag/3'],
+            ['excluir', () => servico.excluir(3), 'DELETE', '/tag/3'],
+            ['restaurar', () => servico.restaurar(3), 'PATCH', '/tag/3/restaurar'],
+        ])('%s invalida a cópia: a leitura seguinte vai ao servidor', (_nome, gravar, metodo, sufixo) => {
+            servico.listarCatalogo().subscribe();
+            pedido('GET', '/tag').flush({ sucesso: true, dados: [], mensagem: 'ok' });
+
+            gravar().subscribe();
+            pedido(metodo, sufixo).flush({ sucesso: true, dados: null, mensagem: 'ok' });
+
+            servico.listarCatalogo().subscribe();
+            pedido('GET', '/tag');
+        });
     });
 });

@@ -13,6 +13,8 @@ import {
     DemandaResumoDto,
     DemandaRecuperadaDto,
     DemandaRecuperarDto,
+    DemandaDetalheRecuperarDto,
+    DemandaDetalheRecuperadoDto,
     DemandaInternoAlterarDto,
     DemandaDocumentacaoResumoDto,
     DemandaTextosAlteradosDto,
@@ -314,6 +316,31 @@ export class DemandaService {
             sucesso:  true,
             dados:    demandaEncontrada,
             mensagem: 'Demanda recuperada com sucesso',
+        };
+    }
+
+    /**
+   * Demanda aberta na tela numa chamada só (P-080): a demanda, os ancestrais, as tags, os membros e as conexões.
+   * O acesso é conferido **uma vez**, pela mesma regra de `recuperar` (desenvolvedor só vê demanda de projeto a que tem acesso; sem acesso é "não encontrada"),
+   * e só depois as quatro leituras de apoio rodam em paralelo; cada bloco é o mesmo que a rota própria devolve, sem campo extra.
+   */
+    async recuperarDetalhe(
+        dto: DemandaDetalheRecuperarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<DemandaDetalheRecuperadoDto>> {
+        const demandaRecuperada = (await this.recuperar({ id: dto.id }, usuarioAtivo)).dados!;
+
+        const [ancestrais, tags, membros, conexoes] = await Promise.all([
+            this.demandaRepositorio.listarAncestral({ demandaId: dto.id }),
+            this.demandaRepositorio.listarTagsDemanda({ demandaId: dto.id }),
+            this.demandaRepositorio.listarMembrosDemanda({ demandaId: dto.id }),
+            this.demandaRepositorio.listarConexoes({ demandaId: dto.id }),
+        ]);
+
+        return {
+            sucesso:  true,
+            dados:    { demanda: demandaRecuperada, ancestrais, tags, membros, conexoes },
+            mensagem: 'Detalhe da demanda recuperado com sucesso',
         };
     }
 

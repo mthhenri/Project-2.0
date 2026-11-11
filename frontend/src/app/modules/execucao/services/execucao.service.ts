@@ -42,6 +42,7 @@ export class ExecucaoService {
         if (filtros.data)           params = params.set('data', filtros.data);
         if (filtros.pagina)         params = params.set('pagina', String(filtros.pagina));
         if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
+        if (filtros.allRows)        params = params.set('allRows', 'true');
         return this.httpClient.get<StandardResponse<ExecucaoResumoDto>>(this.urlBase, { params, ...comFeedbackProprio() });
     }
 
