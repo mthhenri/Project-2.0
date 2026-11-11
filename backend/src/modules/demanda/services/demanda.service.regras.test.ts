@@ -214,6 +214,43 @@ test('recuperar: inexistente, excluída ou de projeto inacessível ao desenvolve
     await assert.rejects(() => criarServico(repositorio({ recuperar: async () => null })).recuperar({ id: 10 }, DESENVOLVEDOR), ResourceNotFoundException);
 });
 
+test('recuperarDetalhe: um bloco só com demanda, ancestrais, tags, membros e conexões, e a checagem de acesso é uma só (P-080)', async () => {
+    const chamadas: string[] = [];
+    const repo = repositorio({
+        recuperar: async () => { chamadas.push('recuperar'); return { ...DEMANDA }; },
+        validarMembro: async () => { chamadas.push('validarMembro'); return true; },
+        listarAncestral: async () => { chamadas.push('listarAncestral'); return [{ id: 1, nome: 'Raiz' }]; },
+        listarMembrosDemanda: async () => { chamadas.push('listarMembrosDemanda'); return [{ usuarioId: 3, nomeCompleto: 'Dev' }]; },
+        listarConexoes: async () => { chamadas.push('listarConexoes'); return [{ id: 9 }]; },
+    });
+    const resposta = await criarServico(repo).recuperarDetalhe({ id: 10 }, DESENVOLVEDOR);
+    assert.equal(resposta.sucesso, true);
+    assert.deepEqual(Object.keys(resposta.dados!).sort(), ['ancestrais', 'conexoes', 'demanda', 'membros', 'tags']);
+    assert.equal(resposta.dados!.demanda.id, 10);
+    assert.equal(resposta.dados!.demanda.podeEditar, true);
+    assert.deepEqual(resposta.dados!.ancestrais, [{ id: 1, nome: 'Raiz' }]);
+    assert.equal(resposta.dados!.tags.length, 1);
+    assert.equal(resposta.dados!.membros.length, 1);
+    assert.deepEqual(resposta.dados!.conexoes, [{ id: 9 }]);
+    assert.equal(chamadas.filter((chamada) => chamada === 'recuperar').length, 1, 'o acesso é conferido uma vez só');
+});
+
+test('recuperarDetalhe: aplica ao desenvolvedor a mesma restrição de acesso de recuperar e não lê nada de apoio se a demanda não é dele', async () => {
+    let restricao: unknown = 'não chamou';
+    let leuApoio = false;
+    const repo = repositorio({
+        recuperar: async (_filtro: unknown, restricaoRecebida: unknown) => { restricao = restricaoRecebida; return null; },
+        listarAncestral: async () => { leuApoio = true; return []; },
+        listarMembrosDemanda: async () => { leuApoio = true; return []; },
+        listarConexoes: async () => { leuApoio = true; return []; },
+    });
+    await assert.rejects(criarServico(repo).recuperarDetalhe({ id: 10 }, DESENVOLVEDOR), ResourceNotFoundException);
+    assert.deepEqual(restricao, { usuarioId: 3 });
+    assert.equal(leuApoio, false);
+    await assert.rejects(criarServico(repo).recuperarDetalhe({ id: 10 }, GESTOR), ResourceNotFoundException);
+    assert.equal(restricao, undefined);
+});
+
 test('listar: desenvolvedor lista só as demandas dele (restrição por usuário); gestor, todas', async () => {
     const restricoes: unknown[] = [];
     const repo = repositorio({ listar: async (_filtros: unknown, restricao: unknown) => { restricoes.push(restricao); return { itens: [], total: 0 }; } });

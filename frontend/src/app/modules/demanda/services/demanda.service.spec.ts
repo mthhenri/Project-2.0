@@ -39,6 +39,14 @@ describe('DemandaService (frontend)', () => {
         paginada.flush({ sucesso: true, dados: null, mensagem: '' });
     });
 
+    it('recuperarDetalhe é um GET em /demanda/:id/detalhe, sem parâmetros (P-080)', () => {
+        servico.recuperarDetalhe(7).subscribe();
+        const requisicao = http.expectOne((registro) => registro.url.endsWith('/demanda/7/detalhe'));
+        expect(requisicao.request.method).toBe('GET');
+        expect(requisicao.request.params.keys()).toEqual([]);
+        requisicao.flush({ sucesso: true, dados: null, mensagem: '' });
+    });
+
     it('listar sem filtros não manda parâmetro', () => {
         servico.listar({} as never).subscribe();
         expect(http.expectOne((registro) => registro.url.endsWith('/demanda')).request.params.keys()).toEqual([]);

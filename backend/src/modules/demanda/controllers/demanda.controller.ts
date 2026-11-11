@@ -98,6 +98,18 @@ export class DemandaController {
         return this.demandaService.recuperarAncestral({ id }, usuarioAtivo);
     }
 
+    @ApiOperation({ summary: 'Recuperar a demanda aberta na tela: demanda, ancestrais, tags, membros e conexões numa chamada só' })
+    @ApiResponse({ status: 200, description: 'Detalhe da demanda recuperado com sucesso' })
+    @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
+    @Get(':id/detalhe')
+    recuperarDetalhe(
+        @Param('id', ParseIntPipe) id: number,
+        @ActiveUser() usuarioAtivo: JwtPayload,
+    ) {
+        return this.demandaService.recuperarDetalhe({ id }, usuarioAtivo);
+    }
+
     @ApiOperation({ summary: 'Listar demandas planejadas/pendentes para criação de atividade (desenvolvedor vê as atribuídas; gestor vê todas)' })
     @ApiResponse({ status: 200, description: 'Demandas atribuídas listadas com sucesso' })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })

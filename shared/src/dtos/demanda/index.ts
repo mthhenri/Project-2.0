@@ -3,6 +3,8 @@ export * from './DemandaCriadaDto';
 export * from './DemandaResumoDto';
 export * from './DemandaRecuperadaDto';
 export * from './DemandaRecuperarDto';
+export * from './DemandaDetalheRecuperarDto';
+export * from './DemandaDetalheRecuperadoDto';
 export * from './DemandaAcessoFiltrarDto';
 export * from './DemandaListarDto';
 export * from './DemandaAlterarDto';

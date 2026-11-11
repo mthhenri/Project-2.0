@@ -22,7 +22,7 @@ function responderPendentes(montado: Montado, podeEditar: boolean): string[] {
         const caminho = requisicao.request.url.replace(/^.*\/api\/v1/, '');
         respondidas.push(`${requisicao.request.method} ${caminho}`);
         let dados: unknown = [];
-        if (caminho === '/demanda/10') dados = { ...DEMANDA, podeEditar };
+        if (caminho === '/demanda/10/detalhe') dados = { demanda: { ...DEMANDA, podeEditar }, ancestrais: [], tags: [], membros: [], conexoes: [] };
         else if (caminho === '/demanda/10/arvore') dados = { id: 10, nome: 'Demanda de teste', filhos: [] };
         else if (caminho === '/plano/demanda/10') dados = null;
         else if (['/usuario', '/demanda', '/atividade'].includes(caminho)) dados = PAGINA([]);
@@ -61,8 +61,12 @@ describe('DemandaAbertaComponent — o que mostra', () => {
         expect(montado.componente.abaAtiva()).toBe('tecnica');
         expect(texto(montado)).toContain('texto tecnico');
         expect(editarDescricao(montado)).not.toBeNull();
-        for (const rota of ['GET /demanda/10', 'GET /demanda/10/ancestral', 'GET /demanda/10/tag', 'GET /demanda/10/membro', 'GET /demanda/10/conexao', 'GET /atividade']) {
+        for (const rota of ['GET /demanda/10/detalhe', 'GET /demanda/10/arvore', 'GET /atividade']) {
             expect(carga.filter((chamada) => chamada.startsWith(rota)).length, rota).toBeGreaterThan(0);
+        }
+        // O detalhe agregado substitui as cinco leituras avulsas (P-080).
+        for (const rota of ['GET /demanda/10', 'GET /demanda/10/ancestral', 'GET /demanda/10/tag', 'GET /demanda/10/membro', 'GET /demanda/10/conexao']) {
+            expect(carga.filter((chamada) => chamada === rota).length, rota).toBe(0);
         }
     });
 
@@ -138,7 +142,7 @@ describe('DemandaAbertaComponent — navegação e título', () => {
         montado.http.expectNone(() => true);
         montado.fixture.componentRef.setInput('demandaId', 12);
         montado.componente.ngOnChanges({ demandaId: { currentValue: 12, previousValue: 10, firstChange: false, isFirstChange: () => false } });
-        expect(montado.http.match((registro) => registro.url.endsWith('/demanda/12') && !registro.url.includes('/plano/')).length).toBe(1);
+        expect(montado.http.match((registro) => registro.url.endsWith('/demanda/12/detalhe')).length).toBe(1);
     });
 
     it('gestor edita o título pelo lápis: Enter salva (PUT), vazio é recusado', async () => {
