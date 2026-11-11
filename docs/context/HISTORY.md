@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-11-11 — Task 315 aberta: spec do `@IA` no chat entre colaboradores, com as decisões de privacidade e modelagem (sem código)
+
+O autor pediu para iniciar a 315 (`PRIORITIES.md`, "Agora"). A guarda-chuva exigia spec própria e decisão de privacidade antes de qualquer código, então esta rodada só escreveu a spec (`docs/specs/active/315-chat-ia-no-chat-entre-colaboradores.spec.md`) e colheu as decisões, em duas rodadas de perguntas. Decisões do autor: a IA lê o pedido e as **20** mensagens anteriores das duas pessoas, rotuladas por nome (o autor aceitou que o texto da outra pessoa vá ao provedor). O texto da resposta é visível às duas pessoas, com a IA avisada nas instruções de quem mais lê; o cartão da proposta é conferido no servidor ("Ação oculta por falta de acesso"). A resposta é uma mensagem direta de autor novo `IA` com `chamada_por_usuario_id` e o vínculo com a proposta (campos nos índices; migration `0086` no PostgreSQL provisório). O custo vai pelo `IaUsoService` (`USO_DE_IA`) em nome de quem chamou. `@IA` sozinho espera a próxima mensagem de quem chamou por 10 minutos. Há "IA digitando…" sem streaming. A ação é uma por chamada: leituras livres e no máximo uma proposta.
+
+Desenho apoiado no análogo da conversa do plano (task 234, `ChatPlanoService`: mensagens rotuladas por autor, orientação fixa no código, custo de quem envia). A spec manda **extrair** o laço de ferramentas do `ChatService` em vez de copiá-lo. Ponto deixado ao autor: a pergunta citava `proposta_ids`, mas a spec usa `proposta_id` (singular), porque é uma ação por chamada. Os contratos novos (`MensagemDiretaPropostaRecuperadaDto`, evento `IA_DIGITANDO`, campos do resumo e `podeVer` dos executores) aguardam a aprovação da spec antes do código.
+
 ## 2026-11-11 — Auditoria de requisições das telas: dossiê escrito, cobertura ainda incompleta (spec segue em `active/`)
 
 Pedido do autor em 2026-11-05 (`docs/specs/active/auditoria-requisicoes-telas.spec.md`): observar a aplicação real e apontar requisição a mais, a menos, repetida, sem projeção ou com dado vazando. Sem alteração de código. A primeira rodada (2026-11-05) deixou 18 roteiros do administrador em `.artifacts/auditoria-requisicoes-telas/` e nenhum relatório; esta segunda fechou os perfis desenvolvedor e auxiliar, passou a gravar o corpo das respostas e escreveu o `DOSSIE.md` ao lado da spec.
