@@ -287,6 +287,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                             tipo_usuario
                         WHERE
                             tipo_usuario.id = usuario.tipo_usuario_id
+                            AND tipo_usuario.is_deleted = false
                     ) AS tipo,
                     ativo,
                     horas_diarias_necessarias AS "horasDiariasNecessarias",
@@ -373,6 +374,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                             tipo_usuario
                         WHERE
                             tipo_usuario.id = usuario.tipo_usuario_id
+                            AND tipo_usuario.is_deleted = false
                     ) AS tipo,
                     ativo,
                     horas_diarias_necessarias AS "horasDiariasNecessarias",
@@ -467,6 +469,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                             tipo_usuario
                         WHERE
                             tipo_usuario.id = usuario.tipo_usuario_id
+                            AND tipo_usuario.is_deleted = false
                     ) AS tipo
                 FROM
                     usuario
@@ -618,6 +621,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                 FROM
                     usuario
                     INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
+                    AND tipo_usuario.is_deleted = false
                 WHERE
                     usuario.id = ANY (CAST(:usuarioIds AS integer[]))
             `,
@@ -637,6 +641,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                 FROM
                     usuario
                     INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
+                    AND tipo_usuario.is_deleted = false
                 WHERE
                     tipo_usuario.codigo = ANY (CAST(:tipos AS text[]))
             `,

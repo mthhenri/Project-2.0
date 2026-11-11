@@ -50,7 +50,6 @@ function resumir(texto: string): string {
 }
 
 async function lerLinhas(conexao: Knex | Knex.Transaction, alvo: AlvoDeConversao): Promise<{ id: number; valor: string | null }[]> {
-    // Inclui as linhas excluídas (soft delete): uma restauração futura não pode trazer HTML de volta.
     const resultado = await conexao.raw(
         `
             SELECT
@@ -61,6 +60,7 @@ async function lerLinhas(conexao: Knex | Knex.Transaction, alvo: AlvoDeConversao
             WHERE
                 :coluna: IS NOT NULL
                 AND :coluna: <> :vazio
+                AND is_deleted = false
             ORDER BY
                 id
         `,
@@ -105,15 +105,16 @@ async function principal(): Promise<void> {
                     total.imagens += plano.perdas.imagens;
                     total.linksRemovidos += plano.perdas.linksRemovidos;
                     if (!aplicar) continue;
-                    // O trigger de updated_date roda.
                     const afetadas = await transacao.raw(
                         `
                             UPDATE :tabela:
                             SET
-                                :coluna: = :novo
+                                :coluna: = :novo,
+                                updated_date = NOW()
                             WHERE
                                 id = :id
                                 AND :coluna: = :antigo
+                                AND is_deleted = false
                         `,
                         { tabela: alvo.tabela, coluna: alvo.coluna, novo: plano.novo, id: plano.id, antigo: plano.antigo },
                     );

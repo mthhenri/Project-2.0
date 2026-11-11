@@ -65,7 +65,8 @@ export class ModelagemTabelaRepository extends BaseRepository<ColocacaoDeTabela>
                 SET
                     modelagem_grupo_id = EXCLUDED.modelagem_grupo_id,
                     posicao_x = EXCLUDED.posicao_x,
-                    posicao_y = EXCLUDED.posicao_y
+                    posicao_y = EXCLUDED.posicao_y,
+                    updated_date = NOW()
                 RETURNING
                     nome_tabela AS "nomeTabela",
                     modelagem_grupo_id AS "grupoId",

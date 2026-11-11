@@ -231,14 +231,14 @@ import { StandardResponse } from '@project20/shared/interfaces';
 - Todo `SELECT` filtra `is_deleted = false`. **Registro `is_deleted = true` é morto**, equivale a apagado
   fisicamente: toda tabela de negócio lida ou alterada (`FROM`, `JOIN`, subconsulta, `EXISTS`, CTE, `UPDATE`) filtra
   `is_deleted = false`, sempre. Se uma listagem mostra o inativo (`ativo = false`) é decisão dela; o excluído nunca
-  entra. A única exceção é a leitura de restauração (`recuperarExcluid[oa]`) e o catálogo do banco. Parâmetros nomeados (`:nomeParametro`), nunca `?` nem
+  entra. As exceções são a lista fechada do `SYSTEM.SPEC.md` §9.2 #1 (leitura de restauração `recuperarExcluid[oa]`, catálogo do banco e três leituras de usuário do chat), e `npm run lint:tudo` reprova o resto. Parâmetros nomeados (`:nomeParametro`), nunca `?` nem
   interpolação. INSERT é `INSERT ... SELECT :campo ... RETURNING`, nunca `VALUES`. Nenhuma coluna
   tem `DEFAULT`: a aplicação fornece todos os valores.
 - **O banco não carrega lógica.** Sem trigger, sem função de negócio: `created_date`, `updated_date`, `is_deleted` e
-  `deleted_date` são gravados pela aplicação. Todo `UPDATE` novo grava `updated_date = NOW()`, também o `SET`
-  montado dinamicamente, e migration nova **não cria trigger**. Os 43 triggers `trg_<tabela>_updated_date`
-  existentes saem pela spec 277; a auditoria do filtro de exclusão em todo o SQL é a spec 276. Regras escritas em
-  `SYSTEM.SPEC.md` §9.2 (#1 e #14) e §16, `CONVENTIONS.md` e `SCHEMA.md`.
+  `deleted_date` são gravados pela aplicação. Todo `UPDATE` grava `updated_date = NOW()`, também o `SET` montado
+  dinamicamente, e migration nova **não cria trigger**. **Excluir não é alterar:** a exclusão grava `is_deleted` e
+  `deleted_date` e não toca `updated_date`. O `npm run lint:tudo` confere as duas regras (`scripts/verificar-sql.mjs`).
+  Regras escritas em `SYSTEM.SPEC.md` §9.2 (#1 e #14) e §16, `CONVENTIONS.md` e `SCHEMA.md`.
 - Aliases descritivos, sem abreviar (`demanda_filho`, não `d`). Tabelas no singular, em português
   snake_case. Datas genéricas `_date`, de negócio `_data` — nunca `_at`/`_em`.
 - Hierarquias e grafos: CTEs recursivas do PostgreSQL.
@@ -287,7 +287,7 @@ npm run test --workspace=desktop           # funções puras do Project Desktop
 npm run pack --workspace=desktop           # executável portátil do Project Desktop (Windows)
 npm run repo:verificar                     # organização de specs/artefatos e espelhos
 npm run repo:test                          # testes dos scripts de verificação, impacto, formatador de SQL e regras de lint
-npm run lint:tudo                          # ESLint + Stylelint + Prettier (HTML/SCSS) + formatação do SQL: precisa sair limpo
+npm run lint:tudo                          # ESLint + Stylelint + Prettier (HTML/SCSS) + formatação e regras do SQL: precisa sair limpo
 npm run lint                               # só o ESLint (TS, JS e templates); `lint:estilos`, `lint:templates` e `lint:sql` isolam o resto
 npm run formatar                           # aplica Prettier (HTML/SCSS) e o formatador de SQL; TypeScript nunca passa por formatador automático
 npm run impacto -- <arquivo>               # consumidores antes de alterar algo compartilhado

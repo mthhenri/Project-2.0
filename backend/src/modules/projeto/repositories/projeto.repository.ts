@@ -98,6 +98,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
                             tipo_projeto_status
                         WHERE
                             tipo_projeto_status.id = projeto.tipo_projeto_status_id
+                            AND tipo_projeto_status.is_deleted = false
                     ) AS status,
                     inicio_data::text AS "inicioData",
                     previsao_fim_data::text AS "previsaoFimData",
@@ -510,6 +511,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
                             tipo_projeto_status
                         WHERE
                             tipo_projeto_status.id = projeto.tipo_projeto_status_id
+                            AND tipo_projeto_status.is_deleted = false
                     ) AS status,
                     inicio_data::text AS "inicioData",
                     previsao_fim_data::text AS "previsaoFimData",

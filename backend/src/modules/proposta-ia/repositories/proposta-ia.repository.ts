@@ -21,7 +21,9 @@ const JUNCOES_RESUMO = `
     FROM
         proposta_ia
         INNER JOIN tipo_proposta_ia ON tipo_proposta_ia.id = proposta_ia.tipo_proposta_ia_id
+        AND tipo_proposta_ia.is_deleted = false
         INNER JOIN tipo_proposta_ia_status ON tipo_proposta_ia_status.id = proposta_ia.tipo_proposta_ia_status_id
+        AND tipo_proposta_ia_status.is_deleted = false
 `;
 
 /** Pedido de mudança de situação: só acontece se a proposta ainda está em uma das situações `de` (comparar e trocar, atômico). */
@@ -152,11 +154,13 @@ export class PropostaIaRepository extends BaseRepository<PropostaIa> {
                     resolucao_data = CASE
                         WHEN :para = :pendente THEN NULL
                         ELSE NOW()
-                    END
+                    END,
+                    updated_date = NOW()
                 FROM
                     tipo_proposta_ia_status AS status_atual
                 WHERE
                     status_atual.id = proposta_ia.tipo_proposta_ia_status_id
+                    AND status_atual.is_deleted = false
                     AND proposta_ia.id = :id
                     AND proposta_ia.usuario_id = :usuarioId
                     AND proposta_ia.is_deleted = false
@@ -183,7 +187,8 @@ export class PropostaIaRepository extends BaseRepository<PropostaIa> {
             `
                 UPDATE proposta_ia
                 SET
-                    resultado = CAST(:resultado AS jsonb)
+                    resultado = CAST(:resultado AS jsonb),
+                    updated_date = NOW()
                 WHERE
                     proposta_ia.id = :id
                     AND proposta_ia.is_deleted = false

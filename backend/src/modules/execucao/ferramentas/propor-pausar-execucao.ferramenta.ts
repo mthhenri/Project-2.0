@@ -7,6 +7,7 @@ import { DemandaRepository } from '../../demanda/repositories/demanda.repository
 import { FerramentaPropostaIa } from '../../ferramenta-ia/ferramentas/ferramenta-proposta-ia';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { ExecucaoService } from '../services/execucao.service';
+import { recuperarAtividadeDaExecucao } from './atividade-da-execucao';
 
 /** Propõe pausar a execução em andamento; **não pausa nada** (só o clique de Confirmar pausa). Sem execução ativa, nem propõe. */
 @Injectable()
@@ -37,7 +38,7 @@ export class ProporPausarExecucaoFerramenta extends FerramentaPropostaIa<ProporP
         if (deOutro && !podeConduzirExecucaoDeOutro(usuarioAtivo.tipo)) throw new BusinessException('Só o gestor pausa a execução de outra pessoa.');
         const ativa = (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: alvoId }, usuarioAtivo)).dados;
         if (!ativa) throw new BusinessException(deOutro ? 'Essa pessoa não tem execução em andamento: não há o que pausar' : 'O usuário não tem execução em andamento: não há o que pausar');
-        const atividade = (await this.atividadeService.recuperar({ id: ativa.atividadeId }, usuarioAtivo)).dados;
+        const atividade = await recuperarAtividadeDaExecucao(this.atividadeService, { id: ativa.atividadeId }, usuarioAtivo);
         const demanda = atividade ? await this.demandaRepositorio.recuperar({ id: atividade.demandaId }) : null;
 
         const dados: PropostaPausarExecucaoDadosDto = {

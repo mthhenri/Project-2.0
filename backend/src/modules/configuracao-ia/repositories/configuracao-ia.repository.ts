@@ -29,14 +29,15 @@ const COLUNAS_RESUMO = `
     configuracao_ia.ia_desligada AS "iaDesligada",
     configuracao_ia.niveis_proposta AS "niveisProposta",
     configuracao_ia.usuario_id AS "usuarioId",
-    usuario.nome_completo AS "usuarioNome",
+    COALESCE(usuario.nome_completo, 'Usuário removido') AS "usuarioNome",
     configuracao_ia.created_date AS "createdDate"
 `;
 
 const JUNCOES_RESUMO = `
     FROM
         configuracao_ia
-        INNER JOIN usuario ON usuario.id = configuracao_ia.usuario_id
+        LEFT JOIN usuario ON usuario.id = configuracao_ia.usuario_id
+        AND usuario.is_deleted = false
 `;
 
 @Injectable()
@@ -147,7 +148,8 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
                             ARRAY[CAST(:modelo AS text)],
                             CAST(:preco AS jsonb),
                             true
-                        )
+                        ),
+                        updated_date = NOW()
                     WHERE
                         configuracao_ia.id = (
                             SELECT
@@ -161,6 +163,7 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
                             LIMIT
                                 1
                         )
+                        AND configuracao_ia.is_deleted = false
                     RETURNING
                         configuracao_ia.id
                 `,
@@ -293,6 +296,7 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
                         ${COLUNAS_RESUMO} ${JUNCOES_RESUMO}
                     WHERE
                         configuracao_ia.id = :id
+                        AND configuracao_ia.is_deleted = false
                 `,
                 { id: inseridas[0].id },
                 transacao,

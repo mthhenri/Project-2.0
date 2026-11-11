@@ -7,6 +7,8 @@ import { ProjetoVolumeVigenciaService } from '../services/projeto-volume-vigenci
 import { SqlMigrationSource } from '../../../database/sql-migration-source';
 import * as path from 'node:path';
 
+const FUNCAO_REMOVIDA_PELA_0085 = 'CREATE FUNCTION fn_set_updated_date() RETURNS TRIGGER AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql';
+
 testarComBanco('migration 0068 aplica, reverte com valor mais recente e reaplica preservando zero e projetos sem início', async conexao => {
     const migration = await new SqlMigrationSource(path.resolve(__dirname, '../../../database/migrations')).getMigration('0068 - Volume esperado do projeto por vigencia.sql');
     await migration.down(conexao);
@@ -26,6 +28,8 @@ testarComBanco('migration 0068 aplica, reverte com valor mais recente e reaplica
         WHERE
             id = :id
     `, { id: semInicio.id, horas: 0 });
+    // A migration antiga cria um trigger com a função que a 0085 removeu: reaplicá-la aqui precisa dela de volta, só nesta transação.
+    await conexao.raw(FUNCAO_REMOVIDA_PELA_0085);
     await migration.up(conexao);
     const repositorio = new ProjetoVolumeVigenciaRepository(conexao);
     assert.equal((await repositorio.listar({ projetoId: projeto.id }))[0].vigenciaInicioData, '2026-01-01');

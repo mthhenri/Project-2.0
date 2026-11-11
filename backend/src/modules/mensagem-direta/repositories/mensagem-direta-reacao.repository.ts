@@ -88,8 +88,7 @@ export class MensagemDiretaReacaoRepository extends BaseRepository<MensagemDiret
                 UPDATE mensagem_direta_reacao
                 SET
                     is_deleted = true,
-                    deleted_date = NOW(),
-                    updated_date = NOW()
+                    deleted_date = NOW()
                 WHERE
                     mensagem_direta_reacao.mensagem_id = CAST(:mensagemId AS uuid)
                     AND mensagem_direta_reacao.usuario_id = :usuarioId

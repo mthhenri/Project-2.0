@@ -125,6 +125,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                             tipo_demanda_status
                         WHERE
                             tipo_demanda_status.id = demanda.tipo_demanda_status_id
+                            AND tipo_demanda_status.is_deleted = false
                     ) AS status,
                     estrutural AS "estrutural",
                     previsao_fim_data AS "previsaoFimData",
@@ -533,6 +534,8 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                                 FROM
                                     demanda AS demanda_do_projeto
                                     INNER JOIN demanda_listada ON demanda_listada.demanda_id = demanda_do_projeto.id
+                                WHERE
+                                    demanda_do_projeto.is_deleted = false
                             )
                         UNION ALL
                         SELECT
@@ -846,6 +849,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                             tipo_demanda_status
                         WHERE
                             tipo_demanda_status.id = demanda.tipo_demanda_status_id
+                            AND tipo_demanda_status.is_deleted = false
                     ) AS status,
                     estrutural AS "estrutural",
                     previsao_fim_data AS "previsaoFimData",
@@ -969,6 +973,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                 FROM
                     arvore_demanda
                     INNER JOIN demanda ON demanda.id = arvore_demanda.id
+                    AND demanda.is_deleted = false
                     INNER JOIN tipo_demanda_status ON tipo_demanda_status.id = demanda.tipo_demanda_status_id
                     AND tipo_demanda_status.is_deleted = false
                 ORDER BY
@@ -1240,7 +1245,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
    */
     async alterarTextos(dto: DemandaTextosInternoAlterarDto): Promise<DemandaTextosAlteradosDto | null> {
         const parametros: Record<string, unknown> = { id: dto.id, versao: dto.versao };
-        const setClauses: string[] = ['versao = demanda.versao + 1'];
+        const setClauses: string[] = ['versao = demanda.versao + 1', 'updated_date = NOW()'];
         if (dto.descricaoTecnica !== undefined) {
             setClauses.push('descricao_tecnica = :descricaoTecnica');
             parametros.descricaoTecnica = dto.descricaoTecnica;
@@ -1605,10 +1610,10 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                 UPDATE demanda_conexao
                 SET
                     is_deleted = true,
-                    deleted_date = NOW(),
-                    updated_date = NOW()
+                    deleted_date = NOW()
                 WHERE
                     id = :conexaoId
+                    AND is_deleted = false
             `,
             { conexaoId: dto.conexaoId },
         );
@@ -1713,8 +1718,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                 UPDATE demanda_tag
                 SET
                     is_deleted = true,
-                    deleted_date = NOW(),
-                    updated_date = NOW()
+                    deleted_date = NOW()
                 WHERE
                     demanda_id = :demandaId
                     AND tag_id = :tagId
@@ -1785,8 +1789,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                 UPDATE demanda_usuario
                 SET
                     is_deleted = true,
-                    deleted_date = NOW(),
-                    updated_date = NOW()
+                    deleted_date = NOW()
                 WHERE
                     demanda_id = :demandaId
                     AND usuario_id = :usuarioId

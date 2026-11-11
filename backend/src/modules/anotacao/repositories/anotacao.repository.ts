@@ -178,6 +178,7 @@ export class AnotacaoRepository extends BaseRepository<Anotacao> {
                             tipo_anotacao
                         WHERE
                             tipo_anotacao.id = anotacao.tipo_anotacao_id
+                            AND tipo_anotacao.is_deleted = false
                             AND tipo_anotacao.codigo = :tipo
                             AND anotacao.usuario_id = :usuarioId
                             AND anotacao.is_deleted = false

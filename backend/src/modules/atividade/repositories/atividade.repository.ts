@@ -38,6 +38,7 @@ const SELECIONAR_PRIORIDADE = `
             tipo_atividade_prioridade
         WHERE
             tipo_atividade_prioridade.id = atividade.tipo_atividade_prioridade_id
+            AND tipo_atividade_prioridade.is_deleted = false
     ) AS prioridade
 `;
 
@@ -106,6 +107,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
                             tipo_atividade_status
                         WHERE
                             tipo_atividade_status.id = atividade.tipo_atividade_status_id
+                            AND tipo_atividade_status.is_deleted = false
                     ) AS status,
                     ${SELECIONAR_PRIORIDADE},
                     created_date AS "createdDate"
@@ -213,7 +215,9 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
                     INNER JOIN tipo_atividade_status ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
                     AND tipo_atividade_status.is_deleted = false
                     INNER JOIN demanda ON demanda.id = atividade.demanda_id
+                    AND demanda.is_deleted = false
                     INNER JOIN projeto ON projeto.id = demanda.projeto_id
+                    AND projeto.is_deleted = false
                 WHERE
                     atividade.id = :id
                     AND atividade.is_deleted = false
@@ -487,6 +491,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
                             tipo_atividade_status
                         WHERE
                             tipo_atividade_status.id = atividade.tipo_atividade_status_id
+                            AND tipo_atividade_status.is_deleted = false
                     ) AS status,
                     ${SELECIONAR_PRIORIDADE},
                     created_date AS "createdDate"
@@ -686,8 +691,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
                     UPDATE atividade_tag
                     SET
                         is_deleted = true,
-                        deleted_date = NOW(),
-                        updated_date = NOW()
+                        deleted_date = NOW()
                     WHERE
                         atividade_id = :atividadeId
                         AND tag_id = :tagId

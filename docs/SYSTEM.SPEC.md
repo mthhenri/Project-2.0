@@ -162,12 +162,12 @@ automática (task 198): o backend serve o `Project-Desktop-<versão>.exe` de mai
 ✅ autenticacao.guard.ts       — comportamento de negócio, arquivo em português
 ✅ auth-token.interceptor.ts   — padrão técnico genérico, arquivo em inglês
 ✅ data-brasileira.pipe.ts     — específico do projeto, arquivo em português
-✅ fn_set_updated_date()       — objeto genérico de banco (infra de BaseEntity), em inglês
-❌ fn_atualizar_updated_date() — idioma misto em objeto genérico, proibido (§16 #12)
+✅ fn_chat_texto_busca()       — objeto genérico de banco, em inglês
+❌ fn_atualizar_data()         — idioma misto em objeto genérico, proibido (§16 #12)
 ✅ dia_nao_util / nome_completo — tabela/coluna de negócio, em português
 ```
 
-A regra alcança também **objetos de banco**: o que for de **infraestrutura** (mecanismo genérico) é nomeado em **inglês**; **tabelas e colunas de negócio** permanecem em português. O banco **não carrega lógica** (§9.2 #14): não se criam funções nem triggers novos; os `trg_<tabela>_updated_date` herdados seguem essa convenção de nome até a spec 277 removê-los.
+A regra alcança também **objetos de banco**: o que for de **infraestrutura** (mecanismo genérico) é nomeado em **inglês**; **tabelas e colunas de negócio** permanecem em português. O banco **não carrega lógica** (§9.2 #14): não se criam funções de negócio nem triggers.
 
 ---
 
@@ -1005,7 +1005,7 @@ export abstract class BaseEntity {
 
 ### 9.2 Regras SQL — Todas Obrigatórias
 
-1. **Registro `is_deleted = true` é morto**, para o sistema equivale a apagado fisicamente: **toda tabela de negócio lida ou alterada** filtra `[tabela].is_deleted = false` — no `FROM`, no `JOIN`, na subconsulta, no `EXISTS`, na CTE e no `UPDATE`, não só na principal. Se uma listagem mostra o inativo (`ativo = false`) é decisão dela, por `ativo`; o excluído nunca entra em leitura, soma, contagem ou junção. Isenções (lista fechada): a leitura de restauração `recuperarExcluid[oa]()` (#11), as tabelas do catálogo do PostgreSQL e `knex_migrations` (Modelagem), funções de conjunto (`generate_series`, `jsonb_each`) e CTEs que só reorganizam linhas já filtradas. Consequência: **entidade que já tem histórico dependente não é excluída, só inativada** (usuário com execução, task 275)
+1. **Registro `is_deleted = true` é morto**, para o sistema equivale a apagado fisicamente: **toda tabela de negócio lida ou alterada** filtra `[tabela].is_deleted = false` — no `FROM`, no `JOIN`, na subconsulta, no `EXISTS`, na CTE e no `UPDATE`, não só na principal. Se uma listagem mostra o inativo (`ativo = false`) é decisão dela, por `ativo`; o excluído nunca entra em leitura, soma, contagem ou junção. Isenções (lista fechada): a leitura de restauração `recuperarExcluid[oa]()` (#11), as tabelas do catálogo do PostgreSQL e `knex_migrations` (Modelagem), funções de conjunto (`generate_series`, `jsonb_each`), CTEs que só reorganizam linhas já filtradas e as três leituras de `usuario` do chat entre colaboradores (`validarExistenciaIncluindoExcluido`, `listarTiposPorIds`, `listarIdsComPermissaoDeGestor`: o histórico sobrevive a quem saiu e a conversa de gestor segue privada). Quem lê o autor de uma versão ou fonte usa `LEFT JOIN` com o filtro e mostra "Usuário removido". A regra é conferida por `scripts/verificar-sql.mjs` (em `npm run lint:tudo`). Consequência: **entidade que já tem histórico dependente não é excluída, só inativada** (usuário com execução, task 275)
 2. **Nomes de tabelas** em snake_case português singular: `usuario`, `demanda`, `dia_nao_util`
 3. **Colunas de negócio** em snake_case português: `nome_completo`, `horas_estimadas`
 4. **Colunas de BaseEntity** em snake_case inglês: `is_deleted`, `created_date`, `updated_date`
@@ -1017,9 +1017,9 @@ export abstract class BaseEntity {
 9. **INSERT sempre com SELECT** — nunca `VALUES`: `INSERT INTO tabela (...) SELECT :campo1, :campo2 RETURNING ...`
 10. **Hierarquias e grafos** via CTEs recursivos do PostgreSQL
 11. **Soft delete** via `executarSoftDelete()` do BaseRepository — nunca DELETE físico. O caminho de volta é `PATCH /<recurso>/:id/restaurar` (gestor): o repositório faz `UPDATE ... SET is_deleted = false, deleted_date = NULL ... WHERE id = :id AND is_deleted = true RETURNING ...`; a **única leitura com `is_deleted = true`** é `recuperarExcluid[oa]()`, usada pela service para validar unicidade (nome/código/login ativos) e dependências (demanda ou projeto pai ativo) antes de restaurar. Restaurar **não é em cascata** (uma demanda não reativa filhos). Disponível em atividade, projeto, usuário, tag, dia não útil e demanda; o frontend o usa no "Desfazer" do toast de exclusão (6 s)
-12. **Objetos genéricos de banco** em **inglês** (idioma misto em mecanismo genérico é proibido, §16 #12); apenas tabelas e colunas de negócio são em português. Hoje só existem os objetos legados `fn_set_updated_date()` e `trg_<tabela>_updated_date` (saem pela spec 277) e as funções de busca do chat (`fn_chat_texto_busca`, `fn_chat_texto_consulta`)
+12. **Objetos genéricos de banco** em **inglês** (idioma misto em mecanismo genérico é proibido, §16 #12); apenas tabelas e colunas de negócio são em português. Hoje só existem as funções de busca do chat (`fn_chat_texto_busca`, `fn_chat_texto_consulta`)
 13. **Enums sempre como tabela de referência** — toda coluna de domínio fechado é `INTEGER` FK para uma tabela `tipo_<tabela>_<complemento?>` (com `codigo` + `descricao`), **nunca** `VARCHAR + CHECK` nem tipo `ENUM` nativo. O enum TypeScript de `shared/` espelha os `codigo`; o repositório traduz `codigo ⇄ id` no SQL (ver §5.4)
-14. **O banco não carrega lógica.** Sem trigger, sem função de negócio, sem `DEFAULT`: `created_date`, `updated_date`, `is_deleted` e `deleted_date` são gravados pela aplicação. **Todo `UPDATE` grava `updated_date = NOW()`**, inclusive o `SET` montado dinamicamente (o soft delete e a restauração do `BaseRepository` já gravam). Migration nova **não cria trigger**. Os 43 `trg_<tabela>_updated_date` herdados, que ainda gravam a data sozinhos, saem na spec 277 (migration 0079); até lá o `UPDATE` novo grava a data mesmo assim, sem depender deles
+14. **O banco não carrega lógica.** Sem trigger, sem função de negócio, sem `DEFAULT`: `created_date`, `updated_date`, `is_deleted` e `deleted_date` são gravados pela aplicação. **Todo `UPDATE` grava `updated_date = NOW()`**, inclusive o `SET` montado dinamicamente e o `DO UPDATE` de upsert; escrita manual no banco precisa gravar a data também. **Excluir não é alterar:** a exclusão grava `is_deleted` e `deleted_date` e não toca `updated_date` (P-074); a restauração grava. Migration nova **não cria trigger** (os 43 herdados saíram na migration `0085`). A regra é conferida por `scripts/verificar-sql.mjs`
 
 ### 9.3 Paginação Padrão
 
@@ -1532,4 +1532,4 @@ Estas regras **jamais** devem ser violadas. São inegociáveis independente do c
 | 24 | **Nunca usar `atualizar`** em nomes de DTO ou método de negócio — usar `alterar` (`UsuarioAlterarDto`, `alterar()`) |
 | 25 | **Nunca colocar em repositório A** uma query cuja responsabilidade é do módulo B — usar o repositório do módulo correto |
 | 26 | **Nunca representar enum como `VARCHAR + CHECK` ou `ENUM` nativo** — todo enum é uma tabela de referência `tipo_<tabela>_<complemento?>` (`codigo` + `descricao`) e a coluna de negócio é `INTEGER` FK para o `id` dela; o enum TypeScript de `shared/` é o contrato tipado que espelha os `codigo` (ver §5.4) |
-| 27 | **Nunca criar** trigger nem função de negócio no banco, nem `UPDATE` sem `updated_date = NOW()` — a aplicação grava as datas genéricas (§9.2 #14) |
+| 27 | **Nunca criar** trigger nem função de negócio no banco, nem `UPDATE` sem `updated_date = NOW()` (exceto a exclusão, que não é alteração) — a aplicação grava as datas genéricas (§9.2 #14) |

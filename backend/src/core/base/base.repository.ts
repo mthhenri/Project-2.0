@@ -45,10 +45,10 @@ export abstract class BaseRepository<TEntidade> {
                 UPDATE ${this.nomeTabela}
                 SET
                     is_deleted = true,
-                    deleted_date = NOW(),
-                    updated_date = NOW()
+                    deleted_date = NOW()
                 WHERE
                     id = :identificador
+                    AND is_deleted = false
             `,
             { identificador },
         );

@@ -82,7 +82,8 @@ export class MensagemDiretaPreferenciaRepository extends BaseRepository<Mensagem
                     silenciado_ate_date = EXCLUDED.silenciado_ate_date,
                     atalho_global = EXCLUDED.atalho_global,
                     posicao_popup = EXCLUDED.posicao_popup,
-                    posicao_barra = EXCLUDED.posicao_barra
+                    posicao_barra = EXCLUDED.posicao_barra,
+                    updated_date = NOW()
                 RETURNING
                     ${COLUNAS_DA_PREFERENCIA}
             `,

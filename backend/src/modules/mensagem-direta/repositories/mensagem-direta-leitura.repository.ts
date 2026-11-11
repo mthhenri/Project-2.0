@@ -103,7 +103,8 @@ export class MensagemDiretaLeituraRepository extends BaseRepository<MarcadorDeLe
                     lida_ate_date = GREATEST(
                         mensagem_direta_leitura.lida_ate_date,
                         EXCLUDED.lida_ate_date
-                    )
+                    ),
+                    updated_date = NOW()
                 RETURNING
                     ${COLUNAS_DO_MARCADOR}
             `,
@@ -140,7 +141,8 @@ export class MensagemDiretaLeituraRepository extends BaseRepository<MarcadorDeLe
                 WHERE
                     is_deleted = false DO UPDATE
                 SET
-                    silenciada = EXCLUDED.silenciada
+                    silenciada = EXCLUDED.silenciada,
+                    updated_date = NOW()
                 RETURNING
                     ${COLUNAS_DO_MARCADOR}
             `,

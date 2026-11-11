@@ -121,36 +121,6 @@ testarComBanco('mensagem_direta_supervisao: grava a abertura com os dois partici
     });
 });
 
-testarComBanco('as três tabelas atualizam updated_date no UPDATE (trigger)', async (conexao) => {
-    const gestor = await criarUsuario(conexao);
-    const menor = await criarUsuario(conexao);
-    const maior = await criarUsuario(conexao);
-    const conversaId = `${menor.id}-${maior.id}`;
-
-    await conexao.raw(INSERIR_LEITURA, leitura(conversaId, menor.id, maior.id) as any);
-    await conexao.raw(INSERIR_PREFERENCIA, { dataBase: DATA_BASE_TESTE, excluida: false, usuarioId: menor.id });
-    await conexao.raw(INSERIR_SUPERVISAO, { dataBase: DATA_BASE_TESTE, leitorId: gestor.id, conversaId, menorId: menor.id, maiorId: maior.id });
-
-    for (const [tabela, alteracao] of [
-        ['mensagem_direta_leitura', 'silenciada = true'],
-        ['mensagem_direta_preferencia', 'som_ativo = true'],
-        ['mensagem_direta_supervisao', 'participantes_avisados = false'],
-    ]) {
-        await conexao.raw(`
-            UPDATE ${tabela}
-            SET
-                ${alteracao}
-        `);
-        const { rows } = await conexao.raw(`
-            SELECT
-                ${tabela}.created_date < ${tabela}.updated_date AS alterada
-            FROM
-                ${tabela}
-        `);
-        assert.equal(rows[0].alterada, true, `${tabela}: updated_date não foi alterado`);
-    }
-});
-
 testarComBanco('as três tabelas têm os campos de BaseEntity e nenhuma coluna tem DEFAULT (fora o id)', async (conexao) => {
     const tabelas = ['mensagem_direta_leitura', 'mensagem_direta_preferencia', 'mensagem_direta_supervisao'];
     const { rows } = await conexao.raw(

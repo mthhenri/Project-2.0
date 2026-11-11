@@ -53,7 +53,7 @@ testarComBanco('mensagem_direta: recusa participantes fora de ordem ou iguais e 
     await conexao.raw(INSERIR_MENSAGEM, mensagem(UUID_UM, '4-9', 4, 9) as any);
 });
 
-testarComBanco('mensagem_direta: guarda os arrays de menções e referências e atualiza updated_date no UPDATE (trigger)', async (conexao) => {
+testarComBanco('mensagem_direta: guarda os arrays de menções e referências', async (conexao) => {
     await conexao.raw(INSERIR_MENSAGEM, mensagem(UUID_UM, '4-9', 4, 9) as any);
     await conexao.raw(`
         UPDATE mensagem_direta
@@ -69,8 +69,7 @@ testarComBanco('mensagem_direta: guarda os arrays de menções e referências e 
     const { rows } = await conexao.raw(`
         SELECT
             mencoes,
-            referencias,
-            created_date < updated_date AS alterada
+            referencias
         FROM
             mensagem_direta
         WHERE
@@ -78,7 +77,6 @@ testarComBanco('mensagem_direta: guarda os arrays de menções e referências e 
     `, { mensagemId: UUID_UM });
     assert.deepEqual(rows[0].mencoes, [4, 9]);
     assert.deepEqual(rows[0].referencias, ['DEMANDA:212']);
-    assert.equal(rows[0].alterada, true);
 });
 
 testarComBanco('mensagem_direta tem os campos de BaseEntity, nenhuma coluna tem DEFAULT (fora o id) e a tabela está marcada como provisória', async (conexao) => {

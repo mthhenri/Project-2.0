@@ -607,13 +607,13 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
                     INNER JOIN demanda ON demanda.id = atividade.demanda_id
                     INNER JOIN projeto ON projeto.id = demanda.projeto_id
                     INNER JOIN tipo_atividade_status ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
+                    AND tipo_atividade_status.is_deleted = false
                 WHERE
                     execucao.is_deleted = false
                     AND atividade.is_deleted = false
                     AND usuario.is_deleted = false
                     AND demanda.is_deleted = false
                     AND projeto.is_deleted = false
-                    AND tipo_atividade_status.is_deleted = false
                     AND projeto.id = :projetoId
                     AND DATE (execucao.inicio_data) BETWEEN :dataInicio::DATE AND :dataFim::DATE
                 ORDER BY

@@ -113,7 +113,8 @@ export class ModelagemGrupoRepository extends BaseRepository<ModelagemGrupoDto> 
                 UPDATE modelagem_grupo
                 SET
                     titulo = :titulo,
-                    rotulo = :rotulo
+                    rotulo = :rotulo,
+                    updated_date = NOW()
                 WHERE
                     modelagem_grupo.id = :id
                     AND modelagem_grupo.is_deleted = false

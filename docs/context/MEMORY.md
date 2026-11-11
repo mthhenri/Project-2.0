@@ -82,6 +82,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Testes de integração dos repositories (banco `<DB_NOME>_teste`, fábricas, `testarComBanco`; `npm run test:integracao`) | `backend/src/testes/`, `backend/scripts/executar-testes.mjs` |
 | Verificação de organização do repositório (`repo:verificar`) | `scripts/verificar-organizacao.mjs` |
 | Mapa de impacto (`npm run impacto`) | `scripts/impacto.mjs`, `scripts/agentes/hook-impacto.mjs` |
+| Verificador estático do SQL (filtro `is_deleted`, `updated_date`; `npm run lint:sql`) | `scripts/verificar-sql.mjs` |
 | Subagentes (`implementador`, `revisor`, `testador`) | `.claude/agents/` |
 | Specs por estado e material da tarefa | `docs/specs/{backlog,active,done,discarded}/` |
 | Mídia versionada de documentação (permitida pelo `repo:verificar`) | `docs/assets/` |

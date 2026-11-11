@@ -209,10 +209,13 @@ WHERE login = '${login}'                        -- interpolação proibida
 SELECT * FROM usuario                           -- sem filtro is_deleted proibido
 INNER JOIN execucao ON execucao.atividade_id = atividade.id  -- sem execucao.is_deleted = false: proibido
 UPDATE usuario SET nome_completo = :nome        -- sem updated_date = NOW(): proibido
+UPDATE usuario SET is_deleted = true, updated_date = NOW()  -- excluir não é alterar: proibido gravar a data
 CREATE TRIGGER ...                              -- sem lógica no banco: proibido
 INNER JOIN atividade a ON a.id = e.atividade_id -- alias abreviado proibido
 cor VARCHAR(7) NOT NULL DEFAULT '#6366f1'       -- DEFAULT proibido
 ```
+
+**Exceções ao filtro `is_deleted` (lista fechada, `SYSTEM.SPEC.md` §9.2 #1):** a leitura de restauração `recuperarExcluid[oa]`, o catálogo do PostgreSQL e `knex_migrations` (Modelagem), funções de conjunto (`generate_series`, `jsonb_each`), CTEs que só reorganizam linhas já filtradas e as três leituras de `usuario` do chat entre colaboradores (`validarExistenciaIncluindoExcluido`, `listarTiposPorIds`, `listarIdsComPermissaoDeGestor`: o histórico sobrevive a quem saiu e a conversa de gestor segue privada). Quem mostra o autor de uma versão ou fonte usa `LEFT JOIN usuario ... AND usuario.is_deleted = false` e `COALESCE(usuario.nome_completo, 'Usuário removido')`. A exclusão grava `is_deleted` e `deleted_date` e não toca `updated_date`.
 
 **Nomes de campo de data:**
 - BaseEntity (inglês): `created_date`, `updated_date`, `deleted_date`
@@ -231,21 +234,17 @@ cor VARCHAR(7) NOT NULL DEFAULT '#6366f1'       -- DEFAULT proibido
 - Hierarquias e grafos: CTEs recursivos do PostgreSQL
 
 **Objetos genéricos de banco: inglês — e o banco não carrega lógica.**
-O que existiria em qualquer projeto segue a regra de linguagem genérica → inglês; objetos de **negócio** (tabelas/colunas) permanecem em português. Decisão do autor (2026-11-04): **sem trigger nem função de negócio novos**; `created_date`, `updated_date`, `is_deleted` e `deleted_date` são gravados pela aplicação (todo `UPDATE` grava `updated_date = NOW()`). Os `trg_<tabela>_updated_date` e a `fn_set_updated_date()` abaixo são **legado**, removidos pela spec 277.
+O que existiria em qualquer projeto segue a regra de linguagem genérica → inglês; objetos de **negócio** (tabelas/colunas) permanecem em português. Decisão do autor (2026-11-04): **sem trigger nem função de negócio**; `created_date`, `updated_date`, `is_deleted` e `deleted_date` são gravados pela aplicação (todo `UPDATE` grava `updated_date = NOW()`).
 
 ```sql
--- Legado (spec 277 remove): o nome já segue o padrão em inglês
-CREATE FUNCTION fn_set_updated_date() ...      -- mantinha updated_date da BaseEntity
-CREATE TRIGGER trg_usuario_updated_date ...
-
 -- ❌ Verbo português em objeto genérico
-CREATE FUNCTION fn_atualizar_updated_date() ... -- idioma misto: proibido
+CREATE FUNCTION fn_atualizar_data() ...         -- idioma misto: proibido
 
 -- ✅ Negócio permanece em português
 CREATE TABLE dia_nao_util ( nome_completo VARCHAR ... )
 ```
 
-**Nomes de constraints, índices, triggers e funções: prefixo por tipo.**
+**Nomes de constraints, índices e funções: prefixo por tipo.**
 Padrão `<prefixo>_<tabela>_<proposito>` (nomes genéricos em inglês; nunca deixar o PostgreSQL
 auto-gerar — sempre nomear explicitamente):
 
@@ -256,8 +255,7 @@ auto-gerar — sempre nomear explicitamente):
 | Unique index | `uix_` | `uix_usuario_login_ativo` |
 | Index | `ix_` | `ix_demanda_status` |
 | Check constraint | `chk_` | `chk_execucao_periodo_valido` |
-| Trigger | `trg_` | `trg_usuario_updated_date` (legado: não se criam novos) |
-| Function | `fn_` | `fn_set_updated_date` (legado: não se criam novas) |
+| Function | `fn_` | `fn_chat_texto_busca` (não se criam novas) |
 
 ```sql
 -- ✅ Constraint nomeada com prefixo chk_
@@ -507,7 +505,7 @@ Um comando só confere tudo: `npm run lint:tudo` (zero erros; nunca desligue reg
 | `npm run lint` | ESLint em TS, JS e templates (`eslint.config.mjs`): quatro espaços, ponto e vírgula, `no-explicit-any` (liberado só em dublê de teste), variável não usada (`_` à frente quando for de propósito), selector com prefixo `app` |
 | `npm run lint:estilos` | Stylelint nos `.scss` do frontend |
 | `npm run lint:templates` | Prettier `--check` em HTML e SCSS do frontend e `style="..."` literal nos templates |
-| `npm run lint:sql` | `scripts/formatar-sql.mjs --check`: SQL dos repositories e scripts, nunca migration |
+| `npm run lint:sql` | `scripts/formatar-sql.mjs --check` (SQL dos repositories e scripts, nunca migration) e `scripts/verificar-sql.mjs` (filtro `is_deleted` em toda tabela lida ou alterada, `updated_date` em todo `UPDATE`, sem `DELETE` físico) |
 | `npm run formatar` | aplica Prettier (HTML/SCSS) e o formatador de SQL |
 
 - **TypeScript nunca passa por formatador automático** (nem Prettier, nem quebra de linha): a indentação é conferida pelo ESLint e corrigida à mão.
@@ -523,8 +521,8 @@ Um comando só confere tudo: `npm run lint:tudo` (zero erros; nunca desligue reg
 | Abreviar nomes | Nome completo sempre |
 | Lógica na controller | Mover para a service |
 | ORM / query builder | `knex.raw()` com SQL bruto |
-| `SELECT`, `JOIN`, subconsulta, CTE ou `UPDATE` sem `is_deleted = false` | Toda tabela lida ou alterada filtra; excluído é morto (exceção: `recuperarExcluid[oa]`) |
-| `UPDATE` sem `updated_date = NOW()` | A aplicação grava as datas genéricas |
+| `SELECT`, `JOIN`, subconsulta, CTE ou `UPDATE` sem `is_deleted = false` | Toda tabela lida ou alterada filtra; excluído é morto (exceções: lista fechada acima) |
+| `UPDATE` sem `updated_date = NOW()` | A aplicação grava as datas genéricas (a exclusão não grava: excluir não é alterar) |
 | Trigger ou função de negócio no banco | O banco não carrega lógica |
 | `?` posicional em SQL | `:nomeParametro` com objeto |
 | `VALUES` no INSERT | `INSERT ... SELECT ... RETURNING` |

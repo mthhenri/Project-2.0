@@ -12,6 +12,34 @@
 
 ---
 
+## 2026-11-11 — Auditoria de requisições das telas: dossiê escrito, cobertura ainda incompleta (spec segue em `active/`)
+
+Pedido do autor em 2026-11-05 (`docs/specs/active/auditoria-requisicoes-telas.spec.md`): observar a aplicação real e apontar requisição a mais, a menos, repetida, sem projeção ou com dado vazando. Sem alteração de código. A primeira rodada (2026-11-05) deixou 18 roteiros do administrador em `.artifacts/auditoria-requisicoes-telas/` e nenhum relatório; esta segunda fechou os perfis desenvolvedor e auxiliar, passou a gravar o corpo das respostas e escreveu o `DOSSIE.md` ao lado da spec.
+
+Medido num stack isolado (3015/4215, banco descartável `project20_auditoria_requests_20261105`, migrado até a 0085), com Playwright em 1920×1080: 28 roteiros de interface e uma varredura de 85 leituras da API chamadas por administrador, gestor, desenvolvedor, auxiliar e sem login.
+
+Resultado: **nenhum vazamento** (401 sem login nas 85 rotas; desenvolvedor recebe 403/404 no que é de projeto alheio; plano privado 404 para os outros; nenhuma resposta com senha ou hash) e listagens com projeção enxuta. Treze achados de tráfego, R-01 a R-13 no dossiê; os principais: `GET /checkin/situacao` a cada 20 s em toda aba, com ou sem execução (3 s na janela do check-in); tela de Demandas com 13 requisições para abrir e 8 por demanda selecionada, sem reaproveitar; `/ia/disponibilidade` e `/checkin/situacao` em dobro em toda carga; listagem de Usuários pedida duas vezes; seletores com teto fixo (`itensPorPagina=100/200`) que cortariam itens em silêncio acima do teto (hipótese, não exercitada).
+
+Achado que só apareceu na verificação: a tela de login lembra o último usuário e muda o formulário, o que derrubou o roteiro de troca de perfil da primeira rodada; cada perfil passou a usar sessão de navegador nova.
+
+Pendente (por isso a spec não foi para `done/`): fluxos de IA, impedidos por falta de chave; Project Desktop; e fluxos disponíveis não percorridos (restaurar excluídos, ação em massa, anexos do pad, publicar plano, escrita como auxiliar e gestor, autorização das rotas de escrita). Lista completa na seção 6 do dossiê.
+
+## 2026-11-11 — Tasks 276 e 277: registro excluído é morto em todo o SQL, e o banco deixa de gravar `updated_date`
+
+**O que mudou (276).** O novo `scripts/verificar-sql.mjs` (no `npm run lint:sql`, dentro do `lint:tudo`) lê todo o SQL de `backend/src` e reprova tabela lida ou alterada sem `is_deleted = false`, além de `DELETE` físico. O inventário (243 consultas em 33 arquivos) saiu dele: 179 já filtravam, 46 foram corrigidas, 18 são isentas. Quase todas as correções são subselects e junções de tabelas `tipo_*`, sem efeito na tela (nenhuma linha `tipo_*` está excluída). O soft delete, `excluirConexao` e o `excluir` do plano deixaram de regravar a data de uma linha já excluída.
+
+**Decisões do autor (2026-11-11).** Autor excluído em prompt, versão da configuração da IA, fonte do plano e plano: a linha continua e o nome vira "Usuário removido" (`LEFT JOIN` com o filtro e `COALESCE`; só com o filtro, a configuração ativa da IA sumiria). Três leituras de `usuario` do chat entram na lista fechada de exceções: filtrar quebraria a leitura de conversas com quem saiu e exporia à supervisão as conversas de um gestor excluído. Abrir atividade de demanda ou projeto excluído passa a dar "não encontrada", e a IA segue conseguindo pausar a execução em andamento nesse caso (`recuperarAtividadeDaExecucao`), com a proposta sem o nome. `converter-descricoes.ts` deixa de converter linhas excluídas.
+
+**O que mudou (277 e P-074).** A migration `0085` remove os 43 triggers e `fn_set_updated_date`. Os 15 `UPDATE`s e upserts sem a data passaram a gravá-la; as exclusões escritas à mão e o `executarSoftDelete` deixaram de gravá-la, porque excluir não é alterar (`P-074` fechado). O verificador reprova `UPDATE` sem a data, exclusão com a data e restauração sem a data. Legado retirado de `SCHEMA.md`, `SYSTEM.SPEC.md`, `CONVENTIONS.md`, `CLAUDE.md`/`AGENTS.md` e skills.
+
+**Achado só na verificação.** O teste de integração pegou `demanda.alterarTextos`, que monta o `SET` em lista e não gravava a data; o verificador deixava passar porque ignorava `SET` dinâmico, e passou a procurar a data nos textos do método. O caso de prova por mutação mostrou nove testes meus que passavam mesmo sem a correção (recusavam a gravação por outro motivo); foram trocados por testes do caminho corrigido. A revisão independente (agente `revisor`) achou brechas no verificador, a regressão da pausa pela IA e os dois casos que viraram decisão acima.
+
+**Testado.** `backend` unitários 1694 ok e 424 de integração ok (17 em `filtro-exclusao`, com falha confirmada sem a correção); `repo:test`, build do backend, `lint:tudo` (556 fontes SQL; 243 consultas, 0 violação) e `repo:verificar` ok. Migration: `up`, `down` (43 triggers e a função de volta) e `up` no banco isolado. O `demanda.repository.integracao.test.ts` estava fora do formato do SQL desde antes e foi formatado para o gate fechar.
+
+**Verificado ao vivo.** Backend real em banco isolado (porta 3001): usuário, projeto, tag, demanda, textos da demanda, atividade, execução, plano, prompt e proposta alteraram `updated_date`; excluir a tag não alterou e restaurar alterou; zero triggers no banco. Sem tela nova, então não houve verificação visual. Evidência em `.artifacts/277/vivo.txt`.
+
+---
+
 ## 2026-11-10 — Task 319 (ajustes): iniciais padronizadas e prévias do diálogo de cor em todos os lugares
 
 **Pedido do autor**, ao ler as duas decisões abertas do fecho da 319: (1) padronizar as iniciais pela **primeira e última palavra** do nome ("Matheus Henrique Silva" → MS), (2) aceitar o Controle de horas no fundo de avatar do tema, e (3) perguntou se o diálogo de troca de cor mostra todos os exemplos — não mostrava, só os quatro do chat.

@@ -8,7 +8,7 @@
 > - `20240013_alterar_status_demanda` — status de demanda para `PENDENTE, PLANEJADA, CONCLUIDA`.
 > - `20240014_adicionar_duracao_dia_nao_util` — coluna `dia_nao_util.duracao` (`INTEGRAL` / `MEIO_PERIODO`).
 > - `20240015_seed_usuario_gestor_inicial` — seed idempotente do gestor inicial.
-> - `20240016_renomear_funcao_updated_date` — renomeia `fn_atualizar_updated_date` → `fn_set_updated_date` (mecanismo genérico de BaseEntity em inglês; estado final já refletido abaixo).
+> - `20240016_renomear_funcao_updated_date` — renomeou a função dos triggers de `updated_date`; a migration `0085` removeu triggers e função (spec 277).
 > - `20240017`/`20240018_seed_tags_padrao(_complemento)` — seed de tags padrão.
 > - `20240019_remover_ordem_exibicao` — remove `ordem_exibicao` de `demanda` e `atividade`.
 > - `20240020_padronizar_nomes_constraints` — renomeia `demanda_status_check` → `chk_demanda_status` e `ck_dia_nao_util_duracao` → `chk_dia_nao_util_duracao` (alinha ao prefixo `chk_`; estado final já refletido abaixo).
@@ -34,8 +34,7 @@ colunas de negócio permanecem em português.
 | Unique index | `uix_` | `uix_usuario_login_ativo` |
 | Index | `ix_` | `ix_demanda_status` |
 | Check constraint | `chk_` | `chk_execucao_periodo_valido` |
-| Trigger | `trg_` | `trg_usuario_updated_date` (legado: não se criam novos) |
-| Function | `fn_` | `fn_set_updated_date` (legado: não se criam novas) |
+| Function | `fn_` | `fn_chat_texto_busca` (não se criam novas) |
 
 **Sem DEFAULT em nenhuma coluna.** Todo valor deve ser fornecido explicitamente pela aplicação.
 Defaults implícitos escondem validações e permitem que dados inválidos entrem no banco sem passar pela service.
@@ -52,8 +51,8 @@ Exemplos: `created_date`, `updated_date`, `deleted_date`, `inicio_data`, `fim_da
 ## Campos BaseEntity
 
 Presentes em todas as tabelas. Nomes em inglês por serem genéricos/arquiteturais.
-Sem DEFAULT — a aplicação fornece todos os valores explicitamente no INSERT, e `updated_date = NOW()` em todo UPDATE
-(o banco não carrega lógica: sem trigger novo; `is_deleted = true` é registro morto, filtrado em toda leitura).
+Sem DEFAULT — a aplicação fornece todos os valores explicitamente no INSERT, e `updated_date = NOW()` em todo UPDATE, exceto na exclusão,
+que grava só `is_deleted` e `deleted_date` (o banco não carrega lógica: não há trigger; `is_deleted = true` é registro morto, filtrado em toda leitura).
 
 ```sql
 id            SERIAL        PRIMARY KEY,
@@ -89,46 +88,6 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 17. mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao (migration `0050`; só dependem de `usuario`) e mensagem_direta_reacao (migration `0083`, task 314; depende de `usuario`)
 18. mensagem_direta (migration `0051`, provisória; sem FK, depende só das funções `fn_chat_texto_*` da `0038`)
 19. modelagem_grupo, modelagem_tabela (migrations `0052` e `0053`; `modelagem_tabela` referencia `modelagem_grupo`)
-```
-
----
-
-## Função de Trigger — updated_date (legado, removido pela spec 277)
-
-> **Decisão do autor (2026-11-04): o banco não carrega lógica.** Tabela nova **não ganha** trigger; a aplicação grava
-> `updated_date = NOW()` em todo UPDATE (`SYSTEM.SPEC.md` §9.2 #14). Esta seção e os blocos `CREATE TRIGGER` de cada tabela
-> descrevem o banco **como está hoje** (43 triggers, migrations `0001` em diante) até a migration 0079 da spec 277 removê-los.
-
-Uma função de trigger no PostgreSQL é um bloco de código executado automaticamente
-pelo banco antes ou depois de um evento (INSERT, UPDATE, DELETE). Aqui usamos uma
-função `BEFORE UPDATE`: ela roda antes de cada UPDATE em qualquer tabela que tenha
-o trigger registrado, e pode modificar os valores que serão gravados.
-
-`NEW` é o registro com os novos valores prestes a ser gravados. Ao setar
-`NEW.updated_date = NOW()`, garantimos que o campo seja atualizado com o horário
-exato do UPDATE — mesmo em scripts externos, migrations ou ferramentas de administração,
-sem depender do código TypeScript para isso.
-
-A função é criada uma única vez e reutilizada por todas as tabelas via trigger:
-
-```sql
-CREATE OR REPLACE FUNCTION fn_set_updated_date()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_date = NOW();
-  RETURN NEW;   -- obrigatório: retorna o registro modificado para o PostgreSQL gravar
-END;
-$$ LANGUAGE plpgsql;
-```
-
-O trigger em cada tabela:
-
-```sql
--- Exemplo: tabela usuario
-CREATE TRIGGER trg_usuario_updated_date
-  BEFORE UPDATE ON usuario        -- executa antes de gravar o UPDATE
-  FOR EACH ROW                    -- uma vez por linha afetada
-  EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -169,10 +128,6 @@ CREATE UNIQUE INDEX uix_usuario_login_ativo
 CREATE INDEX ix_usuario_tipo_usuario_id
   ON usuario(tipo_usuario_id)
   WHERE is_deleted = false;
-
-CREATE TRIGGER trg_usuario_updated_date
-  BEFORE UPDATE ON usuario
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -206,10 +161,6 @@ CREATE UNIQUE INDEX uix_projeto_codigo_ativo
 CREATE INDEX ix_projeto_tipo_projeto_status_id
   ON projeto(tipo_projeto_status_id)
   WHERE is_deleted = false;
-
-CREATE TRIGGER trg_projeto_updated_date
-  BEFORE UPDATE ON projeto
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -233,8 +184,6 @@ CREATE TABLE projeto_volume_vigencia (
 );
 CREATE UNIQUE INDEX uix_projeto_volume_vigencia_mes_ativo
   ON projeto_volume_vigencia (projeto_id, vigencia_inicio_data) WHERE is_deleted = false;
-CREATE TRIGGER trg_projeto_volume_vigencia_updated_date BEFORE UPDATE ON projeto_volume_vigencia
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -255,10 +204,6 @@ CREATE TABLE tag (
   nome  VARCHAR(100) NOT NULL,
   cor   VARCHAR(7)   NOT NULL
 );
-
-CREATE TRIGGER trg_tag_updated_date
-  BEFORE UPDATE ON tag
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -311,10 +256,6 @@ CREATE INDEX ix_demanda_pai
 CREATE INDEX ix_demanda_tipo_demanda_status_id
   ON demanda(tipo_demanda_status_id)
   WHERE is_deleted = false;
-
-CREATE TRIGGER trg_demanda_updated_date
-  BEFORE UPDATE ON demanda
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -346,10 +287,6 @@ CREATE UNIQUE INDEX uix_demanda_usuario_ativo
 CREATE INDEX ix_demanda_usuario_usuario
   ON demanda_usuario(usuario_id)
   WHERE is_deleted = false;
-
-CREATE TRIGGER trg_demanda_usuario_updated_date
-  BEFORE UPDATE ON demanda_usuario
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -390,10 +327,6 @@ CREATE INDEX ix_demanda_conexao_origem
 CREATE INDEX ix_demanda_conexao_destino
   ON demanda_conexao(demanda_destino_id)
   WHERE is_deleted = false;
-
-CREATE TRIGGER trg_demanda_conexao_updated_date
-  BEFORE UPDATE ON demanda_conexao
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -417,10 +350,6 @@ CREATE TABLE demanda_tag (
 CREATE UNIQUE INDEX uix_demanda_tag_ativa
   ON demanda_tag(demanda_id, tag_id)
   WHERE is_deleted = false;
-
-CREATE TRIGGER trg_demanda_tag_updated_date
-  BEFORE UPDATE ON demanda_tag
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -459,10 +388,6 @@ CREATE INDEX ix_atividade_usuario
 CREATE INDEX ix_atividade_tipo_atividade_status_id
   ON atividade(tipo_atividade_status_id)
   WHERE is_deleted = false;
-
-CREATE TRIGGER trg_atividade_updated_date
-  BEFORE UPDATE ON atividade
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -486,10 +411,6 @@ CREATE TABLE atividade_tag (
 CREATE UNIQUE INDEX uix_atividade_tag_ativa
   ON atividade_tag(atividade_id, tag_id)
   WHERE is_deleted = false;
-
-CREATE TRIGGER trg_atividade_tag_updated_date
-  BEFORE UPDATE ON atividade_tag
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -537,10 +458,6 @@ CREATE INDEX ix_execucao_inicio_data
 CREATE INDEX ix_execucao_ativa
   ON execucao(atividade_id)
   WHERE is_deleted = false AND fim_data IS NULL;
-
-CREATE TRIGGER trg_execucao_updated_date
-  BEFORE UPDATE ON execucao
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -580,10 +497,6 @@ CREATE TABLE dia_nao_util (
 CREATE INDEX ix_dia_nao_util_dia_data
   ON dia_nao_util(dia_data)
   WHERE is_deleted = false;
-
-CREATE TRIGGER trg_dia_nao_util_updated_date
-  BEFORE UPDATE ON dia_nao_util
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -756,7 +669,7 @@ A `0052` semeia os 6 grupos (Domínio, Usuários e ponto, Calendário, IA, Chat,
 
 ### Plano do chat com a IA — migration `0059` (task 232)
 
-> O **plano** é o documento do modo planejamento: três textos Markdown (rascunho das descrições técnica e do cliente e da documentação de uma demanda) que vive vários dias e só grava na demanda ao publicar (task 237). Guarda-chuva `chat-planejamento.spec.md`; modelagem em `chat-planejamento/modelagem.md`. As tabelas de pontos em aberto e de fontes (`plano_ponto`, `plano_fonte`) entram nas tasks 235 e 236. Colunas de `BaseEntity`, nenhum `DEFAULT`, trigger `trg_*_updated_date`.
+> O **plano** é o documento do modo planejamento: três textos Markdown (rascunho das descrições técnica e do cliente e da documentação de uma demanda) que vive vários dias e só grava na demanda ao publicar (task 237). Guarda-chuva `chat-planejamento.spec.md`; modelagem em `chat-planejamento/modelagem.md`. As tabelas de pontos em aberto e de fontes (`plano_ponto`, `plano_fonte`) entram nas tasks 235 e 236. Colunas de `BaseEntity`, nenhum `DEFAULT`.
 
 #### `plano`
 `titulo` (`VARCHAR(255)`), `projeto_id` (FK, **anulável**: plano amplo, pessoal do criador), `usuario_id` (FK: quem criou), `solo`, `arquivado`, `descricao_tecnica`, `descricao_cliente` e `documentacao` (`TEXT`, anuláveis: o rascunho) e `versao` (`INTEGER`, a partir de 1; sobe a cada gravação do documento e é a base da recusa de gravação sobre versão mais nova: o `UPDATE` compara e grava na mesma instrução). Índices parciais em `projeto_id` e `usuario_id`.
@@ -798,10 +711,6 @@ CREATE TABLE tipo_usuario (
 CREATE UNIQUE INDEX uix_tipo_usuario_codigo
   ON tipo_usuario(codigo)
   WHERE is_deleted = false;
-
-CREATE TRIGGER trg_tipo_usuario_updated_date
-  BEFORE UPDATE ON tipo_usuario
-  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 Em `tipo_usuario`, a `descricao` guarda o **texto de ajuda do tipo** (migration `0078`, task 308): `VARCHAR(2000)` em Markdown, com linhas `✓ ...` (pode) e
@@ -832,7 +741,7 @@ Seeds (`codigo` → `descricao`):
 > `docs/specs/backlog/chat-colaboradores/modelagem.md` (anexo da guarda-chuva `chat-colaboradores.spec.md`; os dois vão para `done/` com a última task, a 215).
 >
 > `conversa_id` é `<menorUsuarioId>-<maiorUsuarioId>` (ex.: `4-9`): o par sempre cai na mesma conversa e por isso não existe tabela de conversa. Um `CHECK` em cada tabela
-> garante que o texto bate com os dois ids da própria linha. Todas têm os campos de `BaseEntity`, nenhum `DEFAULT` e o trigger `trg_*_updated_date`.
+> garante que o texto bate com os dois ids da própria linha. Todas têm os campos de `BaseEntity` e nenhum `DEFAULT`.
 
 #### `mensagem_direta_leitura`
 Até onde cada pessoa leu cada conversa e se silenciou os avisos dela. Uma linha por pessoa e conversa, criada na primeira leitura ou no primeiro silêncio. Colunas de `BaseEntity` mais:

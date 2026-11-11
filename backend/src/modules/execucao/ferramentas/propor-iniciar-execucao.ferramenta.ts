@@ -7,6 +7,7 @@ import { DemandaRepository } from '../../demanda/repositories/demanda.repository
 import { FerramentaPropostaIa } from '../../ferramenta-ia/ferramentas/ferramenta-proposta-ia';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { ExecucaoService } from '../services/execucao.service';
+import { recuperarAtividadeDaExecucao } from './atividade-da-execucao';
 
 /**
  * Propõe iniciar uma execução; **não inicia nada** (só o clique de Confirmar no cartão inicia). O cartão mostra os nomes da atividade, da
@@ -54,7 +55,7 @@ export class ProporIniciarExecucaoFerramenta extends FerramentaPropostaIa<Propor
             throw new BusinessException('Só o gestor inicia a execução de uma atividade de outra pessoa.');
         }
         const ativa = (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: donoId }, usuarioAtivo)).dados;
-        const aPausar = ativa && ativa.atividadeId !== entrada.atividadeId ? (await this.atividadeService.recuperar({ id: ativa.atividadeId }, usuarioAtivo)).dados : null;
+        const aPausar = ativa && ativa.atividadeId !== entrada.atividadeId ? await recuperarAtividadeDaExecucao(this.atividadeService, { id: ativa.atividadeId }, usuarioAtivo) : null;
 
         const dados: PropostaIniciarExecucaoDadosDto = {
             ...entrada,

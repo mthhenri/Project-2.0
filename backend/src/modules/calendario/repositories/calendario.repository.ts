@@ -93,6 +93,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
                             tipo_dia_nao_util
                         WHERE
                             tipo_dia_nao_util.id = dia_nao_util.tipo_dia_nao_util_id
+                            AND tipo_dia_nao_util.is_deleted = false
                     ) AS tipo,
                     (
                         SELECT
@@ -101,6 +102,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
                             tipo_dia_nao_util_duracao
                         WHERE
                             tipo_dia_nao_util_duracao.id = dia_nao_util.tipo_dia_nao_util_duracao_id
+                            AND tipo_dia_nao_util_duracao.is_deleted = false
                     ) AS duracao,
                     recorrente,
                     created_date AS "createdDate"
@@ -235,6 +237,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
                             tipo_dia_nao_util
                         WHERE
                             tipo_dia_nao_util.id = dia_nao_util.tipo_dia_nao_util_id
+                            AND tipo_dia_nao_util.is_deleted = false
                     ) AS tipo,
                     (
                         SELECT
@@ -243,6 +246,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
                             tipo_dia_nao_util_duracao
                         WHERE
                             tipo_dia_nao_util_duracao.id = dia_nao_util.tipo_dia_nao_util_duracao_id
+                            AND tipo_dia_nao_util_duracao.is_deleted = false
                     ) AS duracao,
                     recorrente,
                     created_date AS "createdDate"

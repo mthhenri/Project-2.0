@@ -54,7 +54,7 @@ const SELECT_PLANO = `
         demanda.nome AS "demandaNome",
         plano_demanda.publicacao_data AS "publicacaoData",
         plano.usuario_id AS "criadorId",
-        usuario_criador.nome_completo AS "criadorNome",
+        COALESCE(usuario_criador.nome_completo, 'Usuário removido') AS "criadorNome",
         plano.solo AS "solo",
         plano.arquivado AS "arquivado",
         plano.descricao_tecnica AS "descricaoTecnica",
@@ -65,7 +65,7 @@ const SELECT_PLANO = `
         plano.updated_date AS "updatedDate"
     FROM
         plano
-        INNER JOIN usuario AS usuario_criador ON usuario_criador.id = plano.usuario_id
+        LEFT JOIN usuario AS usuario_criador ON usuario_criador.id = plano.usuario_id
         AND usuario_criador.is_deleted = false
         LEFT JOIN projeto ON projeto.id = plano.projeto_id
         AND projeto.is_deleted = false
@@ -334,8 +334,7 @@ export class PlanoRepository extends BaseRepository<Plano> {
                     UPDATE plano_demanda
                     SET
                         is_deleted = true,
-                        deleted_date = NOW(),
-                        updated_date = NOW()
+                        deleted_date = NOW()
                     WHERE
                         plano_id = :planoId
                         AND is_deleted = false
@@ -412,8 +411,7 @@ export class PlanoRepository extends BaseRepository<Plano> {
                     UPDATE plano_demanda
                     SET
                         is_deleted = true,
-                        deleted_date = NOW(),
-                        updated_date = NOW()
+                        deleted_date = NOW()
                     WHERE
                         plano_id = :id
                         AND is_deleted = false
@@ -426,10 +424,10 @@ export class PlanoRepository extends BaseRepository<Plano> {
                     UPDATE plano
                     SET
                         is_deleted = true,
-                        deleted_date = NOW(),
-                        updated_date = NOW()
+                        deleted_date = NOW()
                     WHERE
                         id = :id
+                        AND is_deleted = false
                 `,
                 { id: dto.id },
                 transacao,

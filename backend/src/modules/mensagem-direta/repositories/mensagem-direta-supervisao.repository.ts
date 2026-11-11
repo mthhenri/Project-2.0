@@ -72,7 +72,8 @@ export class MensagemDiretaSupervisaoRepository extends BaseRepository<Supervisa
             `
                 UPDATE mensagem_direta_supervisao
                 SET
-                    participantes_avisados = true
+                    participantes_avisados = true,
+                    updated_date = NOW()
                 WHERE
                     mensagem_direta_supervisao.id = :supervisaoId
                     AND mensagem_direta_supervisao.is_deleted = false

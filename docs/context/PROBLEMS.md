@@ -29,6 +29,14 @@
 
 ## Ativos
 
+### P-078 — Textos de demanda fora de Markdown em algumas telas · `ABERTO` · frontend/demanda
+
+- **Sintoma:** relato do autor (2026-11-11): em alguns lugares que exibem o texto da demanda, por exemplo na tela de Atividades, o Markdown não aparece formatado. A suspeita é das descrições de cliente e da documentação.
+- **Causa:** não investigada. Texto rico deveria passar sempre por `app-markdown-visualizador` (`docs/CONVENTIONS.md`).
+- **Contorno:** nenhum.
+- **Correção:** percorrer todo lugar que exibe descrição técnica, descrição do cliente e documentação, conferir a renderização ao vivo e ajustar.
+- **Desde:** 2026-11-11 (relato do autor).
+
 ### P-077 — O Chat da IA e o chat entre colegas usam o mesmo ícone (balão duplo) · `ABERTO` · frontend/identidade visual
 
 - **Sintoma:** o item "Chat" da barra lateral (a IA, `/chat`) e o botão "Chat com colegas" da barra de cima usam `pi-comments`; também a supervisão do chat e o estado vazio da lista de conversas. A pessoa não distingue um do outro só pelo ícone (pedido do autor, 2026-11-06).
@@ -121,12 +129,4 @@
 - **Contorno:** o `atualizar()` de `montarComponente` agora espera a estabilidade da zona no máximo 8 s e segue (a trava vira só uma espera, e as afirmações do teste continuam conferindo o estado); rodar o arquivo sozinho ou repetir a suíte também resolve. Aplicado em 2026-10-30 depois de o teste falhar no CI do PR 27; **a causa da trava segue desconhecida**.
 - **Correção:** achar o temporizador que não termina (suspeita: transição do d3, no diagrama da Modelagem e no grafo, que roda dentro da zona) e tirá-lo da zona ou pará-lo; só então remover o teto. Observação: com a CPU três vezes sobrecarregada o arquivo passou (3 s viraram 11 s), então não é só lentidão.
 - **Desde:** 2026-10-30 (visto nos fechos dos P-035/P-038/P-041/P-055 e dos P-050/P-051/P-058; 10 rodadas completas, 4 falhas dele; depois mais 3 rodadas com falha e uma no CI do PR 27).
-
-### P-074 — Excluir um registro também grava `updated_date`, mas excluir não é alterar · `ABERTO` · banco/backend
-
-- **Sintoma:** o soft delete (`BaseRepository.executarSoftDelete`) faz `SET is_deleted = true, deleted_date = NOW(), updated_date = NOW()`. Um registro excluído passa a parecer editado no instante da exclusão. Os 43 triggers `trg_<tabela>_updated_date` (legado, saem pela spec 277) fazem o mesmo em qualquer `UPDATE`.
-- **Regra do autor (2026-11-05):** cada data tem um só motivo. `created_date` só na criação, `updated_date` só quando o objeto é alterado, `deleted_date` só na exclusão. **Deletar não é alterar:** a exclusão grava `is_deleted` e `deleted_date` e não toca `updated_date`.
-- **Causa:** a regra escrita ("todo `UPDATE` grava `updated_date = NOW()`", `CLAUDE.md`/`AGENTS.md`, `SYSTEM.SPEC.md` §9.2 #14, `CONVENTIONS.md`, `SCHEMA.md`, skill `sql-migrations`) não separa a exclusão, e o `executarSoftDelete` a segue.
-- **Correção:** tirar `updated_date = NOW()` do `executarSoftDelete` e de todo `UPDATE` de exclusão escrito à mão (o levantamento é o da spec 276), escrever a exceção nas regras e nos espelhos (`CLAUDE.md` e `AGENTS.md` idênticos, skills `.claude`/`.agents`), e ajustar os testes que esperam `updated_date` mudando na exclusão. **Só depois da 277 (ou junto com ela):** enquanto os triggers existirem, qualquer `UPDATE`, inclusive o de exclusão, volta a gravar `updated_date` por conta do trigger, então tirar a data do `executarSoftDelete` antes não resolve. Fazer junto com a 276/277, para não tocar o mesmo SQL duas vezes. Rodar `gerenciamento-de-impacto` antes.
-- **Desde:** 2026-11-05 (decisão do autor, ao revisar a migration da spec 261).
 

@@ -55,7 +55,7 @@ Leia o diff completo, procurando o que busca textual não prova:
 - DTO de negócio herdando outro DTO de negócio; primitivo em assinatura de service/repository;
 - query de um módulo no repositório de outro; escrita recebida por canal de tempo real.
 - SQL novo ou alterado: cada tabela (inclusive em `JOIN`, subconsulta, `EXISTS`, CTE e `UPDATE`) filtra
-  `is_deleted = false`, e todo `UPDATE` grava `updated_date = NOW()` (o banco não tem trigger para isso).
+  `is_deleted = false`, e todo `UPDATE` grava `updated_date = NOW()`, menos a exclusão (`npm run lint:sql` confere; o banco não tem trigger).
 
 Cheque ainda que a alteração atende à spec e que cada acerto mecânico não é só texto, comentário,
 fixture ou caso explicitamente permitido. A ausência de acertos não demonstra essas propriedades.

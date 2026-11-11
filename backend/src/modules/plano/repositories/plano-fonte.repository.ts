@@ -20,7 +20,7 @@ const COLUNAS_RESUMO = `
     plano_fonte.titulo,
     tipo_plano_fonte_origem.codigo AS origem,
     plano_fonte.usuario_id AS "usuarioId",
-    usuario.nome_completo AS "usuarioNome",
+    COALESCE(usuario.nome_completo, 'Usuário removido') AS "usuarioNome",
     CHAR_LENGTH(plano_fonte.conteudo) AS tamanho,
     plano_fonte.created_date AS "createdDate"
 `;
@@ -30,7 +30,8 @@ const JUNCAO = `
         plano_fonte
         INNER JOIN tipo_plano_fonte_origem ON tipo_plano_fonte_origem.id = plano_fonte.tipo_plano_fonte_origem_id
         AND tipo_plano_fonte_origem.is_deleted = false
-        INNER JOIN usuario ON usuario.id = plano_fonte.usuario_id
+        LEFT JOIN usuario ON usuario.id = plano_fonte.usuario_id
+        AND usuario.is_deleted = false
 `;
 
 /** Fontes (material de fora) de um plano (task 236). Só SQL; o acesso e a validação do conteúdo ficam na service. */
@@ -161,8 +162,7 @@ export class PlanoFonteRepository extends BaseRepository<BaseEntity> {
                 UPDATE plano_fonte
                 SET
                     is_deleted = true,
-                    deleted_date = NOW(),
-                    updated_date = NOW()
+                    deleted_date = NOW()
                 WHERE
                     id = :id
                     AND plano_id = :planoId

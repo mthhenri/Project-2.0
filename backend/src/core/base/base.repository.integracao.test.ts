@@ -55,7 +55,7 @@ testarComBanco('executarComando grava e não devolve dados', async (conexao) => 
     assert.equal(rows[0].nome, 'Depois');
 });
 
-testarComBanco('executarSoftDelete marca is_deleted, deleted_date e updated_date sem apagar a linha', async (conexao) => {
+testarComBanco('executarSoftDelete marca is_deleted e deleted_date, sem apagar a linha e sem tocar updated_date', async (conexao) => {
     const repositorio = new RepositorioDeTag(conexao);
     const tag = await criarTag(conexao);
     await repositorio.excluirLogicamente(tag.id);
@@ -75,7 +75,7 @@ testarComBanco('executarSoftDelete marca is_deleted, deleted_date e updated_date
     assert.equal(rows.length, 1, 'a linha continua existindo');
     assert.equal(rows[0].is_deleted, true);
     assert.ok(rows[0].deleted_date instanceof Date);
-    assert.ok(rows[0].updated_date.getTime() > rows[0].created_date.getTime(), 'updated_date avança');
+    assert.equal(rows[0].updated_date.getTime(), rows[0].created_date.getTime(), 'excluir não é alterar');
 });
 
 testarComBanco('aceita transação opcional: o que roda nela some com o rollback dela', async (conexao) => {

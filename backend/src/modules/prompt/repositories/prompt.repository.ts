@@ -13,7 +13,7 @@ const COLUNAS_RESUMO = `
     prompt.ativo,
     prompt.rascunho,
     prompt.usuario_id AS "usuarioId",
-    usuario.nome_completo AS "usuarioNome",
+    COALESCE(usuario.nome_completo, 'Usuário removido') AS "usuarioNome",
     prompt.created_date AS "createdDate"
 `;
 
@@ -22,7 +22,8 @@ const JUNCOES_RESUMO = `
         prompt
         INNER JOIN tipo_prompt ON tipo_prompt.id = prompt.tipo_prompt_id
         AND tipo_prompt.is_deleted = false
-        INNER JOIN usuario ON usuario.id = prompt.usuario_id
+        LEFT JOIN usuario ON usuario.id = prompt.usuario_id
+        AND usuario.is_deleted = false
 `;
 
 @Injectable()
@@ -94,6 +95,7 @@ export class PromptRepository extends BaseRepository<Prompt> {
                 FROM
                     prompt
                     INNER JOIN tipo_prompt ON tipo_prompt.id = prompt.tipo_prompt_id
+                    AND tipo_prompt.is_deleted = false
                 WHERE
                     prompt.is_deleted = false
                     AND tipo_prompt.codigo = :tipo
@@ -131,11 +133,13 @@ export class PromptRepository extends BaseRepository<Prompt> {
                     UPDATE prompt
                     SET
                         conteudo = :conteudo,
-                        usuario_id = :usuarioId
+                        usuario_id = :usuarioId,
+                        updated_date = NOW()
                     FROM
                         tipo_prompt
                     WHERE
                         tipo_prompt.id = prompt.tipo_prompt_id
+                        AND tipo_prompt.is_deleted = false
                         AND tipo_prompt.codigo = :tipo
                         AND prompt.rascunho = true
                         AND prompt.is_deleted = false
@@ -210,6 +214,7 @@ export class PromptRepository extends BaseRepository<Prompt> {
                     FROM
                         prompt
                         INNER JOIN tipo_prompt ON tipo_prompt.id = prompt.tipo_prompt_id
+                        AND tipo_prompt.is_deleted = false
                     WHERE
                         tipo_prompt.codigo = :tipo
                         AND prompt.rascunho = true
@@ -225,9 +230,11 @@ export class PromptRepository extends BaseRepository<Prompt> {
                     UPDATE prompt
                     SET
                         ativo = true,
-                        rascunho = false
+                        rascunho = false,
+                        updated_date = NOW()
                     WHERE
                         prompt.id = :id
+                        AND prompt.is_deleted = false
                 `,
                 { id: rascunhos[0].id },
                 transacao,
@@ -247,6 +254,7 @@ export class PromptRepository extends BaseRepository<Prompt> {
                     FROM
                         prompt
                         INNER JOIN tipo_prompt ON tipo_prompt.id = prompt.tipo_prompt_id
+                        AND tipo_prompt.is_deleted = false
                     WHERE
                         tipo_prompt.codigo = :tipo
                         AND prompt.versao = 1
@@ -260,9 +268,11 @@ export class PromptRepository extends BaseRepository<Prompt> {
             await this.executarComando(`
                 UPDATE prompt
                 SET
-                    ativo = true
+                    ativo = true,
+                    updated_date = NOW()
                 WHERE
                     prompt.id = :id
+                    AND prompt.is_deleted = false
             `, { id: padroes[0].id }, transacao);
             return this.recuperarPorId(padroes[0].id, transacao);
         });
@@ -283,6 +293,7 @@ export class PromptRepository extends BaseRepository<Prompt> {
                         tipo_prompt
                     WHERE
                         tipo_prompt.id = prompt.tipo_prompt_id
+                        AND tipo_prompt.is_deleted = false
                         AND tipo_prompt.codigo = :tipo
                         AND prompt.rascunho = true
                         AND prompt.is_deleted = false
@@ -319,11 +330,13 @@ export class PromptRepository extends BaseRepository<Prompt> {
             `
                 UPDATE prompt
                 SET
-                    ativo = false
+                    ativo = false,
+                    updated_date = NOW()
                 FROM
                     tipo_prompt
                 WHERE
                     tipo_prompt.id = prompt.tipo_prompt_id
+                    AND tipo_prompt.is_deleted = false
                     AND tipo_prompt.codigo = :tipo
                     AND prompt.ativo = true
                     AND prompt.is_deleted = false
@@ -340,6 +353,7 @@ export class PromptRepository extends BaseRepository<Prompt> {
                     ${COLUNAS_RESUMO} ${JUNCOES_RESUMO}
                 WHERE
                     prompt.id = :id
+                    AND prompt.is_deleted = false
             `,
             { id },
             transacao,
