@@ -22,9 +22,11 @@ function responderPendentes(montado: Montado, podeEditar: boolean): string[] {
         const caminho = requisicao.request.url.replace(/^.*\/api\/v1/, '');
         respondidas.push(`${requisicao.request.method} ${caminho}`);
         let dados: unknown = [];
-        if (caminho === '/demanda/10/detalhe') dados = { demanda: { ...DEMANDA, podeEditar }, ancestrais: [], tags: [], membros: [], conexoes: [] };
-        else if (caminho === '/demanda/10/arvore') dados = { id: 10, nome: 'Demanda de teste', filhos: [] };
-        else if (caminho === '/plano/demanda/10') dados = null;
+        // Qualquer id: o teste de troca de página também carrega a demanda 12 e não pode receber o `[]` padrão abaixo.
+        const detalhe = /^\/demanda\/(\d+)\/detalhe$/.exec(caminho);
+        if (detalhe) dados = { demanda: { ...DEMANDA, id: Number(detalhe[1]), podeEditar }, ancestrais: [], tags: [], membros: [], conexoes: [] };
+        else if (/^\/demanda\/\d+\/arvore$/.test(caminho)) dados = { id: Number(caminho.split('/')[2]), nome: 'Demanda de teste', filhos: [] };
+        else if (/^\/plano\/demanda\/\d+$/.test(caminho)) dados = null;
         else if (['/usuario', '/demanda', '/atividade'].includes(caminho)) dados = PAGINA([]);
         responderSucesso(requisicao, dados);
     }
