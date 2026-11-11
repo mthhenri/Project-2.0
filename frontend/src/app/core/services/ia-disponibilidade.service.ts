@@ -1,12 +1,14 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, map, of, tap } from 'rxjs';
+import { Observable, catchError, finalize, map, of, tap } from 'rxjs';
 import { EstadoIaEnum, IaEstadoRecuperadoDto, StandardResponse } from '@project20/shared';
 import { ambiente } from '../../../environments/environment';
 import { comFeedbackProprio } from '../interceptors/loading.interceptor';
 import { estadoEfetivoDaIa, iaVoltou } from '../utils/retorno-da-ia';
 
 const CHAVE_MODO_CONVENCIONAL = 'ia_modo_convencional';
+/** Uma consulta concluída há menos que isto vale para quem pedir de novo: a barra lateral, a janelinha e o chat nascem juntos na carga da página (P-081). */
+const JANELA_DE_FRESCOR_MS = 5_000;
 
 /**
  * Estado da IA para qualquer usuário (`GET /ia/disponibilidade`): o chat e a barra lateral leem daqui. Enquanto a IA está "no ar", as
@@ -30,10 +32,14 @@ export class IaDisponibilidadeService {
     /** O usuário voltou para a IA: o chat retoma a conversa do dia (a IA lê o que mudou durante a queda). */
     readonly retomadaPendente = signal(false);
 
+    private consultaEmCurso = false;
+    private ultimaRespostaEm = 0;
+
     /** Consulta o estado agora (guardando no sinal) e o devolve, ou `null` se a consulta falhar: o login decide o destino por ele. */
     consultar(): Observable<EstadoIaEnum | null> {
         return this.httpClient.get<StandardResponse<IaEstadoRecuperadoDto>>(`${ambiente.apiUrl}/ia/disponibilidade`, comFeedbackProprio()).pipe(
             tap((resposta) => {
+                this.ultimaRespostaEm = Date.now();
                 if (resposta.dados) this.aplicar(resposta.dados.estado);
             }),
             map((resposta) => resposta.dados?.estado ?? null),
@@ -41,10 +47,23 @@ export class IaDisponibilidadeService {
         );
     }
 
-    carregar(): void {
+    /**
+     * Atualiza o estado sem repetir o que já está a caminho ou acabou de chegar. `forcar` pula a janela de frescor, para quem acabou de
+     * mudar algo que altera a resposta (uma mensagem enviada ao provedor, por exemplo); uma consulta em curso nunca é duplicada.
+     */
+    carregar(opcoes: { forcar?: boolean } = {}): void {
+        if (this.consultaEmCurso) return;
+        if (!opcoes.forcar && Date.now() - this.ultimaRespostaEm < JANELA_DE_FRESCOR_MS) return;
+        this.consultaEmCurso = true;
         this.httpClient
             .get<StandardResponse<IaEstadoRecuperadoDto>>(`${ambiente.apiUrl}/ia/disponibilidade`, comFeedbackProprio())
-            .pipe(catchError(() => of(null)))
+            .pipe(
+                catchError(() => of(null)),
+                finalize(() => {
+                    this.consultaEmCurso = false;
+                    this.ultimaRespostaEm = Date.now();
+                }),
+            )
             .subscribe((resposta) => {
                 if (resposta?.dados) this.aplicar(resposta.dados.estado);
             });

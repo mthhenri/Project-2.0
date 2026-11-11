@@ -46,7 +46,7 @@ export class SidebarComponent implements OnInit {
 
     ngOnInit(): void {
         this.iaDisponibilidade.carregar();
-        const temporizador = setInterval(() => this.iaDisponibilidade.carregar(), INTERVALO_DISPONIBILIDADE_MS);
+        const temporizador = setInterval(() => this.iaDisponibilidade.carregar({ forcar: true }), INTERVALO_DISPONIBILIDADE_MS);
         this.destroyRef.onDestroy(() => clearInterval(temporizador));
     }
 

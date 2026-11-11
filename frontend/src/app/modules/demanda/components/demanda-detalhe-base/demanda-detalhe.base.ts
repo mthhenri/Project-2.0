@@ -311,7 +311,7 @@ export abstract class DemandaDetalheBase {
         this.atividades.set([]);
 
         // Gestor vê todas as atividades da demanda; desenvolvedor vê apenas as próprias.
-        const filtros: AtividadeListarDto = { demandaId, itensPorPagina: 100 };
+        const filtros: AtividadeListarDto = { demandaId, allRows: true };
         if (!this.sessao.podeEditarDemanda()) {
             const usuarioId = this.sessao.id();
             if (usuarioId !== undefined) filtros.usuarioId = usuarioId;
@@ -394,7 +394,7 @@ export abstract class DemandaDetalheBase {
             conexoes:   this.demandaService.listarConexoes(identificador),
             tags:       this.tagsDisponiveis().length ? of(null) : this.tagService.listar(),
             usuarios:   this.sessao.podeEditarDemanda() && this.todosUsuarios().length === 0
-                ? this.usuarioService.listar({ itensPorPagina: 100 })
+                ? this.usuarioService.listar({ allRows: true })
                 : of(null),
         })
             .pipe(finalize(() => this.carregando.set(false)))
@@ -433,7 +433,7 @@ export abstract class DemandaDetalheBase {
     /** Demandas do projeto para o destino de uma conexão: só recarrega quando o projeto muda. */
     private carregarDemandasParaConexao(projetoId: number): void {
         if (projetoId === this.projetoDasDemandas) return;
-        this.demandaService.listar({ projetoId, itensPorPagina: 200 }).subscribe({
+        this.demandaService.listar({ projetoId, allRows: true }).subscribe({
             next: (resposta) => {
                 if (resposta.sucesso && resposta.dados) {
                     this.projetoDasDemandas = projetoId;

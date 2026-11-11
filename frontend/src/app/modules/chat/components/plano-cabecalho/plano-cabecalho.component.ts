@@ -111,7 +111,7 @@ export class PlanoCabecalhoComponent {
         this.controleDemanda.setValue(this.plano().demandaId);
         this.popoverDemanda()?.toggle(evento);
         this.carregandoOpcoes.set(true);
-        this.demandaService.listar({ projetoId, pagina: 1, itensPorPagina: 200 }).subscribe({
+        this.demandaService.listar({ projetoId, allRows: true }).subscribe({
             next: (resposta) => {
                 this.demandas.set(resposta.dados?.itens ?? []);
                 this.carregandoOpcoes.set(false);

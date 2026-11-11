@@ -38,6 +38,18 @@ describe('AtividadeService (frontend)', () => {
         expect(requisicaoAtual.request.context.get(SEM_OVERLAY_GLOBAL)).toBe(true);
     });
 
+    it('listar com allRows pede a lista inteira e sem allRows não manda o parâmetro (P-083)', () => {
+        servico.listar({ demandaId: 5, allRows: true }).subscribe();
+        const inteira = http.expectOne((registro) => registro.url.endsWith('/atividade'));
+        expect(inteira.request.params.get('allRows')).toBe('true');
+        inteira.flush({ sucesso: true, dados: null, mensagem: '' });
+
+        servico.listar({ demandaId: 5 }).subscribe();
+        const paginada = http.expectOne((registro) => registro.url.endsWith('/atividade'));
+        expect(paginada.request.params.has('allRows')).toBe(false);
+        paginada.flush({ sucesso: true, dados: null, mensagem: '' });
+    });
+
     it('listar ignora status vazio, id zerado e busca vazia', () => {
         servico.listar({ status: [], demandaId: 0, busca: '' } as never).subscribe();
         expect(http.expectOne((registroAtual) => registroAtual.url.endsWith('/atividade')).request.params.keys()).toEqual([]);

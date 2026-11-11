@@ -18,6 +18,18 @@ const pedido = (metodo: string, sufixo: string) =>
     http.expectOne((registroLocal) => registroLocal.method === metodo && registroLocal.url.endsWith(sufixo));
 
 describe('ExecucaoService (frontend)', () => {
+    it('listar com allRows pede a lista inteira e sem allRows não manda o parâmetro (P-083)', () => {
+        servico.listar({ atividadeId: 4, allRows: true }).subscribe();
+        const inteira = http.expectOne((registroLocal) => registroLocal.method === 'GET' && registroLocal.url.endsWith('/execucao'));
+        expect(inteira.request.params.get('allRows')).toBe('true');
+        inteira.flush({ sucesso: true, dados: null, mensagem: '' });
+
+        servico.listar({ atividadeId: 4 }).subscribe();
+        const paginada = http.expectOne((registroLocal) => registroLocal.method === 'GET' && registroLocal.url.endsWith('/execucao'));
+        expect(paginada.request.params.has('allRows')).toBe(false);
+        paginada.flush({ sucesso: true, dados: null, mensagem: '' });
+    });
+
     it('iniciar faz POST em /execucao com o DTO no corpo', () => {
         servico.iniciar({ atividadeId: 4, descricao: 'x' } as never).subscribe();
         const requisicaoSeguinte = http.expectOne((registroSelecionado) => registroSelecionado.url.endsWith('/execucao'));

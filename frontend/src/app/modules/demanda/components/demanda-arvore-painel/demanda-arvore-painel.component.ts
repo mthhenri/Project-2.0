@@ -371,7 +371,7 @@ export class DemandaArvorePainelComponent {
         this.demandaIdMembros.set(demandaId);
 
         if (this.usuariosDisponiveis().length === 0) {
-            this.usuarioService.listar({ itensPorPagina: 100 }).subscribe({
+            this.usuarioService.listar({ allRows: true }).subscribe({
                 next: (resposta) => {
                     if (resposta.sucesso && resposta.dados) {
                         // Gestores não entram no multiselect de membros: têm acesso total a

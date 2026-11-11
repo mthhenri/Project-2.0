@@ -84,6 +84,23 @@ describe('PontoPage: gestor, modo "todos hoje"', () => {
         responderApoio(montado);
     });
 
+    it('o seletor de usuário pede a lista inteira (sem teto de 100) e guarda todos os 108 (P-083)', async () => {
+        const montado = await montarPagina(TipoUsuarioEnum.GESTOR);
+        const pedidos = montado.http.match((registroAtual) => registroAtual.method === 'GET' && registroAtual.url.endsWith('/usuario'));
+        expect(pedidos).toHaveLength(1);
+        expect(pedidos[0].request.params.get('allRows')).toBe('true');
+        expect(pedidos[0].request.params.get('ativo')).toBe('true');
+        expect(pedidos[0].request.params.has('itensPorPagina')).toBe(false);
+
+        const todos = Array.from({ length: 108 }, (_, indice) => ({ id: indice + 1, nomeCompleto: `Pessoa ${String(indice + 1).padStart(3, '0')}` }));
+        responderSucesso(pedidos[0], { itens: todos, totalItens: 108 });
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/ponto/todos'), []);
+        responderApoio(montado);
+        await montado.atualizar();
+
+        expect(montado.componente.usuarios()).toHaveLength(108);
+    });
+
     it('com dados mostra um card por pessoa, quem trabalha agora primeiro, e a contagem no topo', async () => {
         const montado = await montarPagina(TipoUsuarioEnum.GESTOR);
         await carregarTodos(montado, [

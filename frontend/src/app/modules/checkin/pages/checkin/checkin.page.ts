@@ -357,6 +357,8 @@ export class CheckinPage implements OnInit {
 
     private conferirSituacao(): void {
         if (this.estadoDaSituacao() === 'CARREGANDO' || this.estadoDaSituacao() === 'ERRO') return;
+        // Aba oculta não precisa do desfecho agora: ao voltar, o próximo tique de 3 s confere (P-079).
+        if (document.visibilityState === 'hidden') return;
         this.checkinService.consultarSituacao().subscribe({
             next: (resposta) => {
                 const dados = resposta.dados;

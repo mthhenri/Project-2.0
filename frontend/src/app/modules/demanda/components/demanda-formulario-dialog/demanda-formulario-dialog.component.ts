@@ -380,7 +380,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
    * necessidade de atribuição em demanda_usuario (task 71).
    */
     private carregarUsuarios(): void {
-        this.usuarioService.listar({ itensPorPagina: 100 }).subscribe({
+        this.usuarioService.listar({ allRows: true }).subscribe({
             next: (resposta) => {
                 if (resposta.sucesso && resposta.dados) {
                     this.usuariosDisponiveis.set(
@@ -394,7 +394,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     /** Candidatas a pai: as estruturais do projeto (na edição, sem a própria demanda). */
     private carregarDemandasPai(): void {
         this.demandaService
-            .listar({ projetoId: this.projetoId, estrutural: true, itensPorPagina: 200 })
+            .listar({ projetoId: this.projetoId, estrutural: true, allRows: true })
             .subscribe({
                 next: (resposta) => {
                     if (resposta.sucesso && resposta.dados) {

@@ -26,7 +26,7 @@ async function montarListagem(tipoLogado: TipoUsuarioEnum, armazenamento?: Recor
     return montarComponente(UsuarioListagemPage, { usuario: tipoLogado, armazenamento });
 }
 
-/** O p-table (lazy) e o ngOnInit pedem a lista: responde todas as chamadas pendentes com a mesma página. */
+/** O p-table (lazy) pede a lista ao montar: responde as chamadas pendentes com a mesma página. */
 async function carregar(montado: Montado, itens: UsuarioResumoDto[]): Promise<void> {
     for (const requisicao of montado.http.match((resultadoSeguinte) => resultadoSeguinte.method === 'GET' && resultadoSeguinte.url.endsWith('/usuario'))) {
         requisicao.flush({ sucesso: true, dados: PAGINA(itens), mensagem: 'ok' });
@@ -71,6 +71,14 @@ describe('UsuarioListagemPage — estados', () => {
         expect(texto(montado)).toContain('Pessoa 2');
         expect(texto(montado)).toContain('Pessoa 3');
         expect(texto(montado)).toContain('2 usuários');
+    });
+
+    it('ao abrir, pede a listagem uma única vez (P-082)', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+        const pedidos = montado.http.match((seguinte) => seguinte.method === 'GET' && seguinte.url.endsWith('/usuario'));
+        expect(pedidos).toHaveLength(1);
+        expect(pedidos[0].request.params.get('pagina')).toBe('1');
+        expect(pedidos[0].request.params.get('itensPorPagina')).toBe('10');
     });
 
     it('erro ao carregar mostra o erro com "Tentar de novo" no lugar do vazio (P-068)', async () => {

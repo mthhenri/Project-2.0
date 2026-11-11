@@ -1,12 +1,16 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
 import { CheckinSituacaoConsultadaDto } from '@project20/shared';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { CheckinPage } from '../../pages/checkin/checkin.page';
 import { CheckinService } from '../../services/checkin.service';
-import { deveMostrarJanelinha, esperaAteOCheckin } from '../../utils/checkin.util';
+import { deveMostrarJanelinha, esperaAteOCheckin, situacaoDivergeDaExecucao } from '../../utils/checkin.util';
 
-/** De quanto em quanto tempo o Project confere se o horário do check-in chegou (o horário em si é sorteado no backend). */
-const INTERVALO_DA_CONFERENCIA_MS = 20_000;
+/**
+ * Rede de segurança, só com execução em andamento: o horário do check-in chega pelo `setTimeout` agendado em `proximoCheckinData` e a situação
+ * muda por eventos (abrir, voltar para a aba, iniciar ou encerrar a execução). Esta conferência cobre o que acontece fora desta janela (P-079).
+ */
+const INTERVALO_DE_SEGURANCA_MS = 300_000;
 /** O maior atraso que um `setTimeout` aceita; horários mais distantes são alcançados pela conferência periódica. */
 const MAIOR_ESPERA_MS = 2_000_000_000;
 
@@ -25,6 +29,7 @@ const MAIOR_ESPERA_MS = 2_000_000_000;
 export class CheckinJanelinhaComponent implements OnInit {
     private readonly checkinService = inject(CheckinService);
     private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
+    private readonly execucaoAtiva = inject(ExecucaoAtivaService);
     private readonly destroyRef = inject(DestroyRef);
 
     private readonly situacao = signal<CheckinSituacaoConsultadaDto | null>(null);
@@ -33,11 +38,26 @@ export class CheckinJanelinhaComponent implements OnInit {
     readonly visivel = computed(() => deveMostrarJanelinha(this.situacao(), this.iaDisponibilidade.estado()));
 
     constructor() {
-        const intervalo = setInterval(() => this.conferir(), INTERVALO_DA_CONFERENCIA_MS);
+        const intervalo = setInterval(() => {
+            if (this.execucaoAtiva.ativa() !== null) this.conferir();
+        }, INTERVALO_DE_SEGURANCA_MS);
         const aoVoltar = () => {
             if (document.visibilityState === 'visible') this.conferir();
         };
         document.addEventListener('visibilitychange', aoVoltar);
+
+        // Iniciar, encerrar ou trocar a execução (por qualquer tela ou pela IA) muda o check-in: confere, a menos que a situação já conhecida diga o mesmo.
+        let execucaoAnterior: number | null | undefined;
+        effect(() => {
+            const execucaoAtual = this.execucaoAtiva.ativa()?.id ?? null;
+            if (execucaoAnterior !== undefined && execucaoAnterior !== execucaoAtual) {
+                untracked(() => {
+                    if (situacaoDivergeDaExecucao(this.situacao(), execucaoAtual)) this.conferir();
+                });
+            }
+            execucaoAnterior = execucaoAtual;
+        });
+
         this.destroyRef.onDestroy(() => {
             clearInterval(intervalo);
             if (this.temporizadorNoHorario !== null) clearTimeout(this.temporizadorNoHorario);

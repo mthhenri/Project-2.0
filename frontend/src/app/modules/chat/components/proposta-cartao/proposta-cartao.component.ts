@@ -288,7 +288,7 @@ export class PropostaCartaoComponent {
 
     private carregarAtividadesParaTroca(): void {
         this.atividadeService
-            .listar({ usuarioId: this.sessao.id() ?? undefined, status: [TipoAtividadeStatusEnum.PLANEJADA, TipoAtividadeStatusEnum.DESENVOLVENDO], itensPorPagina: 100 })
+            .listar({ usuarioId: this.sessao.id() ?? undefined, status: [TipoAtividadeStatusEnum.PLANEJADA, TipoAtividadeStatusEnum.DESENVOLVENDO], allRows: true })
             .subscribe({
                 next: (resposta) =>
                     this.atividadesParaTroca.set((resposta.dados?.itens ?? []).map((item) => ({ id: item.id, rotulo: `${item.nome} · ${item.nomeDemanda}` }))),

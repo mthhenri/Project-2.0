@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { CheckinSituacaoConsultadaDto, EstadoIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { CheckinSituacaoConsultadaDto, EstadoIaEnum, ExecucaoAtivaDto, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-teste';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 import { CheckinJanelinhaComponent } from './checkin-janelinha.component';
 
 // Janelinha do check-in dentro do Project (SYSTEM.SPEC.md §12 "checkin", task 161): quando o backend diz que o horário chegou (`disparado`),
@@ -52,7 +53,7 @@ async function montarJanelinha(opcoes: OpcoesMontagem = {}): Promise<Montado> {
 async function montarSemSituacao(): Promise<Montado> {
     TestBed.configureTestingModule({ imports: [CheckinJanelinhaComponent] });
     await TestBed.compileComponents();
-    // O `setInterval` de 20 s do componente é uma tarefa pendente do zone.js e `whenStable` esperaria por ele: temporizadores simulados desde o início.
+    // O `setInterval` do componente é uma tarefa pendente do zone.js e `whenStable` esperaria por ele: temporizadores simulados desde o início.
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
     return montarComponente(CheckinJanelinhaComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
 }
@@ -175,10 +176,20 @@ describe('CheckinJanelinhaComponent — o horário sorteado pelo backend', () =>
 });
 
 describe('CheckinJanelinhaComponent — conferência periódica', () => {
-    it('a cada 20 s confere a situação enquanto não há diálogo', async () => {
-        const montado = await montarJanelinha({ situacao: situacao({ disparado: false }) });
+    it('sem execução em andamento, nenhum intervalo consulta a situação (P-079)', async () => {
+        const montado = await montarJanelinha({ situacao: situacao({ execucaoId: null, disparado: false }) });
 
-        vi.advanceTimersByTime(19_900);
+        vi.advanceTimersByTime(3_600_000);
+        montado.http.expectNone(URL_SITUACAO);
+    });
+
+    it('com execução em andamento, a rede de segurança confere a cada 5 min e o diálogo aparece', async () => {
+        const montado = await montarJanelinha({ situacao: situacao({ disparado: false }) });
+        TestBed.inject(ExecucaoAtivaService).definir({ id: 5 } as ExecucaoAtivaDto);
+        await montado.atualizar();
+        montado.http.expectNone(URL_SITUACAO);
+
+        vi.advanceTimersByTime(299_900);
         montado.http.expectNone(URL_SITUACAO);
         vi.advanceTimersByTime(200);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ disparado: true }));
@@ -188,16 +199,48 @@ describe('CheckinJanelinhaComponent — conferência periódica', () => {
         await responderPaginaEmbutida(montado);
     });
 
+    it('iniciar uma execução que a situação conhecida ainda não tem confere na hora; encerrar também', async () => {
+        const montado = await montarJanelinha({ situacao: situacao({ execucaoId: null, disparado: false }) });
+        const execucaoAtiva = TestBed.inject(ExecucaoAtivaService);
+
+        execucaoAtiva.definir({ id: 7 } as ExecucaoAtivaDto);
+        await montado.atualizar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ execucaoId: 7, disparado: false }));
+        await montado.atualizar();
+
+        execucaoAtiva.definir(null);
+        await montado.atualizar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ execucaoId: null, disparado: false }));
+    });
+
+    it('a execução que a situação conhecida já mostra não gera outra consulta (carga da página)', async () => {
+        const montado = await montarJanelinha({ situacao: situacao({ execucaoId: 7, disparado: false }) });
+
+        TestBed.inject(ExecucaoAtivaService).definir({ id: 7 } as ExecucaoAtivaDto);
+        await montado.atualizar();
+
+        montado.http.expectNone(URL_SITUACAO);
+    });
+
     it('com o diálogo aberto, a janelinha não confere (quem confere é a tela do check-in)', async () => {
         const montado = await montarJanelinha();
         await responderPaginaEmbutida(montado);
 
-        vi.advanceTimersByTime(25_000);
+        // Responde a cada passo de 3 s: a consulta em curso é compartilhada, então só assim cada conferência vira uma requisição.
+        let consultas = 0;
+        for (let passo = 0; passo < 8; passo++) {
+            vi.advanceTimersByTime(3_000);
+            for (const pedido of montado.http.match(URL_SITUACAO)) {
+                consultas++;
+                responderSucesso(pedido, situacao());
+            }
+        }
         document.dispatchEvent(new Event('visibilitychange'));
 
         // Só as 8 conferências de 3 s da própria página embutida; a de 20 s e a de visibilidade da janelinha não pedem nada.
         expect(dialogo(montado)).not.toBeNull();
-        expect(montado.http.match(URL_SITUACAO)).toHaveLength(8);
+        expect(consultas).toBe(8);
+        expect(montado.http.match(URL_SITUACAO)).toHaveLength(0);
     });
 
     it('ao voltar para a aba (visibilitychange visível) confere na hora', async () => {

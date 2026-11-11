@@ -1,7 +1,7 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { CheckinSituacaoConsultadaDto, EstadoIaEnum } from '@project20/shared';
-import { decidirEstado, deveMostrarJanelinha, esperaAteOCheckin, textoDoProximoCheckin } from './checkin.util';
+import { decidirEstado, deveMostrarJanelinha, esperaAteOCheckin, situacaoDivergeDaExecucao, textoDoProximoCheckin } from './checkin.util';
 
 function situacao(parcial: Partial<CheckinSituacaoConsultadaDto> & { execucaoId?: number | null; suspenso?: boolean; disparado?: boolean } = {}): CheckinSituacaoConsultadaDto {
     const execucaoId = parcial.execucaoId === undefined ? 5 : parcial.execucaoId;
@@ -80,4 +80,13 @@ test('próximo check-in no menu do perfil: contagem em MM:SS ou H:MM:SS e "agora
     assert.equal(textoDoProximoCheckin(situacao({ proximoCheckinData: new Date(agora + (3600 + 2 * 60 + 3) * 1000) }), agora), 'Próximo check-in em 1:02:03');
     assert.equal(textoDoProximoCheckin(situacao({ proximoCheckinData: new Date(agora - 1000) }), agora), 'Check-in agora');
     assert.equal(textoDoProximoCheckin(situacao({ proximoCheckinData: new Date(agora + 60_000), disparado: true }), agora), 'Check-in agora');
+});
+
+test('situacaoDivergeDaExecucao: sem situação conhecida consulta; com a mesma execução não; iniciar, trocar ou encerrar sim (P-079)', () => {
+    assert.equal(situacaoDivergeDaExecucao(null, 5), true);
+    assert.equal(situacaoDivergeDaExecucao(situacao({ execucaoId: 5 }), 5), false);
+    assert.equal(situacaoDivergeDaExecucao(situacao({ execucaoId: null }), null), false);
+    assert.equal(situacaoDivergeDaExecucao(situacao({ execucaoId: null }), 5), true);
+    assert.equal(situacaoDivergeDaExecucao(situacao({ execucaoId: 5 }), 6), true);
+    assert.equal(situacaoDivergeDaExecucao(situacao({ execucaoId: 5 }), null), true);
 });

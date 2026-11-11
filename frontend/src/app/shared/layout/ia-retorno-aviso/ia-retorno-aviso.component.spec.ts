@@ -19,7 +19,7 @@ const botao = (elemento: HTMLElement, rotulo: string) =>
     Array.from(elemento.querySelectorAll('button')).find((candidato) => candidato.textContent?.includes(rotulo)) as HTMLButtonElement;
 
 function responderEstado(montado: Awaited<ReturnType<typeof montarComponente>>, estado: EstadoIaEnum): void {
-    TestBed.inject(IaDisponibilidadeService).carregar();
+    TestBed.inject(IaDisponibilidadeService).carregar({ forcar: true });
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/disponibilidade'), { estado });
 }
 

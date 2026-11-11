@@ -48,4 +48,30 @@ describe('CheckinService', () => {
 
         expect(status).toBe(500);
     });
+
+    it('dois pedidos enquanto a consulta está a caminho dividem a mesma requisição (P-081)', () => {
+        const recebidos: unknown[] = [];
+        servico.consultarSituacao().subscribe((resposta) => recebidos.push(resposta));
+        servico.consultarSituacao().subscribe((resposta) => recebidos.push(resposta));
+
+        responderSucesso(esperarRequisicao(http, 'GET', '/checkin/situacao'), { haCheckin: true, disparado: false });
+
+        expect(recebidos).toHaveLength(2);
+    });
+
+    it('resposta já concluída não é reaproveitada: o pedido seguinte faz outra requisição', () => {
+        servico.consultarSituacao().subscribe();
+        responderSucesso(esperarRequisicao(http, 'GET', '/checkin/situacao'), { haCheckin: false, disparado: false });
+
+        servico.consultarSituacao().subscribe();
+        responderSucesso(esperarRequisicao(http, 'GET', '/checkin/situacao'), { haCheckin: true, disparado: true });
+    });
+
+    it('depois de uma falha, o pedido seguinte tenta de novo', () => {
+        servico.consultarSituacao().subscribe({ error: () => undefined });
+        responderErro(esperarRequisicao(http, 'GET', '/checkin/situacao'), 500, 'falhou');
+
+        servico.consultarSituacao().subscribe();
+        responderSucesso(esperarRequisicao(http, 'GET', '/checkin/situacao'), { haCheckin: false, disparado: false });
+    });
 });
