@@ -23,6 +23,9 @@ import {
     PropostaIaResumoDto,
     StandardResponse,
     StatusPropostaIaEnum,
+    MensagemDiretaPropostaRecuperadaDto,
+    PropostaIaParticipanteRecuperarDto,
+    temVisibilidadeTotal,
 } from '@project20/shared';
 import { ConfigService } from '../../../config/config.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
@@ -299,6 +302,22 @@ export class PropostaIaService {
         }
     }
 
+    /**
+     * Uma proposta do `@IA` do chat entre colaboradores (task 315) para quem participa da conversa. Quem chama já conferiu que a proposta está numa resposta da IA
+     * da conversa de quem olha; aqui a proposta precisa ser de quem chamou a IA. Quem a criou e quem tem visibilidade total (gestor, administrador e auxiliar)
+     * a veem; a outra pessoa só se o executor do tipo disser que ela vê o alvo (`podeVer`). Sem acesso, nenhum dado da proposta volta. Só o dono resolve.
+     */
+    async recuperarParaParticipante(dto: PropostaIaParticipanteRecuperarDto, usuarioAtivo: JwtPayload): Promise<MensagemDiretaPropostaRecuperadaDto> {
+        const encontrada = await this.propostaIaRepositorio.recuperarPorId(dto.id);
+        if (!encontrada || encontrada.usuarioId !== dto.chamadaPorUsuarioId) throw new ResourceNotFoundException('Proposta');
+        const ehDono = encontrada.usuarioId === usuarioAtivo.sub;
+        if (!ehDono && !temVisibilidadeTotal(usuarioAtivo.tipo) && !(await this.outraPessoaPodeVer(encontrada, usuarioAtivo))) {
+            return { propostaId: dto.id, acessivel: false, podeResolver: false, proposta: null };
+        }
+        const proposta = await this.expirarSeDeDiaAnterior(encontrada);
+        return { propostaId: dto.id, acessivel: true, podeResolver: ehDono, proposta };
+    }
+
     /** Proposta do usuário; uma `PENDENTE` de dia anterior vira `EXPIRADA` ao ser lida (sem job). */
     private async obterDoUsuario(id: number, usuarioAtivo: JwtPayload): Promise<PropostaIaResumoDto> {
         const proposta = await this.propostaIaRepositorio.recuperarPorId(id);
@@ -306,7 +325,11 @@ export class PropostaIaService {
         if (proposta.usuarioId !== usuarioAtivo.sub && !(await this.outraPessoaPodeResolver(proposta, usuarioAtivo))) {
             throw new UnauthorizedAccessException('Esta proposta é de outro usuário');
         }
+        return this.expirarSeDeDiaAnterior(proposta);
+    }
 
+    private async expirarSeDeDiaAnterior(proposta: PropostaIaResumoDto): Promise<PropostaIaResumoDto> {
+        const id = proposta.id;
         if (proposta.status === StatusPropostaIaEnum.PENDENTE && this.ehDeDiaAnterior(proposta.createdDate)) {
             const expirada = await this.propostaIaRepositorio.transitar({
                 id,
@@ -320,6 +343,16 @@ export class PropostaIaService {
     }
 
     /** O executor do tipo deixa outra pessoa resolver a proposta (a alteração de trecho do plano é de quem edita o plano)? */
+    /** O executor do tipo diz que a outra pessoa da conversa vê o alvo da proposta (task 315)? Sem o método, ou com falha, não vê. */
+    private async outraPessoaPodeVer(proposta: PropostaIaResumoDto, usuarioAtivo: JwtPayload): Promise<boolean> {
+        try {
+            const executor = this.executores.obter(proposta.tipo);
+            return (await executor.podeVer?.(proposta.dados, usuarioAtivo)) ?? false;
+        } catch {
+            return false;
+        }
+    }
+
     private async outraPessoaPodeResolver(proposta: PropostaIaResumoDto, usuarioAtivo: JwtPayload): Promise<boolean> {
         try {
             const executor = this.executores.obter(proposta.tipo);

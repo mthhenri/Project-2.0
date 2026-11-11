@@ -294,6 +294,12 @@
         overflow-wrap: anywhere;
     }
 
+    &__propostas {
+        margin: 0.375rem 0 0;
+        font-size: 0.75rem;
+        color: var(--p-text-muted-color);
+    }
+
     &__citacao {
         margin-bottom: 0.375rem;
         padding-left: 0.5rem;

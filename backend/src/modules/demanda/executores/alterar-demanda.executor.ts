@@ -3,6 +3,7 @@ import { PropostaAlterarDemandaDadosDto, TipoPropostaIaEnum } from '@project20/s
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { dataDoBancoComoTexto } from '../../../core/utils/data-do-banco';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { alvoAcessivel, idDoAlvo } from '../../proposta-ia/domain/alvo-acessivel';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
 import { validarNovoPaiDaDemanda } from '../domain/novo-pai-da-demanda';
@@ -25,6 +26,13 @@ export class AlterarDemandaExecutor implements ExecutorPropostaIa {
         private readonly demandaService: DemandaService,
         private readonly demandaRepositorio: DemandaRepository,
     ) {}
+
+    /** Task 315: a outra pessoa da conversa vê a proposta se vê a demanda (as regras da service, com o usuário dela). */
+    async podeVer(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const demandaId = idDoAlvo(dados, 'demandaId');
+        if (demandaId === null) return false;
+        return alvoAcessivel(() => this.demandaService.recuperar({ id: demandaId }, usuarioAtivo));
+    }
 
     validar(dados: Record<string, unknown>): void {
         const entrada = validarDadosDaProposta(PropostaAlterarDemandaDadosDto, dados);

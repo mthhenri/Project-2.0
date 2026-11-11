@@ -23,7 +23,7 @@ function mensagem(texto = 'oi'): MensagemDiretaResumoDto {
         referencias: [],
         respondeA: null,
         createdDate: new Date('2026-10-21T14:05:11.482Z'),
-        editadaDate: null, reacoes: [],
+        editadaDate: null, reacoes: [], chamadaPorUsuarioId: null, propostaIds: [],
     };
 }
 

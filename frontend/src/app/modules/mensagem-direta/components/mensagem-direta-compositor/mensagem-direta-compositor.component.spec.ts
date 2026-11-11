@@ -223,6 +223,33 @@ describe('MensagemDiretaCompositorComponent', () => {
         expect(envios).toEqual([{ texto: 'Valeu! Vou chamar a @Camila Duarte', mencoes: [9], referencias: [] }]);
     });
 
+    it('com a IA disponível (task 315), o @ oferece a IA primeiro; escolhida, ela entra como @IA e não como menção de pessoa', async () => {
+        tela.fixture.componentRef.setInput('iaDisponivel', true);
+        await digitar('@');
+        const titulos = Array.from(tela.elemento.querySelectorAll('.compositor-direto__item-titulo'), (item) => item.textContent?.trim());
+        expect(titulos).toEqual(['IA', 'Camila Duarte']);
+        expect(tela.elemento.textContent).toContain('Pedir à IA');
+
+        teclar('Enter');
+        await tela.atualizar();
+        expect(markdown()).toBe('@IA ');
+        teclar('Enter');
+        expect(envios).toEqual([{ texto: '@IA', mencoes: [], referencias: [] }]);
+    });
+
+    it('a IA some do @ quando o termo não é dela', async () => {
+        tela.fixture.componentRef.setInput('iaDisponivel', true);
+        await digitar('@Cam');
+        expect(tela.elemento.textContent).toContain('Camila Duarte');
+        expect(tela.elemento.textContent).not.toContain('Pedir à IA');
+    });
+
+    it('sem a IA disponível o @ só tem as pessoas', async () => {
+        await digitar('@');
+        expect(tela.elemento.textContent).toContain('Camila Duarte');
+        expect(tela.elemento.textContent).not.toContain('Pedir à IA');
+    });
+
     it('pontuação digitada logo depois da escolha consome o espaço automático; outra tecla o mantém', async () => {
         await digitar('oi @Cam');
         teclar('Tab');

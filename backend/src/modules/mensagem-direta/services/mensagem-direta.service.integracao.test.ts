@@ -28,6 +28,9 @@ function montar(conexao: ConexaoTeste) {
         criarRepositorio(DemandaRepository, conexao),
         criarRepositorio(AtividadeRepository, conexao),
         new MensagemDiretaEventosService(new PublicadorEmMemoria(), criarRepositorio(UsuarioRepository, conexao)),
+        // O `@IA` (task 315) chama o provedor: aqui ele é um dublê que não responde (a service do @IA tem os próprios testes).
+        { atenderSeChamada: async () => undefined } as never,
+        { recuperarParaParticipante: async () => { throw new Error('não usada aqui'); } } as never,
     );
 }
 

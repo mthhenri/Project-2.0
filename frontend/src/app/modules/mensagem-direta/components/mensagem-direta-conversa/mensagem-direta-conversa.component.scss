@@ -189,6 +189,11 @@
     }
 
     // O "digitando" como balão no fim da conversa, igual ao do WhatsApp.
+    &__ia-digitando {
+        margin-right: 0.375rem;
+        font-size: 0.75rem;
+    }
+
     &__balao--digitando {
         display: inline-flex;
         align-items: center;

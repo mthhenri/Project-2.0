@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PropostaMoverAtividadeDadosDto, TipoPropostaIaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { alvoAcessivel, idDoAlvo } from '../../proposta-ia/domain/alvo-acessivel';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
+import { DemandaService } from '../../demanda/services/demanda.service';
 import { AtividadeService } from '../services/atividade.service';
 
 /**
@@ -15,7 +17,21 @@ import { AtividadeService } from '../services/atividade.service';
 export class MoverAtividadeExecutor implements ExecutorPropostaIa {
     readonly tipo = TipoPropostaIaEnum.MOVER_ATIVIDADE;
 
-    constructor(private readonly atividadeService: AtividadeService) {}
+    constructor(
+        private readonly atividadeService: AtividadeService,
+        private readonly demandaService: DemandaService,
+    ) {}
+
+    /** Task 315: a outra pessoa da conversa vê a proposta se vê a atividade e a demanda de destino (as regras da service, com o usuário dela). */
+    async podeVer(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const atividadeId = idDoAlvo(dados, 'atividadeId');
+        const destinoId = idDoAlvo(dados, 'demandaDestinoId');
+        if (atividadeId === null || destinoId === null) return false;
+        return alvoAcessivel(
+            () => this.atividadeService.recuperar({ id: atividadeId }, usuarioAtivo),
+            () => this.demandaService.recuperar({ id: destinoId }, usuarioAtivo),
+        );
+    }
 
     validar(dados: Record<string, unknown>): void {
         const entrada = validarDadosDaProposta(PropostaMoverAtividadeDadosDto, dados);

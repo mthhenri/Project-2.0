@@ -37,7 +37,7 @@ const como = (id: number) => ({ sub: id, login: `u${id}`, tipo: 'DESENVOLVEDOR' 
 
 const MENSAGEM_NOVA: MensagemDiretaEventoDto = {
     tipo: 'MENSAGEM',
-    mensagem: { mensagemId: 'm1', conversaId: '4-9', autor: 'USUARIO' as never, autorUsuarioId: 4, texto: 'oi', contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: new Date(), editadaDate: null, reacoes: [] },
+    mensagem: { mensagemId: 'm1', conversaId: '4-9', autor: 'USUARIO' as never, autorUsuarioId: 4, texto: 'oi', contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: new Date(), editadaDate: null, reacoes: [], chamadaPorUsuarioId: null, propostaIds: [] },
 };
 
 test('a mensagem publicada numa instância chega ao destinatário conectado na OUTRA', async () => {

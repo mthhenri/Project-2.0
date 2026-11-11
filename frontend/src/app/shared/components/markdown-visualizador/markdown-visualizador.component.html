@@ -162,7 +162,9 @@
             @case ("texto") {
                 @for (pedaco of partir(trecho.valor); track $index) {
                     @if (pedaco.destaque) {
-                        <span class="markdown__destaque">{{ pedaco.valor }}</span>
+                        <!-- O ícone e o texto colados: um espaço entre eles apareceria no chip (task 315). -->
+                        <!-- prettier-ignore -->
+                        <span class="markdown__destaque">@if (iconesDosDestaques()[pedaco.valor]; as icone) {<i class="pi markdown__destaque-icone" [class]="icone" aria-hidden="true"></i>}{{ pedaco.valor }}</span>
                     } @else {
                         <ng-container>{{ pedaco.valor }}</ng-container>
                     }

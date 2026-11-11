@@ -45,7 +45,7 @@ const recusaCom = (acao: () => unknown, trecho: RegExp) => assert.throws(acao, (
 test('o mapeamento guarda os campos da modelagem e reaproveita o analisador de português sem acento do chat da IA', () => {
     const propriedades = MAPEAMENTO_MENSAGEM_DIRETA.mappings.properties;
     assert.deepEqual(Object.keys(propriedades).sort(), [
-        'autor', 'autor_usuario_id', 'contem_codigo', 'conversa_id', 'created_date', 'editada_date', 'mencoes', 'mensagem_id', 'participantes', 'referencias',
+        'autor', 'autor_usuario_id', 'chamada_por_usuario_id', 'contem_codigo', 'conversa_id', 'created_date', 'editada_date', 'mencoes', 'mensagem_id', 'participantes', 'proposta_ids', 'referencias',
         'responde_a_autor_usuario_id', 'responde_a_mensagem_id', 'responde_a_trecho', 'texto',
     ]);
     assert.deepEqual(propriedades.texto, { type: 'text', analyzer: 'texto_pt' });

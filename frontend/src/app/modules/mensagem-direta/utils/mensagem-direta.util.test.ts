@@ -21,6 +21,7 @@ import {
     normalizarMensagem,
     previaDaMensagem,
     rotuloDaLista,
+    rotuloDaRespostaDaIa,
     rotuloDoDia,
     semSinalHaMuito,
     totalNaoLidas,
@@ -43,7 +44,7 @@ function mensagem(id: string, minutos: number, autor = OUTRO, parcial: Partial<M
         referencias: [],
         respondeA: null,
         createdDate: new Date(2026, 9, 21, 14, minutos),
-        editadaDate: null, reacoes: [],
+        editadaDate: null, reacoes: [], chamadaPorUsuarioId: null, propostaIds: [],
         situacao: 'ENVIADA',
         ...parcial,
     };
@@ -256,6 +257,15 @@ describe('lista de conversas', () => {
         expect(aplicarMensagemNaLista(lista, mensagem('n2', 31, EU), EU, null).conversas[0].naoLidas).toBe(0);
     });
 
+    it('aplicarMensagemNaLista: a resposta do @IA (task 315) sobe a conversa, mas não conta como não lida (como no servidor)', () => {
+        const lista = [conversa('7', 0), conversa('9', 0)];
+        const daIa = mensagem('ia1', 30, OUTRO, { autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, chamadaPorUsuarioId: OUTRO });
+        const resultado = aplicarMensagemNaLista(lista, daIa, EU, null);
+        expect(resultado.conversas[0].conversaId).toBe('4-9');
+        expect(resultado.conversas[0].ultimaMensagem?.mensagemId).toBe('ia1');
+        expect(resultado.conversas[0].naoLidas).toBe(0);
+    });
+
     it('a mesma mensagem recebida duas vezes não conta duas não lidas', () => {
         const nova = mensagem('n1', 30, OUTRO);
         const uma = aplicarMensagemNaLista([conversa('9')], nova, EU, null).conversas;
@@ -319,5 +329,25 @@ describe('devePublicarDigitacao', () => {
 
     it('o "digitando…" dura mais que o intervalo entre avisos, para não piscar enquanto a pessoa digita', () => {
         expect(VALIDADE_DO_DIGITANDO_MS).toBeGreaterThan(ESPERA_ENTRE_AVISOS_DE_DIGITACAO_MS);
+    });
+});
+
+describe('@IA no chat entre colaboradores (task 315)', () => {
+    it('normalizarMensagem: sem os campos da IA (API anterior à task) valem nulo e lista vazia', () => {
+        const { chamadaPorUsuarioId: _chamada, propostaIds: _propostas, situacao: _situacao, ...antiga } = mensagem('a', 0, OUTRO);
+        const normalizada = normalizarMensagem({ ...antiga, createdDate: new Date() } as never);
+        expect(normalizada.chamadaPorUsuarioId).toBeNull();
+        expect(normalizada.propostaIds).toEqual([]);
+    });
+
+    it('previaDaMensagem: a resposta da IA começa com "IA:", mesmo que eu tenha chamado', () => {
+        expect(previaDaMensagem('Criei a **atividade**', false, false, true)).toBe('IA: Criei a atividade');
+        expect(previaDaMensagem('Criei', false, true, true)).toBe('IA: Criei');
+        expect(previaDaMensagem('oi', false, true)).toBe('Você: oi');
+    });
+
+    it('rotuloDaRespostaDaIa: para quem a IA respondeu', () => {
+        expect(rotuloDaRespostaDaIa('você')).toBe('IA · para você');
+        expect(rotuloDaRespostaDaIa('Camila Duarte')).toBe('IA · para Camila Duarte');
     });
 });

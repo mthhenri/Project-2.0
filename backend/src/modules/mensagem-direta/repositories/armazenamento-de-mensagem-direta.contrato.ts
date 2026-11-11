@@ -335,5 +335,40 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
             await assert.rejects(armazenamento.alterarMensagem({ ...base, autorUsuarioId: ana, texto: '  ' }), (erro) => erro instanceof BusinessException);
             assert.equal((await armazenamento.recuperarMensagem({ conversaId: conversaAnaDavi, mensagemId: original.mensagemId }))?.texto, `Texto depois da edição ${marca}`, 'a tentativa recusada não gravou');
         });
+
+        it('grava a resposta da IA (task 315) com quem a chamou e as propostas, lê de volta e deixa as outras mensagens sem esses campos', async () => {
+            const daIa = (await armazenamento.gravar(mensagem(conversaAnaDavi, null, 'Criei a proposta', { autor: AutorMensagemDiretaEnum.IA, chamadaPorUsuarioId: davi, propostaIds: [41, 42] }))).mensagem;
+            assert.equal(daIa.autor, AutorMensagemDiretaEnum.IA);
+            assert.equal(daIa.autorUsuarioId, null);
+            assert.equal(daIa.chamadaPorUsuarioId, davi);
+            assert.deepEqual(daIa.propostaIds, [41, 42]);
+            const semProposta = (await armazenamento.gravar(mensagem(conversaAnaDavi, null, 'Só respondi', { autor: AutorMensagemDiretaEnum.IA, chamadaPorUsuarioId: ana, propostaIds: [] }))).mensagem;
+
+            const pagina = await armazenamento.listarConversa({ conversaId: conversaAnaDavi, limite: 50 });
+            const lida = pagina.mensagens.find((item) => item.mensagemId === daIa.mensagemId)!;
+            assert.equal(lida.autor, AutorMensagemDiretaEnum.IA);
+            assert.equal(lida.chamadaPorUsuarioId, davi);
+            assert.deepEqual(lida.propostaIds, [41, 42]);
+            assert.deepEqual(pagina.mensagens.find((item) => item.mensagemId === semProposta.mensagemId)!.propostaIds, []);
+            const daPessoa = pagina.mensagens.find((item) => item.autor === AutorMensagemDiretaEnum.USUARIO)!;
+            assert.equal(daPessoa.chamadaPorUsuarioId, null);
+            assert.deepEqual(daPessoa.propostaIds, []);
+            assert.equal((await armazenamento.recuperarMensagem({ conversaId: conversaAnaDavi, mensagemId: daIa.mensagemId }))?.chamadaPorUsuarioId, davi);
+
+            const naoLidas = await armazenamento.contarNaoLidas({ usuarioId: ana, marcadores: [{ conversaId: conversaAnaDavi, lidaAteDate: null }] });
+            assert.equal(naoLidas[conversaAnaDavi] ?? 0, pagina.mensagens.filter((item) => item.autor === AutorMensagemDiretaEnum.USUARIO && item.autorUsuarioId !== ana).length, 'a resposta da IA não conta como não lida');
+
+            const base = { conversaId: conversaAnaDavi, autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null };
+            await assert.rejects(armazenamento.gravar(mensagem(conversaAnaDavi, null, 'sem quem chamou', { ...base, chamadaPorUsuarioId: null })), (erro) => erro instanceof BusinessException);
+            await assert.rejects(armazenamento.gravar(mensagem(conversaAnaDavi, null, 'fora da conversa', { ...base, chamadaPorUsuarioId: carla })), (erro) => erro instanceof BusinessException);
+            await assert.rejects(armazenamento.gravar(mensagem(conversaAnaDavi, null, 'com autor', { ...base, autorUsuarioId: ana, chamadaPorUsuarioId: ana })), (erro) => erro instanceof BusinessException);
+            await assert.rejects(armazenamento.gravar(mensagem(conversaAnaDavi, ana, 'pessoa com proposta', { propostaIds: [3] })), (erro) => erro instanceof BusinessException);
+            await assert.rejects(armazenamento.gravar(mensagem(conversaAnaDavi, null, 'proposta inválida', { ...base, chamadaPorUsuarioId: ana, propostaIds: [0] })), (erro) => erro instanceof BusinessException);
+            assert.equal(
+                await armazenamento.alterarMensagem({ mensagemId: daIa.mensagemId, conversaId: conversaAnaDavi, autorUsuarioId: davi, texto: 'tentativa', contemCodigo: false, mencoes: [], referencias: [] }),
+                null,
+                'ninguém edita a resposta da IA',
+            );
+        });
     });
 }

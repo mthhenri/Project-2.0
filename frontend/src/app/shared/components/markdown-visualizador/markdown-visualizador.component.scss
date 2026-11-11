@@ -170,4 +170,10 @@
         color: var(--p-primary-color);
         font-weight: 600;
     }
+
+    // O ícone antes do destaque (o `@IA`, task 315), no tamanho do texto.
+    &__destaque-icone {
+        margin-right: 0.25em;
+        font-size: 0.85em;
+    }
 }

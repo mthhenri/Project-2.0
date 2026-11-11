@@ -41,6 +41,9 @@ export const MAPEAMENTO_MENSAGEM_DIRETA = {
             created_date: { type: 'date' },
             // Task 313. Índice criado antes dela não tem o campo mapeado: o mapeamento dinâmico o reconhece como data na primeira edição.
             editada_date: { type: 'date' },
+            // Task 315, só na resposta da IA. Índice criado antes dela os ganha pelo mapeamento dinâmico na primeira resposta.
+            chamada_por_usuario_id: { type: 'integer' },
+            proposta_ids: { type: 'integer' },
         },
     },
 };

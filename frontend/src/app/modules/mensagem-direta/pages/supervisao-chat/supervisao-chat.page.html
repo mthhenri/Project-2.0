@@ -248,6 +248,11 @@
                                                     [id]="referencia.id"
                                                 />
                                             }
+                                            @if (avisoDasPropostas(mensagem); as aviso) {
+                                                <p class="supervisao-chat__propostas">
+                                                    {{ aviso }}
+                                                </p>
+                                            }
                                         </div>
                                     </div>
                                 }

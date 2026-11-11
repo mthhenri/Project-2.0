@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseEnumPipe, ParseIntPipe, Patch, Post, Put, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseEnumPipe, ParseIntPipe, ParseUUIDPipe, Patch, Post, Put, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import {
     MensagemDiretaBuscarDto,
@@ -87,6 +87,17 @@ export class MensagemDiretaController {
         @ActiveUser() usuarioAtivo: JwtPayload,
     ) {
         return this.mensagemDiretaService.listarConversa({ ...dto, usuarioId }, usuarioAtivo);
+    }
+
+    /** Uma proposta da resposta do `@IA` (task 315) para quem olha a conversa: sem acesso ao alvo, `acessivel: false` e nenhum dado. */
+    @Get('conversa/:usuarioId/mensagem/:mensagemId/proposta/:propostaId')
+    recuperarProposta(
+        @Param('usuarioId', ParseIntPipe) usuarioId: number,
+        @Param('mensagemId', new ParseUUIDPipe()) mensagemId: string,
+        @Param('propostaId', ParseIntPipe) propostaId: number,
+        @ActiveUser() usuarioAtivo: JwtPayload,
+    ) {
+        return this.mensagemDiretaService.recuperarProposta({ usuarioId, mensagemId, propostaId }, usuarioAtivo);
     }
 
     @Post('mensagem')

@@ -3,6 +3,7 @@ import { PropostaIniciarExecucaoDadosDto, TipoAtividadeStatusEnum, TipoPropostaI
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { AtividadeService } from '../../atividade/services/atividade.service';
+import { alvoAcessivel, idDoAlvo } from '../../proposta-ia/domain/alvo-acessivel';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
 import { ExecucaoService } from '../services/execucao.service';
@@ -25,6 +26,13 @@ export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
         private readonly execucaoService: ExecucaoService,
         private readonly atividadeService: AtividadeService,
     ) {}
+
+    /** Task 315: a outra pessoa da conversa vê a proposta se vê a atividade (as regras da service, com o usuário dela). */
+    async podeVer(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const atividadeId = idDoAlvo(dados, 'atividadeId');
+        if (atividadeId === null) return false;
+        return alvoAcessivel(() => this.atividadeService.recuperar({ id: atividadeId }, usuarioAtivo));
+    }
 
     validar(dados: Record<string, unknown>): void {
         validarDadosDaProposta(PropostaIniciarExecucaoDadosDto, dados);

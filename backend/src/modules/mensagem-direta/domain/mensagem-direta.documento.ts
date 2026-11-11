@@ -26,6 +26,10 @@ export interface MensagemDiretaNova {
     referencias: ReferenciaMensagemDto[];
     /** A mensagem respondida (task 220), já montada pela service a partir da original; `null` ou ausente quando não é resposta. */
     respondeA?: CitacaoMensagemDto | null;
+    /** Só na resposta da IA (task 315): quem a chamou, participante da conversa. */
+    chamadaPorUsuarioId?: number | null;
+    /** Só na resposta da IA: as propostas do turno. */
+    propostaIds?: number[];
 }
 
 /** A edição de uma mensagem própria (task 313): o texto novo e o que deriva dele; o resto da mensagem (data de envio, resposta, autor) não muda. */
@@ -60,6 +64,10 @@ export interface MensagemDiretaFonte {
     created_date: string;
     /** Quando o autor editou a mensagem pela última vez (task 313); ausente ou `null` quando nunca foi editada. */
     editada_date?: string | null;
+    /** Na resposta da IA (task 315): quem a chamou. Documento anterior à task não tem o campo. */
+    chamada_por_usuario_id?: number | null;
+    /** Na resposta da IA: as propostas do turno. Ausente (documento anterior à task) é lido como vazio. */
+    proposta_ids?: number[];
 }
 
 export const REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -79,6 +87,16 @@ export function validarMensagemDiretaNova(mensagem: MensagemDiretaNova): void {
         if (!participa) throw new BusinessException('Quem escreve a mensagem precisa participar da conversa');
     } else if (mensagem.autorUsuarioId !== null) {
         throw new BusinessException('A mensagem do sistema não tem autor');
+    }
+
+    const chamadaPor = mensagem.chamadaPorUsuarioId ?? null;
+    const propostaIds = mensagem.propostaIds ?? [];
+    if (mensagem.autor === AutorMensagemDiretaEnum.IA) {
+        const participa = chamadaPor === participantes.usuarioMenorId || chamadaPor === participantes.usuarioMaiorId;
+        if (!participa) throw new BusinessException('A resposta da IA precisa de quem a chamou, participante da conversa');
+        if (!propostaIds.every((propostaId) => Number.isInteger(propostaId) && propostaId >= 1)) throw new BusinessException('Proposta inválida na resposta da IA');
+    } else if (chamadaPor !== null || propostaIds.length > 0) {
+        throw new BusinessException('Só a resposta da IA tem quem a chamou e propostas');
     }
 
     const respondeA = mensagem.respondeA;
@@ -136,6 +154,7 @@ export function paraFonteDireta(mensagem: MensagemDiretaNova, criadaEm: Date): M
                 responde_a_trecho: mensagem.respondeA.trecho,
             }
             : {}),
+        ...(mensagem.autor === AutorMensagemDiretaEnum.IA ? { chamada_por_usuario_id: mensagem.chamadaPorUsuarioId ?? null, proposta_ids: mensagem.propostaIds ?? [] } : {}),
         created_date: criadaEm.toISOString(),
     };
 }
@@ -161,5 +180,7 @@ export function deFonteDireta(fonte: MensagemDiretaFonte): MensagemDiretaResumoD
         editadaDate: fonte.editada_date ? new Date(fonte.editada_date) : null,
         // As reações vêm da tabela `mensagem_direta_reacao`: quem junta é a service.
         reacoes: [],
+        chamadaPorUsuarioId: fonte.chamada_por_usuario_id ?? null,
+        propostaIds: fonte.proposta_ids ?? [],
     };
 }

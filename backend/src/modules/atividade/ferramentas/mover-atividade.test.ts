@@ -39,7 +39,7 @@ function montar(opcoes: { demandaDaAtividade?: number; statusDestino?: TipoDeman
     const propostaIa = { criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 70, status: 'PENDENTE' }; } } as unknown as PropostaIaService;
     return {
         ferramenta: new ProporMoverAtividadeFerramenta(propostaIa, atividadeService, demandaRepositorio),
-        executor: new MoverAtividadeExecutor(atividadeService),
+        executor: new MoverAtividadeExecutor(atividadeService, {} as never),
         propostas, alteracoes, atividade,
     };
 }

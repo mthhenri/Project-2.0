@@ -14,7 +14,7 @@ Ordem de execução (decidida em 2026-11-06): **318**, 313, 314, **316 antes da 
 | 312 | Barra de bolinhas: com uma conversa aberta, a lista vira uma coluna de avatares | não | feita (`done/`) |
 | 313 | Editar mensagem | sim (`editada_date`, migration 0082) | feita em 2026-11-06 (`done/`) |
 | 314 | Reações nas mensagens e seletor de emoji | sim (tabela `mensagem_direta_reacao`, migration 0083) | feita em 2026-11-06 (`done/`) |
-| 315 | `@IA` no chat entre colaboradores | sim | reservada, spec própria antes de qualquer código |
+| 315 | `@IA` no chat entre colaboradores | sim (autor `IA`, `chamada_por_usuario_id` e `proposta_ids` na mensagem, migration 0086) | spec escrita em 2026-11-11 (`done/315-chat-ia-no-chat-entre-colaboradores.spec.md`), feita em 2026-11-11 (`done/`) |
 | 316 | Cor da bolinha escolhida pela pessoa (só no chat por ora) | sim (`usuario.cor_avatar`, migration 0084) | feita em 2026-11-06 (`done/`); a 319 leva a cor aos demais avatares |
 | 319 | Cor da bolinha nos demais avatares do sistema (depende da 316) | não | feita em 2026-11-10 (`done/`) |
 | 317 | Volume do aviso do chat de 1 a 5 (3 é o atual) e, depois, escolher o som | sim (preferência do usuário) | pedido em 2026-11-06, a especificar |
@@ -32,7 +32,10 @@ armazenamento não muda). Em 2026-11-06 o autor escolheu **qualquer emoji como r
 
 **`@IA` (315).** A IA atende só quem a chamou e só ao pedido dessa pessoa (a mensagem atual ou a seguinte), e executa **uma** ação por chamada. A
 resposta aparece para as duas pessoas da conversa; quem não tem acesso ao que a IA fez vê "Ação oculta por falta de acesso". Vale o fluxo de
-propostas já existente (cartões, Aceitar/Descartar), com as mesmas permissões do chat da IA, e o custo entra na aba Custos como uso da IA.
+propostas já existente (cartões, Aceitar/Descartar), com as mesmas permissões do chat da IA, e o custo entra na aba Custos como uso da IA. Em 2026-11-11 o
+autor decidiu a privacidade e a modelagem (a IA lê o pedido e as 20 mensagens anteriores das duas pessoas; texto para as duas, com a IA avisada de quem
+mais lê; resposta como mensagem direta de autor `IA`; `@IA` sozinho espera o pedido por 10 minutos; "IA digitando…" sem streaming). Ao aprovar a spec,
+no mesmo dia, o autor trocou a "uma ação por chamada" por **mais de uma proposta por vez**, como no chat da IA. Spec: `done/315-chat-ia-no-chat-entre-colaboradores.spec.md`.
 
 **Volume (317).** Pedido: nível de 1 a 5, o 3 é o som de hoje, cada ponto sobe ou desce uma porcentagem do volume; mais tarde, trocar o som.
 Decidido em 2026-11-06: a preferência fica numa coluna nova de `mensagem_direta_preferencia` (que já guarda os avisos por usuário). A

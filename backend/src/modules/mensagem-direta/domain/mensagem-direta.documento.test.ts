@@ -85,8 +85,42 @@ test('ler o documento devolve o resumo, com as referências de volta como objeto
         referencias: [{ tipo: ReferenciaMensagemDiretaEnum.DEMANDA, id: 212 }],
         respondeA: null,
         createdDate: new Date('2026-10-21T14:05:11.482Z'),
-        editadaDate: null, reacoes: [],
+        editadaDate: null, reacoes: [], chamadaPorUsuarioId: null, propostaIds: [],
     });
+});
+
+// --- resposta da IA (task 315) ----------------------------------------------
+
+const DA_IA = { mensagemId: UUID, conversaId: '4-9', autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, texto: 'Criei a proposta', contemCodigo: false, mencoes: [], referencias: [] };
+
+test('a resposta da IA leva quem a chamou e as propostas, e volta igual no resumo', () => {
+    validarMensagemDiretaNova({ ...DA_IA, chamadaPorUsuarioId: 4, propostaIds: [12, 13] });
+    const fonte = paraFonteDireta({ ...DA_IA, chamadaPorUsuarioId: 4, propostaIds: [12, 13] }, new Date('2026-11-11T12:00:00.000Z'));
+    assert.equal(fonte.chamada_por_usuario_id, 4);
+    assert.deepEqual(fonte.proposta_ids, [12, 13]);
+    const resumo = deFonteDireta(fonte);
+    assert.equal(resumo.chamadaPorUsuarioId, 4);
+    assert.deepEqual(resumo.propostaIds, [12, 13]);
+});
+
+test('a mensagem de pessoa não leva os campos da IA no documento, e o documento anterior à task 315 é lido sem eles', () => {
+    const fonte = paraFonteDireta(NOVA, new Date('2026-11-11T12:00:00.000Z'));
+    assert.equal('chamada_por_usuario_id' in fonte, false);
+    assert.equal('proposta_ids' in fonte, false);
+    assert.equal(deFonteDireta(fonte).chamadaPorUsuarioId, null);
+    assert.deepEqual(deFonteDireta(fonte).propostaIds, []);
+});
+
+test('recusa resposta da IA sem quem chamou, com quem não participa, com autor de pessoa ou com proposta inválida; e campos da IA em outra mensagem', () => {
+    const recusa = (mensagem: Parameters<typeof validarMensagemDiretaNova>[0]) => assert.throws(() => validarMensagemDiretaNova(mensagem), BusinessException);
+    recusa({ ...DA_IA });
+    recusa({ ...DA_IA, chamadaPorUsuarioId: 7 });
+    recusa({ ...DA_IA, autorUsuarioId: 4, chamadaPorUsuarioId: 4 });
+    recusa({ ...DA_IA, chamadaPorUsuarioId: 4, propostaIds: [0] });
+    recusa({ ...DA_IA, chamadaPorUsuarioId: 4, propostaIds: [1.5] });
+    recusa({ ...NOVA, chamadaPorUsuarioId: 9 });
+    recusa({ ...NOVA, propostaIds: [3] });
+    recusa({ ...DA_IA, autor: AutorMensagemDiretaEnum.SISTEMA, chamadaPorUsuarioId: 4 });
 });
 
 // --- resposta a outra mensagem (task 220) ----------------------------------

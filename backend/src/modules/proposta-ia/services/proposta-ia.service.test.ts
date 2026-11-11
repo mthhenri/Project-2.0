@@ -63,7 +63,7 @@ function criarRepositorio() {
     return { repositorio, propostas };
 }
 
-function criarExecutor(opcoes: { falharAoExecutar?: boolean | 'obsoleta'; falharAoDesfazer?: boolean; atraso?: boolean; obsoleta?: boolean | 'falha'; podeResolver?: boolean; tipo?: TipoPropostaIaEnum } = {}) {
+function criarExecutor(opcoes: { falharAoExecutar?: boolean | 'obsoleta'; falharAoDesfazer?: boolean; atraso?: boolean; obsoleta?: boolean | 'falha'; podeResolver?: boolean; podeVer?: boolean | 'falha'; tipo?: TipoPropostaIaEnum } = {}) {
     const chamadas = { executar: [] as Record<string, unknown>[], desfazer: 0 };
     const executor: ExecutorPropostaIa = {
         tipo: opcoes.tipo ?? TIPO,
@@ -86,6 +86,9 @@ function criarExecutor(opcoes: { falharAoExecutar?: boolean | 'obsoleta'; falhar
             if (opcoes.falharAoDesfazer) throw new BusinessException('A atividade já foi alterada');
         },
         ...(opcoes.podeResolver !== undefined ? { podeResolver: async () => opcoes.podeResolver as boolean } : {}),
+        ...(opcoes.podeVer !== undefined
+            ? { podeVer: async () => { if (opcoes.podeVer === 'falha') throw new Error('sem acesso ao banco'); return opcoes.podeVer as boolean; } }
+            : {}),
     };
     return { executor, chamadas };
 }
@@ -556,4 +559,39 @@ test('sem o `podeResolver` do executor (ou com ele recusando), a proposta de out
     const recusando = criarServico({ podeResolver: false });
     const criadaRecusando = await recusando.servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
     await assert.rejects(() => recusando.servico.recuperarPorId(criadaRecusando.id, OUTRO), UnauthorizedAccessException);
+});
+
+// --- proposta do @IA para quem participa da conversa (task 315) ------------------
+
+test('recuperarParaParticipante: o dono vê e resolve; a outra pessoa vê o que o executor deixa, sem resolver', async () => {
+    const { servico } = criarServico({ podeVer: true });
+    const proposta = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: { nome: 'Revisar' } });
+    assert.deepEqual(await servico.recuperarParaParticipante({ id: proposta.id, chamadaPorUsuarioId: 1 }, DONO), { propostaId: proposta.id, acessivel: true, podeResolver: true, proposta });
+    const vista = await servico.recuperarParaParticipante({ id: proposta.id, chamadaPorUsuarioId: 1 }, OUTRO);
+    assert.equal(vista.acessivel, true);
+    assert.equal(vista.podeResolver, false);
+    assert.equal(vista.proposta?.id, proposta.id);
+});
+
+test('recuperarParaParticipante: sem acesso ao alvo, sem podeVer ou com falha, a outra pessoa não recebe nenhum dado', async () => {
+    for (const podeVer of [false, 'falha', undefined] as const) {
+        const { servico } = criarServico(podeVer === undefined ? {} : { podeVer });
+        const proposta = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: { nome: 'Revisar' } });
+        assert.deepEqual(await servico.recuperarParaParticipante({ id: proposta.id, chamadaPorUsuarioId: 1 }, OUTRO), { propostaId: proposta.id, acessivel: false, podeResolver: false, proposta: null });
+    }
+});
+
+test('recuperarParaParticipante: quem tem visibilidade total vê mesmo sem podeVer, mas não resolve', async () => {
+    const { servico } = criarServico({ podeVer: false });
+    const proposta = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: { nome: 'Revisar' } });
+    const vista = await servico.recuperarParaParticipante({ id: proposta.id, chamadaPorUsuarioId: 1 }, ADMINISTRADOR);
+    assert.equal(vista.acessivel, true);
+    assert.equal(vista.podeResolver, false);
+});
+
+test('recuperarParaParticipante: 404 quando a proposta não é de quem chamou a IA ou não existe', async () => {
+    const { servico } = criarServico({ podeVer: true });
+    const proposta = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: { nome: 'Revisar' } });
+    await assert.rejects(servico.recuperarParaParticipante({ id: proposta.id, chamadaPorUsuarioId: 2 }, OUTRO), ResourceNotFoundException);
+    await assert.rejects(servico.recuperarParaParticipante({ id: 999, chamadaPorUsuarioId: 1 }, DONO), ResourceNotFoundException);
 });

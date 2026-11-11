@@ -25,6 +25,12 @@ export interface ExecutorPropostaIa {
    * (task 234): quem pode editar o plano a resolve, mesmo que a IA a tenha criado a pedido de outra pessoa. Sem este método, só o dono resolve.
    */
     podeResolver?(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean>;
+    /**
+   * Opcional (task 315): a outra pessoa da conversa do chat entre colaboradores, onde o `@IA` criou a proposta, pode **ver** a proposta? Confere o acesso
+   * dela ao alvo (demanda, atividade) pelas regras de hoje das services. Sem este método, quem não criou a proposta e não tem visibilidade total vê
+   * "Ação oculta por falta de acesso". Ver nunca dá o direito de resolver.
+   */
+    podeVer?(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean>;
 }
 
 /** Os executores por tipo. Cada executor se registra na subida do módulo dele. */

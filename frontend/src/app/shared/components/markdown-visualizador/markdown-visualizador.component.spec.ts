@@ -134,6 +134,17 @@ describe('MarkdownVisualizadorComponent', () => {
         expect(montado.elemento.querySelector('p')?.textContent).toBe('@Gabriel Zimmermann teste #Relatório novo');
     });
 
+    it('o destaque com ícone (o @IA, task 315) mostra o ícone antes do texto, sem espaço a mais; os outros continuam sem ícone', async () => {
+        const montado = await montarComponente(MarkdownVisualizadorComponent, {
+            entradas: { texto: '@IA resume para o @Gabriel Zimmermann', destaques: ['@IA', '@Gabriel Zimmermann'], iconesDosDestaques: { '@IA': 'pi pi-sparkles' } },
+        });
+        const [daIa, daPessoa] = Array.from(montado.elemento.querySelectorAll('.markdown__destaque'));
+        expect(daIa.textContent).toBe('@IA');
+        expect(daIa.querySelector('i.pi-sparkles')).not.toBeNull();
+        expect(daPessoa.querySelector('i')).toBeNull();
+        expect(montado.elemento.querySelector('p')?.textContent).toBe('@IA resume para o @Gabriel Zimmermann');
+    });
+
     it('sem destaques informados nada ganha destaque', async () => {
         const montado = await renderizar('@Gabriel Zimmermann teste');
         expect(montado.elemento.querySelector('.markdown__destaque')).toBeNull();

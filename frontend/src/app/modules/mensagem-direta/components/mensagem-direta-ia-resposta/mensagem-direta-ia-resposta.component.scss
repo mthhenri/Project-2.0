@@ -1,0 +1,107 @@
+// A resposta do `@IA` (task 315) segue o balão da conversa (borda, raio e corpo do Markdown) e o selo "IA" do chat com a IA (escuro no claro, claro no escuro).
+:host {
+    display: block;
+    align-self: flex-start;
+    // Largura fixa (e não só máxima): as propostas ocupam a coluna inteira, como no chat com a IA, mesmo quando o texto da resposta é curto.
+    width: 92%;
+}
+
+.ia-resposta {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+
+    &__avatar {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        margin-top: 1.125rem;
+        border-radius: 8px;
+        background: var(--p-text-color);
+        color: var(--p-content-background);
+        font-size: 0.6875rem;
+        font-weight: 700;
+    }
+
+    &__corpo {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+        min-width: 0;
+    }
+
+    &__rotulo {
+        padding: 0 0.25rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: var(--p-text-muted-color);
+    }
+
+    &__balao {
+        max-width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--app-surface-200);
+        border-radius: 12px 12px 12px 4px;
+        background: var(--app-surface-50);
+
+        ::ng-deep .markdown {
+            font-size: 0.875rem;
+            line-height: 1.45;
+        }
+    }
+
+    &__propostas {
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    &__aviso {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.625rem;
+        border: 1px dashed var(--app-surface-200);
+        border-radius: 10px;
+        background: var(--app-surface-50);
+        font-size: 0.8125rem;
+        color: var(--p-text-muted-color);
+
+        &--erro {
+            color: var(--p-red-500);
+        }
+    }
+
+    &__tentar {
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--p-primary-color);
+        font: inherit;
+        cursor: pointer;
+
+        &:hover,
+        &:focus-visible {
+            text-decoration: underline;
+        }
+    }
+
+    &__carregando {
+        margin: 0;
+        font-size: 0.8125rem;
+        color: var(--p-text-muted-color);
+    }
+
+    &__horario {
+        padding: 0 0.25rem;
+        font-size: 0.6875rem;
+        color: var(--p-text-muted-color);
+    }
+}

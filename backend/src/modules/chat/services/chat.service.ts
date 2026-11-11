@@ -24,10 +24,10 @@ import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
-import { EscopoDaFerramentaIa, OrigemDaFerramentaIa } from '../../ferramenta-ia/domain/ferramenta-ia';
+import { EscopoDaFerramentaIa } from '../../ferramenta-ia/domain/ferramenta-ia';
 import { FerramentaIaRegistro } from '../../ferramenta-ia/services/ferramenta-ia.registro';
 import { IaException } from '../../ia/domain/ia.exception';
-import { IaBloco, IaMensagem } from '../../ia/domain/ia.tipos';
+import { IaMensagem } from '../../ia/domain/ia.tipos';
 import { executarNoTurno, TurnoIa } from '../../ia/domain/turno-ia';
 import { IaService } from '../../ia/services/ia.service';
 import { PromptService } from '../../prompt/services/prompt.service';
@@ -46,15 +46,14 @@ import { montarAberturaDoDia } from '../domain/abertura-do-dia';
 import { atualizarPropostasNoContexto, idsDePropostasNoContexto, SituacaoDaProposta } from '../domain/propostas-no-contexto';
 import { montarRetomadaAposQueda } from '../domain/retomada-apos-queda';
 import { interpretarSugestoes, montarInstrucoesDeSugestoes } from '../domain/sugestoes';
-import { separadorEntreVoltas } from '../domain/separador-entre-voltas';
 import { instanteDoDiaUtilAnterior, montarConversaId, nomePadraoDaConversa } from '../domain/chat-conversa';
 import { ChatMensagemLida, paraResumo } from '../domain/chat-mensagem.documento';
+import { LacoDeFerramentas } from './laco-de-ferramentas';
 import { ARMAZENAMENTO_DE_CHAT, ArmazenamentoDeChat } from '../repositories/armazenamento-de-chat';
 
 /** Mensagens do dia que viram contexto para o modelo (a memória de longo prazo está nos dados, não no chat). */
 export const JANELA_DE_MENSAGENS = 40;
-/** Voltas de ferramenta por mensagem do usuário: cada volta é uma chamada ao modelo. */
-export const MAXIMO_DE_VOLTAS = 8;
+export { MAXIMO_DE_VOLTAS } from './laco-de-ferramentas';
 /** Teto de tokens de cada chamada do chat (alto o bastante para a resposta de código não cortar no meio). */
 export const MAXIMO_TOKENS_DO_CHAT = 4096;
 
@@ -109,6 +108,8 @@ export class ChatService {
     private readonly logger = new Logger(ChatService.name);
     /** Conversas com uma mensagem em andamento: um segundo envio na mesma conversa recebe 409. */
     private readonly emAndamento = new Set<string>();
+    /** O laço com ferramentas é o mesmo do `@IA` do chat entre colaboradores (task 315). */
+    private readonly lacoDeFerramentas: LacoDeFerramentas;
 
     constructor(
         @Inject(ARMAZENAMENTO_DE_CHAT) private readonly chatMensagemRepositorio: ArmazenamentoDeChat,
@@ -118,7 +119,9 @@ export class ChatService {
         private readonly propostaIaService: PropostaIaService,
         private readonly configService: ConfigService,
         private readonly configuracaoIaService: ConfiguracaoIaService,
-    ) {}
+    ) {
+        this.lacoDeFerramentas = new LacoDeFerramentas(iaService, ferramentaIaRegistro);
+    }
 
     async recuperarHoje(usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
         const conversaId = this.conversaDeHoje(usuarioAtivo);
@@ -356,46 +359,20 @@ export class ChatService {
         const mensagemDeRetomada: IaMensagem | null = retomada ? { papel: 'usuario', conteudo: retomada } : null;
         const contextoDoHistorico = mensagemDeAbertura ? [] : await this.montarContextoAtualizado(historico, usuarioAtivo);
         const mensagens = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [...contextoDoHistorico, mensagemDeRetomada] : contextoDoHistorico;
-        const trocasDoTurno: IaMensagem[] = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [mensagemDeRetomada] : [];
-        let texto = '';
-
-        for (let volta = 1; volta <= MAXIMO_DE_VOLTAS; volta++) {
-            // O texto de uma volta nova vem separado do anterior por um parágrafo em branco, tanto no que chega ao vivo quanto no gravado.
-            const separador = separadorEntreVoltas(texto);
-            let separadorEmitido = separador === '';
-            const resposta = await this.iaService.transmitir(
-                {
-                    nivel: opcoes.nivel ?? NivelIaEnum.RAPIDO,
-                    instrucoes,
-                    mensagens,
-                    ferramentas,
-                    maximoTokens: opcoes.maximoTokens ?? MAXIMO_TOKENS_DO_CHAT,
-                    // A dúvida de código (ligada pelo administrador) pode precisar de documentação atual: o provedor pesquisa por conta própria quando o modelo achar útil.
-                    pesquisaWeb: doChat && configuracao.duvidasCodigo,
-                },
-                (trecho) => {
-                    if (trecho === '') return;
-                    if (!separadorEmitido) {
-                        emitir({ tipo: 'trecho', texto: separador });
-                        separadorEmitido = true;
-                    }
-                    emitir({ tipo: 'trecho', texto: trecho });
-                },
-            );
-            if (resposta.texto !== '') texto += separador + resposta.texto;
-
-            const mensagemDaIa: IaMensagem = { papel: 'ia', conteudo: resposta.blocos };
-            mensagens.push(mensagemDaIa);
-            trocasDoTurno.push(mensagemDaIa);
-            if (resposta.motivoParada !== 'uso_ferramenta') break;
-
-            const resultados = await this.executarFerramentas(resposta.blocos, usuarioAtivo, propostasDoTurno, emitir, { contexto });
-            const mensagemDeResultados: IaMensagem = { papel: 'usuario', conteudo: resultados };
-            mensagens.push(mensagemDeResultados);
-            trocasDoTurno.push(mensagemDeResultados);
-
-            if (volta === MAXIMO_DE_VOLTAS) throw new Error(`A IA passou de ${MAXIMO_DE_VOLTAS} voltas de ferramenta na mesma mensagem`);
-        }
+        const { texto, trocasDoTurno } = await this.lacoDeFerramentas.conduzirTurno({
+            usuarioAtivo,
+            nivel: opcoes.nivel ?? NivelIaEnum.RAPIDO,
+            instrucoes,
+            mensagens,
+            trocasIniciais: mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [mensagemDeRetomada] : [],
+            ferramentas,
+            maximoTokens: opcoes.maximoTokens ?? MAXIMO_TOKENS_DO_CHAT,
+            // A dúvida de código (ligada pelo administrador) pode precisar de documentação atual: o provedor pesquisa por conta própria quando o modelo achar útil.
+            pesquisaWeb: doChat && configuracao.duvidasCodigo,
+            origem: { contexto },
+            propostasDoTurno,
+            emitir,
+        });
 
         const conteudoBruto: ConteudoBrutoDoTurno = { mensagens: trocasDoTurno };
         const tokens = turno.tokens;
@@ -514,29 +491,6 @@ export class ChatService {
         } catch (erro) {
             this.logger.warn(`Não foi possível nomear a conversa ${conversaId}: ${erro instanceof Error ? erro.message : String(erro)}`);
         }
-    }
-
-    /** Executa os pedidos de ferramenta de uma volta, em ordem, e devolve os resultados no formato do contrato do provedor. */
-    private async executarFerramentas(
-        blocos: IaBloco[],
-        usuarioAtivo: JwtPayload,
-        propostasDoTurno: number[],
-        emitir: (evento: ChatEventoDto) => void,
-        origem: OrigemDaFerramentaIa,
-    ): Promise<IaBloco[]> {
-        const resultados: IaBloco[] = [];
-        for (const bloco of blocos) {
-            if (bloco.tipo !== 'uso_ferramenta') continue;
-            emitir({ tipo: 'ferramenta', nome: bloco.nome, situacao: 'EXECUTANDO' });
-            const resultado = await this.ferramentaIaRegistro.executar(bloco.nome, bloco.entrada, usuarioAtivo, origem);
-            emitir({ tipo: 'ferramenta', nome: bloco.nome, situacao: resultado.erro ? 'ERRO' : 'CONCLUIDA' });
-            if (resultado.propostaId !== undefined) {
-                propostasDoTurno.push(resultado.propostaId);
-                emitir({ tipo: 'proposta', propostaId: resultado.propostaId });
-            }
-            resultados.push({ tipo: 'resultado_ferramenta', usoId: bloco.id, conteudo: resultado.conteudo, erro: resultado.erro });
-        }
-        return resultados;
     }
 
     /**

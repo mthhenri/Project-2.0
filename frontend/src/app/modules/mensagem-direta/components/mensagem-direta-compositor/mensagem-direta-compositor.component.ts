@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, comp
 import { firstValueFrom } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { LIMITE_TEXTO_MENSAGEM_DIRETA, MensagemDiretaReferenciaResumoDto, ReferenciaMensagemDiretaEnum, trechoDaMensagemDireta } from '@project20/shared';
+import { LIMITE_TEXTO_MENSAGEM_DIRETA, MENCAO_DA_IA, MensagemDiretaReferenciaResumoDto, ReferenciaMensagemDiretaEnum, trechoDaMensagemDireta } from '@project20/shared';
 import { EnvioDoCompositor } from '../../services/mensagem-direta-estado.service';
 import { MensagemDiretaService } from '../../services/mensagem-direta.service';
 import {
@@ -31,6 +31,9 @@ const MINIMO_DE_LETRAS_DA_REFERENCIA = 2;
 const COMECO_DO_AVISO_DE_LIMITE = 8_000;
 /** Folga para a cerca e a linguagem de um bloco de código, ao decidir se uma colagem ainda cabe. */
 const FOLGA_DA_CERCA_DO_CODIGO = 16;
+
+/** O texto que a opção da IA põe depois do `@` (task 315): o servidor reconhece `@IA`. */
+const ROTULO_DA_IA_NO_COMPOSITOR = MENCAO_DA_IA.slice(1);
 
 interface ItemDaSugestao {
     /** O texto que entra na mensagem depois do `@` ou `#`. */
@@ -100,6 +103,8 @@ export class MensagemDiretaCompositorComponent {
     /** Código a pôr no campo como bloco (o que o usuário copiou antes do atalho do Desktop, task 213); `textoAplicado` avisa que já foi usado. */
     readonly codigoInicial = input<string | null>(null);
     readonly textoAplicado = output<void>();
+    /** A IA está no ar (task 315): o `@` oferece **IA** como primeira opção, que entra como texto `@IA` e nunca como menção de pessoa. */
+    readonly iaDisponivel = input(false);
 
     protected readonly limiteDoTexto = LIMITE_TEXTO_MENSAGEM_DIRETA;
     /** O Markdown da mensagem. */
@@ -147,13 +152,16 @@ export class MensagemDiretaCompositorComponent {
         const gatilho = this.gatilho();
         if (!gatilho) return [];
         if (gatilho.tipo === 'MENCAO') {
-            return filtrarPessoasPorNome(
+            const daIa: ItemDaSugestao[] = this.iaDisponivel() && ROTULO_DA_IA_NO_COMPOSITOR.toLowerCase().startsWith(gatilho.termo.toLowerCase())
+                ? [{ rotulo: ROTULO_DA_IA_NO_COMPOSITOR, titulo: ROTULO_DA_IA_NO_COMPOSITOR, detalhe: 'Pedir à IA', icone: 'pi-sparkles', nomeDoAvatar: null, corDoAvatar: null, pessoa: null, referencia: null }]
+                : [];
+            return [...daIa, ...filtrarPessoasPorNome(
                 this.pessoas().map((pessoa) => ({ ...pessoa, usuarioNome: pessoa.nome })),
                 gatilho.termo,
             ).map((pessoa) => ({
                 rotulo: pessoa.nome, titulo: pessoa.nome, detalhe: '', icone: null, nomeDoAvatar: pessoa.nome, corDoAvatar: pessoa.corAvatar ?? null,
                 pessoa: { usuarioId: pessoa.usuarioId, nome: pessoa.nome }, referencia: null,
-            }));
+            }))];
         }
         return this.achadas().map((referencia) => ({
             rotulo: referencia.nome,

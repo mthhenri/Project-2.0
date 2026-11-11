@@ -3,6 +3,7 @@ import { PropostaAtribuirTagDadosDto, TipoPropostaIaEnum } from '@project20/shar
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { DemandaService } from '../../demanda/services/demanda.service';
+import { alvoAcessivel, idDoAlvo } from '../../proposta-ia/domain/alvo-acessivel';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
 import { calcularConjuntoDeTags, mesmoConjuntoDeTags } from '../domain/conjunto-de-tags';
@@ -22,6 +23,15 @@ export class AtribuirTagExecutor implements ExecutorPropostaIa {
         private readonly demandaService: DemandaService,
         private readonly atividadeService: AtividadeService,
     ) {}
+
+    /** Task 315: a outra pessoa da conversa vê a proposta se vê a demanda ou a atividade marcada (as regras da service, com o usuário dela). */
+    async podeVer(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+        const alvoId = idDoAlvo(dados, 'alvoId');
+        if (alvoId === null) return false;
+        return alvoAcessivel(() =>
+            dados['alvo'] === 'ATIVIDADE' ? this.atividadeService.recuperar({ id: alvoId }, usuarioAtivo) : this.demandaService.recuperar({ id: alvoId }, usuarioAtivo),
+        );
+    }
 
     validar(dados: Record<string, unknown>): void {
         const entrada = validarDadosDaProposta(PropostaAtribuirTagDadosDto, dados);

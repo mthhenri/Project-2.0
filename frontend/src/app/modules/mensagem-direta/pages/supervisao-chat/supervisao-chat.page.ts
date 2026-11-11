@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { ConversaDiretaSupervisaoResumoDto, MensagemDiretaSupervisaoParticipanteDto } from '@project20/shared';
+import { AutorMensagemDiretaEnum, ConversaDiretaSupervisaoResumoDto, MensagemDiretaSupervisaoParticipanteDto } from '@project20/shared';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -21,6 +21,7 @@ import {
     normalizarMensagem,
     previaDaMensagem,
     rotuloDaLista,
+    rotuloDaRespostaDaIa,
 } from '../../utils/mensagem-direta.util';
 
 const ESPERA_DA_BUSCA_MS = 400;
@@ -204,11 +205,21 @@ export class SupervisaoChatPage {
     }
 
     protected nomeDoAutor(mensagem: MensagemNaConversa, participantes: MensagemDiretaSupervisaoParticipanteDto[]): string {
-        return participantes.find((participante) => participante.usuarioId === mensagem.autorUsuarioId)?.usuarioNome ?? NOME_DE_USUARIO_REMOVIDO;
+        const nomeDe = (usuarioId: number | null) => participantes.find((participante) => participante.usuarioId === usuarioId)?.usuarioNome ?? NOME_DE_USUARIO_REMOVIDO;
+        // A resposta do `@IA` (task 315) diz para quem a IA respondeu; as propostas ficam com quem chamou (a supervisão só lê o texto).
+        if (mensagem.autor === AutorMensagemDiretaEnum.IA) return rotuloDaRespostaDaIa(nomeDe(mensagem.chamadaPorUsuarioId));
+        return nomeDe(mensagem.autorUsuarioId);
+    }
+
+    /** "A IA propôs 2 ações" na resposta do `@IA` (task 315): a supervisão não abre as propostas, que são de quem chamou a IA. */
+    protected avisoDasPropostas(mensagem: MensagemNaConversa): string | null {
+        const total = mensagem.propostaIds.length;
+        if (mensagem.autor !== AutorMensagemDiretaEnum.IA || total === 0) return null;
+        return total === 1 ? 'A IA propôs 1 ação.' : `A IA propôs ${total} ações.`;
     }
 
     protected previa(conversa: ConversaDiretaSupervisaoResumoDto): string {
-        return previaDaMensagem(conversa.ultimaMensagem.texto, conversa.ultimaMensagem.contemCodigo, false);
+        return previaDaMensagem(conversa.ultimaMensagem.texto, conversa.ultimaMensagem.contemCodigo, false, conversa.ultimaMensagem.autor === AutorMensagemDiretaEnum.IA);
     }
 
     protected quando(conversa: ConversaDiretaSupervisaoResumoDto): string {
