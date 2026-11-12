@@ -44,6 +44,10 @@ export class MensagemDiretaIaRespostaComponent {
     /** O nome de quem chamou a IA, como a conversa o mostra. */
     readonly nomeDeQuemChamou = input.required<string>();
     readonly horario = input.required<string>();
+    /** Os trechos do texto que ganham destaque: as pessoas que a IA marcou (task 328), como nas mensagens de pessoas. */
+    readonly destaques = input<readonly string[]>([]);
+    /** A cor de cada pessoa marcada, por `@Nome`. */
+    readonly coresDosDestaques = input<Readonly<Record<string, string>>>({});
 
     protected readonly souQuemChamou = computed(() => this.meuId() !== undefined && this.mensagem().chamadaPorUsuarioId === this.meuId());
     protected readonly rotulo = computed(() => rotuloDaRespostaDaIa(this.souQuemChamou() ? 'você' : this.nomeDeQuemChamou()));

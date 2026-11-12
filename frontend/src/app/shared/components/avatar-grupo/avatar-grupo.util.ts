@@ -7,8 +7,28 @@ export function iconeDoCanal(tipo: TipoGrupoEnum): string | null {
     return null;
 }
 
-/** Quantas cores de membros entram no degradê (mais que isso vira uma faixa estreita demais para o círculo). */
+/** Quantas cores de membros entram na malha (mais que isso vira uma mancha pequena demais para o círculo). */
 export const MAXIMO_DE_CORES_NO_DEGRADE = 6;
+
+/** O ângulo da primeira mancha da malha (canto superior esquerdo); as outras seguem em passos iguais ao redor do círculo. */
+const ANGULO_INICIAL_DA_MALHA = -135;
+/** A distância das manchas ao centro, em % do círculo, e o raio de cada uma (igual para todas, para ninguém pesar mais). */
+const DISTANCIA_DA_MANCHA = 38;
+const RAIO_DA_MANCHA = 62;
+
+/**
+ * A malha (mesh): uma mancha de cada cor, todas com o **mesmo tamanho** e em ângulos igualmente espaçados, sobre a cor média como base, então cada
+ * membro ocupa a mesma parte do círculo. A ordem é a de entrada no grupo.
+ */
+export function malhaDeCores(cores: string[]): string {
+    const manchas = cores.map((cor, indice) => {
+        const angulo = ((ANGULO_INICIAL_DA_MALHA + (indice * 360) / cores.length) * Math.PI) / 180;
+        const horizontal = (50 + DISTANCIA_DA_MANCHA * Math.cos(angulo)).toFixed(1);
+        const vertical = (50 + DISTANCIA_DA_MANCHA * Math.sin(angulo)).toFixed(1);
+        return `radial-gradient(circle at ${horizontal}% ${vertical}%, ${cor} 0, transparent ${RAIO_DA_MANCHA}%)`;
+    });
+    return [...manchas, corMedia(cores)].join(', ');
+}
 
 export interface FundoDoGrupo {
     /** O valor de `background`; `null` = a cor de acento do tema (ninguém no grupo escolheu cor). */
@@ -28,13 +48,13 @@ export function corMedia(cores: string[]): string {
 }
 
 /**
- * O fundo do avatar do grupo. Com cor escolhida pelo grupo vale ela. Sem cor, vale o degradê das cores de bolinha dos membros que escolheram uma
- * (uma só cor vira cor lisa; nenhuma, a cor do tema). O degradê acompanha os membros: muda sozinho quando entra ou sai alguém.
+ * O fundo do avatar do grupo. Com cor escolhida pelo grupo vale ela. Sem cor, vale a malha das cores de bolinha dos membros que escolheram uma
+ * (`malhaDeCores`; uma só cor vira cor lisa; nenhuma, a cor do tema). A malha acompanha os membros: muda sozinha quando entra ou sai alguém.
  */
 export function fundoDoGrupo(corDoGrupo: string | null, coresDosMembros: string[]): FundoDoGrupo {
     if (corDoGrupo) return { fundo: corDoGrupo, corDoTexto: corDoTextoSobre(corDoGrupo) };
     const cores = coresDosMembros.slice(0, MAXIMO_DE_CORES_NO_DEGRADE);
     if (cores.length === 0) return { fundo: null, corDoTexto: null };
     if (cores.length === 1) return { fundo: cores[0], corDoTexto: corDoTextoSobre(cores[0]) };
-    return { fundo: `linear-gradient(135deg, ${cores.join(', ')})`, corDoTexto: corDoTextoSobre(corMedia(cores)) };
+    return { fundo: malhaDeCores(cores), corDoTexto: corDoTextoSobre(corMedia(cores)) };
 }

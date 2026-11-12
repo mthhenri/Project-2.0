@@ -41,6 +41,23 @@ describe('MensagemDiretaIaRespostaComponent', () => {
         tela.http.verify();
     });
 
+    it('destaca as pessoas que a IA marcou, como nas mensagens de pessoas (task 328)', async () => {
+        const tela = await montarComponente(MensagemDiretaIaRespostaComponent, {
+            usuario: TipoUsuarioEnum.DESENVOLVEDOR,
+            entradas: {
+                mensagem: resposta({ texto: 'Avisei o @Bruno Reis. @todos, reunião às 15h.', mencoes: [BRUNO_ID] }),
+                outroUsuarioId: BRUNO_ID, meuId: 1, nomeDeQuemChamou: 'Bruno Reis', horario: '12:00', destaques: ['@Bruno Reis', '@todos'],
+            },
+        });
+        const destacados = Array.from(tela.elemento.querySelectorAll('.markdown__destaque')).map((elemento) => elemento.textContent);
+        expect(destacados).toEqual(['@Bruno Reis', '@todos']);
+    });
+
+    it('sem destaques informados, o texto da IA não marca nada', async () => {
+        const tela = await montar(resposta({ texto: 'Falei com @Bruno Reis.' }));
+        expect(tela.elemento.querySelector('.markdown__destaque')).toBeNull();
+    });
+
     it('a resposta a outra pessoa diz o nome dela', async () => {
         const tela = await montar(resposta({ chamadaPorUsuarioId: BRUNO_ID }));
         expect(tela.elemento.textContent).toContain('IA · para Bruno Reis');

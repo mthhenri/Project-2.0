@@ -3,7 +3,12 @@
     <div class="ia-resposta__corpo">
         <div class="ia-resposta__rotulo">{{ rotulo() }}</div>
         <div class="ia-resposta__balao">
-            <app-markdown-visualizador [texto]="mensagem().texto" [comTabelas]="false" />
+            <app-markdown-visualizador
+                [texto]="mensagem().texto"
+                [destaques]="destaques()"
+                [coresDosDestaques]="coresDosDestaques()"
+                [comTabelas]="false"
+            />
         </div>
         @if (mensagem().propostaIds.length > 0) {
             <div class="ia-resposta__propostas">

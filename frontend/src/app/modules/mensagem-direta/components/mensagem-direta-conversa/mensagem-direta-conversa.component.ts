@@ -219,6 +219,19 @@ export class MensagemDiretaConversaComponent {
         return destaques;
     }
 
+    /** A cor da bolinha de cada pessoa marcada, por `@Nome` (quem não escolheu cor fica de fora e usa a cor de acento). */
+    protected coresDosDestaquesDe(mensagem: { mencoes: number[] }): Record<string, string> {
+        const aberta = this.aberta();
+        const cores: Record<string, string> = {};
+        for (const usuarioId of mensagem.mencoes) {
+            const eu = usuarioId === this.sessao.id();
+            const nome = eu ? this.sessao.nomeCompleto() : aberta?.usuarioId === usuarioId ? aberta.usuarioNome : null;
+            const cor = eu ? this.sessao.corAvatar() : this.estado.corDe(usuarioId);
+            if (nome && cor) cores[`@${nome}`] = cor;
+        }
+        return cores;
+    }
+
     private async guardarNomeDaReferencia(tipo: ReferenciaMensagemDiretaEnum, id: number): Promise<void> {
         const chave = `${tipo}:${id}`;
         if (this.nomesDasReferencias().has(chave)) return;

@@ -171,6 +171,12 @@
         font-weight: 600;
     }
 
+    // A menção na cor da pessoa: o fundo é um tom suave da cor e o texto a mistura com o texto do tema, para ler bem em cor clara (amarelo) e no tema escuro.
+    &__destaque--cor {
+        background: color-mix(in srgb, var(--destaque-cor) 18%, transparent);
+        color: color-mix(in srgb, var(--destaque-cor) 72%, var(--p-text-color));
+    }
+
     // O ícone antes do destaque (o `@IA`, task 315), no tamanho do texto.
     &__destaque-icone {
         margin-right: 0.25em;

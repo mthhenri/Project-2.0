@@ -204,6 +204,8 @@
                                     [meuId]="meuId()"
                                     [nomeDeQuemChamou]="nomeDoAutor(mensagem.chamadaPorUsuarioId)"
                                     [horario]="hora(mensagem.createdDate)"
+                                    [destaques]="destaquesDe(mensagem)"
+                                    [coresDosDestaques]="coresDosDestaquesDe(mensagem)"
                                 />
                             } @else {
                                 @let minha = mensagem.autorUsuarioId === meuId();
@@ -258,6 +260,7 @@
                                         <app-markdown-visualizador
                                             [texto]="mensagem.texto"
                                             [destaques]="destaquesDe(mensagem)"
+                                            [coresDosDestaques]="coresDosDestaquesDe(mensagem)"
                                             [iconesDosDestaques]="iconesDosDestaques"
                                             [comTabelas]="false"
                                         />

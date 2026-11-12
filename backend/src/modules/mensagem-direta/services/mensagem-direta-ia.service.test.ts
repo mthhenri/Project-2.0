@@ -197,16 +197,59 @@ test('@IA dentro de código não chama a IA', async () => {
     assert.equal(solicitacoes.length, 0);
 });
 
-test('@IA sozinho espera: a próxima mensagem de quem chamou é o pedido, mesmo com a da outra pessoa no meio', async () => {
-    const { enviar, solicitacoes, gravadas } = montar();
+test('@IA sozinho responde na hora, sem ferramentas, dizendo sobre o que é a mensagem anterior (task 327)', async () => {
+    const anterior = mensagem({ texto: 'Dá para criar a atividade de revisão do cadastro?', autorUsuarioId: BRUNO_ID });
+    const { enviar, solicitacoes, gravadas, publicados, listasDeFerramentas, usos } = montar({
+        anteriores: [anterior],
+        respostas: [resposta({ texto: 'Opa, chamou? Sobre a atividade de revisão do cadastro, quer que eu faça isso?' })],
+    });
     await enviar('@IA');
-    assert.equal(solicitacoes.length, 0, 'o @IA sozinho não chama ainda');
-    await enviar('opa, o que foi?', BRUNO_ID);
-    assert.equal(solicitacoes.length, 0, 'a mensagem da outra pessoa não é o pedido');
-    await enviar('lista as minhas atividades');
+
     assert.equal(solicitacoes.length, 1);
-    assert.match(String(solicitacoes[0].mensagens[0].conteudo), /Pedido de Ana Lima:\nlista as minhas atividades$/);
+    assert.deepEqual(solicitacoes[0].ferramentas, [], 'a saudação não usa ferramentas');
+    assert.deepEqual(listasDeFerramentas, [], 'nem pede as ferramentas de quem chamou');
+    assert.equal(solicitacoes[0].maximoTokens, 300);
+    assert.match(solicitacoes[0].instrucoes ?? '', /Chamaram você só com @IA/);
+    assert.match(solicitacoes[0].instrucoes ?? '', /Opa, chamou\?/);
+    assert.match(String(solicitacoes[0].mensagens[0].conteudo), /Só chamou a IA com @IA, sem escrever o que quer\.\) A mensagem anterior à chamada, de Bruno Reis, é:\nDá para criar a atividade de revisão do cadastro\?$/);
+    assert.equal(gravadas.length, 1);
+    assert.equal(gravadas[0].autor, AutorMensagemDiretaEnum.IA);
     assert.equal(gravadas[0].chamadaPorUsuarioId, 4);
+    assert.match(gravadas[0].texto, /^Opa, chamou\? Sobre a atividade de revisão do cadastro/);
+    assert.deepEqual(gravadas[0].propostaIds, []);
+    assert.deepEqual(publicados.map((publicado) => publicado.evento.tipo), ['IA_DIGITANDO', 'MENSAGEM']);
+    assert.equal(usos.length, 1, 'o custo da saudação vai para quem chamou');
+});
+
+test('@IA sozinho numa conversa sem mensagem anterior só pergunta em que pode ajudar', async () => {
+    const { enviar, solicitacoes } = montar({ respostas: [resposta({ texto: 'Opa, chamou? Em que posso ajudar?' })] });
+    await enviar('@IA');
+    assert.match(String(solicitacoes[0].mensagens[0].conteudo), /Não há mensagem anterior de pessoa nesta conversa/);
+});
+
+test('a saudação não marca ninguém, mesmo que o modelo escreva @todos', async () => {
+    const { enviar, gravadas } = montar({ respostas: [resposta({ texto: 'Opa @todos, chamou? @Bruno Reis' })] });
+    await enviar('@IA');
+    assert.deepEqual(gravadas[0].mencoes, []);
+});
+
+test('depois da saudação, a próxima mensagem de quem chamou é o pedido, mesmo com a da outra pessoa no meio', async () => {
+    const { enviar, solicitacoes, gravadas, listasDeFerramentas } = montar({
+        respostas: [resposta({ texto: 'Opa, chamou?' }), resposta({ texto: 'Aqui estão as suas atividades.' })],
+    });
+    await enviar('@IA');
+    assert.equal(solicitacoes.length, 1, 'a saudação é a única chamada até aqui');
+    await enviar('opa, o que foi?', BRUNO_ID);
+    assert.equal(solicitacoes.length, 1, 'a mensagem da outra pessoa não é o pedido');
+    await enviar('lista as minhas atividades');
+    assert.equal(solicitacoes.length, 2);
+    assert.deepEqual(listasDeFerramentas, [ANA], 'o pedido, sim, tem as ferramentas de quem chamou');
+    assert.match(String(solicitacoes[1].mensagens[0].conteudo), /\[IA\] Opa, chamou\?/);
+    assert.match(String(solicitacoes[1].mensagens[0].conteudo), /Pedido de Ana Lima:\nlista as minhas atividades$/);
+    assert.equal(gravadas[1].chamadaPorUsuarioId, 4);
+    // Respondido o pedido, a espera acabou: a conversa seguinte é só conversa.
+    await enviar('valeu');
+    assert.equal(solicitacoes.length, 2);
 });
 
 test('@IA sozinho de mais de 10 minutos atrás não espera mais', async () => {
@@ -348,12 +391,63 @@ test('no canal, a orientação diz de que demanda é o chat', async () => {
     assert.match(solicitacoes[0].instrucoes, /consultá-lo pelas ferramentas/);
 });
 
-test('no grupo, @IA sozinho espera a próxima mensagem de quem chamou, mesmo com outros membros no meio', async () => {
-    const { enviarNoGrupo, solicitacoes } = montar();
+test('no grupo, @IA sozinho responde a todos e a próxima mensagem de quem chamou é o pedido, mesmo com outros membros no meio', async () => {
+    const { enviarNoGrupo, solicitacoes, publicados } = montar({
+        anteriores: [mensagem({ texto: 'Quem pega o ajuste do relatório?', conversaId: 'G7', autorUsuarioId: 12 })],
+        respostas: [resposta({ texto: 'Opa, chamou? Sobre quem pega o ajuste do relatório, quer que eu faça isso?' }), resposta({ texto: 'Feito.' })],
+    });
     await enviarNoGrupo('@IA');
-    await enviarNoGrupo('vocês viram o prazo?', BRUNO_ID);
-    assert.equal(solicitacoes.length, 0);
-    await enviarNoGrupo('quanto falta para a entrega?');
     assert.equal(solicitacoes.length, 1);
-    assert.match(String(solicitacoes[0].mensagens[0].conteudo), /Pedido de Ana Lima:\nquanto falta para a entrega\?$/);
+    assert.match(String(solicitacoes[0].mensagens[0].conteudo), /A mensagem anterior à chamada, de Carla Dias, é:\nQuem pega o ajuste do relatório\?/);
+    assert.deepEqual(publicados.find((publicado) => publicado.evento.tipo === 'MENSAGEM')?.usuarioIds, [4, BRUNO_ID, 12]);
+    await enviarNoGrupo('vocês viram o prazo?', BRUNO_ID);
+    assert.equal(solicitacoes.length, 1);
+    await enviarNoGrupo('quanto falta para a entrega?');
+    assert.equal(solicitacoes.length, 2);
+    assert.match(String(solicitacoes[1].mensagens[0].conteudo), /Pedido de Ana Lima:\nquanto falta para a entrega\?$/);
+});
+
+// --- a IA marca pessoas (task 328) -------------------------------------------
+
+test('a orientação traz quem pode ser marcado e quando marcar', async () => {
+    const { enviar, enviarNoGrupo, solicitacoes } = montar({ respostas: [resposta({ texto: 'ok' }), resposta({ texto: 'ok' })] });
+    await enviar('@IA oi');
+    await enviarNoGrupo('@IA oi');
+    assert.match(solicitacoes[0].instrucoes ?? '', /exatamente como aparece aqui \(Ana Lima, Bruno Reis\)\. Marcar avisa/);
+    assert.doesNotMatch(solicitacoes[0].instrucoes ?? '', /@todos marca/, 'na conversa a dois não há "todos"');
+    assert.match(solicitacoes[0].instrucoes ?? '', /Marque só quando Ana Lima pedir/);
+    assert.match(solicitacoes[1].instrucoes ?? '', /exatamente como aparece aqui \(Ana Lima, Bruno Reis, Carla Dias\); @todos marca todos os outros membros/);
+});
+
+test('a resposta que marca @Nome e @todos grava as menções e as publica (um a um)', async () => {
+    const { enviar, gravadas } = montar({ respostas: [resposta({ texto: 'Avisei o @Bruno Reis. Chamei @todos também.' })] });
+    await enviar('@IA avisa o Bruno');
+    // @todos marca todos menos quem chamou: no um a um, só o Bruno.
+    assert.deepEqual(gravadas[0].mencoes, [BRUNO_ID]);
+});
+
+test('no grupo, @todos marca todos os membros menos quem chamou, e @Nome marca um só', async () => {
+    const { enviarNoGrupo, gravadas } = montar({ respostas: [resposta({ texto: '@todos: reunião às 15h.' }), resposta({ texto: 'Lembrete para @Carla Dias.' })] });
+    await enviarNoGrupo('@IA chama todo mundo para a reunião das 15h');
+    assert.deepEqual(gravadas[0].mencoes, [BRUNO_ID, 12]);
+    await enviarNoGrupo('@IA lembra a Carla');
+    assert.deepEqual(gravadas[1].mencoes, [12]);
+});
+
+test('só marca quem continua no grupo no fim do turno; quem saiu vira texto', async () => {
+    let soltar!: () => void;
+    const segurar = new Promise<void>((resolver) => { soltar = resolver; });
+    const { enviarNoGrupo, membros, gravadas } = montar({ segurar, respostas: [resposta({ texto: 'Aviso para @Bruno Reis e @Carla Dias.' })] });
+    const turno = enviarNoGrupo('@IA avisa o Bruno e a Carla');
+    await new Promise((resolver) => setImmediate(resolver));
+    membros.atuais = [4, 12, 21];
+    soltar();
+    await turno;
+    assert.deepEqual(gravadas[0].mencoes, [12]);
+});
+
+test('resposta sem marcação não grava menções', async () => {
+    const { enviar, gravadas } = montar();
+    await enviar('@IA cria uma atividade');
+    assert.deepEqual(gravadas[0].mencoes, []);
 });

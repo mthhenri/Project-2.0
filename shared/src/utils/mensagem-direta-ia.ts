@@ -62,13 +62,14 @@ export interface MensagemParaPedidoDaIa {
 
 /**
  * A mensagem nova de `usuarioId` é o pedido de um `@IA` sozinho anterior? Vale quando a última mensagem **dele** na conversa (as da outra pessoa e as do
- * sistema no meio não contam) é um `@IA` sem pedido, enviado há no máximo `PRAZO_DO_PEDIDO_DA_IA_MINUTOS`, e a IA ainda não respondeu a ele depois disso.
- * `mensagensAnteriores` vem em ordem de envio e **sem** a mensagem nova; o relógio entra por parâmetro (a tela usa a mesma regra para a dica).
+ * sistema no meio não contam) é um `@IA` sem pedido, enviado há no máximo `PRAZO_DO_PEDIDO_DA_IA_MINUTOS`. A resposta da IA a esse `@IA` sozinho é só a
+ * saudação (task 327: "Opa, chamou?") e **não** encerra a espera; a resposta a um pedido de verdade encerra, porque a última mensagem dele que ela
+ * respondeu não é um `@IA` sozinho. `mensagensAnteriores` vem em ordem de envio e **sem** a mensagem nova; o relógio entra por parâmetro (a tela usa a
+ * mesma regra para a dica).
  */
 export function pedidoPendenteDaIa(mensagensAnteriores: MensagemParaPedidoDaIa[], usuarioId: number, agora: Date): boolean {
     for (let indice = mensagensAnteriores.length - 1; indice >= 0; indice--) {
         const mensagem = mensagensAnteriores[indice];
-        if (mensagem.autor === AutorMensagemDiretaEnum.IA && mensagem.chamadaPorUsuarioId === usuarioId) return false;
         if (mensagem.autor !== AutorMensagemDiretaEnum.USUARIO || mensagem.autorUsuarioId !== usuarioId) continue;
         const chamada = chamadaDaIa(mensagem.texto);
         if (!chamada || chamada.pedido !== '') return false;
@@ -76,4 +77,58 @@ export function pedidoPendenteDaIa(mensagensAnteriores: MensagemParaPedidoDaIa[]
         return decorrido >= 0 && decorrido <= PRAZO_DO_PEDIDO_DA_IA_MINUTOS * 60_000;
     }
     return false;
+}
+
+// ---------------------------------------------------------------------------
+// Menções na resposta da IA (task 328)
+// ---------------------------------------------------------------------------
+
+/** Quem pode ser marcado pela IA: as pessoas da conversa de agora. */
+export interface PessoaMencionavelPelaIa {
+    usuarioId: number;
+    nome: string;
+}
+
+const REGEX_MENCAO_DE_TODOS = /(?<![\p{L}\p{N}_.@])@todos(?![\p{L}\p{N}_])/iu;
+
+function escaparParaRegex(texto: string): string {
+    return texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Quem a resposta da IA marca: `@Nome Completo` (sem diferenciar maiúsculas) ou `@PrimeiroNome` quando só uma pessoa da conversa tem esse primeiro nome;
+ * o nome mais longo vence (`@Ana Lima` não marca também uma `Ana` à parte). `@todos` marca todas as pessoas da conversa **menos quem chamou**; quem chamou
+ * só é marcada pelo próprio nome. Fora de código (cercado ou em linha) e só pessoas de `pessoas`. Devolve os ids sem repetição, na ordem da conversa.
+ */
+export function mencoesNoTextoDaIa(texto: string, pessoas: PessoaMencionavelPelaIa[], quemChamouId: number): number[] {
+    const mascarado = mascararCodigo(texto ?? '');
+    const primeirosNomes = new Map<string, number>();
+    for (const pessoa of pessoas) {
+        const primeiro = pessoa.nome.trim().split(/\s+/)[0]?.toLowerCase();
+        if (primeiro) primeirosNomes.set(primeiro, (primeirosNomes.get(primeiro) ?? 0) + 1);
+    }
+    const candidatos: Array<{ usuarioId: number; rotulo: string }> = [];
+    for (const pessoa of pessoas) {
+        const nome = pessoa.nome.trim().replace(/\s+/g, ' ');
+        if (!nome) continue;
+        candidatos.push({ usuarioId: pessoa.usuarioId, rotulo: nome });
+        const primeiro = nome.split(' ')[0];
+        if (primeiro !== nome && primeirosNomes.get(primeiro.toLowerCase()) === 1) candidatos.push({ usuarioId: pessoa.usuarioId, rotulo: primeiro });
+    }
+    candidatos.sort((candidatoA, candidatoB) => candidatoB.rotulo.length - candidatoA.rotulo.length);
+
+    const marcadas = new Set<number>();
+    let restante = mascarado;
+    for (const candidato of candidatos) {
+        const regex = new RegExp(`(?<![\\p{L}\\p{N}_.@])@${escaparParaRegex(candidato.rotulo).replace(/ /g, '\\s+')}(?![\\p{L}\\p{N}_])`, 'giu');
+        if (regex.test(restante)) {
+            marcadas.add(candidato.usuarioId);
+            // O trecho achado sai do texto para um nome mais curto não o marcar de novo.
+            restante = restante.replace(regex, (achado) => ' '.repeat(achado.length));
+        }
+    }
+    if (REGEX_MENCAO_DE_TODOS.test(mascarado)) {
+        for (const pessoa of pessoas) if (pessoa.usuarioId !== quemChamouId) marcadas.add(pessoa.usuarioId);
+    }
+    return pessoas.map((pessoa) => pessoa.usuarioId).filter((usuarioId, indice, todos) => marcadas.has(usuarioId) && todos.indexOf(usuarioId) === indice);
 }

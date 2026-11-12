@@ -18,7 +18,7 @@ describe('MensagemDiretaGrupoAparenciaComponent', () => {
         expect(tela.elemento.querySelector<HTMLInputElement>('input[aria-label="Nome do grupo"]')!.value).toBe('Time do backend');
         expect(componente.cor()).toBeNull();
         expect(botao(tela, 'Automática').getAttribute('aria-pressed')).toBe('true');
-        expect(tela.elemento.querySelector<HTMLElement>('.avatar-grupo')!.style.background).toContain('linear-gradient');
+        expect(tela.elemento.querySelector<HTMLElement>('.avatar-grupo')!.style.background).toContain('radial-gradient');
     });
 
     it('digitar o nome atualiza o valor ligado e a prévia mostra as iniciais', async () => {
