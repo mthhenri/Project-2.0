@@ -5,6 +5,9 @@ import {
     GrupoLeituraAlterarDto,
     GrupoMembroAdicionarDto,
     GrupoMensagemEnviarDto,
+    GrupoResumoIaCriarDto,
+    GrupoResumoIaEstimarDto,
+    GrupoResumoIaPropostaCriarDto,
     GrupoMensagemListarDto,
     GrupoSilencioAlterarDto,
     GrupoSupervisaoLerDto,
@@ -15,6 +18,7 @@ import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator'
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { GrupoSupervisaoService } from '../services/grupo-supervisao.service';
+import { GrupoResumoIaService } from '../services/grupo-resumo-ia.service';
 import { GrupoService } from '../services/grupo.service';
 
 /**
@@ -26,6 +30,7 @@ export class MensagemDiretaGrupoController {
     constructor(
         private readonly grupoService: GrupoService,
         private readonly supervisaoService: GrupoSupervisaoService,
+        private readonly resumoService: GrupoResumoIaService,
     ) {}
 
     /** Supervisão: os grupos sem gestor nem administrador entre os membros atuais, somente leitura. */
@@ -110,6 +115,52 @@ export class MensagemDiretaGrupoController {
     @Put('grupo/:grupoId/silencio')
     alterarSilencio(@Param('grupoId', ParseIntPipe) grupoId: number, @Body() dto: GrupoSilencioAlterarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
         return this.grupoService.alterarSilencio({ ...dto, grupoId }, usuarioAtivo);
+    }
+
+    /** Resumo com a IA (task 249): o que abre o diálogo, a estimativa (sem chamar o provedor), o resumo e a proposta de gravar na documentação. */
+    @Get('grupo/:grupoId/resumo')
+    recuperarOpcoesDoResumo(@Param('grupoId', ParseIntPipe) grupoId: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.resumoService.recuperarOpcoes({ grupoId }, usuarioAtivo);
+    }
+
+    @Post('grupo/:grupoId/resumo/estimativa')
+    estimarResumo(@Param('grupoId', ParseIntPipe) grupoId: number, @Body() dto: GrupoResumoIaEstimarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.resumoService.estimar({ ...dto, grupoId }, usuarioAtivo);
+    }
+
+    @Post('grupo/:grupoId/resumo')
+    resumir(@Param('grupoId', ParseIntPipe) grupoId: number, @Body() dto: GrupoResumoIaCriarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.resumoService.resumir({ ...dto, grupoId }, usuarioAtivo);
+    }
+
+    @Post('grupo/:grupoId/resumo/:resumoId/proposta')
+    criarPropostaDoResumo(
+        @Param('grupoId', ParseIntPipe) grupoId: number,
+        @Param('resumoId', ParseIntPipe) resumoId: number,
+        @Body() dto: GrupoResumoIaPropostaCriarDto,
+        @ActiveUser() usuarioAtivo: JwtPayload,
+    ) {
+        return this.resumoService.criarProposta({ ...dto, grupoId, resumoId }, usuarioAtivo);
+    }
+
+    @Post('grupo/:grupoId/resumo/:resumoId/proposta/:propostaId/confirmar')
+    confirmarPropostaDoResumo(
+        @Param('grupoId', ParseIntPipe) grupoId: number,
+        @Param('resumoId', ParseIntPipe) resumoId: number,
+        @Param('propostaId', ParseIntPipe) propostaId: number,
+        @ActiveUser() usuarioAtivo: JwtPayload,
+    ) {
+        return this.resumoService.confirmarProposta({ grupoId, resumoId, propostaId }, usuarioAtivo);
+    }
+
+    @Post('grupo/:grupoId/resumo/:resumoId/proposta/:propostaId/recusar')
+    recusarPropostaDoResumo(
+        @Param('grupoId', ParseIntPipe) grupoId: number,
+        @Param('resumoId', ParseIntPipe) resumoId: number,
+        @Param('propostaId', ParseIntPipe) propostaId: number,
+        @ActiveUser() usuarioAtivo: JwtPayload,
+    ) {
+        return this.resumoService.recusarProposta({ grupoId, resumoId, propostaId }, usuarioAtivo);
     }
 
     /** O aviso de que o usuário está digitando para o grupo; nada é gravado. */

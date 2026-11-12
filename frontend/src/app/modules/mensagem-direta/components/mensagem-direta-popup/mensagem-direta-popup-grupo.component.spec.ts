@@ -208,6 +208,32 @@ describe('MensagemDiretaPopupComponent — grupos', () => {
         expect(estado.grupoEstado.grupos()[0].ultimaMensagem?.texto).toBe('Atenção @todos, deploy às 18h');
     });
 
+    it('o grupo avisa que pode ser resumido por IA e o comando /resumir abre o resumo sem enviar mensagem nenhuma', async () => {
+        await montar();
+        await abrirOGrupo();
+        responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/grupo/7/leitura'), { grupoId: 7, conversaId: 'G7', lidaAteData: '2026-10-21T14:07:00.000Z' });
+        expect(texto()).toContain('Este chat pode ser resumido por IA');
+
+        digitarNaMensagem(tela.fixture, '/resumir');
+        teclarNaMensagem(tela.fixture, 'Enter');
+        await tela.atualizar();
+
+        tela.http.expectNone((pedido) => pedido.method === 'POST' && pedido.url.endsWith('/mensagem'));
+        responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/grupo/7/resumo'), { ultimoResumoData: null, destino: 'NENHUM', demandaId: null, projetoId: null });
+        await tela.atualizar();
+        expect(document.body.textContent).toContain('Resumir com IA · Time do backend');
+    });
+
+    it('o menu do grupo também abre o resumo', async () => {
+        await montar();
+        await abrirOGrupo();
+        responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/grupo/7/leitura'), { grupoId: 7, conversaId: 'G7', lidaAteData: '2026-10-21T14:07:00.000Z' });
+        tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Menu do grupo"]')!.click();
+        await tela.atualizar();
+        const item = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"] a, [role="menuitem"] .p-menu-item-link')).find((candidato) => candidato.textContent?.includes('Resumir com IA'));
+        expect(item).toBeDefined();
+    });
+
     it('sem @todos o envio não manda mencionaTodos', async () => {
         await montar();
         await abrirOGrupo();

@@ -11,4 +11,21 @@
         line-height: 1.2;
         color: var(--p-primary-color);
     }
+
+    // O aviso permanente de que o chat pode ser resumido por IA (task 249), logo acima do campo de mensagem.
+    &__aviso-ia {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        margin: 0;
+        padding: 0.25rem 0.75rem 0;
+        font-size: 0.6875rem;
+        color: var(--p-text-muted-color);
+
+        code {
+            font-family: inherit;
+            font-weight: 600;
+        }
+    }
 }

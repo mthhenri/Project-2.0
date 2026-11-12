@@ -93,6 +93,28 @@ describe('MensagemDiretaGrupoService', () => {
         responderSucesso(esperarRequisicao(http, 'POST', '/mensagem-direta/canal/projeto/3'), { grupo: {}, jaExistia: true });
     });
 
+    it('o resumo com a IA tem rotas de opções, estimativa, resumo e proposta (criar, confirmar e recusar), com o período em ISO', () => {
+        const pedido = { inicioData: new Date('2026-11-01T10:00:00.000Z'), fimData: new Date('2026-11-12T10:00:00.000Z'), enviaCodigo: false };
+        servico.recuperarOpcoesDoResumo(7).subscribe();
+        responderSucesso(esperarRequisicao(http, 'GET', '/mensagem-direta/grupo/7/resumo'), {});
+        servico.estimarResumo(7, pedido).subscribe();
+        const estimativa = esperarRequisicao(http, 'POST', '/mensagem-direta/grupo/7/resumo/estimativa');
+        expect(estimativa.request.body).toEqual({ inicioData: '2026-11-01T10:00:00.000Z', fimData: '2026-11-12T10:00:00.000Z', enviaCodigo: false });
+        responderSucesso(estimativa, {});
+        servico.resumir(7, { ...pedido, enviaCodigo: true }).subscribe();
+        const resumo = esperarRequisicao(http, 'POST', '/mensagem-direta/grupo/7/resumo');
+        expect(resumo.request.body.enviaCodigo).toBe(true);
+        responderSucesso(resumo, {});
+        servico.criarPropostaDoResumo(7, 5, 'texto', 12).subscribe();
+        const proposta = esperarRequisicao(http, 'POST', '/mensagem-direta/grupo/7/resumo/5/proposta');
+        expect(proposta.request.body).toEqual({ texto: 'texto', demandaId: 12 });
+        responderSucesso(proposta, {});
+        servico.confirmarPropostaDoResumo(7, 5, 77).subscribe();
+        responderSucesso(esperarRequisicao(http, 'POST', '/mensagem-direta/grupo/7/resumo/5/proposta/77/confirmar'), {});
+        servico.recusarPropostaDoResumo(7, 5, 77).subscribe();
+        responderSucesso(esperarRequisicao(http, 'POST', '/mensagem-direta/grupo/7/resumo/5/proposta/77/recusar'), {});
+    });
+
     it('nenhuma chamada aciona o overlay global nem o aviso global de erro', () => {
         servico.recuperar(7).subscribe();
         const requisicao = esperarRequisicao(http, 'GET', '/mensagem-direta/grupo/7');

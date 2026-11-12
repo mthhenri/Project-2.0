@@ -1,0 +1,263 @@
+<p-dialog
+    [visible]="visivel()"
+    (visibleChange)="visivel.set($event)"
+    [header]="titulo()"
+    [modal]="true"
+    [style]="{ width: '38rem' }"
+    [draggable]="false"
+    [focusOnShow]="false"
+    [dismissableMask]="!ocupado()"
+    [closable]="!ocupado()"
+    appendTo="body"
+>
+    <div class="resumo-grupo">
+        @switch (etapa()) {
+            @case ("FORMULARIO") {
+                <form [formGroup]="formulario" class="resumo-grupo__form" (ngSubmit)="estimar()">
+                    <div class="resumo-grupo__linha">
+                        <div class="resumo-grupo__campo">
+                            <label for="resumo-inicio" class="resumo-grupo__label">De</label>
+                            <p-datepicker
+                                inputId="resumo-inicio"
+                                formControlName="inicioData"
+                                [showTime]="true"
+                                dateFormat="dd/mm/yy"
+                                placeholder="dd/mm/aaaa hh:mm"
+                                appendTo="body"
+                                class="w-full"
+                            />
+                        </div>
+                        <div class="resumo-grupo__campo">
+                            <label for="resumo-fim" class="resumo-grupo__label">Até</label>
+                            <p-datepicker
+                                inputId="resumo-fim"
+                                formControlName="fimData"
+                                [showTime]="true"
+                                dateFormat="dd/mm/yy"
+                                placeholder="dd/mm/aaaa hh:mm"
+                                appendTo="body"
+                                class="w-full"
+                            />
+                        </div>
+                    </div>
+
+                    @if (carregandoOpcoes()) {
+                        <p class="resumo-grupo__dica" aria-busy="true">Carregando…</p>
+                    } @else if (opcoes()?.ultimoResumoData; as ultimo) {
+                        <p class="resumo-grupo__dica">
+                            Último resumo deste chat até {{ ultimo | date: "dd/MM/yyyy HH:mm" }}.
+                            <button
+                                type="button"
+                                class="resumo-grupo__link"
+                                (click)="desdeOUltimoResumo()"
+                            >
+                                Começar dali
+                            </button>
+                        </p>
+                    } @else if (opcoes()) {
+                        <p class="resumo-grupo__dica">Este chat ainda não foi resumido.</p>
+                    }
+
+                    <div class="resumo-grupo__opcao">
+                        <p-checkbox
+                            inputId="resumo-codigo"
+                            formControlName="enviaCodigo"
+                            [binary]="true"
+                        />
+                        <label for="resumo-codigo"
+                            >Enviar o código para a IA
+                            <span class="resumo-grupo__dica"
+                                >(desligado, os blocos de código viram “[trecho de código omitido]”
+                                antes de sair do servidor)</span
+                            ></label
+                        >
+                    </div>
+
+                    <p class="resumo-grupo__aviso" role="note">
+                        <i class="pi pi-info-circle" aria-hidden="true"></i>
+                        <span
+                            >As mensagens do período vão ao provedor de IA configurado. O resumo não
+                            cita os autores. Os outros membros não são avisados.</span
+                        >
+                    </p>
+                </form>
+            }
+            @case ("ESTIMATIVA") {
+                @if (estimativa(); as estimado) {
+                    @if (semMensagens()) {
+                        <p class="resumo-grupo__vazio">Não há mensagens neste período.</p>
+                    } @else {
+                        <dl class="resumo-grupo__estimativa">
+                            <div>
+                                <dt>Mensagens</dt>
+                                <dd>{{ estimado.quantidadeMensagens }}</dd>
+                            </div>
+                            <div>
+                                <dt>Chamadas à IA</dt>
+                                <dd>{{ estimado.quantidadeChamadas }}</dd>
+                            </div>
+                            <div>
+                                <dt>Tokens (aprox.)</dt>
+                                <dd>{{ tokensEstimados() }}</dd>
+                            </div>
+                            <div>
+                                <dt>Custo (aprox.)</dt>
+                                <dd>
+                                    @if (estimado.custoEstimadoDolar !== null) {
+                                        US$ {{ estimado.custoEstimadoDolar | number: "1.4-4" }}
+                                    } @else {
+                                        sem preço cadastrado
+                                    }
+                                </dd>
+                            </div>
+                        </dl>
+                        <p class="resumo-grupo__dica">
+                            @if (estimado.enviaCodigo) {
+                                O código das mensagens vai ao provedor.
+                            } @else if (estimado.blocosDeCodigoOmitidos > 0) {
+                                {{ estimado.blocosDeCodigoOmitidos }}
+                                {{
+                                    estimado.blocosDeCodigoOmitidos === 1
+                                        ? "bloco de código será omitido"
+                                        : "blocos de código serão omitidos"
+                                }}.
+                            } @else {
+                                Nenhum bloco de código no período.
+                            }
+                        </p>
+                        @if (estimado.acimaDoTeto) {
+                            <p class="resumo-grupo__erro" role="alert">
+                                O período é grande demais para resumir de uma vez: escolha um
+                                período menor.
+                            </p>
+                        }
+                    }
+                }
+            }
+            @case ("RESULTADO") {
+                @if (resultado(); as pronto) {
+                    <p class="resumo-grupo__dica">
+                        {{ pronto.quantidadeMensagens }} mensagens ·
+                        {{ pronto.inicioData | date: "dd/MM/yyyy HH:mm" }} a
+                        {{ pronto.fimData | date: "dd/MM/yyyy HH:mm" }}
+                    </p>
+                    <div class="resumo-grupo__texto">
+                        <app-markdown-visualizador [texto]="pronto.texto" />
+                    </div>
+                    @if (pedeDemanda()) {
+                        <div class="resumo-grupo__campo">
+                            <label for="resumo-demanda" class="resumo-grupo__label"
+                                >Demanda em que gravar</label
+                            >
+                            <p-select
+                                inputId="resumo-demanda"
+                                [options]="demandasDoProjeto()"
+                                optionLabel="rotulo"
+                                optionValue="id"
+                                [ngModel]="demandaEscolhida()"
+                                (ngModelChange)="demandaEscolhida.set($event)"
+                                placeholder="Escolha uma demanda do projeto"
+                                [filter]="true"
+                                appendTo="body"
+                                class="w-full"
+                            />
+                        </div>
+                    }
+                }
+            }
+            @case ("PROPOSTA") {
+                @if (proposta(); as revisao) {
+                    <p class="resumo-grupo__aviso" role="note">
+                        <i class="pi pi-file-edit" aria-hidden="true"></i>
+                        <span
+                            >Isto será <strong>acrescentado ao fim</strong> da documentação da
+                            demanda “{{ revisao.demandaNome }}”. Nada é gravado antes de você
+                            confirmar.</span
+                        >
+                    </p>
+                    <div class="resumo-grupo__texto">
+                        <app-markdown-visualizador [texto]="revisao.textoAcrescentado" />
+                    </div>
+                }
+            }
+            @case ("GRAVADO") {
+                <p class="resumo-grupo__ok" role="status">
+                    <i class="pi pi-check-circle" aria-hidden="true"></i>
+                    Resumo gravado na documentação da demanda. O chat recebeu o aviso com o cartão
+                    da demanda.
+                </p>
+            }
+        }
+
+        @if (erro(); as motivo) {
+            <p class="resumo-grupo__erro" role="alert">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ motivo }}
+            </p>
+        }
+    </div>
+
+    <ng-template #footer>
+        @switch (etapa()) {
+            @case ("FORMULARIO") {
+                <p-button label="Cancelar" [text]="true" (onClick)="fechar()" />
+                <p-button
+                    label="Ver estimativa"
+                    icon="pi pi-calculator"
+                    [loading]="ocupado()"
+                    [disabled]="carregandoOpcoes()"
+                    (onClick)="estimar()"
+                />
+            }
+            @case ("ESTIMATIVA") {
+                <p-button
+                    label="Voltar"
+                    [text]="true"
+                    [disabled]="ocupado()"
+                    (onClick)="voltarAoPeriodo()"
+                />
+                <p-button
+                    label="Gerar resumo"
+                    icon="pi pi-sparkles"
+                    [loading]="ocupado()"
+                    [disabled]="semMensagens() || estimativa()?.acimaDoTeto"
+                    (onClick)="gerar()"
+                />
+            }
+            @case ("RESULTADO") {
+                <p-button label="Fechar" [text]="true" (onClick)="fechar()" />
+                <p-button
+                    [label]="copiado() ? 'Copiado' : 'Copiar'"
+                    [icon]="copiado() ? 'pi pi-check' : 'pi pi-copy'"
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="copiar()"
+                />
+                @if (podeGravar()) {
+                    <p-button
+                        label="Gravar na documentação"
+                        icon="pi pi-file-edit"
+                        [loading]="ocupado()"
+                        (onClick)="pedirGravacao()"
+                    />
+                }
+            }
+            @case ("PROPOSTA") {
+                <p-button
+                    label="Descartar"
+                    [text]="true"
+                    [disabled]="ocupado()"
+                    (onClick)="descartarGravacao()"
+                />
+                <p-button
+                    label="Confirmar e gravar"
+                    icon="pi pi-check"
+                    [loading]="ocupado()"
+                    (onClick)="confirmarGravacao()"
+                />
+            }
+            @case ("GRAVADO") {
+                <p-button label="Fechar" (onClick)="fechar()" />
+            }
+        }
+    </ng-template>
+</p-dialog>

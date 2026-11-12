@@ -544,6 +544,12 @@ export class GrupoService {
         };
     }
 
+    /** Para o resumo com a IA (task 249): o grupo e os membros, só se quem pede é membro agora (no canal, também o gestor que já escreveu). */
+    async exigirMembroParaResumo(grupoId: number, usuarioAtivo: JwtPayload): Promise<{ grupo: GrupoRegistrado; membrosIds: number[] }> {
+        const { grupo, membrosIds } = await this.exigirMembro(grupoId, usuarioAtivo);
+        return { grupo, membrosIds };
+    }
+
     /** A pessoa é membro agora. Não membro (inclusive quem saiu, ou saiu da demanda) recebe 403. */
     private async exigirMembro(grupoId: number, usuarioAtivo: JwtPayload): Promise<ContextoDoGrupo> {
         const contexto = await this.carregarContexto(grupoId, usuarioAtivo);

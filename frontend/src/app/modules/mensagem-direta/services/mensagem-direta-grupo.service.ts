@@ -3,6 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
     GrupoAlteradoDto,
+    GrupoResumoIaCriadoDto,
+    GrupoResumoIaEstimadoDto,
+    GrupoResumoIaPropostaConfirmadaDto,
+    GrupoResumoIaPropostaCriadaDto,
+    GrupoResumoIaPropostaRecusadaDto,
+    GrupoResumoIaRecuperadoDto,
     GrupoCanalCriadoDto,
     GrupoCanalRecuperadoDto,
     GrupoCriadoDto,
@@ -22,6 +28,13 @@ import {
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprioEErroTratado } from '../../../core/interceptors/loading.interceptor';
+
+/** O período e a escolha do código de um resumo com a IA (task 249). */
+export interface PedidoDeResumo {
+    inicioData: Date;
+    fimData: Date;
+    enviaCodigo: boolean;
+}
 
 /** O que o formulário do grupo manda ao criar. */
 export type NovoGrupo = Pick<GrupoCriarDto, 'nome' | 'corAvatar' | 'emojiAvatar' | 'membroUsuarioIds'>;
@@ -118,6 +131,42 @@ export class MensagemDiretaGrupoService {
 
     private urlDoCanal(tipo: TipoGrupoEnum.DEMANDA | TipoGrupoEnum.PROJETO, alvoId: number): string {
         return `${ambiente.apiUrl}/mensagem-direta/canal/${tipo === TipoGrupoEnum.DEMANDA ? 'demanda' : 'projeto'}/${alvoId}`;
+    }
+
+    /** O que abre o diálogo de resumo: o fim do último resumo do grupo e onde o resumo pode ser gravado. */
+    recuperarOpcoesDoResumo(grupoId: number): Observable<StandardResponse<GrupoResumoIaRecuperadoDto>> {
+        return this.httpClient.get<StandardResponse<GrupoResumoIaRecuperadoDto>>(`${this.urlBase}/${grupoId}/resumo`, comFeedbackProprioEErroTratado());
+    }
+
+    /** A estimativa do resumo; o servidor não chama o provedor de resumo. */
+    estimarResumo(grupoId: number, pedido: PedidoDeResumo): Observable<StandardResponse<GrupoResumoIaEstimadoDto>> {
+        return this.httpClient.post<StandardResponse<GrupoResumoIaEstimadoDto>>(`${this.urlBase}/${grupoId}/resumo/estimativa`, this.corpoDoResumo(pedido), comFeedbackProprioEErroTratado());
+    }
+
+    /** Gera o resumo (várias chamadas ao provedor num período grande: a resposta pode demorar). */
+    resumir(grupoId: number, pedido: PedidoDeResumo): Observable<StandardResponse<GrupoResumoIaCriadoDto>> {
+        return this.httpClient.post<StandardResponse<GrupoResumoIaCriadoDto>>(`${this.urlBase}/${grupoId}/resumo`, this.corpoDoResumo(pedido), comFeedbackProprioEErroTratado());
+    }
+
+    /** Cria a proposta de gravar o resumo na documentação da demanda (`demandaId` só no canal de projeto). */
+    criarPropostaDoResumo(grupoId: number, resumoId: number, texto: string, demandaId?: number): Observable<StandardResponse<GrupoResumoIaPropostaCriadaDto>> {
+        return this.httpClient.post<StandardResponse<GrupoResumoIaPropostaCriadaDto>>(
+            `${this.urlBase}/${grupoId}/resumo/${resumoId}/proposta`,
+            { texto, ...(demandaId ? { demandaId } : {}) },
+            comFeedbackProprioEErroTratado(),
+        );
+    }
+
+    confirmarPropostaDoResumo(grupoId: number, resumoId: number, propostaId: number): Observable<StandardResponse<GrupoResumoIaPropostaConfirmadaDto>> {
+        return this.httpClient.post<StandardResponse<GrupoResumoIaPropostaConfirmadaDto>>(`${this.urlBase}/${grupoId}/resumo/${resumoId}/proposta/${propostaId}/confirmar`, {}, comFeedbackProprioEErroTratado());
+    }
+
+    recusarPropostaDoResumo(grupoId: number, resumoId: number, propostaId: number): Observable<StandardResponse<GrupoResumoIaPropostaRecusadaDto>> {
+        return this.httpClient.post<StandardResponse<GrupoResumoIaPropostaRecusadaDto>>(`${this.urlBase}/${grupoId}/resumo/${resumoId}/proposta/${propostaId}/recusar`, {}, comFeedbackProprioEErroTratado());
+    }
+
+    private corpoDoResumo(pedido: PedidoDeResumo): { inicioData: string; fimData: string; enviaCodigo: boolean } {
+        return { inicioData: pedido.inicioData.toISOString(), fimData: pedido.fimData.toISOString(), enviaCodigo: pedido.enviaCodigo };
     }
 
     /** Avisa os outros membros de que o usuário está digitando (nada é gravado). */

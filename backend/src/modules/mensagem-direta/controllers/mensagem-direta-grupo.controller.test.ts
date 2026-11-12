@@ -9,13 +9,19 @@ import { MensagemDiretaGrupoController } from './mensagem-direta-grupo.controlle
 
 const USUARIO = { sub: 4, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das dezesseis rotas', () => {
+test('verbos e caminhos das vinte e duas rotas', () => {
     assert.deepEqual(
         Object.values(rotasPorNome(MensagemDiretaGrupoController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
         [
             'DELETE grupo/:grupoId/membro',
             'GET grupo/:grupoId',
             'GET canal/demanda/:demandaId',
+            'GET grupo/:grupoId/resumo',
+            'POST grupo/:grupoId/resumo',
+            'POST grupo/:grupoId/resumo/estimativa',
+            'POST grupo/:grupoId/resumo/:resumoId/proposta',
+            'POST grupo/:grupoId/resumo/:resumoId/proposta/:propostaId/confirmar',
+            'POST grupo/:grupoId/resumo/:resumoId/proposta/:propostaId/recusar',
             'GET canal/projeto/:projetoId',
             'GET grupo/:grupoId/mensagens',
             'GET supervisao/grupo/:grupoId',
@@ -58,6 +64,7 @@ test('o grupoId da rota vence o do corpo e da query, e o usuário é sempre o do
             criarGrupo: registrar('criar'),
         } as never,
         { listarGruposSupervisionados: registrar('listarSupervisao'), lerGrupoSupervisionado: registrar('lerSupervisao') } as never,
+        {} as never,
     );
 
     await controller.alterarGrupo(7, { grupoId: 99, nome: 'Novo' } as never, USUARIO);
@@ -90,7 +97,7 @@ test('o grupoId da rota vence o do corpo e da query, e o usuário é sempre o do
 test('as rotas do canal montam o tipo e o alvo pela rota, sempre como a pessoa do token', async () => {
     const chamadas: Record<string, unknown[]> = {};
     const registrar = (nome: string) => async (...argumentos: unknown[]) => { chamadas[nome] = argumentos; return null; };
-    const controller = new MensagemDiretaGrupoController({ recuperarCanal: registrar('recuperar'), criarCanal: registrar('criar') } as never, {} as never);
+    const controller = new MensagemDiretaGrupoController({ recuperarCanal: registrar('recuperar'), criarCanal: registrar('criar') } as never, {} as never, {} as never);
 
     await controller.recuperarCanalDaDemanda(12, USUARIO);
     assert.deepEqual(chamadas.recuperar, [{ tipo: TipoGrupoEnum.DEMANDA, alvoId: 12 }, USUARIO]);
@@ -100,4 +107,27 @@ test('as rotas do canal montam o tipo e o alvo pela rota, sempre como a pessoa d
     assert.deepEqual(chamadas.criar, [{ tipo: TipoGrupoEnum.DEMANDA, alvoId: 12 }, USUARIO]);
     await controller.criarCanalDoProjeto(3, USUARIO);
     assert.deepEqual(chamadas.criar, [{ tipo: TipoGrupoEnum.PROJETO, alvoId: 3 }, USUARIO]);
+});
+
+test('as rotas do resumo com a IA levam o grupo, o resumo e a proposta da rota, e a pessoa do token', async () => {
+    const chamadas: Record<string, unknown[]> = {};
+    const registrar = (nome: string) => async (...argumentos: unknown[]) => { chamadas[nome] = argumentos; return null; };
+    const controller = new MensagemDiretaGrupoController(
+        {} as never,
+        {} as never,
+        { recuperarOpcoes: registrar('opcoes'), estimar: registrar('estimar'), resumir: registrar('resumir'), criarProposta: registrar('proposta'), confirmarProposta: registrar('confirmar'), recusarProposta: registrar('recusar') } as never,
+    );
+
+    await controller.recuperarOpcoesDoResumo(7, USUARIO);
+    assert.deepEqual(chamadas.opcoes, [{ grupoId: 7 }, USUARIO]);
+    await controller.estimarResumo(7, { grupoId: 99, inicioData: 'a', fimData: 'b', enviaCodigo: false } as never, USUARIO);
+    assert.deepEqual(chamadas.estimar, [{ grupoId: 7, inicioData: 'a', fimData: 'b', enviaCodigo: false }, USUARIO]);
+    await controller.resumir(7, { grupoId: 99, inicioData: 'a', fimData: 'b', enviaCodigo: true } as never, USUARIO);
+    assert.deepEqual(chamadas.resumir, [{ grupoId: 7, inicioData: 'a', fimData: 'b', enviaCodigo: true }, USUARIO]);
+    await controller.criarPropostaDoResumo(7, 3, { grupoId: 99, resumoId: 98, texto: 'x', demandaId: 5 } as never, USUARIO);
+    assert.deepEqual(chamadas.proposta, [{ grupoId: 7, resumoId: 3, texto: 'x', demandaId: 5 }, USUARIO]);
+    await controller.confirmarPropostaDoResumo(7, 3, 11, USUARIO);
+    assert.deepEqual(chamadas.confirmar, [{ grupoId: 7, resumoId: 3, propostaId: 11 }, USUARIO]);
+    await controller.recusarPropostaDoResumo(7, 3, 11, USUARIO);
+    assert.deepEqual(chamadas.recusar, [{ grupoId: 7, resumoId: 3, propostaId: 11 }, USUARIO]);
 });

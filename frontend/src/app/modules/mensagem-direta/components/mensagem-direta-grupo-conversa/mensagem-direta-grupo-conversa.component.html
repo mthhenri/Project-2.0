@@ -352,6 +352,11 @@
             </p>
         }
 
+        <p class="conversa-direta__aviso-ia">
+            <i class="pi pi-sparkles" aria-hidden="true"></i>
+            Este chat pode ser resumido por IA (<code>/resumir</code>).
+        </p>
+
         <app-mensagem-direta-compositor
             [pessoas]="pessoasMencionaveis()"
             [permitirTodos]="true"
@@ -364,4 +369,14 @@
             (digitando)="aoDigitar()"
         />
     </div>
+}
+
+@if (aberto(); as conversa) {
+    @if (grupo(); as dados) {
+        <app-mensagem-direta-grupo-resumo
+            [(visivel)]="resumoAberto"
+            [grupoId]="conversa.grupoId"
+            [nomeDoGrupo]="dados.nome"
+        />
+    }
 }

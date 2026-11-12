@@ -22,6 +22,7 @@ export * from './status-proposta-ia.enum';
 export * from './autor-mensagem-direta.enum';
 export * from './conversa-tipo-mensagem-direta.enum';
 export * from './tipo-grupo.enum';
+export * from './grupo-resumo-ia-destino.enum';
 export * from './posicao-barra-chat.enum';
 export * from './posicao-popup-chat.enum';
 export * from './referencia-mensagem-direta.enum';

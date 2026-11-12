@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AtividadeModule } from '../atividade/atividade.module';
+import { ConfiguracaoIaModule } from '../configuracao-ia/configuracao-ia.module';
 import { DemandaModule } from '../demanda/demanda.module';
 import { FerramentaIaModule } from '../ferramenta-ia/ferramenta-ia.module';
 import { IaModule } from '../ia/ia.module';
@@ -13,12 +14,14 @@ import { MensagemDiretaGrupoController } from './controllers/mensagem-direta-gru
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, armazenamentoDeMensagemDiretaProvider } from './repositories/armazenamento-de-mensagem-direta';
 import { GrupoLeituraRepository } from './repositories/grupo-leitura.repository';
 import { GrupoRepository } from './repositories/grupo.repository';
+import { GrupoResumoRepository } from './repositories/grupo-resumo.repository';
 import { MensagemDiretaLeituraRepository } from './repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPreferenciaRepository } from './repositories/mensagem-direta-preferencia.repository';
 import { MensagemDiretaReacaoRepository } from './repositories/mensagem-direta-reacao.repository';
 import { MensagemDiretaSupervisaoRepository } from './repositories/mensagem-direta-supervisao.repository';
 import { publicadorDeEventosDiretosProvider } from './publicadores/publicador-de-eventos-diretos';
 import { CanalAcessoService } from './services/canal-acesso.service';
+import { GrupoResumoIaService } from './services/grupo-resumo-ia.service';
 import { GrupoSupervisaoService } from './services/grupo-supervisao.service';
 import { GrupoService } from './services/grupo.service';
 import { MensagemDiretaEventosService } from './services/mensagem-direta-eventos.service';
@@ -31,12 +34,13 @@ import { MensagemDiretaService } from './services/mensagem-direta.service';
  * (task 209: stream, barramento entre instâncias e presença), a supervisão pelo gestor (task 214), o `@IA` (task 315) e o grupo livre (task 246).
  */
 @Module({
-    imports:     [UsuarioModule, DemandaModule, ProjetoModule, AtividadeModule, IaModule, FerramentaIaModule, PromptModule, PropostaIaModule, IaCustoModule],
+    imports:     [UsuarioModule, DemandaModule, ProjetoModule, ConfiguracaoIaModule, AtividadeModule, IaModule, FerramentaIaModule, PromptModule, PropostaIaModule, IaCustoModule],
     controllers: [MensagemDiretaController, MensagemDiretaGrupoController],
     providers:   [
         armazenamentoDeMensagemDiretaProvider,
         publicadorDeEventosDiretosProvider,
         GrupoRepository,
+        GrupoResumoRepository,
         GrupoLeituraRepository,
         MensagemDiretaLeituraRepository,
         MensagemDiretaPreferenciaRepository,
@@ -47,6 +51,7 @@ import { MensagemDiretaService } from './services/mensagem-direta.service';
         CanalAcessoService,
         GrupoService,
         GrupoSupervisaoService,
+        GrupoResumoIaService,
         MensagemDiretaService,
         MensagemDiretaSupervisaoService,
     ],

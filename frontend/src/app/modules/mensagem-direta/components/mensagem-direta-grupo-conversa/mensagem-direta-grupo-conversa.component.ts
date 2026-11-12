@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { AutorMensagemDiretaEnum, CitacaoMensagemDto, ReferenciaMensagemDiretaEnum, TipoUsuarioEnum, grupoEhCanal, trechoDaMensagemDireta } from '@project20/shared';
+import { AutorMensagemDiretaEnum, CitacaoMensagemDto, COMANDO_DE_RESUMO, ReferenciaMensagemDiretaEnum, TipoUsuarioEnum, grupoEhCanal, trechoDaMensagemDireta } from '@project20/shared';
 import { MenuItem, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ContextMenu } from 'primeng/contextmenu';
@@ -15,6 +15,7 @@ import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-
 import { EnvioDoCompositor } from '../../services/mensagem-direta-estado.service';
 import { coresDosMembros, nomeDoAutorNoGrupo, rotuloDosMembros } from '../../utils/grupo.util';
 import { agruparPorDia, formatarHora, marcarEmendas, MensagemNaConversa } from '../../utils/mensagem-direta.util';
+import { MensagemDiretaGrupoResumoComponent } from '../mensagem-direta-grupo-resumo/mensagem-direta-grupo-resumo.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
 
@@ -40,7 +41,7 @@ const SELETOR_DO_QUE_NAO_RESPONDE_COM_DOIS_CLIQUES = 'a, button, pre, code, app-
 @Component({
     selector: 'app-mensagem-direta-grupo-conversa',
     standalone: true,
-    imports: [ButtonModule, ContextMenu, Menu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarGrupoComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent],
+    imports: [ButtonModule, ContextMenu, Menu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarGrupoComponent, MensagemDiretaGrupoResumoComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent],
     templateUrl: './mensagem-direta-grupo-conversa.component.html',
     styleUrls: ['../mensagem-direta-conversa/mensagem-direta-conversa.component.scss', './mensagem-direta-grupo-conversa.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,6 +91,8 @@ export class MensagemDiretaGrupoConversaComponent {
         return nomes.length === 1 ? `${nomes[0]} digitando` : `${nomes.length} pessoas digitando`;
     });
     protected readonly silenciado = computed(() => this.grupo()?.silenciada ?? false);
+    /** O diálogo de resumo com a IA (task 249), aberto pelo comando `/resumir` ou pelo menu do grupo. */
+    protected readonly resumoAberto = signal(false);
     protected readonly papelDoLeitor = computed(() => (this.sessao.usuarioAtual()?.tipo === TipoUsuarioEnum.ADMINISTRADOR ? 'administrador' : 'gestor'));
 
     protected readonly emendas = computed(() => marcarEmendas(this.aberto()?.mensagens ?? []));
@@ -126,6 +129,7 @@ export class MensagemDiretaGrupoConversaComponent {
     /** O menu do cabeçalho do grupo: membros, silêncio e sair. O chat da demanda ou do projeto não tem saída (e quem só o lê por tipo não silencia). */
     protected readonly itensDoGrupo = computed<MenuItem[]>(() => [
         { label: this.ehCanal() ? 'Membros' : 'Membros e detalhes', icon: 'pi pi-users', command: () => this.estado.abrirDetalhesDoGrupo() },
+        ...(this.lendoPorTipo() ? [] : [{ label: 'Resumir com IA', icon: 'pi pi-sparkles', command: () => this.resumoAberto.set(true) }]),
         ...(this.lendoPorTipo()
             ? []
             : [
@@ -352,6 +356,11 @@ export class MensagemDiretaGrupoConversaComponent {
     }
 
     protected aoEnviar(envio: EnvioDoCompositor): void {
+        // `/resumir` é um comando, não uma mensagem: abre o resumo e nada é enviado ao grupo (quem só lê por tipo não é membro e não resume).
+        if (envio.texto.trim() === COMANDO_DE_RESUMO && !this.lendoPorTipo()) {
+            this.resumoAberto.set(true);
+            return;
+        }
         this.colarNoFim = true;
         void this.estado.enviarAoGrupo({ texto: envio.texto, mencoes: envio.mencoes, mencionaTodos: envio.mencionaTodos, referencias: envio.referencias });
     }

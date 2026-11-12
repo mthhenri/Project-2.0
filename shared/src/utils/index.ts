@@ -16,3 +16,4 @@ export * from './alterar-trecho';
 export * from './tipo-usuario-descricao';
 export * from './cor-avatar';
 export * from './grupo';
+export * from './grupo-resumo-ia';
