@@ -151,6 +151,7 @@
                 [(tags)]="tagsDaDemanda"
                 (tagsAlteradas)="aoTagsAlteradas($event)"
             />
+            <app-mensagem-direta-canal-botao [tipo]="tipoDoChat" [alvoId]="dadosDemanda.id" />
         </div>
 
         <p-tabs

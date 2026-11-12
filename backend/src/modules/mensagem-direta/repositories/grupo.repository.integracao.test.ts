@@ -2,7 +2,7 @@ import * as assert from 'node:assert/strict';
 import { TipoGrupoEnum } from '@project20/shared';
 import { testarComBanco, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
-import { criarDesenvolvedor } from '../../../testes/fabricas';
+import { criarDemanda, criarDesenvolvedor, criarGestor, criarProjeto } from '../../../testes/fabricas';
 import { GrupoLeituraRepository } from './grupo-leitura.repository';
 import { GrupoRepository } from './grupo.repository';
 
@@ -143,4 +143,68 @@ testarComBanco('alterarSilencio antes de ler cria o marcador sem data; um marcad
     await leitura(conexao).alterarLeitura({ grupoId: grupo.grupoId, usuarioId: ana.id, lidaAteData: new Date('2026-11-02T14:00:00.000Z') });
     assert.equal((await leitura(conexao).listarMarcadores({ usuarioId: ana.id })).length, 1);
     assert.equal(await leitura(conexao).recuperarMarcador({ grupoId: grupo.grupoId, usuarioId: bruno.id }), null, 'o marcador de uma pessoa não aparece na outra');
+});
+
+// --- canais (task 248) -------------------------------------------------------
+
+async function criarCanais(conexao: ConexaoTeste) {
+    const ana = await criarDesenvolvedor(conexao);
+    const projeto = await criarProjeto(conexao);
+    const raiz = await criarDemanda(conexao, { projetoId: projeto.id });
+    const filha = await criarDemanda(conexao, { projetoId: projeto.id, demandaPaiId: raiz.id });
+    const base = { nome: 'Canal', criadorUsuarioId: ana.id, corAvatar: null, emojiAvatar: null };
+    const daRaiz = await grupos(conexao).criarGrupo({ ...base, tipo: TipoGrupoEnum.DEMANDA, projetoId: projeto.id, demandaId: raiz.id });
+    const doProjeto = await grupos(conexao).criarGrupo({ ...base, tipo: TipoGrupoEnum.PROJETO, projetoId: projeto.id, demandaId: null });
+    return { ana, projeto, raiz, filha, daRaiz, doProjeto };
+}
+
+testarComBanco('recuperarCanalPorAlvo: o canal da demanda e o do projeto são distintos e um alvo sem canal devolve null', async (conexao) => {
+    const { projeto, raiz, filha, daRaiz, doProjeto } = await criarCanais(conexao);
+
+    assert.equal((await grupos(conexao).recuperarCanalPorAlvo({ demandaId: raiz.id, projetoId: projeto.id }))?.grupoId, daRaiz.grupoId);
+    assert.equal((await grupos(conexao).recuperarCanalPorAlvo({ demandaId: null, projetoId: projeto.id }))?.grupoId, doProjeto.grupoId, 'o canal do projeto não é o da demanda do mesmo projeto');
+    assert.equal(await grupos(conexao).recuperarCanalPorAlvo({ demandaId: filha.id, projetoId: projeto.id }), null, 'a filha não herda o canal da raiz');
+    assert.equal((await grupos(conexao).recuperarCanalPorAlvo({ demandaId: raiz.id, projetoId: projeto.id }))?.tipo, TipoGrupoEnum.DEMANDA);
+});
+
+testarComBanco('os índices únicos garantem um canal por demanda e um por projeto (a segunda criação falha com 23505)', async (conexao) => {
+    const { ana, projeto, raiz } = await criarCanais(conexao);
+    const base = { nome: 'Outro', criadorUsuarioId: ana.id, corAvatar: null, emojiAvatar: null };
+
+    await conexao.raw('SAVEPOINT duplicado');
+    await assert.rejects(
+        grupos(conexao).criarGrupo({ ...base, tipo: TipoGrupoEnum.DEMANDA, projetoId: projeto.id, demandaId: raiz.id }),
+        (erro) => (erro as { code?: string }).code === '23505',
+    );
+    await conexao.raw('ROLLBACK TO SAVEPOINT duplicado');
+    await assert.rejects(
+        grupos(conexao).criarGrupo({ ...base, tipo: TipoGrupoEnum.PROJETO, projetoId: projeto.id, demandaId: null }),
+        (erro) => (erro as { code?: string }).code === '23505',
+    );
+});
+
+testarComBanco('listarCanais: pelos ids de demanda e de projeto informados, sem o grupo livre e sem o canal de outra demanda', async (conexao) => {
+    const { ana, projeto, raiz, filha, daRaiz, doProjeto } = await criarCanais(conexao);
+    await grupos(conexao).criarGrupo({ nome: 'Livre', tipo: TipoGrupoEnum.LIVRE, criadorUsuarioId: ana.id, corAvatar: null, emojiAvatar: null, projetoId: null, demandaId: null });
+
+    const ids = async (dto: { demandaIds: number[]; projetoIds: number[] }) => (await grupos(conexao).listarCanais(dto)).map((canal) => canal.grupoId).sort((primeiro, segundo) => primeiro - segundo);
+    assert.deepEqual(await ids({ demandaIds: [raiz.id, filha.id], projetoIds: [projeto.id] }), [daRaiz.grupoId, doProjeto.grupoId]);
+    assert.deepEqual(await ids({ demandaIds: [filha.id], projetoIds: [] }), []);
+    assert.deepEqual(await ids({ demandaIds: [], projetoIds: [projeto.id] }), [doProjeto.grupoId], 'projetoIds pega o canal do projeto, não o da demanda');
+    assert.deepEqual(await ids({ demandaIds: [], projetoIds: [] }), []);
+});
+
+testarComBanco('listarCanaisSupervisionaveis: todos os canais, menos aqueles em que o leitor é membro agora', async (conexao) => {
+    const { ana, daRaiz, doProjeto } = await criarCanais(conexao);
+    const gestor = await criarGestor(conexao);
+    await grupos(conexao).criarGrupo({ nome: 'Livre', tipo: TipoGrupoEnum.LIVRE, criadorUsuarioId: ana.id, corAvatar: null, emojiAvatar: null, projetoId: null, demandaId: null });
+
+    const antes = (await grupos(conexao).listarCanaisSupervisionaveis({ leitorUsuarioId: gestor.id })).map((canal) => canal.grupoId);
+    assert.ok(antes.includes(daRaiz.grupoId) && antes.includes(doProjeto.grupoId));
+
+    await grupos(conexao).adicionarMembro({ grupoId: daRaiz.grupoId, usuarioId: gestor.id, entradaData: new Date('2026-11-01T10:00:00.000Z') });
+    const depois = await grupos(conexao).listarCanaisSupervisionaveis({ leitorUsuarioId: gestor.id });
+    assert.equal(depois.some((canal) => canal.grupoId === daRaiz.grupoId), false);
+    assert.equal(depois.some((canal) => canal.grupoId === doProjeto.grupoId), true);
+    assert.equal(depois.some((canal) => canal.tipo === TipoGrupoEnum.LIVRE), false);
 });

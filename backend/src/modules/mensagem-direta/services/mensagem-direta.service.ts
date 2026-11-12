@@ -272,7 +272,7 @@ export class MensagemDiretaService {
     async listarConversas(usuarioAtivo: JwtPayload): Promise<StandardResponse<ConversaDiretaListadasDto>> {
         const usuarioId = usuarioAtivo.sub;
         // Os grupos vão na mesma resposta: o popup tem uma lista só (task 246).
-        const grupos = await this.grupoService.listarResumos(usuarioId);
+        const grupos = await this.grupoService.listarResumos(usuarioAtivo);
         const resumos = await this.armazenamento.listarConversasDoUsuario({ usuarioId });
         if (resumos.length === 0) {
             return { sucesso: true, dados: { conversas: [], grupos }, mensagem: 'Conversas listadas com sucesso' };
@@ -352,7 +352,7 @@ export class MensagemDiretaService {
         const mensagens = await this.armazenamento.buscar({
             usuarioId: usuarioAtivo.sub,
             // A busca olha também os grupos de que a pessoa é membro agora; de grupo que saiu, nunca.
-            grupoIds: await this.grupoService.listarGrupoIdsDoUsuario(usuarioAtivo.sub),
+            grupoIds: await this.grupoService.listarGrupoIdsDoUsuario(usuarioAtivo),
             texto: dto.texto,
             inicio: periodo.inicio,
             fim: periodo.fim,

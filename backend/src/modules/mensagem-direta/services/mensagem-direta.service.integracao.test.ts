@@ -6,6 +6,7 @@ import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAtividade, criarDemanda, criarDemandaUsuario, criarDesenvolvedor, criarGestor, criarUsuario } from '../../../testes/fabricas';
 import { AtividadeRepository } from '../../atividade/repositories/atividade.repository';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
+import { ProjetoRepository } from '../../projeto/repositories/projeto.repository';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import { MensagemDiretaLeituraRepository } from '../repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPostgresRepository } from '../repositories/mensagem-direta-postgres.repository';
@@ -14,6 +15,9 @@ import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-
 import { PublicadorEmMemoria } from '../publicadores/publicador-em-memoria';
 import { GrupoLeituraRepository } from '../repositories/grupo-leitura.repository';
 import { GrupoRepository } from '../repositories/grupo.repository';
+import { MensagemDiretaSupervisaoRepository } from '../repositories/mensagem-direta-supervisao.repository';
+import { CanalAcessoService } from './canal-acesso.service';
+import { GrupoSupervisaoService } from './grupo-supervisao.service';
 import { GrupoService } from './grupo.service';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 import { MensagemDiretaService } from './mensagem-direta.service';
@@ -24,14 +28,31 @@ import { MensagemDiretaService } from './mensagem-direta.service';
 function montar(conexao: ConexaoTeste) {
     const armazenamento = new MensagemDiretaPostgresRepository(conexao);
     const eventos = new MensagemDiretaEventosService(new PublicadorEmMemoria(), criarRepositorio(UsuarioRepository, conexao));
+    const grupos = criarRepositorio(GrupoRepository, conexao);
+    const canais = new CanalAcessoService(
+        grupos,
+        criarRepositorio(DemandaRepository, conexao),
+        criarRepositorio(ProjetoRepository, conexao),
+        criarRepositorio(UsuarioRepository, conexao),
+    );
+    const supervisaoDeGrupos = new GrupoSupervisaoService(
+        armazenamento,
+        grupos,
+        criarRepositorio(MensagemDiretaSupervisaoRepository, conexao),
+        criarRepositorio(UsuarioRepository, conexao),
+        eventos,
+        canais,
+    );
     const grupoService = new GrupoService(
         armazenamento,
-        criarRepositorio(GrupoRepository, conexao),
+        grupos,
         criarRepositorio(GrupoLeituraRepository, conexao),
         criarRepositorio(UsuarioRepository, conexao),
         criarRepositorio(DemandaRepository, conexao),
         criarRepositorio(AtividadeRepository, conexao),
         eventos,
+        canais,
+        supervisaoDeGrupos,
     );
     return new MensagemDiretaService(
         armazenamento,

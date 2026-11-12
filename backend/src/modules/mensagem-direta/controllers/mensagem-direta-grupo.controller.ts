@@ -9,6 +9,7 @@ import {
     GrupoSilencioAlterarDto,
     GrupoSupervisaoLerDto,
     GrupoSupervisaoListarDto,
+    TipoGrupoEnum,
 } from '@project20/shared';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
@@ -39,6 +40,28 @@ export class MensagemDiretaGrupoController {
     @Get('supervisao/grupo/:grupoId')
     lerGrupoSupervisionado(@Param('grupoId', ParseIntPipe) grupoId: number, @Query() dto: GrupoSupervisaoLerDto, @ActiveUser() usuarioAtivo: JwtPayload) {
         return this.supervisaoService.lerGrupoSupervisionado({ ...dto, grupoId }, usuarioAtivo);
+    }
+
+    /** O chat de uma demanda (`canal/demanda/:demandaId`) ou de um projeto (`canal/projeto/:projetoId`): recuperar devolve `grupo: null` se ainda não existe. */
+    @Get('canal/demanda/:demandaId')
+    recuperarCanalDaDemanda(@Param('demandaId', ParseIntPipe) demandaId: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.grupoService.recuperarCanal({ tipo: TipoGrupoEnum.DEMANDA, alvoId: demandaId }, usuarioAtivo);
+    }
+
+    @Get('canal/projeto/:projetoId')
+    recuperarCanalDoProjeto(@Param('projetoId', ParseIntPipe) projetoId: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.grupoService.recuperarCanal({ tipo: TipoGrupoEnum.PROJETO, alvoId: projetoId }, usuarioAtivo);
+    }
+
+    /** "Criar chat": idempotente, devolve o canal que já existe. */
+    @Post('canal/demanda/:demandaId')
+    criarCanalDaDemanda(@Param('demandaId', ParseIntPipe) demandaId: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.grupoService.criarCanal({ tipo: TipoGrupoEnum.DEMANDA, alvoId: demandaId }, usuarioAtivo);
+    }
+
+    @Post('canal/projeto/:projetoId')
+    criarCanalDoProjeto(@Param('projetoId', ParseIntPipe) projetoId: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.grupoService.criarCanal({ tipo: TipoGrupoEnum.PROJETO, alvoId: projetoId }, usuarioAtivo);
     }
 
     @Post('grupo')

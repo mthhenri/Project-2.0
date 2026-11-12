@@ -2,7 +2,17 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Knex } from 'knex';
 import { BaseRepository } from '../../../core/base/base.repository';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
-import { DemandaNomeResumoDto, DemandaNomeBuscarDto } from '@project20/shared';
+import {
+    DemandaAcessoUsuarioListadoDto,
+    DemandaAcessoUsuarioListarDto,
+    DemandaMembroAcessoListadoDto,
+    DemandaMembroDeDemandasListarDto,
+    DemandaMembroDeProjetosListarDto,
+    DemandaNomeBuscarDto,
+    DemandaNomeListadoDto,
+    DemandaNomeListarDto,
+    DemandaNomeResumoDto,
+} from '@project20/shared';
 import { Demanda } from '../domain/models/demanda.model';
 import {
     DemandaCriadaDto,
@@ -1820,6 +1830,115 @@ export class DemandaRepository extends BaseRepository<Demanda> {
             { demandaId: dto.demandaId, usuarioId: dto.usuarioId },
         );
         return resultado[0].existe;
+    }
+
+    /**
+   * As demandas em que a pessoa tem linha ativa em `demanda_usuario` (demanda e projeto existentes), com a data da atribuição. É a fonte da verdade do
+   * acesso aos canais do chat (task 248): o canal de uma demanda é de quem está nela; o de um projeto, de quem está em alguma demanda dele.
+   */
+    async listarAcessosDoUsuario(dto: DemandaAcessoUsuarioListarDto): Promise<DemandaAcessoUsuarioListadoDto[]> {
+        return this.executarConsulta<DemandaAcessoUsuarioListadoDto>(
+            `
+                SELECT
+                    demanda.id AS "demandaId",
+                    demanda.projeto_id AS "projetoId",
+                    demanda_usuario.created_date AS "entradaData"
+                FROM
+                    demanda_usuario
+                    INNER JOIN demanda ON demanda.id = demanda_usuario.demanda_id
+                    AND demanda.is_deleted = false
+                    INNER JOIN projeto ON projeto.id = demanda.projeto_id
+                    AND projeto.is_deleted = false
+                WHERE
+                    demanda_usuario.usuario_id = :usuarioId
+                    AND demanda_usuario.is_deleted = false
+                ORDER BY
+                    demanda.id ASC
+            `,
+            { usuarioId: dto.usuarioId },
+        );
+    }
+
+    /** As pessoas ativas atribuídas a cada demanda (só ela, sem as filhas), com a data da atribuição. */
+    async listarMembrosDeDemandas(dto: DemandaMembroDeDemandasListarDto): Promise<DemandaMembroAcessoListadoDto[]> {
+        if (dto.demandaIds.length === 0) return [];
+        return this.executarConsulta<DemandaMembroAcessoListadoDto>(
+            `
+                SELECT
+                    demanda_usuario.demanda_id AS "alvoId",
+                    demanda_usuario.usuario_id AS "usuarioId",
+                    demanda_usuario.created_date AS "entradaData"
+                FROM
+                    demanda_usuario
+                    INNER JOIN demanda ON demanda.id = demanda_usuario.demanda_id
+                    AND demanda.is_deleted = false
+                    INNER JOIN projeto ON projeto.id = demanda.projeto_id
+                    AND projeto.is_deleted = false
+                    INNER JOIN usuario ON usuario.id = demanda_usuario.usuario_id
+                    AND usuario.is_deleted = false
+                    AND usuario.ativo = true
+                WHERE
+                    demanda_usuario.demanda_id = ANY (CAST(:demandaIds AS integer[]))
+                    AND demanda_usuario.is_deleted = false
+                ORDER BY
+                    demanda_usuario.created_date ASC,
+                    demanda_usuario.usuario_id ASC
+            `,
+            { demandaIds: dto.demandaIds },
+        );
+    }
+
+    /** As pessoas ativas atribuídas a ao menos uma demanda de cada projeto; `entradaData` é a atribuição mais antiga dela no projeto. */
+    async listarMembrosDeProjetos(dto: DemandaMembroDeProjetosListarDto): Promise<DemandaMembroAcessoListadoDto[]> {
+        if (dto.projetoIds.length === 0) return [];
+        return this.executarConsulta<DemandaMembroAcessoListadoDto>(
+            `
+                SELECT
+                    demanda.projeto_id AS "alvoId",
+                    demanda_usuario.usuario_id AS "usuarioId",
+                    MIN(demanda_usuario.created_date) AS "entradaData"
+                FROM
+                    demanda_usuario
+                    INNER JOIN demanda ON demanda.id = demanda_usuario.demanda_id
+                    AND demanda.is_deleted = false
+                    INNER JOIN projeto ON projeto.id = demanda.projeto_id
+                    AND projeto.is_deleted = false
+                    INNER JOIN usuario ON usuario.id = demanda_usuario.usuario_id
+                    AND usuario.is_deleted = false
+                    AND usuario.ativo = true
+                WHERE
+                    demanda.projeto_id = ANY (CAST(:projetoIds AS integer[]))
+                    AND demanda_usuario.is_deleted = false
+                GROUP BY
+                    demanda.projeto_id,
+                    demanda_usuario.usuario_id
+                ORDER BY
+                    MIN(demanda_usuario.created_date) ASC,
+                    demanda_usuario.usuario_id ASC
+            `,
+            { projetoIds: dto.projetoIds },
+        );
+    }
+
+    /** O nome atual e o projeto de cada demanda que ainda existe (a excluída não volta). */
+    async listarNomesDeDemandas(dto: DemandaNomeListarDto): Promise<DemandaNomeListadoDto[]> {
+        if (dto.demandaIds.length === 0) return [];
+        return this.executarConsulta<DemandaNomeListadoDto>(
+            `
+                SELECT
+                    demanda.id,
+                    demanda.projeto_id AS "projetoId",
+                    demanda.nome
+                FROM
+                    demanda
+                    INNER JOIN projeto ON projeto.id = demanda.projeto_id
+                    AND projeto.is_deleted = false
+                WHERE
+                    demanda.id = ANY (CAST(:demandaIds AS integer[]))
+                    AND demanda.is_deleted = false
+            `,
+            { demandaIds: dto.demandaIds },
+        );
     }
 
     /**

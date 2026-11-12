@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { corMedia, fundoDoGrupo, MAXIMO_DE_CORES_NO_DEGRADE } from './avatar-grupo.util';
+import { TipoGrupoEnum } from '@project20/shared';
+import { corMedia, fundoDoGrupo, iconeDoCanal, MAXIMO_DE_CORES_NO_DEGRADE } from './avatar-grupo.util';
 
 describe('fundoDoGrupo', () => {
     it('a cor escolhida pelo grupo vence qualquer cor dos membros', () => {
@@ -37,5 +38,13 @@ describe('corMedia', () => {
     it('é a média canal a canal', () => {
         expect(corMedia(['#000000', '#FFFFFF'])).toBe('#808080');
         expect(corMedia(['#FF0000', '#0000FF'])).toBe('#800080');
+    });
+});
+
+describe('iconeDoCanal', () => {
+    it('a demanda tem o #, o projeto a pasta e o grupo livre nenhum ícone', () => {
+        expect(iconeDoCanal(TipoGrupoEnum.DEMANDA)).toBe('pi-hashtag');
+        expect(iconeDoCanal(TipoGrupoEnum.PROJETO)).toBe('pi-folder');
+        expect(iconeDoCanal(TipoGrupoEnum.LIVRE)).toBeNull();
     });
 });

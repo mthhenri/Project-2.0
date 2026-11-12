@@ -1,6 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Knex } from 'knex';
 import {
+    GrupoCanalAlvoRecuperarDto,
+    GrupoCanalListarDto,
+    GrupoCanalSupervisionavelListarDto,
     GrupoInternoAlterarDto,
     GrupoInternoCriarDto,
     GrupoListarDto,
@@ -128,6 +131,96 @@ export class GrupoRepository extends BaseRepository<GrupoRegistrado> {
             { grupoId: dto.grupoId },
         );
         return encontrados[0] ?? null;
+    }
+
+    /** O canal de uma demanda (`demandaId`) ou o de um projeto (`projetoId`, sem demanda); `null` quando ainda não foi criado. */
+    async recuperarCanalPorAlvo(dto: GrupoCanalAlvoRecuperarDto): Promise<GrupoRegistrado | null> {
+        const encontrados = await this.executarConsulta<GrupoRegistrado>(
+            `
+                SELECT
+                    ${COLUNAS_DO_GRUPO}
+                FROM
+                    grupo
+                    JOIN tipo_grupo ON tipo_grupo.id = grupo.tipo_grupo_id
+                    AND tipo_grupo.is_deleted = false
+                WHERE
+                    grupo.is_deleted = false
+                    AND tipo_grupo.codigo = :tipo
+                    AND (
+                        (
+                            CAST(:demandaId AS integer) IS NOT NULL
+                            AND grupo.demanda_id = CAST(:demandaId AS integer)
+                        )
+                        OR (
+                            CAST(:demandaId AS integer) IS NULL
+                            AND grupo.demanda_id IS NULL
+                            AND grupo.projeto_id = CAST(:projetoId AS integer)
+                        )
+                    )
+            `,
+            { tipo: dto.demandaId !== null ? TipoGrupoEnum.DEMANDA : TipoGrupoEnum.PROJETO, demandaId: dto.demandaId, projetoId: dto.projetoId },
+        );
+        return encontrados[0] ?? null;
+    }
+
+    /** Os canais já criados das demandas e dos projetos informados (os de demanda por `demandaIds`, os de projeto por `projetoIds`). */
+    async listarCanais(dto: GrupoCanalListarDto): Promise<GrupoRegistrado[]> {
+        if (dto.demandaIds.length === 0 && dto.projetoIds.length === 0) return [];
+        return this.executarConsulta<GrupoRegistrado>(
+            `
+                SELECT
+                    ${COLUNAS_DO_GRUPO}
+                FROM
+                    grupo
+                    JOIN tipo_grupo ON tipo_grupo.id = grupo.tipo_grupo_id
+                    AND tipo_grupo.is_deleted = false
+                WHERE
+                    grupo.is_deleted = false
+                    AND (
+                        (
+                            tipo_grupo.codigo = :tipoDemanda
+                            AND grupo.demanda_id = ANY (CAST(:demandaIds AS integer[]))
+                        )
+                        OR (
+                            tipo_grupo.codigo = :tipoProjeto
+                            AND grupo.demanda_id IS NULL
+                            AND grupo.projeto_id = ANY (CAST(:projetoIds AS integer[]))
+                        )
+                    )
+            `,
+            { tipoDemanda: TipoGrupoEnum.DEMANDA, tipoProjeto: TipoGrupoEnum.PROJETO, demandaIds: dto.demandaIds, projetoIds: dto.projetoIds },
+        );
+    }
+
+    /** Todos os canais existentes, menos aqueles em que o leitor já é membro agora (esses ele abre pelo chat). A supervisão lê canal sem olhar membros. */
+    async listarCanaisSupervisionaveis(dto: GrupoCanalSupervisionavelListarDto): Promise<GrupoRegistrado[]> {
+        return this.executarConsulta<GrupoRegistrado>(
+            `
+                SELECT
+                    ${COLUNAS_DO_GRUPO}
+                FROM
+                    grupo
+                    JOIN tipo_grupo ON tipo_grupo.id = grupo.tipo_grupo_id
+                    AND tipo_grupo.is_deleted = false
+                WHERE
+                    grupo.is_deleted = false
+                    AND tipo_grupo.codigo <> :tipoLivre
+                    AND NOT EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            grupo_membro
+                        WHERE
+                            grupo_membro.grupo_id = grupo.id
+                            AND grupo_membro.usuario_id = :leitorUsuarioId
+                            AND grupo_membro.saida_data IS NULL
+                            AND grupo_membro.is_deleted = false
+                    )
+                ORDER BY
+                    grupo.id ASC
+            `,
+            { tipoLivre: TipoGrupoEnum.LIVRE, leitorUsuarioId: dto.leitorUsuarioId },
+        );
     }
 
     /** Os grupos em que a pessoa é membro agora, do mais recente para o mais antigo. */

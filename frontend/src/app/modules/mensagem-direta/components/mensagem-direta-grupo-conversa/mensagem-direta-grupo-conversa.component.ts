@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { AutorMensagemDiretaEnum, CitacaoMensagemDto, ReferenciaMensagemDiretaEnum, trechoDaMensagemDireta } from '@project20/shared';
+import { AutorMensagemDiretaEnum, CitacaoMensagemDto, ReferenciaMensagemDiretaEnum, TipoUsuarioEnum, grupoEhCanal, trechoDaMensagemDireta } from '@project20/shared';
 import { MenuItem, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ContextMenu } from 'primeng/contextmenu';
@@ -61,6 +61,13 @@ export class MensagemDiretaGrupoConversaComponent {
     protected readonly meuId = this.sessao.id;
     protected readonly membros = computed(() => this.grupo()?.membros ?? []);
     protected readonly coresDosMembros = computed(() => coresDosMembros(this.membros()));
+    /** O grupo é o chat de uma demanda ou de um projeto (task 248): nome e membros acompanham o alvo, sem sair, renomear nem adicionar. */
+    protected readonly ehCanal = computed(() => {
+        const grupo = this.grupo();
+        return !!grupo && grupoEhCanal(grupo.tipo);
+    });
+    /** Gestor ou administrador lendo o canal por tipo, sem ser membro: a leitura é auditada e os membros são avisados; ao escrever, ele entra. */
+    protected readonly lendoPorTipo = computed(() => this.grupo()?.leituraPorSupervisao ?? false);
     protected readonly rotuloDosMembros = computed(() => rotuloDosMembros(this.membros().length));
 
     /** Os outros membros, que o `@` oferece (o servidor só aceita membros atuais). */
@@ -83,6 +90,7 @@ export class MensagemDiretaGrupoConversaComponent {
         return nomes.length === 1 ? `${nomes[0]} digitando` : `${nomes.length} pessoas digitando`;
     });
     protected readonly silenciado = computed(() => this.grupo()?.silenciada ?? false);
+    protected readonly papelDoLeitor = computed(() => (this.sessao.usuarioAtual()?.tipo === TipoUsuarioEnum.ADMINISTRADOR ? 'administrador' : 'gestor'));
 
     protected readonly emendas = computed(() => marcarEmendas(this.aberto()?.mensagens ?? []));
     protected readonly dias = computed(() => agruparPorDia(this.aberto()?.mensagens ?? [], new Date()));
@@ -115,16 +123,19 @@ export class MensagemDiretaGrupoConversaComponent {
     private totalAntes = 0;
     private totalVisto = 0;
 
-    /** O menu do cabeçalho do grupo: membros, silêncio e sair. */
+    /** O menu do cabeçalho do grupo: membros, silêncio e sair. O chat da demanda ou do projeto não tem saída (e quem só o lê por tipo não silencia). */
     protected readonly itensDoGrupo = computed<MenuItem[]>(() => [
-        { label: 'Membros e detalhes', icon: 'pi pi-users', command: () => this.estado.abrirDetalhesDoGrupo() },
-        {
-            label: this.silenciado() ? 'Reativar avisos' : 'Silenciar avisos',
-            icon: this.silenciado() ? 'pi pi-bell' : 'pi pi-bell-slash',
-            command: () => this.alternarSilencio(),
-        },
-        { separator: true },
-        { label: 'Sair do grupo', icon: 'pi pi-sign-out', command: () => this.estado.abrirDetalhesDoGrupo(true) },
+        { label: this.ehCanal() ? 'Membros' : 'Membros e detalhes', icon: 'pi pi-users', command: () => this.estado.abrirDetalhesDoGrupo() },
+        ...(this.lendoPorTipo()
+            ? []
+            : [
+                {
+                    label: this.silenciado() ? 'Reativar avisos' : 'Silenciar avisos',
+                    icon: this.silenciado() ? 'pi pi-bell' : 'pi pi-bell-slash',
+                    command: () => this.alternarSilencio(),
+                },
+            ]),
+        ...(this.ehCanal() ? [] : [{ separator: true }, { label: 'Sair do grupo', icon: 'pi pi-sign-out', command: () => this.estado.abrirDetalhesDoGrupo(true) }]),
     ]);
 
     constructor() {

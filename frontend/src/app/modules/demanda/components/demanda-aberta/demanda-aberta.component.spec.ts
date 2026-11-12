@@ -53,6 +53,12 @@ const botao = (montado: Montado, rotulo: string) => Array.from(montado.elemento.
 const editarDescricao = (montado: Montado) => montado.elemento.querySelector<HTMLButtonElement>('.demanda-aberta__acoes-texto button');
 
 describe('DemandaAbertaComponent — o que mostra', () => {
+    it('o cabeçalho tem o botão do chat da demanda, que pergunta pelo canal da própria demanda', async () => {
+        const { montado, carga } = await abrir(TipoUsuarioEnum.DESENVOLVEDOR);
+        expect(carga).toContain('GET /mensagem-direta/canal/demanda/10');
+        expect(montado.elemento.querySelector('.demanda-aberta__pessoas app-mensagem-direta-canal-botao')?.textContent).toContain('Criar chat');
+    });
+
     it('gestor: nome, status com o nome, barra de horas, as cinco abas e o texto da técnica para leitura', async () => {
         const { montado, carga } = await abrir(TipoUsuarioEnum.GESTOR);
         expect(montado.componente.demanda()?.nome).toBe('Demanda de teste');

@@ -1,3 +1,4 @@
+import { TipoGrupoEnum } from '../../enums/tipo-grupo.enum';
 import { MensagemDiretaResumoDto } from '../mensagem-direta/MensagemDiretaResumoDto';
 import { MensagemDiretaSupervisaoParticipanteDto } from '../mensagem-direta/MensagemDiretaSupervisaoParticipanteDto';
 
@@ -5,6 +6,7 @@ import { MensagemDiretaSupervisaoParticipanteDto } from '../mensagem-direta/Mens
 export interface GrupoSupervisaoLidoDto {
     grupoId: number;
     conversaId: string;
+    tipo: TipoGrupoEnum;
     nome: string;
     membros: MensagemDiretaSupervisaoParticipanteDto[];
     mensagens: MensagemDiretaResumoDto[];

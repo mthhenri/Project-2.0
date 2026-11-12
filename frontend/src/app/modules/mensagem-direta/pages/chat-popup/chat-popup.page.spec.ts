@@ -94,7 +94,7 @@ describe('ChatPopupPage (janela de chat do Desktop)', () => {
         await tela.atualizar();
         expect(tela.elemento.querySelector('.popup-direto--janela')).not.toBeNull();
         expect(tela.elemento.textContent).toContain('Camila Duarte');
-        expect(tela.elemento.textContent).toContain('Gestores e administradores podem ler as conversas entre desenvolvedores e os grupos sem gestor ou administrador.');
+        expect(tela.elemento.textContent).toContain('Gestores e administradores podem ler as conversas entre desenvolvedores, os grupos sem gestor ou administrador e os chats de demandas e projetos.');
         expect(TestBed.inject(MensagemDiretaEstadoService).visao()).toBe('LISTA');
     });
 

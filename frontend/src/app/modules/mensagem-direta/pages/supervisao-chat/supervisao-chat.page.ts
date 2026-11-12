@@ -3,13 +3,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { debounceTime, distinctUntilChanged, map } from 'rxjs';
-import { AutorMensagemDiretaEnum, ConversaDiretaSupervisaoResumoDto, MensagemDiretaSupervisaoParticipanteDto } from '@project20/shared';
+import { AutorMensagemDiretaEnum, ConversaDiretaSupervisaoResumoDto, MensagemDiretaSupervisaoParticipanteDto, TipoGrupoEnum } from '@project20/shared';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
+import { iconeDoCanal } from '../../../../shared/components/avatar-grupo/avatar-grupo.util';
 import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../../components/mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
 import { MensagemDiretaGrupoService } from '../../services/mensagem-direta-grupo.service';
@@ -30,7 +31,7 @@ const CONVERSAS_POR_PAGINA = 20;
 const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
 
 /** Uma linha da lista da supervisão: a conversa entre desenvolvedores ou, no modo Grupos, o grupo (com o nome em `titulo`). */
-type ItemDaSupervisao = ConversaDiretaSupervisaoResumoDto & { titulo?: string };
+type ItemDaSupervisao = ConversaDiretaSupervisaoResumoDto & { titulo?: string; tipoDoGrupo?: TipoGrupoEnum };
 
 type ModoDaSupervisao = 'CONVERSAS' | 'GRUPOS';
 
@@ -128,7 +129,7 @@ export class SupervisaoChatPage {
                 ? this.grupoService.listarGruposSupervisionados(filtros).pipe(
                     map((resposta) => ({
                         itens: resposta.dados!.grupos.map(
-                            (grupo): ItemDaSupervisao => ({ conversaId: grupo.conversaId, titulo: grupo.nome, participantes: grupo.membros, totalMensagens: grupo.totalMensagens, ultimaMensagem: grupo.ultimaMensagem }),
+                            (grupo): ItemDaSupervisao => ({ conversaId: grupo.conversaId, tipoDoGrupo: grupo.tipo, titulo: grupo.nome, participantes: grupo.membros, totalMensagens: grupo.totalMensagens, ultimaMensagem: grupo.ultimaMensagem }),
                         ),
                         total: resposta.dados!.total,
                     })),
@@ -255,6 +256,11 @@ export class SupervisaoChatPage {
     }
 
     /** O título da linha e do cabeçalho da leitura: o nome do grupo ou os nomes das duas pessoas. */
+    /** O ícone do chat de demanda ou de projeto (task 248) antes do nome; o grupo livre e a conversa um a um não têm. */
+    protected iconeDoItem(item: { tipoDoGrupo?: TipoGrupoEnum }): string | null {
+        return item.tipoDoGrupo ? iconeDoCanal(item.tipoDoGrupo) : null;
+    }
+
     protected titulo(item: { titulo?: string; participantes: MensagemDiretaSupervisaoParticipanteDto[] }): string {
         return item.titulo ?? this.nomes(item.participantes);
     }

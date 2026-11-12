@@ -1,4 +1,11 @@
-import { corDoTextoSobre } from '@project20/shared';
+import { TipoGrupoEnum, corDoTextoSobre } from '@project20/shared';
+
+/** O ícone do canal no lugar das iniciais (task 248): `#` na demanda e pasta no projeto; o grupo livre não tem (usa emoji ou iniciais). */
+export function iconeDoCanal(tipo: TipoGrupoEnum): string | null {
+    if (tipo === TipoGrupoEnum.DEMANDA) return 'pi-hashtag';
+    if (tipo === TipoGrupoEnum.PROJETO) return 'pi-folder';
+    return null;
+}
 
 /** Quantas cores de membros entram no degradê (mais que isso vira uma faixa estreita demais para o círculo). */
 export const MAXIMO_DE_CORES_NO_DEGRADE = 6;

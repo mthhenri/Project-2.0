@@ -2,6 +2,7 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
     AutorMensagemDiretaEnum,
+    GrupoResumoDto,
     VALIDADE_DO_IA_DIGITANDO_MS,
     MensagemDiretaEventoDto,
     MensagemDiretaPessoaResumoDto,
@@ -32,7 +33,7 @@ import {
     zerarNaoLidas,
 } from '../utils/mensagem-direta.util';
 import { pareceCodigo } from '../utils/compositor.util';
-import { grupoIdDaConversa, nomeDoAutorNoGrupo } from '../utils/grupo.util';
+import { grupoIdDaConversa, nomeDoAutorNoGrupo, normalizarGrupo } from '../utils/grupo.util';
 import { aplicarReacoesNaMensagem, textoDoAvisoDeReacao } from '../utils/reacoes.util';
 import { MensagemDiretaAvisosService } from './mensagem-direta-avisos.service';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
@@ -822,6 +823,16 @@ export class MensagemDiretaEstadoService {
         this.visao.set('GRUPO');
         await this.grupoEstado.abrirGrupo(grupoId);
         void this.marcarGrupoComoLido();
+    }
+
+    /**
+     * Abre o chat de uma demanda ou de um projeto (o botão "Abrir chat" ou "Criar chat", task 248). Quem é membro o encontra na lista (que é relida se ele
+     * ainda não estiver nela). Gestor e administrador que ainda não escreveram nele leem por tipo: o canal fica guardado à parte, porque a lista deles não o traz.
+     */
+    async abrirCanal(canal: GrupoResumoDto): Promise<void> {
+        this.grupoEstado.canalPorTipo.set(canal.leituraPorSupervisao ? normalizarGrupo(canal) : null);
+        if (!canal.leituraPorSupervisao && !this.grupoEstado.grupoDaLista(canal.grupoId)) await this.carregarConversas();
+        await this.abrirGrupo(canal.grupoId);
     }
 
     /** A tela de criar grupo: as pessoas vêm da mesma lista da nova conversa. */

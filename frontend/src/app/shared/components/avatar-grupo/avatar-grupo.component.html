@@ -1,13 +1,16 @@
 <span
     class="avatar-grupo"
     [class.avatar-grupo--pequeno]="pequeno()"
-    [class.avatar-grupo--emoji]="!!emoji()"
+    [class.avatar-grupo--emoji]="!!emoji() && !icone()"
+    [class.avatar-grupo--icone]="!!icone()"
     [style.--avatar-tamanho]="tamanho()"
     [style.background]="fundo()"
     [style.color]="corDoTexto()"
     aria-hidden="true"
 >
-    @if (emoji(); as simbolo) {
+    @if (icone(); as classeDoIcone) {
+        <i class="pi" [class]="classeDoIcone"></i>
+    } @else if (emoji(); as simbolo) {
         {{ simbolo }}
     } @else {
         {{ iniciais() }}

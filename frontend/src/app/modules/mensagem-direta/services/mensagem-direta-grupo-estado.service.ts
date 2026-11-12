@@ -68,10 +68,17 @@ export class MensagemDiretaGrupoEstadoService {
     /** O motivo de a última operação do formulário ter sido recusada; some na próxima tentativa. */
     readonly erroNaOperacao = signal<string | null>(null);
 
+    /**
+     * O canal que o gestor ou administrador abriu pelo botão da demanda ou do projeto **sem ser membro** (lê por tipo, pela supervisão): ele não está na
+     * lista, então fica guardado aqui enquanto estiver aberto. Quando escreve, passa a ser membro e a lista o traz.
+     */
+    readonly canalPorTipo = signal<GrupoNaLista | null>(null);
+
     /** O grupo aberto como a lista o conhece (nome, cor, emoji, membros, silêncio). */
     readonly grupoAbertoNaLista = computed(() => {
         const aberto = this.grupoAberto();
-        return aberto ? (this.grupos().find((grupo) => grupo.grupoId === aberto.grupoId) ?? null) : null;
+        if (!aberto) return null;
+        return this.grupos().find((grupo) => grupo.grupoId === aberto.grupoId) ?? (this.canalPorTipo()?.grupoId === aberto.grupoId ? this.canalPorTipo() : null);
     });
     /** As não lidas dos grupos não silenciados: soma com as das conversas no contador do topbar. */
     readonly naoLidas = computed(() => totalNaoLidasDosGrupos(this.grupos()));
@@ -93,8 +100,10 @@ export class MensagemDiretaGrupoEstadoService {
     definirGrupos(grupos: GrupoResumoDto[]): void {
         const novos = grupos.map(normalizarGrupo);
         this.grupos.set(novos);
+        const lidoPorTipo = this.canalPorTipo();
+        if (lidoPorTipo && novos.some((grupo) => grupo.grupoId === lidoPorTipo.grupoId)) this.canalPorTipo.set(null);
         const aberto = this.grupoAberto();
-        if (aberto && !novos.some((grupo) => grupo.grupoId === aberto.grupoId)) this.fecharGrupo();
+        if (aberto && !novos.some((grupo) => grupo.grupoId === aberto.grupoId) && this.canalPorTipo()?.grupoId !== aberto.grupoId) this.fecharGrupo();
     }
 
     grupoDaLista(grupoId: number): GrupoNaLista | null {
@@ -106,6 +115,7 @@ export class MensagemDiretaGrupoEstadoService {
         this.geracaoDaSessao++;
         this.geracaoDoGrupoAberto++;
         this.grupos.set([]);
+        this.canalPorTipo.set(null);
         this.grupoAberto.set(null);
         this.respondendoA.set(null);
         this.pendentes.clear();

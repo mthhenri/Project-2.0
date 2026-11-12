@@ -332,3 +332,13 @@ testarComBanco('validarAcesso é falso para projeto excluído, mesmo com demanda
     await repositorio.excluir({ id: projeto.id });
     assert.equal(await repositorio.validarAcesso({ usuarioId: desenvolvedor.id, projetoId: projeto.id }), false);
 });
+
+testarComBanco('listarNomesPorIds: o nome de hoje de cada projeto; o excluído não volta (canal do chat, task 248)', async (conexao) => {
+    const repositorio = criarRepositorio(ProjetoRepository, conexao);
+    const vivo = await criarProjeto(conexao, { nome: 'Portal do cliente' });
+    const excluido = await criarProjeto(conexao);
+    await excluirLinha(conexao, 'projeto', excluido.id);
+
+    assert.deepEqual(await repositorio.listarNomesPorIds({ projetoIds: [vivo.id, excluido.id] }), [{ id: vivo.id, nome: 'Portal do cliente' }]);
+    assert.deepEqual(await repositorio.listarNomesPorIds({ projetoIds: [] }), []);
+});

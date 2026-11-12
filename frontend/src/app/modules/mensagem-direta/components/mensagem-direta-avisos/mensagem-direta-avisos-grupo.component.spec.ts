@@ -24,7 +24,7 @@ const membro = (usuarioId: number, usuarioNome: string) => ({ usuarioId, usuario
 function grupo(parcial: Partial<GrupoNaLista> = {}): GrupoNaLista {
     return {
         grupoId: 7, conversaId: 'G7', nome: 'Time do backend', tipo: TipoGrupoEnum.LIVRE, corAvatar: '#1E3A8A', emojiAvatar: '🚀', criadorUsuarioId: 1,
-        membros: [membro(1, 'Eu'), membro(9, 'Camila Duarte')], ultimaMensagem: null, naoLidas: 0, silenciada: false, privado: false,
+        membros: [membro(1, 'Eu'), membro(9, 'Camila Duarte')], ultimaMensagem: null, naoLidas: 0, silenciada: false, privado: false, leituraPorSupervisao: false,
         ...parcial,
     };
 }

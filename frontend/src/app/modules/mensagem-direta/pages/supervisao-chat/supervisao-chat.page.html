@@ -40,8 +40,8 @@
         <p class="supervisao-chat__aviso">
             <i class="pi pi-eye" aria-hidden="true"></i>
             @if (modo() === "GRUPOS") {
-                Grupos sem gestor nem administrador entre os membros, somente leitura. Os membros
-                são avisados.
+                Grupos sem gestor nem administrador entre os membros e chats de demandas e projetos,
+                somente leitura. Os membros são avisados.
             } @else {
                 Conversas entre desenvolvedores, somente leitura. Os participantes são avisados.
             }
@@ -134,9 +134,12 @@
                             (click)="abrir(conversa)"
                         >
                             <div class="supervisao-chat__item-topo">
-                                <span class="supervisao-chat__item-nomes">{{
-                                    titulo(conversa)
-                                }}</span>
+                                <span class="supervisao-chat__item-nomes">
+                                    @if (iconeDoItem(conversa); as icone) {
+                                        <i class="pi" [class]="icone" aria-hidden="true"></i>
+                                    }
+                                    {{ titulo(conversa) }}</span
+                                >
                                 <span class="supervisao-chat__item-quando">{{
                                     quando(conversa)
                                 }}</span>

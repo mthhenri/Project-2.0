@@ -19,7 +19,7 @@ import {
     ProjetoVolumeResumoDto,
     ProjetoVolumeMesDto,
 } from '@project20/shared';
-import { ProjetoRestaurarDto, ProjetoRestauradoDto } from '@project20/shared';
+import { ProjetoNomeListadoDto, ProjetoNomeListarDto, ProjetoRestaurarDto, ProjetoRestauradoDto } from '@project20/shared';
 
 type ProjetoCriarDados = Omit<Projeto, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
 
@@ -142,6 +142,24 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
             { id: dto.id },
         );
         return resultado[0] ?? null;
+    }
+
+    /** O nome atual de cada projeto que ainda existe (o excluído não volta). */
+    async listarNomesPorIds(dto: ProjetoNomeListarDto): Promise<ProjetoNomeListadoDto[]> {
+        if (dto.projetoIds.length === 0) return [];
+        return this.executarConsulta<ProjetoNomeListadoDto>(
+            `
+                SELECT
+                    projeto.id,
+                    projeto.nome
+                FROM
+                    projeto
+                WHERE
+                    projeto.id = ANY (CAST(:projetoIds AS integer[]))
+                    AND projeto.is_deleted = false
+            `,
+            { projetoIds: dto.projetoIds },
+        );
     }
 
     /** Lista todos os projetos ativos com filtros opcionais (para gestores). */

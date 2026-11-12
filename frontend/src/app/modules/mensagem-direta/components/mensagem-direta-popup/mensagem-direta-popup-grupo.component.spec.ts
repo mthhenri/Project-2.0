@@ -38,7 +38,7 @@ function grupoDaLista(grupoId: number, nome: string, extra: Record<string, unkno
     return {
         grupoId, conversaId: `G${grupoId}`, nome, tipo: TipoGrupoEnum.LIVRE, corAvatar: null, emojiAvatar: null, criadorUsuarioId: 1,
         membros: [membro(1, 'Usuário DESENVOLVEDOR'), membro(9, 'Camila Duarte', '#2563EB'), membro(12, 'Davi Rocha')],
-        ultimaMensagem: mensagemDoGrupo(`u${grupoId}`, 'bora revisar', 9, '2026-10-21T14:00:00.000Z', grupoId), naoLidas: 0, silenciada: false, privado: false,
+        ultimaMensagem: mensagemDoGrupo(`u${grupoId}`, 'bora revisar', 9, '2026-10-21T14:00:00.000Z', grupoId), naoLidas: 0, silenciada: false, privado: false, leituraPorSupervisao: false,
         ...extra,
     };
 }

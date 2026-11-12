@@ -25,6 +25,7 @@
                     [nome]="dados.nome"
                     [cor]="dados.corAvatar"
                     [emoji]="dados.emojiAvatar"
+                    [tipo]="dados.tipo"
                     [coresDosMembros]="coresDosMembros()"
                     [pequeno]="true"
                 />
@@ -47,21 +48,23 @@
             } @else {
                 <div class="conversa-direta__identidade"></div>
             }
-            <p-button
-                [icon]="silenciado() ? 'pi pi-bell-slash' : 'pi pi-bell'"
-                [severity]="silenciado() ? 'warn' : 'secondary'"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                [ariaLabel]="
-                    silenciado()
-                        ? 'Reativar os avisos deste grupo'
-                        : 'Silenciar os avisos deste grupo'
-                "
-                [pTooltip]="silenciado() ? 'Reativar avisos' : 'Silenciar avisos'"
-                tooltipPosition="bottom"
-                (onClick)="alternarSilencio()"
-            />
+            @if (!lendoPorTipo()) {
+                <p-button
+                    [icon]="silenciado() ? 'pi pi-bell-slash' : 'pi pi-bell'"
+                    [severity]="silenciado() ? 'warn' : 'secondary'"
+                    [text]="true"
+                    [rounded]="true"
+                    size="small"
+                    [ariaLabel]="
+                        silenciado()
+                            ? 'Reativar os avisos deste grupo'
+                            : 'Silenciar os avisos deste grupo'
+                    "
+                    [pTooltip]="silenciado() ? 'Reativar avisos' : 'Silenciar avisos'"
+                    tooltipPosition="bottom"
+                    (onClick)="alternarSilencio()"
+                />
+            }
             <p-button
                 icon="pi pi-ellipsis-v"
                 severity="secondary"
@@ -90,6 +93,16 @@
             <p class="conversa-direta__faixa" role="status">
                 <i class="pi pi-exclamation-triangle" aria-hidden="true"></i
                 ><span>Sem conexão com o servidor. Tentando reconectar…</span>
+            </p>
+        }
+
+        @if (lendoPorTipo()) {
+            <p class="conversa-direta__faixa" role="status">
+                <i class="pi pi-eye" aria-hidden="true"></i
+                ><span
+                    >Você lê este chat como {{ papelDoLeitor() }}: os membros são avisados. Ao
+                    escrever, você entra nele.</span
+                >
             </p>
         }
 
@@ -130,7 +143,13 @@
                 } @else if (conversa.mensagens.length === 0) {
                     <div class="conversa-direta__estado">
                         <p class="conversa-direta__estado-titulo">Nenhuma mensagem ainda</p>
-                        <p class="conversa-direta__estado-texto">Diga olá para o grupo.</p>
+                        <p class="conversa-direta__estado-texto">
+                            {{
+                                ehCanal()
+                                    ? "Comece a conversa com a equipe."
+                                    : "Diga olá para o grupo."
+                            }}
+                        </p>
                     </div>
                 } @else {
                     @if (conversa.carregandoMais) {

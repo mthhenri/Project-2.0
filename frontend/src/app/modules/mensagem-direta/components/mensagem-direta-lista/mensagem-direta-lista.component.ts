@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { AutorMensagemDiretaEnum } from '@project20/shared';
+import { AutorMensagemDiretaEnum, TipoGrupoEnum } from '@project20/shared';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -111,10 +111,10 @@ export class MensagemDiretaListaComponent {
         const grupoId = grupoIdDaConversa(mensagem.conversaId);
         if (grupoId !== null) {
             const grupo = this.estado.grupoEstado.grupoDaLista(grupoId);
-            return { grupoId, usuarioId: 0, nome: grupo?.nome ?? 'Grupo', cor: grupo?.corAvatar ?? null, emoji: grupo?.emojiAvatar ?? null, coresDosMembros: grupo ? coresDosMembros(grupo.membros) : [] };
+            return { grupoId, usuarioId: 0, nome: grupo?.nome ?? 'Grupo', cor: grupo?.corAvatar ?? null, emoji: grupo?.emojiAvatar ?? null, tipoDoGrupo: grupo?.tipo ?? TipoGrupoEnum.LIVRE, coresDosMembros: grupo ? coresDosMembros(grupo.membros) : [] };
         }
         const pessoa = this.nomeDaOutraPessoa(mensagem);
-        return { grupoId: null, usuarioId: pessoa.usuarioId, nome: pessoa.nome, cor: this.estado.corDe(pessoa.usuarioId), emoji: null, coresDosMembros: [] as string[] };
+        return { grupoId: null, usuarioId: pessoa.usuarioId, nome: pessoa.nome, cor: this.estado.corDe(pessoa.usuarioId), emoji: null, tipoDoGrupo: TipoGrupoEnum.LIVRE, coresDosMembros: [] as string[] };
     }
 
     protected abrirDestino(destino: { grupoId: number | null; usuarioId: number; nome: string }): void {

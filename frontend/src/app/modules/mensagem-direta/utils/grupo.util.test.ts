@@ -33,7 +33,7 @@ function mensagem(parcial: Partial<MensagemNaConversa> = {}): MensagemNaConversa
 function grupo(grupoId: number, parcial: Partial<GrupoNaLista> = {}): GrupoNaLista {
     return {
         grupoId, conversaId: `G${grupoId}`, nome: `Grupo ${grupoId}`, tipo: TipoGrupoEnum.LIVRE, corAvatar: null, emojiAvatar: null, criadorUsuarioId: 1,
-        membros: [membro(1, 'Eu'), membro(9, 'Camila Duarte')], ultimaMensagem: null, naoLidas: 0, silenciada: false, privado: false,
+        membros: [membro(1, 'Eu'), membro(9, 'Camila Duarte')], ultimaMensagem: null, naoLidas: 0, silenciada: false, privado: false, leituraPorSupervisao: false,
         ...parcial,
     };
 }
@@ -54,7 +54,7 @@ describe('normalizarGrupo', () => {
             grupoId: 7, conversaId: 'G7', nome: 'Backend', tipo: TipoGrupoEnum.LIVRE, corAvatar: '#112233', emojiAvatar: '🚀', criadorUsuarioId: 1,
             membros: [{ usuarioId: 1, usuarioNome: 'Eu', tipo: TipoUsuarioEnum.DESENVOLVEDOR, corAvatar: null, entradaData: '2026-11-01T10:00:00.000Z', online: true }],
             ultimaMensagem: { mensagemId: 'm', conversaId: 'G7', autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null, texto: 'criou', contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: '2026-11-01T10:00:00.000Z', editadaDate: null },
-            naoLidas: 0, silenciada: false, privado: false,
+            naoLidas: 0, silenciada: false, privado: false, leituraPorSupervisao: false,
         } as unknown as GrupoResumoDto;
         const normalizado = normalizarGrupo(resumo);
         expect(normalizado.membros[0].entradaData).toBeInstanceOf(Date);

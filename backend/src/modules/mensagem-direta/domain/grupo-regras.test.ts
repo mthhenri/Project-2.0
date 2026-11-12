@@ -1,16 +1,19 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { TipoUsuarioEnum } from '@project20/shared';
+import { TipoGrupoEnum, TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import {
     listarNomes,
+    nomeDoCanalParaGuardar,
     normalizarEmojiDoGrupo,
     normalizarMencoesDoGrupo,
     normalizarNomeDoGrupo,
     normalizarNovosMembros,
     pontoDeLeituraDoGrupo,
     textoDeAparenciaDoGrupo,
+    textoDeCriacaoDoCanal,
     textoDeCriacaoDoGrupo,
+    textoDeEntradaNoCanal,
     textoDeEntradaNoGrupo,
     textoDeGrupoPrivado,
     textoDeRenomeacaoDoGrupo,
@@ -90,4 +93,23 @@ test('o ponto de leitura do grupo é o mais novo entre a leitura e a entrada', (
     assert.equal(pontoDeLeituraDoGrupo(new Date('2026-11-01T10:00:00.000Z'), entrada), entrada, 'leitura anterior à entrada vale a entrada (readicionado)');
     const lida = new Date('2026-11-03T10:00:00.000Z');
     assert.equal(pontoDeLeituraDoGrupo(lida, entrada), lida);
+});
+
+test('o nome guardado do canal perde os espaços repetidos, é cortado em 60 caracteres e nunca fica vazio', () => {
+    assert.equal(nomeDoCanalParaGuardar('  Cadastro   de clientes '), 'Cadastro de clientes');
+    assert.equal([...nomeDoCanalParaGuardar('x'.repeat(100))].length, 60);
+    assert.equal([...nomeDoCanalParaGuardar('😀'.repeat(80))].length, 60, 'conta caracteres, não unidades UTF-16');
+    assert.equal(nomeDoCanalParaGuardar('   '), 'Canal');
+});
+
+test('os textos do canal dizem se é da demanda ou do projeto, e o papel de quem entra', () => {
+    assert.equal(textoDeCriacaoDoCanal('Ana', TipoGrupoEnum.DEMANDA), 'Ana abriu o chat da demanda');
+    assert.equal(textoDeCriacaoDoCanal('Ana', TipoGrupoEnum.PROJETO), 'Ana abriu o chat do projeto');
+    assert.equal(textoDeEntradaNoCanal({ nome: 'Rita', tipo: TipoUsuarioEnum.GESTOR }), 'Rita (gestor) entrou no chat');
+    assert.equal(textoDeEntradaNoCanal({ nome: 'Davi', tipo: TipoUsuarioEnum.ADMINISTRADOR }), 'Davi (administrador) entrou no chat');
+});
+
+test('o aviso de leitura pela supervisão diz canal quando é canal', () => {
+    assert.equal(textoDoAvisoDeSupervisaoDoGrupo('Rita', TipoUsuarioEnum.GESTOR, true), 'Rita, gestor, leu este canal');
+    assert.equal(textoDoAvisoDeSupervisaoDoGrupo('Rita', TipoUsuarioEnum.GESTOR, false), 'Rita, gestor, leu este grupo');
 });

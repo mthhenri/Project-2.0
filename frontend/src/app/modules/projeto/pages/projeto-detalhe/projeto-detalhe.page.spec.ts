@@ -71,6 +71,24 @@ describe('ProjetoDetalhePage', () => {
         expect(montado.elemento.querySelector('[aria-label="Trocar status do projeto"]')).not.toBeNull();
     });
 
+    it('o cabeçalho tem o botão do chat do projeto: entre as ações de quem edita demanda, e sozinho para o desenvolvedor', async () => {
+        const gestor = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+        await carregar(gestor.montado);
+        responderSucesso(esperarRequisicao(gestor.montado.http, 'GET', '/mensagem-direta/canal/projeto/5'), { grupo: null });
+        await gestor.montado.atualizar();
+        expect(gestor.montado.elemento.querySelector('.projeto-detalhe__botoes app-mensagem-direta-canal-botao')?.textContent).toContain('Criar chat');
+    });
+
+    it('o desenvolvedor, que não edita demanda, também tem o botão do chat do projeto (e abre o existente)', async () => {
+        const { montado } = await montarDetalhe(TipoUsuarioEnum.DESENVOLVEDOR);
+        await carregar(montado);
+        const canal = { grupoId: 3, conversaId: 'G3', nome: 'Portal do Cliente', tipo: 'PROJETO', corAvatar: null, emojiAvatar: null, criadorUsuarioId: 1, membros: [], ultimaMensagem: null, naoLidas: 0, silenciada: false, privado: false, leituraPorSupervisao: false };
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/mensagem-direta/canal/projeto/5'), { grupo: canal });
+        await montado.atualizar();
+        expect(montado.elemento.querySelector('.projeto-detalhe__botoes')).toBeNull();
+        expect(montado.elemento.querySelector('.projeto-detalhe__cabecalho-acoes app-mensagem-direta-canal-botao')?.textContent).toContain('Abrir chat');
+    });
+
     it('desenvolvedor não vê as ações de gestão nem troca de status, mas vê o projeto', async () => {
         const { montado } = await montarDetalhe(TipoUsuarioEnum.DESENVOLVEDOR);
         await carregar(montado);

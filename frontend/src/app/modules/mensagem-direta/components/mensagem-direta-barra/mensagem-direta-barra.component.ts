@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { TipoGrupoEnum } from '@project20/shared';
 import { TooltipModule } from 'primeng/tooltip';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
@@ -18,6 +19,8 @@ interface BolinhaDaBarra {
     nome: string;
     cor: string | null;
     emoji: string | null;
+    /** O tipo do grupo (o canal tem ícone); `LIVRE` na bolinha de pessoa, que não o usa. */
+    tipoDoGrupo: TipoGrupoEnum;
     coresDosMembros: string[];
     online: boolean;
     naoLidas: number;
@@ -58,6 +61,7 @@ export class MensagemDiretaBarraComponent {
                     nome: item.conversa.usuarioNome,
                     cor: item.conversa.corAvatar,
                     emoji: null,
+                    tipoDoGrupo: TipoGrupoEnum.LIVRE,
                     coresDosMembros: [],
                     online: online.has(item.conversa.usuarioId),
                     naoLidas: item.conversa.naoLidas,
@@ -71,6 +75,7 @@ export class MensagemDiretaBarraComponent {
                     nome: item.grupo.nome,
                     cor: item.grupo.corAvatar,
                     emoji: item.grupo.emojiAvatar,
+                    tipoDoGrupo: item.grupo.tipo,
                     coresDosMembros: coresDosMembros(item.grupo.membros),
                     online: false,
                     naoLidas: item.grupo.naoLidas,
@@ -79,7 +84,7 @@ export class MensagemDiretaBarraComponent {
                 },
         );
         if (aberta && !bolinhas.some((bolinha) => bolinha.ativa)) {
-            bolinhas.unshift({ chave: aberta.conversaId, usuarioId: aberta.usuarioId, grupoId: null, nome: aberta.usuarioNome, cor: this.estado.corDe(aberta.usuarioId), emoji: null, coresDosMembros: [], online: online.has(aberta.usuarioId), naoLidas: 0, silenciada: false, ativa: true });
+            bolinhas.unshift({ chave: aberta.conversaId, usuarioId: aberta.usuarioId, grupoId: null, nome: aberta.usuarioNome, cor: this.estado.corDe(aberta.usuarioId), emoji: null, tipoDoGrupo: TipoGrupoEnum.LIVRE, coresDosMembros: [], online: online.has(aberta.usuarioId), naoLidas: 0, silenciada: false, ativa: true });
         }
         return bolinhas;
     });

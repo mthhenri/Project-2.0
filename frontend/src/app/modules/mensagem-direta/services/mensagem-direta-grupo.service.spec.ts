@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TipoGrupoEnum } from '@project20/shared';
 import { esperarRequisicao, responderSucesso } from '../../../../testes/http-teste';
 import { ERRO_TRATADO_PELA_TELA } from '../../../core/interceptors/error-handler.interceptor';
 import { SEM_OVERLAY_GLOBAL } from '../../../core/interceptors/loading.interceptor';
@@ -77,6 +78,19 @@ describe('MensagemDiretaGrupoService', () => {
         responderSucesso(silencio, { grupoId: 7, silenciada: true });
         servico.avisarDigitacao(7).subscribe();
         responderSucesso(esperarRequisicao(http, 'POST', '/mensagem-direta/grupo/7/digitando'), null);
+    });
+
+    it('o chat da demanda e o do projeto têm rota própria, para recuperar (GET) e para criar (POST sem corpo)', () => {
+        servico.recuperarCanal(TipoGrupoEnum.DEMANDA, 12).subscribe();
+        responderSucesso(esperarRequisicao(http, 'GET', '/mensagem-direta/canal/demanda/12'), { grupo: null });
+        servico.recuperarCanal(TipoGrupoEnum.PROJETO, 3).subscribe();
+        responderSucesso(esperarRequisicao(http, 'GET', '/mensagem-direta/canal/projeto/3'), { grupo: null });
+        servico.criarCanal(TipoGrupoEnum.DEMANDA, 12).subscribe();
+        const criacao = esperarRequisicao(http, 'POST', '/mensagem-direta/canal/demanda/12');
+        expect(criacao.request.body).toEqual({});
+        responderSucesso(criacao, { grupo: {}, jaExistia: false });
+        servico.criarCanal(TipoGrupoEnum.PROJETO, 3).subscribe();
+        responderSucesso(esperarRequisicao(http, 'POST', '/mensagem-direta/canal/projeto/3'), { grupo: {}, jaExistia: true });
     });
 
     it('nenhuma chamada aciona o overlay global nem o aviso global de erro', () => {

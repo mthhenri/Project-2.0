@@ -23,3 +23,5 @@ export * from './ProjetoVolumeVigenciaCriarDto';
 export * from './ProjetoVolumeVigenciaResumoDto';
 export * from './ProjetoVolumeVigenciaListarDto';
 export * from './ProjetoVolumeVigenciaExcluirDto';
+export * from './ProjetoNomeListarDto';
+export * from './ProjetoNomeListadoDto';

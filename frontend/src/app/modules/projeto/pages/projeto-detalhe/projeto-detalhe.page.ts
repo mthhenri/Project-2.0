@@ -10,6 +10,7 @@ import {
     ProjetoAlterarDto,
     ProjetoRecuperadoDto,
     TipoDemandaStatusEnum,
+    TipoGrupoEnum,
     DemandaGrafoNoDto,
     TagResumoDto,
 } from '@project20/shared';
@@ -26,6 +27,7 @@ import { ProjetoVolumeComponent } from '../../components/projeto-volume/projeto-
 import { ProjetoVolumeDialogComponent } from '../../components/projeto-volume-dialog/projeto-volume-dialog.component';
 import { ProjetoStatusChipComponent } from '../../components/projeto-status-chip/projeto-status-chip.component';
 import { SkeletonModule } from 'primeng/skeleton';
+import { MensagemDiretaCanalBotaoComponent } from '../../../mensagem-direta/components/mensagem-direta-canal-botao/mensagem-direta-canal-botao.component';
 import { DemandaArvoreEsqueletoComponent } from '../../../demanda/components/demanda-arvore-esqueleto/demanda-arvore-esqueleto.component';
 import { PastaId, pastaInicial } from '../../../demanda/utils/demanda-pasta.util';
 import {
@@ -56,6 +58,7 @@ export type VisaoDoProjeto = 'DEMANDAS' | 'VOLUME';
         DemandaArvoreTelaComponent,
         DemandaFormularioDialogComponent,
         DemandaToolbarComponent,
+        MensagemDiretaCanalBotaoComponent,
         ProjetoCampoEditavelComponent,
         ProjetoVolumeComponent,
         ProjetoVolumeDialogComponent,
@@ -71,6 +74,8 @@ export class ProjetoDetalhePage implements OnInit {
     private readonly router = inject(Router);
     private readonly messageService = inject(MessageService);
     readonly sessao = inject(UsuarioSessaoService);
+    /** O chat deste projeto (task 248): o botão do cabeçalho abre o canal dele. */
+    protected readonly tipoDoChat = TipoGrupoEnum.PROJETO;
 
     private readonly toolbar = viewChild<DemandaToolbarComponent>('toolbar');
     private readonly arvoreTela = viewChild<DemandaArvoreTelaComponent>('arvoreTela');

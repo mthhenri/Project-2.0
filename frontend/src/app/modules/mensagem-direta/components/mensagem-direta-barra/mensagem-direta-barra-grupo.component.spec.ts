@@ -22,7 +22,7 @@ const conversa = (usuarioId: number, usuarioNome: string, naoLidas = 0): Convers
 const grupo = (grupoId: number, nome: string, naoLidas = 0): GrupoNaLista => ({
     grupoId, conversaId: `G${grupoId}`, nome, tipo: TipoGrupoEnum.LIVRE, corAvatar: null, emojiAvatar: '🚀', criadorUsuarioId: 1,
     membros: [{ usuarioId: 1, usuarioNome: 'Eu', tipo: TipoUsuarioEnum.DESENVOLVEDOR, corAvatar: '#2563EB', entradaData: new Date(), online: false }],
-    ultimaMensagem: null, naoLidas, silenciada: false, privado: false,
+    ultimaMensagem: null, naoLidas, silenciada: false, privado: false, leituraPorSupervisao: false,
 });
 
 // A barra de bolinhas ao lado da conversa aberta (task 318) também leva os grupos (task 247): a mesma ordem da lista e o clique abre o grupo.

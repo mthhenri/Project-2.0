@@ -6,6 +6,7 @@ import { ResourceNotFoundException } from '../../../core/exceptions/resource-not
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { AtividadeRepository } from '../../atividade/repositories/atividade.repository';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
+import { ProjetoRepository } from '../../projeto/repositories/projeto.repository';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import { testarComBanco, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
@@ -14,6 +15,7 @@ import { GrupoLeituraRepository } from '../repositories/grupo-leitura.repository
 import { GrupoRepository } from '../repositories/grupo.repository';
 import { MensagemDiretaPostgresRepository } from '../repositories/mensagem-direta-postgres.repository';
 import { MensagemDiretaSupervisaoRepository } from '../repositories/mensagem-direta-supervisao.repository';
+import { CanalAcessoService } from './canal-acesso.service';
 import { GrupoSupervisaoService } from './grupo-supervisao.service';
 import { GrupoService } from './grupo.service';
 
@@ -32,6 +34,20 @@ function montar(conexao: ConexaoTeste) {
     };
     const armazenamento = new MensagemDiretaPostgresRepository(conexao);
     const grupos = criarRepositorio(GrupoRepository, conexao);
+    const canais = new CanalAcessoService(
+        grupos,
+        criarRepositorio(DemandaRepository, conexao),
+        criarRepositorio(ProjetoRepository, conexao),
+        criarRepositorio(UsuarioRepository, conexao),
+    );
+    const supervisao = new GrupoSupervisaoService(
+        armazenamento,
+        grupos,
+        criarRepositorio(MensagemDiretaSupervisaoRepository, conexao),
+        criarRepositorio(UsuarioRepository, conexao),
+        eventosService as never,
+        canais,
+    );
     const service = new GrupoService(
         armazenamento,
         grupos,
@@ -40,13 +56,8 @@ function montar(conexao: ConexaoTeste) {
         criarRepositorio(DemandaRepository, conexao),
         criarRepositorio(AtividadeRepository, conexao),
         eventosService as never,
-    );
-    const supervisao = new GrupoSupervisaoService(
-        armazenamento,
-        grupos,
-        criarRepositorio(MensagemDiretaSupervisaoRepository, conexao),
-        criarRepositorio(UsuarioRepository, conexao),
-        eventosService as never,
+        canais,
+        supervisao,
     );
     return { service, supervisao, eventos, armazenamento };
 }
@@ -199,7 +210,7 @@ testarComBanco('sairDoGrupo: quem saiu não lê mais; readicionado volta a ler t
     await recusaCom(service.listarMensagens({ grupoId: grupo.grupoId } as never, como(carla)), UnauthorizedAccessException);
     await recusaCom(service.enviarMensagem({ grupoId: grupo.grupoId, mensagemId: randomUUID(), texto: 'fora' } as never, como(carla)), UnauthorizedAccessException);
     await recusaCom(service.sairDoGrupo(grupo.grupoId, como(carla)), UnauthorizedAccessException);
-    assert.deepEqual((await service.listarResumos(carla.id)).map((resumo) => resumo.grupoId), [], 'o grupo some da lista de quem saiu');
+    assert.deepEqual((await service.listarResumos(como(carla))).map((resumo) => resumo.grupoId), [], 'o grupo some da lista de quem saiu');
 
     await service.adicionarMembros({ grupoId: grupo.grupoId, usuarioIds: [carla.id] }, como(bruno));
     const relido = (await service.listarMensagens({ grupoId: grupo.grupoId } as never, como(carla))).dados!;
@@ -210,7 +221,7 @@ testarComBanco('sairDoGrupo: quem saiu não lê mais; readicionado volta a ler t
     const ultimo = (await service.sairDoGrupo(grupo.grupoId, como(ana))).dados!;
     assert.equal(ultimo.grupoEncerrado, true);
     await recusaCom(service.recuperarGrupo(grupo.grupoId, como(ana)), ResourceNotFoundException);
-    assert.deepEqual(await service.listarResumos(ana.id), []);
+    assert.deepEqual(await service.listarResumos(como(ana)), []);
 });
 
 // --- mensagens -------------------------------------------------------------
@@ -305,8 +316,8 @@ testarComBanco('leitura e silêncio: as não lidas descem ao ler, a leitura nunc
     assert.equal(atrasada.lidaAteData.getTime(), enviadas[1].createdDate.getTime(), 'a leitura não recua');
 
     assert.equal((await service.alterarSilencio({ grupoId: grupo.grupoId, silenciada: true }, como(bruno))).dados!.silenciada, true);
-    assert.equal((await service.listarResumos(bruno.id))[0].silenciada, true);
-    assert.equal((await service.listarResumos(ana.id))[0].silenciada, false, 'o silêncio é de cada um');
+    assert.equal((await service.listarResumos(como(bruno)))[0].silenciada, true);
+    assert.equal((await service.listarResumos(como(ana)))[0].silenciada, false, 'o silêncio é de cada um');
     await recusaCom(service.alterarLeitura({ grupoId: grupo.grupoId, lidaAteData: new Date().toISOString() }, como(carla)), UnauthorizedAccessException);
     await recusaCom(service.alterarSilencio({ grupoId: grupo.grupoId, silenciada: true }, como(carla)), UnauthorizedAccessException);
 });
@@ -333,9 +344,9 @@ testarComBanco('listarResumos: o grupo com mensagem mais recente vem primeiro e 
     await new Promise((resolver) => setTimeout(resolver, 20));
     await service.enviarMensagem({ grupoId: velho.grupoId, mensagemId: randomUUID(), texto: 'mais recente' } as never, como(ana));
 
-    assert.deepEqual((await service.listarResumos(bruno.id)).map((resumo) => resumo.grupoId), [velho.grupoId, novo.grupoId]);
-    assert.deepEqual(await service.listarResumos((await criarDesenvolvedor(conexao)).id), []);
-    assert.deepEqual((await service.listarGrupoIdsDoUsuario(bruno.id)).sort((primeiro, segundo) => primeiro - segundo), [velho.grupoId, novo.grupoId].sort((primeiro, segundo) => primeiro - segundo), 'a busca olha os grupos de que a pessoa é membro');
+    assert.deepEqual((await service.listarResumos(como(bruno))).map((resumo) => resumo.grupoId), [velho.grupoId, novo.grupoId]);
+    assert.deepEqual(await service.listarResumos(como(await criarDesenvolvedor(conexao))), []);
+    assert.deepEqual((await service.listarGrupoIdsDoUsuario(como(bruno))).sort((primeiro, segundo) => primeiro - segundo), [velho.grupoId, novo.grupoId].sort((primeiro, segundo) => primeiro - segundo), 'a busca olha os grupos de que a pessoa é membro');
 });
 
 // --- privacidade e supervisão ---------------------------------------------

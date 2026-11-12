@@ -23,6 +23,15 @@
         font-size: calc(var(--avatar-tamanho, 2.25rem) * 0.36);
     }
 
+    // O ícone do canal (task 248) ocupa o lugar das iniciais.
+    &--icone {
+        font-size: calc(var(--avatar-tamanho, 2.5rem) * 0.45);
+    }
+
+    &--icone.avatar-grupo--pequeno {
+        font-size: calc(var(--avatar-tamanho, 2.25rem) * 0.45);
+    }
+
     // O emoji é maior que as iniciais e não depende da cor do texto.
     &--emoji {
         font-size: calc(var(--avatar-tamanho, 2.5rem) * 0.5);

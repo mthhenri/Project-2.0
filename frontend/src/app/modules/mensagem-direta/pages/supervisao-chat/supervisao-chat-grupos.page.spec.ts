@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AutorMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { AutorMensagemDiretaEnum, TipoGrupoEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { SupervisaoChatPage } from './supervisao-chat.page';
@@ -16,10 +16,10 @@ function mensagem(parcial: Record<string, unknown> = {}) {
     };
 }
 
-const GRUPO = { grupoId: 7, conversaId: 'G7', nome: 'Time do backend', corAvatar: null, emojiAvatar: null, membros: [ANA, BRUNO], totalMensagens: 2, ultimaMensagem: mensagem() };
+const GRUPO = { grupoId: 7, conversaId: 'G7', tipo: TipoGrupoEnum.LIVRE, nome: 'Time do backend', corAvatar: null, emojiAvatar: null, membros: [ANA, BRUNO], totalMensagens: 2, ultimaMensagem: mensagem() };
 
 function leitura(parcial: Record<string, unknown> = {}) {
-    return { grupoId: 7, conversaId: 'G7', nome: 'Time do backend', membros: [ANA, BRUNO], proximoCursor: null, membrosAvisados: false, mensagens: [mensagem()], ...parcial };
+    return { grupoId: 7, conversaId: 'G7', tipo: TipoGrupoEnum.LIVRE, nome: 'Time do backend', membros: [ANA, BRUNO], proximoCursor: null, membrosAvisados: false, mensagens: [mensagem()], ...parcial };
 }
 
 async function montar() {
@@ -49,6 +49,21 @@ describe('SupervisaoChatPage — grupos', () => {
         expect(tela.elemento.querySelector('.supervisao-chat__item-nomes')?.textContent).toContain('Time do backend');
         expect(tela.elemento.textContent).toContain('Subi o PR do filtro');
         expect(tela.elemento.textContent).toContain('Grupos sem gestor nem administrador entre os membros');
+    });
+
+    it('o chat de uma demanda ou de um projeto aparece na lista com o ícone do canal; o grupo livre não tem ícone', async () => {
+        const tela = await montar();
+        await irParaOsGrupos(tela, [
+            { ...GRUPO, grupoId: 8, conversaId: 'G8', tipo: TipoGrupoEnum.DEMANDA, nome: 'Cadastro de clientes' },
+            { ...GRUPO, grupoId: 9, conversaId: 'G9', tipo: TipoGrupoEnum.PROJETO, nome: 'Portal do cliente' },
+            GRUPO,
+        ]);
+        const itens = Array.from(tela.elemento.querySelectorAll('.supervisao-chat__item'));
+        expect(itens).toHaveLength(3);
+        expect(itens[0].querySelector('.pi-hashtag')).not.toBeNull();
+        expect(itens[1].querySelector('.pi-folder')).not.toBeNull();
+        expect(itens[2].querySelector('.pi')).toBeNull();
+        expect(tela.elemento.textContent).toContain('chats de demandas e projetos');
     });
 
     it('sem grupos mostra o estado vazio', async () => {

@@ -1,4 +1,4 @@
-import { LIMITE_MEMBROS_DO_GRUPO, LIMITE_NOME_DO_GRUPO, TipoUsuarioEnum, ehReacaoValida } from '@project20/shared';
+import { LIMITE_MEMBROS_DO_GRUPO, LIMITE_NOME_DO_GRUPO, TipoGrupoEnum, TipoUsuarioEnum, ehReacaoValida } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 
 /**
@@ -84,9 +84,28 @@ export function textoDeGrupoPrivado(quemEntrou: { nome: string; tipo: TipoUsuari
     return `${listarNomes(descricao)} ${verbo} no grupo: a conversa agora é privada e a supervisão não a lê`;
 }
 
-/** O aviso aos membros de que um gestor ou administrador leu o grupo pela supervisão. */
-export function textoDoAvisoDeSupervisaoDoGrupo(nomeDoLeitor: string, tipoDoLeitor: TipoUsuarioEnum): string {
-    return `${nomeDoLeitor}, ${rotuloDoPapel(tipoDoLeitor)}, leu este grupo`;
+/** O aviso aos membros de que um gestor ou administrador leu o grupo (ou o canal) pela supervisão. */
+export function textoDoAvisoDeSupervisaoDoGrupo(nomeDoLeitor: string, tipoDoLeitor: TipoUsuarioEnum, ehCanal = false): string {
+    return `${nomeDoLeitor}, ${rotuloDoPapel(tipoDoLeitor)}, leu ${ehCanal ? 'este canal' : 'este grupo'}`;
+}
+
+/**
+ * O nome que o canal guarda em `grupo.nome` (obrigatório e de até `LIMITE_NOME_DO_GRUPO` caracteres): o da demanda ou do projeto, cortado se passar.
+ * Quem lê vê sempre o nome de hoje do alvo; o guardado só mantém a coluna preenchida.
+ */
+export function nomeDoCanalParaGuardar(nomeDoAlvo: string): string {
+    const limpo = (nomeDoAlvo ?? '').trim().replace(/\s+/g, ' ');
+    return [...limpo].slice(0, LIMITE_NOME_DO_GRUPO).join('') || 'Canal';
+}
+
+/** A mensagem do sistema do primeiro registro do canal. */
+export function textoDeCriacaoDoCanal(nomeDeQuemCriou: string, tipo: TipoGrupoEnum): string {
+    return `${nomeDeQuemCriou} abriu o chat ${tipo === TipoGrupoEnum.DEMANDA ? 'da demanda' : 'do projeto'}`;
+}
+
+/** O gestor ou administrador que escreveu no canal passa a contar como membro (entra em `@todos` e nas não lidas daí em diante). */
+export function textoDeEntradaNoCanal(pessoa: { nome: string; tipo: TipoUsuarioEnum }): string {
+    return `${pessoa.nome} (${rotuloDoPapel(pessoa.tipo)}) entrou no chat`;
 }
 
 /** A leitura mais avançada entre a marcada e a entrada: as não lidas de quem foi adicionado contam desde a entrada, mesmo havendo histórico. */

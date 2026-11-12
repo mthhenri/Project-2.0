@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { TipoGrupoEnum, grupoEhCanal } from '@project20/shared';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -30,6 +31,12 @@ export class MensagemDiretaGrupoDetalhesComponent {
 
     protected readonly grupo = this.grupoEstado.grupoAbertoNaLista;
     protected readonly membros = computed(() => this.grupo()?.membros ?? []);
+    protected readonly alvoDoCanal = computed(() => (this.grupo()?.tipo === TipoGrupoEnum.DEMANDA ? 'demanda' : 'qualquer demanda do projeto'));
+    /** O chat de uma demanda ou de um projeto: só se vê quem está nele (os membros acompanham a demanda ou o projeto). */
+    protected readonly ehCanal = computed(() => {
+        const grupo = this.grupo();
+        return !!grupo && grupoEhCanal(grupo.tipo);
+    });
     protected readonly coresDosMembros = computed(() => coresDosMembros(this.membros()));
 
     // O que a pessoa está editando; parte do que o grupo tem e só vira do grupo ao salvar.

@@ -5,7 +5,8 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TabsModule } from 'primeng/tabs';
 import { TooltipModule } from 'primeng/tooltip';
-import { DemandaGrafoDto } from '@project20/shared';
+import { DemandaGrafoDto, TipoGrupoEnum } from '@project20/shared';
+import { MensagemDiretaCanalBotaoComponent } from '../../../mensagem-direta/components/mensagem-direta-canal-botao/mensagem-direta-canal-botao.component';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { ROTULO_STATUS_DEMANDA } from '../../constants/demanda-cores.constants';
 import { AtividadeNovaDialogComponent } from '../../../atividade/components/atividade-nova-dialog/atividade-nova-dialog.component';
@@ -43,6 +44,7 @@ export type AbaDemandaAberta = 'tecnica' | 'cliente' | 'doc' | 'atividades' | 'c
         DemandaConexaoListaComponent,
         DemandaFormularioDialogComponent,
         DemandaMembrosCabecalhoComponent,
+        MensagemDiretaCanalBotaoComponent,
         DemandaMetricasComponent,
         DemandaStatusComponent,
         DemandaTagsCabecalhoComponent,
@@ -64,6 +66,8 @@ export class DemandaAbertaComponent extends DemandaDetalheBase implements OnChan
     readonly editarDescricao = output<'descricaoTecnica' | 'descricaoCliente' | 'documentacao'>();
 
     readonly rotuloStatus = ROTULO_STATUS_DEMANDA;
+    /** O chat desta demanda (task 248): o botão do cabeçalho abre o canal dela. */
+    protected readonly tipoDoChat = TipoGrupoEnum.DEMANDA;
 
     /** A aba que vale: Atividades só para quem é membro (ou gestor); sem isso volta para a Técnica. */
     readonly abaAtiva = computed<AbaDemandaAberta>(() => (this.aba() === 'atividades' && !this.eMembro() ? 'tecnica' : this.aba()));

@@ -1,0 +1,14 @@
+@if (situacao() !== "SEM_ACESSO") {
+    <p-button
+        [label]="situacao() === 'ERRO' ? 'Chat indisponível' : rotulo()"
+        [icon]="situacao() === 'ERRO' ? 'pi pi-refresh' : 'pi pi-comments'"
+        [severity]="situacao() === 'ERRO' ? 'warn' : 'secondary'"
+        [outlined]="true"
+        size="small"
+        [loading]="ocupado() || situacao() === 'CARREGANDO'"
+        [disabled]="situacao() === 'CARREGANDO'"
+        [pTooltip]="dica()"
+        tooltipPosition="bottom"
+        (onClick)="aoClicar()"
+    />
+}

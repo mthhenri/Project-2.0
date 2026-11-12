@@ -188,3 +188,10 @@
 - **Origem:** a task 247 (2026-11-12). A ponte do Desktop abre a conversa pela **pessoa** (`usuarioId`), então o grupo ficou só com o cartão de aviso do Project; edição, reação e `@IA` não estavam na spec dos grupos (a tabela de reação amarra o `conversa_id` ao par de pessoas).
 - **Por quê:** com o Project oculto no Desktop, mensagem de grupo não vira notificação do sistema; no grupo ainda não há como corrigir uma mensagem, reagir nem chamar a IA.
 - **Custo aparente:** (a) mexe na ponte e na política do Desktop (`chat:avisar`, `chat:abrir-conversa`) e pede nova versão do executável; (b) migration em `mensagem_direta_reacao` e regras de permissão por grupo. Decisão de modelagem do autor antes de especificar.
+
+### I-054 — Evento em tempo real quando `demanda_usuario` muda, para o canal sumir (ou aparecer) na hora · chat entre colaboradores/demanda
+
+- **Ideia:** quando alguém é atribuído a uma demanda ou tirado dela (`DemandaService.atribuirMembro` e `removerMembro`, e o executor de atribuição da IA), o servidor publicar `SINCRONIZAR` para essa pessoa, para a lista do chat reler e o canal da demanda (e do projeto) aparecer ou sumir sem recarregar.
+- **Origem:** a task 248 (2026-11-12). O acesso aos canais é por `demanda_usuario` e já recusa leitura e envio na hora, mas a lista só muda na próxima releitura (reabrir o popup, recarregar, reconectar).
+- **Por quê:** quem é tirado de uma demanda continua vendo o canal na lista, aberto, até a lista reler; o pedido seguinte já volta 403.
+- **Custo aparente:** o `MensagemDiretaModule` importa o `DemandaModule`, então `DemandaService` não pode chamar o serviço de eventos sem criar ciclo: pede um ponto de extensão (um porto no `DemandaModule` que o chat implementa) e muda o construtor de `DemandaService`, que os testes montam à mão. Decisão de arquitetura do autor.

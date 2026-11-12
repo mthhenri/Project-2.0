@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
     GrupoAlteradoDto,
+    GrupoCanalCriadoDto,
+    GrupoCanalRecuperadoDto,
     GrupoCriadoDto,
     GrupoCriarDto,
     GrupoLeituraAlteradaDto,
@@ -16,6 +18,7 @@ import {
     MensagemDiretaEnviadaDto,
     ReferenciaMensagemDto,
     StandardResponse,
+    TipoGrupoEnum,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprioEErroTratado } from '../../../core/interceptors/loading.interceptor';
@@ -101,6 +104,20 @@ export class MensagemDiretaGrupoService {
         let params = new HttpParams();
         if (cursor) params = params.set('cursor', cursor);
         return this.httpClient.get<StandardResponse<GrupoSupervisaoLidoDto>>(`${this.urlSupervisao}/grupo/${grupoId}`, { params, ...comFeedbackProprioEErroTratado() });
+    }
+
+    /** O chat de uma demanda (`DEMANDA`) ou de um projeto (`PROJETO`); `grupo` vem `null` quando ainda não foi criado. 403 = sem acesso, 404 = não existe. */
+    recuperarCanal(tipo: TipoGrupoEnum.DEMANDA | TipoGrupoEnum.PROJETO, alvoId: number): Observable<StandardResponse<GrupoCanalRecuperadoDto>> {
+        return this.httpClient.get<StandardResponse<GrupoCanalRecuperadoDto>>(this.urlDoCanal(tipo, alvoId), comFeedbackProprioEErroTratado());
+    }
+
+    /** "Criar chat": idempotente, devolve o chat que já existe. */
+    criarCanal(tipo: TipoGrupoEnum.DEMANDA | TipoGrupoEnum.PROJETO, alvoId: number): Observable<StandardResponse<GrupoCanalCriadoDto>> {
+        return this.httpClient.post<StandardResponse<GrupoCanalCriadoDto>>(this.urlDoCanal(tipo, alvoId), {}, comFeedbackProprioEErroTratado());
+    }
+
+    private urlDoCanal(tipo: TipoGrupoEnum.DEMANDA | TipoGrupoEnum.PROJETO, alvoId: number): string {
+        return `${ambiente.apiUrl}/mensagem-direta/canal/${tipo === TipoGrupoEnum.DEMANDA ? 'demanda' : 'projeto'}/${alvoId}`;
     }
 
     /** Avisa os outros membros de que o usuário está digitando (nada é gravado). */

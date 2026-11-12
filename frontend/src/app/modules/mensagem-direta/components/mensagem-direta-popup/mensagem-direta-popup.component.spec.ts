@@ -84,7 +84,7 @@ describe('MensagemDiretaPopupComponent', () => {
         expect(texto()).toContain('Dá uma olhada na DEM-212?');
         expect(texto()).toContain('Rafael Lima');
         expect(tela.elemento.querySelector('[aria-label="2 mensagens não lidas"]')).not.toBeNull();
-        expect(texto()).toContain('Gestores e administradores podem ler as conversas entre desenvolvedores e os grupos sem gestor ou administrador.');
+        expect(texto()).toContain('Gestores e administradores podem ler as conversas entre desenvolvedores, os grupos sem gestor ou administrador e os chats de demandas e projetos.');
     });
 
     it('sem conversas, mostra o estado vazio com o botão de nova conversa', async () => {
@@ -139,7 +139,7 @@ describe('MensagemDiretaPopupComponent', () => {
 
     // --- rodapé enxuto (task 217) -----------------------------------------------------------------
 
-    const AVISO = 'Gestores e administradores podem ler as conversas entre desenvolvedores e os grupos sem gestor ou administrador.';
+    const AVISO = 'Gestores e administradores podem ler as conversas entre desenvolvedores, os grupos sem gestor ou administrador e os chats de demandas e projetos.';
 
     it('na conversa o aviso de leitura vira um ícone no cabeçalho (texto no aria-label) e não ocupa o rodapé', async () => {
         await abrirConversaVazia();

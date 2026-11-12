@@ -106,6 +106,10 @@
                 <div class="projeto-detalhe__cabecalho-acoes">
                     @if (sessao.podeEditarDemanda()) {
                         <div class="projeto-detalhe__botoes">
+                            <app-mensagem-direta-canal-botao
+                                [tipo]="tipoDoChat"
+                                [alvoId]="projeto()!.id"
+                            />
                             <p-button
                                 label="Nova Demanda"
                                 icon="pi pi-plus"
@@ -128,6 +132,12 @@
                                 />
                             }
                         </div>
+                    }
+                    @if (!sessao.podeEditarDemanda()) {
+                        <app-mensagem-direta-canal-botao
+                            [tipo]="tipoDoChat"
+                            [alvoId]="projeto()!.id"
+                        />
                     }
                     @if (sessao.eGestor()) {
                         <!-- Demandas ou Volume: abaixo dos botões, no próprio cabeçalho (tasks 291 e 292). -->

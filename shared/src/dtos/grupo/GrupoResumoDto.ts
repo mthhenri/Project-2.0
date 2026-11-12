@@ -20,6 +20,8 @@ export interface GrupoResumoDto {
     /** Mensagens de pessoa, que não são minhas, mais novas que a leitura (ou que a minha última entrada, o que for mais novo). */
     naoLidas: number;
     silenciada: boolean;
-    /** Há gestor ou administrador entre os membros atuais: a supervisão não lê o grupo. */
+    /** Há gestor ou administrador entre os membros atuais: a supervisão não lê o grupo. Canal nunca é privado (a supervisão o lê sempre). */
     privado: boolean;
+    /** Canal: o gestor ou administrador que ainda não escreveu nele lê por tipo, sem ser membro, e a leitura é auditada. Grupo livre e canal de membro: `false`. */
+    leituraPorSupervisao: boolean;
 }

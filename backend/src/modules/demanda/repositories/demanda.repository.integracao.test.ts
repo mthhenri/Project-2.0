@@ -788,3 +788,76 @@ testarComBanco('documentação: emExecucao só acende com execução ativa da pr
     assert.equal(rodandoPorDemanda[encerrada.id], false);
     assert.equal(rodandoPorDemanda[doColega.id], false);
 });
+
+// ---------------------------------------------------------------------------
+// Acesso dos canais do chat (task 248): quem está em quê, por demanda_usuario
+// ---------------------------------------------------------------------------
+
+testarComBanco('listarAcessosDoUsuario: as demandas em que a pessoa está, com a data da atribuição; demanda ou linha excluída não conta', async (conexao) => {
+    const repositorio = criarRepositorio(DemandaRepository, conexao);
+    const { projeto, raiz, a: filhaA, b: filhaB } = await montarArvore(conexao);
+    const pessoa = await criarDesenvolvedor(conexao);
+    await criarDemandaUsuario(conexao, { demandaId: raiz.id, usuarioId: pessoa.id, dataBase: '2026-10-01T10:00:00.000Z' });
+    await criarDemandaUsuario(conexao, { demandaId: filhaA.id, usuarioId: pessoa.id, dataBase: '2026-10-05T10:00:00.000Z' });
+    const linhaB = await criarDemandaUsuario(conexao, { demandaId: filhaB.id, usuarioId: pessoa.id });
+    await excluirLinha(conexao, 'demanda_usuario', linhaB.id);
+
+    const acessos = await repositorio.listarAcessosDoUsuario({ usuarioId: pessoa.id });
+
+    assert.deepEqual(acessos.map((acesso) => acesso.demandaId), [raiz.id, filhaA.id]);
+    assert.equal(acessos[0].projetoId, projeto.id);
+    assert.equal(acessos[1].entradaData.toISOString(), '2026-10-05T10:00:00.000Z');
+
+    await excluirLinha(conexao, 'demanda', filhaA.id);
+    assert.deepEqual((await repositorio.listarAcessosDoUsuario({ usuarioId: pessoa.id })).map((acesso) => acesso.demandaId), [raiz.id]);
+});
+
+testarComBanco('listarMembrosDeDemandas: só quem está na própria demanda (sem as filhas) e só usuário ativo', async (conexao) => {
+    const repositorio = criarRepositorio(DemandaRepository, conexao);
+    const { raiz, a: filhaA } = await montarArvore(conexao);
+    const [naRaiz, naFilha, inativo] = [await criarDesenvolvedor(conexao), await criarDesenvolvedor(conexao), await criarDesenvolvedor(conexao)];
+    await criarDemandaUsuario(conexao, { demandaId: raiz.id, usuarioId: naRaiz.id });
+    await criarDemandaUsuario(conexao, { demandaId: filhaA.id, usuarioId: naFilha.id });
+    await criarDemandaUsuario(conexao, { demandaId: raiz.id, usuarioId: inativo.id });
+    await conexao.raw(`
+        UPDATE usuario
+        SET
+            ativo = false
+        WHERE
+            id = :id
+    `, { id: inativo.id });
+
+    const membros = await repositorio.listarMembrosDeDemandas({ demandaIds: [raiz.id, filhaA.id] });
+
+    assert.deepEqual(membros.filter((membro) => membro.alvoId === raiz.id).map((membro) => membro.usuarioId), [naRaiz.id]);
+    assert.deepEqual(membros.filter((membro) => membro.alvoId === filhaA.id).map((membro) => membro.usuarioId), [naFilha.id]);
+    assert.deepEqual(await repositorio.listarMembrosDeDemandas({ demandaIds: [] }), []);
+});
+
+testarComBanco('listarMembrosDeProjetos: quem está em qualquer demanda do projeto, uma vez só, com a atribuição mais antiga', async (conexao) => {
+    const repositorio = criarRepositorio(DemandaRepository, conexao);
+    const { projeto, raiz, a: filhaA } = await montarArvore(conexao);
+    const outroProjeto = await criarDemanda(conexao, {});
+    const [dupla, so, fora] = [await criarDesenvolvedor(conexao), await criarDesenvolvedor(conexao), await criarDesenvolvedor(conexao)];
+    await criarDemandaUsuario(conexao, { demandaId: raiz.id, usuarioId: dupla.id, dataBase: '2026-10-09T10:00:00.000Z' });
+    await criarDemandaUsuario(conexao, { demandaId: filhaA.id, usuarioId: dupla.id, dataBase: '2026-10-02T10:00:00.000Z' });
+    await criarDemandaUsuario(conexao, { demandaId: filhaA.id, usuarioId: so.id, dataBase: '2026-10-03T10:00:00.000Z' });
+    await criarDemandaUsuario(conexao, { demandaId: outroProjeto.id, usuarioId: fora.id });
+
+    const membros = await repositorio.listarMembrosDeProjetos({ projetoIds: [projeto.id] });
+
+    assert.deepEqual(membros.map((membro) => membro.usuarioId), [dupla.id, so.id]);
+    assert.equal(membros[0].alvoId, projeto.id);
+    assert.equal(membros[0].entradaData.toISOString(), '2026-10-02T10:00:00.000Z');
+});
+
+testarComBanco('listarNomesDeDemandas: o nome de hoje; a demanda excluída não volta', async (conexao) => {
+    const repositorio = criarRepositorio(DemandaRepository, conexao);
+    const { projeto, raiz, a: filhaA } = await montarArvore(conexao);
+    await excluirLinha(conexao, 'demanda', filhaA.id);
+
+    const nomes = await repositorio.listarNomesDeDemandas({ demandaIds: [raiz.id, filhaA.id] });
+
+    assert.deepEqual(nomes.map((demanda) => [demanda.id, demanda.nome, demanda.projetoId]), [[raiz.id, 'Raiz', projeto.id]]);
+    assert.deepEqual(await repositorio.listarNomesDeDemandas({ demandaIds: [] }), []);
+});

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { TipoUsuarioEnum } from '@project20/shared';
+import { TipoGrupoEnum, TipoUsuarioEnum } from '@project20/shared';
 import { rotasPorNome } from '../../../testes/rotas-do-controller';
 import { MensagemDiretaGrupoController } from './mensagem-direta-grupo.controller';
 
@@ -9,16 +9,20 @@ import { MensagemDiretaGrupoController } from './mensagem-direta-grupo.controlle
 
 const USUARIO = { sub: 4, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das doze rotas', () => {
+test('verbos e caminhos das dezesseis rotas', () => {
     assert.deepEqual(
         Object.values(rotasPorNome(MensagemDiretaGrupoController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
         [
             'DELETE grupo/:grupoId/membro',
             'GET grupo/:grupoId',
+            'GET canal/demanda/:demandaId',
+            'GET canal/projeto/:projetoId',
             'GET grupo/:grupoId/mensagens',
             'GET supervisao/grupo/:grupoId',
             'GET supervisao/grupos',
             'PATCH grupo/:grupoId',
+            'POST canal/demanda/:demandaId',
+            'POST canal/projeto/:projetoId',
             'POST grupo',
             'POST grupo/:grupoId/digitando',
             'POST grupo/:grupoId/mensagem',
@@ -81,4 +85,19 @@ test('o grupoId da rota vence o do corpo e da query, e o usuário é sempre o do
     assert.deepEqual(chamadas.criar, [{ nome: 'x' }, USUARIO]);
     assert.deepEqual(chamadas.listarSupervisao, [{ texto: 'bug' }, USUARIO]);
     assert.deepEqual(chamadas.lerSupervisao, [{ grupoId: 7, limite: 5 }, USUARIO]);
+});
+
+test('as rotas do canal montam o tipo e o alvo pela rota, sempre como a pessoa do token', async () => {
+    const chamadas: Record<string, unknown[]> = {};
+    const registrar = (nome: string) => async (...argumentos: unknown[]) => { chamadas[nome] = argumentos; return null; };
+    const controller = new MensagemDiretaGrupoController({ recuperarCanal: registrar('recuperar'), criarCanal: registrar('criar') } as never, {} as never);
+
+    await controller.recuperarCanalDaDemanda(12, USUARIO);
+    assert.deepEqual(chamadas.recuperar, [{ tipo: TipoGrupoEnum.DEMANDA, alvoId: 12 }, USUARIO]);
+    await controller.recuperarCanalDoProjeto(3, USUARIO);
+    assert.deepEqual(chamadas.recuperar, [{ tipo: TipoGrupoEnum.PROJETO, alvoId: 3 }, USUARIO]);
+    await controller.criarCanalDaDemanda(12, USUARIO);
+    assert.deepEqual(chamadas.criar, [{ tipo: TipoGrupoEnum.DEMANDA, alvoId: 12 }, USUARIO]);
+    await controller.criarCanalDoProjeto(3, USUARIO);
+    assert.deepEqual(chamadas.criar, [{ tipo: TipoGrupoEnum.PROJETO, alvoId: 3 }, USUARIO]);
 });

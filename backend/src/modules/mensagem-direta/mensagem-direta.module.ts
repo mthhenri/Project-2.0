@@ -5,6 +5,7 @@ import { FerramentaIaModule } from '../ferramenta-ia/ferramenta-ia.module';
 import { IaModule } from '../ia/ia.module';
 import { IaCustoModule } from '../ia-custo/ia-custo.module';
 import { PromptModule } from '../prompt/prompt.module';
+import { ProjetoModule } from '../projeto/projeto.module';
 import { PropostaIaModule } from '../proposta-ia/proposta-ia.module';
 import { UsuarioModule } from '../usuario/usuario.module';
 import { MensagemDiretaController } from './controllers/mensagem-direta.controller';
@@ -17,6 +18,7 @@ import { MensagemDiretaPreferenciaRepository } from './repositories/mensagem-dir
 import { MensagemDiretaReacaoRepository } from './repositories/mensagem-direta-reacao.repository';
 import { MensagemDiretaSupervisaoRepository } from './repositories/mensagem-direta-supervisao.repository';
 import { publicadorDeEventosDiretosProvider } from './publicadores/publicador-de-eventos-diretos';
+import { CanalAcessoService } from './services/canal-acesso.service';
 import { GrupoSupervisaoService } from './services/grupo-supervisao.service';
 import { GrupoService } from './services/grupo.service';
 import { MensagemDiretaEventosService } from './services/mensagem-direta-eventos.service';
@@ -29,7 +31,7 @@ import { MensagemDiretaService } from './services/mensagem-direta.service';
  * (task 209: stream, barramento entre instâncias e presença), a supervisão pelo gestor (task 214), o `@IA` (task 315) e o grupo livre (task 246).
  */
 @Module({
-    imports:     [UsuarioModule, DemandaModule, AtividadeModule, IaModule, FerramentaIaModule, PromptModule, PropostaIaModule, IaCustoModule],
+    imports:     [UsuarioModule, DemandaModule, ProjetoModule, AtividadeModule, IaModule, FerramentaIaModule, PromptModule, PropostaIaModule, IaCustoModule],
     controllers: [MensagemDiretaController, MensagemDiretaGrupoController],
     providers:   [
         armazenamentoDeMensagemDiretaProvider,
@@ -42,6 +44,7 @@ import { MensagemDiretaService } from './services/mensagem-direta.service';
         MensagemDiretaSupervisaoRepository,
         MensagemDiretaEventosService,
         MensagemDiretaIaService,
+        CanalAcessoService,
         GrupoService,
         GrupoSupervisaoService,
         MensagemDiretaService,
