@@ -50,6 +50,17 @@
             }
             @if (!lendoPorTipo()) {
                 <p-button
+                    icon="pi pi-search"
+                    severity="secondary"
+                    [text]="true"
+                    [rounded]="true"
+                    size="small"
+                    ariaLabel="Buscar neste chat"
+                    pTooltip="Buscar neste chat"
+                    tooltipPosition="bottom"
+                    (onClick)="buscaAberta.set(true)"
+                />
+                <p-button
                     [icon]="silenciado() ? 'pi pi-bell-slash' : 'pi pi-bell'"
                     [severity]="silenciado() ? 'warn' : 'secondary'"
                     [text]="true"
@@ -106,7 +117,24 @@
             </p>
         }
 
+        <app-mensagem-direta-grupo-fixadas
+            [fixadas]="fixadas()"
+            [membros]="membros()"
+            [meuId]="meuId()"
+            [podeDesafixar]="!lendoPorTipo()"
+            (ir)="irParaMensagem($event)"
+            (desafixar)="alternarFixada($event)"
+        />
+
         <div class="conversa-direta__area">
+            @if (buscaAberta()) {
+                <app-mensagem-direta-grupo-busca
+                    [grupoId]="conversa.grupoId"
+                    [membros]="membros()"
+                    (ir)="irParaMensagem($event)"
+                    (fechar)="buscaAberta.set(false)"
+                />
+            }
             <div
                 #rolagem
                 class="conversa-direta__mensagens"

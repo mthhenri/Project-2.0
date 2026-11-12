@@ -15,6 +15,8 @@ import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-
 import { EnvioDoCompositor } from '../../services/mensagem-direta-estado.service';
 import { coresDosMembros, nomeDoAutorNoGrupo, rotuloDosMembros } from '../../utils/grupo.util';
 import { agruparPorDia, formatarHora, marcarEmendas, MensagemNaConversa } from '../../utils/mensagem-direta.util';
+import { MensagemDiretaGrupoBuscaComponent } from '../mensagem-direta-grupo-busca/mensagem-direta-grupo-busca.component';
+import { MensagemDiretaGrupoFixadasComponent } from '../mensagem-direta-grupo-fixadas/mensagem-direta-grupo-fixadas.component';
 import { MensagemDiretaGrupoResumoComponent } from '../mensagem-direta-grupo-resumo/mensagem-direta-grupo-resumo.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
@@ -41,7 +43,7 @@ const SELETOR_DO_QUE_NAO_RESPONDE_COM_DOIS_CLIQUES = 'a, button, pre, code, app-
 @Component({
     selector: 'app-mensagem-direta-grupo-conversa',
     standalone: true,
-    imports: [ButtonModule, ContextMenu, Menu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarGrupoComponent, MensagemDiretaGrupoResumoComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent],
+    imports: [ButtonModule, ContextMenu, Menu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarGrupoComponent, MensagemDiretaGrupoBuscaComponent, MensagemDiretaGrupoFixadasComponent, MensagemDiretaGrupoResumoComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent],
     templateUrl: './mensagem-direta-grupo-conversa.component.html',
     styleUrls: ['../mensagem-direta-conversa/mensagem-direta-conversa.component.scss', './mensagem-direta-grupo-conversa.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -93,6 +95,10 @@ export class MensagemDiretaGrupoConversaComponent {
     protected readonly silenciado = computed(() => this.grupo()?.silenciada ?? false);
     /** O diálogo de resumo com a IA (task 249), aberto pelo comando `/resumir` ou pelo menu do grupo. */
     protected readonly resumoAberto = signal(false);
+    /** A busca dentro do grupo (task 250), aberta pela lupa do cabeçalho; cobre a área das mensagens. */
+    protected readonly buscaAberta = signal(false);
+    protected readonly fixadas = this.grupoEstado.fixadas;
+    private readonly idsDasFixadas = computed(() => new Set(this.fixadas().map((fixada) => fixada.mensagem.mensagemId)));
     protected readonly papelDoLeitor = computed(() => (this.sessao.usuarioAtual()?.tipo === TipoUsuarioEnum.ADMINISTRADOR ? 'administrador' : 'gestor'));
 
     protected readonly emendas = computed(() => marcarEmendas(this.aberto()?.mensagens ?? []));
@@ -145,6 +151,7 @@ export class MensagemDiretaGrupoConversaComponent {
     constructor() {
         effect(() => {
             this.grupoAbertoId();
+            this.buscaAberta.set(false);
             this.menuAcoes()?.hide();
             this.mensagemDoMenu.set(null);
             this.longeDoFim.set(false);
@@ -223,6 +230,14 @@ export class MensagemDiretaGrupoConversaComponent {
         this.itensMenu.set([
             { label: 'Responder', icon: 'pi pi-reply', command: () => this.grupoEstado.responder(mensagem) },
             { label: 'Copiar texto', icon: 'pi pi-copy', command: () => void this.copiar(mensagem.mensagemId, mensagem.texto) },
+            // Fixar é de membro: quem só lê o canal por tipo não fixa (task 250).
+            ...(this.lendoPorTipo()
+                ? []
+                : [
+                    this.idsDasFixadas().has(mensagem.mensagemId)
+                        ? { label: 'Desafixar mensagem', icon: 'pi pi-bookmark-fill', command: () => void this.alternarFixada(mensagem.mensagemId) }
+                        : { label: 'Fixar mensagem', icon: 'pi pi-bookmark', command: () => void this.alternarFixada(mensagem.mensagemId) },
+                ]),
         ]);
         const botao = peloBotao ? (evento.currentTarget as HTMLElement) : null;
         const limites = botao?.getBoundingClientRect();
@@ -259,6 +274,20 @@ export class MensagemDiretaGrupoConversaComponent {
         this.copiadaId.set(mensagemId);
         if (this.temporizadorDoCopiado) clearTimeout(this.temporizadorDoCopiado);
         this.temporizadorDoCopiado = setTimeout(() => this.copiadaId.set(null), TEMPO_DO_COPIADO_MS);
+    }
+
+    /** Fixa ou desafixa a mensagem; a recusa (o limite de fixadas, por exemplo) aparece como aviso. */
+    protected async alternarFixada(mensagemId: string): Promise<void> {
+        const aberto = this.aberto();
+        if (!aberto) return;
+        const motivo = await this.grupoEstado.alternarFixada(aberto.grupoId, mensagemId);
+        if (motivo) this.messageService.add({ severity: 'warn', summary: 'Mensagem fixada', detail: motivo });
+    }
+
+    /** Clicou numa fixada ou num resultado da busca: fecha a busca e leva a conversa até a mensagem. */
+    protected irParaMensagem(mensagemId: string): void {
+        this.buscaAberta.set(false);
+        void this.irParaOriginal(mensagemId);
     }
 
     protected alternarSilencio(): void {

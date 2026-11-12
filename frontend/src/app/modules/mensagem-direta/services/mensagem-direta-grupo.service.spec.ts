@@ -115,6 +115,24 @@ describe('MensagemDiretaGrupoService', () => {
         responderSucesso(esperarRequisicao(http, 'POST', '/mensagem-direta/grupo/7/resumo/5/proposta/77/recusar'), {});
     });
 
+    it('as fixadas e a busca no grupo têm rota própria: listar, fixar (POST), desafixar (DELETE) e buscar com o filtro de código', () => {
+        servico.listarFixadas(7).subscribe();
+        responderSucesso(esperarRequisicao(http, 'GET', '/mensagem-direta/grupo/7/fixadas'), { grupoId: 7, fixadas: [] });
+        servico.fixarMensagem(7, 'm1').subscribe();
+        responderSucesso(esperarRequisicao(http, 'POST', '/mensagem-direta/grupo/7/fixadas/m1'), {});
+        servico.desafixarMensagem(7, 'm1').subscribe();
+        responderSucesso(esperarRequisicao(http, 'DELETE', '/mensagem-direta/grupo/7/fixadas/m1'), {});
+        servico.buscarNoGrupo(7, 'fila', true).subscribe();
+        const busca = esperarRequisicao(http, 'GET', '/mensagem-direta/grupo/7/busca');
+        expect(busca.request.params.get('texto')).toBe('fila');
+        expect(busca.request.params.get('somenteCodigo')).toBe('true');
+        responderSucesso(busca, { grupoId: 7, mensagens: [] });
+        servico.buscarNoGrupo(7, 'fila', false).subscribe();
+        const semCodigo = esperarRequisicao(http, 'GET', '/mensagem-direta/grupo/7/busca');
+        expect(semCodigo.request.params.has('somenteCodigo')).toBe(false);
+        responderSucesso(semCodigo, { grupoId: 7, mensagens: [] });
+    });
+
     it('nenhuma chamada aciona o overlay global nem o aviso global de erro', () => {
         servico.recuperar(7).subscribe();
         const requisicao = esperarRequisicao(http, 'GET', '/mensagem-direta/grupo/7');

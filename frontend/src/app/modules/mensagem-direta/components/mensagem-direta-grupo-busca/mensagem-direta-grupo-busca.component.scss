@@ -1,0 +1,167 @@
+// A busca dentro do grupo (task 250): cobre a área das mensagens com a barra de busca e os resultados.
+:host {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    background: var(--app-surface-0);
+}
+
+.busca-grupo {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+
+    &__barra {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--app-surface-200);
+    }
+
+    &__campo {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__icone {
+        position: absolute;
+        left: 0.625rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.8125rem;
+        color: var(--p-text-muted-color);
+        pointer-events: none;
+    }
+
+    &__input {
+        width: 100%;
+        padding-left: 2rem;
+        padding-right: 1.75rem;
+        font-size: 0.8125rem;
+    }
+
+    &__limpar {
+        position: absolute;
+        right: 0.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--p-text-muted-color);
+        cursor: pointer;
+    }
+
+    &__codigo {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.3125rem 0.625rem;
+        border: 1px solid var(--app-surface-300);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--p-text-color);
+        font: inherit;
+        font-size: 0.75rem;
+        cursor: pointer;
+
+        &--ligado {
+            border-color: var(--p-primary-color);
+            background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+            color: var(--p-primary-color);
+            font-weight: 600;
+        }
+    }
+
+    &__corpo {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    &__estado,
+    &__total {
+        margin: 0;
+        padding: 1rem 0.875rem;
+        font-size: 0.8125rem;
+        color: var(--p-text-muted-color);
+    }
+
+    &__total {
+        padding-bottom: 0.25rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    &__esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    &__achado {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        width: 100%;
+        padding: 0.5rem 0.875rem;
+        border: 0;
+        border-bottom: 1px solid var(--app-surface-100);
+        background: transparent;
+        color: var(--p-text-color);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+
+        &:hover {
+            background: var(--app-surface-50);
+        }
+    }
+
+    &__topo {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        font-size: 0.6875rem;
+        color: var(--p-text-muted-color);
+    }
+
+    &__autor {
+        font-weight: 600;
+        color: var(--p-primary-color);
+    }
+
+    &__trecho {
+        font-size: 0.8125rem;
+        overflow-wrap: anywhere;
+    }
+
+    &__realce {
+        padding: 0 0.125rem;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--p-primary-color) 28%, transparent);
+        color: inherit;
+    }
+
+    &__selo-codigo {
+        margin-left: 0.375rem;
+        padding: 0.0625rem 0.375rem;
+        border-radius: 999px;
+        background: var(--app-surface-200);
+        font-size: 0.625rem;
+    }
+}

@@ -1,6 +1,6 @@
 # 249-resumo-do-grupo-com-ia.spec.md
 
-> Task 4/5 da guarda-chuva [`chat-grupos.spec.md`](../backlog/chat-grupos.spec.md), fase 3. Depende da [`248`](248-canais-de-projeto-e-de-demanda.spec.md) (e, por ela, da 246 e da 247). Usa as propostas das tasks
+> Task 4/5 da guarda-chuva [`chat-grupos.spec.md`](chat-grupos.spec.md), fase 3. Depende da [`248`](248-canais-de-projeto-e-de-demanda.spec.md) (e, por ela, da 246 e da 247). Usa as propostas das tasks
 > [`145`](145-chat-propostas-de-atividade-e-execucao.spec.md) e [`159`](159-ia-cria-projetos-e-demandas.spec.md) e os custos da [`202`](202-custos-pelas-mensagens-do-chat.spec.md).
 
 ## Objetivo

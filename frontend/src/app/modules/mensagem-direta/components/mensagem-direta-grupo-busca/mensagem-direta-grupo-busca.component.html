@@ -1,0 +1,99 @@
+<div class="busca-grupo" role="search" aria-label="Buscar neste chat">
+    <div class="busca-grupo__barra">
+        <div class="busca-grupo__campo">
+            <i class="pi pi-search busca-grupo__icone" aria-hidden="true"></i>
+            <input
+                #campo
+                pInputText
+                type="text"
+                class="busca-grupo__input"
+                placeholder="Buscar neste chat"
+                aria-label="Buscar neste chat"
+                autocomplete="off"
+                [formControl]="texto"
+                (keydown.escape)="fechar.emit()"
+            />
+            @if (texto.value) {
+                <button
+                    type="button"
+                    class="busca-grupo__limpar"
+                    aria-label="Limpar a busca"
+                    (click)="limpar()"
+                >
+                    <i class="pi pi-times" aria-hidden="true"></i>
+                </button>
+            }
+        </div>
+        <button
+            type="button"
+            class="busca-grupo__codigo"
+            [class.busca-grupo__codigo--ligado]="somenteCodigo()"
+            [attr.aria-pressed]="somenteCodigo()"
+            (click)="alternarCodigo()"
+        >
+            <i class="pi pi-code" aria-hidden="true"></i> Com código
+        </button>
+        <p-button
+            icon="pi pi-times"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Fechar a busca"
+            (onClick)="fechar.emit()"
+        />
+    </div>
+
+    <div class="busca-grupo__corpo" aria-live="polite">
+        @switch (situacao()) {
+            @case ("PARADA") {
+                <p class="busca-grupo__estado">Digite para buscar nas mensagens deste chat.</p>
+            }
+            @case ("CARREGANDO") {
+                <div class="busca-grupo__esqueleto" aria-busy="true">
+                    <p-skeleton height="3rem" />
+                    <p-skeleton height="3rem" />
+                </div>
+            }
+            @case ("ERRO") {
+                <div class="busca-grupo__estado" role="alert">
+                    <p>Não foi possível buscar.</p>
+                    <p-button
+                        label="Tentar de novo"
+                        icon="pi pi-refresh"
+                        size="small"
+                        [outlined]="true"
+                        (onClick)="buscar()"
+                    />
+                </div>
+            }
+            @case ("PRONTA") {
+                <p class="busca-grupo__total">{{ rotuloDoTotal() }}</p>
+                @for (mensagem of resultados(); track mensagem.mensagemId) {
+                    <button
+                        type="button"
+                        class="busca-grupo__achado"
+                        (click)="ir.emit(mensagem.mensagemId)"
+                    >
+                        <span class="busca-grupo__topo">
+                            <span class="busca-grupo__autor">{{ autor(mensagem) }}</span>
+                            <span class="busca-grupo__hora">{{ hora(mensagem) }}</span>
+                        </span>
+                        <span class="busca-grupo__trecho">
+                            @for (trecho of trechos(mensagem); track $index) {
+                                @if (trecho.realce) {
+                                    <mark class="busca-grupo__realce">{{ trecho.texto }}</mark>
+                                } @else {
+                                    {{ trecho.texto }}
+                                }
+                            }
+                            @if (mensagem.contemCodigo) {
+                                <span class="busca-grupo__selo-codigo">código</span>
+                            }
+                        </span>
+                    </button>
+                }
+            }
+        }
+    </div>
+</div>

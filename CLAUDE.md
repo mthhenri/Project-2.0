@@ -88,7 +88,7 @@ Specs de fase/milestone são divididas em tarefas numeradas antes da implementa�
 `done/` são registro histórico e não são reescritas. Specs em `discarded/` foram descartadas pelo
 autor e não são implementadas (o corpo também não é reescrito).
 
-O backlog está em `docs/specs/backlog/` (a **220–222** e as guarda-chuvas já quebradas em tasks, todas só a spec: `chat-grupos.spec.md` (**246–250**), quebrada em 2026-10-25; em 2026-10-21, depois de o `rework-chat-ia` ir para `done/` com a revisão de UI/UX; o texto abaixo é o histórico dessas specs: a revisão de UI/UX 94–117 foi concluída, inclusive 110 e 111 (reativadas em 2026-10-17) e 102–105 (reativadas em 2026-10-18);
+O backlog está em `docs/specs/backlog/` (a **220–222** e as guarda-chuvas já quebradas em tasks, todas só a spec: `chat-grupos.spec.md` (**246–250**, já implementada, em `done/`), quebrada em 2026-10-25; em 2026-10-21, depois de o `rework-chat-ia` ir para `done/` com a revisão de UI/UX; o texto abaixo é o histórico dessas specs: a revisão de UI/UX 94–117 foi concluída, inclusive 110 e 111 (reativadas em 2026-10-17) e 102–105 (reativadas em 2026-10-18);
 o guarda-chuva e o `INDEX-revisao-ux.md` foram para `docs/specs/done/` em 2026-10-20, mapa em `docs/context/MEMORY.md` §3). A guarda-chuva
 `rework-chat-ia.spec.md` (chat com IA, 2026-10-17) já tem as tasks dos blocos 1 a 3 especificadas (**118–124**: permissão de gestor
 centralizada, administrador, layout, Markdown), do bloco 8 (**125–128**, pad estruturado, já implementado) do bloco 4 (**129–133**,

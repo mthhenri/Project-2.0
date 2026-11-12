@@ -14,6 +14,7 @@ import { MensagemDiretaGrupoController } from './controllers/mensagem-direta-gru
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, armazenamentoDeMensagemDiretaProvider } from './repositories/armazenamento-de-mensagem-direta';
 import { GrupoLeituraRepository } from './repositories/grupo-leitura.repository';
 import { GrupoRepository } from './repositories/grupo.repository';
+import { GrupoFixadaRepository } from './repositories/grupo-fixada.repository';
 import { GrupoResumoRepository } from './repositories/grupo-resumo.repository';
 import { MensagemDiretaLeituraRepository } from './repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPreferenciaRepository } from './repositories/mensagem-direta-preferencia.repository';
@@ -21,6 +22,7 @@ import { MensagemDiretaReacaoRepository } from './repositories/mensagem-direta-r
 import { MensagemDiretaSupervisaoRepository } from './repositories/mensagem-direta-supervisao.repository';
 import { publicadorDeEventosDiretosProvider } from './publicadores/publicador-de-eventos-diretos';
 import { CanalAcessoService } from './services/canal-acesso.service';
+import { GrupoFixadaService } from './services/grupo-fixada.service';
 import { GrupoResumoIaService } from './services/grupo-resumo-ia.service';
 import { GrupoSupervisaoService } from './services/grupo-supervisao.service';
 import { GrupoService } from './services/grupo.service';
@@ -41,6 +43,7 @@ import { MensagemDiretaService } from './services/mensagem-direta.service';
         publicadorDeEventosDiretosProvider,
         GrupoRepository,
         GrupoResumoRepository,
+        GrupoFixadaRepository,
         GrupoLeituraRepository,
         MensagemDiretaLeituraRepository,
         MensagemDiretaPreferenciaRepository,
@@ -52,6 +55,7 @@ import { MensagemDiretaService } from './services/mensagem-direta.service';
         GrupoService,
         GrupoSupervisaoService,
         GrupoResumoIaService,
+        GrupoFixadaService,
         MensagemDiretaService,
         MensagemDiretaSupervisaoService,
     ],

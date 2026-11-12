@@ -32,6 +32,13 @@ export interface GrupoAberto {
     erro: boolean;
 }
 
+/** Uma mensagem fixada do grupo aberto, já com a mensagem como a conversa a mostra. */
+export interface FixadaNoGrupo {
+    mensagem: MensagemNaConversa;
+    fixadaPorUsuarioId: number;
+    fixadaDate: Date;
+}
+
 /** O que o compositor entrega ao enviar ao grupo. */
 export interface EnvioAoGrupoDoCompositor {
     texto: string;
@@ -62,6 +69,9 @@ export class MensagemDiretaGrupoEstadoService {
     readonly respondendoA = signal<MensagemNaConversa | null>(null);
     /** Quem está digitando em cada grupo (chave: `conversaId`); cada aviso vale `VALIDADE_DO_DIGITANDO_MS`. */
     readonly digitando = signal<ReadonlyMap<string, ReadonlySet<number>>>(new Map());
+
+    /** As mensagens fixadas do grupo aberto (task 250), da fixada há menos tempo para a mais antiga; relidas a cada `carregarGrupoAberto` (inclusive no `SINCRONIZAR`). */
+    readonly fixadas = signal<FixadaNoGrupo[]>([]);
 
     /** Uma operação do formulário (criar, alterar, adicionar, sair) está em andamento. */
     readonly salvando = signal(false);
@@ -115,6 +125,7 @@ export class MensagemDiretaGrupoEstadoService {
         this.geracaoDaSessao++;
         this.geracaoDoGrupoAberto++;
         this.grupos.set([]);
+        this.fixadas.set([]);
         this.canalPorTipo.set(null);
         this.grupoAberto.set(null);
         this.respondendoA.set(null);
@@ -133,7 +144,10 @@ export class MensagemDiretaGrupoEstadoService {
     /** Abre o grupo e carrega a página mais nova. As mensagens locais que não chegaram voltam. */
     async abrirGrupo(grupoId: number): Promise<void> {
         const atual = this.grupoAberto();
-        if (atual?.grupoId !== grupoId) this.respondendoA.set(null);
+        if (atual?.grupoId !== grupoId) {
+            this.respondendoA.set(null);
+            this.fixadas.set([]);
+        }
         this.erroNaOperacao.set(null);
         this.grupoAberto.set({
             grupoId,
@@ -173,9 +187,47 @@ export class MensagemDiretaGrupoEstadoService {
                 proximoCursor: pagina.proximoCursor,
                 carregando: false,
             }));
+            void this.carregarFixadas(aberto.grupoId);
         } catch {
             if (vale()) this.atualizarGrupoAberto(aberto.grupoId, { carregando: false, erro: true });
         }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Fixadas e busca no grupo (task 250)
+    // ---------------------------------------------------------------------------
+
+    /** Relê as fixadas do grupo aberto. Falhar aqui não atrapalha a conversa: a lista fica como estava. */
+    async carregarFixadas(grupoId: number): Promise<void> {
+        const sessao = this.geracaoDaSessao;
+        try {
+            const resposta = await firstValueFrom(this.api.listarFixadas(grupoId));
+            if (sessao !== this.geracaoDaSessao || this.grupoAberto()?.grupoId !== grupoId) return;
+            this.fixadas.set(
+                (resposta.dados?.fixadas ?? []).map((fixada) => ({ mensagem: normalizarMensagem(fixada.mensagem), fixadaPorUsuarioId: fixada.fixadaPorUsuarioId, fixadaDate: new Date(fixada.fixadaDate) })),
+            );
+        } catch {
+            // Sem as fixadas a conversa segue normal.
+        }
+    }
+
+    /** Fixa ou desafixa a mensagem e relê as fixadas. Devolve o motivo da recusa (por exemplo, o limite), ou `null` se deu certo. */
+    async alternarFixada(grupoId: number, mensagemId: string): Promise<string | null> {
+        const fixada = this.fixadas().some((item) => item.mensagem.mensagemId === mensagemId);
+        try {
+            if (fixada) await firstValueFrom(this.api.desafixarMensagem(grupoId, mensagemId));
+            else await firstValueFrom(this.api.fixarMensagem(grupoId, mensagemId));
+        } catch (erro) {
+            return motivoDaRecusa(erro, fixada ? 'Não foi possível desafixar a mensagem' : 'Não foi possível fixar a mensagem');
+        }
+        await this.carregarFixadas(grupoId);
+        return null;
+    }
+
+    /** A busca dentro do grupo (sem acento, com "Com código"). Quem chama trata a falha. */
+    async buscarNoGrupo(grupoId: number, texto: string, somenteCodigo: boolean): Promise<MensagemNaConversa[]> {
+        const resposta = await firstValueFrom(this.api.buscarNoGrupo(grupoId, texto, somenteCodigo));
+        return (resposta.dados?.mensagens ?? []).map((mensagem) => normalizarMensagem(mensagem));
     }
 
     /** Carrega a página mais antiga (ao rolar para cima). */

@@ -9,7 +9,7 @@ import { MensagemDiretaGrupoController } from './mensagem-direta-grupo.controlle
 
 const USUARIO = { sub: 4, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das vinte e duas rotas', () => {
+test('verbos e caminhos das vinte e seis rotas', () => {
     assert.deepEqual(
         Object.values(rotasPorNome(MensagemDiretaGrupoController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
         [
@@ -23,7 +23,11 @@ test('verbos e caminhos das vinte e duas rotas', () => {
             'POST grupo/:grupoId/resumo/:resumoId/proposta/:propostaId/confirmar',
             'POST grupo/:grupoId/resumo/:resumoId/proposta/:propostaId/recusar',
             'GET canal/projeto/:projetoId',
+            'DELETE grupo/:grupoId/fixadas/:mensagemId',
+            'GET grupo/:grupoId/busca',
+            'GET grupo/:grupoId/fixadas',
             'GET grupo/:grupoId/mensagens',
+            'POST grupo/:grupoId/fixadas/:mensagemId',
             'GET supervisao/grupo/:grupoId',
             'GET supervisao/grupos',
             'PATCH grupo/:grupoId',
@@ -65,6 +69,7 @@ test('o grupoId da rota vence o do corpo e da query, e o usuário é sempre o do
         } as never,
         { listarGruposSupervisionados: registrar('listarSupervisao'), lerGrupoSupervisionado: registrar('lerSupervisao') } as never,
         {} as never,
+        {} as never,
     );
 
     await controller.alterarGrupo(7, { grupoId: 99, nome: 'Novo' } as never, USUARIO);
@@ -97,7 +102,7 @@ test('o grupoId da rota vence o do corpo e da query, e o usuário é sempre o do
 test('as rotas do canal montam o tipo e o alvo pela rota, sempre como a pessoa do token', async () => {
     const chamadas: Record<string, unknown[]> = {};
     const registrar = (nome: string) => async (...argumentos: unknown[]) => { chamadas[nome] = argumentos; return null; };
-    const controller = new MensagemDiretaGrupoController({ recuperarCanal: registrar('recuperar'), criarCanal: registrar('criar') } as never, {} as never, {} as never);
+    const controller = new MensagemDiretaGrupoController({ recuperarCanal: registrar('recuperar'), criarCanal: registrar('criar') } as never, {} as never, {} as never, {} as never);
 
     await controller.recuperarCanalDaDemanda(12, USUARIO);
     assert.deepEqual(chamadas.recuperar, [{ tipo: TipoGrupoEnum.DEMANDA, alvoId: 12 }, USUARIO]);
@@ -116,6 +121,7 @@ test('as rotas do resumo com a IA levam o grupo, o resumo e a proposta da rota, 
         {} as never,
         {} as never,
         { recuperarOpcoes: registrar('opcoes'), estimar: registrar('estimar'), resumir: registrar('resumir'), criarProposta: registrar('proposta'), confirmarProposta: registrar('confirmar'), recusarProposta: registrar('recusar') } as never,
+        {} as never,
     );
 
     await controller.recuperarOpcoesDoResumo(7, USUARIO);
@@ -130,4 +136,25 @@ test('as rotas do resumo com a IA levam o grupo, o resumo e a proposta da rota, 
     assert.deepEqual(chamadas.confirmar, [{ grupoId: 7, resumoId: 3, propostaId: 11 }, USUARIO]);
     await controller.recusarPropostaDoResumo(7, 3, 11, USUARIO);
     assert.deepEqual(chamadas.recusar, [{ grupoId: 7, resumoId: 3, propostaId: 11 }, USUARIO]);
+});
+
+test('as rotas das fixadas e da busca no grupo levam o grupo e a mensagem da rota, e a pessoa do token', async () => {
+    const chamadas: Record<string, unknown[]> = {};
+    const registrar = (nome: string) => async (...argumentos: unknown[]) => { chamadas[nome] = argumentos; return null; };
+    const controller = new MensagemDiretaGrupoController(
+        {} as never,
+        {} as never,
+        {} as never,
+        { listarFixadas: registrar('listar'), fixarMensagem: registrar('fixar'), desafixarMensagem: registrar('desafixar'), buscarNoGrupo: registrar('buscar') } as never,
+    );
+    const mensagemId = '8d0c8a52-3a7f-4a3e-9f0e-1c2b3d4e5f60';
+
+    await controller.listarFixadas(7, USUARIO);
+    assert.deepEqual(chamadas.listar, [{ grupoId: 7 }, USUARIO]);
+    await controller.fixarMensagem(7, mensagemId, USUARIO);
+    assert.deepEqual(chamadas.fixar, [{ grupoId: 7, mensagemId }, USUARIO]);
+    await controller.desafixarMensagem(7, mensagemId, USUARIO);
+    assert.deepEqual(chamadas.desafixar, [{ grupoId: 7, mensagemId }, USUARIO]);
+    await controller.buscarNoGrupo(7, { grupoId: 99, texto: 'fila' } as never, USUARIO);
+    assert.deepEqual(chamadas.buscar, [{ grupoId: 7, texto: 'fila' }, USUARIO]);
 });

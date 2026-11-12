@@ -544,10 +544,19 @@ export class GrupoService {
         };
     }
 
-    /** Para o resumo com a IA (task 249): o grupo e os membros, só se quem pede é membro agora (no canal, também o gestor que já escreveu). */
-    async exigirMembroParaResumo(grupoId: number, usuarioAtivo: JwtPayload): Promise<{ grupo: GrupoRegistrado; membrosIds: number[] }> {
+    /**
+     * Para o resumo com a IA (task 249), as fixadas e a busca no grupo (task 250): o grupo e os membros, só se quem pede é membro agora (no canal, também o
+     * gestor que já escreveu).
+     */
+    async exigirMembroDoGrupo(grupoId: number, usuarioAtivo: JwtPayload): Promise<{ grupo: GrupoRegistrado; membrosIds: number[] }> {
         const { grupo, membrosIds } = await this.exigirMembro(grupoId, usuarioAtivo);
         return { grupo, membrosIds };
+    }
+
+    /** Como `exigirMembroDoGrupo`, mas também deixa passar o gestor ou administrador que lê o canal por tipo (só leitura: vê as fixadas, não fixa). */
+    async exigirAcessoAoGrupo(grupoId: number, usuarioAtivo: JwtPayload): Promise<{ grupo: GrupoRegistrado; membrosIds: number[]; leitorPorTipo: boolean }> {
+        const { grupo, membrosIds, leitorPorTipo } = await this.exigirAcessoDeLeitura(grupoId, usuarioAtivo);
+        return { grupo, membrosIds, leitorPorTipo };
     }
 
     /** A pessoa é membro agora. Não membro (inclusive quem saiu, ou saiu da demanda) recebe 403. */

@@ -61,3 +61,16 @@ export * from './GrupoResumoIaUltimoRecuperarDto';
 export * from './GrupoResumoIaInternoRecuperarDto';
 export * from './GrupoResumoIaPropostaInternoMarcarDto';
 export * from './GrupoResumoIaGravadoInternoMarcarDto';
+
+export * from './GrupoMensagemFixarDto';
+export * from './GrupoMensagemDesafixarDto';
+export * from './GrupoMensagemFixadaListarDto';
+export * from './GrupoMensagemFixadaResumoDto';
+export * from './GrupoMensagemFixadaListadasDto';
+export * from './GrupoMensagemFixadaDto';
+export * from './GrupoMensagemDesafixadaDto';
+export * from './GrupoMensagemBuscarDto';
+export * from './GrupoMensagemBuscadasDto';
+export * from './GrupoFixadaInternoCriarDto';
+export * from './GrupoFixadaInternoListarDto';
+export * from './GrupoFixadaInternoExcluirDto';

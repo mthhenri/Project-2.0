@@ -92,7 +92,7 @@ export class GrupoResumoIaService {
 
     /** O que abre o diálogo: o fim do último resumo do grupo e onde este pode ser gravado. */
     async recuperarOpcoes(dto: GrupoResumoIaRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<GrupoResumoIaRecuperadoDto>> {
-        const { grupo } = await this.grupoService.exigirMembroParaResumo(dto.grupoId, usuarioAtivo);
+        const { grupo } = await this.grupoService.exigirMembroDoGrupo(dto.grupoId, usuarioAtivo);
         const ultimo = await this.resumoRepositorio.recuperarUltimoResumo({ grupoId: grupo.grupoId });
         return {
             sucesso: true,
@@ -108,7 +108,7 @@ export class GrupoResumoIaService {
 
     /** A estimativa: lê o período e faz as contas, sem chamar o provedor de resumo nem gravar nada. */
     async estimar(dto: GrupoResumoIaEstimarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<GrupoResumoIaEstimadoDto>> {
-        const { grupo } = await this.grupoService.exigirMembroParaResumo(dto.grupoId, usuarioAtivo);
+        const { grupo } = await this.grupoService.exigirMembroDoGrupo(dto.grupoId, usuarioAtivo);
         const periodo = await this.lerPeriodo(grupo, dto);
         const preparadas = prepararMensagens(periodo.mensagens, dto.enviaCodigo);
         const estimativa = estimarResumo(dividirEmBlocos(preparadas.linhas), await this.precoDoModeloRapido());
@@ -121,7 +121,7 @@ export class GrupoResumoIaService {
 
     /** Confirma e executa o resumo. O servidor refaz as contas (nunca confia na estimativa da tela) e recusa período vazio ou acima do teto. */
     async resumir(dto: GrupoResumoIaCriarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<GrupoResumoIaCriadoDto>> {
-        const { grupo } = await this.grupoService.exigirMembroParaResumo(dto.grupoId, usuarioAtivo);
+        const { grupo } = await this.grupoService.exigirMembroDoGrupo(dto.grupoId, usuarioAtivo);
         const estado = await this.iaService.obterEstado();
         if (estado !== EstadoIaEnum.NO_AR) throw new BusinessException(`Não dá para resumir agora: ${estado === EstadoIaEnum.DESLIGADA ? 'a IA está desligada' : 'a IA está fora do ar'}`);
 
@@ -206,7 +206,7 @@ export class GrupoResumoIaService {
      * mesmas regras do executor). Canal de demanda: a demanda do canal; canal de projeto: uma demanda **do projeto**, escolhida na tela; grupo livre: não grava.
      */
     async criarProposta(dto: GrupoResumoIaPropostaCriarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<GrupoResumoIaPropostaCriadaDto>> {
-        const { grupo } = await this.grupoService.exigirMembroParaResumo(dto.grupoId, usuarioAtivo);
+        const { grupo } = await this.grupoService.exigirMembroDoGrupo(dto.grupoId, usuarioAtivo);
         const resumo = await this.exigirResumoDeQuemPediu(dto.resumoId, grupo.grupoId, usuarioAtivo);
         if (resumo.gravadaData) throw new BusinessException('Este resumo já foi gravado na documentação');
 
@@ -226,7 +226,7 @@ export class GrupoResumoIaService {
 
     /** Confirma a proposta (grava na documentação) e avisa o chat com a mensagem do sistema e o cartão da demanda. */
     async confirmarProposta(dto: GrupoResumoIaPropostaDecidirDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<GrupoResumoIaPropostaConfirmadaDto>> {
-        const { grupo, membrosIds } = await this.grupoService.exigirMembroParaResumo(dto.grupoId, usuarioAtivo);
+        const { grupo, membrosIds } = await this.grupoService.exigirMembroDoGrupo(dto.grupoId, usuarioAtivo);
         const resumo = await this.exigirPropostaDoResumo(dto, grupo, usuarioAtivo);
         if (resumo.gravadaData) throw new BusinessException('Este resumo já foi gravado na documentação');
         const demandaId = resumo.demandaId as number;
@@ -241,7 +241,7 @@ export class GrupoResumoIaService {
 
     /** Recusa a proposta: nada é gravado e o resumo pode virar proposta de novo. */
     async recusarProposta(dto: GrupoResumoIaPropostaDecidirDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<GrupoResumoIaPropostaRecusadaDto>> {
-        const { grupo } = await this.grupoService.exigirMembroParaResumo(dto.grupoId, usuarioAtivo);
+        const { grupo } = await this.grupoService.exigirMembroDoGrupo(dto.grupoId, usuarioAtivo);
         const resumo = await this.exigirPropostaDoResumo(dto, grupo, usuarioAtivo);
         await this.propostaIaService.recusar(dto.propostaId, usuarioAtivo);
         return { sucesso: true, dados: { resumoId: resumo.resumoId }, mensagem: 'Proposta recusada: nada foi gravado' };

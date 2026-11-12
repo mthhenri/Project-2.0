@@ -1,7 +1,7 @@
 # 246-grupo-livre-backend.spec.md
 
-> Task 1/5 da guarda-chuva [`chat-grupos.spec.md`](../backlog/chat-grupos.spec.md), fase 1 (lado do servidor). Modelagem em
-> [`chat-grupos/modelagem.md`](../backlog/chat-grupos/modelagem.md) (§1 a §4). Estende o chat um a um da guarda-chuva [`chat-colaboradores.spec.md`](chat-colaboradores.spec.md).
+> Task 1/5 da guarda-chuva [`chat-grupos.spec.md`](chat-grupos.spec.md), fase 1 (lado do servidor). Modelagem em
+> [`chat-grupos/modelagem.md`](chat-grupos/modelagem.md) (§1 a §4). Estende o chat um a um da guarda-chuva [`chat-colaboradores.spec.md`](chat-colaboradores.spec.md).
 > Depende da [`214`](214-mensagem-direta-supervisao.spec.md) (supervisão).
 
 ## Objetivo

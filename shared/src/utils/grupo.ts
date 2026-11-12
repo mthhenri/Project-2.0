@@ -8,6 +8,9 @@ export const LIMITE_NOME_DO_GRUPO = 60;
 /** Um emoji pode ser uma sequência de vários pontos de código (família, bandeira, tom de pele). */
 export const LIMITE_EMOJI_DO_GRUPO = 32;
 
+/** Quantas mensagens um grupo ou canal pode manter fixadas (task 250). */
+export const LIMITE_DE_FIXADAS_DO_GRUPO = 10;
+
 /** O grupo é um canal de demanda ou de projeto (task 248): membros e nome vêm do alvo, não são editados no grupo e a supervisão o lê sempre. */
 export function grupoEhCanal(tipo: TipoGrupoEnum): boolean {
     return tipo === TipoGrupoEnum.DEMANDA || tipo === TipoGrupoEnum.PROJETO;

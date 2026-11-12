@@ -3,6 +3,10 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
     GrupoAlteradoDto,
+    GrupoMensagemBuscadasDto,
+    GrupoMensagemDesafixadaDto,
+    GrupoMensagemFixadaDto,
+    GrupoMensagemFixadaListadasDto,
     GrupoResumoIaCriadoDto,
     GrupoResumoIaEstimadoDto,
     GrupoResumoIaPropostaConfirmadaDto,
@@ -167,6 +171,27 @@ export class MensagemDiretaGrupoService {
 
     private corpoDoResumo(pedido: PedidoDeResumo): { inicioData: string; fimData: string; enviaCodigo: boolean } {
         return { inicioData: pedido.inicioData.toISOString(), fimData: pedido.fimData.toISOString(), enviaCodigo: pedido.enviaCodigo };
+    }
+
+    /** As mensagens fixadas do grupo ou canal (task 250). */
+    listarFixadas(grupoId: number): Observable<StandardResponse<GrupoMensagemFixadaListadasDto>> {
+        return this.httpClient.get<StandardResponse<GrupoMensagemFixadaListadasDto>>(`${this.urlBase}/${grupoId}/fixadas`, comFeedbackProprioEErroTratado());
+    }
+
+    /** Fixa uma mensagem (idempotente). */
+    fixarMensagem(grupoId: number, mensagemId: string): Observable<StandardResponse<GrupoMensagemFixadaDto>> {
+        return this.httpClient.post<StandardResponse<GrupoMensagemFixadaDto>>(`${this.urlBase}/${grupoId}/fixadas/${mensagemId}`, {}, comFeedbackProprioEErroTratado());
+    }
+
+    desafixarMensagem(grupoId: number, mensagemId: string): Observable<StandardResponse<GrupoMensagemDesafixadaDto>> {
+        return this.httpClient.delete<StandardResponse<GrupoMensagemDesafixadaDto>>(`${this.urlBase}/${grupoId}/fixadas/${mensagemId}`, comFeedbackProprioEErroTratado());
+    }
+
+    /** A busca dentro do grupo: só as mensagens dele. */
+    buscarNoGrupo(grupoId: number, texto: string, somenteCodigo: boolean): Observable<StandardResponse<GrupoMensagemBuscadasDto>> {
+        let params = new HttpParams().set('texto', texto);
+        if (somenteCodigo) params = params.set('somenteCodigo', true);
+        return this.httpClient.get<StandardResponse<GrupoMensagemBuscadasDto>>(`${this.urlBase}/${grupoId}/busca`, { params, ...comFeedbackProprioEErroTratado() });
     }
 
     /** Avisa os outros membros de que o usuário está digitando (nada é gravado). */

@@ -293,6 +293,111 @@ describe('MensagemDiretaPopupComponent — grupos', () => {
         expect(texto()).toContain('depois do sincronizar');
     });
 
+    // --- fixadas e busca no grupo (task 250) ---------------------------------------------------
+
+    const fixadaDoServidor = (mensagemId: string, texto: string, autor = 9) => ({ mensagem: mensagemDoGrupo(mensagemId, texto, autor), fixadaPorUsuarioId: 1, fixadaDate: '2026-10-22T10:00:00.000Z' });
+
+    async function responderFixadas(fixadas: unknown[]) {
+        responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/grupo/7/fixadas'), { grupoId: 7, fixadas });
+        await tela.atualizar();
+    }
+
+    it('ao abrir o grupo lê as fixadas e mostra a mais recente na faixa, com a contagem quando há mais de uma', async () => {
+        await montar();
+        await abrirOGrupo();
+        await responderFixadas([fixadaDoServidor('f2', 'Regras do deploy: sexta não'), fixadaDoServidor('f1', 'Link do ambiente de testes')]);
+        responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/grupo/7/leitura'), { grupoId: 7, conversaId: 'G7', lidaAteData: '2026-10-21T14:07:00.000Z' });
+
+        expect(texto()).toContain('Regras do deploy: sexta não');
+        expect(texto()).toContain('2 fixadas');
+        expect(estado.grupoEstado.fixadas()).toHaveLength(2);
+    });
+
+    it('sem fixadas a faixa não aparece, e falhar ao ler as fixadas não atrapalha a conversa', async () => {
+        await montar();
+        await abrirOGrupo();
+        responderErro(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/grupo/7/fixadas'), 500, 'falhou');
+        await tela.atualizar();
+        responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/grupo/7/leitura'), { grupoId: 7, conversaId: 'G7', lidaAteData: '2026-10-21T14:07:00.000Z' });
+        expect(tela.elemento.querySelector('.fixadas-grupo')).toBeNull();
+        expect(texto()).toContain('Já subi o PR');
+    });
+
+    it('fixar manda o pedido e relê as fixadas; fixar de uma mensagem já fixada desafixa', async () => {
+        await montar();
+        await abrirOGrupo();
+        await responderFixadas([]);
+        responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/grupo/7/leitura'), { grupoId: 7, conversaId: 'G7', lidaAteData: '2026-10-21T14:07:00.000Z' });
+
+        const fixando = estado.grupoEstado.alternarFixada(7, 'm2');
+        responderSucesso(esperarRequisicao(tela.http, 'POST', '/mensagem-direta/grupo/7/fixadas/m2'), { fixada: fixadaDoServidor('m2', 'Já subi o PR'), jaEstavaFixada: false });
+        await tela.atualizar();
+        await responderFixadas([fixadaDoServidor('m2', 'Já subi o PR')]);
+        expect(await fixando).toBeNull();
+        expect(texto()).toContain('Já subi o PR');
+
+        const desafixando = estado.grupoEstado.alternarFixada(7, 'm2');
+        responderSucesso(esperarRequisicao(tela.http, 'DELETE', '/mensagem-direta/grupo/7/fixadas/m2'), { grupoId: 7, mensagemId: 'm2', estavaFixada: true });
+        await tela.atualizar();
+        await responderFixadas([]);
+        expect(await desafixando).toBeNull();
+        expect(tela.elemento.querySelector('.fixadas-grupo')).toBeNull();
+    });
+
+    it('o limite de fixadas devolve o motivo do servidor e não muda a faixa', async () => {
+        await montar();
+        await abrirOGrupo();
+        await responderFixadas([fixadaDoServidor('f1', 'Uma só')]);
+        responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/grupo/7/leitura'), { grupoId: 7, conversaId: 'G7', lidaAteData: '2026-10-21T14:07:00.000Z' });
+
+        const fixando = estado.grupoEstado.alternarFixada(7, 'm2');
+        responderErro(esperarRequisicao(tela.http, 'POST', '/mensagem-direta/grupo/7/fixadas/m2'), 400, 'Um chat comporta no máximo 10 mensagens fixadas: desafixe uma antes');
+        expect(await fixando).toContain('no máximo 10 mensagens fixadas');
+        expect(estado.grupoEstado.fixadas()).toHaveLength(1);
+    });
+
+    it('o botão da faixa desafixa a mensagem', async () => {
+        await montar();
+        await abrirOGrupo();
+        await responderFixadas([fixadaDoServidor('f1', 'Só esta')]);
+        responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/grupo/7/leitura'), { grupoId: 7, conversaId: 'G7', lidaAteData: '2026-10-21T14:07:00.000Z' });
+
+        await clicar('Desafixar a mensagem');
+        responderSucesso(esperarRequisicao(tela.http, 'DELETE', '/mensagem-direta/grupo/7/fixadas/f1'), { grupoId: 7, mensagemId: 'f1', estavaFixada: true });
+        await tela.atualizar();
+        await responderFixadas([]);
+        expect(tela.elemento.querySelector('.fixadas-grupo')).toBeNull();
+    });
+
+    it('SINCRONIZAR do grupo (alguém fixou ou desafixou) relê as fixadas', async () => {
+        await montar();
+        await abrirOGrupo();
+        await responderFixadas([]);
+        responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/grupo/7/leitura'), { grupoId: 7, conversaId: 'G7', lidaAteData: '2026-10-21T14:07:00.000Z' });
+
+        eventos.ouvintes!.aoEvento({ tipo: 'SINCRONIZAR', conversaId: 'G7' });
+        responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversas'), { conversas: [], grupos: [grupoDaLista(7, 'Time do backend')] });
+        responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/grupo/7/mensagens'), { grupoId: 7, mensagens: [mensagemDoGrupo('m9', 'oi', 9)], proximoCursor: null });
+        await tela.atualizar();
+        await responderFixadas([fixadaDoServidor('f9', 'Fixada por outra pessoa')]);
+
+        expect(texto()).toContain('Fixada por outra pessoa');
+    });
+
+    it('a lupa do cabeçalho abre a busca dentro do grupo e fechar volta às mensagens', async () => {
+        await montar();
+        await abrirOGrupo();
+        await responderFixadas([]);
+        responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/grupo/7/leitura'), { grupoId: 7, conversaId: 'G7', lidaAteData: '2026-10-21T14:07:00.000Z' });
+
+        await clicar('Buscar neste chat');
+        expect(tela.elemento.querySelector('app-mensagem-direta-grupo-busca')).not.toBeNull();
+        expect(texto()).toContain('Digite para buscar nas mensagens deste chat');
+
+        await clicar('Fechar a busca');
+        expect(tela.elemento.querySelector('app-mensagem-direta-grupo-busca')).toBeNull();
+    });
+
     it('o grupo aberto que sumiu da lista (saí dele em outra aba) fecha e volta à lista', async () => {
         await montar();
         await abrirOGrupo();

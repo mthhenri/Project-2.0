@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import {
     GrupoAlterarDto,
     GrupoCriarDto,
     GrupoLeituraAlterarDto,
     GrupoMembroAdicionarDto,
+    GrupoMensagemBuscarDto,
     GrupoMensagemEnviarDto,
     GrupoResumoIaCriarDto,
     GrupoResumoIaEstimarDto,
@@ -18,6 +19,7 @@ import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator'
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { GrupoSupervisaoService } from '../services/grupo-supervisao.service';
+import { GrupoFixadaService } from '../services/grupo-fixada.service';
 import { GrupoResumoIaService } from '../services/grupo-resumo-ia.service';
 import { GrupoService } from '../services/grupo.service';
 
@@ -31,6 +33,7 @@ export class MensagemDiretaGrupoController {
         private readonly grupoService: GrupoService,
         private readonly supervisaoService: GrupoSupervisaoService,
         private readonly resumoService: GrupoResumoIaService,
+        private readonly fixadaService: GrupoFixadaService,
     ) {}
 
     /** Supervisão: os grupos sem gestor nem administrador entre os membros atuais, somente leitura. */
@@ -161,6 +164,28 @@ export class MensagemDiretaGrupoController {
         @ActiveUser() usuarioAtivo: JwtPayload,
     ) {
         return this.resumoService.recusarProposta({ grupoId, resumoId, propostaId }, usuarioAtivo);
+    }
+
+    /** Mensagens fixadas (task 250): qualquer membro fixa e desafixa; a lista também vai ao gestor que lê o canal por tipo. */
+    @Get('grupo/:grupoId/fixadas')
+    listarFixadas(@Param('grupoId', ParseIntPipe) grupoId: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.fixadaService.listarFixadas({ grupoId }, usuarioAtivo);
+    }
+
+    @Post('grupo/:grupoId/fixadas/:mensagemId')
+    fixarMensagem(@Param('grupoId', ParseIntPipe) grupoId: number, @Param('mensagemId', ParseUUIDPipe) mensagemId: string, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.fixadaService.fixarMensagem({ grupoId, mensagemId }, usuarioAtivo);
+    }
+
+    @Delete('grupo/:grupoId/fixadas/:mensagemId')
+    desafixarMensagem(@Param('grupoId', ParseIntPipe) grupoId: number, @Param('mensagemId', ParseUUIDPipe) mensagemId: string, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.fixadaService.desafixarMensagem({ grupoId, mensagemId }, usuarioAtivo);
+    }
+
+    /** A busca dentro do grupo (só de membro): só as mensagens dele. */
+    @Get('grupo/:grupoId/busca')
+    buscarNoGrupo(@Param('grupoId', ParseIntPipe) grupoId: number, @Query() dto: GrupoMensagemBuscarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.fixadaService.buscarNoGrupo({ ...dto, grupoId }, usuarioAtivo);
     }
 
     /** O aviso de que o usuário está digitando para o grupo; nada é gravado. */

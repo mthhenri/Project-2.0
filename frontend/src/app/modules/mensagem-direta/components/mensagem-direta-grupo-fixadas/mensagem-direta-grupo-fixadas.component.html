@@ -1,0 +1,74 @@
+@if (maisRecente(); as primeira) {
+    <section class="fixadas-grupo" aria-label="Mensagens fixadas">
+        <div class="fixadas-grupo__linha">
+            <button
+                type="button"
+                class="fixadas-grupo__corpo"
+                [attr.aria-label]="'Ir para a mensagem fixada: ' + previa(primeira)"
+                (click)="ir.emit(primeira.mensagem.mensagemId)"
+            >
+                <i class="pi pi-bookmark-fill fixadas-grupo__icone" aria-hidden="true"></i>
+                <span class="fixadas-grupo__texto"
+                    ><span class="fixadas-grupo__autor">{{ autor(primeira) }}:</span>
+                    {{ previa(primeira) }}</span
+                >
+            </button>
+            @if (fixadas().length > 1) {
+                <button
+                    type="button"
+                    class="fixadas-grupo__contagem"
+                    [attr.aria-expanded]="expandida()"
+                    (click)="alternar()"
+                >
+                    {{ fixadas().length }} fixadas
+                    <i
+                        class="pi"
+                        [class.pi-chevron-down]="!expandida()"
+                        [class.pi-chevron-up]="expandida()"
+                        aria-hidden="true"
+                    ></i>
+                </button>
+            } @else if (podeDesafixar()) {
+                <button
+                    type="button"
+                    class="fixadas-grupo__acao"
+                    aria-label="Desafixar a mensagem"
+                    pTooltip="Desafixar"
+                    tooltipPosition="bottom"
+                    (click)="desafixar.emit(primeira.mensagem.mensagemId)"
+                >
+                    <i class="pi pi-times" aria-hidden="true"></i>
+                </button>
+            }
+        </div>
+        @if (expandida() && fixadas().length > 1) {
+            <ul class="fixadas-grupo__lista">
+                @for (fixada of fixadas(); track fixada.mensagem.mensagemId) {
+                    <li class="fixadas-grupo__item">
+                        <button
+                            type="button"
+                            class="fixadas-grupo__corpo"
+                            (click)="ir.emit(fixada.mensagem.mensagemId)"
+                        >
+                            <i class="pi pi-bookmark fixadas-grupo__icone" aria-hidden="true"></i>
+                            <span class="fixadas-grupo__texto"
+                                ><span class="fixadas-grupo__autor">{{ autor(fixada) }}:</span>
+                                {{ previa(fixada) }}</span
+                            >
+                        </button>
+                        @if (podeDesafixar()) {
+                            <button
+                                type="button"
+                                class="fixadas-grupo__acao"
+                                aria-label="Desafixar a mensagem"
+                                (click)="desafixar.emit(fixada.mensagem.mensagemId)"
+                            >
+                                <i class="pi pi-times" aria-hidden="true"></i>
+                            </button>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+}

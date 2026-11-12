@@ -111,6 +111,8 @@ export interface ConsultaBuscaDireta {
     usuarioId: number;
     /** Os grupos em que a pessoa é membro agora: a busca olha também as mensagens deles. Ausente ou vazio = só as conversas um a um. */
     grupoIds?: number[];
+    /** Só as mensagens dos `grupoIds`: as conversas um a um ficam de fora (a busca dentro de um grupo, task 250). Exige `grupoIds`. */
+    somenteGrupos?: boolean;
     texto: string;
     inicio?: Date;
     fim?: Date;
@@ -196,6 +198,7 @@ export function validarConsultaNaoLidas(consulta: ConsultaNaoLidas): void {
 export function validarConsultaBuscaDireta(consulta: ConsultaBuscaDireta): void {
     if (!consulta.texto.trim()) throw new BusinessException('Informe o texto da busca');
     validarGrupoIds(consulta.grupoIds ?? [], LIMITE_GRUPOS_DO_USUARIO);
+    if (consulta.somenteGrupos && (consulta.grupoIds ?? []).length === 0) throw new BusinessException('Informe o grupo da busca');
 }
 
 /** Os ids de grupo são inteiros positivos, sem passar do limite da consulta. */
@@ -365,8 +368,9 @@ export function montarConsultaNaoLidasDeGrupos(consulta: ConsultaNaoLidas) {
  */
 export function montarConsultaBuscaDireta(consulta: ConsultaBuscaDireta) {
     const grupoIds = consulta.grupoIds ?? [];
-    const escopo =
-        grupoIds.length > 0
+    const escopo = consulta.somenteGrupos
+        ? { terms: { conversa_id: conversasDosGrupos(grupoIds) } }
+        : grupoIds.length > 0
             ? { bool: { should: [{ term: { participantes: consulta.usuarioId } }, { terms: { conversa_id: conversasDosGrupos(grupoIds) } }], minimum_should_match: 1 } }
             : { term: { participantes: consulta.usuarioId } };
     return {

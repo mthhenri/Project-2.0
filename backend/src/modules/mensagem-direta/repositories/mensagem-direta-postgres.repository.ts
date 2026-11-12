@@ -508,7 +508,7 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                     FROM
                         mensagem_direta
                     WHERE
-                        ${PARTICIPA_OU_GRUPO}
+                        ${consulta.somenteGrupos ? 'conversa_id = ANY (CAST(:conversaIdsDeGrupos AS text[]))' : PARTICIPA_OU_GRUPO}
                         AND is_deleted = false
                         AND fn_chat_texto_busca (texto) @@ fn_chat_texto_consulta (:texto)
                         AND ${FILTROS_DE_RECORTE}

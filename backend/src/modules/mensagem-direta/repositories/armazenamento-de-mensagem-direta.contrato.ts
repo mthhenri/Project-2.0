@@ -485,6 +485,17 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
                 await assert.rejects(armazenamento.buscar({ usuarioId: ana, grupoIds: [-1], texto: marca }), (erro) => erro instanceof BusinessException);
             });
 
+            it('a busca dentro do grupo (somenteGrupos) traz só as mensagens dele: nunca a conversa um a um nem outro grupo', async () => {
+                const soGrupoUm = await armazenamento.buscar({ usuarioId: ana, grupoIds: [grupoUm], somenteGrupos: true, texto: `balanco ${marca}` });
+                assert.deepEqual(ids(soGrupoUm), [daConversaDoGrupoUm[1].mensagemId], 'sem acento, como na busca geral');
+                assert.ok(soGrupoUm.every((achada) => achada.conversaId === conversaGrupoUm));
+                assert.equal((await armazenamento.buscar({ usuarioId: ana, grupoIds: [grupoUm], somenteGrupos: true, texto: `cadastro ${marca}` })).length, 0, 'a conversa um a um não entra');
+                assert.equal((await armazenamento.buscar({ usuarioId: ana, grupoIds: [grupoDois], somenteGrupos: true, texto: `balanco ${marca}` })).length, 0, 'o grupo dois não tem a palavra');
+                assert.equal((await armazenamento.buscar({ usuarioId: ana, grupoIds: [grupoUm], somenteGrupos: true, texto: `trecho ${marca}`, somenteCodigo: true })).length >= 1, true, 'com o filtro de código');
+                assert.equal((await armazenamento.buscar({ usuarioId: ana, grupoIds: [grupoUm], somenteGrupos: true, texto: `balanco ${marca}`, inicio: new Date(Date.now() + 86_400_000) })).length, 0, 'com o período');
+                await assert.rejects(armazenamento.buscar({ usuarioId: ana, somenteGrupos: true, texto: marca }), (erro) => erro instanceof BusinessException, 'sem grupo não há busca no grupo');
+            });
+
             it('a supervisão um a um nunca lista grupo, e a supervisão dos grupos lista só os grupos pedidos, pagina, conta e filtra', async () => {
                 const umAUm = await armazenamento.listarTodasConversas({ usuarioIdsExcluidos: [], texto: marca, pagina: 1, porPagina: 100 });
                 assert.ok(umAUm.conversas.every((conversa) => !conversa.conversaId.startsWith('G')), 'o grupo tem participantes vazios e passaria no filtro de exclusão');

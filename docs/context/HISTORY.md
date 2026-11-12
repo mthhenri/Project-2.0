@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-11-12 — Task 250: fixar mensagem e busca no grupo (fecho da guarda-chuva `chat-grupos`)
+
+Quinta e última task da guarda-chuva. **O que mudou:** qualquer membro de um grupo ou canal fixa e desafixa mensagens (`grupo_fixada`, migration `0089`; até 10 por grupo, idempotente, sem mensagem do sistema), e a faixa no topo da conversa mostra a mais recente, abre a lista e leva à mensagem original; fixar e desafixar chegam aos outros membros em tempo real pelo `SINCRONIZAR`. A busca dentro do grupo (lupa do cabeçalho) acha texto sem acento e código só naquele grupo: o contrato do armazenamento ganhou `somenteGrupos` (Postgres e índice), com cenário na suíte de contrato, e nada de outro grupo ou de conversa um a um vaza. O gestor que só lê um canal por tipo vê as fixadas mas não fixa nem busca. **Decisões pelos padrões da spec, a confirmar com o autor:** qualquer membro fixa, limite de 10, sem mensagem do sistema ao fixar. **Guarda-chuva:** `chat-grupos.spec.md` e `chat-grupos/modelagem.md` foram para `done/` com as cinco tasks (246 a 250).
+
+**Testes:** shared 353, backend 1773 unitários e 518 de integração (inclui a suíte de contrato do Postgres), frontend 236 arquivos e 2851 testes, lint e builds sem erros. **Ao vivo:** 19 de 19 verificações nos cinco formatos e nos dois temas (três pessoas, grupo livre e canal). Detalhes em `docs/specs/done/250-fixar-mensagem-e-busca-no-grupo/verificacao.md`.
+
+---
+
 ## 2026-11-12 — Task 249: resumo do grupo e do canal com a IA
 
 Quarta task da guarda-chuva `chat-grupos.spec.md`. **O que mudou:** o comando `/resumir` (ou o item "Resumir com IA" do menu do grupo) abre um diálogo em que a pessoa escolhe o período (com o fim do último resumo à vista), se o código vai à IA (padrão: não) e vê o aviso de consentimento e a **estimativa**, que não chama a IA. Ao confirmar, o servidor lê **todas** as mensagens de pessoa do período, troca o código por `[trecho de código omitido]` antes de qualquer envio, não manda o autor, divide em blocos, resume cada um e fecha num texto único com a linha "Resumo gerado por IA". O texto não é guardado (`grupo_resumo`, migration `0088`, guarda período, modelo e tokens); o custo entra na aba Custos pela mensagem de uso do chat. No canal, **Gravar na documentação** cria uma proposta `ALTERAR_DEMANDA` (acrescenta ao fim, com período e data) que a pessoa revisa e confirma ou descarta; ao confirmar, o chat recebe a mensagem do sistema com o cartão da demanda. Canal de projeto pede a demanda de destino; grupo livre só copia. **Decisões pelos padrões da spec, a confirmar com o autor:** resposta única, teto de 40 chamadas, aviso permanente em todo grupo e canal, retenção sem prazo, instruções do prompt em constantes, custo estimado só com preço cadastrado. **Limite:** verificado ao vivo com um provedor de mentira que fala o protocolo da Anthropic (não havia chave real), então a qualidade do texto de um modelo real não foi vista.
