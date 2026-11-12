@@ -64,6 +64,8 @@ interface Cenario {
     ativos?: { id: number; nome: string; tipo?: TipoUsuarioEnum; corAvatar?: string | null }[];
     demandasAchadas?: { id: number; projetoId: number; nome: string; status: string }[];
     atividadesAchadas?: { id: number; nome: string; status: string; demandaId: number; nomeDemanda: string; projetoId: number }[];
+    /** Os grupos da pessoa (task 246): a service da lista só os repassa. */
+    grupos?: { grupoId: number; nome: string }[];
 }
 
 function montar(cenario: Cenario = {}) {
@@ -158,6 +160,10 @@ function montar(cenario: Cenario = {}) {
     const service = new MensagemDiretaService(
         armazenamento as never, leitura as never, preferencia as never, reacao as never, usuario as never, demanda as never, atividade as never, eventos as never, iaChatDireto as never,
         propostaIa as never,
+        {
+            listarResumos: async () => (cenario.grupos ?? []),
+            listarGrupoIdsDoUsuario: async () => (cenario.grupos ?? []).map((grupo) => grupo.grupoId),
+        } as never,
     );
     return { service, chamadas };
 }
@@ -349,7 +355,7 @@ test('listarConversa: sem marcador do outro o "Lida" é nulo; consigo mesmo ou c
 
 test('listarConversas: nome, não lidas e silêncio por conversa; pessoa removida vira "Usuário removido"; sem conversa não consulta nada', async () => {
     const vazio = montar();
-    assert.deepEqual((await vazio.service.listarConversas(ANA)).dados, { conversas: [] });
+    assert.deepEqual((await vazio.service.listarConversas(ANA)).dados, { conversas: [], grupos: [] });
     assert.equal(vazio.chamadas.contarNaoLidas, undefined);
 
     const lidaAteDate = new Date('2026-10-21T10:00:00.000Z');
@@ -727,4 +733,36 @@ test('alterarMensagem: a mensagem editada devolve e avisa com as reações que e
     const resposta = await service.alterarMensagem(edicao(), ANA);
     assert.deepEqual(resposta.dados!.mensagem.reacoes, [{ usuarioId: BRUNO_ID, reacao: '👍' }]);
     assert.deepEqual((chamadas.publicar[0] as { evento: { mensagem: { reacoes: unknown } } }).evento.mensagem.reacoes, [{ usuarioId: BRUNO_ID, reacao: '👍' }]);
+});
+
+// --- grupos (task 246) -------------------------------------------------------
+
+test('listarConversas: os grupos da pessoa vão na mesma resposta, mesmo sem nenhuma conversa um a um', async () => {
+    const { service } = montar({ grupos: [{ grupoId: 7, nome: 'Backend' }, { grupoId: 3, nome: 'Front' }] });
+    const dados = (await service.listarConversas(ANA)).dados!;
+    assert.deepEqual(dados.conversas, []);
+    assert.deepEqual(dados.grupos.map((grupo) => grupo.grupoId), [7, 3]);
+});
+
+test('listarConversas: com conversas um a um os grupos continuam na resposta', async () => {
+    const { service } = montar({
+        grupos: [{ grupoId: 7, nome: 'Backend' }],
+        conversas: [{ conversaId: '4-9', participantes: [4, 9], totalMensagens: 1, ultimaMensagem: mensagem() }],
+        usuarios: { [BRUNO_ID]: {} },
+    });
+    const dados = (await service.listarConversas(ANA)).dados!;
+    assert.equal(dados.conversas.length, 1);
+    assert.deepEqual(dados.grupos.map((grupo) => grupo.grupoId), [7]);
+});
+
+test('buscar: manda ao armazenamento os grupos de que a pessoa é membro agora, e só eles', async () => {
+    const { service, chamadas } = montar({ grupos: [{ grupoId: 7, nome: 'Backend' }, { grupoId: 3, nome: 'Front' }] });
+    await service.buscar({ texto: 'balanço' }, ANA);
+    const consulta = chamadas.buscar[0] as { usuarioId: number; grupoIds: number[] };
+    assert.equal(consulta.usuarioId, 4);
+    assert.deepEqual(consulta.grupoIds, [7, 3]);
+
+    const semGrupos = montar();
+    await semGrupos.service.buscar({ texto: 'balanço' }, ANA);
+    assert.deepEqual((semGrupos.chamadas.buscar[0] as { grupoIds: number[] }).grupoIds, []);
 });

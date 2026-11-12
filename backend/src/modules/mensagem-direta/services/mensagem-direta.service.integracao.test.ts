@@ -12,6 +12,9 @@ import { MensagemDiretaPostgresRepository } from '../repositories/mensagem-diret
 import { MensagemDiretaPreferenciaRepository } from '../repositories/mensagem-direta-preferencia.repository';
 import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-reacao.repository';
 import { PublicadorEmMemoria } from '../publicadores/publicador-em-memoria';
+import { GrupoLeituraRepository } from '../repositories/grupo-leitura.repository';
+import { GrupoRepository } from '../repositories/grupo.repository';
+import { GrupoService } from './grupo.service';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 import { MensagemDiretaService } from './mensagem-direta.service';
 
@@ -19,18 +22,30 @@ import { MensagemDiretaService } from './mensagem-direta.service';
 // sem dublê. Prova o que o dublê não prova: a leitura e as não lidas conversando entre si, o "Lida" na outra ponta, a busca restrita a quem busca.
 
 function montar(conexao: ConexaoTeste) {
+    const armazenamento = new MensagemDiretaPostgresRepository(conexao);
+    const eventos = new MensagemDiretaEventosService(new PublicadorEmMemoria(), criarRepositorio(UsuarioRepository, conexao));
+    const grupoService = new GrupoService(
+        armazenamento,
+        criarRepositorio(GrupoRepository, conexao),
+        criarRepositorio(GrupoLeituraRepository, conexao),
+        criarRepositorio(UsuarioRepository, conexao),
+        criarRepositorio(DemandaRepository, conexao),
+        criarRepositorio(AtividadeRepository, conexao),
+        eventos,
+    );
     return new MensagemDiretaService(
-        new MensagemDiretaPostgresRepository(conexao),
+        armazenamento,
         criarRepositorio(MensagemDiretaLeituraRepository, conexao),
         criarRepositorio(MensagemDiretaPreferenciaRepository, conexao),
         criarRepositorio(MensagemDiretaReacaoRepository, conexao),
         criarRepositorio(UsuarioRepository, conexao),
         criarRepositorio(DemandaRepository, conexao),
         criarRepositorio(AtividadeRepository, conexao),
-        new MensagemDiretaEventosService(new PublicadorEmMemoria(), criarRepositorio(UsuarioRepository, conexao)),
+        eventos,
         // O `@IA` (task 315) chama o provedor: aqui ele é um dublê que não responde (a service do @IA tem os próprios testes).
         { atenderSeChamada: async () => undefined } as never,
         { recuperarParaParticipante: async () => { throw new Error('não usada aqui'); } } as never,
+        grupoService,
     );
 }
 

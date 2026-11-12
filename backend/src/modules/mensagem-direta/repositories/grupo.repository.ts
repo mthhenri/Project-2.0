@@ -4,11 +4,14 @@ import {
     GrupoInternoAlterarDto,
     GrupoInternoCriarDto,
     GrupoListarDto,
+    GrupoMembroDeGruposListarDto,
     GrupoMembroInternoAdicionarDto,
     GrupoMembroInternoSairDto,
     GrupoMembroListarDto,
     GrupoMembroRecuperarDto,
+    GrupoPorIdsListarDto,
     GrupoRecuperarDto,
+    GrupoSupervisionavelListarDto,
     TipoGrupoEnum,
 } from '@project20/shared';
 import { BaseRepository } from '../../../core/base/base.repository';
@@ -192,6 +195,93 @@ export class GrupoRepository extends BaseRepository<GrupoRegistrado> {
             `,
             { grupoId: dto.grupoId },
         );
+    }
+
+    /** Os grupos com esses ids (os encerrados não aparecem), sem ordem garantida. */
+    async listarGruposPorIds(dto: GrupoPorIdsListarDto): Promise<GrupoRegistrado[]> {
+        if (dto.grupoIds.length === 0) return [];
+        return this.executarConsulta<GrupoRegistrado>(
+            `
+                SELECT
+                    ${COLUNAS_DO_GRUPO}
+                FROM
+                    grupo
+                    JOIN tipo_grupo ON tipo_grupo.id = grupo.tipo_grupo_id
+                    AND tipo_grupo.is_deleted = false
+                WHERE
+                    grupo.id = ANY (CAST(:grupoIds AS integer[]))
+                    AND grupo.is_deleted = false
+            `,
+            { grupoIds: dto.grupoIds },
+        );
+    }
+
+    /** Os membros atuais de vários grupos de uma vez (a lista do popup e a supervisão), do que entrou primeiro ao último. */
+    async listarMembrosDeGrupos(dto: GrupoMembroDeGruposListarDto): Promise<GrupoMembroRegistrado[]> {
+        if (dto.grupoIds.length === 0) return [];
+        return this.executarConsulta<GrupoMembroRegistrado>(
+            `
+                SELECT
+                    ${COLUNAS_DO_MEMBRO}
+                FROM
+                    grupo_membro
+                    JOIN grupo ON grupo.id = grupo_membro.grupo_id
+                    AND grupo.is_deleted = false
+                WHERE
+                    grupo_membro.grupo_id = ANY (CAST(:grupoIds AS integer[]))
+                    AND grupo_membro.saida_data IS NULL
+                    AND grupo_membro.is_deleted = false
+                ORDER BY
+                    grupo_membro.entrada_data ASC,
+                    grupo_membro.usuario_id ASC
+            `,
+            { grupoIds: dto.grupoIds },
+        );
+    }
+
+    /**
+   * Os ids dos grupos livres que a supervisão pode ler: têm ao menos um membro atual e nenhum deles está em `usuarioIdsComPoderDeGestor`. A decisão é
+   * do tipo de hoje dos membros de hoje: entrar um gestor torna o grupo privado, e sair, legível de novo.
+   */
+    async listarIdsSupervisionaveis(dto: GrupoSupervisionavelListarDto): Promise<number[]> {
+        const encontrados = await this.executarConsulta<{ id: number }>(
+            `
+                SELECT
+                    grupo.id
+                FROM
+                    grupo
+                    JOIN tipo_grupo ON tipo_grupo.id = grupo.tipo_grupo_id
+                    AND tipo_grupo.is_deleted = false
+                WHERE
+                    grupo.is_deleted = false
+                    AND tipo_grupo.codigo = :tipo
+                    AND EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            grupo_membro
+                        WHERE
+                            grupo_membro.grupo_id = grupo.id
+                            AND grupo_membro.saida_data IS NULL
+                            AND grupo_membro.is_deleted = false
+                    )
+                    AND NOT EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            grupo_membro
+                        WHERE
+                            grupo_membro.grupo_id = grupo.id
+                            AND grupo_membro.saida_data IS NULL
+                            AND grupo_membro.is_deleted = false
+                            AND grupo_membro.usuario_id = ANY (CAST(:usuarioIdsComPoderDeGestor AS integer[]))
+                    )
+                ORDER BY
+                    grupo.id ASC
+            `,
+            { tipo: TipoGrupoEnum.LIVRE, usuarioIdsComPoderDeGestor: dto.usuarioIdsComPoderDeGestor },
+        );
+        return encontrados.map((grupo) => grupo.id);
     }
 
     /** A linha da pessoa no grupo, mesmo que ela tenha saído (`saidaData` preenchida); `null` quando nunca entrou ou o grupo foi encerrado. */

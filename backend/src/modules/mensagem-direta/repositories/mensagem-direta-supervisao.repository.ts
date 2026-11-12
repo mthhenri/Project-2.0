@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Knex } from 'knex';
 import {
+    GrupoSupervisaoRegistrarDto,
     MensagemDiretaSupervisaoAvisoMarcarDto,
     MensagemDiretaSupervisaoAvisoVerificarDto,
     MensagemDiretaSupervisaoRegistrarDto,
@@ -62,6 +63,40 @@ export class MensagemDiretaSupervisaoRepository extends BaseRepository<Supervisa
                     ${COLUNAS_DA_SUPERVISAO}
             `,
             { ...dto },
+        );
+        return gravadas[0];
+    }
+
+    /** Grava a abertura de um grupo (ainda sem aviso): `conversa_id` é `G<id>` e o par de participantes fica nulo. */
+    async registrarLeituraDeGrupo(dto: GrupoSupervisaoRegistrarDto): Promise<SupervisaoRegistrada> {
+        const gravadas = await this.executarConsulta<SupervisaoRegistrada>(
+            `
+                INSERT INTO
+                    mensagem_direta_supervisao (
+                        created_date,
+                        updated_date,
+                        is_deleted,
+                        leitor_usuario_id,
+                        conversa_id,
+                        grupo_id,
+                        usuario_menor_id,
+                        usuario_maior_id,
+                        participantes_avisados
+                    )
+                SELECT
+                    NOW(),
+                    NOW(),
+                    false,
+                    :leitorUsuarioId,
+                    'G' || CAST(:grupoId AS text),
+                    :grupoId,
+                    CAST(NULL AS integer),
+                    CAST(NULL AS integer),
+                    false
+                RETURNING
+                    ${COLUNAS_DA_SUPERVISAO}
+            `,
+            { leitorUsuarioId: dto.leitorUsuarioId, grupoId: dto.grupoId },
         );
         return gravadas[0];
     }

@@ -146,3 +146,11 @@
 - **Correção:** investigar a atualização parcial (`update` com `doc`) e o analisador; reindexar o campo se for o caso.
 - **Desde:** task 313 (edição de mensagem); percebido em 2026-11-12.
 
+### P-087 — Frontend: `ng test` falha inteiro no Node 26 (`localStorage` indefinido) · `CONTORNADO` · frontend/testes
+
+- **Sintoma:** com Node 26 (visto em 26.13.0), quase toda a suíte do frontend falha com `Cannot read properties of undefined (reading 'getItem'|'setItem'|'clear')`, inclusive arquivos que ninguém tocou (`guards.spec`, interceptors). O mesmo arquivo passa se não usar `localStorage`.
+- **Causa:** o Node 25+ define um `localStorage` global próprio (Web Storage experimental) que, sem arquivo de armazenamento, vem indefinido; o Vitest/jsdom não o sobrescreve.
+- **Contorno:** rodar com `NODE_OPTIONS=--no-experimental-webstorage` (suíte inteira: 222 arquivos, 2701 testes, todos passam).
+- **Correção:** fixar a opção no script de teste do frontend (ou no setup do Vitest) e/ou fixar a versão do Node do projeto; conferir a versão usada no CI.
+- **Desde:** 2026-11-12 (Node 26.13.0 na máquina do autor).
+

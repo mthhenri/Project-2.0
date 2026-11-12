@@ -42,7 +42,6 @@ import {
     ehReacaoValida,
     montarConversaDiretaId,
     outroParticipanteDaConversaDireta,
-    trechoDaMensagemDireta,
     temVisibilidadeTotal,
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
@@ -53,6 +52,7 @@ import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.int
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
+import { ReferenciaResolvida, montarCitacaoDireta, resolverReferenciaDireta, validarReferenciaDireta } from '../domain/mensagem-direta-referencia';
 import {
     LIMITE_DE_SUGESTOES_DE_REFERENCIA,
     combinarSugestoesDeReferencia,
@@ -66,12 +66,10 @@ import { MensagemDiretaLeituraRepository } from '../repositories/mensagem-direta
 import { MensagemDiretaPreferenciaRepository } from '../repositories/mensagem-direta-preferencia.repository';
 import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-reacao.repository';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
+import { GrupoService } from './grupo.service';
 import { MensagemDiretaIaService } from './mensagem-direta-ia.service';
 
 const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
-
-/** O que o cartão mostra de uma referência a que **quem pergunta** tem acesso. */
-type ReferenciaResolvida = Omit<MensagemDiretaReferenciaRecuperadaDto, 'tipo' | 'id' | 'acessivel'>;
 
 /**
  * Chat entre colaboradores (task 208): conversa um a um entre quaisquer usuários. Toda regra e permissão mora aqui; o armazenamento das
@@ -93,6 +91,7 @@ export class MensagemDiretaService {
         private readonly eventosService: MensagemDiretaEventosService,
         private readonly iaChatDiretoService: MensagemDiretaIaService,
         private readonly propostaIaService: PropostaIaService,
+        private readonly grupoService: GrupoService,
     ) {}
 
     // ---------------------------------------------------------------------------
@@ -272,9 +271,11 @@ export class MensagemDiretaService {
 
     async listarConversas(usuarioAtivo: JwtPayload): Promise<StandardResponse<ConversaDiretaListadasDto>> {
         const usuarioId = usuarioAtivo.sub;
+        // Os grupos vão na mesma resposta: o popup tem uma lista só (task 246).
+        const grupos = await this.grupoService.listarResumos(usuarioId);
         const resumos = await this.armazenamento.listarConversasDoUsuario({ usuarioId });
         if (resumos.length === 0) {
-            return { sucesso: true, dados: { conversas: [] }, mensagem: 'Conversas listadas com sucesso' };
+            return { sucesso: true, dados: { conversas: [], grupos }, mensagem: 'Conversas listadas com sucesso' };
         }
 
         const marcadores = await this.leituraRepositorio.listarMarcadores({ usuarioId });
@@ -305,7 +306,7 @@ export class MensagemDiretaService {
             });
         }
 
-        return { sucesso: true, dados: { conversas }, mensagem: 'Conversas listadas com sucesso' };
+        return { sucesso: true, dados: { conversas, grupos }, mensagem: 'Conversas listadas com sucesso' };
     }
 
     /** As pessoas ativas com quem se pode conversar (qualquer uma, menos quem pergunta), com a presença. O desenvolvedor não pode usar `GET /usuario`, que é do gestor. */
@@ -350,6 +351,8 @@ export class MensagemDiretaService {
         const periodo = lerPeriodoDaBusca(dto.inicio, dto.fim);
         const mensagens = await this.armazenamento.buscar({
             usuarioId: usuarioAtivo.sub,
+            // A busca olha também os grupos de que a pessoa é membro agora; de grupo que saiu, nunca.
+            grupoIds: await this.grupoService.listarGrupoIdsDoUsuario(usuarioAtivo.sub),
             texto: dto.texto,
             inicio: periodo.inicio,
             fim: periodo.fim,
@@ -469,17 +472,8 @@ export class MensagemDiretaService {
     }
 
     /** Para enviar o destinatário precisa, além disso, existir sem exclusão e estar **ativo**. */
-    /**
-   * A citação da resposta (task 220): autor e trecho saem da mensagem original, lida **nesta conversa**; o cliente só diz qual é. A mensagem do sistema
-   * (aviso da supervisão, por exemplo) não é respondida.
-   */
     private async montarCitacao(respondeAMensagemId: string | undefined, conversaId: string): Promise<CitacaoMensagemDto | null> {
-        if (!respondeAMensagemId) return null;
-        const original = await this.armazenamento.recuperarMensagem({ conversaId, mensagemId: respondeAMensagemId });
-        if (!original || original.autor !== AutorMensagemDiretaEnum.USUARIO || original.autorUsuarioId === null) {
-            throw new BusinessException('A mensagem respondida não existe nesta conversa');
-        }
-        return { mensagemId: original.mensagemId, autorUsuarioId: original.autorUsuarioId, trecho: trechoDaMensagemDireta(original.texto) };
+        return montarCitacaoDireta(this.armazenamento, respondeAMensagemId, conversaId);
     }
 
     private async validarDestinatarioAtivo(destinatarioId: number, usuarioAtivo: JwtPayload): Promise<void> {
@@ -498,21 +492,10 @@ export class MensagemDiretaService {
         referencia: ReferenciaMensagemDto,
         usuarioAtivo: JwtPayload,
     ): Promise<ReferenciaResolvida | null> {
-        const ehDesenvolvedor = !temVisibilidadeTotal(usuarioAtivo.tipo);
-        if (referencia.tipo === ReferenciaMensagemDiretaEnum.DEMANDA) {
-            const demanda = await this.demandaRepositorio.recuperar({ id: referencia.id }, ehDesenvolvedor ? { usuarioId: usuarioAtivo.sub } : undefined);
-            return demanda ? { nome: demanda.nome, situacao: demanda.status, projetoId: demanda.projetoId, demandaId: null, demandaNome: null } : null;
-        }
-
-        const atividade = await this.atividadeRepositorio.recuperar({ id: referencia.id });
-        if (!atividade) return null;
-        if (ehDesenvolvedor && !(await this.atividadeRepositorio.validarAcessoDemanda({ demandaId: atividade.demandaId, usuarioId: usuarioAtivo.sub }))) return null;
-        return { nome: atividade.nome, situacao: atividade.status, projetoId: atividade.projetoId, demandaId: atividade.demandaId, demandaNome: atividade.nomeDemanda };
+        return resolverReferenciaDireta({ demandaRepositorio: this.demandaRepositorio, atividadeRepositorio: this.atividadeRepositorio }, referencia, usuarioAtivo);
     }
 
     private async validarReferencia(referencia: ReferenciaMensagemDto, usuarioAtivo: JwtPayload): Promise<void> {
-        if (await this.resolverReferencia(referencia, usuarioAtivo)) return;
-        const rotulo = referencia.tipo === ReferenciaMensagemDiretaEnum.DEMANDA ? 'A demanda' : 'A atividade';
-        throw new BusinessException(`${rotulo} ${referencia.id} não existe ou você não tem acesso a ela`);
+        await validarReferenciaDireta({ demandaRepositorio: this.demandaRepositorio, atividadeRepositorio: this.atividadeRepositorio }, referencia, usuarioAtivo);
     }
 }
