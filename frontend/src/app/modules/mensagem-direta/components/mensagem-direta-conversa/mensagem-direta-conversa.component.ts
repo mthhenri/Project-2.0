@@ -85,7 +85,10 @@ export class MensagemDiretaConversaComponent {
         const meuId = this.sessao.id();
         if (!aberta || meuId === undefined || this.iaRespondendo()) return false;
         const enviadas = aberta.mensagens.filter((mensagem) => mensagem.situacao === 'ENVIADA');
-        return pedidoPendenteDaIa(enviadas, meuId, new Date(this.relogioDaIa()));
+        // A regra recusa idade negativa, e o relógio só bate a cada 30 s (e a data do servidor chega alguns milissegundos depois da local): o "agora" nunca fica
+        // antes da mensagem mais recente, senão o `@IA` recém-enviado só teria a dica na próxima batida (P-088).
+        const maisRecente = enviadas.reduce((maior, mensagem) => Math.max(maior, mensagem.createdDate.getTime()), 0);
+        return pedidoPendenteDaIa(enviadas, meuId, new Date(Math.max(this.relogioDaIa(), maisRecente)));
     });
     protected readonly estaOnline = computed(() => {
         const aberta = this.aberta();

@@ -11,6 +11,7 @@ import { testarComBanco, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarDemanda, criarDemandaUsuario, criarDesenvolvedor, criarGestor, criarProjeto } from '../../../testes/fabricas';
 import { PropostaIaRepository } from '../../proposta-ia/repositories/proposta-ia.repository';
+import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-reacao.repository';
 import { GrupoLeituraRepository } from '../repositories/grupo-leitura.repository';
 import { GrupoResumoRepository } from '../repositories/grupo-resumo.repository';
 import { GrupoRepository } from '../repositories/grupo.repository';
@@ -56,8 +57,7 @@ function montar(conexao: ConexaoTeste, estadoDaIa = EstadoIaEnum.NO_AR) {
     const supervisao = new GrupoSupervisaoService(armazenamento, grupos, criarRepositorio(MensagemDiretaSupervisaoRepository, conexao), criarRepositorio(UsuarioRepository, conexao), eventosService as never, canais);
     const grupoService = new GrupoService(
         armazenamento, grupos, criarRepositorio(GrupoLeituraRepository, conexao), criarRepositorio(UsuarioRepository, conexao), criarRepositorio(DemandaRepository, conexao),
-        criarRepositorio(AtividadeRepository, conexao), eventosService as never, canais, supervisao,
-    );
+        criarRepositorio(AtividadeRepository, conexao), eventosService as never, canais, supervisao, criarRepositorio(MensagemDiretaReacaoRepository, conexao), { atenderSeChamada: async () => undefined } as never, {} as never);
     const service = new GrupoResumoIaService(
         armazenamento, grupoService, criarRepositorio(GrupoResumoRepository, conexao), iaService as never, iaUsoService as never, configuracaoIaService as never,
         criarRepositorio(DemandaRepository, conexao), propostaIaService as never, eventosService as never,

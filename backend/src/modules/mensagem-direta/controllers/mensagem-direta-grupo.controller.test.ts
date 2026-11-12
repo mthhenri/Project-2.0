@@ -9,7 +9,7 @@ import { MensagemDiretaGrupoController } from './mensagem-direta-grupo.controlle
 
 const USUARIO = { sub: 4, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das vinte e seis rotas', () => {
+test('verbos e caminhos das vinte e nove rotas', () => {
     assert.deepEqual(
         Object.values(rotasPorNome(MensagemDiretaGrupoController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
         [
@@ -31,6 +31,9 @@ test('verbos e caminhos das vinte e seis rotas', () => {
             'GET supervisao/grupo/:grupoId',
             'GET supervisao/grupos',
             'PATCH grupo/:grupoId',
+            'PATCH grupo/:grupoId/mensagem',
+            'PUT grupo/:grupoId/reacao',
+            'GET grupo/:grupoId/mensagem/:mensagemId/proposta/:propostaId',
             'POST canal/demanda/:demandaId',
             'POST canal/projeto/:projetoId',
             'POST grupo',

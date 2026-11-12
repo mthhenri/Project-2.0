@@ -74,3 +74,6 @@ export * from './GrupoMensagemBuscadasDto';
 export * from './GrupoFixadaInternoCriarDto';
 export * from './GrupoFixadaInternoListarDto';
 export * from './GrupoFixadaInternoExcluirDto';
+export * from './GrupoMensagemEditarDto';
+export * from './GrupoMensagemReagirDto';
+export * from './GrupoMensagemPropostaRecuperarDto';

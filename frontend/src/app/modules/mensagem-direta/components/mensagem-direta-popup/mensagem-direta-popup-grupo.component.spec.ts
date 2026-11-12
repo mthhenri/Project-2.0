@@ -168,12 +168,11 @@ describe('MensagemDiretaPopupComponent — grupos', () => {
         expect(estado.naoLidas()).toBe(0);
     });
 
-    it('no grupo não há "Lida" por pessoa nem edição e reação', async () => {
+    it('no grupo não há "Lida" por pessoa, mas há o botão Reagir (a reação em grupo veio na task 326)', async () => {
         await montar();
         await abrirOGrupo([mensagemDoGrupo('m2', 'Minha mensagem', 1, '2026-10-21T14:07:00.000Z')]);
         expect(texto()).not.toContain('Lida');
-        expect(tela.elemento.querySelector('app-mensagem-direta-reacoes')).toBeNull();
-        expect(tela.elemento.querySelector('button[aria-label="Reagir"]')).toBeNull();
+        expect(tela.elemento.querySelector('button[aria-label="Reagir"]')).not.toBeNull();
     });
 
     it('a mensagem de outro grupo em evento não entra no grupo aberto e some do "digitando" quando chega', async () => {

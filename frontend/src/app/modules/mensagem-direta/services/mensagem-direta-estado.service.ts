@@ -519,6 +519,11 @@ export class MensagemDiretaEstadoService {
 
     /** Avisa o autor da mensagem de que alguém reagiu a ela: o mesmo cartão e as mesmas regras dos avisos de mensagem, sem contar como mensagem nova. */
     private avisarDaReacao(evento: Extract<MensagemDiretaEventoDto, { tipo: 'REACAO' }>, reacao: string): void {
+        const grupoId = grupoIdDaConversa(evento.conversaId);
+        if (grupoId !== null) {
+            this.avisarDaReacaoNoGrupo(evento, reacao, grupoId);
+            return;
+        }
         const aberta = this.conversaAberta();
         const naConversaAberta = aberta?.conversaId === evento.conversaId;
         const nome = this.conversas().find((conversa) => conversa.conversaId === evento.conversaId)?.usuarioNome ?? (naConversaAberta ? aberta?.usuarioNome : undefined) ?? 'Alguém';
@@ -531,6 +536,25 @@ export class MensagemDiretaEstadoService {
             mencionaVoce: false,
             conversaSilenciada: this.estaSilenciada(evento.reatorUsuarioId),
             conversaAVista: naConversaAberta && this.aVista(),
+            semContar: true,
+        });
+    }
+
+    /** O aviso de reação no grupo (task 326): o título é o do grupo e o texto leva o nome de quem reagiu; as mesmas regras (silêncio, conversa à vista, sem contar como nova). */
+    private avisarDaReacaoNoGrupo(evento: Extract<MensagemDiretaEventoDto, { tipo: 'REACAO' }>, reacao: string, grupoId: number): void {
+        const grupo = this.grupoEstado.grupoDaLista(grupoId);
+        const reator = nomeDoAutorNoGrupo(grupo?.membros ?? [], evento.reatorUsuarioId, this.sessao.id() ?? -1).split(' ')[0];
+        const naAberto = this.grupoEstado.grupoAberto()?.conversaId === evento.conversaId;
+        this.avisos.avisar({
+            conversaId: evento.conversaId,
+            usuarioId: evento.reatorUsuarioId,
+            usuarioNome: grupo?.nome ?? 'Grupo',
+            grupoId,
+            texto: `${reator} ${textoDoAvisoDeReacao(reacao)}`,
+            mensagemMinha: false,
+            mencionaVoce: false,
+            conversaSilenciada: grupo?.silenciada ?? false,
+            conversaAVista: naAberto && this.grupoAVista(),
             semContar: true,
         });
     }
@@ -713,10 +737,12 @@ export class MensagemDiretaEstadoService {
                 else this.receberMensagem(normalizarMensagem(evento.mensagem), true);
                 break;
             case 'EDICAO':
-                this.aplicarEdicao(normalizarMensagem(evento.mensagem));
+                if (grupoIdDaConversa(evento.mensagem.conversaId) !== null) this.grupoEstado.aplicarEdicao(evento.mensagem);
+                else this.aplicarEdicao(normalizarMensagem(evento.mensagem));
                 break;
             case 'REACAO': {
-                this.aplicarReacoes(evento.conversaId, evento.mensagemId, evento.reacoes);
+                if (grupoIdDaConversa(evento.conversaId) !== null) this.grupoEstado.aplicarReacoes(evento.conversaId, evento.mensagemId, evento.reacoes);
+                else this.aplicarReacoes(evento.conversaId, evento.mensagemId, evento.reacoes);
                 // Só quem escreveu a mensagem é avisado, e só de reação nova (trocar avisa de novo; tirar e reagir à própria mensagem, não).
                 const meuId = this.sessao.id();
                 if (evento.reacao !== null && meuId !== undefined && evento.autorUsuarioId === meuId && evento.reatorUsuarioId !== meuId) this.avisarDaReacao(evento, evento.reacao);
@@ -894,6 +920,8 @@ export class MensagemDiretaEstadoService {
         const aberto = this.grupoEstado.grupoAberto();
         const naAberto = aberto?.conversaId === mensagem.conversaId;
         const aVista = naAberto && this.grupoAVista();
+        // A IA terminou: chegou a resposta dela ou o aviso do sistema de que ela não pôde responder (task 326).
+        if (mensagem.autor !== AutorMensagemDiretaEnum.USUARIO) this.removerIaDigitando(mensagem.conversaId);
         const resultado = this.grupoEstado.receberMensagem(mensagem, aVista);
         const recarga = resultado.grupoDesconhecido ? this.carregarConversas() : null;
         if (naAberto && mensagem.autorUsuarioId !== meuId) void this.marcarGrupoComoLido();
@@ -902,21 +930,22 @@ export class MensagemDiretaEstadoService {
 
     /** O aviso do grupo traz o nome do grupo no título e o autor na prévia ("Ana: texto"); a mensagem do sistema nunca avisa. */
     private async avisarDaMensagemDeGrupo(mensagem: MensagemNaConversa, meuId: number, aVista: boolean, recarga: Promise<void> | null): Promise<void> {
-        if (mensagem.autor !== AutorMensagemDiretaEnum.USUARIO) return;
+        if (mensagem.autor === AutorMensagemDiretaEnum.SISTEMA) return;
         const sessao = this.geracaoDaSessao;
         if (recarga) await recarga;
         if (sessao !== this.geracaoDaSessao) return;
         const grupoId = grupoIdDaConversa(mensagem.conversaId);
         const grupo = grupoId === null ? null : this.grupoEstado.grupoDaLista(grupoId);
         if (grupoId === null) return;
-        const autor = nomeDoAutorNoGrupo(grupo?.membros ?? [], mensagem.autorUsuarioId, meuId);
-        const primeiroNome = autor.split(' ')[0];
+        // A resposta da IA (task 326) não tem autor pessoa: o aviso a chama de "IA".
+        const ehIa = mensagem.autor === AutorMensagemDiretaEnum.IA;
+        const primeiroNome = ehIa ? 'IA' : nomeDoAutorNoGrupo(grupo?.membros ?? [], mensagem.autorUsuarioId, meuId).split(' ')[0];
         this.avisos.avisar({
             conversaId: mensagem.conversaId,
             usuarioId: mensagem.autorUsuarioId ?? 0,
             usuarioNome: grupo?.nome ?? 'Grupo',
             grupoId,
-            texto: `${primeiroNome}: ${previaDaMensagem(mensagem.texto, mensagem.contemCodigo, false)}`,
+            texto: `${primeiroNome}: ${previaDaMensagem(mensagem.texto, mensagem.contemCodigo, false, ehIa)}`,
             markdown: `${primeiroNome}: ${mensagem.texto}`,
             mensagemMinha: mensagem.autorUsuarioId === meuId,
             mencionaVoce: mensagem.mencoes.includes(meuId),

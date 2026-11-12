@@ -153,4 +153,3 @@
 - **Contorno:** rodar com `NODE_OPTIONS=--no-experimental-webstorage` (suíte inteira: 222 arquivos, 2701 testes, todos passam).
 - **Correção:** fixar a opção no script de teste do frontend (ou no setup do Vitest) e/ou fixar a versão do Node do projeto; conferir a versão usada no CI.
 - **Desde:** 2026-11-12 (Node 26.13.0 na máquina do autor).
-

@@ -132,6 +132,13 @@ describe('MensagemDiretaConversaComponent — @IA', () => {
         expect(dica()).toBe(false);
     });
 
+    it('o @IA sozinho recém-enviado mostra a dica na hora, mesmo com o relógio da dica atrasado e a data do servidor à frente (P-088)', async () => {
+        await abrir([mensagem({ mensagemId: 'm-0', texto: 'oi', autorUsuarioId: 9 })]);
+        vi.setSystemTime(new Date(Date.now() + 45 * 60_000));
+        await abrir([mensagem({ mensagemId: 'm-0', texto: 'oi', autorUsuarioId: 9 }), mensagem({ mensagemId: 'm-1', texto: '@IA', createdDate: new Date(Date.now() + 50) })]);
+        expect(tela.elemento.textContent).toContain('A IA está esperando o seu pedido');
+    });
+
     it('com a IA no ar, o @ do compositor oferece a IA', async () => {
         TestBed.inject(IaDisponibilidadeService).estadoReal.set(EstadoIaEnum.NO_AR);
         await abrir([]);

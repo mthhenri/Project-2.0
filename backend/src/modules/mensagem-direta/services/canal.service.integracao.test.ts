@@ -11,6 +11,7 @@ import { UsuarioRepository } from '../../usuario/repositories/usuario.repository
 import { testarComBanco, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAdministrador, criarDemanda, criarDemandaUsuario, criarDesenvolvedor, criarGestor, criarProjeto, excluirLinha } from '../../../testes/fabricas';
+import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-reacao.repository';
 import { GrupoLeituraRepository } from '../repositories/grupo-leitura.repository';
 import { GrupoRepository } from '../repositories/grupo.repository';
 import { MensagemDiretaPostgresRepository } from '../repositories/mensagem-direta-postgres.repository';
@@ -44,8 +45,7 @@ function montar(conexao: ConexaoTeste) {
         criarRepositorio(AtividadeRepository, conexao),
         eventosService as never,
         canais,
-        supervisao,
-    );
+        supervisao, criarRepositorio(MensagemDiretaReacaoRepository, conexao), { atenderSeChamada: async () => undefined } as never, {} as never);
     return { service, supervisao, eventos, armazenamento, grupos };
 }
 

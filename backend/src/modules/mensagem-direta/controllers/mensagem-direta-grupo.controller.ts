@@ -5,7 +5,9 @@ import {
     GrupoLeituraAlterarDto,
     GrupoMembroAdicionarDto,
     GrupoMensagemBuscarDto,
+    GrupoMensagemEditarDto,
     GrupoMensagemEnviarDto,
+    GrupoMensagemReagirDto,
     GrupoResumoIaCriarDto,
     GrupoResumoIaEstimarDto,
     GrupoResumoIaPropostaCriarDto,
@@ -108,6 +110,29 @@ export class MensagemDiretaGrupoController {
     @Post('grupo/:grupoId/mensagem')
     enviarMensagem(@Param('grupoId', ParseIntPipe) grupoId: number, @Body() dto: GrupoMensagemEnviarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
         return this.grupoService.enviarMensagem({ ...dto, grupoId }, usuarioAtivo);
+    }
+
+    /** Edita a própria mensagem do grupo (task 326): até 1 hora, só o autor. */
+    @Patch('grupo/:grupoId/mensagem')
+    alterarMensagem(@Param('grupoId', ParseIntPipe) grupoId: number, @Body() dto: GrupoMensagemEditarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.grupoService.alterarMensagem({ ...dto, grupoId }, usuarioAtivo);
+    }
+
+    /** Reage a uma mensagem do grupo (task 326): um emoji, o mesmo de antes (ou `null`) tira. */
+    @Put('grupo/:grupoId/reacao')
+    reagirMensagem(@Param('grupoId', ParseIntPipe) grupoId: number, @Body() dto: GrupoMensagemReagirDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.grupoService.reagirMensagem({ ...dto, grupoId }, usuarioAtivo);
+    }
+
+    /** Uma proposta da resposta do `@IA` do grupo (task 326) para quem olha: sem acesso ao alvo, `acessivel: false` e nenhum dado. */
+    @Get('grupo/:grupoId/mensagem/:mensagemId/proposta/:propostaId')
+    recuperarProposta(
+        @Param('grupoId', ParseIntPipe) grupoId: number,
+        @Param('mensagemId', new ParseUUIDPipe()) mensagemId: string,
+        @Param('propostaId', ParseIntPipe) propostaId: number,
+        @ActiveUser() usuarioAtivo: JwtPayload,
+    ) {
+        return this.grupoService.recuperarProposta({ grupoId, mensagemId, propostaId }, usuarioAtivo);
     }
 
     @Put('grupo/:grupoId/leitura')

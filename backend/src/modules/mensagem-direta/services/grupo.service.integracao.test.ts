@@ -11,6 +11,7 @@ import { UsuarioRepository } from '../../usuario/repositories/usuario.repository
 import { testarComBanco, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAdministrador, criarDesenvolvedor, criarGestor } from '../../../testes/fabricas';
+import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-reacao.repository';
 import { GrupoLeituraRepository } from '../repositories/grupo-leitura.repository';
 import { GrupoRepository } from '../repositories/grupo.repository';
 import { MensagemDiretaPostgresRepository } from '../repositories/mensagem-direta-postgres.repository';
@@ -31,6 +32,16 @@ function montar(conexao: ConexaoTeste) {
     const eventosService = {
         publicarParaUsuarios: async (dto: MensagemDiretaEventoPublicarDto) => { eventos.push(dto); },
         listarUsuariosOnline: () => new Set<number>(),
+    };
+    // O `@IA` (task 326): o turno em si é testado na service da IA; aqui só se vê que o grupo a aciona com os membros certos.
+    const chamadasDaIa: Array<{ mensagem: { texto: string; conversaId: string }; usuarioAtivo: { sub: number }; grupo?: { nome: string; lerMembrosIds: () => Promise<number[]> } }> = [];
+    const iaChatDireto = { atenderSeChamada: async (dto: (typeof chamadasDaIa)[number]) => { chamadasDaIa.push(dto); } };
+    const propostaIa = {
+        recuperarParaParticipante: async (dto: { id: number; chamadaPorUsuarioId: number }, usuario: { sub: number }) => ({
+            acessivel: usuario.sub !== 0,
+            podeResolver: usuario.sub === dto.chamadaPorUsuarioId,
+            proposta: null,
+        }),
     };
     const armazenamento = new MensagemDiretaPostgresRepository(conexao);
     const grupos = criarRepositorio(GrupoRepository, conexao);
@@ -57,9 +68,8 @@ function montar(conexao: ConexaoTeste) {
         criarRepositorio(AtividadeRepository, conexao),
         eventosService as never,
         canais,
-        supervisao,
-    );
-    return { service, supervisao, eventos, armazenamento };
+        supervisao, criarRepositorio(MensagemDiretaReacaoRepository, conexao), iaChatDireto as never, propostaIa as never);
+    return { service, supervisao, eventos, armazenamento, chamadasDaIa };
 }
 
 async function trio(conexao: ConexaoTeste) {
@@ -438,4 +448,161 @@ testarComBanco('supervisão: o gestor que é membro não abre o próprio grupo p
     const leitor = await criarGestor(conexao);
     assert.ok(!(await supervisao.listarGruposSupervisionados({}, como(leitor))).dados!.grupos.some((item) => item.grupoId === efemero.grupoId));
     await recusaCom(supervisao.lerGrupoSupervisionado({ grupoId: efemero.grupoId } as never, como(leitor)), ResourceNotFoundException);
+});
+
+
+// --- editar, reagir e o @IA no grupo (task 326) ------------------------------
+
+const enviarNoGrupo = (service: GrupoService, grupoId: number, autor: { id: number; login: string; tipo: unknown }, texto: string, extras: Partial<Parameters<GrupoService['enviarMensagem']>[0]> = {}) =>
+    service.enviarMensagem({ grupoId, mensagemId: randomUUID(), texto, ...extras }, como(autor));
+
+testarComBanco('alterarMensagem: o autor membro edita; os membros recebem EDICAO; não membro, outro autor e prazo vencido recusam', async (conexao) => {
+    const { service, eventos, armazenamento } = montar(conexao);
+    const { ana, bruno, carla } = await trio(conexao);
+    const fora = await criarDesenvolvedor(conexao);
+    const { grupoId } = (await service.criarGrupo({ nome: 'Time', membroUsuarioIds: [bruno.id, carla.id] }, como(ana))).dados!.grupo;
+    const enviada = (await enviarNoGrupo(service, grupoId, ana, 'texto antigo')).dados!.mensagem;
+
+    eventos.length = 0;
+    const editada = (await service.alterarMensagem({ grupoId, mensagemId: enviada.mensagemId, texto: 'texto novo' }, como(ana))).dados!.mensagem;
+    assert.equal(editada.texto, 'texto novo');
+    assert.ok(editada.editadaDate, 'ganha a marca de editada');
+    assert.equal(editada.createdDate.getTime(), enviada.createdDate.getTime(), 'a data de envio não muda');
+    const edicao = eventos.find((evento) => evento.evento.tipo === 'EDICAO')!;
+    assert.deepEqual([...edicao.usuarioIds].sort(), [ana.id, bruno.id, carla.id].sort());
+
+    eventos.length = 0;
+    const igual = await service.alterarMensagem({ grupoId, mensagemId: enviada.mensagemId, texto: 'texto novo' }, como(ana));
+    assert.equal(igual.mensagem, 'Mensagem sem alterações');
+    assert.equal(eventos.length, 0, 'texto igual não grava nem avisa');
+
+    await recusaCom(service.alterarMensagem({ grupoId, mensagemId: enviada.mensagemId, texto: 'do Bruno' }, como(bruno)), UnauthorizedAccessException);
+    await recusaCom(service.alterarMensagem({ grupoId, mensagemId: enviada.mensagemId, texto: 'de fora' }, como(fora)), UnauthorizedAccessException);
+    await recusaCom(service.alterarMensagem({ grupoId, mensagemId: randomUUID(), texto: 'não existe' }, como(ana)), ResourceNotFoundException);
+
+    await conexao.raw(`
+        UPDATE mensagem_direta
+        SET
+            created_date = NOW() - INTERVAL '2 hours'
+        WHERE
+            mensagem_id = ?
+    `, [enviada.mensagemId]);
+    await recusaCom(service.alterarMensagem({ grupoId, mensagemId: enviada.mensagemId, texto: 'tarde demais' }, como(ana)), BusinessException);
+    assert.equal((await armazenamento.recuperarMensagem({ conversaId: `G${grupoId}`, mensagemId: enviada.mensagemId }))?.texto, 'texto novo');
+});
+
+testarComBanco('alterarMensagem: não edita a mensagem de outro grupo, a do sistema nem a da IA', async (conexao) => {
+    const { service, armazenamento } = montar(conexao);
+    const { ana, bruno } = await trio(conexao);
+    const primeiro = (await service.criarGrupo({ nome: 'Um', membroUsuarioIds: [bruno.id] }, como(ana))).dados!.grupo.grupoId;
+    const segundo = (await service.criarGrupo({ nome: 'Dois', membroUsuarioIds: [bruno.id] }, como(ana))).dados!.grupo.grupoId;
+    const doSegundo = (await enviarNoGrupo(service, segundo, ana, 'só no segundo')).dados!.mensagem;
+    await recusaCom(service.alterarMensagem({ grupoId: primeiro, mensagemId: doSegundo.mensagemId, texto: 'trocada' }, como(ana)), ResourceNotFoundException);
+
+    const doSistema = (await service.listarMensagens({ grupoId: primeiro }, como(ana))).dados!.mensagens.find((mensagem) => mensagem.autor === AutorMensagemDiretaEnum.SISTEMA)!;
+    await recusaCom(service.alterarMensagem({ grupoId: primeiro, mensagemId: doSistema.mensagemId, texto: 'trocada' }, como(ana)), BusinessException);
+
+    const daIa = (await armazenamento.gravar({
+        mensagemId: randomUUID(), conversaId: `G${primeiro}`, autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, texto: 'resposta', contemCodigo: false, mencoes: [], referencias: [],
+        chamadaPorUsuarioId: ana.id, propostaIds: [],
+    })).mensagem;
+    await recusaCom(service.alterarMensagem({ grupoId: primeiro, mensagemId: daIa.mensagemId, texto: 'trocada' }, como(ana)), BusinessException);
+});
+
+testarComBanco('reagirMensagem: membro reage a mensagem de pessoa, troca e remove; todos os membros recebem REACAO e as reações voltam na lista', async (conexao) => {
+    const { service, eventos } = montar(conexao);
+    const { ana, bruno, carla } = await trio(conexao);
+    const { grupoId } = (await service.criarGrupo({ nome: 'Time', membroUsuarioIds: [bruno.id, carla.id] }, como(ana))).dados!.grupo;
+    const enviada = (await enviarNoGrupo(service, grupoId, ana, 'bom dia')).dados!.mensagem;
+
+    eventos.length = 0;
+    const primeira = (await service.reagirMensagem({ grupoId, mensagemId: enviada.mensagemId, reacao: '👍' }, como(bruno))).dados!;
+    assert.deepEqual(primeira.reacoes, [{ usuarioId: bruno.id, reacao: '👍' }]);
+    const evento = eventos.find((item) => item.evento.tipo === 'REACAO')!;
+    assert.deepEqual([...evento.usuarioIds].sort(), [ana.id, bruno.id, carla.id].sort());
+    assert.deepEqual(evento.evento, {
+        tipo: 'REACAO', conversaId: `G${grupoId}`, mensagemId: enviada.mensagemId, reacoes: primeira.reacoes, reatorUsuarioId: bruno.id, autorUsuarioId: ana.id, reacao: '👍',
+    });
+
+    await service.reagirMensagem({ grupoId, mensagemId: enviada.mensagemId, reacao: '❤️' }, como(carla));
+    const trocada = (await service.reagirMensagem({ grupoId, mensagemId: enviada.mensagemId, reacao: '😂' }, como(bruno))).dados!;
+    assert.deepEqual(trocada.reacoes.map((item) => [item.usuarioId, item.reacao]), [[bruno.id, '😂'], [carla.id, '❤️']], 'trocar mantém o lugar na ordem');
+
+    const lista = (await service.listarMensagens({ grupoId }, como(ana))).dados!.mensagens.find((mensagem) => mensagem.mensagemId === enviada.mensagemId)!;
+    assert.equal(lista.reacoes.length, 2, 'a lista do grupo traz as reações');
+
+    const removida = (await service.reagirMensagem({ grupoId, mensagemId: enviada.mensagemId, reacao: '😂' }, como(bruno))).dados!;
+    assert.deepEqual(removida.reacoes.map((item) => item.usuarioId), [carla.id], 'o mesmo emoji de novo remove');
+    const nula = (await service.reagirMensagem({ grupoId, mensagemId: enviada.mensagemId, reacao: null }, como(carla))).dados!;
+    assert.deepEqual(nula.reacoes, []);
+});
+
+testarComBanco('reagirMensagem: recusa não membro, emoji inválido, mensagem de outro grupo, do sistema e da IA; a reação do grupo não tem conversa', async (conexao) => {
+    const { service, armazenamento } = montar(conexao);
+    const { ana, bruno } = await trio(conexao);
+    const fora = await criarDesenvolvedor(conexao);
+    const grupoId = (await service.criarGrupo({ nome: 'Time', membroUsuarioIds: [bruno.id] }, como(ana))).dados!.grupo.grupoId;
+    const outroId = (await service.criarGrupo({ nome: 'Outro', membroUsuarioIds: [bruno.id] }, como(ana))).dados!.grupo.grupoId;
+    const enviada = (await enviarNoGrupo(service, grupoId, ana, 'oi')).dados!.mensagem;
+    const doOutro = (await enviarNoGrupo(service, outroId, ana, 'no outro')).dados!.mensagem;
+
+    await recusaCom(service.reagirMensagem({ grupoId, mensagemId: enviada.mensagemId, reacao: '👍' }, como(fora)), UnauthorizedAccessException);
+    await recusaCom(service.reagirMensagem({ grupoId, mensagemId: enviada.mensagemId, reacao: 'oi' }, como(bruno)), BusinessException);
+    await recusaCom(service.reagirMensagem({ grupoId, mensagemId: doOutro.mensagemId, reacao: '👍' }, como(bruno)), ResourceNotFoundException);
+    const doSistema = (await service.listarMensagens({ grupoId }, como(ana))).dados!.mensagens.find((mensagem) => mensagem.autor === AutorMensagemDiretaEnum.SISTEMA)!;
+    await recusaCom(service.reagirMensagem({ grupoId, mensagemId: doSistema.mensagemId, reacao: '👍' }, como(bruno)), BusinessException);
+    const daIa = (await armazenamento.gravar({
+        mensagemId: randomUUID(), conversaId: `G${grupoId}`, autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, texto: 'resposta', contemCodigo: false, mencoes: [], referencias: [],
+        chamadaPorUsuarioId: ana.id, propostaIds: [],
+    })).mensagem;
+    await recusaCom(service.reagirMensagem({ grupoId, mensagemId: daIa.mensagemId, reacao: '👍' }, como(bruno)), BusinessException);
+
+    await service.reagirMensagem({ grupoId, mensagemId: enviada.mensagemId, reacao: '👍' }, como(bruno));
+    const linha = (await conexao.raw(`
+        SELECT
+            grupo_id,
+            conversa_id
+        FROM
+            mensagem_direta_reacao
+        WHERE
+            mensagem_id = ?
+    `, [enviada.mensagemId])).rows[0];
+    assert.deepEqual([linha.grupo_id, linha.conversa_id], [grupoId, null], 'a reação do grupo guarda o grupo, não a conversa');
+});
+
+testarComBanco('enviarMensagem aciona a IA com os membros de agora; a do reenvio não', async (conexao) => {
+    const { service, chamadasDaIa } = montar(conexao);
+    const { ana, bruno, carla } = await trio(conexao);
+    const { grupoId } = (await service.criarGrupo({ nome: 'Time', membroUsuarioIds: [bruno.id] }, como(ana))).dados!.grupo;
+    const mensagemId = randomUUID();
+    await service.enviarMensagem({ grupoId, mensagemId, texto: '@IA resume' }, como(ana));
+    await service.enviarMensagem({ grupoId, mensagemId, texto: '@IA resume' }, como(ana));
+    assert.equal(chamadasDaIa.length, 1, 'o reenvio não chama de novo');
+    assert.equal(chamadasDaIa[0].grupo?.nome, 'Time');
+    assert.equal(chamadasDaIa[0].usuarioAtivo.sub, ana.id);
+    assert.deepEqual((await chamadasDaIa[0].grupo!.lerMembrosIds()).sort(), [ana.id, bruno.id].sort());
+
+    await service.adicionarMembros({ grupoId, usuarioIds: [carla.id] }, como(ana));
+    assert.deepEqual((await chamadasDaIa[0].grupo!.lerMembrosIds()).sort(), [ana.id, bruno.id, carla.id].sort(), 'os membros são lidos de novo a cada chamada');
+});
+
+testarComBanco('recuperarProposta: só da resposta da IA deste grupo; membro vê, quem não é membro recebe 403, proposta alheia dá 404', async (conexao) => {
+    const { service, armazenamento } = montar(conexao);
+    const { ana, bruno } = await trio(conexao);
+    const fora = await criarDesenvolvedor(conexao);
+    const grupoId = (await service.criarGrupo({ nome: 'Time', membroUsuarioIds: [bruno.id] }, como(ana))).dados!.grupo.grupoId;
+    const outroId = (await service.criarGrupo({ nome: 'Outro', membroUsuarioIds: [bruno.id] }, como(ana))).dados!.grupo.grupoId;
+    const daIa = (await armazenamento.gravar({
+        mensagemId: randomUUID(), conversaId: `G${grupoId}`, autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, texto: 'proposta', contemCodigo: false, mencoes: [], referencias: [],
+        chamadaPorUsuarioId: ana.id, propostaIds: [71, 72],
+    })).mensagem;
+
+    const paraQuemChamou = (await service.recuperarProposta({ grupoId, mensagemId: daIa.mensagemId, propostaId: 71 }, como(ana))).dados!;
+    assert.deepEqual([paraQuemChamou.acessivel, paraQuemChamou.podeResolver], [true, true]);
+    const paraOutro = (await service.recuperarProposta({ grupoId, mensagemId: daIa.mensagemId, propostaId: 72 }, como(bruno))).dados!;
+    assert.deepEqual([paraOutro.acessivel, paraOutro.podeResolver], [true, false], 'só quem chamou resolve');
+
+    await recusaCom(service.recuperarProposta({ grupoId, mensagemId: daIa.mensagemId, propostaId: 99 }, como(ana)), ResourceNotFoundException);
+    await recusaCom(service.recuperarProposta({ grupoId: outroId, mensagemId: daIa.mensagemId, propostaId: 71 }, como(ana)), ResourceNotFoundException);
+    await recusaCom(service.recuperarProposta({ grupoId, mensagemId: daIa.mensagemId, propostaId: 71 }, como(fora)), UnauthorizedAccessException);
 });

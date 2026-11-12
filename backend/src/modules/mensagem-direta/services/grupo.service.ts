@@ -15,9 +15,12 @@ import {
     GrupoMembroAdicionadoDto,
     GrupoMembroAdicionarDto,
     GrupoMembroResumoDto,
+    GrupoMensagemEditarDto,
     GrupoMensagemEnviarDto,
     GrupoMensagemListadasDto,
     GrupoMensagemListarDto,
+    GrupoMensagemPropostaRecuperarDto,
+    GrupoMensagemReagirDto,
     GrupoRecuperadoDto,
     GrupoResumoDto,
     GrupoSaidoDto,
@@ -25,12 +28,18 @@ import {
     GrupoSilencioAlterarDto,
     LIMITE_MEMBROS_DO_GRUPO,
     LIMITE_PADRAO_DA_CONVERSA_DIRETA,
+    MensagemDiretaEditadaDto,
     MensagemDiretaEnviadaDto,
+    MensagemDiretaPropostaRecuperadaDto,
+    MensagemDiretaReagidaDto,
+    ReacaoMensagemDiretaDto,
     StandardResponse,
     TipoGrupoEnum,
     TipoUsuarioEnum,
+    avaliarEdicaoDeMensagemDireta,
     contemBlocoDeCodigo,
     ehCorAvatarValida,
+    ehReacaoValida,
     grupoEhCanal,
     grupoEhPrivado,
     montarConversaGrupoId,
@@ -43,6 +52,7 @@ import { UnauthorizedAccessException } from '../../../core/exceptions/unauthoriz
 import { AtividadeRepository } from '../../atividade/repositories/atividade.repository';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
+import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import { LIMITE_GRUPOS_DO_USUARIO } from '../domain/mensagem-direta-consultas';
 import {
@@ -63,12 +73,15 @@ import {
 } from '../domain/grupo-regras';
 import { limitarLeituraAoAgora, normalizarReferencias } from '../domain/mensagem-direta-regras';
 import { montarCitacaoDireta, validarReferenciaDireta } from '../domain/mensagem-direta-referencia';
+import { juntarReacoesNasMensagens } from '../domain/mensagem-direta-reacoes';
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, ArmazenamentoDeMensagemDireta } from '../repositories/armazenamento-de-mensagem-direta';
 import { GrupoLeituraRepository } from '../repositories/grupo-leitura.repository';
 import { GrupoMembroRegistrado, GrupoRegistrado, GrupoRepository } from '../repositories/grupo.repository';
+import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-reacao.repository';
 import { CanalAcessoService } from './canal-acesso.service';
 import { GrupoSupervisaoService } from './grupo-supervisao.service';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
+import { MensagemDiretaIaService } from './mensagem-direta-ia.service';
 
 const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
 
@@ -109,6 +122,9 @@ export class GrupoService {
         private readonly eventosService: MensagemDiretaEventosService,
         private readonly canais: CanalAcessoService,
         private readonly supervisaoService: GrupoSupervisaoService,
+        private readonly reacaoRepositorio: MensagemDiretaReacaoRepository,
+        private readonly iaChatDiretoService: MensagemDiretaIaService,
+        private readonly propostaIaService: PropostaIaService,
     ) {}
 
     // ---------------------------------------------------------------------------
@@ -333,9 +349,18 @@ export class GrupoService {
             respondeA,
         });
 
+        // O reenvio de uma mensagem já gravada pode já ter reações; a nova não tem.
+        if (enviada.jaExistia) enviada.mensagem = (await juntarReacoesNasMensagens(this.reacaoRepositorio, [enviada.mensagem]))[0];
+
         // O reenvio de uma mensagem já gravada não avisa de novo. Todos os membros recebem (a do autor cobre as outras abas dele).
         if (!enviada.jaExistia) {
             await this.eventosService.publicarParaUsuarios({ usuarioIds: membrosIds, evento: { tipo: 'MENSAGEM', mensagem: enviada.mensagem } });
+            // O `@IA` (task 326) responde fora da requisição, como na conversa um a um: o envio volta sem esperar a IA e a resposta chega pelo stream.
+            void this.iaChatDiretoService.atenderSeChamada({
+                mensagem: enviada.mensagem,
+                usuarioAtivo,
+                grupo: { nome: grupo.nome, tipo: grupo.tipo, lerMembrosIds: async () => (await this.canais.listarMembros(grupo)).map((membro) => membro.usuarioId) },
+            });
         }
         return { sucesso: true, dados: enviada, mensagem: enviada.jaExistia ? 'Mensagem já enviada' : 'Mensagem enviada com sucesso' };
     }
@@ -352,7 +377,99 @@ export class GrupoService {
             cursor: dto.cursor,
             limite: dto.limite ?? LIMITE_PADRAO_DA_CONVERSA_DIRETA,
         });
-        return { sucesso: true, dados: { grupoId: grupo.grupoId, mensagens: pagina.mensagens, proximoCursor: pagina.proximoCursor }, mensagem: 'Conversa do grupo recuperada com sucesso' };
+        return { sucesso: true, dados: { grupoId: grupo.grupoId, mensagens: await juntarReacoesNasMensagens(this.reacaoRepositorio, pagina.mensagens), proximoCursor: pagina.proximoCursor }, mensagem: 'Conversa do grupo recuperada com sucesso' };
+    }
+
+    // ---------------------------------------------------------------------------
+    // Editar, reagir e ver a proposta da IA (task 326)
+    // ---------------------------------------------------------------------------
+
+    /**
+     * O autor troca o texto da própria mensagem do grupo, até 1 hora depois do envio, com as regras da conversa um a um (`avaliarEdicaoDeMensagemDireta`; o
+     * original não é guardado, I-052). Só membro de agora edita: o gestor que lê o canal por tipo sem ser membro não edita. Todos os membros recebem `EDICAO`.
+     */
+    async alterarMensagem(dto: GrupoMensagemEditarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaEditadaDto>> {
+        const { grupo, membrosIds } = await this.exigirMembro(dto.grupoId, usuarioAtivo);
+        const conversaId = montarConversaGrupoId(grupo.grupoId);
+        const existente = await this.armazenamento.recuperarMensagem({ conversaId, mensagemId: dto.mensagemId });
+        if (!existente) throw new ResourceNotFoundException('Mensagem');
+
+        switch (avaliarEdicaoDeMensagemDireta({ ...existente, usuarioId: usuarioAtivo.sub, agora: new Date() })) {
+            case 'MENSAGEM_DO_SISTEMA':
+                throw new BusinessException('A mensagem do sistema não pode ser editada');
+            case 'NAO_E_DO_AUTOR':
+                throw new UnauthorizedAccessException('Só o autor pode editar a mensagem');
+            case 'PRAZO_ENCERRADO':
+                throw new BusinessException('O prazo de 1 hora para editar a mensagem acabou');
+        }
+
+        if (existente.texto === dto.texto) {
+            return { sucesso: true, dados: { mensagem: (await juntarReacoesNasMensagens(this.reacaoRepositorio, [existente]))[0] }, mensagem: 'Mensagem sem alterações' };
+        }
+
+        const mencoes = normalizarMencoesDoGrupo(dto.mencoes, dto.mencionaTodos, membrosIds, usuarioAtivo.sub);
+        const referencias = normalizarReferencias(dto.referencias);
+        for (const referencia of referencias) {
+            await validarReferenciaDireta({ demandaRepositorio: this.demandaRepositorio, atividadeRepositorio: this.atividadeRepositorio }, referencia, usuarioAtivo);
+        }
+
+        const alterada = await this.armazenamento.alterarMensagem({
+            mensagemId: dto.mensagemId.toLowerCase(),
+            conversaId,
+            autorUsuarioId: usuarioAtivo.sub,
+            texto: dto.texto,
+            contemCodigo: contemBlocoDeCodigo(dto.texto),
+            mencoes,
+            referencias,
+        });
+        if (!alterada) throw new ResourceNotFoundException('Mensagem');
+        const [comReacoes] = await juntarReacoesNasMensagens(this.reacaoRepositorio, [alterada]);
+
+        await this.eventosService.publicarParaUsuarios({ usuarioIds: membrosIds, evento: { tipo: 'EDICAO', mensagem: comReacoes } });
+        return { sucesso: true, dados: { mensagem: comReacoes }, mensagem: 'Mensagem editada com sucesso' };
+    }
+
+    /**
+     * O membro reage a uma mensagem de **pessoa** do grupo (a dele ou a de outro; a do sistema e a da IA não têm reação): um só emoji, uma reação por
+     * pessoa por mensagem; o mesmo emoji (ou `null`) tira, outro troca. Todos os membros recebem `REACAO` com a lista completa.
+     */
+    async reagirMensagem(dto: GrupoMensagemReagirDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaReagidaDto>> {
+        const { grupo, membrosIds } = await this.exigirMembro(dto.grupoId, usuarioAtivo);
+        const reacao = dto.reacao ?? null;
+        if (reacao !== null && !ehReacaoValida(reacao)) throw new BusinessException('A reação deve ser um único emoji');
+        const conversaId = montarConversaGrupoId(grupo.grupoId);
+        const mensagemId = dto.mensagemId.toLowerCase();
+        const original = await this.armazenamento.recuperarMensagem({ conversaId, mensagemId });
+        if (!original) throw new ResourceNotFoundException('Mensagem');
+        if (original.autor !== AutorMensagemDiretaEnum.USUARIO || original.autorUsuarioId === null) throw new BusinessException('A mensagem do sistema ou da IA não recebe reação');
+
+        const atuais = await this.reacaoRepositorio.listarPorMensagens({ mensagemIds: [mensagemId] });
+        const minhaAtual = atuais.find((atual) => atual.usuarioId === usuarioAtivo.sub)?.reacao ?? null;
+        const nova = reacao !== null && reacao !== minhaAtual ? reacao : null;
+        if (nova === null) await this.reacaoRepositorio.remover({ mensagemId, usuarioId: usuarioAtivo.sub });
+        else await this.reacaoRepositorio.definir({ mensagemId, grupoId: grupo.grupoId, usuarioId: usuarioAtivo.sub, reacao: nova });
+
+        const reacoes = (await this.reacaoRepositorio.listarPorMensagens({ mensagemIds: [mensagemId] })).map(({ usuarioId, reacao: emoji }): ReacaoMensagemDiretaDto => ({ usuarioId, reacao: emoji }));
+        await this.eventosService.publicarParaUsuarios({
+            usuarioIds: membrosIds,
+            evento: { tipo: 'REACAO', conversaId, mensagemId, reacoes, reatorUsuarioId: usuarioAtivo.sub, autorUsuarioId: original.autorUsuarioId, reacao: nova },
+        });
+        return { sucesso: true, dados: { mensagemId, reacoes }, mensagem: nova === null ? 'Reação removida' : 'Reação registrada' };
+    }
+
+    /**
+     * Uma proposta da resposta do `@IA` do grupo para quem está olhando (task 326, como a 315 faz na conversa um a um). A proposta precisa estar na mensagem
+     * da IA indicada, **deste** grupo; senão, 404. Sem acesso ao alvo, `acessivel: false` e nenhum dado; só quem chamou a IA resolve (pelas rotas de
+     * `/proposta-ia`). Membro ou gestor lendo o canal por tipo olham; qualquer outra pessoa recebe 403.
+     */
+    async recuperarProposta(dto: GrupoMensagemPropostaRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaPropostaRecuperadaDto>> {
+        const { grupo } = await this.exigirAcessoDeLeitura(dto.grupoId, usuarioAtivo);
+        const resposta = await this.armazenamento.recuperarMensagem({ conversaId: montarConversaGrupoId(grupo.grupoId), mensagemId: dto.mensagemId });
+        if (!resposta || resposta.autor !== AutorMensagemDiretaEnum.IA || resposta.chamadaPorUsuarioId === null || !resposta.propostaIds.includes(dto.propostaId)) {
+            throw new ResourceNotFoundException('Proposta');
+        }
+        const dados = await this.propostaIaService.recuperarParaParticipante({ id: dto.propostaId, chamadaPorUsuarioId: resposta.chamadaPorUsuarioId }, usuarioAtivo);
+        return { sucesso: true, dados, mensagem: dados.acessivel ? 'Proposta recuperada com sucesso' : 'Ação oculta por falta de acesso' };
     }
 
     // ---------------------------------------------------------------------------

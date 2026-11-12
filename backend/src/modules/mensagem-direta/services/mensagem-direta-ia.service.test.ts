@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { AutorMensagemDiretaEnum, EstadoIaEnum, MensagemDiretaResumoDto, NivelIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { AutorMensagemDiretaEnum, EstadoIaEnum, MensagemDiretaResumoDto, NivelIaEnum, TipoGrupoEnum, TipoUsuarioEnum } from '@project20/shared';
 import { IaException } from '../../ia/domain/ia.exception';
 import { IaResposta, IaSolicitacao } from '../../ia/domain/ia.tipos';
 import { turnoAtual } from '../../ia/domain/turno-ia';
@@ -62,6 +62,8 @@ interface Cenario {
     propostas?: Record<string, number>;
     /** Segura a primeira chamada ao modelo até o teste soltar. */
     segurar?: Promise<void>;
+    /** Os membros do grupo (task 326); padrão: Ana, Bruno e Carla. */
+    membros?: number[];
 }
 
 function montar(cenario: Cenario = {}) {
@@ -73,6 +75,7 @@ function montar(cenario: Cenario = {}) {
     const recusadas: number[] = [];
     let conversa: MensagemDiretaResumoDto[] = [...(cenario.anteriores ?? [])];
     let volta = 0;
+    const membros = { atuais: cenario.membros ?? [4, BRUNO_ID, 12] };
 
     const armazenamento = {
         gravar: async (nova: MensagemDiretaNova) => {
@@ -86,7 +89,11 @@ function montar(cenario: Cenario = {}) {
     const eventos = { publicarParaUsuarios: async (dto: { usuarioIds: number[]; evento: { tipo: string } }) => { publicados.push(dto); } };
     const usuarios = {
         recuperar: async ({ id }: { id: number }) =>
-            id === 4 ? { id, nomeCompleto: 'Ana Lima', tipo: TipoUsuarioEnum.DESENVOLVEDOR } : { id, nomeCompleto: 'Bruno Reis', tipo: TipoUsuarioEnum.GESTOR },
+            id === 4
+                ? { id, nomeCompleto: 'Ana Lima', tipo: TipoUsuarioEnum.DESENVOLVEDOR }
+                : id === 12
+                    ? { id, nomeCompleto: 'Carla Dias', tipo: TipoUsuarioEnum.DESENVOLVEDOR }
+                    : { id, nomeCompleto: 'Bruno Reis', tipo: TipoUsuarioEnum.GESTOR },
     };
     const ia = {
         obterEstado: async () => cenario.estado ?? EstadoIaEnum.NO_AR,
@@ -122,7 +129,17 @@ function montar(cenario: Cenario = {}) {
         conversa = [...conversa, nova];
         await service.atenderSeChamada({ mensagem: nova, usuarioAtivo: autorUsuarioId === 4 ? ANA : ({ sub: autorUsuarioId, login: 'bruno', tipo: TipoUsuarioEnum.GESTOR } as never) });
     };
-    return { service, enviar, gravadas, publicados, solicitacoes, listasDeFerramentas, usos, recusadas };
+    /** Como `enviar`, mas a mensagem é do grupo `G7` (task 326): a service recebe o nome, o tipo e os membros de agora. */
+    const enviarNoGrupo = async (texto: string, autorUsuarioId = 4, tipo: TipoGrupoEnum = TipoGrupoEnum.LIVRE, nome = 'Time') => {
+        const nova = mensagem({ texto, autorUsuarioId, conversaId: 'G7' });
+        conversa = [...conversa, nova];
+        await service.atenderSeChamada({
+            mensagem: nova,
+            usuarioAtivo: autorUsuarioId === 4 ? ANA : ({ sub: autorUsuarioId, login: 'x', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never),
+            grupo: { nome, tipo, lerMembrosIds: async () => membros.atuais },
+        });
+    };
+    return { service, enviar, enviarNoGrupo, membros, gravadas, publicados, solicitacoes, listasDeFerramentas, usos, recusadas };
 }
 
 test('@IA com pedido: atende quem chamou, com as ferramentas dele, e grava a resposta como mensagem da IA para as duas pontas', async () => {
@@ -269,4 +286,74 @@ test('o pedido que responde a uma mensagem fora da janela leva o trecho citado',
     const { enviar, solicitacoes } = montar();
     await enviar('@IA explica isto', 4, { respondeA: { mensagemId: '11111111-2222-4333-8444-555555555555', autorUsuarioId: BRUNO_ID, trecho: 'o deploy falhou' } });
     assert.match(String(solicitacoes[0].mensagens[0].conteudo), /responde a esta mensagem de Bruno Reis: "o deploy falhou"/);
+});
+
+
+// --- no grupo e no canal (task 326) ------------------------------------------
+
+test('no grupo: atende quem chamou, orienta sobre os leitores, grava e publica a todos os membros e cobra no uso do grupo', async () => {
+    const { enviarNoGrupo, gravadas, publicados, solicitacoes, listasDeFerramentas, usos } = montar();
+    await enviarNoGrupo('@IA cria uma atividade de revisão');
+
+    assert.equal(solicitacoes.length, 1);
+    assert.deepEqual(listasDeFerramentas, [ANA], 'as ferramentas são as de quem chamou');
+    assert.match(solicitacoes[0].instrucoes, /no grupo "Time"/);
+    assert.match(solicitacoes[0].instrucoes, /Quem chamou: Ana Lima \(desenvolvedor\)/);
+    assert.match(solicitacoes[0].instrucoes, /Quem mais lê a sua resposta: 2 pessoas do grupo \(1 gestor e 1 desenvolvedor\)/);
+    assert.equal(gravadas[0].conversaId, 'G7');
+    assert.equal(gravadas[0].autor, AutorMensagemDiretaEnum.IA);
+    assert.equal(gravadas[0].chamadaPorUsuarioId, 4);
+    assert.deepEqual(publicados.map((publicado) => publicado.evento.tipo), ['IA_DIGITANDO', 'MENSAGEM']);
+    for (const publicado of publicados) assert.deepEqual(publicado.usuarioIds, [4, BRUNO_ID, 12]);
+    assert.equal((usos[0] as { descricao: string; usuarioId: number }).descricao, '@IA no grupo');
+    assert.equal((usos[0] as { usuarioId: number }).usuarioId, 4);
+});
+
+test('no grupo o contexto leva as 30 mensagens anteriores, de todos os membros, com nomes', async () => {
+    const anteriores = Array.from({ length: 35 }, (_, indice) => mensagem({ texto: `mensagem ${indice + 1}`, conversaId: 'G7', autorUsuarioId: [4, BRUNO_ID, 12][indice % 3] }));
+    const { enviarNoGrupo, solicitacoes } = montar({ anteriores });
+    await enviarNoGrupo('@IA resume');
+    const contexto = String(solicitacoes[0].mensagens[0].conteudo);
+    assert.match(contexto, /\[Carla Dias\] mensagem 33\n/);
+    assert.match(contexto, /mensagem 6\n/);
+    assert.doesNotMatch(contexto, /mensagem 5\n/, 'só as 30 anteriores');
+    assert.doesNotMatch(contexto, /\] @IA resume/, 'o pedido não se repete no contexto');
+});
+
+test('no grupo, quem não é membro de agora não é atendido', async () => {
+    const { enviarNoGrupo, solicitacoes, gravadas, publicados } = montar({ membros: [BRUNO_ID, 12] });
+    await enviarNoGrupo('@IA cria uma atividade');
+    assert.equal(solicitacoes.length, 0);
+    assert.equal(gravadas.length, 0);
+    assert.equal(publicados.length, 0);
+});
+
+test('no grupo, a resposta vai aos membros do fim do turno (quem saiu não recebe, quem entrou recebe)', async () => {
+    let soltar!: () => void;
+    const segurar = new Promise<void>((resolver) => { soltar = resolver; });
+    const { enviarNoGrupo, membros, publicados } = montar({ segurar });
+    const turno = enviarNoGrupo('@IA cria uma atividade');
+    await new Promise((resolver) => setImmediate(resolver));
+    membros.atuais = [4, 12, 21];
+    soltar();
+    await turno;
+    assert.deepEqual(publicados.find((publicado) => publicado.evento.tipo === 'MENSAGEM')?.usuarioIds, [4, 12, 21]);
+    assert.deepEqual(publicados.find((publicado) => publicado.evento.tipo === 'IA_DIGITANDO')?.usuarioIds, [4, BRUNO_ID, 12]);
+});
+
+test('no canal, a orientação diz de que demanda é o chat', async () => {
+    const { enviarNoGrupo, solicitacoes } = montar();
+    await enviarNoGrupo('@IA qual o status?', 4, TipoGrupoEnum.DEMANDA, 'Cadastro de clientes');
+    assert.match(solicitacoes[0].instrucoes, /chat da demanda "Cadastro de clientes"/);
+    assert.match(solicitacoes[0].instrucoes, /consultá-lo pelas ferramentas/);
+});
+
+test('no grupo, @IA sozinho espera a próxima mensagem de quem chamou, mesmo com outros membros no meio', async () => {
+    const { enviarNoGrupo, solicitacoes } = montar();
+    await enviarNoGrupo('@IA');
+    await enviarNoGrupo('vocês viram o prazo?', BRUNO_ID);
+    assert.equal(solicitacoes.length, 0);
+    await enviarNoGrupo('quanto falta para a entrega?');
+    assert.equal(solicitacoes.length, 1);
+    assert.match(String(solicitacoes[0].mensagens[0].conteudo), /Pedido de Ana Lima:\nquanto falta para a entrega\?$/);
 });
