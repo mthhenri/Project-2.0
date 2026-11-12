@@ -263,6 +263,14 @@ describe('MensagemDiretaGrupoConversaComponent — editar, reagir e @IA', () => 
         expect(estado.grupoEstado.grupos()[0].naoLidas, 'a resposta da IA não conta como não lida').toBe(0);
     });
 
+    it('"PESSOA digitando" mostra o nome de quem digita no balão do fim da conversa', async () => {
+        await abrir([mensagem(MINHA_ID, 1, 'oi')]);
+        estado.aplicarEvento({ tipo: 'DIGITANDO', conversaId: 'G7', usuarioId: 9 });
+        await redesenhar();
+        const balao = tela.elemento.querySelector('.conversa-direta__linha--digitando[role="status"]');
+        expect(balao?.textContent).toContain('Camila digitando');
+    });
+
     it('com a IA no ar o @ do compositor oferece "Pedir à IA"; com a IA fora do ar, não', async () => {
         const disponibilidade = TestBed.inject(IaDisponibilidadeService);
         disponibilidade.estadoReal.set(EstadoIaEnum.NO_AR);
