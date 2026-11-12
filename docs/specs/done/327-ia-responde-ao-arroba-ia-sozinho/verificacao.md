@@ -31,6 +31,10 @@ Stack real: PostgreSQL 16 local (`/tmp/pgdata`, porta 5433), API com `CHAT_ARMAZ
 - O Esc para fechar a lista do `@` só pode ser enviado quando o texto termina em `@palavra`; nas outras mensagens ele fecha o popup. O Enter com a lista aberta escolhe a sugestão em vez de enviar.
 - A primeira leva das rodadas "escuras" saiu clara: o tema do app é a chave `tema` do `localStorage`, não o `prefers-color-scheme`. As rodadas foram refeitas com a conferência do `<html>`. (Entrou na skill `verify`.)
 
+## Cor da menção e malha do grupo (pedidos do autor, mesmo dia)
+
+Nova rodada ao vivo (Ana roxo `#A23FD4`, Davi laranja `#F7931E`, Carla azul `#3F6FD0`), 7 verificações por rodada, **5 formatos × 2 temas, todas passaram**: "Ei, @Davi Souza e @Carla Dias, vocês fizeram aquela demanda?" mostra cada menção na cor da bolinha da pessoa (`--destaque-cor` conferido e cores de texto diferentes); a resposta da IA marca `@Davi Souza` em laranja; o avatar do grupo é a malha com 3 manchas do mesmo raio e a cor média por baixo. Frontend: 683 testes (módulo `mensagem-direta` e componentes compartilhados), 0 falhas. Limite: a legibilidade de cores muito claras (amarelo) foi pensada (texto misturado com o do tema) e não vista ao vivo.
+
 ## Limites (o que não foi verificado)
 
 - **Provedor real de IA:** não houve chave. Se o modelo real segue a orientação (cumprimentar com o assunto certo, não fazer nada ainda, só marcar quando quem chamou pede, nunca por mensagem anterior) só se vê com um provedor real. A orientação é fixa no código e coberta por teste; a obediência é do modelo.

@@ -32,7 +32,7 @@ describe('AvatarGrupoComponent', () => {
 
     it('sem cor do grupo, as cores dos membros viram um degradê', async () => {
         const tela = await montarComponente(AvatarGrupoComponent, { entradas: { nome: 'Time', coresDosMembros: ['#DB2777', '#2563EB', '#059669'] } });
-        expect(circulo(tela.elemento).style.background).toContain('linear-gradient');
+        expect(circulo(tela.elemento).style.background).toContain('radial-gradient');
         expect(circulo(tela.elemento).style.background).toContain('rgb(219, 39, 119)');
     });
 
