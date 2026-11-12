@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-11-12 — Chat de grupo: o balão de "digitando" mostra o nome de quem digita
+
+Pedido do autor, em conversa: nos grupos, como existe o "IA digitando", deveria existir o "PESSOA digitando". O cabeçalho do grupo já dizia quem digitava, mas o balão no fim da
+conversa trazia só as três bolinhas. Sem decisão de modelagem e sem spec (ajuste de uma linha de template): o balão ganhou o `rotuloDoDigitando()` que o componente já calculava
+("Camila digitando", "2 pessoas digitando"), na mesma classe `conversa-direta__ia-digitando` do "IA digitando". Só o grupo mudou; o chat um a um continua só com as bolinhas.
+
+- **Testes:** componente do grupo, 17 passam (1 novo: o balão contém "Camila digitando"); todos os de `mensagem-direta`, 33 arquivos e 366 testes; `npm run lint:tudo` e
+  `npm run build --workspace=frontend` sem erro. O Prettier reformatou a linha nova (quebra em três linhas) e o commit anterior ainda levava a versão sem formatar.
+- **Ao vivo:** stack local (Postgres 16 em `/tmp/pgdata`, `CHAT_ARMAZENAMENTO=postgres`), grupo com três pessoas, aviso de digitação disparado pela API como Camila e depois
+  como Davi: balão "Camila digitando" e depois "2 pessoas digitando", nos cinco formatos de desktop (1920×1080, 1366×768, 1080×1920, 720×1280 e 960×1080) e nos dois temas
+  (conferido o `app-escuro`). Conferi pessoalmente 1920×1080 claro, 1366×768 claro e 720×1280 escuro; os demais foram capturados, não olhados um a um. Análogo: o próprio
+  "IA digitando" do grupo. Capturas em `.artifacts/digitando-grupo/` (ignorada pelo Git).
+
 ## 2026-11-12 — Tasks 327 e 328: o `@IA` sozinho responde na hora e a IA marca `@pessoa` e `@todos`
 
 Pedido do autor, em conversa: nos chats internos (um a um e grupos), um `@IA` sozinho deveria receber algo como "opa, chamou?" e, olhando a mensagem anterior, "sobre
