@@ -23,11 +23,22 @@ async function esperarFalha(conexao: ConexaoTeste, codigo: string, sql: string, 
 
 const INSERIR_MENSAGEM = `
   INSERT INTO mensagem_direta
-    (created_date, updated_date, is_deleted, mensagem_id, conversa_id, usuario_menor_id, usuario_maior_id, autor_usuario_id, autor, texto,
+    (created_date, updated_date, is_deleted, mensagem_id, conversa_id, conversa_tipo, usuario_menor_id, usuario_maior_id, autor_usuario_id, autor, texto,
      contem_codigo, mencoes, referencias)
-  SELECT :dataBase::timestamptz, :dataBase::timestamptz, false, :mensagemId::uuid, :conversaId::varchar, :menorId::integer, :maiorId::integer,
+  SELECT :dataBase::timestamptz, :dataBase::timestamptz, false, :mensagemId::uuid, :conversaId::varchar, 'DIRETA', :menorId::integer, :maiorId::integer,
          :menorId::integer, 'USUARIO', 'Oi', false, CAST('{}' AS integer[]), CAST('{DEMANDA:212}' AS text[])
   RETURNING id`;
+
+// A mensagem de grupo (migration 0087, task 246): sem participantes, com o grupo; `conversa_id` é `G<grupo_id>`.
+const INSERIR_MENSAGEM_DE_GRUPO = `
+  INSERT INTO mensagem_direta
+    (created_date, updated_date, is_deleted, mensagem_id, conversa_id, conversa_tipo, grupo_id, autor_usuario_id, autor, texto,
+     contem_codigo, mencoes, referencias)
+  SELECT :dataBase::timestamptz, :dataBase::timestamptz, false, :mensagemId::uuid, :conversaId::varchar, :conversaTipo::varchar, :grupoId::integer,
+         4, 'USUARIO', 'Oi', false, CAST('{}' AS integer[]), CAST('{}' AS text[])
+  RETURNING id`;
+
+const mensagemDeGrupo = (mensagemId: string, conversaId: string, conversaTipo: string, grupoId: number) => ({ dataBase: DATA_BASE_TESTE, mensagemId, conversaId, conversaTipo, grupoId });
 
 const mensagem = (mensagemId: string, conversaId: string, menorId: number, maiorId: number) => ({ dataBase: DATA_BASE_TESTE, mensagemId, conversaId, menorId, maiorId });
 
@@ -51,6 +62,14 @@ testarComBanco('mensagem_direta: recusa participantes fora de ordem ou iguais e 
     await esperarFalha(conexao, CHECK, INSERIR_MENSAGEM, mensagem(UUID_UM, '4-9x', 4, 9));
     await esperarFalha(conexao, CHECK, INSERIR_MENSAGEM, mensagem(UUID_UM, '4-10', 4, 9));
     await conexao.raw(INSERIR_MENSAGEM, mensagem(UUID_UM, '4-9', 4, 9) as any);
+});
+
+testarComBanco('mensagem_direta: a mensagem de grupo exige o grupo e o conversa_id G<grupo_id>; o tipo e o formato se excluem', async (conexao) => {
+    await conexao.raw(INSERIR_MENSAGEM_DE_GRUPO, mensagemDeGrupo(UUID_UM, 'G7', 'GRUPO', 7) as any);
+    await esperarFalha(conexao, CHECK, INSERIR_MENSAGEM_DE_GRUPO, mensagemDeGrupo(UUID_DOIS, 'G8', 'GRUPO', 7));
+    await esperarFalha(conexao, CHECK, INSERIR_MENSAGEM_DE_GRUPO, mensagemDeGrupo(UUID_DOIS, '4-9', 'GRUPO', 7));
+    await esperarFalha(conexao, CHECK, INSERIR_MENSAGEM_DE_GRUPO, mensagemDeGrupo(UUID_DOIS, 'G7', 'DIRETA', 7));
+    await esperarFalha(conexao, CHECK, INSERIR_MENSAGEM, { ...mensagem(UUID_DOIS, 'G7', 4, 9) });
 });
 
 testarComBanco('mensagem_direta: guarda os arrays de menções e referências', async (conexao) => {
@@ -96,7 +115,7 @@ testarComBanco('mensagem_direta tem os campos de BaseEntity, nenhuma coluna tem 
     const nomes = rows.map((linha: { coluna: string }) => linha.coluna);
     for (const base of ['id', 'created_date', 'updated_date', 'is_deleted', 'deleted_date']) assert.ok(nomes.includes(base), `sem a coluna ${base}`);
     assert.deepEqual(rows.filter((linha: { coluna: string; padrao: string | null }) => linha.coluna !== 'id' && linha.padrao !== null).map((linha: { coluna: string }) => linha.coluna), []);
-    for (const obrigatoria of ['created_date', 'updated_date', 'is_deleted', 'mensagem_id', 'conversa_id', 'texto', 'mencoes', 'referencias']) {
+    for (const obrigatoria of ['created_date', 'updated_date', 'is_deleted', 'mensagem_id', 'conversa_id', 'conversa_tipo', 'texto', 'mencoes', 'referencias']) {
         assert.equal(rows.find((linha: { coluna: string }) => linha.coluna === obrigatoria).anulavel, 'NO', `${obrigatoria} deveria ser NOT NULL`);
     }
     const { rows: comentario } = await conexao.raw(`

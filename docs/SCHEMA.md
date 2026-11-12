@@ -88,6 +88,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 17. mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao (migration `0050`; só dependem de `usuario`) e mensagem_direta_reacao (migration `0083`, task 314; depende de `usuario`)
 18. mensagem_direta (migration `0051`, provisória; sem FK, depende só das funções `fn_chat_texto_*` da `0038`)
 19. modelagem_grupo, modelagem_tabela (migrations `0052` e `0053`; `modelagem_tabela` referencia `modelagem_grupo`)
+20. tipo_grupo, grupo, grupo_membro, grupo_leitura (migration `0087`, task 246; `grupo` referencia `tipo_grupo`, `usuario`, `projeto` e `demanda`; a `0087` também altera `mensagem_direta` e `mensagem_direta_supervisao`, que passam a referenciar `grupo`)
 ```
 
 ---
@@ -766,6 +767,16 @@ dois usuários). Colunas de `BaseEntity` mais: `leitor_usuario_id`, `conversa_id
 #### `mensagem_direta_reacao` (task 314)
 As reações às mensagens do chat entre colaboradores, uma por pessoa por mensagem. Fica no PostgreSQL **para as três implementações do armazenamento** (a mensagem pode viver no índice), e a service junta as reações à página de mensagens. Colunas de `BaseEntity` mais: `mensagem_id` (`UUID`, **sem FK**: a mensagem pode estar fora do PostgreSQL), `conversa_id` (`VARCHAR(21)`, `<menorId>-<maiorId>`, com `CHECK` do formato), `usuario_id` (FK para `usuario`, quem reagiu) e `reacao` (`VARCHAR(32)`: o **próprio emoji**, um só, conferido pela regra `ehReacaoValida` do `shared`). Índice único parcial em (`mensagem_id`, `usuario_id`) onde `is_deleted = false` e índice em `conversa_id`. Trocar a reação é `UPDATE`; tirar é soft delete, e reagir de novo depois cria uma linha nova.
 
+#### Grupos do chat (task 246, migration `0087`)
+O grupo é uma entidade com tabela própria; a conversa um a um não muda. As mensagens do grupo ficam no mesmo armazenamento das um a um (índice ou `mensagem_direta`), com `conversa_tipo = GRUPO` e `conversa_id = G<id do grupo>`. Todas as tabelas têm as colunas de `BaseEntity` e nenhum `DEFAULT`.
+
+- **`tipo_grupo`**: tabela de referência (`codigo`, `descricao`) com `LIVRE`, `PROJETO` e `DEMANDA` (`TipoGrupoEnum`). `PROJETO` e `DEMANDA` são os canais da task 248.
+- **`grupo`**: `nome` (`VARCHAR(60)`), `tipo_grupo_id` (FK), `criador_usuario_id` (FK para `usuario`), `projeto_id` e `demanda_id` (FKs anuláveis, só nos canais; índices únicos parciais: um canal por demanda e um por projeto), `cor_avatar` (`VARCHAR(7)`, `#RRGGBB`, anulável) e `emoji_avatar` (`VARCHAR(16)`, anulável). Sem cor vale o degradê das cores dos membros atuais e sem emoji valem as iniciais do nome; o padrão mora no frontend.
+- **`grupo_membro`**: só do grupo livre. `grupo_id`, `usuario_id` (FKs), `entrada_data` e `saida_data` (anulável; `CHECK` de saída >= entrada). Sair preenche `saida_data`; ser readicionado reabre a mesma linha (`saida_data` nula, `entrada_data` nova). Único em (`grupo_id`, `usuario_id`) entre as linhas ativas; `entrada_data` é o ponto de partida das não lidas.
+- **`grupo_leitura`**: `grupo_id`, `usuario_id` (FKs), `lida_ate_data` (o `created_date` da última mensagem vista; anulável) e `silenciada`. Único em (`grupo_id`, `usuario_id`) entre as ativas.
+
+A `0087` também altera duas tabelas existentes. `mensagem_direta` (provisória): `usuario_menor_id` e `usuario_maior_id` passam a aceitar nulo (nulos no grupo), ganha `conversa_tipo` (`VARCHAR(10)`: `DIRETA` ou `GRUPO`) e `grupo_id` (`INTEGER` anulável, sem FK como o resto da tabela); os dois `CHECK` antigos viram um só, `chk_mensagem_direta_conversa`, que amarra o `conversa_id` ao par (um a um) ou a `G<grupo_id>` (grupo). `mensagem_direta_supervisao`: ganha `grupo_id` (FK anulável) e os participantes passam a aceitar nulo, com o mesmo `CHECK` (`chk_mensagem_direta_supervisao_conversa`); a abertura de um grupo guarda `grupo_id` e deixa o par nulo.
+
 ### Tabelas provisórias — migrations `0038` (task 162) e `0051` (task 207)
 
 > **Não fazem parte do modelo definitivo.** Existem só para o ambiente de teste (`CHAT_ARMAZENAMENTO=postgres`) guardar as mensagens do
@@ -817,6 +828,9 @@ dia_nao_util  [standalone, consultado pelo módulo ponto]
 
 usuario ─── mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao, mensagem_direta_reacao
             [chat entre colaboradores; as mensagens ficam no índice, não no PostgreSQL]
+
+usuario ─── grupo_membro, grupo_leitura ─── grupo ─── tipo_grupo
+            [grupo livre; os canais usam grupo.projeto_id / grupo.demanda_id; as mensagens ficam no armazenamento do chat]
 
 projeto ─── plano ─── plano_demanda ─── demanda
 usuario ─── plano (criador)   [plano amplo: projeto_id nulo, pessoal do criador]

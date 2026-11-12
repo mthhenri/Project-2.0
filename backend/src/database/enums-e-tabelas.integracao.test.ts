@@ -20,6 +20,7 @@ const ENUM_POR_TABELA: Record<string, Record<string, string>> = {
     tipo_proposta_ia_status: shared.StatusPropostaIaEnum,
     tipo_plano_ponto_situacao: shared.TipoPlanoPontoSituacaoEnum,
     tipo_plano_fonte_origem: shared.TipoPlanoFonteOrigemEnum,
+    tipo_grupo: shared.TipoGrupoEnum,
 };
 
 for (const [tabela, enumeracao] of Object.entries(ENUM_POR_TABELA)) {

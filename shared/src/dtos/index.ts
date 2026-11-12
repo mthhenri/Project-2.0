@@ -24,3 +24,4 @@ export * from './ia-custo/index';
 export * from './modelagem/index';
 export * from './mensagem-direta/index';
 export * from './plano/index';
+export * from './grupo/index';

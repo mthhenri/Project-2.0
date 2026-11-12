@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { Knex } from 'knex';
-import { AutorMensagemDiretaEnum, MensagemDiretaEnviadaDto, MensagemDiretaResumoDto } from '@project20/shared';
+import { AutorMensagemDiretaEnum, ConversaTipoMensagemDiretaEnum, MensagemDiretaEnviadaDto, MensagemDiretaResumoDto } from '@project20/shared';
 import { BaseRepository } from '../../../core/base/base.repository';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import {
@@ -115,6 +115,7 @@ const FILTROS_DE_RECORTE = `
 /** As mensagens que a supervisão considera: nenhuma conversa com os ids excluídos (gestores e administradores), mais texto, período e código. */
 const FILTROS_DA_SUPERVISAO = `
     is_deleted = false
+    AND conversa_tipo = 'DIRETA'
     AND NOT (
         usuario_menor_id = ANY (CAST(:usuarioIdsExcluidos AS integer[]))
         OR usuario_maior_id = ANY (CAST(:usuarioIdsExcluidos AS integer[]))
@@ -219,6 +220,7 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                             is_deleted,
                             mensagem_id,
                             conversa_id,
+                            conversa_tipo,
                             usuario_menor_id,
                             usuario_maior_id,
                             autor_usuario_id,
@@ -239,6 +241,7 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                         false,
                         CAST(:mensagemId AS uuid),
                         :conversaId,
+                        :conversaTipo,
                         :usuarioMenorId,
                         :usuarioMaiorId,
                         :autorUsuarioId,
@@ -260,6 +263,7 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                     criadaEm: fonte.created_date,
                     mensagemId: fonte.mensagem_id,
                     conversaId: fonte.conversa_id,
+                    conversaTipo: ConversaTipoMensagemDiretaEnum.DIRETA,
                     usuarioMenorId: fonte.participantes[0],
                     usuarioMaiorId: fonte.participantes[1],
                     autorUsuarioId: fonte.autor_usuario_id,
