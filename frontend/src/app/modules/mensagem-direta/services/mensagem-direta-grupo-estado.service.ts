@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { AutorMensagemDiretaEnum, GrupoResumoDto, MensagemDiretaResumoDto, ReferenciaMensagemDto, trechoDaMensagemDireta } from '@project20/shared';
+import { AutorMensagemDiretaEnum, GrupoResumoDto, MensagemDiretaResumoDto, ReacaoMensagemDiretaDto, ReferenciaMensagemDto, podeEditarMensagemDireta, trechoDaMensagemDireta } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import {
     GrupoNaLista,
@@ -11,6 +11,7 @@ import {
     zerarNaoLidasDoGrupo,
 } from '../utils/grupo.util';
 import { mencionaTodosNoTexto } from '../utils/compositor.util';
+import { aplicarReacoesNaMensagem } from '../utils/reacoes.util';
 import {
     MensagemNaConversa,
     VALIDADE_DO_DIGITANDO_MS,
@@ -67,6 +68,13 @@ export class MensagemDiretaGrupoEstadoService {
     readonly grupoAberto = signal<GrupoAberto | null>(null);
     /** A mensagem a que o próximo envio responde; vale para o grupo aberto e sai ao enviar, cancelar ou abrir outro grupo. */
     readonly respondendoA = signal<MensagemNaConversa | null>(null);
+    /** A mensagem própria que o compositor está editando (task 326): vale para o grupo aberto e sai ao salvar, cancelar ou abrir outro grupo. */
+    readonly editando = signal<MensagemNaConversa | null>(null);
+    readonly salvandoEdicao = signal(false);
+    /** O motivo de a edição não ter sido salva (o servidor recusa depois do prazo, por exemplo); a edição continua aberta para o usuário decidir. */
+    readonly erroNaEdicao = signal<string | null>(null);
+    /** O motivo da última reação recusada; some na próxima tentativa. */
+    readonly erroNaReacao = signal<string | null>(null);
     /** Quem está digitando em cada grupo (chave: `conversaId`); cada aviso vale `VALIDADE_DO_DIGITANDO_MS`. */
     readonly digitando = signal<ReadonlyMap<string, ReadonlySet<number>>>(new Map());
 
@@ -129,6 +137,8 @@ export class MensagemDiretaGrupoEstadoService {
         this.canalPorTipo.set(null);
         this.grupoAberto.set(null);
         this.respondendoA.set(null);
+        this.cancelarEdicao();
+        this.erroNaReacao.set(null);
         this.pendentes.clear();
         this.ultimaLeituraMarcada.clear();
         this.ultimoAvisoDeDigitacao.clear();
@@ -146,6 +156,8 @@ export class MensagemDiretaGrupoEstadoService {
         const atual = this.grupoAberto();
         if (atual?.grupoId !== grupoId) {
             this.respondendoA.set(null);
+            this.cancelarEdicao();
+            this.erroNaReacao.set(null);
             this.fixadas.set([]);
         }
         this.erroNaOperacao.set(null);
@@ -164,6 +176,8 @@ export class MensagemDiretaGrupoEstadoService {
     fecharGrupo(): void {
         this.geracaoDoGrupoAberto++;
         this.respondendoA.set(null);
+        this.cancelarEdicao();
+        this.erroNaReacao.set(null);
         this.grupoAberto.set(null);
     }
 
@@ -282,6 +296,99 @@ export class MensagemDiretaGrupoEstadoService {
 
     cancelarResposta(): void {
         this.respondendoA.set(null);
+    }
+
+    // ---------------------------------------------------------------------------
+    // Editar e reagir (task 326)
+    // ---------------------------------------------------------------------------
+
+    /** Passa a editar uma mensagem própria já enviada do grupo aberto, se o prazo de 1 hora (contado do envio) ainda vale. Editar e responder não se misturam. */
+    editar(mensagem: MensagemNaConversa): void {
+        const meuId = this.sessao.id();
+        if (meuId === undefined || mensagem.situacao !== 'ENVIADA' || mensagem.conversaId !== this.grupoAberto()?.conversaId) return;
+        if (!podeEditarMensagemDireta({ ...mensagem, usuarioId: meuId, agora: new Date() })) return;
+        this.respondendoA.set(null);
+        this.erroNaEdicao.set(null);
+        this.editando.set(mensagem);
+    }
+
+    cancelarEdicao(): void {
+        this.editando.set(null);
+        this.erroNaEdicao.set(null);
+        this.salvandoEdicao.set(false);
+    }
+
+    /**
+     * Salva o texto editado. Sem mudança, só fecha a edição. Se o servidor recusar (prazo vencido, mensagem sumiu, saí do grupo, sem rede), a edição continua
+     * aberta com o motivo, e o texto digitado não se perde.
+     */
+    async confirmarEdicao(envio: EnvioAoGrupoDoCompositor): Promise<void> {
+        const aberto = this.grupoAberto();
+        const alvo = this.editando();
+        const texto = envio.texto.trim();
+        if (!aberto || !alvo || !texto || this.salvandoEdicao()) return;
+        if (texto === alvo.texto.trim()) {
+            this.cancelarEdicao();
+            return;
+        }
+        const sessao = this.geracaoDaSessao;
+        this.salvandoEdicao.set(true);
+        this.erroNaEdicao.set(null);
+        try {
+            const resposta = await firstValueFrom(
+                this.api.editarMensagem(aberto.grupoId, {
+                    mensagemId: alvo.mensagemId,
+                    texto,
+                    mencoes: envio.mencoes,
+                    mencionaTodos: envio.mencionaTodos || undefined,
+                    referencias: envio.referencias,
+                }),
+            );
+            if (sessao !== this.geracaoDaSessao) return;
+            this.aplicarEdicao(resposta.dados!.mensagem);
+            this.editando.set(null);
+        } catch (erro) {
+            if (sessao !== this.geracaoDaSessao) return;
+            this.erroNaEdicao.set(motivoDaRecusa(erro, 'Não foi possível salvar a edição. Tente de novo.'));
+        } finally {
+            if (sessao === this.geracaoDaSessao) this.salvandoEdicao.set(false);
+        }
+    }
+
+    /** A mensagem editada (resposta do meu PATCH ou evento `EDICAO`) substitui a que a tela tinha; não avisa, não conta como não lida e não muda a ordem. */
+    aplicarEdicao(mensagem: MensagemDiretaResumoDto): void {
+        const normalizada = normalizarMensagem(mensagem);
+        const grupoId = Number(normalizada.conversaId.slice(1));
+        this.atualizarGrupoAberto(grupoId, (atual) => ({ mensagens: mesclarMensagens(atual.mensagens, [normalizada]) }));
+        // A última mensagem do grupo na lista (a prévia) acompanha a edição.
+        this.grupos.update((lista) =>
+            lista.map((grupo) => (grupo.grupoId === grupoId && grupo.ultimaMensagem?.mensagemId === normalizada.mensagemId ? { ...grupo, ultimaMensagem: normalizada } : grupo)),
+        );
+        // A mesma mensagem editada em outra aba minha: a edição daqui perde o sentido (o texto de partida mudou).
+        if (this.editando()?.mensagemId === normalizada.mensagemId && !this.salvandoEdicao()) this.editando.set(null);
+    }
+
+    /** Reage à mensagem do grupo aberto com um emoji (o mesmo de antes tira a reação; outro troca). A tela segue a resposta do servidor, não adivinha. */
+    async reagir(mensagemId: string, reacao: string | null): Promise<void> {
+        const aberto = this.grupoAberto();
+        if (!aberto) return;
+        const sessao = this.geracaoDaSessao;
+        this.erroNaReacao.set(null);
+        try {
+            const resposta = await firstValueFrom(this.api.reagirMensagem(aberto.grupoId, mensagemId, reacao));
+            if (sessao !== this.geracaoDaSessao) return;
+            this.aplicarReacoes(aberto.conversaId, mensagemId, resposta.dados!.reacoes);
+        } catch (erro) {
+            if (sessao !== this.geracaoDaSessao) return;
+            this.erroNaReacao.set(motivoDaRecusa(erro, 'Não foi possível reagir. Tente de novo.'));
+        }
+    }
+
+    /** A lista completa de reações da mensagem (resposta do meu PUT ou evento `REACAO`); não avisa, não conta como não lida e não mexe na ordem. */
+    aplicarReacoes(conversaId: string, mensagemId: string, reacoes: ReacaoMensagemDiretaDto[]): void {
+        const aberto = this.grupoAberto();
+        if (!aberto || aberto.conversaId !== conversaId) return;
+        this.atualizarGrupoAberto(aberto.grupoId, (atual) => ({ mensagens: aplicarReacoesNaMensagem(atual.mensagens, mensagemId, reacoes) }));
     }
 
     /** Envia ao grupo aberto: a mensagem aparece na hora (`ENVIANDO`) e vira `ENVIADA` ou `FALHOU`. */

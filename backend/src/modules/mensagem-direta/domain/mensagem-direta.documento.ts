@@ -99,12 +99,14 @@ export function validarMensagemDiretaNova(mensagem: MensagemDiretaNova): void {
     } else if (mensagem.autorUsuarioId !== null) {
         throw new BusinessException('A mensagem do sistema não tem autor');
     }
-    if (grupoId !== null && mensagem.autor === AutorMensagemDiretaEnum.IA) throw new BusinessException('A IA ainda não responde em grupo');
 
     const chamadaPor = mensagem.chamadaPorUsuarioId ?? null;
     const propostaIds = mensagem.propostaIds ?? [];
     if (mensagem.autor === AutorMensagemDiretaEnum.IA) {
-        const participa = !!participantes && (chamadaPor === participantes.usuarioMenorId || chamadaPor === participantes.usuarioMaiorId);
+        // Na conversa um a um quem chamou é um dos dois; no grupo, quem é membro é conferido pela service (o armazenamento não conhece os membros).
+        const participa = participantes
+            ? chamadaPor === participantes.usuarioMenorId || chamadaPor === participantes.usuarioMaiorId
+            : Number.isInteger(chamadaPor) && (chamadaPor as number) >= 1;
         if (!participa) throw new BusinessException('A resposta da IA precisa de quem a chamou, participante da conversa');
         if (!propostaIds.every((propostaId) => Number.isInteger(propostaId) && propostaId >= 1)) throw new BusinessException('Proposta inválida na resposta da IA');
     } else if (chamadaPor !== null || propostaIds.length > 0) {

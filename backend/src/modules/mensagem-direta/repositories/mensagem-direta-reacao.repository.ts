@@ -45,7 +45,7 @@ export class MensagemDiretaReacaoRepository extends BaseRepository<MensagemDiret
         );
     }
 
-    /** Grava a reação da pessoa à mensagem, trocando a que já havia (uma por pessoa por mensagem). */
+    /** Grava a reação da pessoa à mensagem, trocando a que já havia (uma por pessoa por mensagem). O dono é a conversa um a um ou o grupo (task 326). */
     async definir(dto: MensagemDiretaReacaoInternoDefinirDto): Promise<MensagemDiretaReacaoRecuperadaDto> {
         const gravadas = await this.executarConsulta<MensagemDiretaReacaoRecuperadaDto>(
             `
@@ -56,6 +56,7 @@ export class MensagemDiretaReacaoRepository extends BaseRepository<MensagemDiret
                         is_deleted,
                         mensagem_id,
                         conversa_id,
+                        grupo_id,
                         usuario_id,
                         reacao
                     )
@@ -64,7 +65,8 @@ export class MensagemDiretaReacaoRepository extends BaseRepository<MensagemDiret
                     NOW(),
                     false,
                     CAST(:mensagemId AS uuid),
-                    :conversaId,
+                    CAST(:conversaId AS varchar),
+                    CAST(:grupoId AS integer),
                     :usuarioId,
                     :reacao
                 ON CONFLICT (mensagem_id, usuario_id)
@@ -76,7 +78,7 @@ export class MensagemDiretaReacaoRepository extends BaseRepository<MensagemDiret
                 RETURNING
                     ${COLUNAS_DA_REACAO}
             `,
-            { ...dto },
+            { ...dto, conversaId: dto.conversaId ?? null, grupoId: dto.grupoId ?? null },
         );
         return gravadas[0];
     }

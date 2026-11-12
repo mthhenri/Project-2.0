@@ -5,11 +5,14 @@ import {
     ContextoChatEnum,
     EstadoIaEnum,
     JANELA_DE_CONTEXTO_DA_IA_NO_CHAT_DIRETO,
+    JANELA_DE_CONTEXTO_DA_IA_NO_GRUPO,
     MensagemDiretaResumoDto,
     NivelIaEnum,
+    TipoGrupoEnum,
     TipoPromptEnum,
     TipoUsuarioEnum,
     chamadaDaIa,
+    lerConversaGrupoId,
     outroParticipanteDaConversaDireta,
     pedidoPendenteDaIa,
 } from '@project20/shared';
@@ -24,7 +27,7 @@ import { IaUsoService } from '../../ia-custo/services/ia-uso.service';
 import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
-import { montarContextoDoChatDireto, montarOrientacaoDoChatDireto, PessoaDaConversaComIa, textoDaRespostaDaIa } from '../domain/mensagem-direta-ia';
+import { montarContextoDoChatDireto, montarOrientacaoDoChatDireto, montarOrientacaoDoGrupo, PessoaDaConversaComIa, textoDaRespostaDaIa } from '../domain/mensagem-direta-ia';
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, ArmazenamentoDeMensagemDireta } from '../repositories/armazenamento-de-mensagem-direta';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 
@@ -32,10 +35,31 @@ import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service'
 export interface MensagemDiretaIaAvaliar {
     mensagem: MensagemDiretaResumoDto;
     usuarioAtivo: JwtPayload;
+    /**
+     * Só quando a mensagem é de um grupo ou canal (task 326): quem chama a service já conhece os membros, então ela os entrega por uma função
+     * (lida de novo no fim do turno, quando a resposta é publicada) e a service da IA não depende da do grupo.
+     */
+    grupo?: GrupoDaChamadaDaIaDoServidor;
+}
+
+export interface GrupoDaChamadaDaIaDoServidor {
+    nome: string;
+    tipo: TipoGrupoEnum;
+    /** Os ids dos membros de agora. */
+    lerMembrosIds: () => Promise<number[]>;
+}
+
+/** Para onde vai a conversa: quem a lê, quantas mensagens a IA lê dela e como se orienta. */
+interface DestinoDaChamada {
+    conversaId: string;
+    janela: number;
+    lerParticipantesIds: () => Promise<number[]>;
+    orientar: (quemChamou: PessoaDaConversaComIa, outrosLeitores: PessoaDaConversaComIa[]) => string;
 }
 
 const MOTIVO_GENERICO = 'o serviço de IA está temporariamente indisponível';
 const DESCRICAO_DO_USO = '@IA no chat entre colaboradores';
+const DESCRICAO_DO_USO_NO_GRUPO = '@IA no grupo';
 
 /**
  * O `@IA` do chat entre colaboradores (task 315). Depois de a mensagem de uma pessoa ser gravada e publicada, decide se ela chama a IA (pela regra pura do
@@ -43,6 +67,9 @@ const DESCRICAO_DO_USO = '@IA no chat entre colaboradores';
  * últimas mensagens das duas pessoas, chama a IA com as ferramentas e as permissões de **quem chamou** (o laço do chat da IA) e grava a resposta como
  * mensagem de autor `IA`, publicada às duas pontas. O custo vai para a aba Custos em nome de quem chamou. Toda falha termina numa mensagem do sistema,
  * nunca numa exceção solta.
+ *
+ * No grupo e no canal (task 326) o turno é o mesmo, com mais leitores: a IA lê as 30 mensagens anteriores, a resposta vai a todos os membros de agora e
+ * a orientação diz quantos e de que tipo são. Só membro chama.
  */
 @Injectable()
 export class MensagemDiretaIaService {
@@ -83,16 +110,41 @@ export class MensagemDiretaIaService {
         const { mensagem, usuarioAtivo } = dto;
         const chamada = chamadaDaIa(mensagem.texto);
         if (chamada) return chamada.pedido === '' ? null : chamada.pedido;
-        const anteriores = (await this.lerAnteriores(mensagem)).filter((anterior) => anterior.mensagemId !== mensagem.mensagemId);
+        const anteriores = (await this.lerAnteriores(mensagem, dto.grupo ? JANELA_DE_CONTEXTO_DA_IA_NO_GRUPO : undefined)).filter((anterior) => anterior.mensagemId !== mensagem.mensagemId);
         return pedidoPendenteDaIa(anteriores, usuarioAtivo.sub, new Date()) ? mensagem.texto : null;
+    }
+
+    /** Para onde vai a conversa: a de duas pessoas (task 315) ou a do grupo (task 326). `null` quando a mensagem não é de nenhuma das duas. */
+    private destinoDaChamada(dto: MensagemDiretaIaAvaliar): DestinoDaChamada | null {
+        const { mensagem, usuarioAtivo, grupo } = dto;
+        const conversaId = mensagem.conversaId;
+        if (grupo) {
+            if (lerConversaGrupoId(conversaId) === null) return null;
+            return {
+                conversaId,
+                janela: JANELA_DE_CONTEXTO_DA_IA_NO_GRUPO,
+                lerParticipantesIds: grupo.lerMembrosIds,
+                orientar: (quemChamou, outrosLeitores) => montarOrientacaoDoGrupo(quemChamou, outrosLeitores, { nome: grupo.nome, tipo: grupo.tipo }),
+            };
+        }
+        const outroUsuarioId = outroParticipanteDaConversaDireta(conversaId, usuarioAtivo.sub);
+        if (outroUsuarioId === null) return null;
+        return {
+            conversaId,
+            janela: JANELA_DE_CONTEXTO_DA_IA_NO_CHAT_DIRETO,
+            lerParticipantesIds: async () => [usuarioAtivo.sub, outroUsuarioId],
+            orientar: (quemChamou, outrosLeitores) => montarOrientacaoDoChatDireto(quemChamou, outrosLeitores[0]),
+        };
     }
 
     private async atender(dto: MensagemDiretaIaAvaliar, pedido: string): Promise<void> {
         const { mensagem, usuarioAtivo } = dto;
-        const conversaId = mensagem.conversaId;
-        const outroUsuarioId = outroParticipanteDaConversaDireta(conversaId, usuarioAtivo.sub);
-        if (outroUsuarioId === null) return;
-        const participantes = [usuarioAtivo.sub, outroUsuarioId];
+        const destino = this.destinoDaChamada(dto);
+        if (destino === null) return;
+        const conversaId = destino.conversaId;
+        let participantes = await destino.lerParticipantesIds();
+        // Só membro chama: quem saiu (ou nunca entrou) entre a mensagem e agora não é atendido.
+        if (!participantes.includes(usuarioAtivo.sub)) return;
 
         if (this.emAndamento.has(conversaId)) {
             await this.gravarDoSistema(conversaId, participantes, 'A IA ainda está respondendo a outra chamada nesta conversa. Chame de novo quando ela terminar.');
@@ -109,23 +161,24 @@ export class MensagemDiretaIaService {
             }
             await this.eventosService.publicarParaUsuarios({ usuarioIds: participantes, evento: { tipo: 'IA_DIGITANDO', conversaId } });
 
-            const [quemChamou, outraPessoa] = await Promise.all([this.lerPessoa(usuarioAtivo.sub, usuarioAtivo.tipo), this.lerPessoa(outroUsuarioId, null)]);
-            const nomes = new Map<number, string>([
-                [quemChamou.usuarioId, quemChamou.nome],
-                [outraPessoa.usuarioId, outraPessoa.nome],
-            ]);
-            const anteriores = (await this.lerAnteriores(mensagem)).filter((anterior) => anterior.mensagemId !== mensagem.mensagemId);
-            const citada = mensagem.respondeA && !anteriores.slice(-JANELA_DE_CONTEXTO_DA_IA_NO_CHAT_DIRETO).some((anterior) => anterior.mensagemId === mensagem.respondeA!.mensagemId)
+            const anteriores = (await this.lerAnteriores(mensagem, destino.janela)).filter((anterior) => anterior.mensagemId !== mensagem.mensagemId);
+            const pessoasIds = [...new Set([...participantes, ...anteriores.map((anterior) => anterior.autorUsuarioId).filter((id): id is number => id !== null)])];
+            const pessoas = new Map<number, PessoaDaConversaComIa>();
+            for (const pessoaId of pessoasIds) pessoas.set(pessoaId, await this.lerPessoa(pessoaId, pessoaId === usuarioAtivo.sub ? usuarioAtivo.tipo : null));
+            const quemChamou = pessoas.get(usuarioAtivo.sub)!;
+            const outrosLeitores = participantes.filter((participanteId) => participanteId !== usuarioAtivo.sub).map((participanteId) => pessoas.get(participanteId)!);
+            const nomes = new Map<number, string>([...pessoas].map(([pessoaId, pessoa]) => [pessoaId, pessoa.nome]));
+            const citada = mensagem.respondeA && !anteriores.slice(-destino.janela).some((anterior) => anterior.mensagemId === mensagem.respondeA!.mensagemId)
                 ? { autorNome: nomes.get(mensagem.respondeA.autorUsuarioId) ?? 'Alguém', trecho: mensagem.respondeA.trecho }
                 : null;
-            const contexto = montarContextoDoChatDireto(anteriores, { texto: pedido, citacao: citada }, quemChamou, nomes);
+            const contexto = montarContextoDoChatDireto(anteriores, { texto: pedido, citacao: citada }, quemChamou, nomes, destino.janela);
             const prompt = await this.promptService.obterAtivo(TipoPromptEnum.CONVERSA);
 
             const { texto } = await executarNoTurno(turno, () =>
                 this.lacoDeFerramentas.conduzirTurno({
                     usuarioAtivo,
                     nivel: NivelIaEnum.RAPIDO,
-                    instrucoes: `${prompt.conteudo}\n\n${montarOrientacaoDoChatDireto(quemChamou, outraPessoa)}`,
+                    instrucoes: `${prompt.conteudo}\n\n${destino.orientar(quemChamou, outrosLeitores)}`,
                     mensagens: [{ papel: 'usuario', conteudo: contexto }],
                     trocasIniciais: [],
                     ferramentas: this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo),
@@ -151,6 +204,8 @@ export class MensagemDiretaIaService {
                 chamadaPorUsuarioId: usuarioAtivo.sub,
                 propostaIds: propostasDoTurno,
             });
+            // Os membros mudam durante o turno (alguém sai, alguém entra): a resposta vai aos de agora.
+            participantes = await destino.lerParticipantesIds();
             await this.eventosService.publicarParaUsuarios({ usuarioIds: participantes, evento: { tipo: 'MENSAGEM', mensagem: gravada.mensagem } });
         } catch (erro) {
             const motivo = erro instanceof IaException ? erro.mensagem : MOTIVO_GENERICO;
@@ -160,13 +215,13 @@ export class MensagemDiretaIaService {
             await this.gravarDoSistema(conversaId, participantes, `A IA não pôde responder: ${motivo.charAt(0).toLowerCase()}${motivo.slice(1).replace(/\.$/, '')}.`);
         } finally {
             this.emAndamento.delete(conversaId);
-            await this.registrarUso(turno, usuarioAtivo);
+            await this.registrarUso(turno, usuarioAtivo, dto.grupo ? DESCRICAO_DO_USO_NO_GRUPO : DESCRICAO_DO_USO);
         }
     }
 
     /** As mensagens antes da nova, da mais antiga para a mais nova: a janela do contexto mais a própria mensagem (o armazenamento devolve da mais nova). */
-    private async lerAnteriores(mensagem: MensagemDiretaResumoDto): Promise<MensagemDiretaResumoDto[]> {
-        const pagina = await this.armazenamento.listarConversa({ conversaId: mensagem.conversaId, limite: JANELA_DE_CONTEXTO_DA_IA_NO_CHAT_DIRETO + 1 });
+    private async lerAnteriores(mensagem: MensagemDiretaResumoDto, janela: number = JANELA_DE_CONTEXTO_DA_IA_NO_CHAT_DIRETO): Promise<MensagemDiretaResumoDto[]> {
+        const pagina = await this.armazenamento.listarConversa({ conversaId: mensagem.conversaId, limite: janela + 1 });
         return [...pagina.mensagens].reverse();
     }
 
@@ -186,12 +241,12 @@ export class MensagemDiretaIaService {
     }
 
     /** O custo do turno, em nome de quem chamou; só quando houve chamada ao provedor (o turno tem modelo). */
-    private async registrarUso(turno: TurnoIa, usuarioAtivo: JwtPayload): Promise<void> {
+    private async registrarUso(turno: TurnoIa, usuarioAtivo: JwtPayload, descricao: string): Promise<void> {
         if (!turno.modelo) return;
         const tokens = turno.tokens;
         await this.iaUsoService.registrar({
             usuarioId: usuarioAtivo.sub,
-            descricao: DESCRICAO_DO_USO,
+            descricao,
             nivel: turno.nivel,
             modelo: turno.modelo,
             tokensEntrada: tokens.entrada,

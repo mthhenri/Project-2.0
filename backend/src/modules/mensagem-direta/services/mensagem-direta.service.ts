@@ -61,6 +61,7 @@ import {
     normalizarMencoes,
     normalizarReferencias,
 } from '../domain/mensagem-direta-regras';
+import { juntarReacoesNasMensagens } from '../domain/mensagem-direta-reacoes';
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, ArmazenamentoDeMensagemDireta } from '../repositories/armazenamento-de-mensagem-direta';
 import { MensagemDiretaLeituraRepository } from '../repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPreferenciaRepository } from '../repositories/mensagem-direta-preferencia.repository';
@@ -220,16 +221,9 @@ export class MensagemDiretaService {
         return { sucesso: true, dados: { mensagemId, reacoes }, mensagem: nova === null ? 'Reação removida' : 'Reação registrada' };
     }
 
-    /** Põe as reações (tabela do PostgreSQL) nas mensagens que o armazenamento devolveu, numa consulta só. O armazenamento sempre devolve `reacoes: []`. */
-    private async juntarReacoes(mensagens: MensagemDiretaResumoDto[]): Promise<MensagemDiretaResumoDto[]> {
-        const reacoes = await this.reacaoRepositorio.listarPorMensagens({ mensagemIds: mensagens.map((mensagem) => mensagem.mensagemId) });
-        if (reacoes.length === 0) return mensagens;
-        return mensagens.map((mensagem) => ({
-            ...mensagem,
-            reacoes: reacoes
-                .filter((reacao) => reacao.mensagemId === mensagem.mensagemId.toLowerCase())
-                .map(({ usuarioId, reacao }): ReacaoMensagemDiretaDto => ({ usuarioId, reacao })),
-        }));
+    /** Põe as reações (tabela do PostgreSQL) nas mensagens que o armazenamento devolveu, numa consulta só. */
+    private juntarReacoes(mensagens: MensagemDiretaResumoDto[]): Promise<MensagemDiretaResumoDto[]> {
+        return juntarReacoesNasMensagens(this.reacaoRepositorio, mensagens);
     }
 
     // ---------------------------------------------------------------------------

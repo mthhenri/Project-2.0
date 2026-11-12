@@ -12,6 +12,7 @@ import { testarComBanco, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarDemanda, criarDemandaUsuario, criarDesenvolvedor, criarGestor, criarProjeto } from '../../../testes/fabricas';
 import { GrupoFixadaRepository } from '../repositories/grupo-fixada.repository';
+import { MensagemDiretaReacaoRepository } from '../repositories/mensagem-direta-reacao.repository';
 import { GrupoLeituraRepository } from '../repositories/grupo-leitura.repository';
 import { GrupoRepository } from '../repositories/grupo.repository';
 import { MensagemDiretaPostgresRepository } from '../repositories/mensagem-direta-postgres.repository';
@@ -35,8 +36,7 @@ function montar(conexao: ConexaoTeste) {
     const supervisao = new GrupoSupervisaoService(armazenamento, grupos, criarRepositorio(MensagemDiretaSupervisaoRepository, conexao), criarRepositorio(UsuarioRepository, conexao), eventosService as never, canais);
     const grupoService = new GrupoService(
         armazenamento, grupos, criarRepositorio(GrupoLeituraRepository, conexao), criarRepositorio(UsuarioRepository, conexao), criarRepositorio(DemandaRepository, conexao),
-        criarRepositorio(AtividadeRepository, conexao), eventosService as never, canais, supervisao,
-    );
+        criarRepositorio(AtividadeRepository, conexao), eventosService as never, canais, supervisao, criarRepositorio(MensagemDiretaReacaoRepository, conexao), { atenderSeChamada: async () => undefined } as never, {} as never);
     const service = new GrupoFixadaService(armazenamento, grupoService, criarRepositorio(GrupoFixadaRepository, conexao), eventosService as never);
     return { service, grupoService, armazenamento, eventos };
 }

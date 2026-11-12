@@ -52,8 +52,7 @@ function montar(conexao: ConexaoTeste) {
         criarRepositorio(AtividadeRepository, conexao),
         eventos,
         canais,
-        supervisaoDeGrupos,
-    );
+        supervisaoDeGrupos, criarRepositorio(MensagemDiretaReacaoRepository, conexao), { atenderSeChamada: async () => undefined } as never, {} as never);
     return new MensagemDiretaService(
         armazenamento,
         criarRepositorio(MensagemDiretaLeituraRepository, conexao),

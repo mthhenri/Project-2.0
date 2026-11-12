@@ -91,6 +91,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 20. tipo_grupo, grupo, grupo_membro, grupo_leitura (migration `0087`, task 246; `grupo` referencia `tipo_grupo`, `usuario`, `projeto` e `demanda`; a `0087` também altera `mensagem_direta` e `mensagem_direta_supervisao`, que passam a referenciar `grupo`)
 21. grupo_resumo (migration `0088`, task 249; referencia `grupo`, `usuario`, `proposta_ia` e `demanda`)
 22. grupo_fixada (migration `0089`, task 250; referencia `grupo` e `usuario`)
+23. `mensagem_direta_reacao` ganha `grupo_id` (migration `0090`, task 326; referencia `grupo`; não cria tabela)
 ```
 
 ---
@@ -767,7 +768,7 @@ dois usuários). Colunas de `BaseEntity` mais: `leitor_usuario_id`, `conversa_id
 (`leitor_usuario_id`, `conversa_id`, `created_date`).
 
 #### `mensagem_direta_reacao` (task 314)
-As reações às mensagens do chat entre colaboradores, uma por pessoa por mensagem. Fica no PostgreSQL **para as três implementações do armazenamento** (a mensagem pode viver no índice), e a service junta as reações à página de mensagens. Colunas de `BaseEntity` mais: `mensagem_id` (`UUID`, **sem FK**: a mensagem pode estar fora do PostgreSQL), `conversa_id` (`VARCHAR(21)`, `<menorId>-<maiorId>`, com `CHECK` do formato), `usuario_id` (FK para `usuario`, quem reagiu) e `reacao` (`VARCHAR(32)`: o **próprio emoji**, um só, conferido pela regra `ehReacaoValida` do `shared`). Índice único parcial em (`mensagem_id`, `usuario_id`) onde `is_deleted = false` e índice em `conversa_id`. Trocar a reação é `UPDATE`; tirar é soft delete, e reagir de novo depois cria uma linha nova.
+As reações às mensagens do chat entre colaboradores, uma por pessoa por mensagem. Fica no PostgreSQL **para as três implementações do armazenamento** (a mensagem pode viver no índice), e a service junta as reações à página de mensagens. Colunas de `BaseEntity` mais: `mensagem_id` (`UUID`, **sem FK**: a mensagem pode estar fora do PostgreSQL), `conversa_id` (`VARCHAR(21)`, `<menorId>-<maiorId>`, com `CHECK` do formato; anulável desde a `0090`) e `grupo_id` (`INTEGER`, FK para `grupo`, anulável, task 326, migration `0090`: a reação a uma mensagem de grupo guarda o grupo e deixa `conversa_id` nulo, e o `CHECK` `chk_mensagem_direta_reacao_dono` exige exatamente um dos dois; índice parcial em `grupo_id`), `usuario_id` (FK para `usuario`, quem reagiu) e `reacao` (`VARCHAR(32)`: o **próprio emoji**, um só, conferido pela regra `ehReacaoValida` do `shared`). Índice único parcial em (`mensagem_id`, `usuario_id`) onde `is_deleted = false` e índice em `conversa_id`. Trocar a reação é `UPDATE`; tirar é soft delete, e reagir de novo depois cria uma linha nova.
 
 #### Grupos do chat (task 246, migration `0087`)
 O grupo é uma entidade com tabela própria; a conversa um a um não muda. As mensagens do grupo ficam no mesmo armazenamento das um a um (índice ou `mensagem_direta`), com `conversa_tipo = GRUPO` e `conversa_id = G<id do grupo>`. Todas as tabelas têm as colunas de `BaseEntity` e nenhum `DEFAULT`.

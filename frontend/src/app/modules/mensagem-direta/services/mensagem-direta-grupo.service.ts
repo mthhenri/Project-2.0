@@ -25,7 +25,10 @@ import {
     GrupoSilencioAlteradoDto,
     GrupoSupervisaoLidoDto,
     GrupoSupervisaoListadosDto,
+    MensagemDiretaEditadaDto,
     MensagemDiretaEnviadaDto,
+    MensagemDiretaPropostaRecuperadaDto,
+    MensagemDiretaReagidaDto,
     ReferenciaMensagemDto,
     StandardResponse,
     TipoGrupoEnum,
@@ -48,6 +51,15 @@ export interface AlteracaoDoGrupo {
     nome?: string;
     corAvatar?: string | null;
     emojiAvatar?: string | null;
+}
+
+/** A edição do texto de uma mensagem própria do grupo (task 326). */
+export interface EdicaoNoGrupo {
+    mensagemId: string;
+    texto: string;
+    mencoes: number[];
+    mencionaTodos?: boolean;
+    referencias: ReferenciaMensagemDto[];
 }
 
 export interface EnvioAoGrupo {
@@ -98,6 +110,21 @@ export class MensagemDiretaGrupoService {
 
     enviarMensagem(grupoId: number, envio: EnvioAoGrupo): Observable<StandardResponse<MensagemDiretaEnviadaDto>> {
         return this.httpClient.post<StandardResponse<MensagemDiretaEnviadaDto>>(`${this.urlBase}/${grupoId}/mensagem`, envio, comFeedbackProprioEErroTratado());
+    }
+
+    /** Edita o texto de uma mensagem própria do grupo (task 326): só o autor, até 1 hora depois do envio. */
+    editarMensagem(grupoId: number, edicao: EdicaoNoGrupo): Observable<StandardResponse<MensagemDiretaEditadaDto>> {
+        return this.httpClient.patch<StandardResponse<MensagemDiretaEditadaDto>>(`${this.urlBase}/${grupoId}/mensagem`, edicao, comFeedbackProprioEErroTratado());
+    }
+
+    /** Reage a uma mensagem do grupo com um emoji (o mesmo de antes tira a reação; outro troca) (task 326). */
+    reagirMensagem(grupoId: number, mensagemId: string, reacao: string | null): Observable<StandardResponse<MensagemDiretaReagidaDto>> {
+        return this.httpClient.put<StandardResponse<MensagemDiretaReagidaDto>>(`${this.urlBase}/${grupoId}/reacao`, { mensagemId, reacao }, comFeedbackProprioEErroTratado());
+    }
+
+    /** Uma proposta da resposta do `@IA` do grupo para quem olha: sem acesso ao alvo, `acessivel: false` e nenhum dado (task 326). */
+    recuperarProposta(grupoId: number, mensagemId: string, propostaId: number): Observable<StandardResponse<MensagemDiretaPropostaRecuperadaDto>> {
+        return this.httpClient.get<StandardResponse<MensagemDiretaPropostaRecuperadaDto>>(`${this.urlBase}/${grupoId}/mensagem/${mensagemId}/proposta/${propostaId}`, comFeedbackProprioEErroTratado());
     }
 
     alterarLeitura(grupoId: number, lidaAteData: Date): Observable<StandardResponse<GrupoLeituraAlteradaDto>> {

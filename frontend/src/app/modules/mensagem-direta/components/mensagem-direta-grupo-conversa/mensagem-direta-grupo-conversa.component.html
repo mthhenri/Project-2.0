@@ -196,6 +196,15 @@
                                 >
                                     {{ mensagem.texto }} · {{ hora(mensagem.createdDate) }}
                                 </p>
+                            } @else if (mensagem.autor === "IA") {
+                                <app-mensagem-direta-ia-resposta
+                                    [attr.data-mensagem-id]="mensagem.mensagemId"
+                                    [mensagem]="mensagem"
+                                    [grupoId]="conversa.grupoId"
+                                    [meuId]="meuId()"
+                                    [nomeDeQuemChamou]="nomeDoAutor(mensagem.chamadaPorUsuarioId)"
+                                    [horario]="hora(mensagem.createdDate)"
+                                />
                             } @else {
                                 @let minha = mensagem.autorUsuarioId === meuId();
                                 @let emenda = emendas().get(mensagem.mensagemId);
@@ -249,6 +258,7 @@
                                         <app-markdown-visualizador
                                             [texto]="mensagem.texto"
                                             [destaques]="destaquesDe(mensagem)"
+                                            [iconesDosDestaques]="iconesDosDestaques"
                                             [comTabelas]="false"
                                         />
                                         @for (
@@ -261,6 +271,15 @@
                                             />
                                         }
                                     </div>
+                                    <app-mensagem-direta-reacoes
+                                        [reacoes]="mensagem.reacoes"
+                                        [meuId]="meuId()"
+                                        [nomeDe]="nomeDeQuemReagiu"
+                                        [barraAberta]="reagindoId() === mensagem.mensagemId"
+                                        (reagir)="reagir(mensagem.mensagemId, $event)"
+                                        (abrirSeletor)="abrirSeletorDaReacao(mensagem.mensagemId)"
+                                        (fecharBarra)="reagindoId.set(null)"
+                                    />
                                     <div
                                         class="conversa-direta__rodape"
                                         [class.conversa-direta__rodape--compacto]="compacto"
@@ -300,6 +319,16 @@
                                                 @if (!compacto) {
                                                     <span class="conversa-direta__horario"
                                                         >{{ hora(mensagem.createdDate) }}
+                                                        @if (mensagem.editadaDate) {
+                                                            <span
+                                                                class="conversa-direta__editada"
+                                                                [attr.title]="
+                                                                    'Editada às ' +
+                                                                    hora(mensagem.editadaDate)
+                                                                "
+                                                                >· editada</span
+                                                            >
+                                                        }
                                                         @if (
                                                             minha &&
                                                             mensagem.mensagemId === ultimaMinhaId()
@@ -307,6 +336,24 @@
                                                             <span>· Enviada</span>
                                                         }
                                                     </span>
+                                                }
+                                                @if (!lendoPorTipo()) {
+                                                    <button
+                                                        type="button"
+                                                        class="conversa-direta__acoes"
+                                                        [class.conversa-direta__acoes--visivel]="
+                                                            reagindoId() === mensagem.mensagemId
+                                                        "
+                                                        aria-label="Reagir"
+                                                        pTooltip="Reagir"
+                                                        tooltipPosition="top"
+                                                        (click)="abrirReacao(mensagem.mensagemId)"
+                                                    >
+                                                        <i
+                                                            class="pi pi-face-smile"
+                                                            aria-hidden="true"
+                                                        ></i>
+                                                    </button>
                                                 }
                                                 <button
                                                     type="button"
@@ -344,6 +391,25 @@
                             }
                         }
                     }
+                    @if (aguardandoPedidoDaIa()) {
+                        <p class="conversa-direta__sistema" role="status">
+                            A IA está esperando o seu pedido: a sua próxima mensagem vai para ela.
+                        </p>
+                    }
+                    @if (iaRespondendo()) {
+                        <div
+                            class="conversa-direta__linha conversa-direta__linha--digitando"
+                            role="status"
+                            aria-label="IA digitando"
+                        >
+                            <div class="conversa-direta__balao conversa-direta__balao--digitando">
+                                <span class="conversa-direta__ia-digitando">IA digitando</span>
+                                <span class="conversa-direta__pontos" aria-hidden="true"
+                                    ><span></span><span></span><span></span
+                                ></span>
+                            </div>
+                        </div>
+                    }
                     @if (rotuloDoDigitando()) {
                         <div
                             class="conversa-direta__linha conversa-direta__linha--digitando"
@@ -380,6 +446,20 @@
             </p>
         }
 
+        @if (grupoEstado.erroNaReacao(); as motivo) {
+            <p class="conversa-direta__faixa" role="alert">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i
+                ><span>{{ motivo }}</span>
+            </p>
+        }
+
+        @if (seletorDaReacaoId(); as alvoDaReacao) {
+            <app-mensagem-direta-emoji-seletor
+                (escolher)="reagir(alvoDaReacao, $event)"
+                (fechar)="seletorDaReacaoId.set(null)"
+            />
+        }
+
         <p class="conversa-direta__aviso-ia">
             <i class="pi pi-sparkles" aria-hidden="true"></i>
             Este chat pode ser resumido por IA (<code>/resumir</code>).
@@ -388,8 +468,13 @@
         <app-mensagem-direta-compositor
             [pessoas]="pessoasMencionaveis()"
             [permitirTodos]="true"
+            [iaDisponivel]="iaDisponivel()"
             [resposta]="respostaEmPreparo()"
             (cancelarResposta)="grupoEstado.cancelarResposta()"
+            [edicao]="edicaoEmPreparo()"
+            (cancelarEdicao)="grupoEstado.cancelarEdicao()"
+            [salvando]="grupoEstado.salvandoEdicao()"
+            [erroDaEdicao]="grupoEstado.erroNaEdicao()"
             [chave]="grupoAbertoId()"
             [codigoInicial]="estado.rascunhoDoDesktop()"
             (textoAplicado)="estado.rascunhoDoDesktop.set(null)"

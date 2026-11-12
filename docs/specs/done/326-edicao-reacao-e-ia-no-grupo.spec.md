@@ -3,6 +3,7 @@
 > Task 326, vinda da ideia I-053 (`docs/context/IDEAS.md`; a outra metade dela, a notificação do Windows para grupo, já saiu no Desktop 1.1.3).
 > Spec escrita em 2026-11-12 a partir das decisões do autor na conversa do mesmo dia (seção "Decisões do autor"). **Nenhum código antes de o autor
 > aprovar esta spec**: o entregável 1 é modelagem (migration em `mensagem_direta_reacao`) e o 4 amplia o que a IA lê.
+> Aprovada e feita em 2026-11-12: verificação em `326-edicao-reacao-e-ia-no-grupo/verificacao.md` (ao lado desta spec), com os limites.
 
 ## Objetivo
 
@@ -54,7 +55,7 @@ Respondidas em 2026-11-12 (as pendências da primeira versão foram fechadas no 
      `IA_DIGITANDO` aos membros. Falha, IA desligada ou fora do ar: mensagem do sistema, como hoje.
    - Custo registrado no `IaUsoService` em nome de quem chamou (descrição "@IA no grupo").
    - `validarMensagemDiretaNova` aceita a mensagem `IA` com `chamadaPorUsuarioId` membro do grupo (hoje confere participante da conversa a dois).
-5. **Ver a proposta como membro do grupo:** `GET /mensagem-direta/grupo/:grupoId/proposta/:propostaId?mensagemId=` devolve o mesmo
+5. **Ver a proposta como membro do grupo:** `GET /mensagem-direta/grupo/:grupoId/mensagem/:mensagemId/proposta/:propostaId` (o mesmo desenho da rota da conversa um a um) devolve o mesmo
    `MensagemDiretaPropostaRecuperadaDto` (`acessivel`, `podeResolver`, `proposta`). 404 se a proposta não está numa mensagem `IA` **deste** grupo; 403 para quem
    não é membro nem leitor por tipo. `podeResolver` só para quem chamou; `acessivel` pelo `podeVer` dos executores, como na um a um.
 6. **Frontend** (`modules/mensagem-direta`, popup, janela do Desktop e supervisão):
@@ -62,7 +63,7 @@ Respondidas em 2026-11-12 (as pendências da primeira versão foram fechadas no 
      reagiu); "editada" ao lado do horário; tratamento de `EDICAO` e `REACAO` do grupo.
    - O `@` do compositor do grupo oferece **IA** como primeira opção (com a IA disponível); balão da IA, "IA digitando…", cartão, grupo de propostas e
      "Ação oculta por falta de acesso" reaproveitam os componentes da 315.
-   - Supervisão do grupo: a mensagem da IA e a "editada" aparecem somente leitura; reação e `@IA` não se exercem por lá.
+   - Supervisão do grupo: a tela de supervisão já mostra a resposta da IA (rótulo "IA · para <Nome>" e "A IA propôs N ações") e o texto atual da mensagem editada, somente leitura, como na conversa um a um (a marca "editada" não aparece por lá, como na 313); reação e `@IA` não se exercem por lá.
    - Análogo visual aprovado: a própria conversa um a um já com as três ações (tasks 313, 314 e 315).
 7. **Documentação:** `SCHEMA.md` (a `0090`), `SYSTEM.SPEC.md` §12 (linha `mensagem-direta`: as três rotas e a regra de membro), `CONTEXT.md`, `HISTORY.md`.
    A I-053 sai de `IDEAS.md` (já saiu a metade do Desktop; esta task a encerra).

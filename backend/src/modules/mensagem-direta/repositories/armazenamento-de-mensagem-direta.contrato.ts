@@ -413,7 +413,7 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
                 await assert.rejects(armazenamento.gravar({ ...mensagem(conversaGrupoDois, ana, 'outro grupo'), mensagemId: daAna.mensagemId }), (erro) => erro instanceof BusinessException);
             });
 
-            it('recusa mensagem de grupo incoerente: grupo inválido, usuário sem id, sistema com autor e a IA (ainda não responde em grupo)', async () => {
+            it('recusa mensagem de grupo incoerente: grupo inválido, usuário sem id, sistema com autor e a IA sem quem a chamou', async () => {
                 await assert.rejects(armazenamento.gravar(mensagem('G0', ana, 'grupo zero')), (erro) => erro instanceof BusinessException);
                 await assert.rejects(armazenamento.gravar(mensagem('Gx', ana, 'grupo inválido')), (erro) => erro instanceof BusinessException);
                 await assert.rejects(
@@ -425,10 +425,23 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
                     (erro) => erro instanceof BusinessException,
                 );
                 await assert.rejects(
-                    armazenamento.gravar(mensagem(conversaGrupoUm, null, 'ia em grupo', { autor: AutorMensagemDiretaEnum.IA, chamadaPorUsuarioId: ana, propostaIds: [] })),
+                    armazenamento.gravar(mensagem(conversaGrupoUm, null, 'ia em grupo sem quem chamou', { autor: AutorMensagemDiretaEnum.IA, chamadaPorUsuarioId: null, propostaIds: [] })),
                     (erro) => erro instanceof BusinessException,
                 );
                 await assert.rejects(armazenamento.listarConversa({ conversaId: 'G0', limite: 10 }), (erro) => erro instanceof BusinessException);
+            });
+
+            it('grava a resposta da IA no grupo (task 326) com quem a chamou e as propostas, e ninguém edita nem a IA nem o sistema', async () => {
+                const conversaGrupoTres = `G${base + 102}`;
+                const daIa = (await armazenamento.gravar(mensagem(conversaGrupoTres, null, 'Criei as propostas', { autor: AutorMensagemDiretaEnum.IA, chamadaPorUsuarioId: carla, propostaIds: [51, 52] }))).mensagem;
+                assert.equal(daIa.autor, AutorMensagemDiretaEnum.IA);
+                assert.equal(daIa.autorUsuarioId, null);
+                assert.equal(daIa.chamadaPorUsuarioId, carla);
+                assert.deepEqual(daIa.propostaIds, [51, 52]);
+                const lida = await armazenamento.recuperarMensagem({ conversaId: conversaGrupoTres, mensagemId: daIa.mensagemId });
+                assert.deepEqual(lida?.propostaIds, [51, 52]);
+                assert.equal(lida?.chamadaPorUsuarioId, carla);
+                assert.equal(await armazenamento.alterarMensagem({ mensagemId: daIa.mensagemId, conversaId: conversaGrupoTres, autorUsuarioId: carla, texto: 'x', contemCodigo: false, mencoes: [], referencias: [] }), null, 'a IA não é editada por quem a chamou');
             });
 
             it('a lista um a um nunca traz o grupo; a lista dos grupos traz cada um, o mais recente primeiro, com participantes vazios', async () => {

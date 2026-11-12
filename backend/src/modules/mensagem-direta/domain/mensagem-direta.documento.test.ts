@@ -193,11 +193,19 @@ test('a mensagem de grupo (G<id>) passa com qualquer pessoa como autor, e o sist
     assert.doesNotThrow(() => validarMensagemDiretaNova({ ...NOVA_DE_GRUPO, autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null }));
 });
 
-test('a mensagem de grupo recusa grupo inválido, usuário sem id, sistema com autor e a IA', () => {
+test('a mensagem de grupo recusa grupo inválido, usuário sem id e sistema com autor', () => {
     for (const conversaId of ['G0', 'G', 'g7', 'G7x']) recusa({ ...NOVA_DE_GRUPO, conversaId }, /Conversa direta inválida/);
     recusa({ ...NOVA_DE_GRUPO, autorUsuarioId: null }, /participar/);
     recusa({ ...NOVA_DE_GRUPO, autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: 9 }, /sistema não tem autor/);
-    recusa({ ...NOVA_DE_GRUPO, autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, chamadaPorUsuarioId: 9, propostaIds: [] }, /IA ainda não responde em grupo/);
+});
+
+test('a resposta da IA no grupo (task 326) precisa de quem a chamou; quem é membro a service confere', () => {
+    const resposta = { ...NOVA_DE_GRUPO, autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, propostaIds: [3, 4] };
+    assert.doesNotThrow(() => validarMensagemDiretaNova({ ...resposta, chamadaPorUsuarioId: 9 }));
+    recusa({ ...resposta, chamadaPorUsuarioId: null }, /quem a chamou/);
+    recusa({ ...resposta, chamadaPorUsuarioId: 0 }, /quem a chamou/);
+    recusa({ ...resposta, chamadaPorUsuarioId: 9, propostaIds: [0] }, /Proposta inválida/);
+    recusa({ ...NOVA_DE_GRUPO, chamadaPorUsuarioId: 9 }, /Só a resposta da IA/);
 });
 
 test('o documento do grupo não tem participantes e marca o tipo e o grupo; o da conversa um a um não ganha campos novos', () => {

@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { AutorMensagemDiretaEnum, CitacaoMensagemDto, COMANDO_DE_RESUMO, ReferenciaMensagemDiretaEnum, TipoUsuarioEnum, grupoEhCanal, trechoDaMensagemDireta } from '@project20/shared';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, NgZone, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { AutorMensagemDiretaEnum, CitacaoMensagemDto, COMANDO_DE_RESUMO, EstadoIaEnum, ReferenciaMensagemDiretaEnum, TipoUsuarioEnum, chamadaDaIa, grupoEhCanal, pedidoPendenteDaIa, podeEditarMensagemDireta, trechoDaMensagemDireta } from '@project20/shared';
 import { MenuItem, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ContextMenu } from 'primeng/contextmenu';
 import { Menu } from 'primeng/menu';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
+import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { AvatarGrupoComponent } from '../../../../shared/components/avatar-grupo/avatar-grupo.component';
 import { TEMPO_DO_COPIADO_MS } from '../../../../shared/components/markdown-bloco-codigo/markdown-bloco-codigo.component';
@@ -13,12 +14,16 @@ import { MarkdownVisualizadorComponent } from '../../../../shared/components/mar
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-referencia.service';
 import { EnvioDoCompositor } from '../../services/mensagem-direta-estado.service';
+import { EdicaoEmPreparo } from '../../utils/compositor.util';
 import { coresDosMembros, nomeDoAutorNoGrupo, rotuloDosMembros } from '../../utils/grupo.util';
-import { agruparPorDia, formatarHora, marcarEmendas, MensagemNaConversa } from '../../utils/mensagem-direta.util';
+import { DESTAQUES_DA_IA, ICONES_DOS_DESTAQUES_DA_IA, agruparPorDia, formatarHora, marcarEmendas, MensagemNaConversa } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaGrupoBuscaComponent } from '../mensagem-direta-grupo-busca/mensagem-direta-grupo-busca.component';
 import { MensagemDiretaGrupoFixadasComponent } from '../mensagem-direta-grupo-fixadas/mensagem-direta-grupo-fixadas.component';
 import { MensagemDiretaGrupoResumoComponent } from '../mensagem-direta-grupo-resumo/mensagem-direta-grupo-resumo.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
+import { MensagemDiretaEmojiSeletorComponent } from '../mensagem-direta-emoji-seletor/mensagem-direta-emoji-seletor.component';
+import { MensagemDiretaIaRespostaComponent } from '../mensagem-direta-ia-resposta/mensagem-direta-ia-resposta.component';
+import { MensagemDiretaReacoesComponent } from '../mensagem-direta-reacoes/mensagem-direta-reacoes.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
 
 /** Distância do fim (px) até a qual a conversa continua acompanhando as mensagens que chegam. */
@@ -33,17 +38,19 @@ const TEMPO_DO_AVISO_MS = 4_000;
 const AVISO_ORIGINAL_NAO_ACHADA = 'Mensagem antiga demais para localizar.';
 /** Onde o duplo clique mantém o comportamento próprio (selecionar texto, abrir, copiar) em vez de responder. */
 const SELETOR_DO_QUE_NAO_RESPONDE_COM_DOIS_CLIQUES = 'a, button, pre, code, app-mensagem-direta-referencia-cartao';
+/** De quanto em quanto tempo a dica do `@IA` sozinho confere se o prazo do pedido acabou. */
+const INTERVALO_DO_RELOGIO_DA_IA_MS = 30_000;
 
 /**
  * A conversa de um grupo no popup (task 247). Parte da conversa um a um (mesmos balões, compositor, citação e rolagem), com o que é de grupo: o nome de quem
  * escreveu em cada sequência, o avatar e o número de membros no cabeçalho, o menu do grupo (membros, silêncio, sair), `@todos` e nenhum indicador de leitura por
- * pessoa. Não há edição nem reação em grupo. Fica em componente próprio, e não como ramo do componente da conversa um a um, para esse não ganhar mais
+ * pessoa. Editar, reagir e o `@IA` (task 326) funcionam como na conversa um a um. Fica em componente próprio, e não como ramo do componente da conversa um a um, para esse não ganhar mais
  * responsabilidade; os estilos são os da conversa (`styleUrls`), para os dois parecerem o mesmo chat.
  */
 @Component({
     selector: 'app-mensagem-direta-grupo-conversa',
     standalone: true,
-    imports: [ButtonModule, ContextMenu, Menu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarGrupoComponent, MensagemDiretaGrupoBuscaComponent, MensagemDiretaGrupoFixadasComponent, MensagemDiretaGrupoResumoComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent],
+    imports: [ButtonModule, ContextMenu, Menu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarGrupoComponent, MensagemDiretaReacoesComponent, MensagemDiretaEmojiSeletorComponent, MensagemDiretaIaRespostaComponent, MensagemDiretaGrupoBuscaComponent, MensagemDiretaGrupoFixadasComponent, MensagemDiretaGrupoResumoComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent],
     templateUrl: './mensagem-direta-grupo-conversa.component.html',
     styleUrls: ['../mensagem-direta-conversa/mensagem-direta-conversa.component.scss', './mensagem-direta-grupo-conversa.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,6 +60,7 @@ export class MensagemDiretaGrupoConversaComponent {
     protected readonly grupoEstado = this.estado.grupoEstado;
     private readonly sessao = inject(UsuarioSessaoService);
     private readonly referencias = inject(MensagemDiretaReferenciaService);
+    private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
     private readonly messageService = inject(MessageService);
     private readonly rolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
     private readonly menuAcoes = viewChild<ContextMenu>('menuAcoes');
@@ -114,6 +122,43 @@ export class MensagemDiretaGrupoConversaComponent {
     private readonly totalDeMensagens = computed(() => this.aberto()?.mensagens.length ?? 0);
     private readonly nomesDasReferencias = signal<ReadonlyMap<string, string>>(new Map());
 
+    /** O `@IA` só é oferecido no compositor com a IA no ar (task 326); o servidor confere de novo e avisa no grupo se ela não puder responder. */
+    protected readonly iaDisponivel = computed(() => this.iaDisponibilidade.estadoReal() === EstadoIaEnum.NO_AR);
+    /** A IA está respondendo a um `@IA` deste grupo: os membros veem "IA digitando…". */
+    protected readonly iaRespondendo = computed(() => {
+        const aberto = this.aberto();
+        return aberto ? this.estado.iaDigitando().has(aberto.conversaId) : false;
+    });
+    /** O relógio da dica do `@IA` sozinho: o prazo do pedido acaba sem nenhuma mensagem nova chegar. */
+    private readonly relogioDaIa = signal(Date.now());
+    /** O usuário mandou só `@IA` há menos de 10 minutos: a próxima mensagem dele é o pedido (a mesma regra do servidor, no `shared`). */
+    protected readonly aguardandoPedidoDaIa = computed(() => {
+        const aberto = this.aberto();
+        const meuId = this.sessao.id();
+        if (!aberto || meuId === undefined || this.iaRespondendo()) return false;
+        const enviadas = aberto.mensagens.filter((mensagem) => mensagem.situacao === 'ENVIADA');
+        // A regra recusa idade negativa, e o relógio só bate a cada 30 s (e a data do servidor chega alguns milissegundos depois da local): o "agora" nunca fica
+        // antes da mensagem mais recente, senão o `@IA` recém-enviado só teria a dica na próxima batida.
+        const maisRecente = enviadas.reduce((maior, mensagem) => Math.max(maior, mensagem.createdDate.getTime()), 0);
+        return pedidoPendenteDaIa(enviadas, meuId, new Date(Math.max(this.relogioDaIa(), maisRecente)));
+    });
+    /** O ícone da IA antes do `@IA` destacado: o `@IA` parece uma menção de pessoa, com o ícone na frente. */
+    protected readonly iconesDosDestaques = ICONES_DOS_DESTAQUES_DA_IA;
+    /** A mensagem cuja faixa de reações está aberta e a que está escolhendo o emoji no seletor completo; no máximo uma de cada. */
+    protected readonly reagindoId = signal<string | null>(null);
+    protected readonly seletorDaReacaoId = signal<string | null>(null);
+    protected readonly nomeDeQuemReagiu = (usuarioId: number): string => this.nomeDoAutor(usuarioId);
+    /** A mensagem própria em edição, no formato do compositor: o texto, as menções e as referências com o nome que o texto traz. */
+    protected readonly edicaoEmPreparo = computed<EdicaoEmPreparo | null>(() => {
+        const editando = this.grupoEstado.editando();
+        if (!editando) return null;
+        const referencias = editando.referencias.flatMap((referencia) => {
+            const nome = this.nomesDasReferencias().get(`${referencia.tipo}:${referencia.id}`);
+            return nome ? [{ ...referencia, nome }] : [];
+        });
+        return { mensagemId: editando.mensagemId, texto: editando.texto, mencoes: editando.mencoes, referencias };
+    });
+
     protected readonly respostaEmPreparo = computed(() => {
         const respondida = this.grupoEstado.respondendoA();
         if (!respondida || respondida.autorUsuarioId === null) return null;
@@ -155,20 +200,27 @@ export class MensagemDiretaGrupoConversaComponent {
             this.menuAcoes()?.hide();
             this.mensagemDoMenu.set(null);
             this.longeDoFim.set(false);
+            this.reagindoId.set(null);
+            this.seletorDaReacaoId.set(null);
         });
         effect(() => {
             this.totalDeMensagens();
             setTimeout(() => this.ajustarRolagem(), 0);
         });
         effect(() => {
-            if (this.quemDigita().length > 0) setTimeout(() => this.acompanharOFim(), 0);
+            if (this.quemDigita().length > 0 || this.iaRespondendo() || this.aguardandoPedidoDaIa()) setTimeout(() => this.acompanharOFim(), 0);
         });
         effect(() => {
             for (const mensagem of this.aberto()?.mensagens ?? []) {
                 for (const referencia of mensagem.referencias) void this.guardarNomeDaReferencia(referencia.tipo, referencia.id);
             }
         });
+        // A janela de chat do Project Desktop não passa pelo layout, que é quem lê o estado da IA: lê aqui se ninguém leu ainda.
+        if (this.iaDisponibilidade.estadoReal() === null) this.iaDisponibilidade.carregar();
+        // Fora da zona do Angular: um intervalo permanente não pode impedir a tela de ficar estável (o signal ainda atualiza a tela).
+        const relogio = inject(NgZone).runOutsideAngular(() => setInterval(() => this.relogioDaIa.set(Date.now()), INTERVALO_DO_RELOGIO_DA_IA_MS));
         inject(DestroyRef).onDestroy(() => {
+            clearInterval(relogio);
             if (this.temporizadorDoCopiado) clearTimeout(this.temporizadorDoCopiado);
             if (this.temporizadorDoRealce) clearTimeout(this.temporizadorDoRealce);
             if (this.temporizadorDoAviso) clearTimeout(this.temporizadorDoAviso);
@@ -188,6 +240,8 @@ export class MensagemDiretaGrupoConversaComponent {
             const nome = this.nomesDasReferencias().get(`${referencia.tipo}:${referencia.id}`);
             if (nome) destaques.push(`#${nome}`);
         }
+        // O `@IA` ganha o mesmo destaque da menção quando a mensagem chama a IA (a regra do servidor, no `shared`: fora de código).
+        if (chamadaDaIa(mensagem.texto)) destaques.push(...DESTAQUES_DA_IA);
         return destaques;
     }
 
@@ -218,6 +272,30 @@ export class MensagemDiretaGrupoConversaComponent {
         return mensagem.autorUsuarioId !== this.meuId() && !this.emendas().get(mensagem.mensagemId)?.comAnterior;
     }
 
+    /** A opção "Editar" só aparece na mensagem própria enviada, dentro do prazo de 1 hora (a mesma regra pura da service, que é quem decide de verdade). */
+    protected podeEditar(mensagem: MensagemNaConversa): boolean {
+        const meuId = this.sessao.id();
+        return !this.lendoPorTipo() && meuId !== undefined && mensagem.situacao === 'ENVIADA' && podeEditarMensagemDireta({ ...mensagem, usuarioId: meuId, agora: new Date() });
+    }
+
+    /** Abre (ou fecha, se já estava aberta) a faixa de reações da mensagem. */
+    protected abrirReacao(mensagemId: string): void {
+        this.seletorDaReacaoId.set(null);
+        this.reagindoId.set(this.reagindoId() === mensagemId ? null : mensagemId);
+    }
+
+    protected abrirSeletorDaReacao(mensagemId: string): void {
+        this.reagindoId.set(null);
+        this.seletorDaReacaoId.set(mensagemId);
+    }
+
+    /** Reage com o emoji escolhido (o mesmo da minha reação tira, outro troca) e fecha a faixa e o seletor. */
+    protected reagir(mensagemId: string, emoji: string): void {
+        this.reagindoId.set(null);
+        this.seletorDaReacaoId.set(null);
+        void this.grupoEstado.reagir(mensagemId, emoji);
+    }
+
     protected abrirMenu(evento: MouseEvent, mensagem: MensagemNaConversa, peloBotao = false): void {
         if (mensagem.situacao !== 'ENVIADA' || mensagem.autor !== AutorMensagemDiretaEnum.USUARIO) return;
         evento.preventDefault();
@@ -229,6 +307,9 @@ export class MensagemDiretaGrupoConversaComponent {
         this.mensagemDoMenu.set(mensagem.mensagemId);
         this.itensMenu.set([
             { label: 'Responder', icon: 'pi pi-reply', command: () => this.grupoEstado.responder(mensagem) },
+            // Reagir, editar e fixar são de membro: quem só lê o canal por tipo não age (task 326).
+            ...(this.lendoPorTipo() ? [] : [{ label: 'Reagir', icon: 'pi pi-face-smile', command: () => this.abrirReacao(mensagem.mensagemId) }]),
+            ...(this.podeEditar(mensagem) ? [{ label: 'Editar', icon: 'pi pi-pencil', command: () => this.grupoEstado.editar(mensagem) }] : []),
             { label: 'Copiar texto', icon: 'pi pi-copy', command: () => void this.copiar(mensagem.mensagemId, mensagem.texto) },
             // Fixar é de membro: quem só lê o canal por tipo não fixa (task 250).
             ...(this.lendoPorTipo()
@@ -385,6 +466,11 @@ export class MensagemDiretaGrupoConversaComponent {
     }
 
     protected aoEnviar(envio: EnvioDoCompositor): void {
+        // Com uma mensagem em edição, enviar é salvar a edição (nada de mensagem nova).
+        if (this.grupoEstado.editando()) {
+            void this.grupoEstado.confirmarEdicao({ texto: envio.texto, mencoes: envio.mencoes, mencionaTodos: envio.mencionaTodos, referencias: envio.referencias });
+            return;
+        }
         // `/resumir` é um comando, não uma mensagem: abre o resumo e nada é enviado ao grupo (quem só lê por tipo não é membro e não resume).
         if (envio.texto.trim() === COMANDO_DE_RESUMO && !this.lendoPorTipo()) {
             this.resumoAberto.set(true);

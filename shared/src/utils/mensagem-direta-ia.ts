@@ -8,6 +8,8 @@ import { AutorMensagemDiretaEnum } from '../enums/autor-mensagem-direta.enum';
 export const PRAZO_DO_PEDIDO_DA_IA_MINUTOS = 10;
 /** Quantas mensagens anteriores da conversa, das duas pessoas, a IA lê junto com o pedido. */
 export const JANELA_DE_CONTEXTO_DA_IA_NO_CHAT_DIRETO = 20;
+/** Quantas mensagens anteriores do grupo ou canal a IA lê junto com o pedido (task 326). */
+export const JANELA_DE_CONTEXTO_DA_IA_NO_GRUPO = 30;
 /** Por quanto tempo a tela mostra "IA digitando…" sem receber a resposta. */
 export const VALIDADE_DO_IA_DIGITANDO_MS = 120_000;
 /** O texto que chama a IA. */
