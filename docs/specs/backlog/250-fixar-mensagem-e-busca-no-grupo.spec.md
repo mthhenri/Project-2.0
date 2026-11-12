@@ -1,6 +1,6 @@
 # 250-fixar-mensagem-e-busca-no-grupo.spec.md
 
-> Task 5/5 da guarda-chuva [`chat-grupos.spec.md`](chat-grupos.spec.md), fase 4. Depende da [`246`](246-grupo-livre-backend.spec.md) e da [`247`](247-grupo-livre-frontend-e-desktop.spec.md);
+> Task 5/5 da guarda-chuva [`chat-grupos.spec.md`](chat-grupos.spec.md), fase 4. Depende da [`246`](../done/246-grupo-livre-backend.spec.md) e da [`247`](247-grupo-livre-frontend-e-desktop.spec.md);
 > funciona também nos canais da [`248`](248-canais-de-projeto-e-de-demanda.spec.md).
 
 ## Objetivo

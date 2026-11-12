@@ -69,7 +69,7 @@ propor gravar o resumo na documentação da demanda.
 
 | # | Task | Escopo | Depende de |
 |---|---|---|---|
-| 246 | [Grupo livre, backend](246-grupo-livre-backend.spec.md) | modelo e migration, armazenamento, service e API, membros (adicionar, sair, readicionar, fim do grupo), nome e foto, mensagens do sistema, supervisão de grupo | 214 |
+| 246 | [Grupo livre, backend](../done/246-grupo-livre-backend.spec.md) | modelo e migration, armazenamento, service e API, membros (adicionar, sair, readicionar, fim do grupo), nome e foto, mensagens do sistema, supervisão de grupo | 214 |
 | 247 | [Grupo livre, frontend e Desktop](247-grupo-livre-frontend-e-desktop.spec.md) | popup (lista e conversa de grupo, criar, renomear, sair), avisos, `@todos`, seletor do Project Desktop com pessoas e grupos | 246 |
 | 248 | [Canais de projeto e de demanda](248-canais-de-projeto-e-de-demanda.spec.md) | fase 2: canal sob demanda, membros por `demanda_usuario`, supervisão | 246, 247 |
 | 249 | [Resumo com a IA](249-resumo-do-grupo-com-ia.spec.md) | fase 3: `/resumir`, blocos, estimativa, código omitido, proposta de gravar na documentação, custos | 248 |

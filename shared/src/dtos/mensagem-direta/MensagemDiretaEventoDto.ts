@@ -4,6 +4,10 @@ import { ReacaoMensagemDiretaDto } from './ReacaoMensagemDiretaDto';
 /**
  * Evento do stream do chat entre colaboradores (`GET /mensagem-direta/eventos`, `text/event-stream`, um JSON por evento).
  * O stream não é o histórico: ele só avisa. O que o cliente perde numa queda, ele recupera relendo a conversa (`SINCRONIZAR` pede isso).
+ *
+ * Grupos (task 246): os mesmos eventos valem para o grupo, identificado pelo `conversaId` `G<id do grupo>`, e chegam a todos os membros atuais.
+ * `SINCRONIZAR` com `conversaId` de grupo pede para reler a lista de conversas e esse grupo (entrada, saída, nome, cor e emoji mudaram); quem saiu
+ * também o recebe, para a lista perder o grupo.
  */
 export type MensagemDiretaEventoDto =
   /** Primeiro evento de toda conexão: quem está online agora. */
