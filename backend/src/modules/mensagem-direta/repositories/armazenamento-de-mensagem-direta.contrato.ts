@@ -21,7 +21,7 @@ const espera = (milissegundos: number) => new Promise((resolver) => setTimeout(r
 export function registrarContratoDeArmazenamentoDeMensagemDireta(
     nome: string,
     criar: () => Promise<ArmazenamentoDeMensagemDireta>,
-    limpar: (usuarioIds: number[]) => Promise<void>,
+    limpar: (usuarioIds: number[], conversaIds: string[]) => Promise<void>,
     /** `sempreLigado`: o armazenamento roda no banco de teste local (Postgres), sem serviço externo, então não espera `CHAT_INTEGRACAO=1`. */
     opcoes: { sempreLigado?: boolean } = {},
 ): void {
@@ -39,6 +39,11 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
         const conversaAnaGestor = `${ana}-${gestor}`;
         const conversaBrunoCarla = `${bruno}-${carla}`;
         const conversaAnaDavi = `${ana}-${davi}`;
+        // Os grupos (task 246): a mensagem de grupo não tem participantes e o `conversaId` é `G<id>`.
+        const grupoUm = base + 100;
+        const grupoDois = base + 101;
+        const conversaGrupoUm = `G${grupoUm}`;
+        const conversaGrupoDois = `G${grupoDois}`;
         let armazenamento: ArmazenamentoDeMensagemDireta;
 
         const mensagem = (conversaId: string, autorUsuarioId: number | null, texto: string, extras: Partial<MensagemDiretaNova> = {}): MensagemDiretaNova => ({
@@ -61,7 +66,7 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
         const daAnaECarla: MensagemDiretaResumoDto[] = []; // da mais antiga para a mais nova
 
         after(async () => {
-            await limpar([ana, bruno, carla, gestor, davi]);
+            await limpar([ana, bruno, carla, gestor, davi], [conversaGrupoUm, conversaGrupoDois]);
         });
 
         it('grava e lê a conversa da mais nova para a mais antiga, com todos os campos', async () => {
@@ -369,6 +374,161 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
                 null,
                 'ninguém edita a resposta da IA',
             );
+        });
+
+        describe('grupos (task 246)', () => {
+            const daConversaDoGrupoUm: MensagemDiretaResumoDto[] = []; // da mais antiga para a mais nova
+            let doGrupoDois: MensagemDiretaResumoDto;
+
+            it('grava e lê a conversa de um grupo: sem participantes, qualquer membro escreve, o sistema avisa e o reenvio é idempotente', async () => {
+                const entrada = (await armazenamento.gravar(mensagem(conversaGrupoUm, null, 'Bruno entrou no grupo'))).mensagem;
+                await espera(15);
+                const daAna = (await armazenamento.gravar(mensagem(conversaGrupoUm, ana, 'Bem-vindos ao balanço do trimestre'))).mensagem;
+                await espera(15);
+                const doBruno = (await armazenamento.gravar(mensagem(conversaGrupoUm, bruno, 'Trecho do relatório', { contemCodigo: true, mencoes: [ana] }))).mensagem;
+                await espera(15);
+                const daCarla = (await armazenamento.gravar(mensagem(conversaGrupoUm, carla, 'Vou revisar hoje'))).mensagem;
+                daConversaDoGrupoUm.push(entrada, daAna, doBruno, daCarla);
+                await espera(15);
+                doGrupoDois = (await armazenamento.gravar(mensagem(conversaGrupoDois, davi, 'Outro grupo, outra conversa'))).mensagem;
+
+                const pagina = await armazenamento.listarConversa({ conversaId: conversaGrupoUm, limite: 10 });
+                assert.deepEqual(ids(pagina.mensagens), [daCarla, doBruno, daAna, entrada].map((item) => item.mensagemId));
+                assert.equal(pagina.proximoCursor, null);
+                assert.equal(pagina.mensagens[3].autor, AutorMensagemDiretaEnum.SISTEMA);
+                assert.equal(pagina.mensagens[3].autorUsuarioId, null);
+                assert.equal(pagina.mensagens[1].contemCodigo, true);
+                assert.deepEqual(pagina.mensagens[1].mencoes, [ana]);
+                assert.equal(pagina.mensagens[1].conversaId, conversaGrupoUm);
+
+                const primeiraPagina = await armazenamento.listarConversa({ conversaId: conversaGrupoUm, limite: 3 });
+                const segundaPagina = await armazenamento.listarConversa({ conversaId: conversaGrupoUm, limite: 3, cursor: primeiraPagina.proximoCursor! });
+                assert.deepEqual(ids(segundaPagina.mensagens), [entrada.mensagemId]);
+                assert.equal(segundaPagina.proximoCursor, null);
+
+                const repetida = await armazenamento.gravar({ ...mensagem(conversaGrupoUm, ana, 'texto diferente'), mensagemId: daAna.mensagemId });
+                assert.equal(repetida.jaExistia, true);
+                assert.equal(repetida.mensagem.texto, daAna.texto);
+                await assert.rejects(armazenamento.gravar({ ...mensagem(conversaGrupoUm, bruno, 'id da Ana'), mensagemId: daAna.mensagemId }), (erro) => erro instanceof BusinessException);
+                await assert.rejects(armazenamento.gravar({ ...mensagem(conversaGrupoDois, ana, 'outro grupo'), mensagemId: daAna.mensagemId }), (erro) => erro instanceof BusinessException);
+            });
+
+            it('recusa mensagem de grupo incoerente: grupo inválido, usuário sem id, sistema com autor e a IA (ainda não responde em grupo)', async () => {
+                await assert.rejects(armazenamento.gravar(mensagem('G0', ana, 'grupo zero')), (erro) => erro instanceof BusinessException);
+                await assert.rejects(armazenamento.gravar(mensagem('Gx', ana, 'grupo inválido')), (erro) => erro instanceof BusinessException);
+                await assert.rejects(
+                    armazenamento.gravar({ ...mensagem(conversaGrupoUm, null, 'usuário sem id'), autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: null }),
+                    (erro) => erro instanceof BusinessException,
+                );
+                await assert.rejects(
+                    armazenamento.gravar({ ...mensagem(conversaGrupoUm, null, 'sistema com autor'), autorUsuarioId: ana }),
+                    (erro) => erro instanceof BusinessException,
+                );
+                await assert.rejects(
+                    armazenamento.gravar(mensagem(conversaGrupoUm, null, 'ia em grupo', { autor: AutorMensagemDiretaEnum.IA, chamadaPorUsuarioId: ana, propostaIds: [] })),
+                    (erro) => erro instanceof BusinessException,
+                );
+                await assert.rejects(armazenamento.listarConversa({ conversaId: 'G0', limite: 10 }), (erro) => erro instanceof BusinessException);
+            });
+
+            it('a lista um a um nunca traz o grupo; a lista dos grupos traz cada um, o mais recente primeiro, com participantes vazios', async () => {
+                const umAUm = await armazenamento.listarConversasDoUsuario({ usuarioId: ana });
+                assert.ok(umAUm.every((conversa) => !conversa.conversaId.startsWith('G')), 'a lista um a um não traz conversa de grupo');
+
+                const grupos = await armazenamento.listarConversasDeGrupos({ grupoIds: [grupoUm, grupoDois] });
+                assert.deepEqual(grupos.map((conversa) => conversa.conversaId), [conversaGrupoDois, conversaGrupoUm]);
+                assert.deepEqual(grupos[0].participantes, []);
+                assert.equal(grupos[0].totalMensagens, 1);
+                assert.equal(grupos[0].ultimaMensagem.mensagemId, doGrupoDois.mensagemId);
+                assert.equal(grupos[1].totalMensagens, 4);
+                assert.equal(grupos[1].ultimaMensagem.mensagemId, daConversaDoGrupoUm[3].mensagemId);
+
+                assert.deepEqual((await armazenamento.listarConversasDeGrupos({ grupoIds: [grupoUm] })).map((conversa) => conversa.conversaId), [conversaGrupoUm]);
+                assert.deepEqual(await armazenamento.listarConversasDeGrupos({ grupoIds: [] }), []);
+                assert.deepEqual(await armazenamento.listarConversasDeGrupos({ grupoIds: [base + 999] }), [], 'grupo sem mensagem não aparece');
+                await assert.rejects(armazenamento.listarConversasDeGrupos({ grupoIds: [0] }), (erro) => erro instanceof BusinessException);
+            });
+
+            it('conta as não lidas do grupo a partir do marcador: só mensagem de pessoa, nunca a minha nem a do sistema, e a conversa um a um não conta grupo', async () => {
+                const desdeOInicio = await armazenamento.contarNaoLidasDeGrupos({
+                    usuarioId: ana,
+                    marcadores: [
+                        { conversaId: conversaGrupoUm, lidaAteDate: null },
+                        { conversaId: conversaGrupoDois, lidaAteDate: null },
+                    ],
+                });
+                assert.deepEqual(desdeOInicio, { [conversaGrupoUm]: 2, [conversaGrupoDois]: 1 }, 'Bruno e Carla no grupo um; Davi no dois');
+
+                const aposAEntrada = await armazenamento.contarNaoLidasDeGrupos({
+                    usuarioId: carla,
+                    marcadores: [{ conversaId: conversaGrupoUm, lidaAteDate: daConversaDoGrupoUm[1].createdDate }],
+                });
+                assert.deepEqual(aposAEntrada, { [conversaGrupoUm]: 1 }, 'a Carla entrou depois da mensagem da Ana: só conta o que veio depois dela, menos a dela própria');
+
+                const aposTudo = await armazenamento.contarNaoLidasDeGrupos({ usuarioId: ana, marcadores: [{ conversaId: conversaGrupoUm, lidaAteDate: daConversaDoGrupoUm[3].createdDate }] });
+                assert.deepEqual(aposTudo, { [conversaGrupoUm]: 0 });
+                assert.deepEqual(await armazenamento.contarNaoLidasDeGrupos({ usuarioId: ana, marcadores: [] }), {});
+
+                const pelaConversaDireta = await armazenamento.contarNaoLidas({ usuarioId: ana, marcadores: [{ conversaId: conversaGrupoUm, lidaAteDate: null }] });
+                assert.deepEqual(pelaConversaDireta, { [conversaGrupoUm]: 0 }, 'a contagem um a um não enxerga o grupo');
+            });
+
+            it('a busca só olha o grupo quando a service o manda: sem grupoIds nunca, com grupoIds só os dele', async () => {
+                assert.equal((await armazenamento.buscar({ usuarioId: ana, texto: `balanço ${marca}` })).length, 0, 'sem grupoIds o grupo não aparece');
+                const noGrupoUm = await armazenamento.buscar({ usuarioId: ana, grupoIds: [grupoUm], texto: `balanco ${marca}` });
+                assert.deepEqual(ids(noGrupoUm), [daConversaDoGrupoUm[1].mensagemId], 'sem acento, como na conversa um a um');
+                assert.equal((await armazenamento.buscar({ usuarioId: ana, grupoIds: [grupoDois], texto: `balanco ${marca}` })).length, 0, 'o grupo dois não tem a palavra');
+                assert.equal((await armazenamento.buscar({ usuarioId: ana, grupoIds: [grupoUm, grupoDois], texto: `entrou ${marca}` })).length, 1, 'olha vários grupos de uma vez');
+                const comAConversaDireta = await armazenamento.buscar({ usuarioId: ana, grupoIds: [grupoUm], texto: `cadastro ${marca}` });
+                assert.ok(comAConversaDireta.length >= 1, 'com grupoIds a conversa um a um continua na busca');
+                assert.equal((await armazenamento.buscar({ usuarioId: ana, grupoIds: [grupoUm], texto: `trecho ${marca}`, somenteCodigo: true })).length >= 1, true);
+                await assert.rejects(armazenamento.buscar({ usuarioId: ana, grupoIds: [-1], texto: marca }), (erro) => erro instanceof BusinessException);
+            });
+
+            it('a supervisão um a um nunca lista grupo, e a supervisão dos grupos lista só os grupos pedidos, pagina, conta e filtra', async () => {
+                const umAUm = await armazenamento.listarTodasConversas({ usuarioIdsExcluidos: [], texto: marca, pagina: 1, porPagina: 100 });
+                assert.ok(umAUm.conversas.every((conversa) => !conversa.conversaId.startsWith('G')), 'o grupo tem participantes vazios e passaria no filtro de exclusão');
+
+                const grupos = await armazenamento.listarGruposSupervisionados({ grupoIds: [grupoUm, grupoDois], texto: marca, pagina: 1, porPagina: 100 });
+                assert.equal(grupos.total, 2);
+                assert.deepEqual(grupos.conversas.map((conversa) => conversa.conversaId), [conversaGrupoDois, conversaGrupoUm]);
+
+                const soUm = await armazenamento.listarGruposSupervisionados({ grupoIds: [grupoUm], texto: marca, pagina: 1, porPagina: 100 });
+                assert.deepEqual(soUm.conversas.map((conversa) => conversa.conversaId), [conversaGrupoUm]);
+                assert.equal(soUm.total, 1);
+
+                const primeira = await armazenamento.listarGruposSupervisionados({ grupoIds: [grupoUm, grupoDois], texto: marca, pagina: 1, porPagina: 1 });
+                const segunda = await armazenamento.listarGruposSupervisionados({ grupoIds: [grupoUm, grupoDois], texto: marca, pagina: 2, porPagina: 1 });
+                assert.deepEqual(primeira.conversas.map((conversa) => conversa.conversaId), [conversaGrupoDois]);
+                assert.deepEqual(segunda.conversas.map((conversa) => conversa.conversaId), [conversaGrupoUm]);
+                assert.equal(primeira.total, 2);
+
+                const comCodigo = await armazenamento.listarGruposSupervisionados({ grupoIds: [grupoUm, grupoDois], texto: marca, somenteCodigo: true, pagina: 1, porPagina: 100 });
+                assert.deepEqual(comCodigo.conversas.map((conversa) => conversa.conversaId), [conversaGrupoUm]);
+                assert.equal(comCodigo.conversas[0].ultimaMensagem.mensagemId, daConversaDoGrupoUm[2].mensagemId, 'com filtro, a última mensagem é a última que casou');
+
+                const futuras = await armazenamento.listarGruposSupervisionados({ grupoIds: [grupoUm], texto: marca, inicio: new Date(Date.now() + 24 * 3_600_000), pagina: 1, porPagina: 100 });
+                assert.equal(futuras.total, 0);
+
+                const semGrupos = await armazenamento.listarGruposSupervisionados({ grupoIds: [], pagina: 1, porPagina: 10 });
+                assert.deepEqual(semGrupos, { conversas: [], total: 0 });
+                await assert.rejects(armazenamento.listarGruposSupervisionados({ grupoIds: [grupoUm], pagina: 0, porPagina: 10 }), (erro) => erro instanceof BusinessException);
+                await assert.rejects(armazenamento.listarGruposSupervisionados({ grupoIds: [grupoUm], pagina: 1, porPagina: 101 }), (erro) => erro instanceof BusinessException);
+            });
+
+            it('recuperarMensagem e alterarMensagem valem no grupo: só do grupo pedido, e só o autor edita', async () => {
+                const daAna = daConversaDoGrupoUm[1];
+                assert.equal((await armazenamento.recuperarMensagem({ conversaId: conversaGrupoUm, mensagemId: daAna.mensagemId }))?.texto, daAna.texto);
+                assert.equal(await armazenamento.recuperarMensagem({ conversaId: conversaGrupoDois, mensagemId: daAna.mensagemId }), null, 'de outro grupo');
+
+                const base = { mensagemId: daAna.mensagemId, conversaId: conversaGrupoUm, texto: `Texto novo do grupo ${marca}`, contemCodigo: false, mencoes: [], referencias: [] };
+                assert.equal(await armazenamento.alterarMensagem({ ...base, autorUsuarioId: bruno }), null, 'só o autor edita');
+                const editada = await armazenamento.alterarMensagem({ ...base, autorUsuarioId: ana });
+                assert.equal(editada?.texto, `Texto novo do grupo ${marca}`);
+                assert.ok(editada?.editadaDate instanceof Date);
+                const pagina = await armazenamento.listarConversa({ conversaId: conversaGrupoUm, limite: 10 });
+                assert.deepEqual(ids(pagina.mensagens), daConversaDoGrupoUm.map((item) => item.mensagemId).reverse(), 'a ordem não muda');
+            });
         });
     });
 }

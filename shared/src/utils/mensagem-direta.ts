@@ -110,6 +110,31 @@ export function lerConversaDiretaId(conversaId: string): ParticipantesDaConversa
     return { usuarioMenorId, usuarioMaiorId };
 }
 
+// ---------------------------------------------------------------------------
+// Identidade da conversa de um grupo: `G<id do grupo>` (task 246)
+// ---------------------------------------------------------------------------
+
+const REGEX_CONVERSA_GRUPO = /^G([1-9]\d{0,9})$/;
+
+/** O `conversaId` das mensagens de um grupo. Nunca colide com o da conversa direta (`<menor>-<maior>`, que começa por dígito). */
+export function montarConversaGrupoId(grupoId: number): string {
+    if (!idDeUsuarioValido(grupoId)) throw new Error('A conversa de grupo exige o id inteiro e positivo do grupo');
+    return `G${grupoId}`;
+}
+
+/** O id do grupo de um `conversaId`, ou `null` se o texto não é a conversa de um grupo. */
+export function lerConversaGrupoId(conversaId: string): number | null {
+    const encontrado = REGEX_CONVERSA_GRUPO.exec(conversaId ?? '');
+    if (!encontrado) return null;
+    const grupoId = Number(encontrado[1]);
+    return idDeUsuarioValido(grupoId) ? grupoId : null;
+}
+
+/** O `conversaId` é de grupo (`G<id>`) ou de conversa direta (`<menor>-<maior>`) válido? */
+export function conversaIdValido(conversaId: string): boolean {
+    return lerConversaGrupoId(conversaId) !== null || lerConversaDiretaId(conversaId) !== null;
+}
+
 /** O outro id da conversa; `null` se o `conversaId` é inválido ou a pessoa não participa dela. */
 export function outroParticipanteDaConversaDireta(conversaId: string, usuarioId: number): number | null {
     const participantes = lerConversaDiretaId(conversaId);

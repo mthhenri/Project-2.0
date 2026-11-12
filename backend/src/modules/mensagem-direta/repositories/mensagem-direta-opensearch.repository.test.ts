@@ -20,11 +20,11 @@ registrarContratoDeArmazenamentoDeMensagemDireta(
         await repositorio.onModuleInit();
         return repositorio;
     },
-    async (usuarioIds) => {
+    async (usuarioIds, conversaIds) => {
         await fetch(`${urlDoOpenSearch}/mensagem-direta/_delete_by_query?refresh=true`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: { terms: { participantes: usuarioIds } } }),
+            body: JSON.stringify({ query: { bool: { should: [{ terms: { participantes: usuarioIds } }, { terms: { conversa_id: conversaIds } }], minimum_should_match: 1 } } }),
         });
     },
 );

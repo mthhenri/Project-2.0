@@ -6,23 +6,28 @@ import { BusinessException } from '../../../core/exceptions/business.exception';
 import {
     ConsultaBuscaDireta,
     ConsultaConversaDireta,
+    ConsultaConversasDeGrupos,
     ConsultaConversasDoUsuario,
     ConsultaMensagemDireta,
     ConsultaNaoLidas,
     ConsultaSupervisao,
+    ConsultaSupervisaoDeGrupos,
     LIMITE_BUSCA_DIRETA,
     LIMITE_CONVERSAS_DO_USUARIO,
     PaginaDeConversasSupervisionadas,
     PaginaDeMensagensDiretas,
     ResumoDeConversaDireta,
+    conversasDosGrupos,
     decodificarCursor,
     deBaldesDeNaoLidas,
     montarPaginaDeMensagens,
     validarConsultaBuscaDireta,
     validarConsultaConversaDireta,
+    validarConsultaConversasDeGrupos,
     validarConsultaMensagemDireta,
     validarConsultaNaoLidas,
     validarPaginaDaSupervisao,
+    validarPaginaDaSupervisaoDeGrupos,
 } from '../domain/mensagem-direta-consultas';
 import {
     MensagemDiretaAlterar,
@@ -42,8 +47,11 @@ import { ArmazenamentoDeMensagemDireta } from './armazenamento-de-mensagem-diret
 interface LinhaDeMensagemDireta {
     mensagem_id: string;
     conversa_id: string;
-    usuario_menor_id: number;
-    usuario_maior_id: number;
+    conversa_tipo: string;
+    grupo_id: number | null;
+    /** Nulos na mensagem de grupo. */
+    usuario_menor_id: number | null;
+    usuario_maior_id: number | null;
     autor_usuario_id: number | null;
     autor: string;
     texto: string;
@@ -71,6 +79,8 @@ interface LinhaDeNaoLidas {
 const COLUNAS_DA_MENSAGEM = `
     mensagem_id,
     conversa_id,
+    conversa_tipo,
+    grupo_id,
     usuario_menor_id,
     usuario_maior_id,
     autor_usuario_id,
@@ -93,6 +103,14 @@ const PARTICIPA_DA_CONVERSA = `
     (
         usuario_menor_id = :usuarioId
         OR usuario_maior_id = :usuarioId
+    )
+`;
+
+/** A pessoa é um dos dois participantes da conversa **ou** a conversa é de um dos grupos pedidos (`:conversaIdsDeGrupos`, vazio = nenhum). */
+const PARTICIPA_OU_GRUPO = `
+    (
+        ${PARTICIPA_DA_CONVERSA}
+        OR conversa_id = ANY (CAST(:conversaIdsDeGrupos AS text[]))
     )
 `;
 
@@ -120,6 +138,17 @@ const FILTROS_DA_SUPERVISAO = `
         usuario_menor_id = ANY (CAST(:usuarioIdsExcluidos AS integer[]))
         OR usuario_maior_id = ANY (CAST(:usuarioIdsExcluidos AS integer[]))
     )
+    AND (
+        CAST(:texto AS text) IS NULL
+        OR fn_chat_texto_busca (texto) @@ fn_chat_texto_consulta (:texto)
+    )
+    AND ${FILTROS_DE_RECORTE}
+`;
+
+/** As mensagens que a supervisão dos grupos considera: só os grupos elegíveis (`:conversaIds`), mais texto, período e código. */
+const FILTROS_DA_SUPERVISAO_DE_GRUPOS = `
+    is_deleted = false
+    AND conversa_id = ANY (CAST(:conversaIds AS text[]))
     AND (
         CAST(:texto AS text) IS NULL
         OR fn_chat_texto_busca (texto) @@ fn_chat_texto_consulta (:texto)
@@ -161,11 +190,17 @@ const ULTIMA_MENSAGEM_POR_CONVERSA = (origem: string) => `
         mensagem_id DESC
 `;
 
+/** Os dois participantes da conversa um a um; vazio na de grupo. */
+function participantesDaLinha(linha: LinhaDeMensagemDireta): number[] {
+    return linha.usuario_menor_id !== null && linha.usuario_maior_id !== null ? [linha.usuario_menor_id, linha.usuario_maior_id] : [];
+}
+
 function deLinha(linha: LinhaDeMensagemDireta): MensagemDiretaFonte {
     return {
         mensagem_id: linha.mensagem_id,
         conversa_id: linha.conversa_id,
-        participantes: [linha.usuario_menor_id, linha.usuario_maior_id],
+        participantes: participantesDaLinha(linha),
+        ...(linha.conversa_tipo === ConversaTipoMensagemDiretaEnum.GRUPO ? { conversa_tipo: linha.conversa_tipo, grupo_id: linha.grupo_id } : {}),
         autor_usuario_id: linha.autor_usuario_id,
         autor: linha.autor,
         texto: linha.texto,
@@ -188,7 +223,7 @@ function deLinha(linha: LinhaDeMensagemDireta): MensagemDiretaFonte {
 function deLinhaDeConversa(linha: LinhaDeConversaDireta): ResumoDeConversaDireta {
     return {
         conversaId: linha.conversa_id,
-        participantes: [linha.usuario_menor_id, linha.usuario_maior_id],
+        participantes: participantesDaLinha(linha),
         totalMensagens: linha.total_mensagens,
         ultimaMensagem: deFonteDireta(deLinha(linha)),
     };
@@ -221,6 +256,7 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                             mensagem_id,
                             conversa_id,
                             conversa_tipo,
+                            grupo_id,
                             usuario_menor_id,
                             usuario_maior_id,
                             autor_usuario_id,
@@ -242,8 +278,9 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                         CAST(:mensagemId AS uuid),
                         :conversaId,
                         :conversaTipo,
-                        :usuarioMenorId,
-                        :usuarioMaiorId,
+                        CAST(:grupoId AS integer),
+                        CAST(:usuarioMenorId AS integer),
+                        CAST(:usuarioMaiorId AS integer),
                         :autorUsuarioId,
                         :autor,
                         :texto,
@@ -263,9 +300,10 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                     criadaEm: fonte.created_date,
                     mensagemId: fonte.mensagem_id,
                     conversaId: fonte.conversa_id,
-                    conversaTipo: ConversaTipoMensagemDiretaEnum.DIRETA,
-                    usuarioMenorId: fonte.participantes[0],
-                    usuarioMaiorId: fonte.participantes[1],
+                    conversaTipo: fonte.conversa_tipo ?? ConversaTipoMensagemDiretaEnum.DIRETA,
+                    grupoId: fonte.grupo_id ?? null,
+                    usuarioMenorId: fonte.participantes[0] ?? null,
+                    usuarioMaiorId: fonte.participantes[1] ?? null,
                     autorUsuarioId: fonte.autor_usuario_id,
                     autor: fonte.autor,
                     texto: fonte.texto,
@@ -470,7 +508,7 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                     FROM
                         mensagem_direta
                     WHERE
-                        ${PARTICIPA_DA_CONVERSA}
+                        ${PARTICIPA_OU_GRUPO}
                         AND is_deleted = false
                         AND fn_chat_texto_busca (texto) @@ fn_chat_texto_consulta (:texto)
                         AND ${FILTROS_DE_RECORTE}
@@ -484,7 +522,13 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                     LIMIT
                         :limite
                 `,
-                { usuarioId: consulta.usuarioId, texto: consulta.texto, ...this.lerRecorte(consulta), limite: LIMITE_BUSCA_DIRETA },
+                {
+                    usuarioId: consulta.usuarioId,
+                    conversaIdsDeGrupos: conversasDosGrupos(consulta.grupoIds ?? []),
+                    texto: consulta.texto,
+                    ...this.lerRecorte(consulta),
+                    limite: LIMITE_BUSCA_DIRETA,
+                },
             );
             return linhas.map((linha) => deFonteDireta(deLinha(linha)));
         });
@@ -519,6 +563,105 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
                         mensagem_direta
                     WHERE
                         ${FILTROS_DA_SUPERVISAO}
+                `,
+                filtros,
+            );
+            return { conversas: linhas.map(deLinhaDeConversa), total: contagem[0]?.total ?? 0 };
+        });
+    }
+
+    async listarConversasDeGrupos(consulta: ConsultaConversasDeGrupos): Promise<ResumoDeConversaDireta[]> {
+        validarConsultaConversasDeGrupos(consulta);
+        if (consulta.grupoIds.length === 0) return [];
+        return this.proteger(async () => {
+            const linhas = await this.executarConsulta<LinhaDeConversaDireta>(
+                `
+                    ${ULTIMA_MENSAGEM_POR_CONVERSA(`
+                        SELECT
+                            ${COLUNAS_DA_MENSAGEM}
+                        FROM
+                            mensagem_direta
+                        WHERE
+                            conversa_id = ANY (CAST(:conversaIds AS text[]))
+                            AND is_deleted = false
+                    `)}
+                `,
+                { conversaIds: conversasDosGrupos(consulta.grupoIds) },
+            );
+            return linhas.map(deLinhaDeConversa);
+        });
+    }
+
+    /** Como `contarNaoLidas`, sem o filtro de participante: quem restringe aos grupos da pessoa são os marcadores. */
+    async contarNaoLidasDeGrupos(consulta: ConsultaNaoLidas): Promise<Record<string, number>> {
+        if (consulta.marcadores.length === 0) return {};
+        validarConsultaNaoLidas(consulta);
+        return this.proteger(async () => {
+            const linhas = await this.executarConsulta<LinhaDeNaoLidas>(
+                `
+                    SELECT
+                        marcador.conversa_id,
+                        CAST(COUNT(mensagem_direta.id) AS integer) AS total
+                    FROM
+                        UNNEST(
+                            CAST(:conversaIds AS text[]),
+                            CAST(:lidasAteDates AS timestamptz[])
+                        ) AS marcador (conversa_id, lida_ate_date)
+                        LEFT JOIN mensagem_direta ON mensagem_direta.conversa_id = marcador.conversa_id
+                        AND mensagem_direta.is_deleted = false
+                        AND mensagem_direta.autor = :autorUsuario
+                        AND mensagem_direta.autor_usuario_id <> :usuarioId
+                        AND (
+                            marcador.lida_ate_date IS NULL
+                            OR mensagem_direta.created_date > marcador.lida_ate_date
+                        )
+                    GROUP BY
+                        marcador.conversa_id
+                `,
+                {
+                    usuarioId: consulta.usuarioId,
+                    autorUsuario: AutorMensagemDiretaEnum.USUARIO,
+                    conversaIds: consulta.marcadores.map((marcador) => marcador.conversaId),
+                    lidasAteDates: consulta.marcadores.map((marcador) => marcador.lidaAteDate?.toISOString() ?? null),
+                },
+            );
+            return deBaldesDeNaoLidas(
+                consulta.marcadores.map((marcador) => marcador.conversaId),
+                Object.fromEntries(linhas.map((linha) => [linha.conversa_id, { doc_count: linha.total }])),
+            );
+        });
+    }
+
+    async listarGruposSupervisionados(consulta: ConsultaSupervisaoDeGrupos): Promise<PaginaDeConversasSupervisionadas> {
+        const deslocamento = validarPaginaDaSupervisaoDeGrupos(consulta);
+        if (consulta.grupoIds.length === 0) return { conversas: [], total: 0 };
+        return this.proteger(async () => {
+            const filtros = { conversaIds: conversasDosGrupos(consulta.grupoIds), texto: consulta.texto?.trim() || null, ...this.lerRecorte(consulta) };
+            const linhas = await this.executarConsulta<LinhaDeConversaDireta>(
+                `
+                    ${ULTIMA_MENSAGEM_POR_CONVERSA(`
+                        SELECT
+                            ${COLUNAS_DA_MENSAGEM}
+                        FROM
+                            mensagem_direta
+                        WHERE
+                            ${FILTROS_DA_SUPERVISAO_DE_GRUPOS}
+                    `)}
+                    LIMIT
+                        :limite
+                    OFFSET
+                        :deslocamento
+                `,
+                { ...filtros, limite: consulta.porPagina, deslocamento },
+            );
+            const contagem = await this.executarConsulta<{ total: number }>(
+                `
+                    SELECT
+                        CAST(COUNT(DISTINCT conversa_id) AS integer) AS total
+                    FROM
+                        mensagem_direta
+                    WHERE
+                        ${FILTROS_DA_SUPERVISAO_DE_GRUPOS}
                 `,
                 filtros,
             );

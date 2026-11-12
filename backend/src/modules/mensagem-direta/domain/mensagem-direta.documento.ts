@@ -1,20 +1,23 @@
 import {
     AutorMensagemDiretaEnum,
     CitacaoMensagemDto,
+    ConversaTipoMensagemDiretaEnum,
     LIMITE_TRECHO_MENSAGEM_DIRETA,
     MensagemDiretaResumoDto,
     ReferenciaMensagemDto,
+    conversaIdValido,
     formatarReferenciaDireta,
     lerConversaDiretaId,
+    lerConversaGrupoId,
     lerReferenciaDireta,
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 
-/** A mensagem a gravar: o repository define só a data (`created_date`) e deriva os dois participantes do `conversaId`. */
+/** A mensagem a gravar: o repository define só a data (`created_date`) e deriva os dois participantes do `conversaId` (no grupo, `G<id>`, não há participantes). */
 export interface MensagemDiretaNova {
     /** UUID gerado pelo cliente; vira o `_id` do documento e dá idempotência ao reenvio. */
     mensagemId: string;
-    /** `<menorUsuarioId>-<maiorUsuarioId>`. */
+    /** `<menorUsuarioId>-<maiorUsuarioId>` na conversa um a um e `G<grupoId>` no grupo. */
     conversaId: string;
     autor: AutorMensagemDiretaEnum;
     /** Quem escreveu; `null` quando o autor é o sistema. */
@@ -48,8 +51,12 @@ export interface MensagemDiretaAlterar {
 export interface MensagemDiretaFonte {
     mensagem_id: string;
     conversa_id: string;
-    /** Os dois ids da conversa, em ordem crescente. */
+    /** Os dois ids da conversa, em ordem crescente; vazio na mensagem de grupo (os membros vêm de `grupo_membro`). */
     participantes: number[];
+    /** `GRUPO` na mensagem de um grupo (task 246); ausente (documento anterior à task, ou conversa um a um) vale `DIRETA`. */
+    conversa_tipo?: string;
+    /** O grupo da mensagem, só quando `conversa_tipo` é `GRUPO`. */
+    grupo_id?: number | null;
     autor_usuario_id: number | null;
     autor: string;
     texto: string;
@@ -78,21 +85,26 @@ export const REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9
  */
 export function validarMensagemDiretaNova(mensagem: MensagemDiretaNova): void {
     const participantes = lerConversaDiretaId(mensagem.conversaId);
-    if (!participantes) throw new BusinessException('Conversa direta inválida');
+    const grupoId = lerConversaGrupoId(mensagem.conversaId);
+    if (!participantes && grupoId === null) throw new BusinessException('Conversa direta inválida');
     if (!REGEX_UUID.test(mensagem.mensagemId)) throw new BusinessException('O identificador da mensagem deve ser um UUID');
     if (!mensagem.texto || !mensagem.texto.trim()) throw new BusinessException('A mensagem não pode ser vazia');
 
     if (mensagem.autor === AutorMensagemDiretaEnum.USUARIO) {
-        const participa = mensagem.autorUsuarioId === participantes.usuarioMenorId || mensagem.autorUsuarioId === participantes.usuarioMaiorId;
+        // Na conversa um a um o autor é um dos dois; no grupo, quem é membro é conferido pela service (o armazenamento não conhece os membros).
+        const participa = participantes
+            ? mensagem.autorUsuarioId === participantes.usuarioMenorId || mensagem.autorUsuarioId === participantes.usuarioMaiorId
+            : Number.isInteger(mensagem.autorUsuarioId) && (mensagem.autorUsuarioId as number) >= 1;
         if (!participa) throw new BusinessException('Quem escreve a mensagem precisa participar da conversa');
     } else if (mensagem.autorUsuarioId !== null) {
         throw new BusinessException('A mensagem do sistema não tem autor');
     }
+    if (grupoId !== null && mensagem.autor === AutorMensagemDiretaEnum.IA) throw new BusinessException('A IA ainda não responde em grupo');
 
     const chamadaPor = mensagem.chamadaPorUsuarioId ?? null;
     const propostaIds = mensagem.propostaIds ?? [];
     if (mensagem.autor === AutorMensagemDiretaEnum.IA) {
-        const participa = chamadaPor === participantes.usuarioMenorId || chamadaPor === participantes.usuarioMaiorId;
+        const participa = !!participantes && (chamadaPor === participantes.usuarioMenorId || chamadaPor === participantes.usuarioMaiorId);
         if (!participa) throw new BusinessException('A resposta da IA precisa de quem a chamou, participante da conversa');
         if (!propostaIds.every((propostaId) => Number.isInteger(propostaId) && propostaId >= 1)) throw new BusinessException('Proposta inválida na resposta da IA');
     } else if (chamadaPor !== null || propostaIds.length > 0) {
@@ -112,7 +124,7 @@ export function validarMensagemDiretaNova(mensagem: MensagemDiretaNova): void {
 
 /** Defesa do armazenamento para a edição (a service valida o pedido): conversa e id válidos e texto não vazio. */
 export function validarMensagemDiretaAlterar(alteracao: MensagemDiretaAlterar): void {
-    if (!lerConversaDiretaId(alteracao.conversaId)) throw new BusinessException('Conversa direta inválida');
+    if (!conversaIdValido(alteracao.conversaId)) throw new BusinessException('Conversa direta inválida');
     if (!REGEX_UUID.test(alteracao.mensagemId)) throw new BusinessException('O identificador da mensagem deve ser um UUID');
     if (!Number.isInteger(alteracao.autorUsuarioId) || alteracao.autorUsuarioId < 1) throw new BusinessException('Quem edita a mensagem precisa ser um usuário');
     if (!alteracao.texto || !alteracao.texto.trim()) throw new BusinessException('A mensagem não pode ficar vazia');
@@ -136,11 +148,13 @@ export function mesmaOrigemDaMensagem(existente: Pick<MensagemDiretaFonte, 'conv
 
 export function paraFonteDireta(mensagem: MensagemDiretaNova, criadaEm: Date): MensagemDiretaFonte {
     const participantes = lerConversaDiretaId(mensagem.conversaId);
-    if (!participantes) throw new BusinessException('Conversa direta inválida');
+    const grupoId = lerConversaGrupoId(mensagem.conversaId);
+    if (!participantes && grupoId === null) throw new BusinessException('Conversa direta inválida');
     return {
         mensagem_id: mensagem.mensagemId,
         conversa_id: mensagem.conversaId,
-        participantes: [participantes.usuarioMenorId, participantes.usuarioMaiorId],
+        participantes: participantes ? [participantes.usuarioMenorId, participantes.usuarioMaiorId] : [],
+        ...(grupoId !== null ? { conversa_tipo: ConversaTipoMensagemDiretaEnum.GRUPO, grupo_id: grupoId } : {}),
         autor_usuario_id: mensagem.autorUsuarioId,
         autor: mensagem.autor,
         texto: mensagem.texto,

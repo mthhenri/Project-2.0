@@ -1,4 +1,4 @@
-import { AutorMensagemDiretaEnum, LIMITE_MAXIMO_DA_CONVERSA_DIRETA, MensagemDiretaResumoDto, lerConversaDiretaId } from '@project20/shared';
+import { AutorMensagemDiretaEnum, LIMITE_MAXIMO_DA_CONVERSA_DIRETA, MensagemDiretaResumoDto, conversaIdValido, montarConversaGrupoId } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { MAPEAMENTO_CHAT_MENSAGEM } from '../../chat/domain/chat-consultas';
 import { MensagemDiretaFonte } from './mensagem-direta.documento';
@@ -12,6 +12,10 @@ export const LIMITE_BUSCA_DIRETA = 50;
 /** Conversas que a supervisão agrega; a paginação é feita em cima delas (`bucket_sort`). */
 export const LIMITE_CONVERSAS_DA_SUPERVISAO = 1000;
 export const LIMITE_POR_PAGINA_DA_SUPERVISAO = 100;
+/** Grupos que a lista do popup, a busca e as não lidas consideram de uma vez (como o limite de conversas um a um). */
+export const LIMITE_GRUPOS_DO_USUARIO = LIMITE_CONVERSAS_DO_USUARIO;
+/** Grupos que a supervisão considera de uma vez: o servidor decide os elegíveis e manda os ids. */
+export const LIMITE_GRUPOS_DA_SUPERVISAO = 5000;
 /** Conversas cujas não lidas são contadas de uma vez. */
 export const LIMITE_MARCADORES_DE_LEITURA = LIMITE_CONVERSAS_DO_USUARIO;
 
@@ -29,6 +33,9 @@ export const MAPEAMENTO_MENSAGEM_DIRETA = {
             mensagem_id: { type: 'keyword' },
             conversa_id: { type: 'keyword' },
             participantes: { type: 'integer' },
+            // Task 246. Índice criado antes dela os ganha pelo mapeamento dinâmico (nenhuma consulta os usa: o grupo é reconhecido pelo `conversa_id` `G<id>`).
+            conversa_tipo: { type: 'keyword' },
+            grupo_id: { type: 'integer' },
             autor_usuario_id: { type: 'integer' },
             autor: { type: 'keyword' },
             texto: { type: 'text', analyzer: 'texto_pt' },
@@ -76,6 +83,11 @@ export interface ConsultaConversasDoUsuario {
     usuarioId: number;
 }
 
+/** As conversas de grupo da lista do popup: os grupos em que a pessoa é membro (a service os lê de `grupo_membro`). */
+export interface ConsultaConversasDeGrupos {
+    grupoIds: number[];
+}
+
 /** Uma conversa na lista: o total e a última mensagem (na supervisão com filtro de texto, a última que casou). */
 export interface ResumoDeConversaDireta {
     conversaId: string;
@@ -97,6 +109,8 @@ export interface ConsultaNaoLidas {
 
 export interface ConsultaBuscaDireta {
     usuarioId: number;
+    /** Os grupos em que a pessoa é membro agora: a busca olha também as mensagens deles. Ausente ou vazio = só as conversas um a um. */
+    grupoIds?: number[];
     texto: string;
     inicio?: Date;
     fim?: Date;
@@ -106,6 +120,18 @@ export interface ConsultaBuscaDireta {
 export interface ConsultaSupervisao {
     /** Ids de gestores e administradores: conversa com algum deles é privada e nunca entra. */
     usuarioIdsExcluidos: number[];
+    texto?: string;
+    inicio?: Date;
+    fim?: Date;
+    somenteCodigo?: boolean;
+    /** Começa em 1. */
+    pagina: number;
+    porPagina: number;
+}
+
+/** A lista da supervisão dos grupos: os `grupoIds` já são os elegíveis (sem gestor nem administrador entre os membros atuais), decididos pela service. */
+export interface ConsultaSupervisaoDeGrupos {
+    grupoIds: number[];
     texto?: string;
     inicio?: Date;
     fim?: Date;
@@ -151,14 +177,14 @@ export function decodificarCursor(cursor: string): ValoresDoCursor {
 
 /** A conversa é válida e o limite cabe na faixa. O cursor é conferido por quem o lê (`decodificarCursor`). */
 export function validarConsultaConversaDireta(consulta: ConsultaConversaDireta): void {
-    if (!lerConversaDiretaId(consulta.conversaId)) throw new BusinessException('Conversa direta inválida');
+    if (!conversaIdValido(consulta.conversaId)) throw new BusinessException('Conversa direta inválida');
     if (!Number.isInteger(consulta.limite) || consulta.limite < 1 || consulta.limite > LIMITE_MAXIMO_DA_CONVERSA_DIRETA) {
         throw new BusinessException(`O limite da conversa deve ficar entre 1 e ${LIMITE_MAXIMO_DA_CONVERSA_DIRETA}`);
     }
 }
 
 export function validarConsultaMensagemDireta(consulta: ConsultaMensagemDireta): void {
-    if (!lerConversaDiretaId(consulta.conversaId)) throw new BusinessException('Conversa direta inválida');
+    if (!conversaIdValido(consulta.conversaId)) throw new BusinessException('Conversa direta inválida');
 }
 
 export function validarConsultaNaoLidas(consulta: ConsultaNaoLidas): void {
@@ -169,6 +195,28 @@ export function validarConsultaNaoLidas(consulta: ConsultaNaoLidas): void {
 
 export function validarConsultaBuscaDireta(consulta: ConsultaBuscaDireta): void {
     if (!consulta.texto.trim()) throw new BusinessException('Informe o texto da busca');
+    validarGrupoIds(consulta.grupoIds ?? [], LIMITE_GRUPOS_DO_USUARIO);
+}
+
+/** Os ids de grupo são inteiros positivos, sem passar do limite da consulta. */
+export function validarGrupoIds(grupoIds: number[], limite: number): void {
+    if (grupoIds.length > limite) throw new BusinessException(`A consulta considera até ${limite} grupos de uma vez`);
+    if (!grupoIds.every((grupoId) => Number.isInteger(grupoId) && grupoId >= 1)) throw new BusinessException('Grupo inválido');
+}
+
+export function validarConsultaConversasDeGrupos(consulta: ConsultaConversasDeGrupos): void {
+    validarGrupoIds(consulta.grupoIds, LIMITE_GRUPOS_DO_USUARIO);
+}
+
+/** A página pedida da supervisão dos grupos cabe no que é agregado; devolve quantas conversas pular. */
+export function validarPaginaDaSupervisaoDeGrupos(consulta: ConsultaSupervisaoDeGrupos): number {
+    validarGrupoIds(consulta.grupoIds, LIMITE_GRUPOS_DA_SUPERVISAO);
+    return validarPaginaDaSupervisao({ ...consulta, usuarioIdsExcluidos: [] });
+}
+
+/** Os `conversa_id` (`G<id>`) dos grupos. */
+export function conversasDosGrupos(grupoIds: number[]): string[] {
+    return grupoIds.map(montarConversaGrupoId);
 }
 
 /** A página pedida cabe no que a supervisão agrega; devolve quantas conversas pular (`from`). */
@@ -235,6 +283,15 @@ export function montarConsultaConversasDoUsuario(consulta: ConsultaConversasDoUs
     };
 }
 
+/** As conversas de grupo da pessoa, da que teve mensagem mais recente, no mesmo formato da lista um a um. */
+export function montarConsultaConversasDeGrupos(consulta: ConsultaConversasDeGrupos) {
+    return {
+        size: 0,
+        query: { bool: { filter: [{ terms: { conversa_id: conversasDosGrupos(consulta.grupoIds) } }] } },
+        aggs: { conversas: agregacaoDeConversas(LIMITE_GRUPOS_DO_USUARIO) },
+    };
+}
+
 /** Os filtros de período e de código, comuns à busca e à supervisão. */
 function filtrosDeRecorte(recorte: { inicio?: Date; fim?: Date; somenteCodigo?: boolean }): unknown[] {
     const filtros: unknown[] = [];
@@ -284,13 +341,39 @@ export function montarConsultaNaoLidas(consulta: ConsultaNaoLidas) {
     };
 }
 
-/** Busca textual nas mensagens das conversas da pessoa, mais relevantes primeiro, com período e filtro de código opcionais. */
+/**
+ * Quantas mensagens de pessoa, que não são minhas, vieram depois do marcador de cada grupo. Igual a `montarConsultaNaoLidas`, mas sem o filtro de
+ * `participantes` (a mensagem de grupo não os tem): quem restringe aos grupos da pessoa são os próprios marcadores, que a service monta dos grupos
+ * dela, com o ponto de partida na entrada da pessoa no grupo.
+ */
+export function montarConsultaNaoLidasDeGrupos(consulta: ConsultaNaoLidas) {
+    const consultaDoUsuario = montarConsultaNaoLidas(consulta);
+    return {
+        ...consultaDoUsuario,
+        query: {
+            bool: {
+                filter: [{ terms: { conversa_id: consulta.marcadores.map((marcador) => marcador.conversaId) } }, { term: { autor: AutorMensagemDiretaEnum.USUARIO } }],
+                must_not: [{ term: { autor_usuario_id: consulta.usuarioId } }],
+            },
+        },
+    };
+}
+
+/**
+ * Busca textual nas mensagens das conversas da pessoa (e, com `grupoIds`, dos grupos em que ela é membro), mais relevantes primeiro, com período e
+ * filtro de código opcionais.
+ */
 export function montarConsultaBuscaDireta(consulta: ConsultaBuscaDireta) {
+    const grupoIds = consulta.grupoIds ?? [];
+    const escopo =
+        grupoIds.length > 0
+            ? { bool: { should: [{ term: { participantes: consulta.usuarioId } }, { terms: { conversa_id: conversasDosGrupos(grupoIds) } }], minimum_should_match: 1 } }
+            : { term: { participantes: consulta.usuarioId } };
     return {
         size: LIMITE_BUSCA_DIRETA,
         query: {
             bool: {
-                filter: [{ term: { participantes: consulta.usuarioId } }, ...filtrosDeRecorte(consulta)],
+                filter: [escopo, ...filtrosDeRecorte(consulta)],
                 must: [CASAR_TEXTO(consulta.texto)],
             },
         },
@@ -311,7 +394,29 @@ export function montarConsultaSupervisao(consulta: ConsultaSupervisao) {
             bool: {
                 filter: filtrosDeRecorte(consulta),
                 ...(consulta.texto ? { must: [CASAR_TEXTO(consulta.texto)] } : {}),
-                ...(consulta.usuarioIdsExcluidos.length > 0 ? { must_not: [{ terms: { participantes: consulta.usuarioIdsExcluidos } }] } : {}),
+                // A conversa de grupo (`G<id>`) nunca entra na supervisão um a um: tem `participantes` vazio e passaria no filtro de exclusão.
+                must_not: [{ prefix: { conversa_id: 'G' } }, ...(consulta.usuarioIdsExcluidos.length > 0 ? [{ terms: { participantes: consulta.usuarioIdsExcluidos } }] : [])],
+            },
+        },
+        aggs: {
+            total: { cardinality: { field: 'conversa_id' } },
+            conversas: agregacaoDeConversas(LIMITE_CONVERSAS_DA_SUPERVISAO, { from: inicio, size: consulta.porPagina }),
+        },
+    };
+}
+
+/**
+ * A lista da supervisão dos grupos: só os grupos que a service marcou como elegíveis (`grupoIds`), com busca de texto, período e filtro de código
+ * opcionais, paginada como a um a um.
+ */
+export function montarConsultaSupervisaoDeGrupos(consulta: ConsultaSupervisaoDeGrupos) {
+    const inicio = validarPaginaDaSupervisaoDeGrupos(consulta);
+    return {
+        size: 0,
+        query: {
+            bool: {
+                filter: [{ terms: { conversa_id: conversasDosGrupos(consulta.grupoIds) } }, ...filtrosDeRecorte(consulta)],
+                ...(consulta.texto ? { must: [CASAR_TEXTO(consulta.texto)] } : {}),
             },
         },
         aggs: {

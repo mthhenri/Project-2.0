@@ -182,3 +182,34 @@ test('mesmaOrigemDaMensagem só vale para o mesmo autor na mesma conversa', () =
     assert.equal(mesmaOrigemDaMensagem(gravada, { ...NOVA, autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null }), false, 'o sistema não é a pessoa');
     assert.equal(mesmaOrigemDaMensagem({ ...gravada, autor: 'SISTEMA', autor_usuario_id: null }, { ...NOVA, autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null }), true);
 });
+
+// --- grupos (task 246) -------------------------------------------------------
+
+const NOVA_DE_GRUPO: MensagemDiretaNova = { ...NOVA, conversaId: 'G7', mencoes: [], referencias: [] };
+
+test('a mensagem de grupo (G<id>) passa com qualquer pessoa como autor, e o sistema sem autor', () => {
+    assert.doesNotThrow(() => validarMensagemDiretaNova(NOVA_DE_GRUPO));
+    assert.doesNotThrow(() => validarMensagemDiretaNova({ ...NOVA_DE_GRUPO, autorUsuarioId: 31 }));
+    assert.doesNotThrow(() => validarMensagemDiretaNova({ ...NOVA_DE_GRUPO, autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null }));
+});
+
+test('a mensagem de grupo recusa grupo inválido, usuário sem id, sistema com autor e a IA', () => {
+    for (const conversaId of ['G0', 'G', 'g7', 'G7x']) recusa({ ...NOVA_DE_GRUPO, conversaId }, /Conversa direta inválida/);
+    recusa({ ...NOVA_DE_GRUPO, autorUsuarioId: null }, /participar/);
+    recusa({ ...NOVA_DE_GRUPO, autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: 9 }, /sistema não tem autor/);
+    recusa({ ...NOVA_DE_GRUPO, autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, chamadaPorUsuarioId: 9, propostaIds: [] }, /IA ainda não responde em grupo/);
+});
+
+test('o documento do grupo não tem participantes e marca o tipo e o grupo; o da conversa um a um não ganha campos novos', () => {
+    const doGrupo = paraFonteDireta(NOVA_DE_GRUPO, new Date('2026-11-01T10:00:00.000Z'));
+    assert.deepEqual(doGrupo.participantes, []);
+    assert.equal(doGrupo.conversa_id, 'G7');
+    assert.equal(doGrupo.conversa_tipo, 'GRUPO');
+    assert.equal(doGrupo.grupo_id, 7);
+    assert.equal(deFonteDireta(doGrupo).conversaId, 'G7');
+
+    const umAUm = paraFonteDireta(NOVA, new Date('2026-11-01T10:00:00.000Z'));
+    assert.deepEqual(umAUm.participantes, [4, 9]);
+    assert.equal('conversa_tipo' in umAUm, false);
+    assert.equal('grupo_id' in umAUm, false);
+});

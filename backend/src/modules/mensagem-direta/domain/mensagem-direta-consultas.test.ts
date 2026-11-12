@@ -8,6 +8,8 @@ import {
     LIMITE_BUSCA_DIRETA,
     LIMITE_CONVERSAS_DA_SUPERVISAO,
     LIMITE_CONVERSAS_DO_USUARIO,
+    LIMITE_GRUPOS_DA_SUPERVISAO,
+    LIMITE_GRUPOS_DO_USUARIO,
     MAPEAMENTO_MENSAGEM_DIRETA,
     codificarCursor,
     deBaldesDeConversas,
@@ -15,12 +17,17 @@ import {
     decodificarCursor,
     montarConsultaBuscaDireta,
     montarConsultaConversaDireta,
+    montarConsultaConversasDeGrupos,
     montarConsultaConversasDoUsuario,
     montarConsultaNaoLidas,
+    montarConsultaNaoLidasDeGrupos,
     montarConsultaSupervisao,
+    montarConsultaSupervisaoDeGrupos,
     montarPaginaDeMensagens,
     validarConsultaBuscaDireta,
     validarConsultaConversaDireta,
+    validarConsultaConversasDeGrupos,
+    validarConsultaMensagemDireta,
     validarConsultaNaoLidas,
     validarPaginaDaSupervisao,
 } from './mensagem-direta-consultas';
@@ -45,8 +52,8 @@ const recusaCom = (acao: () => unknown, trecho: RegExp) => assert.throws(acao, (
 test('o mapeamento guarda os campos da modelagem e reaproveita o analisador de português sem acento do chat da IA', () => {
     const propriedades = MAPEAMENTO_MENSAGEM_DIRETA.mappings.properties;
     assert.deepEqual(Object.keys(propriedades).sort(), [
-        'autor', 'autor_usuario_id', 'chamada_por_usuario_id', 'contem_codigo', 'conversa_id', 'created_date', 'editada_date', 'mencoes', 'mensagem_id', 'participantes', 'proposta_ids', 'referencias',
-        'responde_a_autor_usuario_id', 'responde_a_mensagem_id', 'responde_a_trecho', 'texto',
+        'autor', 'autor_usuario_id', 'chamada_por_usuario_id', 'contem_codigo', 'conversa_id', 'conversa_tipo', 'created_date', 'editada_date', 'grupo_id', 'mencoes', 'mensagem_id', 'participantes',
+        'proposta_ids', 'referencias', 'responde_a_autor_usuario_id', 'responde_a_mensagem_id', 'responde_a_trecho', 'texto',
     ]);
     assert.deepEqual(propriedades.texto, { type: 'text', analyzer: 'texto_pt' });
     assert.equal(propriedades.created_date.type, 'date');
@@ -168,7 +175,7 @@ test('a busca acrescenta o período (só o limite informado) e o filtro de códi
 test('a supervisão exclui as conversas com gestor ou administrador, pagina em cima da agregação e conta o total', () => {
     const consulta = montarConsultaSupervisao({ usuarioIdsExcluidos: [1, 2], pagina: 3, porPagina: 20 }) as any;
     assert.equal(consulta.size, 0);
-    assert.deepEqual(consulta.query.bool.must_not, [{ terms: { participantes: [1, 2] } }]);
+    assert.deepEqual(consulta.query.bool.must_not, [{ prefix: { conversa_id: 'G' } }, { terms: { participantes: [1, 2] } }], 'o grupo (G<id>) nunca entra na supervisão um a um');
     assert.deepEqual(consulta.query.bool.filter, []);
     assert.equal('must' in consulta.query.bool, false, 'sem texto não há busca');
     assert.deepEqual(consulta.aggs.total, { cardinality: { field: 'conversa_id' } });
@@ -176,10 +183,10 @@ test('a supervisão exclui as conversas com gestor ou administrador, pagina em c
     assert.deepEqual(consulta.aggs.conversas.aggs.pagina, { bucket_sort: { from: 40, size: 20 } });
 });
 
-test('a supervisão sem ninguém a excluir não manda o filtro vazio, e com texto, período e código filtra', () => {
+test('a supervisão sem ninguém a excluir não manda o filtro vazio de participantes, só a exclusão do grupo, e com texto, período e código filtra', () => {
     const inicio = new Date('2026-10-01T00:00:00.000Z');
     const consulta = montarConsultaSupervisao({ usuarioIdsExcluidos: [], texto: 'filtro', inicio, somenteCodigo: true, pagina: 1, porPagina: 10 }) as any;
-    assert.equal('must_not' in consulta.query.bool, false);
+    assert.deepEqual(consulta.query.bool.must_not, [{ prefix: { conversa_id: 'G' } }]);
     assert.deepEqual(consulta.query.bool.must, [{ match: { texto: { query: 'filtro', operator: 'and' } } }]);
     assert.deepEqual(consulta.query.bool.filter, [{ range: { created_date: { gte: '2026-10-01T00:00:00.000Z' } } }, { term: { contem_codigo: true } }]);
     assert.deepEqual(consulta.aggs.conversas.aggs.pagina, { bucket_sort: { from: 0, size: 10 } });
@@ -234,4 +241,68 @@ test('montarPaginaDeMensagens corta o excedente, que só prova a página seguint
     assert.equal(exata.mensagens.length, 3);
     assert.equal(exata.proximoCursor, null);
     assert.deepEqual(montarPaginaDeMensagens([], 2, deFonteDireta), { mensagens: [], proximoCursor: null });
+});
+
+// --- grupos (task 246) -------------------------------------------------------
+
+test('as conversas dos grupos agregam só os conversa_id G<id> pedidos, como a lista um a um', () => {
+    const consulta = montarConsultaConversasDeGrupos({ grupoIds: [3, 8] }) as any;
+    assert.equal(consulta.size, 0);
+    assert.deepEqual(consulta.query.bool.filter, [{ terms: { conversa_id: ['G3', 'G8'] } }]);
+    assert.deepEqual(consulta.aggs.conversas.terms, { field: 'conversa_id', size: LIMITE_GRUPOS_DO_USUARIO, order: { ultima: 'desc' } });
+});
+
+test('as não lidas dos grupos não filtram por participantes: quem restringe são os marcadores', () => {
+    const marcadores = [
+        { conversaId: 'G3', lidaAteDate: null },
+        { conversaId: 'G8', lidaAteDate: new Date('2026-11-01T10:00:00.000Z') },
+    ];
+    const consulta = montarConsultaNaoLidasDeGrupos({ usuarioId: 5, marcadores }) as any;
+    assert.deepEqual(consulta.query.bool.filter, [{ terms: { conversa_id: ['G3', 'G8'] } }, { term: { autor: 'USUARIO' } }]);
+    assert.deepEqual(consulta.query.bool.must_not, [{ term: { autor_usuario_id: 5 } }]);
+    assert.equal(JSON.stringify(consulta).includes('participantes'), false);
+    assert.deepEqual(Object.keys(consulta.aggs.nao_lidas.filters.filters), ['G3', 'G8']);
+    assert.deepEqual(consulta.aggs.nao_lidas.filters.filters.G8.bool.filter[1], { range: { created_date: { gt: '2026-11-01T10:00:00.000Z' } } });
+});
+
+test('a busca só olha os grupos quando recebe grupoIds; sem eles continua só nas conversas da pessoa', () => {
+    const semGrupos = montarConsultaBuscaDireta({ usuarioId: 5, texto: 'balanço' }) as any;
+    assert.deepEqual(semGrupos.query.bool.filter, [{ term: { participantes: 5 } }]);
+    const comGrupos = montarConsultaBuscaDireta({ usuarioId: 5, grupoIds: [3], texto: 'balanço' }) as any;
+    assert.deepEqual(comGrupos.query.bool.filter[0], {
+        bool: { should: [{ term: { participantes: 5 } }, { terms: { conversa_id: ['G3'] } }], minimum_should_match: 1 },
+    });
+    assert.deepEqual(montarConsultaBuscaDireta({ usuarioId: 5, grupoIds: [], texto: 'x' }), montarConsultaBuscaDireta({ usuarioId: 5, texto: 'x' }));
+});
+
+test('a supervisão dos grupos filtra pelos grupos elegíveis, com texto, período e código, e pagina como a um a um', () => {
+    const inicio = new Date('2026-10-01T00:00:00.000Z');
+    const consulta = montarConsultaSupervisaoDeGrupos({ grupoIds: [3, 8], texto: 'filtro', inicio, somenteCodigo: true, pagina: 2, porPagina: 10 }) as any;
+    assert.equal(consulta.size, 0);
+    assert.deepEqual(consulta.query.bool.filter, [{ terms: { conversa_id: ['G3', 'G8'] } }, { range: { created_date: { gte: '2026-10-01T00:00:00.000Z' } } }, { term: { contem_codigo: true } }]);
+    assert.deepEqual(consulta.query.bool.must, [{ match: { texto: { query: 'filtro', operator: 'and' } } }]);
+    assert.deepEqual(consulta.aggs.total, { cardinality: { field: 'conversa_id' } });
+    assert.deepEqual(consulta.aggs.conversas.aggs.pagina, { bucket_sort: { from: 10, size: 10 } });
+    const semTexto = montarConsultaSupervisaoDeGrupos({ grupoIds: [3], pagina: 1, porPagina: 10 }) as any;
+    assert.equal('must' in semTexto.query.bool, false);
+});
+
+test('as consultas de grupo recusam grupo inválido, excesso de grupos e página fora da faixa', () => {
+    recusaCom(() => validarConsultaConversasDeGrupos({ grupoIds: [0] }), /Grupo inválido/);
+    recusaCom(() => validarConsultaConversasDeGrupos({ grupoIds: [1.5] }), /Grupo inválido/);
+    recusaCom(() => validarConsultaConversasDeGrupos({ grupoIds: Array.from({ length: LIMITE_GRUPOS_DO_USUARIO + 1 }, (_, indice) => indice + 1) }), /até 200 grupos/);
+    validarConsultaConversasDeGrupos({ grupoIds: Array.from({ length: LIMITE_GRUPOS_DO_USUARIO }, (_, indice) => indice + 1) });
+    recusaCom(() => validarConsultaBuscaDireta({ usuarioId: 1, grupoIds: [-2], texto: 'x' }), /Grupo inválido/);
+    recusaCom(() => montarConsultaSupervisaoDeGrupos({ grupoIds: [1], pagina: 0, porPagina: 10 }), /Página/);
+    recusaCom(() => montarConsultaSupervisaoDeGrupos({ grupoIds: [1], pagina: 11, porPagina: 100 }), /1\.000/);
+    recusaCom(() => montarConsultaSupervisaoDeGrupos({ grupoIds: Array.from({ length: LIMITE_GRUPOS_DA_SUPERVISAO + 1 }, (_, indice) => indice + 1), pagina: 1, porPagina: 10 }), /até 5000 grupos/);
+});
+
+test('a conversa e a mensagem aceitam o id de grupo (G<id>) e continuam recusando o que não é conversa', () => {
+    validarConsultaConversaDireta({ conversaId: 'G7', limite: 10 });
+    validarConsultaMensagemDireta({ conversaId: 'G7', mensagemId: 'x' });
+    recusaCom(() => validarConsultaConversaDireta({ conversaId: 'G0', limite: 10 }), /Conversa direta inválida/);
+    recusaCom(() => validarConsultaMensagemDireta({ conversaId: 'g7', mensagemId: 'x' }), /Conversa direta inválida/);
+    const consulta = montarConsultaConversaDireta({ conversaId: 'G7', limite: 5 }) as any;
+    assert.deepEqual(consulta.query.bool.filter, [{ term: { conversa_id: 'G7' } }]);
 });

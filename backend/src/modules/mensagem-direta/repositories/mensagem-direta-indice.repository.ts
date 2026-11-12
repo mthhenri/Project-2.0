@@ -5,10 +5,12 @@ import {
     BaldeConversaDireta,
     ConsultaBuscaDireta,
     ConsultaConversaDireta,
+    ConsultaConversasDeGrupos,
     ConsultaConversasDoUsuario,
     ConsultaMensagemDireta,
     ConsultaNaoLidas,
     ConsultaSupervisao,
+    ConsultaSupervisaoDeGrupos,
     INDICE_MENSAGEM_DIRETA,
     MAPEAMENTO_MENSAGEM_DIRETA,
     PaginaDeConversasSupervisionadas,
@@ -18,12 +20,16 @@ import {
     deBaldesDeNaoLidas,
     montarConsultaBuscaDireta,
     montarConsultaConversaDireta,
+    montarConsultaConversasDeGrupos,
     montarConsultaConversasDoUsuario,
     montarConsultaNaoLidas,
+    montarConsultaNaoLidasDeGrupos,
     montarConsultaSupervisao,
+    montarConsultaSupervisaoDeGrupos,
     montarPaginaDeMensagens,
     validarConsultaBuscaDireta,
     validarConsultaConversaDireta,
+    validarConsultaConversasDeGrupos,
     validarConsultaMensagemDireta,
     validarConsultaNaoLidas,
 } from '../domain/mensagem-direta-consultas';
@@ -166,6 +172,39 @@ export abstract class MensagemDiretaIndiceRepository implements ArmazenamentoDeM
 
     async listarTodasConversas(consulta: ConsultaSupervisao): Promise<PaginaDeConversasSupervisionadas> {
         const montada = montarConsultaSupervisao(consulta);
+        return this.proteger(async () => {
+            await this.garantirIndice();
+            const { baldes, total } = await this.pesquisar(INDICE_MENSAGEM_DIRETA, montada);
+            return { conversas: deBaldesDeConversas(baldes, deFonteDireta), total: total ?? 0 };
+        });
+    }
+
+    async listarConversasDeGrupos(consulta: ConsultaConversasDeGrupos): Promise<ResumoDeConversaDireta[]> {
+        validarConsultaConversasDeGrupos(consulta);
+        if (consulta.grupoIds.length === 0) return [];
+        return this.proteger(async () => {
+            await this.garantirIndice();
+            const { baldes } = await this.pesquisar(INDICE_MENSAGEM_DIRETA, montarConsultaConversasDeGrupos(consulta));
+            return deBaldesDeConversas(baldes, deFonteDireta);
+        });
+    }
+
+    async contarNaoLidasDeGrupos(consulta: ConsultaNaoLidas): Promise<Record<string, number>> {
+        if (consulta.marcadores.length === 0) return {};
+        validarConsultaNaoLidas(consulta);
+        return this.proteger(async () => {
+            await this.garantirIndice();
+            const { naoLidas } = await this.pesquisar(INDICE_MENSAGEM_DIRETA, montarConsultaNaoLidasDeGrupos(consulta));
+            return deBaldesDeNaoLidas(
+                consulta.marcadores.map((marcador) => marcador.conversaId),
+                naoLidas,
+            );
+        });
+    }
+
+    async listarGruposSupervisionados(consulta: ConsultaSupervisaoDeGrupos): Promise<PaginaDeConversasSupervisionadas> {
+        const montada = montarConsultaSupervisaoDeGrupos(consulta);
+        if (consulta.grupoIds.length === 0) return { conversas: [], total: 0 };
         return this.proteger(async () => {
             await this.garantirIndice();
             const { baldes, total } = await this.pesquisar(INDICE_MENSAGEM_DIRETA, montada);

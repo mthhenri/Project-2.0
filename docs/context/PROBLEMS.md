@@ -138,3 +138,11 @@
 - **Correção:** achar o temporizador que não termina (suspeita: transição do d3, no diagrama da Modelagem e no grafo, que roda dentro da zona) e tirá-lo da zona ou pará-lo; só então remover o teto. Observação: com a CPU três vezes sobrecarregada o arquivo passou (3 s viraram 11 s), então não é só lentidão.
 - **Desde:** 2026-10-30 (visto nos fechos dos P-035/P-038/P-041/P-055 e dos P-050/P-051/P-058; 10 rodadas completas, 4 falhas dele; depois mais 3 rodadas com falha e uma no CI do PR 27).
 
+### P-086 — Contrato do OpenSearch: a busca ainda acha o texto antigo de uma mensagem editada · `ABERTO` · chat/armazenamento
+
+- **Sintoma:** com `CHAT_INTEGRACAO=1`, o cenário `alterarMensagem` da suíte de contrato do OpenSearch falha em "e não o antigo": depois de editar a mensagem, a busca pelas palavras do texto antigo ainda a encontra. O mesmo cenário passa no Postgres. Aparece também no código anterior à task 246.
+- **Causa:** não investigada (o texto novo é achado, então a atualização parcial grava; suspeita de `match` ou de análise do campo `texto` no OpenSearch local).
+- **Contorno:** nenhum necessário no uso normal; só a suíte de contrato do OpenSearch fica com 1 falha.
+- **Correção:** investigar a atualização parcial (`update` com `doc`) e o analisador; reindexar o campo se for o caso.
+- **Desde:** task 313 (edição de mensagem); percebido em 2026-11-12.
+

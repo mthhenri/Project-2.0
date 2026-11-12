@@ -16,6 +16,9 @@ import {
     estaSilenciado,
     formatarReferenciaDireta,
     lerConversaDiretaId,
+    lerConversaGrupoId,
+    montarConversaGrupoId,
+    conversaIdValido,
     lerReferenciaDireta,
     montarConversaDiretaId,
     outroParticipanteDaConversaDireta,
@@ -47,6 +50,22 @@ test('ler a conversa devolve os dois ids e recusa o que não é uma conversa dir
         assert.equal(lerConversaDiretaId(invalido), null, JSON.stringify(invalido));
     }
     assert.equal(lerConversaDiretaId(undefined as unknown as string), null);
+});
+
+test('a conversa de grupo é G<id>, lê de volta e nunca se confunde com a conversa direta', () => {
+    assert.equal(montarConversaGrupoId(7), 'G7');
+    assert.equal(lerConversaGrupoId('G7'), 7);
+    assert.equal(lerConversaGrupoId(montarConversaGrupoId(2_147_483_647)), 2_147_483_647);
+    for (const invalido of ['G0', 'G', 'g7', 'G07', 'G7x', '7', '4-9', 'G-1', 'G2147483648', '', undefined as unknown as string]) {
+        assert.equal(lerConversaGrupoId(invalido), null, JSON.stringify(invalido));
+    }
+    assert.equal(lerConversaDiretaId('G7'), null);
+    assert.equal(lerConversaGrupoId('4-9'), null);
+    assert.throws(() => montarConversaGrupoId(0));
+    assert.equal(conversaIdValido('G7'), true);
+    assert.equal(conversaIdValido('4-9'), true);
+    assert.equal(conversaIdValido('9-4'), false);
+    assert.equal(conversaIdValido('lixo'), false);
 });
 
 test('o outro participante vem do id de quem pergunta; quem não participa não tem "outro"', () => {

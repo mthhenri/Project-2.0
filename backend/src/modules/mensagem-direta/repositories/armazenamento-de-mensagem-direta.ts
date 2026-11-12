@@ -5,10 +5,12 @@ import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 import {
     ConsultaBuscaDireta,
     ConsultaConversaDireta,
+    ConsultaConversasDeGrupos,
     ConsultaConversasDoUsuario,
     ConsultaMensagemDireta,
     ConsultaNaoLidas,
     ConsultaSupervisao,
+    ConsultaSupervisaoDeGrupos,
     PaginaDeConversasSupervisionadas,
     PaginaDeMensagensDiretas,
     ResumoDeConversaDireta,
@@ -44,10 +46,22 @@ export interface ArmazenamentoDeMensagemDireta {
     listarConversasDoUsuario(consulta: ConsultaConversasDoUsuario): Promise<ResumoDeConversaDireta[]>;
     /** Quantas mensagens do outro vieram depois do marcador de cada conversa; toda conversa pedida aparece, com zero quando não há. */
     contarNaoLidas(consulta: ConsultaNaoLidas): Promise<Record<string, number>>;
-    /** Busca textual (sem acento, todas as palavras) nas conversas da pessoa, mais relevantes primeiro. */
+    /**
+   * Busca textual (sem acento, todas as palavras) nas conversas da pessoa, mais relevantes primeiro. Com `grupoIds`, olha também as mensagens
+   * desses grupos (a service passa só os grupos em que a pessoa é membro agora); sem eles, a mensagem de grupo nunca aparece.
+   */
     buscar(consulta: ConsultaBuscaDireta): Promise<MensagemDiretaResumoDto[]>;
-    /** Só para a supervisão: as conversas em que nenhum participante está em `usuarioIdsExcluidos`, paginadas. */
+    /** Só para a supervisão: as conversas **um a um** em que nenhum participante está em `usuarioIdsExcluidos`, paginadas. Conversa de grupo nunca entra. */
     listarTodasConversas(consulta: ConsultaSupervisao): Promise<PaginaDeConversasSupervisionadas>;
+    /**
+   * As conversas dos grupos pedidos (`G<id>`), da que teve mensagem mais recente, no formato da lista um a um (`participantes` vazio). Grupo sem
+   * mensagem não aparece; a service o completa com o que sabe do grupo.
+   */
+    listarConversasDeGrupos(consulta: ConsultaConversasDeGrupos): Promise<ResumoDeConversaDireta[]>;
+    /** Como `contarNaoLidas`, para os grupos: o marcador de cada grupo já traz o ponto de partida (a leitura ou a entrada da pessoa, o que for mais novo). */
+    contarNaoLidasDeGrupos(consulta: ConsultaNaoLidas): Promise<Record<string, number>>;
+    /** Só para a supervisão: as conversas dos grupos elegíveis (`grupoIds`, decididos pela service), paginadas, com busca de texto, período e filtro de código. */
+    listarGruposSupervisionados(consulta: ConsultaSupervisaoDeGrupos): Promise<PaginaDeConversasSupervisionadas>;
 }
 
 export const ARMAZENAMENTO_DE_MENSAGEM_DIRETA = 'ARMAZENAMENTO_DE_MENSAGEM_DIRETA';
