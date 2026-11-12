@@ -1,0 +1,169 @@
+<div class="detalhes-grupo">
+    <div class="detalhes-grupo__cabecalho" data-popup-arrasto>
+        <p-button
+            icon="pi pi-angle-left"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Voltar para o grupo"
+            pTooltip="Voltar"
+            tooltipPosition="bottom"
+            (onClick)="voltar()"
+        />
+        <h2 class="detalhes-grupo__titulo">Detalhes do grupo</h2>
+        <p-button
+            icon="pi pi-minus"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Ocultar o chat"
+            pTooltip="Ocultar"
+            tooltipPosition="bottom"
+            (onClick)="estado.fechar()"
+        />
+    </div>
+
+    @if (grupo(); as dados) {
+        <div class="detalhes-grupo__corpo">
+            <section class="detalhes-grupo__secao">
+                <app-mensagem-direta-grupo-aparencia
+                    [(nome)]="nome"
+                    [(cor)]="cor"
+                    [(emoji)]="emoji"
+                    [coresDosMembros]="coresDosMembros()"
+                />
+                <div class="detalhes-grupo__acoes">
+                    <p-button
+                        label="Salvar alterações"
+                        icon="pi pi-check"
+                        size="small"
+                        [disabled]="!podeSalvar()"
+                        [loading]="grupoEstado.salvando()"
+                        (onClick)="salvar()"
+                    />
+                </div>
+            </section>
+
+            <section class="detalhes-grupo__secao" aria-labelledby="titulo-membros">
+                <h3 class="detalhes-grupo__subtitulo" id="titulo-membros">
+                    Membros
+                    <span class="detalhes-grupo__contagem">{{
+                        rotuloDosMembros(membros().length)
+                    }}</span>
+                </h3>
+                <ul class="detalhes-grupo__membros">
+                    @for (membro of membros(); track membro.usuarioId) {
+                        <li class="detalhes-grupo__membro">
+                            <app-avatar-usuario
+                                [nome]="membro.usuarioNome"
+                                [cor]="membro.corAvatar"
+                                [online]="estado.online().has(membro.usuarioId)"
+                                [pequeno]="true"
+                            />
+                            <span class="detalhes-grupo__miolo">
+                                <span class="detalhes-grupo__nome"
+                                    >{{ membro.usuarioNome }}
+                                    @if (membro.usuarioId === meuId()) {
+                                        <span class="detalhes-grupo__voce">(você)</span>
+                                    }
+                                </span>
+                                <span class="detalhes-grupo__tipo">{{
+                                    rotuloTipo(membro.tipo)
+                                }}</span>
+                            </span>
+                        </li>
+                    }
+                </ul>
+            </section>
+
+            <section class="detalhes-grupo__secao" aria-labelledby="titulo-adicionar">
+                <h3 class="detalhes-grupo__subtitulo" id="titulo-adicionar">Adicionar pessoas</h3>
+                @if (vagas() <= 0) {
+                    <p class="detalhes-grupo__aviso">O grupo já tem o máximo de 50 pessoas.</p>
+                } @else {
+                    <app-mensagem-direta-grupo-pessoas
+                        [pessoas]="candidatas()"
+                        [online]="estado.online()"
+                        [carregando]="estado.carregandoPessoas()"
+                        [erro]="estado.erroNasPessoas()"
+                        [vagas]="vagas()"
+                        [(selecionadas)]="escolhidas"
+                        (recarregar)="estado.carregarPessoas()"
+                    />
+                    <div class="detalhes-grupo__acoes">
+                        <p-button
+                            [label]="
+                                escolhidas().length > 1
+                                    ? 'Adicionar ' + escolhidas().length + ' pessoas'
+                                    : 'Adicionar pessoa'
+                            "
+                            icon="pi pi-user-plus"
+                            size="small"
+                            [outlined]="true"
+                            [disabled]="escolhidas().length === 0 || grupoEstado.salvando()"
+                            (onClick)="adicionar()"
+                        />
+                    </div>
+                    <p class="detalhes-grupo__aviso">
+                        Quem entra vê todo o histórico do grupo. Ninguém remove ninguém: cada um sai
+                        por conta própria.
+                    </p>
+                }
+            </section>
+
+            <section class="detalhes-grupo__secao">
+                @if (confirmandoSaida()) {
+                    <div
+                        class="detalhes-grupo__confirmacao"
+                        role="alertdialog"
+                        aria-label="Confirmar saída do grupo"
+                    >
+                        <p class="detalhes-grupo__confirmacao-texto">
+                            @if (souOUltimo()) {
+                                Você é a última pessoa do grupo: ao sair, ele é encerrado. O
+                                histórico permanece.
+                            } @else {
+                                Sair de “{{ dados.nome }}”? Você deixa de ver as mensagens e pode
+                                ser adicionado de novo por qualquer membro.
+                            }
+                        </p>
+                        <div class="detalhes-grupo__acoes">
+                            <p-button
+                                label="Cancelar"
+                                size="small"
+                                severity="secondary"
+                                [text]="true"
+                                (onClick)="cancelarSaida()"
+                            />
+                            <p-button
+                                label="Sair do grupo"
+                                icon="pi pi-sign-out"
+                                size="small"
+                                severity="danger"
+                                [loading]="grupoEstado.salvando()"
+                                (onClick)="confirmarSaida()"
+                            />
+                        </div>
+                    </div>
+                } @else {
+                    <p-button
+                        label="Sair do grupo"
+                        icon="pi pi-sign-out"
+                        size="small"
+                        severity="danger"
+                        [outlined]="true"
+                        (onClick)="pedirSaida()"
+                    />
+                }
+            </section>
+        </div>
+
+        @if (grupoEstado.erroNaOperacao(); as motivo) {
+            <p class="detalhes-grupo__erro" role="alert">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ motivo }}
+            </p>
+        }
+    }
+</div>

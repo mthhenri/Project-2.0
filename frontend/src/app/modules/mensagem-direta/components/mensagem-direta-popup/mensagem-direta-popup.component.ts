@@ -10,6 +10,9 @@ import { CantoDoPopup, PASSO_DO_TECLADO_PX, PASSO_GRANDE_DO_TECLADO_PX, Retangul
 import { MensagemDiretaBarraComponent } from '../mensagem-direta-barra/mensagem-direta-barra.component';
 import { MensagemDiretaConfiguracoesComponent } from '../mensagem-direta-configuracoes/mensagem-direta-configuracoes.component';
 import { MensagemDiretaConversaComponent } from '../mensagem-direta-conversa/mensagem-direta-conversa.component';
+import { MensagemDiretaGrupoConversaComponent } from '../mensagem-direta-grupo-conversa/mensagem-direta-grupo-conversa.component';
+import { MensagemDiretaGrupoDetalhesComponent } from '../mensagem-direta-grupo-detalhes/mensagem-direta-grupo-detalhes.component';
+import { MensagemDiretaGrupoNovoComponent } from '../mensagem-direta-grupo-novo/mensagem-direta-grupo-novo.component';
 import { MensagemDiretaListaComponent } from '../mensagem-direta-lista/mensagem-direta-lista.component';
 import { MensagemDiretaNovaComponent } from '../mensagem-direta-nova/mensagem-direta-nova.component';
 
@@ -24,7 +27,17 @@ import { MensagemDiretaNovaComponent } from '../mensagem-direta-nova/mensagem-di
 @Component({
     selector: 'app-mensagem-direta-popup',
     standalone: true,
-    imports: [TooltipModule, MensagemDiretaBarraComponent, MensagemDiretaListaComponent, MensagemDiretaConversaComponent, MensagemDiretaNovaComponent, MensagemDiretaConfiguracoesComponent],
+    imports: [
+        TooltipModule,
+        MensagemDiretaBarraComponent,
+        MensagemDiretaListaComponent,
+        MensagemDiretaConversaComponent,
+        MensagemDiretaGrupoConversaComponent,
+        MensagemDiretaGrupoDetalhesComponent,
+        MensagemDiretaGrupoNovoComponent,
+        MensagemDiretaNovaComponent,
+        MensagemDiretaConfiguracoesComponent,
+    ],
     templateUrl: './mensagem-direta-popup.component.html',
     styleUrl: './mensagem-direta-popup.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,

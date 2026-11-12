@@ -2,15 +2,23 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { TooltipModule } from 'primeng/tooltip';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
+import { coresDosMembros, montarItensDaLista } from '../../utils/grupo.util';
 import { ladoDoTooltipDaBarra } from '../../utils/posicao-barra.util';
+import { AvatarGrupoComponent } from '../../../../shared/components/avatar-grupo/avatar-grupo.component';
 import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 import { MensagemDiretaConfiguracoesBotaoComponent } from '../mensagem-direta-configuracoes-botao/mensagem-direta-configuracoes-botao.component';
 
-/** Uma bolinha da barra: a pessoa da conversa, com o que a barra mostra dela (presença e não lidas). */
+/** Uma bolinha da barra: a pessoa da conversa ou o grupo, com o que a barra mostra dela (presença e não lidas). */
 interface BolinhaDaBarra {
-    usuarioId: number;
+    chave: string;
+    /** `null` na bolinha de grupo. */
+    usuarioId: number | null;
+    /** `null` na bolinha de pessoa. */
+    grupoId: number | null;
     nome: string;
     cor: string | null;
+    emoji: string | null;
+    coresDosMembros: string[];
     online: boolean;
     naoLidas: number;
     silenciada: boolean;
@@ -24,7 +32,7 @@ interface BolinhaDaBarra {
 @Component({
     selector: 'app-mensagem-direta-barra',
     standalone: true,
-    imports: [TooltipModule, AvatarUsuarioComponent, MensagemDiretaConfiguracoesBotaoComponent],
+    imports: [TooltipModule, AvatarGrupoComponent, AvatarUsuarioComponent, MensagemDiretaConfiguracoesBotaoComponent],
     templateUrl: './mensagem-direta-barra.component.html',
     styleUrl: './mensagem-direta-barra.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,25 +46,48 @@ export class MensagemDiretaBarraComponent {
 
     protected readonly bolinhas = computed<BolinhaDaBarra[]>(() => {
         const aberta = this.estado.conversaAberta();
+        const grupoAberto = this.estado.grupoEstado.grupoAberto();
         const online = this.estado.online();
-        const bolinhas = this.estado.conversas().map((conversa) => ({
-            usuarioId: conversa.usuarioId,
-            nome: conversa.usuarioNome,
-            cor: conversa.corAvatar,
-            online: online.has(conversa.usuarioId),
-            naoLidas: conversa.naoLidas,
-            silenciada: conversa.silenciada,
-            ativa: conversa.usuarioId === aberta?.usuarioId,
-        }));
+        // A mesma ordem da lista: conversas e grupos juntos, o que teve mensagem mais recente primeiro.
+        const bolinhas = montarItensDaLista(this.estado.conversas(), this.estado.grupoEstado.grupos()).map((item): BolinhaDaBarra =>
+            item.tipo === 'PESSOA'
+                ? {
+                    chave: item.chave,
+                    usuarioId: item.conversa.usuarioId,
+                    grupoId: null,
+                    nome: item.conversa.usuarioNome,
+                    cor: item.conversa.corAvatar,
+                    emoji: null,
+                    coresDosMembros: [],
+                    online: online.has(item.conversa.usuarioId),
+                    naoLidas: item.conversa.naoLidas,
+                    silenciada: item.conversa.silenciada,
+                    ativa: item.conversa.usuarioId === aberta?.usuarioId,
+                }
+                : {
+                    chave: item.chave,
+                    usuarioId: null,
+                    grupoId: item.grupo.grupoId,
+                    nome: item.grupo.nome,
+                    cor: item.grupo.corAvatar,
+                    emoji: item.grupo.emojiAvatar,
+                    coresDosMembros: coresDosMembros(item.grupo.membros),
+                    online: false,
+                    naoLidas: item.grupo.naoLidas,
+                    silenciada: item.grupo.silenciada,
+                    ativa: item.grupo.grupoId === grupoAberto?.grupoId,
+                },
+        );
         if (aberta && !bolinhas.some((bolinha) => bolinha.ativa)) {
-            bolinhas.unshift({ usuarioId: aberta.usuarioId, nome: aberta.usuarioNome, cor: this.estado.corDe(aberta.usuarioId), online: online.has(aberta.usuarioId), naoLidas: 0, silenciada: false, ativa: true });
+            bolinhas.unshift({ chave: aberta.conversaId, usuarioId: aberta.usuarioId, grupoId: null, nome: aberta.usuarioNome, cor: this.estado.corDe(aberta.usuarioId), emoji: null, coresDosMembros: [], online: online.has(aberta.usuarioId), naoLidas: 0, silenciada: false, ativa: true });
         }
         return bolinhas;
     });
 
     protected abrir(bolinha: BolinhaDaBarra): void {
         if (bolinha.ativa) return;
-        void this.estado.abrirConversa(bolinha.usuarioId, bolinha.nome);
+        if (bolinha.grupoId !== null) void this.estado.abrirGrupo(bolinha.grupoId);
+        else if (bolinha.usuarioId !== null) void this.estado.abrirConversa(bolinha.usuarioId, bolinha.nome);
     }
 
     protected rotulo(bolinha: BolinhaDaBarra): string {

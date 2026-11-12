@@ -1,0 +1,15 @@
+<span
+    class="avatar-grupo"
+    [class.avatar-grupo--pequeno]="pequeno()"
+    [class.avatar-grupo--emoji]="!!emoji()"
+    [style.--avatar-tamanho]="tamanho()"
+    [style.background]="fundo()"
+    [style.color]="corDoTexto()"
+    aria-hidden="true"
+>
+    @if (emoji(); as simbolo) {
+        {{ simbolo }}
+    } @else {
+        {{ iniciais() }}
+    }
+</span>

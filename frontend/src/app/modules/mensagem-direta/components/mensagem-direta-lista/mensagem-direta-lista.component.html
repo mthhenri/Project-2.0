@@ -12,6 +12,17 @@
             tooltipPosition="bottom"
             (onClick)="novaConversa()"
         />
+        <p-button
+            icon="pi pi-users"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Novo grupo"
+            pTooltip="Novo grupo"
+            tooltipPosition="bottom"
+            (onClick)="novoGrupo()"
+        />
         <app-mensagem-direta-configuracoes-botao />
         <p-button
             icon="pi pi-minus"
@@ -33,8 +44,8 @@
             type="text"
             class="lista-direta__busca-campo"
             [formControl]="controleBusca"
-            placeholder="Buscar pessoa ou mensagem"
-            aria-label="Buscar pessoa ou mensagem"
+            placeholder="Buscar pessoa, grupo ou mensagem"
+            aria-label="Buscar pessoa, grupo ou mensagem"
             maxlength="200"
         />
         @if (controleBusca.value) {
@@ -92,20 +103,30 @@
                     }}
                 </p>
                 @for (mensagem of mensagens; track mensagem.mensagemId) {
-                    @let pessoa = nomeDaOutraPessoa(mensagem);
+                    @let destino = destinoDoAchado(mensagem);
                     <button
                         type="button"
                         class="lista-direta__linha lista-direta__linha--achado"
-                        (click)="abrir(pessoa.usuarioId, pessoa.nome)"
+                        (click)="abrirDestino(destino)"
                     >
-                        <app-avatar-usuario
-                            [nome]="pessoa.nome"
-                            [cor]="estado.corDe(pessoa.usuarioId)"
-                            [pequeno]="true"
-                        />
+                        @if (destino.grupoId !== null) {
+                            <app-avatar-grupo
+                                [nome]="destino.nome"
+                                [cor]="destino.cor"
+                                [emoji]="destino.emoji"
+                                [coresDosMembros]="destino.coresDosMembros"
+                                [pequeno]="true"
+                            />
+                        } @else {
+                            <app-avatar-usuario
+                                [nome]="destino.nome"
+                                [cor]="destino.cor"
+                                [pequeno]="true"
+                            />
+                        }
                         <span class="lista-direta__miolo">
                             <span class="lista-direta__topo">
-                                <span class="lista-direta__nome">{{ pessoa.nome }}</span>
+                                <span class="lista-direta__nome">{{ destino.nome }}</span>
                                 <span class="lista-direta__hora">{{
                                     hora(mensagem.createdDate)
                                 }}</span>
@@ -127,6 +148,28 @@
                             </span>
                         </span>
                     </button>
+                }
+
+                @if (gruposEncontrados().length > 0) {
+                    <p class="lista-direta__secao">Grupos · {{ gruposEncontrados().length }}</p>
+                    @for (grupo of gruposEncontrados(); track grupo.grupoId) {
+                        <button
+                            type="button"
+                            class="lista-direta__linha"
+                            (click)="abrirGrupo(grupo.grupoId)"
+                        >
+                            <app-avatar-grupo
+                                [nome]="grupo.nome"
+                                [cor]="grupo.corAvatar"
+                                [emoji]="grupo.emojiAvatar"
+                                [coresDosMembros]="coresDosMembros(grupo.membros)"
+                                [pequeno]="true"
+                            />
+                            <span class="lista-direta__miolo"
+                                ><span class="lista-direta__nome">{{ grupo.nome }}</span></span
+                            >
+                        </button>
+                    }
                 }
 
                 <p class="lista-direta__secao">
@@ -177,7 +220,7 @@
                     (onClick)="estado.carregarConversas()"
                 />
             </div>
-        } @else if (estado.conversas().length === 0) {
+        } @else if (itens().length === 0) {
             <div class="lista-direta__estado">
                 <span class="lista-direta__estado-icone"
                     ><i class="pi pi-comments" aria-hidden="true"></i
@@ -185,91 +228,174 @@
                 <h3 class="lista-direta__estado-titulo">Nenhuma conversa ainda</h3>
                 <p class="lista-direta__estado-texto">
                     Escolha alguém do time para tirar uma dúvida de código ou combinar algo sem sair
-                    da reunião.
+                    da reunião, ou crie um grupo.
                 </p>
-                <p-button label="Nova conversa" size="small" (onClick)="novaConversa()" />
+                <div class="lista-direta__estado-acoes">
+                    <p-button label="Nova conversa" size="small" (onClick)="novaConversa()" />
+                    <p-button
+                        label="Novo grupo"
+                        size="small"
+                        [outlined]="true"
+                        (onClick)="novoGrupo()"
+                    />
+                </div>
             </div>
         } @else {
-            @for (conversa of estado.conversas(); track conversa.conversaId) {
-                <button
-                    type="button"
-                    class="lista-direta__linha"
-                    [class.lista-direta__linha--nao-lida]="conversa.naoLidas > 0"
-                    (click)="abrir(conversa.usuarioId, conversa.usuarioNome)"
-                >
-                    <app-avatar-usuario
-                        [nome]="conversa.usuarioNome"
-                        [cor]="conversa.corAvatar"
-                        [online]="estado.online().has(conversa.usuarioId)"
-                    />
-                    <span class="lista-direta__miolo">
-                        <span class="lista-direta__topo">
-                            <span class="lista-direta__nome">{{ conversa.usuarioNome }}</span>
-                            @if (conversa.ultimaMensagem) {
-                                <span class="lista-direta__hora">{{
-                                    hora(conversa.ultimaMensagem.createdDate)
-                                }}</span>
-                            }
-                        </span>
-                        <span class="lista-direta__rodape">
-                            @if (estado.digitando().has(conversa.usuarioId)) {
-                                <span class="lista-direta__previa lista-direta__previa--digitando"
-                                    >digitando…</span
-                                >
-                            } @else {
-                                @if (conversa.ultimaMensagem; as ultima) {
-                                    @if (ultima.contemCodigo) {
-                                        <span class="lista-direta__previa">{{
+            @for (item of itens(); track item.chave) {
+                @if (item.tipo === "GRUPO") {
+                    @let grupo = item.grupo;
+                    <button
+                        type="button"
+                        class="lista-direta__linha"
+                        [class.lista-direta__linha--nao-lida]="grupo.naoLidas > 0"
+                        (click)="abrirGrupo(grupo.grupoId)"
+                    >
+                        <app-avatar-grupo
+                            [nome]="grupo.nome"
+                            [cor]="grupo.corAvatar"
+                            [emoji]="grupo.emojiAvatar"
+                            [coresDosMembros]="coresDosMembros(grupo.membros)"
+                        />
+                        <span class="lista-direta__miolo">
+                            <span class="lista-direta__topo">
+                                <span class="lista-direta__nome">{{ grupo.nome }}</span>
+                                @if (grupo.ultimaMensagem) {
+                                    <span class="lista-direta__hora">{{
+                                        hora(grupo.ultimaMensagem.createdDate)
+                                    }}</span>
+                                }
+                            </span>
+                            <span class="lista-direta__rodape">
+                                @if (digitandoNoGrupo(grupo.conversaId)) {
+                                    <span
+                                        class="lista-direta__previa lista-direta__previa--digitando"
+                                        >digitando…</span
+                                    >
+                                } @else if (grupo.ultimaMensagem; as ultima) {
+                                    <span class="lista-direta__previa">
+                                        @if (autorDaPrevia(ultima, grupo.membros); as autor) {
+                                            <span class="lista-direta__voce">{{ autor }}:</span>
+                                        }
+                                        {{
                                             previa(
                                                 ultima.texto,
                                                 ultima.contemCodigo,
-                                                ultima.autorUsuarioId,
+                                                null,
                                                 ultima.autor
                                             )
-                                        }}</span>
-                                    } @else {
-                                        <span
-                                            class="lista-direta__previa lista-direta__previa--markdown"
-                                        >
-                                            @if (ultima.autor === "IA") {
-                                                <span class="lista-direta__voce">IA:</span>
-                                            } @else if (ultima.autorUsuarioId === meuId()) {
-                                                <span class="lista-direta__voce">Você:</span>
-                                            }
-                                            <app-markdown-visualizador
-                                                class="lista-direta__markdown"
-                                                [texto]="ultima.texto"
-                                                [comTabelas]="false"
-                                            />
-                                        </span>
-                                    }
+                                        }}
+                                    </span>
                                 } @else {
                                     <span class="lista-direta__previa"></span>
                                 }
-                            }
-                            @if (conversa.naoLidas > 0) {
-                                <span
-                                    class="lista-direta__contador"
-                                    [attr.aria-label]="
-                                        conversa.naoLidas +
-                                        (conversa.naoLidas === 1
-                                            ? ' mensagem não lida'
-                                            : ' mensagens não lidas')
-                                    "
-                                    >{{ conversa.naoLidas > 99 ? "99+" : conversa.naoLidas }}</span
-                                >
-                            }
-                            @if (conversa.silenciada) {
-                                <i
-                                    class="pi pi-bell-slash lista-direta__silenciada"
-                                    aria-label="Silenciada"
-                                    pTooltip="Silenciada"
-                                    tooltipPosition="left"
-                                ></i>
-                            }
+                                @if (grupo.naoLidas > 0) {
+                                    <span
+                                        class="lista-direta__contador"
+                                        [attr.aria-label]="
+                                            grupo.naoLidas +
+                                            (grupo.naoLidas === 1
+                                                ? ' mensagem não lida'
+                                                : ' mensagens não lidas')
+                                        "
+                                        >{{ grupo.naoLidas > 99 ? "99+" : grupo.naoLidas }}</span
+                                    >
+                                }
+                                @if (grupo.silenciada) {
+                                    <i
+                                        class="pi pi-bell-slash lista-direta__silenciada"
+                                        aria-label="Silenciado"
+                                        pTooltip="Silenciado"
+                                        tooltipPosition="left"
+                                    ></i>
+                                }
+                            </span>
                         </span>
-                    </span>
-                </button>
+                    </button>
+                } @else {
+                    @let conversa = item.conversa;
+                    <button
+                        type="button"
+                        class="lista-direta__linha"
+                        [class.lista-direta__linha--nao-lida]="conversa.naoLidas > 0"
+                        (click)="abrir(conversa.usuarioId, conversa.usuarioNome)"
+                    >
+                        <app-avatar-usuario
+                            [nome]="conversa.usuarioNome"
+                            [cor]="conversa.corAvatar"
+                            [online]="estado.online().has(conversa.usuarioId)"
+                        />
+                        <span class="lista-direta__miolo">
+                            <span class="lista-direta__topo">
+                                <span class="lista-direta__nome">{{ conversa.usuarioNome }}</span>
+                                @if (conversa.ultimaMensagem) {
+                                    <span class="lista-direta__hora">{{
+                                        hora(conversa.ultimaMensagem.createdDate)
+                                    }}</span>
+                                }
+                            </span>
+                            <span class="lista-direta__rodape">
+                                @if (estado.digitando().has(conversa.usuarioId)) {
+                                    <span
+                                        class="lista-direta__previa lista-direta__previa--digitando"
+                                        >digitando…</span
+                                    >
+                                } @else {
+                                    @if (conversa.ultimaMensagem; as ultima) {
+                                        @if (ultima.contemCodigo) {
+                                            <span class="lista-direta__previa">{{
+                                                previa(
+                                                    ultima.texto,
+                                                    ultima.contemCodigo,
+                                                    ultima.autorUsuarioId,
+                                                    ultima.autor
+                                                )
+                                            }}</span>
+                                        } @else {
+                                            <span
+                                                class="lista-direta__previa lista-direta__previa--markdown"
+                                            >
+                                                @if (ultima.autor === "IA") {
+                                                    <span class="lista-direta__voce">IA:</span>
+                                                } @else if (ultima.autorUsuarioId === meuId()) {
+                                                    <span class="lista-direta__voce">Você:</span>
+                                                }
+                                                <app-markdown-visualizador
+                                                    class="lista-direta__markdown"
+                                                    [texto]="ultima.texto"
+                                                    [comTabelas]="false"
+                                                />
+                                            </span>
+                                        }
+                                    } @else {
+                                        <span class="lista-direta__previa"></span>
+                                    }
+                                }
+                                @if (conversa.naoLidas > 0) {
+                                    <span
+                                        class="lista-direta__contador"
+                                        [attr.aria-label]="
+                                            conversa.naoLidas +
+                                            (conversa.naoLidas === 1
+                                                ? ' mensagem não lida'
+                                                : ' mensagens não lidas')
+                                        "
+                                        >{{
+                                            conversa.naoLidas > 99 ? "99+" : conversa.naoLidas
+                                        }}</span
+                                    >
+                                }
+                                @if (conversa.silenciada) {
+                                    <i
+                                        class="pi pi-bell-slash lista-direta__silenciada"
+                                        aria-label="Silenciada"
+                                        pTooltip="Silenciada"
+                                        tooltipPosition="left"
+                                    ></i>
+                                }
+                            </span>
+                        </span>
+                    </button>
+                }
             }
         }
     </div>

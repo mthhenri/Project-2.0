@@ -1,0 +1,73 @@
+<div class="novo-grupo">
+    <div class="novo-grupo__cabecalho" data-popup-arrasto>
+        <p-button
+            icon="pi pi-angle-left"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Voltar para as conversas"
+            pTooltip="Voltar"
+            tooltipPosition="bottom"
+            (onClick)="voltar()"
+        />
+        <h2 class="novo-grupo__titulo">Novo grupo</h2>
+        <p-button
+            icon="pi pi-minus"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Ocultar o chat"
+            pTooltip="Ocultar"
+            tooltipPosition="bottom"
+            (onClick)="estado.fechar()"
+        />
+    </div>
+
+    <div class="novo-grupo__corpo">
+        <app-mensagem-direta-grupo-aparencia
+            [(nome)]="nome"
+            [(cor)]="cor"
+            [(emoji)]="emoji"
+            [coresDosMembros]="coresEscolhidas()"
+        />
+
+        <section class="novo-grupo__secao">
+            <h3 class="novo-grupo__subtitulo">
+                Pessoas
+                <span class="novo-grupo__contagem"
+                    >{{ escolhidas().length }} escolhida{{
+                        escolhidas().length === 1 ? "" : "s"
+                    }}
+                    (você entra automaticamente)</span
+                >
+            </h3>
+            <app-mensagem-direta-grupo-pessoas
+                [pessoas]="estado.pessoas() ?? []"
+                [online]="estado.online()"
+                [carregando]="estado.carregandoPessoas()"
+                [erro]="estado.erroNasPessoas()"
+                [vagas]="vagas"
+                [(selecionadas)]="escolhidas"
+                (recarregar)="estado.carregarPessoas()"
+            />
+        </section>
+    </div>
+
+    <div class="novo-grupo__rodape">
+        @if (grupoEstado.erroNaOperacao(); as motivo) {
+            <p class="novo-grupo__erro" role="alert">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ motivo }}
+            </p>
+        }
+        <p-button
+            label="Criar grupo"
+            icon="pi pi-check"
+            size="small"
+            [disabled]="!podeCriar()"
+            [loading]="grupoEstado.salvando()"
+            (onClick)="criar()"
+        />
+    </div>
+</div>

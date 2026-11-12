@@ -174,3 +174,17 @@ describe('atalhoDoTeclado', () => {
         expect(atalhoDoTeclado(tecla({ key: 'F25', code: 'F25', ctrlKey: true }))).toBeNull();
     });
 });
+
+describe('somarAviso com grupo (task 247)', () => {
+    it('o cartão do grupo carrega o grupoId e o mantém ao somar mensagens seguidas', () => {
+        const primeira = somarAviso([], { conversaId: 'G7', usuarioId: 9, usuarioNome: 'Time', texto: 'Camila: oi', grupoId: 7, mencionaVoce: false, agora: 1 });
+        expect(primeira[0].grupoId).toBe(7);
+        const segunda = somarAviso(primeira, { conversaId: 'G7', usuarioId: 12, usuarioNome: 'Time', texto: 'Davi: e aí', grupoId: 7, mencionaVoce: true, agora: 2 });
+        expect(segunda).toHaveLength(1);
+        expect(segunda[0]).toMatchObject({ grupoId: 7, quantidade: 2, mencionaVoce: true, texto: 'Davi: e aí' });
+    });
+
+    it('o cartão de pessoa não tem grupoId', () => {
+        expect(somarAviso([], { conversaId: '1-9', usuarioId: 9, usuarioNome: 'Camila', texto: 'oi', mencionaVoce: false, agora: 1 })[0].grupoId).toBeUndefined();
+    });
+});

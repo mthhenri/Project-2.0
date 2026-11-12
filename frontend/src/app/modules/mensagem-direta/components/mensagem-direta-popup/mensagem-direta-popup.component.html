@@ -36,6 +36,24 @@
                         <app-mensagem-direta-conversa />
                     </div>
                 }
+                @case ("GRUPO") {
+                    <!-- O grupo aberto também ganha a barra: trocar de conversa ou de grupo sem passar pela lista. -->
+                    <div
+                        class="popup-direto__conversa-com-barra"
+                        [class]="
+                            'popup-direto__conversa-com-barra--' + posicaoDaBarra().toLowerCase()
+                        "
+                    >
+                        <app-mensagem-direta-barra />
+                        <app-mensagem-direta-grupo-conversa />
+                    </div>
+                }
+                @case ("GRUPO_NOVO") {
+                    <app-mensagem-direta-grupo-novo />
+                }
+                @case ("GRUPO_DETALHES") {
+                    <app-mensagem-direta-grupo-detalhes />
+                }
                 @case ("CONFIGURACOES") {
                     <app-mensagem-direta-configuracoes />
                 }
@@ -60,7 +78,7 @@
             ></button>
         }
         <!-- Na conversa o aviso vira o ícone do cabeçalho (task 217): o rodapé ficaria com a altura que a lista de mensagens precisa. -->
-        @if (estado.visao() !== "CONVERSA") {
+        @if (estado.visao() !== "CONVERSA" && estado.visao() !== "GRUPO") {
             <p class="popup-direto__aviso">
                 <i class="pi pi-info-circle" aria-hidden="true"></i>{{ avisoDeLeitura }}
             </p>

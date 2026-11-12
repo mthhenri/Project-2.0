@@ -1,0 +1,129 @@
+:host {
+    display: block;
+}
+
+.pessoas-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    &__busca {
+        position: relative;
+    }
+
+    &__busca-icone {
+        position: absolute;
+        left: 0.625rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.8125rem;
+        color: var(--p-text-muted-color);
+        pointer-events: none;
+    }
+
+    &__busca-campo {
+        width: 100%;
+        padding-left: 2.125rem;
+        font-size: 0.8125rem;
+    }
+
+    &__lista {
+        max-height: 14rem;
+        overflow-y: auto;
+        border: 1px solid var(--app-surface-200);
+        border-radius: 0.5rem;
+    }
+
+    &__esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    &__linha {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        width: 100%;
+        padding: 0.4375rem 0.625rem;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+
+        &:hover:not(:disabled) {
+            background: var(--app-surface-50);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--p-primary-color);
+            outline-offset: -2px;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        &--marcada {
+            background: color-mix(in srgb, var(--p-primary-color) 8%, var(--app-surface-0));
+        }
+    }
+
+    &__marca {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 1.125rem;
+        height: 1.125rem;
+        border: 1px solid var(--app-surface-400);
+        border-radius: 0.25rem;
+        background: var(--app-surface-0);
+        font-size: 0.625rem;
+        color: var(--p-primary-contrast-color);
+
+        &--ativa {
+            border-color: var(--p-primary-color);
+            background: var(--p-primary-color);
+        }
+    }
+
+    &__miolo {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    &__nome {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--p-text-color);
+    }
+
+    &__tipo {
+        font-size: 0.6875rem;
+        color: var(--p-text-muted-color);
+    }
+
+    &__estado {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    &__estado-texto {
+        margin: 0;
+        font-size: 0.8125rem;
+        color: var(--p-text-muted-color);
+    }
+}

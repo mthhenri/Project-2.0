@@ -5,7 +5,9 @@ import { MarkdownVisualizadorComponent } from '../../../../shared/components/mar
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { AvisoNaTela, DURACAO_DO_AVISO_MS, rotuloDaQuantidade } from '../../utils/avisos.util';
+import { AvatarGrupoComponent } from '../../../../shared/components/avatar-grupo/avatar-grupo.component';
 import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
+import { coresDosMembros } from '../../utils/grupo.util';
 
 /** O tempo mínimo que sobra de um cartão que o mouse largou: não some no mesmo instante em que o usuário tira o ponteiro. */
 const TEMPO_MINIMO_DEPOIS_DE_PAUSAR_MS = 2_000;
@@ -26,7 +28,7 @@ interface Temporizador {
 @Component({
     selector: 'app-mensagem-direta-avisos',
     standalone: true,
-    imports: [ButtonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarUsuarioComponent],
+    imports: [ButtonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarGrupoComponent, AvatarUsuarioComponent],
     templateUrl: './mensagem-direta-avisos.component.html',
     styleUrl: './mensagem-direta-avisos.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -96,8 +98,16 @@ export class MensagemDiretaAvisosComponent {
     }
 
     protected abrir(aviso: AvisoNaTela): void {
-        void this.estado.abrirConversaDoAviso(aviso.usuarioId, aviso.usuarioNome, aviso.id);
+        if (aviso.grupoId !== undefined) void this.estado.abrirGrupoDoAviso(aviso.grupoId, aviso.id);
+        else void this.estado.abrirConversaDoAviso(aviso.usuarioId, aviso.usuarioNome, aviso.id);
     }
+
+    /** O grupo do aviso, como a lista o conhece (cor, emoji e membros para o avatar). */
+    protected grupoDe(aviso: AvisoNaTela) {
+        return aviso.grupoId === undefined ? null : this.estado.grupoEstado.grupoDaLista(aviso.grupoId);
+    }
+
+    protected coresDosMembros = coresDosMembros;
 
     protected fechar(id: string): void {
         this.servico.fechar(id);

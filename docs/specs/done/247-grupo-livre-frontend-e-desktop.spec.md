@@ -1,6 +1,6 @@
 # 247-grupo-livre-frontend-e-desktop.spec.md
 
-> Task 2/5 da guarda-chuva [`chat-grupos.spec.md`](chat-grupos.spec.md), fase 1 (lado do cliente). Depende da [`246`](../done/246-grupo-livre-backend.spec.md). Altera a janela do Project Desktop
+> Task 2/5 da guarda-chuva [`chat-grupos.spec.md`](../backlog/chat-grupos.spec.md), fase 1 (lado do cliente). Depende da [`246`](../done/246-grupo-livre-backend.spec.md). Altera a janela do Project Desktop
 > entregue na [`213`](../done/213-mensagem-direta-project-desktop.spec.md) (em `done/`): a alteração é task nova, como a modelagem previu.
 
 ## Objetivo

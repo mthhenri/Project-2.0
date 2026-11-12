@@ -5,6 +5,7 @@ import {
     VALIDADE_DO_IA_DIGITANDO_MS,
     MensagemDiretaEventoDto,
     MensagemDiretaPessoaResumoDto,
+    MensagemDiretaResumoDto,
     ReacaoMensagemDiretaDto,
     ReferenciaMensagemDto,
     montarConversaDiretaId,
@@ -31,15 +32,18 @@ import {
     zerarNaoLidas,
 } from '../utils/mensagem-direta.util';
 import { pareceCodigo } from '../utils/compositor.util';
+import { grupoIdDaConversa, nomeDoAutorNoGrupo } from '../utils/grupo.util';
 import { aplicarReacoesNaMensagem, textoDoAvisoDeReacao } from '../utils/reacoes.util';
 import { MensagemDiretaAvisosService } from './mensagem-direta-avisos.service';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
+import { EnvioAoGrupoDoCompositor, MensagemDiretaGrupoEstadoService } from './mensagem-direta-grupo-estado.service';
+import { NovoGrupo } from './mensagem-direta-grupo.service';
 import { MensagemDiretaReferenciaService } from './mensagem-direta-referencia.service';
 import { MensagemDiretaService } from './mensagem-direta.service';
 
 const ESPERA_ATE_AVISAR_SEM_CONEXAO_MS = 2_500;
 
-export type VisaoDoPopup = 'LISTA' | 'CONVERSA' | 'NOVA' | 'CONFIGURACOES';
+export type VisaoDoPopup = 'LISTA' | 'CONVERSA' | 'NOVA' | 'CONFIGURACOES' | 'GRUPO' | 'GRUPO_NOVO' | 'GRUPO_DETALHES';
 
 /** A conversa aberta na tela com uma pessoa. */
 export interface ConversaAberta {
@@ -59,6 +63,8 @@ export interface ConversaAberta {
 export interface EnvioDoCompositor {
     texto: string;
     mencoes: number[];
+    /** `@todos` no texto (só o grupo oferece): o servidor expande nos membros atuais. */
+    mencionaTodos?: boolean;
     referencias: ReferenciaMensagemDto[];
 }
 
@@ -80,10 +86,12 @@ export class MensagemDiretaEstadoService {
     private readonly referencias = inject(MensagemDiretaReferenciaService);
     private readonly avisos = inject(MensagemDiretaAvisosService);
     private readonly desktop = inject(ProjectDesktopService);
+    /** A parte de grupo (task 247): lista de grupos, grupo aberto e envio. Este serviço a orquestra (visão do popup, eventos, avisos, "à vista"). */
+    readonly grupoEstado = inject(MensagemDiretaGrupoEstadoService);
 
     readonly aberto = signal(false);
     readonly visao = signal<VisaoDoPopup>('LISTA');
-    private visaoAntesDasConfiguracoes: 'LISTA' | 'CONVERSA' = 'LISTA';
+    private visaoAntesDasConfiguracoes: 'LISTA' | 'CONVERSA' | 'GRUPO' = 'LISTA';
 
     readonly conversas = signal<ConversaNaLista[]>([]);
     readonly carregandoConversas = signal(false);
@@ -134,8 +142,8 @@ export class MensagemDiretaEstadoService {
         return this.coresPorUsuario().get(usuarioId) ?? null;
     }
 
-    /** O contador do topbar: as não lidas das conversas que **não** estão silenciadas (a linha de cada conversa na lista mostra a sua mesmo assim). */
-    readonly naoLidas = computed(() => totalNaoLidas(this.conversas().filter((conversa) => !conversa.silenciada)));
+    /** O contador do topbar: as não lidas das conversas e dos grupos que **não** estão silenciados (a linha de cada um na lista mostra a sua mesmo assim). */
+    readonly naoLidas = computed(() => totalNaoLidas(this.conversas().filter((conversa) => !conversa.silenciada)) + this.grupoEstado.naoLidas());
 
     /** Conversas silenciadas que ainda não estão na lista (sem mensagem): o sino do cabeçalho precisa lembrar a escolha. */
     private readonly silenciadasSemLinha = signal<ReadonlySet<number>>(new Set());
@@ -217,6 +225,7 @@ export class MensagemDiretaEstadoService {
         this.carregandoPessoas.set(false);
         this.erroNasPessoas.set(false);
         this.pendentes.clear();
+        this.grupoEstado.limpar();
         this.conversas.set([]);
         this.conversaAberta.set(null);
         this.online.set(new Set());
@@ -238,6 +247,7 @@ export class MensagemDiretaEstadoService {
     abrir(): void {
         this.aberto.set(true);
         if (this.visao() === 'CONVERSA') void this.marcarComoLida();
+        if (this.visao() === 'GRUPO') void this.marcarGrupoComoLido();
     }
 
     fechar(): void {
@@ -255,6 +265,7 @@ export class MensagemDiretaEstadoService {
         this.abrir();
         if (codigo === null) return;
         this.conversaAberta.set(null);
+        this.grupoEstado.fecharGrupo();
         this.visao.set('NOVA');
         void this.carregarPessoas();
     }
@@ -262,15 +273,18 @@ export class MensagemDiretaEstadoService {
     /** A tela de configurações (engrenagem do cabeçalho e da barra): ocupa o popup e, ao fechar, devolve a pessoa de onde ela veio. */
     abrirConfiguracoes(): void {
         if (this.visao() === 'CONFIGURACOES') return;
-        this.visaoAntesDasConfiguracoes = this.visao() === 'CONVERSA' && this.conversaAberta() ? 'CONVERSA' : 'LISTA';
+        const estavaNumGrupo = this.visao() === 'GRUPO' && this.grupoEstado.grupoAberto() !== null;
+        this.visaoAntesDasConfiguracoes = estavaNumGrupo ? 'GRUPO' : this.visao() === 'CONVERSA' && this.conversaAberta() ? 'CONVERSA' : 'LISTA';
         this.visao.set('CONFIGURACOES');
     }
 
     fecharConfiguracoes(): void {
         if (this.visao() !== 'CONFIGURACOES') return;
         const voltaParaAConversa = this.visaoAntesDasConfiguracoes === 'CONVERSA' && this.conversaAberta() !== null;
-        this.visao.set(voltaParaAConversa ? 'CONVERSA' : 'LISTA');
+        const voltaParaOGrupo = this.visaoAntesDasConfiguracoes === 'GRUPO' && this.grupoEstado.grupoAberto() !== null;
+        this.visao.set(voltaParaAConversa ? 'CONVERSA' : voltaParaOGrupo ? 'GRUPO' : 'LISTA');
         if (voltaParaAConversa) void this.marcarComoLida();
+        if (voltaParaOGrupo) void this.marcarGrupoComoLido();
     }
 
     voltarParaALista(): void {
@@ -278,6 +292,7 @@ export class MensagemDiretaEstadoService {
         this.respondendoA.set(null);
         this.cancelarEdicao();
         this.conversaAberta.set(null);
+        this.grupoEstado.fecharGrupo();
         this.resultadoDaBusca.set(null);
         this.visao.set('LISTA');
     }
@@ -296,6 +311,9 @@ export class MensagemDiretaEstadoService {
             const resposta = await firstValueFrom(this.api.listarConversas());
             if (!vale()) return;
             this.conversas.set(resposta.dados!.conversas.map(normalizarConversa));
+            this.grupoEstado.definirGrupos(resposta.dados!.grupos ?? []);
+            // O grupo aberto que sumiu da lista (saí dele, ou foi encerrado) fecha: volta à lista.
+            if (this.visao() === 'GRUPO' && this.grupoEstado.grupoAberto() === null) this.visao.set('LISTA');
             this.jaCarregouConversas.set(true);
         } catch {
             if (vale()) this.erroNasConversas.set(true);
@@ -314,6 +332,7 @@ export class MensagemDiretaEstadoService {
         if (meuId === undefined || meuId === usuarioId) return;
         // O código copiado só vai à conversa escolhida na tela de nova conversa; qualquer outro caminho até uma conversa o descarta.
         if (this.visao() !== 'NOVA') this.rascunhoDoDesktop.set(null);
+        this.grupoEstado.fecharGrupo();
         if (this.conversaAberta()?.usuarioId !== usuarioId) {
             this.respondendoA.set(null);
             this.cancelarEdicao();
@@ -682,13 +701,15 @@ export class MensagemDiretaEstadoService {
                 break;
             }
             case 'DIGITANDO':
-                this.marcarDigitando(evento.usuarioId);
+                if (grupoIdDaConversa(evento.conversaId) !== null) this.grupoEstado.marcarDigitando(evento.conversaId, evento.usuarioId);
+                else this.marcarDigitando(evento.usuarioId);
                 break;
             case 'IA_DIGITANDO':
                 this.marcarIaDigitando(evento.conversaId);
                 break;
             case 'MENSAGEM':
-                this.receberMensagem(normalizarMensagem(evento.mensagem), true);
+                if (grupoIdDaConversa(evento.mensagem.conversaId) !== null) this.receberMensagemDeGrupo(evento.mensagem, true);
+                else this.receberMensagem(normalizarMensagem(evento.mensagem), true);
                 break;
             case 'EDICAO':
                 this.aplicarEdicao(normalizarMensagem(evento.mensagem));
@@ -713,6 +734,8 @@ export class MensagemDiretaEstadoService {
             case 'SINCRONIZAR':
                 void this.carregarConversas();
                 if (evento.conversaId === null || this.conversaAberta()?.conversaId === evento.conversaId) void this.carregarConversaAberta();
+                // Entrada, saída, nome, cor e emoji do grupo: a lista já foi pedida acima; o grupo aberto relê as mensagens (as do sistema chegam por `MENSAGEM`).
+                if (evento.conversaId === null || this.grupoEstado.grupoAberto()?.conversaId === evento.conversaId) void this.grupoEstado.carregarGrupoAberto();
                 break;
             case 'BATIMENTO':
             case 'ENCERRANDO':
@@ -726,6 +749,7 @@ export class MensagemDiretaEstadoService {
         this.limparDigitando();
         void this.carregarConversas();
         if (this.conversaAberta()) void this.carregarConversaAberta();
+        if (this.grupoEstado.grupoAberto()) void this.grupoEstado.carregarGrupoAberto();
     }
 
     /** `pelaStream`: veio do stream (de outra pessoa ou de outra aba minha). Só ela pode virar aviso; a resposta do meu envio nunca. */
@@ -774,6 +798,119 @@ export class MensagemDiretaEstadoService {
             mencionaVoce: mensagem.mencoes.includes(meuId),
             conversaSilenciada: this.estaSilenciada(usuarioId),
             conversaAVista,
+        });
+    }
+
+    // ---------------------------------------------------------------------------
+    // Grupos (task 247)
+    // ---------------------------------------------------------------------------
+
+    /** O grupo está mesmo à vista de quem usa: o popup aberto nele e a página visível (aba em primeiro plano, janela não minimizada). */
+    private grupoAVista(): boolean {
+        return this.aberto() && this.visao() === 'GRUPO' && document.visibilityState === 'visible' && !this.desktop.oculto();
+    }
+
+    /** Abre o grupo (existindo ou não na lista) e carrega a página mais nova. O código do Desktop só vale se veio da tela de escolha (`NOVA`). */
+    async abrirGrupo(grupoId: number): Promise<void> {
+        if (this.visao() !== 'NOVA') this.rascunhoDoDesktop.set(null);
+        if (this.conversaAberta() !== null) {
+            this.respondendoA.set(null);
+            this.cancelarEdicao();
+            this.conversaAberta.set(null);
+        }
+        this.aberto.set(true);
+        this.visao.set('GRUPO');
+        await this.grupoEstado.abrirGrupo(grupoId);
+        void this.marcarGrupoComoLido();
+    }
+
+    /** A tela de criar grupo: as pessoas vêm da mesma lista da nova conversa. */
+    novoGrupo(): void {
+        this.visao.set('GRUPO_NOVO');
+        this.grupoEstado.erroNaOperacao.set(null);
+        void this.carregarPessoas();
+    }
+
+    /** Os detalhes do grupo abrem já pedindo a confirmação de saída (o item "Sair do grupo" do menu); a tela de detalhes lê e zera. */
+    readonly saidaPedidaAoAbrirDetalhes = signal(false);
+
+    /** Detalhes do grupo aberto: nome, cor, emoji, membros, adicionar pessoas e sair (`comSaida`: já pedindo a confirmação). */
+    abrirDetalhesDoGrupo(comSaida = false): void {
+        if (!this.grupoEstado.grupoAberto()) return;
+        this.saidaPedidaAoAbrirDetalhes.set(comSaida);
+        this.visao.set('GRUPO_DETALHES');
+        this.grupoEstado.erroNaOperacao.set(null);
+        void this.carregarPessoas();
+    }
+
+    voltarParaOGrupo(): void {
+        this.visao.set(this.grupoEstado.grupoAberto() ? 'GRUPO' : 'LISTA');
+        if (this.visao() === 'GRUPO') void this.marcarGrupoComoLido();
+    }
+
+    /** Cria o grupo e o abre; se o servidor recusar, o formulário continua aberto com o motivo. */
+    async criarGrupo(novo: NovoGrupo): Promise<void> {
+        const criado = await this.grupoEstado.criarGrupo(novo);
+        if (criado) await this.abrirGrupo(criado.grupoId);
+    }
+
+    /** Sai do grupo aberto e volta à lista. */
+    async sairDoGrupoAberto(): Promise<void> {
+        const aberto = this.grupoEstado.grupoAberto();
+        if (!aberto) return;
+        if (await this.grupoEstado.sairDoGrupo(aberto.grupoId)) this.visao.set('LISTA');
+    }
+
+    async marcarGrupoComoLido(): Promise<void> {
+        await this.grupoEstado.marcarComoLida(this.grupoAVista());
+    }
+
+    async enviarAoGrupo(envio: EnvioAoGrupoDoCompositor): Promise<void> {
+        await this.grupoEstado.enviar(envio);
+    }
+
+    /** O clique no aviso de grupo: abre o grupo e tira o cartão. */
+    async abrirGrupoDoAviso(grupoId: number, avisoId: string): Promise<void> {
+        this.avisos.fechar(avisoId);
+        this.rascunhoDoDesktop.set(null);
+        await this.abrirGrupo(grupoId);
+    }
+
+    /** A mensagem de um grupo (resposta do meu envio ou evento): entra no grupo aberto e na lista, e pode virar aviso. */
+    private receberMensagemDeGrupo(mensagem: MensagemDiretaResumoDto, pelaStream: boolean): void {
+        const meuId = this.sessao.id();
+        if (meuId === undefined) return;
+        const aberto = this.grupoEstado.grupoAberto();
+        const naAberto = aberto?.conversaId === mensagem.conversaId;
+        const aVista = naAberto && this.grupoAVista();
+        const resultado = this.grupoEstado.receberMensagem(mensagem, aVista);
+        const recarga = resultado.grupoDesconhecido ? this.carregarConversas() : null;
+        if (naAberto && mensagem.autorUsuarioId !== meuId) void this.marcarGrupoComoLido();
+        if (pelaStream) void this.avisarDaMensagemDeGrupo(resultado.mensagem, meuId, aVista, recarga);
+    }
+
+    /** O aviso do grupo traz o nome do grupo no título e o autor na prévia ("Ana: texto"); a mensagem do sistema nunca avisa. */
+    private async avisarDaMensagemDeGrupo(mensagem: MensagemNaConversa, meuId: number, aVista: boolean, recarga: Promise<void> | null): Promise<void> {
+        if (mensagem.autor !== AutorMensagemDiretaEnum.USUARIO) return;
+        const sessao = this.geracaoDaSessao;
+        if (recarga) await recarga;
+        if (sessao !== this.geracaoDaSessao) return;
+        const grupoId = grupoIdDaConversa(mensagem.conversaId);
+        const grupo = grupoId === null ? null : this.grupoEstado.grupoDaLista(grupoId);
+        if (grupoId === null) return;
+        const autor = nomeDoAutorNoGrupo(grupo?.membros ?? [], mensagem.autorUsuarioId, meuId);
+        const primeiroNome = autor.split(' ')[0];
+        this.avisos.avisar({
+            conversaId: mensagem.conversaId,
+            usuarioId: mensagem.autorUsuarioId ?? 0,
+            usuarioNome: grupo?.nome ?? 'Grupo',
+            grupoId,
+            texto: `${primeiroNome}: ${previaDaMensagem(mensagem.texto, mensagem.contemCodigo, false)}`,
+            markdown: `${primeiroNome}: ${mensagem.texto}`,
+            mensagemMinha: mensagem.autorUsuarioId === meuId,
+            mencionaVoce: mensagem.mencoes.includes(meuId),
+            conversaSilenciada: grupo?.silenciada ?? false,
+            conversaAVista: aVista,
         });
     }
 

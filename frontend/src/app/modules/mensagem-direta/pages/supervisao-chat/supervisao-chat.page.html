@@ -4,13 +4,47 @@
             <h1 class="supervisao-chat__titulo">Supervisão do chat</h1>
             @if (!carregandoLista() && !erroDaLista()) {
                 <span class="supervisao-chat__contador"
-                    >{{ total() }} {{ total() === 1 ? "conversa" : "conversas" }}</span
+                    >{{ total() }}
+                    {{
+                        modo() === "GRUPOS"
+                            ? total() === 1
+                                ? "grupo"
+                                : "grupos"
+                            : total() === 1
+                              ? "conversa"
+                              : "conversas"
+                    }}</span
                 >
             }
         </div>
+        <div class="supervisao-chat__modos" role="group" aria-label="O que supervisionar">
+            <button
+                type="button"
+                class="supervisao-chat__modo"
+                [class.supervisao-chat__modo--ativo]="modo() === 'CONVERSAS'"
+                [attr.aria-pressed]="modo() === 'CONVERSAS'"
+                (click)="trocarModo('CONVERSAS')"
+            >
+                Chats internos
+            </button>
+            <button
+                type="button"
+                class="supervisao-chat__modo"
+                [class.supervisao-chat__modo--ativo]="modo() === 'GRUPOS'"
+                [attr.aria-pressed]="modo() === 'GRUPOS'"
+                (click)="trocarModo('GRUPOS')"
+            >
+                Grupos
+            </button>
+        </div>
         <p class="supervisao-chat__aviso">
-            <i class="pi pi-eye" aria-hidden="true"></i> Conversas entre desenvolvedores, somente
-            leitura. Os participantes são avisados.
+            <i class="pi pi-eye" aria-hidden="true"></i>
+            @if (modo() === "GRUPOS") {
+                Grupos sem gestor nem administrador entre os membros, somente leitura. Os membros
+                são avisados.
+            } @else {
+                Conversas entre desenvolvedores, somente leitura. Os participantes são avisados.
+            }
         </p>
     </div>
 
@@ -101,7 +135,7 @@
                         >
                             <div class="supervisao-chat__item-topo">
                                 <span class="supervisao-chat__item-nomes">{{
-                                    nomes(conversa.participantes)
+                                    titulo(conversa)
                                 }}</span>
                                 <span class="supervisao-chat__item-quando">{{
                                     quando(conversa)
@@ -145,7 +179,7 @@
                         }
                     </div>
                     <div class="supervisao-chat__leitura-nomes">
-                        {{ nomes(conversa.participantes) }}
+                        {{ titulo(conversa) }}
                     </div>
                     <p-button
                         icon="pi pi-times"
@@ -162,16 +196,28 @@
 
                 <p class="supervisao-chat__faixa" role="status">
                     <i class="pi pi-eye" aria-hidden="true"></i>
-                    <span
-                        >Você está lendo uma conversa entre {{ nomes(conversa.participantes) }};
-                        eles são avisados.</span
-                    >
+                    @if (conversa.titulo) {
+                        <span
+                            >Você está lendo o grupo {{ conversa.titulo }} ({{
+                                nomes(conversa.participantes)
+                            }}); os membros são avisados.</span
+                        >
+                    } @else {
+                        <span
+                            >Você está lendo uma conversa entre {{ nomes(conversa.participantes) }};
+                            eles são avisados.</span
+                        >
+                    }
                 </p>
 
                 <div
                     class="supervisao-chat__mensagens"
                     role="log"
-                    [attr.aria-label]="'Conversa entre ' + nomes(conversa.participantes)"
+                    [attr.aria-label]="
+                        conversa.titulo
+                            ? 'Grupo ' + conversa.titulo
+                            : 'Conversa entre ' + nomes(conversa.participantes)
+                    "
                 >
                     @if (conversa.carregando) {
                         <div class="supervisao-chat__esqueleto" aria-busy="true">

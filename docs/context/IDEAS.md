@@ -181,3 +181,10 @@
 - **Origem:** o autor, em 2026-11-06, na especificação da 313: primeiro pediu o original guardado, depois mandou deixar isso como ideia e editar sem guardar.
 - **Por quê:** sem isso, a supervisão lê só o texto atual e não vê o que foi dito antes da edição.
 - **Custo aparente:** decisão de modelagem (já discutida): campo `texto_original` no próprio documento/tabela `mensagem_direta` (migration + OpenSearch/Elasticsearch) lido só pelo DTO da supervisão, ou tabela de edições no PostgreSQL se quiser todas as versões. Perguntar ao autor de novo antes de especificar.
+
+### I-053 — Notificação do sistema do Project Desktop para grupo, e edição, reação e `@IA` em grupo · chat entre colaboradores/desktop
+
+- **Ideia:** (a) o Project Desktop mostrar a notificação do Windows também para mensagem de grupo, abrindo o grupo ao clicar; (b) editar, reagir e chamar a `@IA` dentro do grupo, como na conversa um a um.
+- **Origem:** a task 247 (2026-11-12). A ponte do Desktop abre a conversa pela **pessoa** (`usuarioId`), então o grupo ficou só com o cartão de aviso do Project; edição, reação e `@IA` não estavam na spec dos grupos (a tabela de reação amarra o `conversa_id` ao par de pessoas).
+- **Por quê:** com o Project oculto no Desktop, mensagem de grupo não vira notificação do sistema; no grupo ainda não há como corrigir uma mensagem, reagir nem chamar a IA.
+- **Custo aparente:** (a) mexe na ponte e na política do Desktop (`chat:avisar`, `chat:abrir-conversa`) e pede nova versão do executável; (b) migration em `mensagem_direta_reacao` e regras de permissão por grupo. Decisão de modelagem do autor antes de especificar.

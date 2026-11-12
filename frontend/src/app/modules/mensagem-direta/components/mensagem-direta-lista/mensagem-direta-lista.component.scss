@@ -332,4 +332,11 @@
         line-height: 1.5;
         color: var(--p-text-muted-color);
     }
+
+    &__estado-acoes {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
 }

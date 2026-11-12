@@ -1,0 +1,77 @@
+<div class="pessoas-grupo">
+    <div class="pessoas-grupo__busca">
+        <i class="pi pi-search pessoas-grupo__busca-icone" aria-hidden="true"></i>
+        <input
+            pInputText
+            type="text"
+            class="pessoas-grupo__busca-campo"
+            [formControl]="controleBusca"
+            placeholder="Buscar pessoa pelo nome"
+            aria-label="Buscar pessoa pelo nome"
+            maxlength="100"
+        />
+    </div>
+
+    <div class="pessoas-grupo__lista" role="group" aria-label="Pessoas do time">
+        @if (carregando() && pessoas().length === 0) {
+            <div class="pessoas-grupo__esqueleto" aria-busy="true">
+                <p-skeleton height="2.5rem" />
+                <p-skeleton height="2.5rem" />
+                <p-skeleton height="2.5rem" />
+            </div>
+        } @else if (erro()) {
+            <div class="pessoas-grupo__estado" role="alert">
+                <p class="pessoas-grupo__estado-texto">Não foi possível carregar as pessoas.</p>
+                <p-button
+                    label="Tentar de novo"
+                    icon="pi pi-refresh"
+                    size="small"
+                    [outlined]="true"
+                    (onClick)="recarregar.emit()"
+                />
+            </div>
+        } @else if (visiveis().length === 0) {
+            <div class="pessoas-grupo__estado">
+                <p class="pessoas-grupo__estado-texto">
+                    {{
+                        controleBusca.value.trim()
+                            ? "Ninguém com esse nome."
+                            : "Não há outras pessoas para escolher."
+                    }}
+                </p>
+            </div>
+        } @else {
+            @for (pessoa of visiveis(); track pessoa.usuarioId) {
+                <button
+                    type="button"
+                    class="pessoas-grupo__linha"
+                    role="checkbox"
+                    [class.pessoas-grupo__linha--marcada]="marcada(pessoa.usuarioId)"
+                    [attr.aria-checked]="marcada(pessoa.usuarioId)"
+                    [disabled]="!marcada(pessoa.usuarioId) && limiteAtingido()"
+                    (click)="alternar(pessoa.usuarioId)"
+                >
+                    <span
+                        class="pessoas-grupo__marca"
+                        [class.pessoas-grupo__marca--ativa]="marcada(pessoa.usuarioId)"
+                        aria-hidden="true"
+                    >
+                        @if (marcada(pessoa.usuarioId)) {
+                            <i class="pi pi-check"></i>
+                        }
+                    </span>
+                    <app-avatar-usuario
+                        [nome]="pessoa.usuarioNome"
+                        [cor]="pessoa.corAvatar"
+                        [online]="online().has(pessoa.usuarioId)"
+                        [pequeno]="true"
+                    />
+                    <span class="pessoas-grupo__miolo">
+                        <span class="pessoas-grupo__nome">{{ pessoa.usuarioNome }}</span>
+                        <span class="pessoas-grupo__tipo">{{ rotuloTipo(pessoa.tipo) }}</span>
+                    </span>
+                </button>
+            }
+        }
+    </div>
+</div>

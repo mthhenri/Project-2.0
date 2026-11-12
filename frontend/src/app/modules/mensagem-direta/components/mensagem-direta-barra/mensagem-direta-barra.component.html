@@ -4,7 +4,7 @@
     aria-label="Conversas"
 >
     <div class="barra-direta__bolinhas">
-        @for (bolinha of bolinhas(); track bolinha.usuarioId) {
+        @for (bolinha of bolinhas(); track bolinha.chave) {
             <button
                 type="button"
                 class="barra-direta__bolinha"
@@ -16,12 +16,22 @@
                 [tooltipPosition]="ladoDoTooltip()"
                 (click)="abrir(bolinha)"
             >
-                <app-avatar-usuario
-                    [nome]="bolinha.nome"
-                    [cor]="bolinha.cor"
-                    [online]="bolinha.online"
-                    [pequeno]="true"
-                />
+                @if (bolinha.grupoId !== null) {
+                    <app-avatar-grupo
+                        [nome]="bolinha.nome"
+                        [cor]="bolinha.cor"
+                        [emoji]="bolinha.emoji"
+                        [coresDosMembros]="bolinha.coresDosMembros"
+                        [pequeno]="true"
+                    />
+                } @else {
+                    <app-avatar-usuario
+                        [nome]="bolinha.nome"
+                        [cor]="bolinha.cor"
+                        [online]="bolinha.online"
+                        [pequeno]="true"
+                    />
+                }
                 @if (bolinha.naoLidas > 0 && !bolinha.ativa) {
                     <span class="barra-direta__contador" aria-hidden="true">{{
                         bolinha.naoLidas > 99 ? "99+" : bolinha.naoLidas

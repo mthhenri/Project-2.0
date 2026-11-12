@@ -8,8 +8,11 @@ import {
 
 // Lógica pura do chat entre colaboradores (task 210): nada aqui conhece Angular nem a rede, para testar sem montar componente.
 
-/** O aviso permanente de que gestor e administrador leem as conversas entre desenvolvedores (decisão 5 da guarda-chuva): rodapé da lista e ícone do cabeçalho da conversa. */
-export const AVISO_DE_LEITURA_DAS_CONVERSAS = 'Gestores e administradores podem ler as conversas entre desenvolvedores.';
+/**
+ * O aviso permanente de que gestor e administrador leem as conversas entre desenvolvedores (decisão 5 da guarda-chuva) e, desde os grupos (task 247), os grupos sem
+ * gestor ou administrador entre os membros: rodapé da lista e ícone do cabeçalho da conversa.
+ */
+export const AVISO_DE_LEITURA_DAS_CONVERSAS = 'Gestores e administradores podem ler as conversas entre desenvolvedores e os grupos sem gestor ou administrador.';
 
 /** Uma mensagem como a tela a mostra: as do servidor (`ENVIADA`) mais as locais que ainda não chegaram (`ENVIANDO`) ou que falharam. */
 export type SituacaoDaMensagem = 'ENVIADA' | 'ENVIANDO' | 'FALHOU';

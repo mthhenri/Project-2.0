@@ -13,6 +13,17 @@
         />
         <h2 class="nova-direta__titulo">Nova conversa</h2>
         <p-button
+            icon="pi pi-users"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Novo grupo"
+            pTooltip="Novo grupo"
+            tooltipPosition="bottom"
+            (onClick)="novoGrupo()"
+        />
+        <p-button
             icon="pi pi-minus"
             severity="secondary"
             [text]="true"
@@ -33,12 +44,37 @@
             class="nova-direta__busca-campo"
             [formControl]="controleBusca"
             placeholder="Para quem? Digite o nome"
-            aria-label="Buscar pessoa pelo nome"
+            aria-label="Buscar pessoa ou grupo pelo nome"
             maxlength="100"
         />
     </div>
 
     <div class="nova-direta__corpo">
+        @if (grupos().length > 0) {
+            <p class="nova-direta__secao">Grupos</p>
+            @for (grupo of grupos(); track grupo.grupoId) {
+                <button
+                    type="button"
+                    class="nova-direta__linha"
+                    (click)="escolherGrupo(grupo.grupoId)"
+                >
+                    <app-avatar-grupo
+                        [nome]="grupo.nome"
+                        [cor]="grupo.corAvatar"
+                        [emoji]="grupo.emojiAvatar"
+                        [coresDosMembros]="coresDosMembros(grupo.membros)"
+                        [pequeno]="true"
+                    />
+                    <span class="nova-direta__miolo">
+                        <span class="nova-direta__nome">{{ grupo.nome }}</span>
+                        <span class="nova-direta__tipo">{{
+                            rotuloDosMembros(grupo.membros.length)
+                        }}</span>
+                    </span>
+                </button>
+            }
+            <p class="nova-direta__secao">Pessoas</p>
+        }
         @if (estado.carregandoPessoas() && estado.pessoas() === null) {
             <div class="nova-direta__esqueleto" aria-busy="true">
                 <p-skeleton height="2.75rem" />

@@ -5,6 +5,7 @@ import {
     destinoDaReferencia,
     detectarGatilho,
     inserirBlocoDeCodigo,
+    mencionaTodosNoTexto,
     mencoesPresentes,
     pareceCodigo,
     referenciasPresentes,
@@ -146,5 +147,26 @@ describe('rótulos e destino', () => {
         expect(destinoDaReferencia(ATIVIDADE, 57, 5)).toEqual({ caminho: ['/atividade', '57'] });
         expect(destinoDaReferencia(DEMANDA, 212, 5)).toEqual({ caminho: ['/demanda'], parametros: { projetoId: 5 } });
         expect(destinoDaReferencia(DEMANDA, 212, null)).toBeNull();
+    });
+});
+
+describe('mencionaTodosNoTexto (grupo, task 247)', () => {
+    it('reconhece @todos como palavra inteira, sem diferenciar maiúsculas', () => {
+        expect(mencionaTodosNoTexto('@todos reunião às 10')).toBe(true);
+        expect(mencionaTodosNoTexto('Bom dia, @Todos!')).toBe(true);
+        expect(mencionaTodosNoTexto('atenção @TODOS')).toBe(true);
+    });
+
+    it('não confunde com outra palavra, e-mail nem texto sem a menção', () => {
+        expect(mencionaTodosNoTexto('@todosfoo')).toBe(false);
+        expect(mencionaTodosNoTexto('fulano@todos.com')).toBe(false);
+        expect(mencionaTodosNoTexto('todos juntos')).toBe(false);
+        expect(mencionaTodosNoTexto('')).toBe(false);
+    });
+
+    it('o @todos dentro de código não vale', () => {
+        expect(mencionaTodosNoTexto('veja `@todos` no código')).toBe(false);
+        expect(mencionaTodosNoTexto('```ts\nconst x = "@todos";\n```')).toBe(false);
+        expect(mencionaTodosNoTexto('```\n@todos\n```\n@todos agora')).toBe(true);
     });
 });

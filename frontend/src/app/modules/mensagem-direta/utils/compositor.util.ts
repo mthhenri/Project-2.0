@@ -90,6 +90,15 @@ function contemMarcado(texto: string, marcado: string): boolean {
     return false;
 }
 
+/**
+ * O texto traz `@todos` (fora de código): no grupo qualquer membro pode, e o servidor expande nos membros atuais para o aviso. Vale a palavra inteira
+ * (`@todosfoo` não conta) e sem diferenciar maiúsculas, como o `@IA`.
+ */
+export function mencionaTodosNoTexto(texto: string): boolean {
+    const semCodigo = texto.replace(/```[\s\S]*?```/g, ' ').replace(/`[^`\n]*`/g, ' ');
+    return /(^|[^\p{L}\p{N}_@])@todos(?![\p{L}\p{N}_])/iu.test(semCodigo);
+}
+
 /** Os ids das pessoas escolhidas cujo `@Nome` ainda está no texto (quem apagou a menção digitando por cima não avisa ninguém). */
 export function mencoesPresentes(texto: string, escolhidas: PessoaEscolhida[]): number[] {
     const ids = new Set<number>();

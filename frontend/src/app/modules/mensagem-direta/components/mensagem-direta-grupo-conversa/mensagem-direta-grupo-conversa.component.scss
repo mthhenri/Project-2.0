@@ -1,0 +1,14 @@
+// A conversa do grupo usa os estilos da conversa um a um (`styleUrls`); aqui só o que é de grupo.
+.conversa-direta {
+    // O nome de quem escreveu, acima do primeiro balão de cada sequência de outra pessoa.
+    &__autor {
+        margin: 0 0.5rem 0.125rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        line-height: 1.2;
+        color: var(--p-primary-color);
+    }
+}

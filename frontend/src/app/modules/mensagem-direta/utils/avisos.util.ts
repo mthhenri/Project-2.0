@@ -113,6 +113,8 @@ export interface AvisoNaTela {
     texto: string;
     /** O Markdown da última mensagem, que o cartão renderiza; ausente, o cartão mostra `texto`. */
     markdown?: string;
+    /** O aviso é de um grupo (task 247): o cartão mostra o avatar do grupo e o clique abre o grupo. */
+    grupoId?: number;
     mencionaVoce: boolean;
     /** Quantas mensagens novas esse cartão resume. */
     quantidade: number;
@@ -126,6 +128,7 @@ export interface NovaMensagemParaAviso {
     usuarioNome: string;
     texto: string;
     markdown?: string;
+    grupoId?: number;
     mencionaVoce: boolean;
     agora: number;
     /** Aviso que não é mensagem nova (a reação, task 314): não entra na contagem "N mensagens novas" do cartão. */
@@ -139,8 +142,8 @@ export interface NovaMensagemParaAviso {
 export function somarAviso(avisos: AvisoNaTela[], nova: NovaMensagemParaAviso): AvisoNaTela[] {
     const existente = avisos.find((aviso) => aviso.id === nova.conversaId);
     const atualizado: AvisoNaTela = existente
-        ? { ...existente, usuarioNome: nova.usuarioNome, texto: nova.texto, markdown: nova.markdown, mencionaVoce: existente.mencionaVoce || nova.mencionaVoce, quantidade: existente.quantidade + (nova.semContar ? 0 : 1), atualizadoEm: nova.agora }
-        : { id: nova.conversaId, usuarioId: nova.usuarioId, usuarioNome: nova.usuarioNome, texto: nova.texto, markdown: nova.markdown, mencionaVoce: nova.mencionaVoce, quantidade: nova.semContar ? 0 : 1, atualizadoEm: nova.agora };
+        ? { ...existente, usuarioNome: nova.usuarioNome, texto: nova.texto, markdown: nova.markdown, grupoId: nova.grupoId, mencionaVoce: existente.mencionaVoce || nova.mencionaVoce, quantidade: existente.quantidade + (nova.semContar ? 0 : 1), atualizadoEm: nova.agora }
+        : { id: nova.conversaId, usuarioId: nova.usuarioId, usuarioNome: nova.usuarioNome, texto: nova.texto, markdown: nova.markdown, grupoId: nova.grupoId, mencionaVoce: nova.mencionaVoce, quantidade: nova.semContar ? 0 : 1, atualizadoEm: nova.agora };
     return [atualizado, ...avisos.filter((aviso) => aviso.id !== nova.conversaId)].slice(0, MAXIMO_DE_AVISOS_NA_TELA);
 }
 

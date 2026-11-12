@@ -21,6 +21,8 @@ export interface MensagemParaAvisar extends Omit<EntradaDaDecisaoDeAviso, 'prefe
     conversaId: string;
     usuarioId: number;
     usuarioNome: string;
+    /** O aviso é de um grupo (task 247): o cartão abre o grupo. A notificação do sistema do Desktop é só da conversa um a um (a ponte dele é por pessoa). */
+    grupoId?: number;
     /** A prévia da mensagem, sem marcação (a notificação do sistema não renderiza Markdown). */
     texto: string;
     /** O Markdown da mensagem, que o cartão do Project renderiza. */
@@ -125,7 +127,8 @@ export class MensagemDiretaAvisosService {
         const decisao = decidirAviso({ ...mensagem, preferencia: this.preferencia(), agora });
         if (!decisao.avisar) return false;
         if (this.desktop.disponivel && this.desktop.paginaOculta()) {
-            if (!this.preferencia().avisoDesktopAtivo) return false;
+            // A ponte do Desktop abre a conversa pela pessoa: um grupo não tem pessoa para abrir, então não há notificação do sistema para ele.
+            if (mensagem.grupoId !== undefined || !this.preferencia().avisoDesktopAtivo) return false;
             this.desktop.avisarMensagem({
                 usuarioId: mensagem.usuarioId,
                 usuarioNome: mensagem.usuarioNome,
@@ -142,6 +145,7 @@ export class MensagemDiretaAvisosService {
                 usuarioNome: mensagem.usuarioNome,
                 texto: mensagem.texto,
                 markdown: mensagem.markdown,
+                grupoId: mensagem.grupoId,
                 mencionaVoce: mensagem.mencionaVoce,
                 agora: agora.getTime(),
                 semContar: mensagem.semContar,

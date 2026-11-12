@@ -13,6 +13,7 @@ import {
     ROTULO_DO_TIPO_DE_REFERENCIA,
     aplicarEscolha,
     detectarGatilho,
+    mencionaTodosNoTexto,
     mencoesPresentes,
     pareceCodigo,
     referenciasPresentes,
@@ -34,6 +35,8 @@ const FOLGA_DA_CERCA_DO_CODIGO = 16;
 
 /** O texto que a opção da IA põe depois do `@` (task 315): o servidor reconhece `@IA`. */
 const ROTULO_DA_IA_NO_COMPOSITOR = MENCAO_DA_IA.slice(1);
+/** O texto que a opção de todos põe depois do `@` (task 247): o servidor reconhece `@todos` no grupo. */
+const ROTULO_DE_TODOS_NO_COMPOSITOR = 'todos';
 
 interface ItemDaSugestao {
     /** O texto que entra na mensagem depois do `@` ou `#`. */
@@ -105,6 +108,8 @@ export class MensagemDiretaCompositorComponent {
     readonly textoAplicado = output<void>();
     /** A IA está no ar (task 315): o `@` oferece **IA** como primeira opção, que entra como texto `@IA` e nunca como menção de pessoa. */
     readonly iaDisponivel = input(false);
+    /** No grupo (task 247) o `@` oferece **todos** depois da IA: entra como texto `@todos` e nunca como menção de pessoa; o servidor o expande nos membros. */
+    readonly permitirTodos = input(false);
 
     protected readonly limiteDoTexto = LIMITE_TEXTO_MENSAGEM_DIRETA;
     /** O Markdown da mensagem. */
@@ -155,7 +160,10 @@ export class MensagemDiretaCompositorComponent {
             const daIa: ItemDaSugestao[] = this.iaDisponivel() && ROTULO_DA_IA_NO_COMPOSITOR.toLowerCase().startsWith(gatilho.termo.toLowerCase())
                 ? [{ rotulo: ROTULO_DA_IA_NO_COMPOSITOR, titulo: ROTULO_DA_IA_NO_COMPOSITOR, detalhe: 'Pedir à IA', icone: 'pi-sparkles', nomeDoAvatar: null, corDoAvatar: null, pessoa: null, referencia: null }]
                 : [];
-            return [...daIa, ...filtrarPessoasPorNome(
+            const deTodos: ItemDaSugestao[] = this.permitirTodos() && ROTULO_DE_TODOS_NO_COMPOSITOR.startsWith(gatilho.termo.toLowerCase())
+                ? [{ rotulo: ROTULO_DE_TODOS_NO_COMPOSITOR, titulo: ROTULO_DE_TODOS_NO_COMPOSITOR, detalhe: 'Avisar todos do grupo', icone: 'pi-users', nomeDoAvatar: null, corDoAvatar: null, pessoa: null, referencia: null }]
+                : [];
+            return [...daIa, ...deTodos, ...filtrarPessoasPorNome(
                 this.pessoas().map((pessoa) => ({ ...pessoa, usuarioNome: pessoa.nome })),
                 gatilho.termo,
             ).map((pessoa) => ({
@@ -502,6 +510,7 @@ export class MensagemDiretaCompositorComponent {
         this.enviar.emit({
             texto,
             mencoes: mencoesPresentes(texto, this.escolhidasPessoas),
+            ...(this.permitirTodos() && mencionaTodosNoTexto(texto) ? { mencionaTodos: true } : {}),
             referencias: referenciasPresentes(texto, this.escolhidasReferencias),
         });
         // Editando, o campo só é limpo quando a edição termina (se o servidor recusar, o texto digitado fica).

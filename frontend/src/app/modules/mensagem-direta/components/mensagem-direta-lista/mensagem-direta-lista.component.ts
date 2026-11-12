@@ -10,6 +10,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
+import { autorDaPreviaDoGrupo, coresDosMembros, filtrarGruposPorNome, grupoIdDaConversa, montarItensDaLista } from '../../utils/grupo.util';
 import {
     MensagemNaConversa,
     filtrarPessoasPorNome,
@@ -18,16 +19,17 @@ import {
     rotuloDaLista,
     trechosComRealce,
 } from '../../utils/mensagem-direta.util';
+import { AvatarGrupoComponent } from '../../../../shared/components/avatar-grupo/avatar-grupo.component';
 import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 import { MensagemDiretaConfiguracoesBotaoComponent } from '../mensagem-direta-configuracoes-botao/mensagem-direta-configuracoes-botao.component';
 
 const ATRASO_DA_BUSCA_MS = 300;
 
-/** A lista de conversas do popup, com a busca por pessoa e por mensagem (mockups 2, 8 e 10). */
+/** A lista do popup: conversas e grupos juntos, com a busca por pessoa, por grupo e por mensagem (mockups 2, 8 e 10; grupos, task 247). */
 @Component({
     selector: 'app-mensagem-direta-lista',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarUsuarioComponent, MensagemDiretaConfiguracoesBotaoComponent],
+    imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, AvatarGrupoComponent, AvatarUsuarioComponent, MensagemDiretaConfiguracoesBotaoComponent],
     templateUrl: './mensagem-direta-lista.component.html',
     styleUrl: './mensagem-direta-lista.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,6 +46,10 @@ export class MensagemDiretaListaComponent {
     readonly buscaAtiva = computed(() => this.termo().trim().length > 0);
 
     readonly pessoasEncontradas = computed(() => filtrarPessoasPorNome(this.estado.pessoas() ?? [], this.termo()));
+    readonly gruposEncontrados = computed(() => filtrarGruposPorNome(this.estado.grupoEstado.grupos(), this.termo()));
+    /** Conversas e grupos juntos, o que teve mensagem mais recente primeiro. */
+    protected readonly itens = computed(() => montarItensDaLista(this.estado.conversas(), this.estado.grupoEstado.grupos()));
+    protected readonly coresDosMembros = coresDosMembros;
     protected readonly agora = signal(new Date());
 
     constructor() {
@@ -70,8 +76,26 @@ export class MensagemDiretaListaComponent {
         void this.estado.carregarPessoas();
     }
 
+    protected novoGrupo(): void {
+        this.estado.novoGrupo();
+    }
+
     protected abrir(usuarioId: number, nome: string): void {
         void this.estado.abrirConversa(usuarioId, nome);
+    }
+
+    protected abrirGrupo(grupoId: number): void {
+        void this.estado.abrirGrupo(grupoId);
+    }
+
+    /** Quem está digitando no grupo agora (o "digitando…" da linha). */
+    protected digitandoNoGrupo(conversaId: string): boolean {
+        return (this.estado.grupoEstado.digitando().get(conversaId)?.size ?? 0) > 0;
+    }
+
+    /** "Ana: " na prévia do grupo (só mensagem de pessoa; a do sistema não tem autor). */
+    protected autorDaPrevia(ultima: { autor: AutorMensagemDiretaEnum; autorUsuarioId: number | null }, membros: Parameters<typeof autorDaPreviaDoGrupo>[1]): string | null {
+        return autorDaPreviaDoGrupo(ultima, membros, this.sessao.id());
     }
 
     protected hora(data: Date): string {
@@ -80,6 +104,22 @@ export class MensagemDiretaListaComponent {
 
     protected previa(texto: string, contemCodigo: boolean, autorUsuarioId: number | null, autor: AutorMensagemDiretaEnum): string {
         return previaDaMensagem(texto, contemCodigo, autorUsuarioId !== null && autorUsuarioId === this.sessao.id(), autor === AutorMensagemDiretaEnum.IA);
+    }
+
+    /** Para onde um achado da busca leva: o grupo (nome e aparência da lista) ou a outra pessoa (pela lista de conversas, depois pela lista de pessoas). */
+    protected destinoDoAchado(mensagem: MensagemNaConversa) {
+        const grupoId = grupoIdDaConversa(mensagem.conversaId);
+        if (grupoId !== null) {
+            const grupo = this.estado.grupoEstado.grupoDaLista(grupoId);
+            return { grupoId, usuarioId: 0, nome: grupo?.nome ?? 'Grupo', cor: grupo?.corAvatar ?? null, emoji: grupo?.emojiAvatar ?? null, coresDosMembros: grupo ? coresDosMembros(grupo.membros) : [] };
+        }
+        const pessoa = this.nomeDaOutraPessoa(mensagem);
+        return { grupoId: null, usuarioId: pessoa.usuarioId, nome: pessoa.nome, cor: this.estado.corDe(pessoa.usuarioId), emoji: null, coresDosMembros: [] as string[] };
+    }
+
+    protected abrirDestino(destino: { grupoId: number | null; usuarioId: number; nome: string }): void {
+        if (destino.grupoId !== null) this.abrirGrupo(destino.grupoId);
+        else this.abrir(destino.usuarioId, destino.nome);
     }
 
     /** O nome da outra pessoa de uma mensagem achada na busca: pela lista de conversas, depois pela lista de pessoas. */

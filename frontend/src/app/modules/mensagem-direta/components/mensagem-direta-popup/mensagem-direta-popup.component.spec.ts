@@ -84,7 +84,7 @@ describe('MensagemDiretaPopupComponent', () => {
         expect(texto()).toContain('Dá uma olhada na DEM-212?');
         expect(texto()).toContain('Rafael Lima');
         expect(tela.elemento.querySelector('[aria-label="2 mensagens não lidas"]')).not.toBeNull();
-        expect(texto()).toContain('Gestores e administradores podem ler as conversas entre desenvolvedores.');
+        expect(texto()).toContain('Gestores e administradores podem ler as conversas entre desenvolvedores e os grupos sem gestor ou administrador.');
     });
 
     it('sem conversas, mostra o estado vazio com o botão de nova conversa', async () => {
@@ -139,7 +139,7 @@ describe('MensagemDiretaPopupComponent', () => {
 
     // --- rodapé enxuto (task 217) -----------------------------------------------------------------
 
-    const AVISO = 'Gestores e administradores podem ler as conversas entre desenvolvedores.';
+    const AVISO = 'Gestores e administradores podem ler as conversas entre desenvolvedores e os grupos sem gestor ou administrador.';
 
     it('na conversa o aviso de leitura vira um ícone no cabeçalho (texto no aria-label) e não ocupa o rodapé', async () => {
         await abrirConversaVazia();
@@ -303,7 +303,7 @@ describe('MensagemDiretaPopupComponent', () => {
 
     it('a busca mostra as mensagens com o termo realçado e as pessoas pelo nome', async () => {
         await montar();
-        const campo = tela.elemento.querySelector<HTMLInputElement>('input[aria-label="Buscar pessoa ou mensagem"]')!;
+        const campo = tela.elemento.querySelector<HTMLInputElement>('input[aria-label="Buscar pessoa, grupo ou mensagem"]')!;
         campo.value = 'filtro';
         campo.dispatchEvent(new Event('input'));
         await new Promise((resolver) => setTimeout(resolver, 400));
@@ -336,7 +336,7 @@ describe('MensagemDiretaPopupComponent', () => {
         expect(texto()).toContain('Camila Duarte');
         expect(texto()).toContain('Thiago Mendes');
 
-        const campo = tela.elemento.querySelector<HTMLInputElement>('input[aria-label="Buscar pessoa pelo nome"]')!;
+        const campo = tela.elemento.querySelector<HTMLInputElement>('input[aria-label="Buscar pessoa ou grupo pelo nome"]')!;
         campo.value = 'thi';
         campo.dispatchEvent(new Event('input'));
         await tela.atualizar();

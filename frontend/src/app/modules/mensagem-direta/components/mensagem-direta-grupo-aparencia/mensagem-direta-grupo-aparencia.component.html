@@ -1,0 +1,108 @@
+<div class="aparencia-grupo">
+    <div class="aparencia-grupo__identidade">
+        <app-avatar-grupo
+            [nome]="nome() || 'Grupo'"
+            [cor]="cor()"
+            [emoji]="emoji()"
+            [coresDosMembros]="coresDosMembros()"
+            tamanho="3.5rem"
+        />
+        <label class="aparencia-grupo__campo">
+            <span class="aparencia-grupo__rotulo">Nome do grupo</span>
+            <input
+                pInputText
+                type="text"
+                class="aparencia-grupo__nome"
+                [formControl]="controleNome"
+                [attr.maxlength]="limiteDoNome"
+                placeholder="Ex.: Time do backend"
+                aria-label="Nome do grupo"
+            />
+        </label>
+    </div>
+
+    <fieldset class="aparencia-grupo__grupo">
+        <legend class="aparencia-grupo__rotulo">Cor</legend>
+        <div class="aparencia-grupo__opcoes">
+            <button
+                type="button"
+                class="aparencia-grupo__automatica"
+                [class.aparencia-grupo__automatica--ativa]="cor() === null"
+                [attr.aria-pressed]="cor() === null"
+                pTooltip="O grupo usa as cores dos membros, em degradê"
+                tooltipPosition="top"
+                (click)="escolherCor(null)"
+            >
+                <i class="pi pi-palette" aria-hidden="true"></i> Automática
+            </button>
+            @for (opcao of coresSugeridas; track opcao) {
+                <button
+                    type="button"
+                    class="aparencia-grupo__cor"
+                    [class.aparencia-grupo__cor--ativa]="cor() === opcao"
+                    [style.background]="opcao"
+                    [attr.aria-label]="'Cor ' + opcao"
+                    [attr.aria-pressed]="cor() === opcao"
+                    (click)="escolherCor(opcao)"
+                ></button>
+            }
+            <label
+                class="aparencia-grupo__outra"
+                pTooltip="Escolher outra cor"
+                tooltipPosition="top"
+            >
+                <input
+                    type="color"
+                    class="aparencia-grupo__seletor-de-cor"
+                    [formControl]="controleCor"
+                    aria-label="Escolher outra cor"
+                />
+            </label>
+        </div>
+    </fieldset>
+
+    <fieldset class="aparencia-grupo__grupo">
+        <legend class="aparencia-grupo__rotulo">Emoji no lugar das iniciais</legend>
+        <div class="aparencia-grupo__opcoes">
+            <button
+                type="button"
+                class="aparencia-grupo__emoji aparencia-grupo__emoji--sem"
+                [class.aparencia-grupo__emoji--ativo]="emoji() === null"
+                [attr.aria-pressed]="emoji() === null"
+                pTooltip="Usar as iniciais do nome"
+                tooltipPosition="top"
+                (click)="escolherEmoji(null)"
+            >
+                Aa
+            </button>
+            @for (opcao of emojisSugeridos; track opcao) {
+                <button
+                    type="button"
+                    class="aparencia-grupo__emoji"
+                    [class.aparencia-grupo__emoji--ativo]="emoji() === opcao"
+                    [attr.aria-label]="'Emoji ' + opcao"
+                    [attr.aria-pressed]="emoji() === opcao"
+                    (click)="escolherEmoji(opcao)"
+                >
+                    {{ opcao }}
+                </button>
+            }
+            <button
+                type="button"
+                class="aparencia-grupo__emoji aparencia-grupo__emoji--mais"
+                [attr.aria-expanded]="seletorDeEmojiAberto()"
+                pTooltip="Outro emoji"
+                tooltipPosition="top"
+                (click)="alternarSeletor()"
+            >
+                <i class="pi pi-plus" aria-hidden="true"></i>
+            </button>
+        </div>
+        @if (seletorDeEmojiAberto()) {
+            <app-mensagem-direta-emoji-seletor
+                (escolher)="escolherEmoji($event)"
+                (fechar)="seletorDeEmojiAberto.set(false)"
+            />
+        }
+    </fieldset>
+</div>
