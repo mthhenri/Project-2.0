@@ -71,4 +71,3 @@ Sem urgência; o autor quer conversar antes de especificar.
 - **I-045** — volume por usuário (horas e atividades por pessoa no mês). "Isso não é nem um pouco prioridade agora" (2026-10-31).
 - **P-049** — campo `codigo` do modelo do projeto sem uso. Segue aberto por enquanto (2026-10-31).
 - **P-059** — `modelagem.page.spec` instável na suíte inteira. "Instável mesmo, é complexo" (2026-10-31).
-- **Grupos** (`chat-grupos.spec.md`, tasks 246–250) — bacana, mas não é o caso fazer agora (2026-11-03).

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DemandaRepository } from '../repositories/demanda.repository';
 import { TagRepository } from '../../tag/repositories/tag.repository';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
+import { ObservadoresDeMembrosDaDemandaRegistro } from '../domain/observador-de-membros-da-demanda';
 import {
     DemandaCriarDto,
     DemandaCriadaDto,
@@ -58,6 +59,7 @@ export class DemandaService {
         private readonly demandaRepositorio: DemandaRepository,
         private readonly tagRepositorio: TagRepository,
         private readonly usuarioRepositorio: UsuarioRepository,
+        private readonly observadoresDeMembros: ObservadoresDeMembrosDaDemandaRegistro,
     ) {}
 
     /**
@@ -170,6 +172,8 @@ export class DemandaService {
         if (dto.tagIds && dto.tagIds.length > 0) {
             await this.demandaRepositorio.atribuirTagsDemanda({ demandaId: demandaCriada.id, tagIds: dto.tagIds });
         }
+
+        await this.observadoresDeMembros.notificar({ demandaId: demandaCriada.id, usuarioIds });
 
         return {
             sucesso:  true,
@@ -902,6 +906,7 @@ export class DemandaService {
             demandaId,
             usuarioId: dto.usuarioId,
         });
+        await this.observadoresDeMembros.notificar({ demandaId, usuarioIds: [dto.usuarioId] });
 
         return {
             sucesso: true,
@@ -952,6 +957,7 @@ export class DemandaService {
         }
 
         await this.demandaRepositorio.removerMembroDemanda({ demandaId, usuarioId });
+        await this.observadoresDeMembros.notificar({ demandaId, usuarioIds: [usuarioId] });
 
         return {
             sucesso:  true,

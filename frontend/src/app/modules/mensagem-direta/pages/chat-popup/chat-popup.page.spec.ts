@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { AutorMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { AutorMensagemDiretaEnum, TipoGrupoEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-teste';
 import { esperarCampoDeMensagem, textoDaMensagem } from '../../../../../testes/campo-mensagem';
-import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
+import { ConversaAVista, ConversaPedidaAoDesktop, ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { MensagemDiretaPopupComponent } from '../../components/mensagem-direta-popup/mensagem-direta-popup.component';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
@@ -27,14 +27,14 @@ class DesktopFalso {
     readonly naJanelaDeChat = true;
     readonly oculto = signal(false);
     paginaOculta = () => false;
-    conversasInformadas: (number | null)[] = [];
-    informarConversa = (usuarioId: number | null) => this.conversasInformadas.push(usuarioId);
+    conversasInformadas: ConversaAVista[] = [];
+    informarConversa = (conversa: ConversaAVista) => this.conversasInformadas.push(conversa);
     rascunho: string | null = null;
     fechamentos = 0;
     abertosNoProject: string[] = [];
     chat: ((areaDeTransferencia: string | null) => void) | null = null;
     navegacao: ((caminho: string) => void) | null = null;
-    conversa: ((usuarioId: number, usuarioNome: string) => void) | null = null;
+    conversa: ((pedido: ConversaPedidaAoDesktop) => void) | null = null;
     aoPedirChat(ouvinte: (areaDeTransferencia: string | null) => void) {
         this.chat = ouvinte;
         return () => (this.chat = null);
@@ -43,7 +43,7 @@ class DesktopFalso {
         this.navegacao = ouvinte;
         return () => (this.navegacao = null);
     }
-    aoPedirConversa(ouvinte: (usuarioId: number, usuarioNome: string) => void) {
+    aoPedirConversa(ouvinte: (pedido: ConversaPedidaAoDesktop) => void) {
         this.conversa = ouvinte;
         return () => (this.conversa = null);
     }
@@ -60,6 +60,15 @@ function conversaDaLista(usuarioId: number, nome: string) {
     return {
         conversaId: `1-${usuarioId}`, usuarioId, usuarioNome: nome, naoLidas: 0, silenciada: false, online: false,
         ultimaMensagem: { mensagemId: `m${usuarioId}`, conversaId: `1-${usuarioId}`, autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: usuarioId, texto: 'oi', contemCodigo: false, mencoes: [], referencias: [], createdDate: '2026-10-21T14:00:00.000Z' },
+    };
+}
+
+function grupoNaLista(grupoId: number, nome: string) {
+    const membro = (usuarioId: number, usuarioNome: string) => ({ usuarioId, usuarioNome, tipo: TipoUsuarioEnum.DESENVOLVEDOR, corAvatar: null, entradaData: '2026-10-01T10:00:00.000Z', online: false });
+    return {
+        grupoId, conversaId: `G${grupoId}`, nome, tipo: TipoGrupoEnum.LIVRE, corAvatar: null, emojiAvatar: null, criadorUsuarioId: 1,
+        membros: [membro(1, 'Usuário DESENVOLVEDOR'), membro(9, 'Camila Duarte')],
+        ultimaMensagem: null, naoLidas: 0, silenciada: false, privado: false, leituraPorSupervisao: false,
     };
 }
 
@@ -86,6 +95,10 @@ describe('ChatPopupPage (janela de chat do Desktop)', () => {
 
     const responderListas = (tela: ComponenteMontado<unknown>) => {
         responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversas'), { conversas: [conversaDaLista(9, 'Camila Duarte')] });
+    };
+    /** A lista com o grupo 7: sem ele na lista, o grupo aberto "sumiu" (saí dele em outra aba) e a janela volta à lista. */
+    const responderListasComGrupo = (tela: ComponenteMontado<unknown>) => {
+        responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversas'), { conversas: [conversaDaLista(9, 'Camila Duarte')], grupos: [grupoNaLista(7, 'Time do backend')] });
     };
 
     it('abre no chat com a lista quando não havia nada copiado', async () => {
@@ -142,11 +155,49 @@ describe('ChatPopupPage (janela de chat do Desktop)', () => {
         await tela.atualizar();
         expect(TestBed.inject(MensagemDiretaEstadoService).visao()).toBe('LISTA');
 
-        desktop.conversa?.(9, 'Camila Duarte');
+        desktop.conversa?.({ usuarioId: 9, usuarioNome: 'Camila Duarte' });
         await tela.atualizar();
         responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversa/9'), { mensagens: [], proximoCursor: null, lidaAteDate: null });
         await tela.atualizar();
         expect(TestBed.inject(MensagemDiretaEstadoService).conversaAberta()?.usuarioId).toBe(9);
+    });
+
+    // --- notificação de grupo (I-053) ---------------------------------------------------------
+
+    it('o clique na notificação de um grupo abre a janela direto no grupo (parâmetro grupoId), não na pessoa que escreveu', async () => {
+        const tela = await montar(ChatPopupPage, desktop, { grupoId: '7', usuarioId: '9', nome: 'Time do backend' });
+        responderListasComGrupo(tela);
+        responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/grupo/7/mensagens'), { grupoId: 7, mensagens: [], proximoCursor: null });
+        await tela.atualizar();
+        const estado = TestBed.inject(MensagemDiretaEstadoService);
+        expect(estado.visao()).toBe('GRUPO');
+        expect(estado.grupoEstado.grupoAberto()?.grupoId).toBe(7);
+        expect(estado.conversaAberta()).toBeNull();
+    });
+
+    it('uma notificação de grupo com a janela já aberta troca para o grupo', async () => {
+        const tela = await montar(ChatPopupPage, desktop);
+        responderListasComGrupo(tela);
+        await tela.atualizar();
+
+        desktop.conversa?.({ usuarioId: 9, usuarioNome: 'Time do backend', grupoId: 7 });
+        await tela.atualizar();
+        responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/grupo/7/mensagens'), { grupoId: 7, mensagens: [], proximoCursor: null });
+        await tela.atualizar();
+        const estado = TestBed.inject(MensagemDiretaEstadoService);
+        expect(estado.visao()).toBe('GRUPO');
+        expect(estado.grupoEstado.grupoAberto()?.grupoId).toBe(7);
+    });
+
+    it('diz ao Desktop o grupo à vista ({ grupoId }), e nenhuma conversa ao voltar para a lista', async () => {
+        const tela = await montar(ChatPopupPage, desktop, { grupoId: '7', nome: 'Time do backend' });
+        responderListasComGrupo(tela);
+        responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/grupo/7/mensagens'), { grupoId: 7, mensagens: [], proximoCursor: null });
+        await tela.atualizar();
+        expect(desktop.conversasInformadas.at(-1)).toEqual({ grupoId: 7 });
+        TestBed.inject(MensagemDiretaEstadoService).voltarParaALista();
+        await tela.atualizar();
+        expect(desktop.conversasInformadas.at(-1)).toBeNull();
     });
 
     it('ocultar o chat fecha a janela do Desktop', async () => {

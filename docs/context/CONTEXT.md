@@ -8,7 +8,7 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-11-12 · **Última decisão registrada:** tasks 246 a 250 (grupos do chat entre colaboradores: grupo livre, canais, resumo com a IA, fixadas e busca no grupo; guarda-chuva concluída) — `HISTORY.md`, blocos de 2026-11-12
+> **Última revisão:** 2026-11-12 · **Última decisão registrada:** tasks 246 a 250 (grupos do chat entre colaboradores: grupo livre, canais, resumo com a IA, fixadas e busca no grupo; guarda-chuva concluída) e, em seguida, a lista do chat em tempo real quando os membros da demanda mudam (I-054) e a notificação do Desktop para grupo (I-053, Project Desktop 1.1.3) — `HISTORY.md`, blocos de 2026-11-12
 
 ---
 

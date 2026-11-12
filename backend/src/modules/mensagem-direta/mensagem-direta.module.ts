@@ -22,6 +22,7 @@ import { MensagemDiretaReacaoRepository } from './repositories/mensagem-direta-r
 import { MensagemDiretaSupervisaoRepository } from './repositories/mensagem-direta-supervisao.repository';
 import { publicadorDeEventosDiretosProvider } from './publicadores/publicador-de-eventos-diretos';
 import { CanalAcessoService } from './services/canal-acesso.service';
+import { CanalMembrosObservadorService } from './services/canal-membros-observador.service';
 import { GrupoFixadaService } from './services/grupo-fixada.service';
 import { GrupoResumoIaService } from './services/grupo-resumo-ia.service';
 import { GrupoSupervisaoService } from './services/grupo-supervisao.service';
@@ -52,6 +53,7 @@ import { MensagemDiretaService } from './services/mensagem-direta.service';
         MensagemDiretaEventosService,
         MensagemDiretaIaService,
         CanalAcessoService,
+        CanalMembrosObservadorService,
         GrupoService,
         GrupoSupervisaoService,
         GrupoResumoIaService,

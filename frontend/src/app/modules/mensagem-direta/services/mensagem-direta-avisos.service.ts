@@ -127,14 +127,15 @@ export class MensagemDiretaAvisosService {
         const decisao = decidirAviso({ ...mensagem, preferencia: this.preferencia(), agora });
         if (!decisao.avisar) return false;
         if (this.desktop.disponivel && this.desktop.paginaOculta()) {
-            // A ponte do Desktop abre a conversa pela pessoa: um grupo não tem pessoa para abrir, então não há notificação do sistema para ele.
-            if (mensagem.grupoId !== undefined || !this.preferencia().avisoDesktopAtivo) return false;
+            if (!this.preferencia().avisoDesktopAtivo) return false;
+            // No grupo, o título é o nome do grupo e o clique abre o grupo (`grupoId`); na conversa um a um, a pessoa.
             this.desktop.avisarMensagem({
                 usuarioId: mensagem.usuarioId,
                 usuarioNome: mensagem.usuarioNome,
                 texto: mensagem.texto,
                 mencionaVoce: mensagem.mencionaVoce,
                 som: this.preferencia().somAtivo,
+                ...(mensagem.grupoId !== undefined ? { grupoId: mensagem.grupoId } : {}),
             });
             return true;
         }

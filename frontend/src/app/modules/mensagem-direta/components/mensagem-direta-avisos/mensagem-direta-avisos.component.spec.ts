@@ -305,6 +305,19 @@ describe('MensagemDiretaAvisosComponent no Project Desktop (task 213)', () => {
         expect(som.toques).toBe(0);
     });
 
+    it('mensagem de grupo com o Project oculto vira notificação do sistema com o nome do grupo e o grupoId, e respeita o aviso do Desktop desligado (I-053)', async () => {
+        esconderAPagina(true);
+        const doGrupo = { conversaId: 'G7', usuarioId: 9, usuarioNome: 'Time do backend', grupoId: 7, texto: 'Camila: bora revisar', mensagemMinha: false, mencionaVoce: true, conversaSilenciada: false, conversaAVista: false };
+        expect(avisos.avisar(doGrupo)).toBe(true);
+        expect(avisosDoDesktop).toEqual([{ usuarioId: 9, usuarioNome: 'Time do backend', texto: 'Camila: bora revisar', mencionaVoce: true, som: false, grupoId: 7 }]);
+        expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
+
+        avisosDoDesktop.length = 0;
+        avisos.preferencia.update((preferenciaNaTelaAtual) => ({ ...preferenciaNaTelaAtual, avisoDesktopAtivo: false }));
+        expect(avisos.avisar(doGrupo)).toBe(false);
+        expect(avisosDoDesktop).toEqual([]);
+    });
+
     it('com a janela do Project oculta pelo Desktop (a página segue "visible"), o aviso também vai ao sistema', async () => {
         esconderAPagina(false);
         projetoOculto.set(true);

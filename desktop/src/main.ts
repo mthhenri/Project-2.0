@@ -14,8 +14,8 @@ import {
     textoDoAvisoDeAtualizacao, VersaoPublicada, versaoARegistrar,
 } from './politica-da-versao';
 import {
-    AvisoDoChat, ConversaDoChat, decidirAtalho, enderecoDaJanelaDeChat, lerAvisoDoChat, lerCaminhoDoProject, lerConversaAbertaDoChat, lerPreferenciaDoChat, planoDoAtalho,
-    posicaoDaJanelaDeChat, prepararAreaDeTransferencia, textoDoItemDoChat,
+    AvisoDoChat, avisoEhDaConversaAberta, ConversaAbertaDoChat, ConversaDoChat, conversaDoAviso, decidirAtalho, enderecoDaJanelaDeChat, lerAvisoDoChat, lerCaminhoDoProject,
+    lerConversaAbertaDoChat, lerPreferenciaDoChat, planoDoAtalho, posicaoDaJanelaDeChat, prepararAreaDeTransferencia, textoDoItemDoChat, tituloDaNotificacao,
 } from './politica-do-chat';
 import { deveAbrirJanelinha, deveFecharJanelinha, enderecoDaApi, lerEstadoDaIa, lerSituacao, segundosAteOCheckin, SituacaoDoCheckin } from './politica-do-checkin';
 import { ARQUIVO_DO_REGISTRO, deveRenovarRegistro, linhaDoRegistro } from './registro';
@@ -60,7 +60,7 @@ const ALTURA_DO_CHAT = 640;
 let janelaDeChat: BrowserWindow | null = null;
 let rascunhoPendente: string | null = null;
 /** A conversa que a janela de chat está mostrando: o aviso dela não vira notificação (o usuário já está lendo). */
-let conversaDaJanelaDeChat: number | null = null;
+let conversaDaJanelaDeChat: ConversaAbertaDoChat = null;
 /** O atalho que a preferência do usuário pede e o que o sistema de fato registrou (diferem quando outro programa já usa a combinação). */
 let atalhoDesejado: string | null = null;
 let atalhoRegistrado: string | null = null;
@@ -700,7 +700,7 @@ function fecharJanelaDeChat(): void {
 function mostrarNotificacao(aviso: AvisoDoChat): void {
     if (!Notification.isSupported()) return;
     const notificacao = new Notification({
-        title: aviso.mencionaVoce ? `${aviso.usuarioNome} mencionou você` : aviso.usuarioNome,
+        title: tituloDaNotificacao(aviso),
         body: aviso.texto,
         icon: caminhoDoIcone,
         silent: !aviso.som,
@@ -709,7 +709,7 @@ function mostrarNotificacao(aviso: AvisoDoChat): void {
     const soltar = () => notificacoesNaTela.delete(notificacao);
     notificacao.on('click', () => {
         soltar();
-        abrirJanelaDeChat({ usuarioId: aviso.usuarioId, usuarioNome: aviso.usuarioNome });
+        abrirJanelaDeChat(conversaDoAviso(aviso));
     });
     notificacao.on('close', soltar);
     notificacao.on('failed', soltar);
@@ -770,7 +770,7 @@ ipcMain.on('chat:avisar', (evento, corpo) => {
     if (!veioDe(evento, janela)) return;
     const aviso = lerAvisoDoChat(corpo);
     if (!aviso) return;
-    if (janelaDeChatViva() && conversaDaJanelaDeChat === aviso.usuarioId) return;
+    if (janelaDeChatViva() && avisoEhDaConversaAberta(aviso, conversaDaJanelaDeChat)) return;
     mostrarNotificacao(aviso);
 });
 ipcMain.on('chat:conversa', (evento, valor) => {

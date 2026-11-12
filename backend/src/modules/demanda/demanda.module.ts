@@ -9,6 +9,7 @@ import { FerramentaIaRegistro } from '../ferramenta-ia/services/ferramenta-ia.re
 import { ExecutorPropostaIaRegistro } from '../proposta-ia/domain/executor-proposta-ia';
 import { PropostaIaModule } from '../proposta-ia/proposta-ia.module';
 import { ProjetoModule } from '../projeto/projeto.module';
+import { ObservadoresDeMembrosDaDemandaRegistro } from './domain/observador-de-membros-da-demanda';
 import { CriarDemandaExecutor } from './executores/criar-demanda.executor';
 import { ConectarDemandaExecutor } from './executores/conectar-demanda.executor';
 import { ProporConectarDemandaFerramenta } from './ferramentas/propor-conectar-demanda.ferramenta';
@@ -33,8 +34,8 @@ import { ProporAlterarDemandaFerramenta } from './ferramentas/propor-alterar-dem
 @Module({
     imports:     [TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule, ProjetoModule, IaModule, PromptModule],
     controllers: [DemandaController],
-    providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor, SugerirConexoesELugarFerramenta, ProporConectarDemandaFerramenta, ConectarDemandaExecutor, ProporAlterarDemandaFerramenta, AlterarDemandaExecutor, ProporAtribuirMembroFerramenta, AtribuirMembroExecutor, ProporConcluirDemandaFerramenta, ConcluirDemandaExecutor, ProporDesconectarDemandaFerramenta, DesconectarDemandaExecutor],
-    exports:     [DemandaService, DemandaRepository],
+    providers:   [DemandaService, DemandaRepository, ObservadoresDeMembrosDaDemandaRegistro,ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor, SugerirConexoesELugarFerramenta, ProporConectarDemandaFerramenta, ConectarDemandaExecutor, ProporAlterarDemandaFerramenta, AlterarDemandaExecutor, ProporAtribuirMembroFerramenta, AtribuirMembroExecutor, ProporConcluirDemandaFerramenta, ConcluirDemandaExecutor, ProporDesconectarDemandaFerramenta, DesconectarDemandaExecutor],
+    exports:     [DemandaService, DemandaRepository, ObservadoresDeMembrosDaDemandaRegistro],
 })
 export class DemandaModule implements OnModuleInit {
     constructor(

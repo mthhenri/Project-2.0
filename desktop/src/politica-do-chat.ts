@@ -55,11 +55,15 @@ export function planoDoAtalho(registrado: string | null, desejado: string | null
 }
 
 export interface AvisoDoChat {
+    /** Quem escreveu (na conversa um a um, também quem se abre ao clicar). */
     usuarioId: number;
+    /** Na conversa um a um, o nome da pessoa; no grupo, o nome do grupo. */
     usuarioNome: string;
     texto: string;
     mencionaVoce: boolean;
     som: boolean;
+    /** O grupo ou canal da mensagem (task 247/I-053); ausente na conversa um a um. */
+    grupoId: number | null;
 }
 
 function textoCurto(valor: unknown, limite: number): string | null {
@@ -74,17 +78,52 @@ export function lerAvisoDoChat(corpo: unknown): AvisoDoChat | null {
     const usuarioNome = textoCurto(dados['usuarioNome'], LIMITE_DO_NOME);
     const texto = textoCurto(dados['texto'], LIMITE_DO_AVISO);
     if (typeof usuarioId !== 'number' || !Number.isInteger(usuarioId) || usuarioId <= 0 || !usuarioNome || !texto) return null;
-    return { usuarioId, usuarioNome, texto, mencionaVoce: dados['mencionaVoce'] === true, som: dados['som'] === true };
+    const grupoId = dados['grupoId'];
+    // Um `grupoId` que não é um id válido torna o aviso inteiro inválido: abrir a conversa errada é pior que não avisar.
+    if (grupoId !== undefined && grupoId !== null && !ehIdValido(grupoId)) return null;
+    return { usuarioId, usuarioNome, texto, mencionaVoce: dados['mencionaVoce'] === true, som: dados['som'] === true, grupoId: grupoId ?? null };
+}
+
+function ehIdValido(valor: unknown): valor is number {
+    return typeof valor === 'number' && Number.isInteger(valor) && valor > 0;
 }
 
 export interface ConversaDoChat {
     usuarioId: number;
     usuarioNome: string;
+    /** Com `grupoId`, a janela abre no grupo (e `usuarioNome` é o nome dele); `usuarioId` fica só como o autor do aviso. */
+    grupoId?: number;
 }
 
-/** Valida a conversa que a janela de chat diz estar mostrando: um id de usuário, ou `null` quando não há conversa à vista. */
-export function lerConversaAbertaDoChat(valor: unknown): number | null {
-    return typeof valor === 'number' && Number.isInteger(valor) && valor > 0 ? valor : null;
+/** O título da notificação do sistema: a pessoa (ou o grupo) e, quando o aviso menciona o usuário, o motivo ("Camila mencionou você" / "Mencionaram você em Time"). */
+export function tituloDaNotificacao(aviso: AvisoDoChat): string {
+    if (!aviso.mencionaVoce) return aviso.usuarioNome;
+    return aviso.grupoId === null ? `${aviso.usuarioNome} mencionou você` : `Mencionaram você em ${aviso.usuarioNome}`;
+}
+
+/** A conversa que o clique na notificação abre: o grupo, se o aviso era de um, senão a pessoa. */
+export function conversaDoAviso(aviso: AvisoDoChat): ConversaDoChat {
+    return aviso.grupoId === null ? { usuarioId: aviso.usuarioId, usuarioNome: aviso.usuarioNome } : { usuarioId: aviso.usuarioId, usuarioNome: aviso.usuarioNome, grupoId: aviso.grupoId };
+}
+
+/** A conversa à vista na janela de chat: uma pessoa, um grupo ou nada. */
+export type ConversaAbertaDoChat = { usuarioId: number } | { grupoId: number } | null;
+
+/**
+ * Valida a conversa que a janela de chat diz estar mostrando: um id de usuário (formato que o executável anterior já enviava), `{ grupoId }` para um
+ * grupo, ou `null` quando não há conversa à vista.
+ */
+export function lerConversaAbertaDoChat(valor: unknown): ConversaAbertaDoChat {
+    if (ehIdValido(valor)) return { usuarioId: valor };
+    const grupoId = (valor as { grupoId?: unknown } | null)?.grupoId;
+    return typeof valor === 'object' && valor !== null && ehIdValido(grupoId) ? { grupoId } : null;
+}
+
+/** O aviso é da conversa que o usuário está lendo na janela de chat? Então não vira notificação. */
+export function avisoEhDaConversaAberta(aviso: AvisoDoChat, aberta: ConversaAbertaDoChat): boolean {
+    if (aberta === null) return false;
+    if (aviso.grupoId !== null) return 'grupoId' in aberta && aberta.grupoId === aviso.grupoId;
+    return 'usuarioId' in aberta && aberta.usuarioId === aviso.usuarioId;
 }
 
 /** O caminho (e a consulta) que a janela de chat pede ao Project para abrir: só rotas internas, nunca outra origem nem a própria janela de chat. */
@@ -101,7 +140,8 @@ export function lerCaminhoDoProject(valor: unknown): string | null {
 export function enderecoDaJanelaDeChat(urlDoProject: string, conversa: ConversaDoChat | null): string {
     const endereco = new URL('chat-popup', urlDoProject);
     if (conversa) {
-        endereco.searchParams.set('usuarioId', String(conversa.usuarioId));
+        if (conversa.grupoId !== undefined) endereco.searchParams.set('grupoId', String(conversa.grupoId));
+        else endereco.searchParams.set('usuarioId', String(conversa.usuarioId));
         endereco.searchParams.set('nome', conversa.usuarioNome);
     }
     return endereco.toString();

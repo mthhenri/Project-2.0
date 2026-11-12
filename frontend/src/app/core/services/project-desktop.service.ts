@@ -2,12 +2,26 @@ import { Injectable, NgZone, inject, signal } from '@angular/core';
 
 /** O aviso que a página entrega ao Desktop quando o Project está oculto (vira notificação do sistema). */
 export interface AvisoParaODesktop {
+    /** Quem escreveu; na conversa um a um, também a pessoa que o clique abre. */
     usuarioId: number;
+    /** Na conversa um a um, o nome da pessoa; no grupo ou canal, o nome dele. */
     usuarioNome: string;
     texto: string;
     mencionaVoce: boolean;
     som: boolean;
+    /** O grupo ou canal da mensagem: o clique na notificação abre a janela de chat nele. Ausente na conversa um a um. */
+    grupoId?: number;
 }
+
+/** Quem o clique numa notificação pediu para abrir: a pessoa, ou o grupo quando há `grupoId` (então `usuarioNome` é o nome do grupo). */
+export interface ConversaPedidaAoDesktop {
+    usuarioId: number;
+    usuarioNome: string;
+    grupoId?: number;
+}
+
+/** O que a janela de chat tem à vista, para o Desktop não notificar o que o usuário já lê: o id da pessoa, o grupo ou nada. */
+export type ConversaAVista = number | { grupoId: number } | null;
 
 export interface SituacaoDoAtalho {
     /** O atalho que a preferência do usuário pede; `null` sem login. */
@@ -20,9 +34,9 @@ export interface SituacaoDoAtalho {
 interface PonteDoDesktop {
     aoPedirChat?(ouvinte: (pedido: { areaDeTransferencia: string | null }) => void): () => void;
     aoPedirNavegacao?(ouvinte: (pedido: { caminho: string }) => void): () => void;
-    aoPedirConversa?(ouvinte: (pedido: { usuarioId: number; usuarioNome: string }) => void): () => void;
+    aoPedirConversa?(ouvinte: (pedido: ConversaPedidaAoDesktop) => void): () => void;
     aoMudarVisibilidade?(ouvinte: (estado: { oculta: boolean }) => void): () => void;
-    informarConversa?(usuarioId: number | null): void;
+    informarConversa?(conversa: ConversaAVista): void;
     avisarMensagem?(aviso: AvisoParaODesktop): void;
     pegarRascunho?(): Promise<string | null>;
     fecharChat?(): void;
@@ -71,8 +85,8 @@ export class ProjectDesktopService {
     }
 
     /** O clique numa notificação pediu a janela de chat numa conversa (com a janela já aberta). */
-    aoPedirConversa(ouvinte: (usuarioId: number, usuarioNome: string) => void): () => void {
-        return this.ponte?.aoPedirConversa?.((pedido) => this.zona.run(() => ouvinte(pedido.usuarioId, pedido.usuarioNome))) ?? SEM_OUVINTE;
+    aoPedirConversa(ouvinte: (pedido: ConversaPedidaAoDesktop) => void): () => void {
+        return this.ponte?.aoPedirConversa?.((pedido) => this.zona.run(() => ouvinte(pedido))) ?? SEM_OUVINTE;
     }
 
     avisarMensagem(aviso: AvisoParaODesktop): void {
@@ -80,8 +94,8 @@ export class ProjectDesktopService {
     }
 
     /** A janela de chat diz ao Desktop qual conversa está à vista (ou `null`), para ele não notificar o que o usuário já está lendo. */
-    informarConversa(usuarioId: number | null): void {
-        this.ponte?.informarConversa?.(usuarioId);
+    informarConversa(conversa: ConversaAVista): void {
+        this.ponte?.informarConversa?.(conversa);
     }
 
     /** O texto copiado no instante do atalho, entregue uma única vez à janela de chat. */

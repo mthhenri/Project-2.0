@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, effect, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
+import { ConversaAVista, ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { MensagemDiretaPopupComponent } from '../../components/mensagem-direta-popup/mensagem-direta-popup.component';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 
 /**
  * A janela de chat do Project Desktop (task 213), aberta pelo atalho global ou pelo clique numa notificação: a rota `/chat-popup`, sem menu nem barra
- * superior, com o mesmo chat do popup do Project preenchendo a janela. Abre numa conversa (`?usuarioId=&nome=`, do clique na notificação), no código
+ * superior, com o mesmo chat do popup do Project preenchendo a janela. Abre numa conversa (`?usuarioId=&nome=`) ou num grupo (`?grupoId=`), do clique na notificação, no código
  * que o usuário copiou antes do atalho (entregue uma vez pelo Desktop) ou na lista. Links de demanda e atividade abrem no Project, nunca nesta janela.
  * No navegador comum a rota também funciona, só que sem o Desktop por trás.
  */
@@ -28,7 +28,15 @@ export class ChatPopupPage implements OnInit {
 
     constructor() {
     // O Desktop só notifica o que o usuário não está lendo aqui.
-        effect(() => this.desktop.informarConversa(this.estado.aberto() ? (this.estado.conversaAberta()?.usuarioId ?? null) : null));
+        effect(() => this.desktop.informarConversa(this.conversaAVista()));
+    }
+
+    /** A pessoa ou o grupo que a janela mostra agora (o grupo só com a tela do grupo à vista), ou `null`. */
+    private conversaAVista(): ConversaAVista {
+        if (!this.estado.aberto()) return null;
+        const grupoId = this.estado.visao() === 'GRUPO' ? (this.estado.grupoEstado.grupoAberto()?.grupoId ?? null) : null;
+        if (grupoId !== null) return { grupoId };
+        return this.estado.conversaAberta()?.usuarioId ?? null;
     }
 
     ngOnInit(): void {
@@ -38,17 +46,21 @@ export class ChatPopupPage implements OnInit {
 
         const parametros = this.rota.snapshot.queryParamMap;
         const usuarioId = Number(parametros.get('usuarioId'));
+        const grupoId = Number(parametros.get('grupoId'));
         const nome = parametros.get('nome');
         this.estado.abrir();
-        if (Number.isInteger(usuarioId) && usuarioId > 0 && nome) {
+        if (Number.isInteger(grupoId) && grupoId > 0) {
+            void this.estado.abrirGrupo(grupoId);
+        } else if (Number.isInteger(usuarioId) && usuarioId > 0 && nome) {
             void this.estado.abrirConversa(usuarioId, nome);
         } else {
             void this.desktop.pegarRascunho().then((texto) => this.estado.abrirPeloDesktop(texto));
         }
 
-        const soltarConversa = this.desktop.aoPedirConversa((id, nomeDaPessoa) => {
+        const soltarConversa = this.desktop.aoPedirConversa((pedido) => {
             this.estado.rascunhoDoDesktop.set(null);
-            void this.estado.abrirConversa(id, nomeDaPessoa);
+            if (pedido.grupoId !== undefined) void this.estado.abrirGrupo(pedido.grupoId);
+            else void this.estado.abrirConversa(pedido.usuarioId, pedido.usuarioNome);
         });
         document.addEventListener('click', this.enviarLinkAoProject, true);
         this.destroyRef.onDestroy(() => {

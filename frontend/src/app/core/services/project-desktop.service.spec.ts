@@ -46,6 +46,18 @@ describe('ProjectDesktopService', () => {
         expect(servico.paginaOculta()).toBe(false);
         servico.informarConversa(9);
         expect(informarConversa).toHaveBeenCalledWith(9);
+        servico.informarConversa({ grupoId: 7 });
+        expect(informarConversa).toHaveBeenLastCalledWith({ grupoId: 7 });
+    });
+
+    it('o pedido de conversa do clique na notificação chega inteiro, com o grupoId quando é um grupo', () => {
+        let ouvinteDaPonte: ((pedido: { usuarioId: number; usuarioNome: string; grupoId?: number }) => void) | undefined;
+        janela.projectDesktop = { avisarMensagem: vi.fn(), aoPedirConversa: (ouvinte: typeof ouvinteDaPonte) => ((ouvinteDaPonte = ouvinte), () => undefined) };
+        const recebidos: unknown[] = [];
+        criar().aoPedirConversa((pedido) => recebidos.push(pedido));
+        ouvinteDaPonte!({ usuarioId: 9, usuarioNome: 'Camila' });
+        ouvinteDaPonte!({ usuarioId: 9, usuarioNome: 'Time do backend', grupoId: 7 });
+        expect(recebidos).toEqual([{ usuarioId: 9, usuarioNome: 'Camila' }, { usuarioId: 9, usuarioNome: 'Time do backend', grupoId: 7 }]);
     });
 
     it('com a ponte do chat entrega o aviso, o rascunho, a situação do atalho e os pedidos', async () => {

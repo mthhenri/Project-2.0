@@ -25,6 +25,7 @@ export * from './DemandaUsuarioAtribuirDto';
 export * from './DemandaUsuarioAtribuidoDto';
 export * from './DemandaMembroDto';
 export * from './DemandaMembroInternoAtribuirDto';
+export * from './DemandaMembrosAlteradosDto';
 export * from './DemandaConexaoVerificarDto';
 export * from './DemandaTagsListarDto';
 export * from './DemandaTagsInternoAtribuirDto';

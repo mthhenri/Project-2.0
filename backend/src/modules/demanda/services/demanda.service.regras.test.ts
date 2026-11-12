@@ -22,11 +22,12 @@ const PAI_ESTRUTURAL = { ...DEMANDA, id: 5, nome: 'Pai', estrutural: true };
 
 type Dublê = Record<string, unknown>;
 
-function criarServico(repositorio: Dublê = {}, tags: Dublê = {}, usuarios: Dublê = {}): DemandaService {
+function criarServico(repositorio: Dublê = {}, tags: Dublê = {}, usuarios: Dublê = {}, avisosDeMembros: unknown[] = []): DemandaService {
     const servico = Object.create(DemandaService.prototype) as Record<string, unknown>;
     servico.demandaRepositorio = repositorio;
     servico.tagRepositorio = tags;
     servico.usuarioRepositorio = usuarios;
+    servico.observadoresDeMembros = { notificar: async (aviso: unknown) => { avisosDeMembros.push(aviso); } };
     return servico as unknown as DemandaService;
 }
 
@@ -596,6 +597,27 @@ test('atribuirMembro e removerMembro: o auxiliar mexe em qualquer pessoa, sem se
     const remove = repositorio({ contarMembrosDemanda: async () => 2, validarAcessoProjeto: async () => false });
     await criarServico(remove).removerMembro({ demandaId: 10, usuarioId: 3 }, AUXILIAR);
     assert.equal(remove.gravacoes.length, 1);
+});
+
+test('membros da demanda: atribuir e remover avisam quem mudou depois de gravar; recusa não avisa ninguém (I-054)', async () => {
+    const avisos: unknown[] = [];
+    await criarServico(repositorio({ validarMembro: async () => false }), tagExistente, usuarioExistente, avisos).atribuirMembro({ demandaId: 10, usuarioId: 8 }, GESTOR);
+    await criarServico(repositorio(), tagExistente, usuarioExistente, avisos).removerMembro({ demandaId: 10, usuarioId: 8 }, GESTOR);
+    assert.deepEqual(avisos, [{ demandaId: 10, usuarioIds: [8] }, { demandaId: 10, usuarioIds: [8] }]);
+
+    const recusados: unknown[] = [];
+    await assert.rejects(() => criarServico(repositorio({ validarMembro: async () => true }), tagExistente, usuarioExistente, recusados).atribuirMembro({ demandaId: 10, usuarioId: 8 }, GESTOR), BusinessException);
+    await assert.rejects(() => criarServico(repositorio({ contarMembrosDemanda: async () => 1 }), tagExistente, usuarioExistente, recusados).removerMembro({ demandaId: 10, usuarioId: 8 }, GESTOR), BusinessException);
+    await assert.rejects(() => criarServico(repositorio(), tagExistente, usuarioExistente, recusados).atribuirMembro({ demandaId: 10, usuarioId: 8 }, DESENVOLVEDOR), UnauthorizedAccessException);
+    assert.deepEqual(recusados, []);
+});
+
+test('criar: avisa os membros que já nascem na demanda (os escolhidos pelo gestor e o desenvolvedor criador)', async () => {
+    const avisos: unknown[] = [];
+    const repo = repositorio({ recuperar: async () => PAI_ESTRUTURAL, inserirComAtribuicao: async () => ({ ...DEMANDA, id: 77 }) });
+    await criarServico(repo, tagExistente, usuarioExistente, avisos).criar({ ...DADOS_CRIAR, usuarioIds: [8] }, GESTOR);
+    await criarServico(repo, tagExistente, usuarioExistente, avisos).criar({ ...DADOS_CRIAR, demandaPaiId: 5 }, DESENVOLVEDOR);
+    assert.deepEqual(avisos, [{ demandaId: 77, usuarioIds: [8] }, { demandaId: 77, usuarioIds: [3] }]);
 });
 
 test('criar: só o gestor grava a descrição do cliente; o auxiliar e o desenvolvedor são recusados e nada é gravado', async () => {
