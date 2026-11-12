@@ -11,14 +11,16 @@ No grupo livre e nos canais de projeto e de demanda do chat entre colaboradores,
 
 ## Decisões do autor
 
-Respondidas em 2026-11-12:
+Respondidas em 2026-11-12 (as pendências da primeira versão foram fechadas no mesmo dia):
 
 1. **Reação:** `mensagem_direta_reacao` ganha `grupo_id`; a linha tem **ou** `grupo_id` **ou** `conversa_id` (nunca os dois, nunca nenhum).
 2. **IA no grupo:**
    1. Lê como contexto as **últimas N mensagens do grupo**; **todos os membros veem a resposta**, com o mesmo esquema da conversa um a um: a proposta
       aparece como cartão só para quem tem acesso ao alvo e como "Ação oculta por falta de acesso" para os demais.
    2. Nos **canais**, a IA **pode ler** a demanda ou o projeto do canal (sempre com as permissões de quem chamou).
-   3. **Custo em nome de quem chamou** (resposta do autor: "acho que sim"; **a confirmar na aprovação**).
+   3. **Custo em nome de quem chamou** (confirmado pelo autor).
+   4. **Janela de contexto do grupo: 30 mensagens** (a conversa um a um continua com 20).
+   5. **`/resumir` não muda:** a mensagem da IA fica fora do resumo do grupo (confirmado).
 3. **Edição:** igual à conversa um a um (só o autor, até 1 hora, "editada"; o original não é guardado, I-052).
 
 ## Entregáveis
@@ -43,7 +45,7 @@ Respondidas em 2026-11-12:
    - A regra pura `chamadaDaIa` e `pedidoPendenteDaIa` servem como estão (o `@IA` sozinho vale a próxima mensagem **de quem chamou**, em até 10 minutos).
    - `GrupoService.enviarMensagem` aciona `atenderSeChamada` como a conversa um a um faz, fora da requisição. A trava é por `conversaId` (`G<id>`).
    - Quem pode chamar: membro de agora. Leitor por tipo que não é membro não chama.
-   - Contexto: as **20** mensagens anteriores do grupo (a mesma `JANELA_DE_CONTEXTO_DA_IA_NO_CHAT_DIRETO`; **N fica em 20 salvo ordem em contrário**), rotuladas
+   - Contexto: as **30** mensagens anteriores do grupo (constante nova `JANELA_DE_CONTEXTO_DA_IA_NO_GRUPO = 30` no `shared`; a `JANELA_DE_CONTEXTO_DA_IA_NO_CHAT_DIRETO` continua em 20), rotuladas
      pelo nome de quem escreveu, sem as mensagens do sistema, mais o trecho citado se o pedido responde a algo fora da janela.
    - Instruções: o prompt `CONVERSA` mais a orientação fixa no código, agora dizendo que **vários membros leem a resposta** (quantidade e tipos presentes) e que o
      texto não pode expor o que algum deles não acessa. Nos canais, a orientação nomeia a demanda ou o projeto do canal, e a IA os lê pelas ferramentas de
@@ -68,7 +70,7 @@ Respondidas em 2026-11-12:
 ## Critérios de Aceite
 
 1. `backend` unitários: editar (autor membro, prazo no limite, não membro, leitor por tipo, mensagem de outro grupo, texto igual); reagir (membro, trocar, remover,
-   sistema, IA, não membro, evento só aos membros); `@IA` (só membro chama, trava por grupo, contexto de 20 rotulado e sem sistema, o canal lê a demanda com as permissões
+   sistema, IA, não membro, evento só aos membros); `@IA` (só membro chama, trava por grupo, contexto de 30 rotulado e sem sistema, o canal lê a demanda com as permissões
    de quem chamou, custo em nome de quem chamou, falha gera mensagem do sistema); `GET .../proposta/:id` (404 de outro grupo, `acessivel` por membro, `podeResolver` só de quem chamou).
 2. `npm run test:integracao`: a `0090` aplica e reverte; o repository grava e lê reação de conversa e de grupo; o `CHECK` recusa as duas preenchidas e as duas vazias; o
    único parcial vale nos dois casos; a suíte de contrato grava e lê a mensagem `IA` de grupo nas implementações de armazenamento.
