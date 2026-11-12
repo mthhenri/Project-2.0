@@ -13,6 +13,7 @@ import {
     TipoUsuarioEnum,
     chamadaDaIa,
     lerConversaGrupoId,
+    mencoesNoTextoDaIa,
     outroParticipanteDaConversaDireta,
     pedidoPendenteDaIa,
 } from '@project20/shared';
@@ -27,7 +28,15 @@ import { IaUsoService } from '../../ia-custo/services/ia-uso.service';
 import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
-import { montarContextoDoChatDireto, montarOrientacaoDoChatDireto, montarOrientacaoDoGrupo, PessoaDaConversaComIa, textoDaRespostaDaIa } from '../domain/mensagem-direta-ia';
+import {
+    montarContextoDoChatDireto,
+    montarOrientacaoDaSaudacao,
+    montarOrientacaoDoChatDireto,
+    montarOrientacaoDoGrupo,
+    montarPedidoDaSaudacao,
+    PessoaDaConversaComIa,
+    textoDaRespostaDaIa,
+} from '../domain/mensagem-direta-ia';
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, ArmazenamentoDeMensagemDireta } from '../repositories/armazenamento-de-mensagem-direta';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 
@@ -57,13 +66,18 @@ interface DestinoDaChamada {
     orientar: (quemChamou: PessoaDaConversaComIa, outrosLeitores: PessoaDaConversaComIa[]) => string;
 }
 
+/** A saudação do `@IA` sozinho é uma ou duas frases: não precisa do teto do chat. */
+const MAXIMO_TOKENS_DA_SAUDACAO = 300;
+/** O que a mensagem pede à IA: um pedido com texto, ou só o `@IA` (task 327), que ela responde na hora com a saudação. */
+type PedidoDaIa = { tipo: 'PEDIDO'; texto: string } | { tipo: 'SAUDACAO' };
+
 const MOTIVO_GENERICO = 'o serviço de IA está temporariamente indisponível';
 const DESCRICAO_DO_USO = '@IA no chat entre colaboradores';
 const DESCRICAO_DO_USO_NO_GRUPO = '@IA no grupo';
 
 /**
  * O `@IA` do chat entre colaboradores (task 315). Depois de a mensagem de uma pessoa ser gravada e publicada, decide se ela chama a IA (pela regra pura do
- * `shared`: `@IA` com pedido, ou a mensagem seguinte a um `@IA` sozinho, em até 10 minutos) e, se chama, conduz o turno **fora da requisição**: lê as
+ * `shared`: `@IA` com pedido, ou a mensagem seguinte a um `@IA` sozinho, em até 10 minutos; o `@IA` sozinho recebe na hora uma saudação, task 327) e, se chama, conduz o turno **fora da requisição**: lê as
  * últimas mensagens das duas pessoas, chama a IA com as ferramentas e as permissões de **quem chamou** (o laço do chat da IA) e grava a resposta como
  * mensagem de autor `IA`, publicada às duas pontas. O custo vai para a aba Custos em nome de quem chamou. Toda falha termina numa mensagem do sistema,
  * nunca numa exceção solta.
@@ -105,13 +119,13 @@ export class MensagemDiretaIaService {
         }
     }
 
-    /** O pedido que esta mensagem faz à IA, ou `null` quando ela não chama (ou é um `@IA` sozinho, que espera a próxima mensagem). */
-    private async pedidoDaMensagem(dto: MensagemDiretaIaAvaliar): Promise<string | null> {
+    /** O que esta mensagem pede à IA, ou `null` quando ela não chama. Um `@IA` sozinho pede a saudação; a mensagem seguinte a ele é o pedido. */
+    private async pedidoDaMensagem(dto: MensagemDiretaIaAvaliar): Promise<PedidoDaIa | null> {
         const { mensagem, usuarioAtivo } = dto;
         const chamada = chamadaDaIa(mensagem.texto);
-        if (chamada) return chamada.pedido === '' ? null : chamada.pedido;
+        if (chamada) return chamada.pedido === '' ? { tipo: 'SAUDACAO' } : { tipo: 'PEDIDO', texto: chamada.pedido };
         const anteriores = (await this.lerAnteriores(mensagem, dto.grupo ? JANELA_DE_CONTEXTO_DA_IA_NO_GRUPO : undefined)).filter((anterior) => anterior.mensagemId !== mensagem.mensagemId);
-        return pedidoPendenteDaIa(anteriores, usuarioAtivo.sub, new Date()) ? mensagem.texto : null;
+        return pedidoPendenteDaIa(anteriores, usuarioAtivo.sub, new Date()) ? { tipo: 'PEDIDO', texto: mensagem.texto } : null;
     }
 
     /** Para onde vai a conversa: a de duas pessoas (task 315) ou a do grupo (task 326). `null` quando a mensagem não é de nenhuma das duas. */
@@ -137,7 +151,7 @@ export class MensagemDiretaIaService {
         };
     }
 
-    private async atender(dto: MensagemDiretaIaAvaliar, pedido: string): Promise<void> {
+    private async atender(dto: MensagemDiretaIaAvaliar, pedido: PedidoDaIa): Promise<void> {
         const { mensagem, usuarioAtivo } = dto;
         const destino = this.destinoDaChamada(dto);
         if (destino === null) return;
@@ -171,18 +185,26 @@ export class MensagemDiretaIaService {
             const citada = mensagem.respondeA && !anteriores.slice(-destino.janela).some((anterior) => anterior.mensagemId === mensagem.respondeA!.mensagemId)
                 ? { autorNome: nomes.get(mensagem.respondeA.autorUsuarioId) ?? 'Alguém', trecho: mensagem.respondeA.trecho }
                 : null;
-            const contexto = montarContextoDoChatDireto(anteriores, { texto: pedido, citacao: citada }, quemChamou, nomes, destino.janela);
+            const ehSaudacao = pedido.tipo === 'SAUDACAO';
+            // A mensagem anterior à chamada é a última de pessoa: a saudação diz sobre o que ela trata.
+            const ultimaDePessoa = [...anteriores].reverse().find((anterior) => anterior.autor === AutorMensagemDiretaEnum.USUARIO);
+            const textoDoPedido = ehSaudacao
+                ? montarPedidoDaSaudacao(ultimaDePessoa ? { autorNome: nomes.get(ultimaDePessoa.autorUsuarioId ?? 0) ?? 'Alguém', texto: ultimaDePessoa.texto } : null)
+                : pedido.texto;
+            const contexto = montarContextoDoChatDireto(anteriores, { texto: textoDoPedido, citacao: ehSaudacao ? null : citada }, quemChamou, nomes, destino.janela);
             const prompt = await this.promptService.obterAtivo(TipoPromptEnum.CONVERSA);
+            const orientacao = destino.orientar(quemChamou, outrosLeitores);
 
             const { texto } = await executarNoTurno(turno, () =>
                 this.lacoDeFerramentas.conduzirTurno({
                     usuarioAtivo,
                     nivel: NivelIaEnum.RAPIDO,
-                    instrucoes: `${prompt.conteudo}\n\n${destino.orientar(quemChamou, outrosLeitores)}`,
+                    instrucoes: `${prompt.conteudo}\n\n${orientacao}${ehSaudacao ? `\n\n${montarOrientacaoDaSaudacao()}` : ''}`,
                     mensagens: [{ papel: 'usuario', conteudo: contexto }],
                     trocasIniciais: [],
-                    ferramentas: this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo),
-                    maximoTokens: MAXIMO_TOKENS_DO_CHAT,
+                    // A saudação só cumprimenta e oferece: sem ferramentas, nada é proposto antes de a pessoa confirmar.
+                    ferramentas: ehSaudacao ? [] : this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo),
+                    maximoTokens: ehSaudacao ? MAXIMO_TOKENS_DA_SAUDACAO : MAXIMO_TOKENS_DO_CHAT,
                     pesquisaWeb: false,
                     // As ferramentas tratam o `@IA` como o chat da IA (nada nelas depende de ser o chat entre colaboradores).
                     origem: { contexto: ContextoChatEnum.CHAT },
@@ -192,20 +214,23 @@ export class MensagemDiretaIaService {
                 }),
             );
 
+            // Os membros mudam durante o turno (alguém sai, alguém entra): a resposta marca e vai aos de agora.
+            participantes = await destino.lerParticipantesIds();
+            const textoDaResposta = textoDaRespostaDaIa(texto, propostasDoTurno.length);
+            // Só quem chamou decide marcar alguém (task 328); a saudação não marca. Só entra quem já era da conversa no início do turno e continua nela.
+            const mencionaveis = participantes.filter((participanteId) => pessoas.has(participanteId)).map((participanteId) => ({ usuarioId: participanteId, nome: pessoas.get(participanteId)!.nome }));
             const gravada = await this.armazenamento.gravar({
                 mensagemId: randomUUID(),
                 conversaId,
                 autor: AutorMensagemDiretaEnum.IA,
                 autorUsuarioId: null,
-                texto: textoDaRespostaDaIa(texto, propostasDoTurno.length),
+                texto: textoDaResposta,
                 contemCodigo: false,
-                mencoes: [],
+                mencoes: ehSaudacao ? [] : mencoesNoTextoDaIa(textoDaResposta, mencionaveis, usuarioAtivo.sub),
                 referencias: [],
                 chamadaPorUsuarioId: usuarioAtivo.sub,
                 propostaIds: propostasDoTurno,
             });
-            // Os membros mudam durante o turno (alguém sai, alguém entra): a resposta vai aos de agora.
-            participantes = await destino.lerParticipantesIds();
             await this.eventosService.publicarParaUsuarios({ usuarioIds: participantes, evento: { tipo: 'MENSAGEM', mensagem: gravada.mensagem } });
         } catch (erro) {
             const motivo = erro instanceof IaException ? erro.mensagem : MOTIVO_GENERICO;

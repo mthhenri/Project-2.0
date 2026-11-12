@@ -8,7 +8,9 @@ import {
     descreverTipoDaPessoa,
     montarContextoDoChatDireto,
     montarOrientacaoDoChatDireto,
+    montarOrientacaoDaSaudacao,
     montarOrientacaoDoGrupo,
+    montarPedidoDaSaudacao,
     textoDaRespostaDaIa,
 } from './mensagem-direta-ia';
 
@@ -104,4 +106,26 @@ test('a orientação do grupo sem outros membros diz que ninguém mais lê agora
     const orientacao = montarOrientacaoDoGrupo(ANA, [], { nome: 'Cadastro', tipo: TipoGrupoEnum.DEMANDA });
     assert.match(orientacao, /ninguém por enquanto \(quem chamou é o único membro de agora\)/);
     assert.doesNotMatch(orientacao, /0 pessoas/);
+});
+
+test('a orientação da saudação manda cumprimentar, oferecer e não fazer nada ainda', () => {
+    const orientacao = montarOrientacaoDaSaudacao();
+    assert.match(orientacao, /Opa, chamou\?/);
+    assert.match(orientacao, /Sobre <assunto>, quer que eu faça isso\?/);
+    assert.match(orientacao, /não use ferramentas, não proponha ações/);
+    assert.match(orientacao, /não marque ninguém/);
+});
+
+test('o pedido da saudação traz a mensagem anterior com o autor, cortada quando longa, ou diz que não há', () => {
+    assert.match(montarPedidoDaSaudacao({ autorNome: 'Bruno Reis', texto: 'cria a atividade' }), /de Bruno Reis, é:\ncria a atividade$/);
+    const longa = montarPedidoDaSaudacao({ autorNome: 'Bruno Reis', texto: 'a'.repeat(900) });
+    assert.ok(longa.endsWith('…') && longa.length < 750);
+    assert.match(montarPedidoDaSaudacao(null), /Não há mensagem anterior de pessoa/);
+});
+
+test('as orientações listam quem pode ser marcado e limitam a marcação ao pedido de quem chamou', () => {
+    for (const orientacao of [montarOrientacaoDoChatDireto(ANA, BRUNO), montarOrientacaoDoGrupo(ANA, [BRUNO], { nome: 'Time', tipo: TipoGrupoEnum.LIVRE })]) {
+        assert.match(orientacao, /exatamente como aparece aqui \(Ana Lima, Bruno Reis\)/);
+        assert.match(orientacao, /Marque só quando Ana Lima pedir/);
+    }
 });

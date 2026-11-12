@@ -12,6 +12,32 @@
 
 ---
 
+## 2026-11-12 — Tasks 327 e 328: o `@IA` sozinho responde na hora e a IA marca `@pessoa` e `@todos`
+
+Pedido do autor, em conversa: nos chats internos (um a um e grupos), um `@IA` sozinho deveria receber algo como "opa, chamou?" e, olhando a mensagem anterior, "sobre
+<assunto>, quer que eu faça isso?"; e a IA deveria poder marcar `@pessoa` e `@todos`. Sem decisão de modelagem (nenhuma tabela, coluna, DTO nem enum): as duas usam o que a
+mensagem já tinha. Specs `327-ia-responde-ao-arroba-ia-sozinho.spec.md` e `328-ia-menciona-pessoas-e-todos.spec.md` em `done/`, com a verificação em
+`327-ia-responde-ao-arroba-ia-sozinho/verificacao.md`.
+
+- **327:** o `@IA` sem pedido deixa de esperar calado (task 315): o `MensagemDiretaIaService` o trata como `SAUDACAO` e conduz um turno do nível rápido **sem ferramentas** e com
+  teto de 300 tokens, com a orientação fixa `montarOrientacaoDaSaudacao` e a última mensagem de pessoa antes da chamada no que vai ao modelo (`montarPedidoDaSaudacao`). A
+  regra pura `pedidoPendenteDaIa` deixou de tratar a resposta da IA como encerramento: olha só a última mensagem **da pessoa** (a resposta da IA a um `@IA` sozinho é a saudação,
+  então a próxima mensagem, em até 10 minutos, continua sendo o pedido; respondido o pedido, a última mensagem dela já não é um `@IA` sozinho e a espera acaba). A dica da tela
+  usa a mesma função e volta depois da saudação sem mudança de tela.
+- **328:** `mencoesNoTextoDaIa` (`shared`) transforma `@Nome Completo`, `@PrimeiroNome` único e `@todos` do texto da resposta em `mencoes` (fora de código, só as pessoas da
+  conversa de agora que já estavam nela no início do turno; `@todos` = todos menos quem chamou). A orientação do chat direto e a do grupo ganharam `montarOrientacaoDeMencoes`
+  (lista dos nomes, `@todos` só no grupo, só a pedido de quem chamou, nunca por mensagem anterior). O balão da IA (`app-mensagem-direta-ia-resposta`) recebeu `destaques`
+  das duas conversas. Para a resposta marcar quem entrou no meio do turno seria preciso reler os nomes: ficou de fora (só quem já estava e continua).
+- **Cor da menção (pedido do autor, no mesmo dia):** a menção a pessoa ganhou a cor de bolinha dela, nas mensagens da IA e nas de pessoas (`coresDosDestaques` no visualizador, fundo suave + texto misturado com o do tema). Teste de componente novo; **não** verificado ao vivo depois dessa mudança. O pedido de testar outros padrões para o fundo mesclado do avatar do grupo gerou só uma folha de comparação com 8 padrões (nada mudou no sistema; aguarda a escolha do autor).
+- **Testes:** `shared` 15 no arquivo da regra, `backend` unitários 1803, `frontend` 365 no módulo `mensagem-direta`, `npm test` e `npm run lint:tudo` sem falha. Os dois testes que
+  afirmavam o comportamento antigo (o `@IA` sozinho não chama o modelo) foram reescritos.
+- **Ao vivo:** PostgreSQL 16 local, API, `ng serve` e Playwright com Ana e Davi; a IA foi um servidor falso da API da Anthropic. 9 verificações por rodada nos cinco formatos de desktop
+  e nos dois temas, todas passaram; o servidor falso registrou a saudação com 0 ferramentas e a linha gravada tem `mencoes = {3}` (marcou o Davi) e `{1,3,4}` (`@todos` sem a Ana).
+  Limites: sem provedor real (a obediência do modelo à orientação não foi vista), o aviso ao marcado e a notificação do Desktop não foram exercitados, só o armazenamento PostgreSQL rodou.
+- **Achado só na verificação:** o tema escuro do app é a chave `tema` do `localStorage`, não o `prefers-color-scheme`; a primeira leva "escura" saiu clara e foi refeita. Entrou na
+  skill `verify`, junto de duas armadilhas do ambiente (`ANTHROPIC_BASE_URL` precisa estar no ambiente do processo, não só no `.env`; o PostgreSQL no scratchpad cai quando o harness
+  reseta a permissão das pastas pai, use `/tmp/pgdata`).
+
 ## 2026-11-12 — P-088 corrigido: dica do `@IA` sozinho na conversa um a um
 
 `aguardandoPedidoDaIa` (`MensagemDiretaConversaComponent`) passou a usar o maior entre o relógio da dica e a data da mensagem enviada mais recente, como a task 326 já fazia no grupo: a regra pura recusa idade negativa e o relógio só batia a cada 30 s (a data do servidor também chega alguns ms depois da local), então a dica "A IA está esperando o seu pedido" demorava até 30 s. Teste novo no spec de componente da 315 (falha sem a correção, passa com ela); frontend `mensagem-direta-conversa-ia` 9 testes. Sem verificação ao vivo própria: é a mesma expressão já vista ao vivo no grupo.

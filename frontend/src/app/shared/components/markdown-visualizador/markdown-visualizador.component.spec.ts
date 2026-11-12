@@ -145,6 +145,21 @@ describe('MarkdownVisualizadorComponent', () => {
         expect(montado.elemento.querySelector('p')?.textContent).toBe('@IA resume para o @Gabriel Zimmermann');
     });
 
+    it('a menção na cor da pessoa leva a cor; a sem cor e o @todos ficam no destaque padrão (task 328)', async () => {
+        const montado = await montarComponente(MarkdownVisualizadorComponent, {
+            entradas: {
+                texto: 'Ei, @Ana Lima e @Davi Souza, @todos viram?',
+                destaques: ['@Ana Lima', '@Davi Souza', '@todos'],
+                coresDosDestaques: { '@Ana Lima': '#A23FD4' },
+            },
+        });
+        const [ana, davi, todos] = Array.from(montado.elemento.querySelectorAll<HTMLElement>('.markdown__destaque'));
+        expect(ana.classList.contains('markdown__destaque--cor')).toBe(true);
+        expect(ana.style.getPropertyValue('--destaque-cor').toLowerCase()).toBe('#a23fd4');
+        expect(davi.classList.contains('markdown__destaque--cor')).toBe(false);
+        expect(todos.classList.contains('markdown__destaque--cor')).toBe(false);
+    });
+
     it('sem destaques informados nada ganha destaque', async () => {
         const montado = await renderizar('@Gabriel Zimmermann teste');
         expect(montado.elemento.querySelector('.markdown__destaque')).toBeNull();

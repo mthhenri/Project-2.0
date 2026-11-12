@@ -95,6 +95,16 @@ await browser.newContext({ viewport: { width: 1366, height: 768 } });
   backend**, a configuração fica em cache) e monte cenários inserindo `proposta_ia` + `chat_mensagem` (com `proposta_id`) direto no banco.
 - **`pkill -f` e `pgrep -f "..."` matam o próprio shell** (saída 144): o padrão casa com a linha de comando da ferramenta. Mate o backend pelo PID da porta
   (`lsof -ti tcp:3000`) e suba com `setsid nohup ... &`. Um backend velho que ficou na porta continua respondendo com o **.env antigo**: confira o PID antes de achar que a variável nova "não pegou".
+- **Tema escuro nunca vem do `prefers-color-scheme`** (tasks 327/328, 2026-11-12): o app lê a chave `tema` (`'claro'`/`'escuro'`) do `localStorage`; um contexto com
+  `colorScheme: 'dark'` renderiza **claro**. Plante a chave com `context.addInitScript` e confira `document.documentElement.classList.contains('app-escuro')` antes de valer a
+  captura. Sintoma: "rodada escura" com captura clara.
+- **IA de mentira para o chat entre colaboradores:** `ANTHROPIC_BASE_URL` é lido pelo SDK em `process.env`, **não** do `.env` do projeto: exporte-o no comando que sobe o backend
+  (`ANTHROPIC_BASE_URL=http://127.0.0.1:4010 npm run backend:dev`) junto de `ANTHROPIC_API_KEY` qualquer, e um servidor HTTP que responda `POST /v1/messages` (JSON e SSE). Sem isso a
+  mensagem do sistema diz "configuração da IA inválida" e o servidor falso nunca é chamado.
+- **PostgreSQL no scratchpad cai sozinho** (`PANIC: could not open file ".../pg_control": Permission denied`): o harness reseta a permissão das pastas pai do scratchpad e o usuário
+  `postgres` perde o acesso. Use `/tmp/pgdata` como acima (e recrie o banco, as migrations e o cenário se ele já caiu; reinicie o backend, que guarda conexões e a configuração da IA).
+- **Roteiro do chat no Playwright:** com a lista do `@` aberta (texto que termina em `@palavra`) o Enter escolhe a sugestão em vez de enviar: feche com Esc **só** nesse caso, porque nas
+  outras mensagens o Esc fecha o popup do chat.
 - **A janelinha do check-in cobre a tela inteira** e atrapalha qualquer captura: aparece quando a execução ativa passa do mínimo (30 min). A agenda do check-in
   fica **em memória por execução**: para sair dela, encerre a execução e inicie outra (mexer em `inicio_data` não basta).
 - **Provar um bug de "recarrega a página"**: plante `window.__sentinela` e confira depois do clique; reverta o arquivo corrigido só para a contraprova
