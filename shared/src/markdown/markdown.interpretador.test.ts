@@ -383,3 +383,23 @@ test('endereço solto não duplica o link já escrito com a sintaxe nem entra em
     assert.equal(paragrafo('[https://a.com](https://a.com)').length, 1);
     assert.deepEqual(paragrafo('`https://a.com`'), [{ tipo: 'codigo', valor: 'https://a.com' }]);
 });
+
+test('tabela com linha em branco entre as linhas (texto antigo) é exibida como uma tabela só', () => {
+    const separada = '| Campo | Obrigatório |\n\n|---|---|\n\n| `nome` | Sim |\n\n| `email` | Sim |\n\nCampos fora da tabela são ignorados.';
+    const blocos = interpretarMarkdown(separada, COM_TABELAS);
+    assert.deepEqual(blocos.map((bloco) => bloco.tipo), ['tabela', 'paragrafo']);
+    assert.equal((blocos[0] as Extract<MarkdownBlocoNo, { tipo: 'tabela' }>).linhas.length, 2);
+});
+
+test('duas tabelas separadas por linha em branco continuam duas tabelas', () => {
+    const duas = '| a | b |\n|---|---|\n| 1 | 2 |\n\n| c | d |\n|---|---|\n| 3 | 4 |';
+    assert.deepEqual(interpretarMarkdown(duas, COM_TABELAS).map((bloco) => bloco.tipo), ['tabela', 'tabela']);
+});
+
+test('linhas com barra dentro de bloco de código não são juntadas e, sem a opção de tabelas, nada muda', () => {
+    const codigo = '```\n| a | b |\n\n| c | d |\n```';
+    const blocos = interpretarMarkdown(codigo, COM_TABELAS);
+    assert.deepEqual(blocos.map((bloco) => bloco.tipo), ['bloco-codigo']);
+    assert.equal((blocos[0] as Extract<MarkdownBlocoNo, { tipo: 'bloco-codigo' }>).valor, '| a | b |\n\n| c | d |');
+    assert.equal(interpretarMarkdown('| a | b |\n\n|---|---|').length, 2);
+});

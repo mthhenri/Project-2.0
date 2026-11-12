@@ -34,7 +34,8 @@ export interface OpcoesDoMarkdown {
 
 export function interpretarMarkdown(texto: string, opcoes: OpcoesDoMarkdown = {}): MarkdownBlocoNo[] {
     if (typeof texto !== 'string' || texto.length === 0) return [];
-    const linhas = texto.split(/\r\n|\r|\n/);
+    const linhasDoTexto = texto.split(/\r\n|\r|\n/);
+    const linhas = opcoes.tabelas ? juntarLinhasDeTabela(linhasDoTexto) : linhasDoTexto;
     return interpretarBlocos(linhas, 0, opcoes);
 }
 
@@ -321,6 +322,41 @@ function inicioDeTabela(linhas: string[], indice: number): boolean {
     if (!cabecalho || cabecalho.length === 0 || cabecalho.length > MAX_COLUNAS_DA_TABELA) return false;
     const separacao = alinhamentosDaLinha(linhas[indice + 1]);
     return separacao !== null && separacao.length === cabecalho.length;
+}
+
+/** Linha de tabela: começa e termina com barra (`| a | b |`, `|---|---|`). */
+function ehLinhaDeTabela(linha: string): boolean {
+    const texto = linha.trim();
+    return texto.length > 1 && texto.startsWith('|') && texto.endsWith('|');
+}
+
+/**
+ * Texto que veio com linha em branco entre as linhas de uma mesma tabela (o editor antigo e a IA gravaram assim) não é uma tabela
+ * em GFM: cada linha viraria um parágrafo. Tira as linhas em branco entre duas linhas de tabela, fora de bloco de código, e deixa
+ * a linha em branco que antecede o cabeçalho de **outra** tabela (cabeçalho seguido da linha de separação).
+ */
+function juntarLinhasDeTabela(linhas: string[]): string[] {
+    const resultado: string[] = [];
+    let emCerca = false;
+    for (let indice = 0; indice < linhas.length; indice++) {
+        const linha = linhas[indice];
+        if (/^\s*(```|~~~)/.test(linha)) emCerca = !emCerca;
+        if (emCerca || !linhaEmBranco(linha) || resultado.length === 0 || !ehLinhaDeTabela(resultado[resultado.length - 1])) {
+            resultado.push(linha);
+            continue;
+        }
+        let proxima = indice;
+        while (proxima < linhas.length && linhaEmBranco(linhas[proxima])) proxima++;
+        let seguinte = proxima + 1;
+        while (seguinte < linhas.length && linhaEmBranco(linhas[seguinte])) seguinte++;
+        const abreOutraTabela = seguinte < linhas.length && alinhamentosDaLinha(linhas[seguinte]) !== null && alinhamentosDaLinha(linhas[proxima]) === null;
+        if (proxima < linhas.length && ehLinhaDeTabela(linhas[proxima]) && !abreOutraTabela) {
+            indice = proxima - 1;
+            continue;
+        }
+        resultado.push(linha);
+    }
+    return resultado;
 }
 
 function interpretarTabela(linhas: string[], inicio: number): { tabela: MarkdownTabelaNo; proximaLinha: number } {

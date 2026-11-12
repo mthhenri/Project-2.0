@@ -400,14 +400,28 @@ describe('AtividadeListagemPage: menu ⋮ e permissões da linha', () => {
         expect(auxiliar.montado.componente.podeEditar(criarAtividade(2, { usuarioId: 9 }))).toBe(true);
     });
 
-    it('o menu traz só "Registrar execução" e "Excluir" (tags se editam na célula)', async () => {
+    it('o menu traz "Editar nome", "Registrar execução" e "Excluir" (tags se editam na célula)', async () => {
         const { montado } = await montarPagina();
         await carregar(montado, [criarAtividade(1)]);
         botaoPorRotulo(montado, 'Mais ações')[0].click();
         await montado.atualizar();
         const rotulos = montado.componente.itensMenu.filter((item) => !item.separator).map((item) => item.label);
-        expect(rotulos).toEqual(['Registrar execução', 'Excluir']);
+        expect(rotulos).toEqual(['Editar nome', 'Registrar execução', 'Excluir']);
         expect(rotulos).not.toContain('Atribuir tags');
+    });
+
+    it('"Editar nome" do menu salva o novo nome pela API e atualiza a linha', async () => {
+        const { montado } = await montarPagina();
+        await carregar(montado, [criarAtividade(1)]);
+        botaoPorRotulo(montado, 'Mais ações')[0].click();
+        montado.componente.itensMenu.find((item) => item.label === 'Editar nome')!.command!({} as never);
+        montado.componente.campoNome.setValue('  Nome novo da atividade ');
+        montado.componente.salvarNome();
+        const requisicao = esperarRequisicao(montado.http, 'PUT', '/atividade/1');
+        expect(requisicao.request.body).toEqual({ nome: 'Nome novo da atividade' });
+        requisicao.flush({ sucesso: true, dados: {}, mensagem: 'ok' });
+        expect(montado.componente.atividades()[0].nome).toBe('Nome novo da atividade');
+        expect(montado.componente.atividadeNomeEdicao()).toBeNull();
     });
 
     it('"Excluir" do menu tira a linha na hora e chama a exclusão da atividade', async () => {
