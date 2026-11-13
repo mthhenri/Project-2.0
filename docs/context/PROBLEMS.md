@@ -29,33 +29,6 @@
 
 ## Ativos
 
-### P-089 — Canal de demanda não inclui quem entra na demanda depois de criado · `ABERTO` · chat/canais
-
-- **Sintoma:** o chat de uma demanda tinha duas pessoas (as duas da demanda); ao adicionar uma terceira à demanda, ela não entrou no grupo do canal.
-- **Causa:** não investigada (os membros do canal de demanda vêm de `demanda_usuario`, task 248; falta achar onde a lista fica congelada ou desatualizada).
-- **Contorno:** nenhum conhecido.
-- **Correção:** a investigar; a regra é do `SYSTEM.SPEC.md` §12 (canais de projeto e de demanda, membros por `demanda_usuario`).
-- **Desde:** relato do autor em 2026-11-13 (task 248).
-
-### P-090 — Editor de texto da demanda só aceita clique numa faixa pequena · `ABERTO` · frontend/demanda
-
-- **Sintoma:** ao editar o texto da demanda (tela de Atividades e tela de Demandas, e onde mais o texto é editável), clicar para escrever só funciona num pedaço pequeno do editor, não na caixa toda como na tela de Documentações.
-- **Causa:** não investigada.
-- **Contorno:** clicar na primeira linha.
-- **Correção:** a caixa toda focar o editor, como em Documentações; conferir todos os pontos de edição dos textos da demanda.
-- **Desde:** relato do autor em 2026-11-13.
-
-### P-091 — "X" de remover membro da demanda destoa do padrão visual · `ABERTO` · frontend/demanda
-
-- **Sintoma:** o botão "X" vermelho ao lado do nome do membro (remover da demanda) é chamativo e fora do padrão do sistema.
-- **Causa:** estilo próprio do botão.
-- **Contorno:** nenhum (só estético).
-- **Correção:** deixar discreto e alinhado aos padrões (analogia: outros botões de remover do sistema).
-- **Desde:** relato do autor em 2026-11-13.
-
-> P-084 e P-085 vêm da auditoria de requisições das telas (2026-11-11); os demais (P-079 a P-083) foram corrigidos nas tasks 320–325. Medição, reprodução e recomendação de cada um em
-> [`DOSSIE.md`](../specs/active/auditoria-requisicoes-telas/DOSSIE.md), pelo código R-NN citado. Os achados de impacto baixo (R-06 a R-10, R-12, R-13, R-15, R-16) ficaram só no dossiê.
-
 ### P-085 — Ação em massa nas atividades faz uma requisição por item · `ABERTO` · frontend/atividade
 
 - **Sintoma:** com N atividades selecionadas, "Mudar status", "Acrescentar tags", "Excluir" e "Desfazer" fazem N chamadas (`PUT`, `PUT .../tag`, `DELETE`, `PATCH .../restaurar`) e depois recarregam a lista. Se uma falhar, a operação fica pela metade (R-14).

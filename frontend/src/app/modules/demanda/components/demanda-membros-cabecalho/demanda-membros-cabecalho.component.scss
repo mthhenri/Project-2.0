@@ -35,23 +35,34 @@
         color: var(--p-text-color);
     }
 
-    // O "x" de remover só aparece com o mouse (ou o foco do teclado) sobre o avatar.
+    // O "x" de remover só aparece com o mouse (ou o foco do teclado) sobre o avatar: um selo neutro e pequeno, que só ganha o vermelho do perigo sob o cursor.
     &__remover {
         position: absolute;
-        top: -0.3rem;
-        right: -0.3rem;
+        top: -0.25rem;
+        right: -0.25rem;
         display: none;
         align-items: center;
         justify-content: center;
-        width: 1rem;
-        height: 1rem;
+        width: 0.9375rem;
+        height: 0.9375rem;
         padding: 0;
-        border: none;
+        border: 1px solid var(--app-surface-300);
         border-radius: 50%;
-        background: var(--p-red-500);
-        color: white;
-        font-size: 0.5rem;
+        background: var(--app-surface-0);
+        color: var(--p-text-muted-color);
+        font-size: 0.4375rem;
         cursor: pointer;
+        transition:
+            background-color 0.15s,
+            border-color 0.15s,
+            color 0.15s;
+
+        &:hover,
+        &:focus-visible {
+            border-color: var(--p-red-500);
+            background: var(--p-red-500);
+            color: white;
+        }
     }
 
     &__membro:hover &__remover,

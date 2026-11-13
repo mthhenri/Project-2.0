@@ -146,7 +146,6 @@
     // Edição formatada (Milkdown): o conteúdo é montado pela biblioteca dentro deste elemento, daí o ::ng-deep.
     &__formatado {
         position: relative;
-        display: block;
         flex: 1 1 auto;
         min-height: 0;
         padding: 0.625rem 0.75rem;
@@ -168,6 +167,21 @@
         ::ng-deep .ProseMirror {
             outline: 0;
             min-height: inherit;
+        }
+
+        // A área editável preenche a caixa toda (P-090): sem isso, num editor que ocupa o espaço que sobra (`alturaMinima` 0) só a altura do texto
+        // recebia o clique. O `.milkdown` e o `.ProseMirror` crescem junto com a caixa; o clique no respiro da borda é encaminhado em `aoClicarFormatado`.
+        display: flex;
+        flex-direction: column;
+
+        ::ng-deep .milkdown {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+        }
+
+        ::ng-deep .milkdown .ProseMirror {
+            flex: 1 1 auto;
         }
 
         @include conteudo.conteudo-formatado;
