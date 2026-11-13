@@ -12,6 +12,23 @@
 
 ---
 
+## 2026-11-13 — Task 329: "Enviar para colaborador" no Chat IA
+
+Pedido do autor, em conversa: um botão na resposta da IA do Chat IA que a manda a uma pessoa, grupo ou canal do chat entre colaboradores. **Decisão de modelagem do
+autor:** reaproveitar `autor = IA` de `mensagem_direta` com `chamada_por_usuario_id` = quem enviou (sem migration); nota opcional.
+
+`POST /mensagem-direta/resposta-ia` (`MensagemDiretaRespostaIaEnviarDto`): o cliente aponta a resposta (`conversaId` + `chatMensagemId`) e o servidor lê o texto da conversa
+do próprio remetente (só `autor = IA`; outro caso é 404), para ninguém forjar "resposta da IA". Pessoa: `MensagemDiretaService.enviarRespostaDaIa`; grupo ou canal:
+`GrupoService.enviarRespostaDaIa` (mesmas travas do envio normal). A nota vai antes, como mensagem comum. Front: componente `enviar-resposta-colaborador` (diálogo com
+busca, lista de grupos e pessoas e nota) e o botão ao lado de "Copiar" na resposta gravada, só na conversa de perguntas.
+
+Testes: `shared` 362, `backend` 1809 (7 cenários novos da service, 1 do controller; o teste de rotas foi atualizado para 19), `frontend` 238 arquivos (6 testes novos), `lint:tudo` limpo.
+Ao vivo (PostgreSQL local e seed): envio a uma pessoa nos cinco formatos de desktop e nos dois temas; o destinatário vê a nota e a bolha da IA. **Não exercitado ao vivo:** grupo e canal.
+Limite conhecido: o encaminhamento é indistinguível de uma resposta ao `@IA` (`IA · para <remetente>`). Relatório: `docs/specs/done/329-chat-ia-enviar-resposta-para-colaborador/verificacao.md`.
+
+Itens que o autor trouxe na mesma conversa e foram registrados, sem implementação: P-089 (canal de demanda não inclui quem entra depois), P-090 (editor do texto da demanda
+só clica numa faixa) e P-091 ("X" de remover membro da demanda).
+
 ## 2026-11-12 — Chat de grupo: o balão de "digitando" mostra o nome de quem digita
 
 Pedido do autor, em conversa: nos grupos, como existe o "IA digitando", deveria existir o "PESSOA digitando". O cabeçalho do grupo já dizia quem digitava, mas o balão no fim da

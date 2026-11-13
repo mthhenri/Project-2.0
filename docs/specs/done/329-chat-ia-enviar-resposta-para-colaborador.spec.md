@@ -31,8 +31,9 @@ por <remetente>".
    mensagem(ns) pelo caminho de envio existente, publicando às pontas como hoje. Sem SQL novo se o repositório do Chat IA já expõe a leitura por id; senão, uma
    leitura no repository, com `is_deleted = false`.
 3. `frontend`: botão "Enviar para colaborador" na resposta da IA do Chat IA (componente já existente de mensagem da IA), diálogo/painel com seletor de destino e
-   nota, estados carregando e erro, confirmação ao enviar. Tela análoga: o seletor de "nova conversa" do popup do chat. Mostra a mensagem entregue no chat
-   com o selo "Resposta da IA · enviada por <nome>" (a bolha `IA` já existe; acrescentar a linha do remetente).
+   nota, estados carregando e erro, confirmação ao enviar. Tela análoga: o seletor de "nova conversa" do popup do chat. A mensagem entregue usa a bolha `IA` que já existe,
+   com o rótulo de sempre `IA · para <nome de quem enviou>` (para quem enviou, `IA · para você`). **Limite conhecido da decisão de modelagem:** sem coluna
+   nova, o encaminhamento é indistinguível de uma resposta ao `@IA`; se o autor quiser um selo próprio ("enviada por"), isso pede a coluna (opção descartada em 2026-11-13).
 4. `docs/SYSTEM.SPEC.md` §12 (linha `mensagem-direta`) com a regra nova; `docs/SCHEMA.md` só ganha a observação de que `chamada_por_usuario_id` também vale
    para o encaminhamento.
 

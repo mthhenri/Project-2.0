@@ -10,6 +10,7 @@ import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibi
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { PedidoDeAlteracaoDoTrecho, PlanoDocumentoComponent } from '../../components/plano-documento/plano-documento.component';
+import { EnviarRespostaColaboradorComponent, RespostaDaIaParaEnviar } from '../../components/enviar-resposta-colaborador/enviar-resposta-colaborador.component';
 import { PropostaCartaoComponent } from '../../components/proposta-cartao/proposta-cartao.component';
 import { PropostaGrupoComponent } from '../../components/proposta-grupo/proposta-grupo.component';
 import { DemandaLeituraComponent } from '../../components/demanda-leitura/demanda-leitura.component';
@@ -89,6 +90,7 @@ const JANELA_DA_INTERACAO_MS = 400;
         PlanoDocumentoComponent,
         MinhasDemandasComponent,
         DemandaLeituraComponent,
+        EnviarRespostaColaboradorComponent,
         NgTemplateOutlet,
     ],
     templateUrl: './chat.page.html',
@@ -172,6 +174,8 @@ export class ChatPage implements OnInit {
         return [...this.mensagensVisiveis(), emAndamento];
     });
     readonly conversaId = signal<string>('');
+    /** A resposta da IA que a pessoa está enviando a um colaborador (task 329); o diálogo abre enquanto houver uma. */
+    readonly respostaParaEnviar = signal<RespostaDaIaParaEnviar | null>(null);
     /** O dia de hoje no servidor (`yyyy-mm-dd`, do id da conversa de hoje); vazio até a primeira carga. */
     readonly hoje = signal('');
     /** O dia aberto no lugar de hoje (`yyyy-mm-dd`), só para leitura; `null` é a conversa de hoje. */
@@ -712,6 +716,15 @@ export class ChatPage implements OnInit {
         } catch {
             // Sem armazenamento (janela privada, dados bloqueados): o divisor funciona, só não lembra.
         }
+    }
+
+    /** O botão "Enviar para colaborador" só vale na resposta já gravada da IA, na conversa de perguntas (a do plano e a que chega ao vivo ficam de fora). */
+    podeEnviarParaColaborador(mensagem: MensagemNaTela): boolean {
+        return !mensagem.aoVivo && !mensagem.id.startsWith('local-') && this.modo() === ModoDoChatEnum.PERGUNTAS && this.conversaId() !== '';
+    }
+
+    enviarParaColaborador(mensagem: MensagemNaTela): void {
+        this.respostaParaEnviar.set({ id: mensagem.id, conversaId: this.conversaId() });
     }
 
     async copiar(texto: string): Promise<void> {

@@ -365,6 +365,37 @@ export class GrupoService {
         return { sucesso: true, dados: enviada, mensagem: enviada.jaExistia ? 'Mensagem já enviada' : 'Mensagem enviada com sucesso' };
     }
 
+    /**
+     * Entrega ao grupo ou canal a resposta da IA do Chat IA de quem envia (task 329). O `texto` já veio lido e conferido pela `MensagemDiretaService`.
+     * Mesmas travas do envio normal (membro, ou gestor em canal); a nota, se houver, vai antes como mensagem comum do remetente.
+     */
+    async enviarRespostaDaIa(
+        dto: { grupoId: number; mensagemId: string; texto: string; nota?: string; notaMensagemId?: string },
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<MensagemDiretaEnviadaDto>> {
+        const contexto = await this.carregarContexto(dto.grupoId, usuarioAtivo);
+        if (!contexto.ehMembro && !contexto.leitorPorTipo) this.recusarSemAcesso(contexto.grupo);
+        if (dto.nota) await this.enviarMensagem({ grupoId: dto.grupoId, mensagemId: dto.notaMensagemId!, texto: dto.nota }, usuarioAtivo);
+        const contextoAtual = dto.nota ? await this.carregarContexto(dto.grupoId, usuarioAtivo) : contexto;
+        const membrosIds = contextoAtual.ehMembro ? contextoAtual.membrosIds : await this.entrarNoCanal(contextoAtual, usuarioAtivo);
+
+        const enviada = await this.armazenamento.gravar({
+            mensagemId: dto.mensagemId.toLowerCase(),
+            conversaId: montarConversaGrupoId(dto.grupoId),
+            autor: AutorMensagemDiretaEnum.IA,
+            autorUsuarioId: null,
+            texto: dto.texto,
+            contemCodigo: contemBlocoDeCodigo(dto.texto),
+            mencoes: [],
+            referencias: [],
+            chamadaPorUsuarioId: usuarioAtivo.sub,
+            propostaIds: [],
+        });
+        if (enviada.jaExistia) enviada.mensagem = (await juntarReacoesNasMensagens(this.reacaoRepositorio, [enviada.mensagem]))[0];
+        if (!enviada.jaExistia) await this.eventosService.publicarParaUsuarios({ usuarioIds: membrosIds, evento: { tipo: 'MENSAGEM', mensagem: enviada.mensagem } });
+        return { sucesso: true, dados: enviada, mensagem: enviada.jaExistia ? 'Resposta já enviada' : 'Resposta da IA enviada com sucesso' };
+    }
+
     async listarMensagens(dto: GrupoMensagemListarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<GrupoMensagemListadasDto>> {
         const { grupo, leitorPorTipo } = await this.exigirAcessoDeLeitura(dto.grupoId, usuarioAtivo);
         // Quem lê o canal sem ser membro lê pela supervisão: a abertura é auditada e os membros são avisados, no máximo uma vez por dia.

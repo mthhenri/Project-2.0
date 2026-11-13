@@ -306,6 +306,24 @@
                                                             >
                                                                 <i class="pi pi-copy"></i>
                                                             </button>
+                                                            @if (
+                                                                podeEnviarParaColaborador(mensagem)
+                                                            ) {
+                                                                <button
+                                                                    type="button"
+                                                                    class="chat__copiar"
+                                                                    aria-label="Enviar a resposta para um colaborador"
+                                                                    pTooltip="Enviar para colaborador"
+                                                                    tooltipPosition="bottom"
+                                                                    (click)="
+                                                                        enviarParaColaborador(
+                                                                            mensagem
+                                                                        )
+                                                                    "
+                                                                >
+                                                                    <i class="pi pi-send"></i>
+                                                                </button>
+                                                            }
                                                         </div>
                                                     }
                                                 </div>
@@ -587,3 +605,11 @@
         </button>
     </div>
 </ng-template>
+
+@if (respostaParaEnviar(); as respostaDaIa) {
+    <app-enviar-resposta-colaborador
+        [mensagem]="respostaDaIa"
+        [visivel]="true"
+        (visivelChange)="$event ? null : respostaParaEnviar.set(null)"
+    />
+}

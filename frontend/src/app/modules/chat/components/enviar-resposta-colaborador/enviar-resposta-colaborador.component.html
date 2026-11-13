@@ -1,0 +1,153 @@
+<p-dialog
+    [visible]="visivel()"
+    (visibleChange)="visivel.set($event)"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: 'min(96vw, 520px)' }"
+    header="Enviar para colaborador"
+    appendTo="body"
+>
+    <div class="enviar-resposta">
+        <p class="enviar-resposta__aviso">
+            <i class="pi pi-sparkles" aria-hidden="true"></i>
+            <span
+                >A resposta chega no chat como <strong>resposta da IA</strong>, enviada por
+                você.</span
+            >
+        </p>
+
+        <div class="enviar-resposta__busca">
+            <i class="pi pi-search enviar-resposta__busca-icone" aria-hidden="true"></i>
+            <input
+                pInputText
+                type="text"
+                class="enviar-resposta__busca-campo"
+                [formControl]="controleBusca"
+                placeholder="Para quem? Digite o nome"
+                aria-label="Buscar pessoa ou grupo pelo nome"
+                maxlength="100"
+            />
+        </div>
+
+        <div class="enviar-resposta__lista" role="listbox" aria-label="Destino">
+            @if (grupos().length > 0) {
+                <p class="enviar-resposta__secao">Grupos e canais</p>
+                @for (grupo of grupos(); track grupo.grupoId) {
+                    <button
+                        type="button"
+                        class="enviar-resposta__linha"
+                        role="option"
+                        [class.enviar-resposta__linha--escolhida]="
+                            ehDestino('GRUPO', grupo.grupoId)
+                        "
+                        [attr.aria-selected]="ehDestino('GRUPO', grupo.grupoId)"
+                        (click)="escolherGrupo(grupo.grupoId, grupo.nome)"
+                    >
+                        <app-avatar-grupo
+                            [nome]="grupo.nome"
+                            [cor]="grupo.corAvatar"
+                            [emoji]="grupo.emojiAvatar"
+                            [tipo]="grupo.tipo"
+                            [coresDosMembros]="coresDosMembros(grupo.membros)"
+                            [pequeno]="true"
+                        />
+                        <span class="enviar-resposta__miolo">
+                            <span class="enviar-resposta__nome">{{ grupo.nome }}</span>
+                            <span class="enviar-resposta__tipo">{{
+                                rotuloDosMembros(grupo.membros.length)
+                            }}</span>
+                        </span>
+                    </button>
+                }
+                <p class="enviar-resposta__secao">Pessoas</p>
+            }
+            @if (estado.carregandoPessoas() && estado.pessoas() === null) {
+                <div class="enviar-resposta__esqueleto" aria-busy="true">
+                    <p-skeleton height="2.75rem" />
+                    <p-skeleton height="2.75rem" />
+                    <p-skeleton height="2.75rem" />
+                </div>
+            } @else if (estado.erroNasPessoas()) {
+                <div class="enviar-resposta__estado" role="alert">
+                    <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+                    <p class="enviar-resposta__estado-texto">
+                        Não foi possível carregar as pessoas.
+                    </p>
+                    <p-button
+                        label="Tentar de novo"
+                        icon="pi pi-refresh"
+                        size="small"
+                        [outlined]="true"
+                        (onClick)="carregarPessoas()"
+                    />
+                </div>
+            } @else if (pessoas().length === 0) {
+                <p class="enviar-resposta__estado-texto">
+                    {{
+                        controleBusca.value.trim()
+                            ? "Ninguém com esse nome."
+                            : "Não há outras pessoas ativas."
+                    }}
+                </p>
+            } @else {
+                @for (pessoa of pessoas(); track pessoa.usuarioId) {
+                    <button
+                        type="button"
+                        class="enviar-resposta__linha"
+                        role="option"
+                        [class.enviar-resposta__linha--escolhida]="
+                            ehDestino('PESSOA', pessoa.usuarioId)
+                        "
+                        [attr.aria-selected]="ehDestino('PESSOA', pessoa.usuarioId)"
+                        (click)="escolherPessoa(pessoa.usuarioId, pessoa.usuarioNome)"
+                    >
+                        <app-avatar-usuario
+                            [nome]="pessoa.usuarioNome"
+                            [cor]="pessoa.corAvatar"
+                            [online]="estado.online().has(pessoa.usuarioId)"
+                            [pequeno]="true"
+                        />
+                        <span class="enviar-resposta__miolo">
+                            <span class="enviar-resposta__nome">{{ pessoa.usuarioNome }}</span>
+                            <span class="enviar-resposta__tipo">{{ rotuloTipo(pessoa.tipo) }}</span>
+                        </span>
+                    </button>
+                }
+            }
+        </div>
+
+        <label class="enviar-resposta__rotulo" for="enviar-resposta-nota">Nota (opcional)</label>
+        <textarea
+            pTextarea
+            id="enviar-resposta-nota"
+            class="enviar-resposta__nota"
+            rows="3"
+            [formControl]="controleNota"
+            placeholder="Acrescente um comentário. Ele vai antes da resposta."
+            [attr.maxlength]="limiteDaNota"
+        ></textarea>
+
+        @if (erro(); as mensagemDeErro) {
+            <p class="enviar-resposta__erro" role="alert">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ mensagemDeErro }}
+            </p>
+        }
+    </div>
+
+    <ng-template #footer>
+        <p-button
+            label="Cancelar"
+            severity="secondary"
+            [text]="true"
+            (onClick)="visivel.set(false)"
+        />
+        <p-button
+            label="Enviar"
+            icon="pi pi-send"
+            [disabled]="!podeEnviar()"
+            [loading]="enviando()"
+            (onClick)="enviar()"
+        />
+    </ng-template>
+</p-dialog>

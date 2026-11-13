@@ -9,7 +9,7 @@ import { MensagemDiretaController } from './mensagem-direta.controller';
 
 const USUARIO = { sub: 4, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das dezoito rotas', () => {
+test('verbos e caminhos das dezenove rotas', () => {
     assert.deepEqual(
         Object.values(rotasPorNome(MensagemDiretaController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
         [
@@ -26,6 +26,7 @@ test('verbos e caminhos das dezoito rotas', () => {
             'GET preferencia',
             'PATCH mensagem',
             'POST mensagem',
+            'POST resposta-ia',
             'POST conversa/:usuarioId/digitando',
             'PUT conversa/:usuarioId/leitura',
             'PUT conversa/:usuarioId/silencio',
@@ -159,4 +160,18 @@ test('eventos: abre o stream do usuário do token, com os cabeçalhos de event-s
     assert.equal(fechada, 1);
     abertas[0].conexao.encerrar();
     assert.equal(encerrada, true);
+});
+
+test('a resposta da IA enviada a um colaborador (task 329) repassa o DTO e o usuário do token', async () => {
+    const chamadas: Record<string, unknown[]> = {};
+    const controller = new MensagemDiretaController(
+        { enviarRespostaDaIa: async (...argumentos: unknown[]) => { chamadas.enviar = argumentos; return null; } } as never,
+        {} as never,
+        {} as never,
+    );
+    const dto = { conversaId: '4-2026-11-13', chatMensagemId: 'x', destinatarioId: 9 } as never;
+
+    await controller.enviarRespostaDaIa(dto, USUARIO);
+
+    assert.deepEqual(chamadas.enviar, [dto, USUARIO]);
 });
