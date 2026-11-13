@@ -24,7 +24,7 @@ Três relatos do autor na mesma conversa da 329, corrigidos sem spec própria (s
   ocupam o espaço que sobra (`alturaMinima` 0: Atividades, Demandas) não faziam a área editável crescer junto. Correção no componente compartilhado `markdown-editor`: o `.milkdown`
   e o `.ProseMirror` preenchem a caixa (flex) e o clique no respiro da borda leva o foco ao editor (`aoClicarFormatado`). Depois: 635 px; clique embaixo foca e digita; na tela de
   Atividades 579 px. Consumidores (`npm run impacto`): `plano-documento`, `prompts-aba`, `pad-painel`, `documentacao-demanda`, `demanda-arvore-painel`, `demanda-descricao-editor`;
-  conferi ao vivo Demandas, Atividades e o pad em Documentações; **`plano-documento` e `prompts-aba` não foram olhados ao vivo** (a mudança só estende a área editável).
+  conferi ao vivo Demandas, Atividades e o pad em Documentações; `plano-documento` (Planejamento do chat) e `prompts-aba` também conferidos ao vivo depois, sem regressão.
 - **P-091 ("X" de remover membro).** O botão vermelho cheio virou um selo neutro e pequeno (fundo da superfície, borda e ícone discretos) que só fica vermelho sob o cursor ou o
   foco do teclado; só o SCSS de `demanda-membros-cabecalho` mudou.
 
@@ -41,7 +41,7 @@ do próprio remetente (só `autor = IA`; outro caso é 404), para ninguém forja
 busca, lista de grupos e pessoas e nota) e o botão ao lado de "Copiar" na resposta gravada, só na conversa de perguntas.
 
 Testes: `shared` 362, `backend` 1809 (7 cenários novos da service, 1 do controller; o teste de rotas foi atualizado para 19), `frontend` 238 arquivos (6 testes novos), `lint:tudo` limpo.
-Ao vivo (PostgreSQL local e seed): envio a uma pessoa nos cinco formatos de desktop e nos dois temas; o destinatário vê a nota e a bolha da IA. **Não exercitado ao vivo:** grupo e canal.
+Ao vivo (PostgreSQL local e seed): envio a uma pessoa nos cinco formatos de desktop e nos dois temas; o destinatário vê a nota e a bolha da IA. Grupo e canal provados em integração com banco real (testes novos), não pela tela.
 Limite conhecido: o encaminhamento é indistinguível de uma resposta ao `@IA` (`IA · para <remetente>`). Relatório: `docs/specs/done/329-chat-ia-enviar-resposta-para-colaborador/verificacao.md`.
 
 Três itens que o autor trouxe na mesma conversa (P-089, P-090 e P-091) foram registrados e já corrigidos: ver o bloco acima desta task.

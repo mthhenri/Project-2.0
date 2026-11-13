@@ -12,7 +12,7 @@ Task 329: botão "Enviar para colaborador" no Chat IA. Evidências brutas em `.a
 | `desktop` / `repo:test` | 49 e 50 aprovados |
 | `npm run lint:tudo` | zero erros (Prettier aplicado só nos dois HTML alterados) |
 | `build` backend e frontend | compilam; os avisos de orçamento de SCSS são preexistentes |
-| Integração (`test:integracao`) | **não rodada**: nenhum repository mudou |
+| Integração (`test:integracao`) | 527 de 527 contra o PostgreSQL local (rodada depois, ao fechar as pendências); 2 testes novos: `enviarRespostaDaIa` no grupo livre e no canal |
 
 ## Ao vivo (PostgreSQL 16 local, `CHAT_ARMAZENAMENTO=postgres`, seed de desenvolvimento)
 
@@ -23,9 +23,13 @@ Cenário: `dev.teste` com uma resposta da IA gravada direto em `chat_mensagem` (
 - O destinatário recebe o contador no topo, a lista mostra "IA: Valide o CPF…" e a conversa mostra a nota e a bolha da IA com o rótulo `IA · para Dev de Teste`.
 - Diálogo conferido em 1920×1080, 1366×768 (claro e escuro), 1080×1920, 720×1280 e 960×1080; olhados pessoalmente 1920×1080, 1366×768 (claro e escuro) e 720×1280.
 
-## Limites e pendências
+## Pendências fechadas depois
 
-- **Grupo e canal não foram exercitados ao vivo** (o seed só tem dois usuários); a rota e a service do grupo têm teste unitário do repasse, e o ramo do grupo só é coberto por leitura de código (reaproveita `carregarContexto`, `entrarNoCanal` e `enviarMensagem`). Fica aberto para o autor conferir com um grupo real.
+- **Grupo e canal:** provados em integração com banco real (`grupo.service.integracao.test.ts` e `canal.service.integracao.test.ts`): membro envia, de fora recebe 403, gestor que escreve no canal vira membro, nota antes da resposta, reenvio idempotente, evento a todos os membros. Não foram exercitados pela tela (o banco de teste só tinha dois usuários), então o diálogo com grupo escolhido segue só coberto pelo teste de componente.
+- **Editor compartilhado (P-090):** conferido ao vivo também no Planejamento do chat e nos prompts da IA, sem regressão.
+
+## Limites
+
 - **Estados de erro e de carregando** foram provados nos testes de componente, não ao vivo.
 - **Rótulo:** sem coluna nova, a mensagem encaminhada aparece como `IA · para <remetente>`, igual a uma resposta ao `@IA`. Decisão do autor (2026-11-13); um selo "enviada por" pediria a coluna.
 - Resposta de mais de 10 000 caracteres é recusada com mensagem clara (o limite da mensagem do chat).

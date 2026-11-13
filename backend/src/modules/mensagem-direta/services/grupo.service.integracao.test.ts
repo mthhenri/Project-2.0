@@ -606,3 +606,34 @@ testarComBanco('recuperarProposta: só da resposta da IA deste grupo; membro vê
     await recusaCom(service.recuperarProposta({ grupoId: outroId, mensagemId: daIa.mensagemId, propostaId: 71 }, como(ana)), ResourceNotFoundException);
     await recusaCom(service.recuperarProposta({ grupoId, mensagemId: daIa.mensagemId, propostaId: 71 }, como(fora)), UnauthorizedAccessException);
 });
+
+// --- resposta da IA do Chat IA enviada ao grupo (task 329) ------------------
+
+testarComBanco('enviarRespostaDaIa: grava como IA chamada pelo remetente, com a nota antes; só membro envia e o reenvio não duplica', async (conexao) => {
+    const { service, eventos } = montar(conexao);
+    const { ana, bruno, carla } = await trio(conexao);
+    const grupo = (await service.criarGrupo({ nome: 'Time', membroUsuarioIds: [bruno.id] }, como(ana))).dados!.grupo;
+    const mensagemId = randomUUID();
+    const notaMensagemId = randomUUID();
+
+    const antes = eventos.length;
+    const enviada = (await service.enviarRespostaDaIa({ grupoId: grupo.grupoId, mensagemId, texto: 'Valide no service.', nota: 'olha isso', notaMensagemId }, como(bruno))).dados!;
+
+    assert.equal(enviada.jaExistia, false);
+    assert.equal(enviada.mensagem.autor, AutorMensagemDiretaEnum.IA);
+    assert.equal(enviada.mensagem.autorUsuarioId, null);
+    assert.equal(enviada.mensagem.chamadaPorUsuarioId, bruno.id);
+    assert.deepEqual(enviada.mensagem.propostaIds, []);
+    assert.equal(eventos.length, antes + 2, 'a nota e a resposta avisam os membros');
+    assert.deepEqual([...eventos[eventos.length - 1].usuarioIds].sort(), [ana.id, bruno.id].sort());
+
+    const lidas = (await service.listarMensagens({ grupoId: grupo.grupoId } as never, como(ana))).dados!.mensagens.map((mensagem) => `${mensagem.autor}:${mensagem.texto}`);
+    assert.deepEqual(lidas.slice(0, 2).reverse(), ['USUARIO:olha isso', 'IA:Valide no service.'], 'a listagem vem da mais nova para a mais antiga');
+
+    const repetida = (await service.enviarRespostaDaIa({ grupoId: grupo.grupoId, mensagemId, texto: 'outro texto' }, como(bruno))).dados!;
+    assert.equal(repetida.jaExistia, true);
+    assert.equal(repetida.mensagem.texto, 'Valide no service.');
+
+    await recusaCom(service.enviarRespostaDaIa({ grupoId: grupo.grupoId, mensagemId: randomUUID(), texto: 'intruso' }, como(carla)), UnauthorizedAccessException);
+    await recusaCom(service.enviarRespostaDaIa({ grupoId: 999_999, mensagemId: randomUUID(), texto: 'x' }, como(ana)), ResourceNotFoundException);
+});
