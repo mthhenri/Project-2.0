@@ -12,6 +12,23 @@
 
 ---
 
+## 2026-11-13 — Balão de chat na linha da demanda (lista "Árvore"): indica que a demanda tem canal
+
+Pedido do autor (sem spec): a linha da demanda na lista da pasta mostra um balão de chat à esquerda do ícone da descrição técnica quando a demanda tem chat.
+
+- **Decisões do autor (modelagem, perguntadas antes):** o balão acende quando **o canal da demanda existe** (não exige mensagem) e mostra **só presença**, como os três ícones de
+  descrição (apagado sem chat, colorido com chat). Sem migration: o canal é a linha de `grupo` com `demanda_id` (índice único `uix_grupo_demanda`, migration `0087`).
+- **Contrato:** `DemandaGrafoNoDto` ganhou `temChat: boolean`. `DemandaRepository.recuperarGrafo` calcula com `EXISTS (SELECT 1 FROM grupo WHERE grupo.demanda_id = demanda.id AND
+  grupo.is_deleted = false)`. Só esse DTO mudou; `DemandaArvoreItemDto`, `DemandaPlanejamentoDto` e `DemandaDocumentacaoResumoDto` ficaram como estavam.
+- **UI:** `demanda-pasta-linha` ganhou um indicador não clicável (`<span role="img">` com `pi-comment`, tooltip e `aria-label`) como primeiro item do grupo de ícones; classes BEM
+  `demanda-pasta-linha__chat` e `--ativo`. Token novo `--app-icone-chat` em `styles.scss` (claro e escuro) = a cor primária do tema (600 no claro, 400 no escuro), com brilho duplo (drop-shadow 4px e 8px) quando ativo; a primeira versão usava matiz girada e foi trocada a pedido do autor.
+  Impacto (`npm run impacto`): os 14 consumidores do DTO só leem o nó; 7 fixtures tipados de teste receberam `temChat: false`.
+- **Testes:** integração `recuperarGrafo: temChat…` (canal ativo, canal excluído, sem canal); spec do componente (ativo/apagado e posição à esquerda). Resultados: lint:tudo limpo;
+  shared 362, backend 1812, integração 530 (PostgreSQL 16 local), frontend 2887 em 238 arquivos, todos passando; build do backend e do frontend ok.
+- **Verificado ao vivo** (stack real, projeto com 5 demandas e 3 canais criados por SQL): `GET /demanda/grafo` devolveu `temChat` verdadeiro nas três com canal e falso nas duas sem;
+  capturas nos cinco formatos (1920×1080, 1366×768, 1080×1920, 720×1280, 960×1080) e nos dois temas (classe `app-escuro` conferida), em `.artifacts/chat-na-linha-da-demanda/`.
+  Limite: o balão é só indicador; clicar nele não abre o chat (o botão "Abrir chat" continua na demanda aberta).
+
 ## 2026-11-13 — P-089, P-090 e P-091 corrigidos: canal da demanda, área do editor e "X" do membro
 
 Três relatos do autor na mesma conversa da 329, corrigidos sem spec própria (sem mudança de modelagem).

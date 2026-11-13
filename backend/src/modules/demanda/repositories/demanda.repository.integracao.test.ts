@@ -572,6 +572,58 @@ testarComBanco('recuperarGrafo: nós do projeto (sem excluídos) e arestas de hi
     assert.deepEqual(conexoes, [[demandaFabricadaSelecionado.id, a1.id]]);
 });
 
+testarComBanco('recuperarGrafo: temChat é verdadeiro só para a demanda com canal ativo (canal excluído e demanda sem canal dão falso)', async (conexao) => {
+    const repositorio = criarRepositorio(DemandaRepository, conexao);
+    const projeto = await criarProjeto(conexao);
+    const comCanal = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Com canal' });
+    const canalExcluido = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Canal excluído' });
+    const semCanal = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Sem canal' });
+    const gestor = await criarGestor(conexao);
+    for (const demanda of [comCanal, canalExcluido]) {
+        await conexao.raw(`
+            INSERT INTO
+                grupo (
+                    created_date,
+                    updated_date,
+                    is_deleted,
+                    nome,
+                    tipo_grupo_id,
+                    criador_usuario_id,
+                    projeto_id,
+                    demanda_id
+                )
+            SELECT
+                NOW(),
+                NOW(),
+                false,
+                :nome,
+                tipo_grupo.id,
+                :criadorId,
+                :projetoId,
+                :demandaId
+            FROM
+                tipo_grupo
+            WHERE
+                tipo_grupo.codigo = 'DEMANDA'
+                AND tipo_grupo.is_deleted = false
+        `, { nome: `Canal ${demanda.id}`, criadorId: gestor.id, projetoId: projeto.id, demandaId: demanda.id });
+    }
+    await conexao.raw(`
+        UPDATE grupo
+        SET
+            is_deleted = true,
+            deleted_date = NOW()
+        WHERE
+            demanda_id = :demandaId
+    `, { demandaId: canalExcluido.id });
+
+    const grafo = await repositorio.recuperarGrafo({ projetoId: projeto.id });
+    const temChatPorId = new Map(grafo.nos.map((no) => [no.id, no.temChat]));
+    assert.equal(temChatPorId.get(comCanal.id), true);
+    assert.equal(temChatPorId.get(canalExcluido.id), false);
+    assert.equal(temChatPorId.get(semCanal.id), false);
+});
+
 testarComBanco('listarPlanejamento: só PENDENTE e PLANEJADA, com caminho, minutos e executores ativos', async (conexao) => {
     const repositorio = criarRepositorio(DemandaRepository, conexao);
     const projeto = await criarProjeto(conexao);

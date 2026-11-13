@@ -178,7 +178,7 @@ describe('ProjetoDetalhePage', () => {
         const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
         const no = (id: number, sobrescritas: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto => ({
             id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 4, minutosExecutados: 0,
-            demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...sobrescritas,
+            demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, temChat: false, tags: [], ...sobrescritas,
         });
         await carregar(montado, PROJETO, { nos: [no(1), no(2, { demandaPaiId: 1 })], arestas: [] });
 
@@ -189,7 +189,7 @@ describe('ProjetoDetalhePage', () => {
 
     const noDeTeste = (id: number): DemandaGrafoNoDto => ({
         id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 4, minutosExecutados: 0,
-        demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [],
+        demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, temChat: false, tags: [],
     });
     const iconesDeVisao = (montado: Montado) =>
         Array.from(montado.elemento.querySelectorAll('.demanda-toolbar [slotVisoes] button')).map((botao) => botao.getAttribute('aria-label'));

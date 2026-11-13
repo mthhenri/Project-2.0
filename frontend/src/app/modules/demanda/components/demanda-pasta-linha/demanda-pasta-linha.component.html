@@ -50,6 +50,16 @@
     </span>
 
     <span class="demanda-pasta-linha__descricoes" role="group" aria-label="Descrições da demanda">
+        <span
+            class="demanda-pasta-linha__chat"
+            [class.demanda-pasta-linha__chat--ativo]="no().temChat"
+            role="img"
+            [attr.aria-label]="no().temChat ? 'Esta demanda tem chat' : 'Esta demanda não tem chat'"
+            [pTooltip]="no().temChat ? 'Tem chat' : 'Sem chat'"
+            tooltipPosition="top"
+        >
+            <i class="pi pi-comment"></i>
+        </span>
         @for (descricao of descricoes; track descricao.campo) {
             <button
                 type="button"

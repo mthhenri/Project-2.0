@@ -33,6 +33,9 @@ export class DemandaGrafoNoDto {
     @ApiProperty({ example: false })
     temDocumentacao: boolean;
 
+    @ApiProperty({ example: false, description: 'A demanda tem canal de chat criado' })
+    temChat: boolean;
+
     @ApiProperty({ type: [TagResumoDto] })
     tags: TagResumoDto[];
 }
