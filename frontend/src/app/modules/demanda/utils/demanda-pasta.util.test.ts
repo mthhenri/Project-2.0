@@ -16,7 +16,7 @@ import {
 function no(id: number, nome: string, opcoes: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
         id, nome, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 0, minutosExecutados: 0, demandaPaiId: null,
-        temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...opcoes,
+        temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, temChat: false, tags: [], ...opcoes,
     };
 }
 

@@ -92,6 +92,24 @@
         flex-shrink: 0;
     }
 
+    // Indicador (não clicável) de que a demanda tem canal de chat; apagado quando não tem, como as descrições vazias.
+    &__chat {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        color: var(--app-surface-400);
+        font-size: 0.85rem;
+        opacity: 0.55;
+
+        &--ativo {
+            color: var(--app-icone-chat);
+            opacity: 1;
+            filter: drop-shadow(0 0 3px color-mix(in srgb, currentColor 45%, transparent));
+        }
+    }
+
     &__descricao {
         display: inline-flex;
         align-items: center;

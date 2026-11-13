@@ -61,6 +61,10 @@ $raio-borda-padrao: 0.5rem;
     --app-icone-doc: hsl(
         from var(--p-primary-600) calc(h - var(--app-giro-descricoes)) max(s, 55) l
     );
+    // Balão de chat da linha da demanda: giro maior que o das descrições para não se confundir com elas.
+    --app-icone-chat: hsl(
+        from var(--p-primary-600) calc(h + var(--app-giro-descricoes) * 2) max(s, 55) l
+    );
 
     // Realce do ícone de anotações do usuário: vibrante e distinto, também puxando
     // para a cor primária (resíduo de azul-céu mantém o brilho).
@@ -112,6 +116,9 @@ $raio-borda-padrao: 0.5rem;
     --app-icone-tecnica: var(--p-primary-400);
     --app-icone-doc: hsl(
         from var(--p-primary-400) calc(h - var(--app-giro-descricoes)) max(s, 55) l
+    );
+    --app-icone-chat: hsl(
+        from var(--p-primary-400) calc(h + var(--app-giro-descricoes) * 2) max(s, 55) l
     );
 
     // No escuro, tom mais claro mantém o brilho do azul-céu puxando para o primário.

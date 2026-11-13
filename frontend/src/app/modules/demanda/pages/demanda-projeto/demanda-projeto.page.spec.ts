@@ -17,7 +17,7 @@ const PROJETOS = [
 function criarNo(id: number, sobrescritas: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
         id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 4, minutosExecutados: 0,
-        demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...sobrescritas,
+        demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, temChat: false, tags: [], ...sobrescritas,
     };
 }
 

@@ -1378,6 +1378,15 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                     NULLIF(demanda.descricao_tecnica, '') IS NOT NULL AS "temDescricaoTecnica",
                     NULLIF(demanda.descricao_cliente, '') IS NOT NULL AS "temDescricaoCliente",
                     NULLIF(demanda.documentacao, '') IS NOT NULL AS "temDocumentacao",
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            grupo
+                        WHERE
+                            grupo.demanda_id = demanda.id
+                            AND grupo.is_deleted = false
+                    ) AS "temChat",
                     COALESCE(
                         (
                             SELECT
