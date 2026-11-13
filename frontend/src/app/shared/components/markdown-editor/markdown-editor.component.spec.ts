@@ -81,6 +81,19 @@ describe('MarkdownEditorComponent — barra e alternância de modo', () => {
         expect(montado.componente.confirmado).toBe('Texto recém digitado');
     });
 
+    it('clicar no respiro da caixa do editor formatado leva o foco ao editor; clicar no texto não o desvia (P-090)', async () => {
+        const montado = await montarComponente(AnfitriaoComponent);
+        const componente = montado.fixture.debugElement.query(By.directive(MarkdownEditorComponent)).componentInstance as unknown as { editorFormatado: EditorFormatado | null };
+        await vi.waitFor(() => expect(componente.editorFormatado).not.toBeNull(), { timeout: 8000 });
+        const focar = vi.spyOn(componente.editorFormatado!, 'focar');
+
+        montado.elemento.querySelector<HTMLElement>('.markdown-editor__formatado')!.click();
+        expect(focar).toHaveBeenCalledTimes(1);
+
+        montado.elemento.querySelector<HTMLElement>('.ProseMirror')!.click();
+        expect(focar).toHaveBeenCalledTimes(1);
+    });
+
     it('valor externo no editor formatado não dispara outra alteração nem perde a forma original', async () => {
         const montado = await montarComponente(AnfitriaoComponent);
         const componente = montado.fixture.debugElement.query(By.directive(MarkdownEditorComponent)).componentInstance as unknown as { editorFormatado: EditorFormatado | null };

@@ -12,6 +12,40 @@
 
 ---
 
+## 2026-11-13 — P-089, P-090 e P-091 corrigidos: canal da demanda, área do editor e "X" do membro
+
+Três relatos do autor na mesma conversa da 329, corrigidos sem spec própria (sem mudança de modelagem).
+
+- **P-089 (canal de demanda não incluía quem entrou depois).** O servidor já listava o novo membro (o acesso ao canal é derivado de `demanda_usuario`); o defeito era o aviso:
+  o `CanalMembrosObservadorService` mandava `SINCRONIZAR` só a quem teve o vínculo alterado, então quem já estava no canal (e quem adicionou) continuava com a lista de membros
+  antiga na tela. Agora o aviso vai também a quem está nos canais criados da demanda e do projeto dela (`listarCanais` + `listarMembrosDeGrupos`). Provado ao vivo: um
+  desenvolvedor que já era membro recebeu o `SINCRONIZAR` quando o gestor adicionou outro. Testes: 2 cenários novos no observador.
+- **P-090 (editor do texto da demanda só clicava numa faixa).** Causa medida no app: a caixa do editor tinha 655 px e a área editável (`.ProseMirror`) 21 px, porque os editores que
+  ocupam o espaço que sobra (`alturaMinima` 0: Atividades, Demandas) não faziam a área editável crescer junto. Correção no componente compartilhado `markdown-editor`: o `.milkdown`
+  e o `.ProseMirror` preenchem a caixa (flex) e o clique no respiro da borda leva o foco ao editor (`aoClicarFormatado`). Depois: 635 px; clique embaixo foca e digita; na tela de
+  Atividades 579 px. Consumidores (`npm run impacto`): `plano-documento`, `prompts-aba`, `pad-painel`, `documentacao-demanda`, `demanda-arvore-painel`, `demanda-descricao-editor`;
+  conferi ao vivo Demandas, Atividades e o pad em Documentações; `plano-documento` (Planejamento do chat) e `prompts-aba` também conferidos ao vivo depois, sem regressão.
+- **P-091 ("X" de remover membro).** O botão vermelho cheio virou um selo neutro e pequeno (fundo da superfície, borda e ícone discretos) que só fica vermelho sob o cursor ou o
+  foco do teclado; só o SCSS de `demanda-membros-cabecalho` mudou.
+
+Testes: `npm test` verde (shared 362, backend 1812, frontend 238 arquivos, desktop 49); `lint:tudo` limpo.
+
+## 2026-11-13 — Task 329: "Enviar para colaborador" no Chat IA
+
+Pedido do autor, em conversa: um botão na resposta da IA do Chat IA que a manda a uma pessoa, grupo ou canal do chat entre colaboradores. **Decisão de modelagem do
+autor:** reaproveitar `autor = IA` de `mensagem_direta` com `chamada_por_usuario_id` = quem enviou (sem migration); nota opcional.
+
+`POST /mensagem-direta/resposta-ia` (`MensagemDiretaRespostaIaEnviarDto`): o cliente aponta a resposta (`conversaId` + `chatMensagemId`) e o servidor lê o texto da conversa
+do próprio remetente (só `autor = IA`; outro caso é 404), para ninguém forjar "resposta da IA". Pessoa: `MensagemDiretaService.enviarRespostaDaIa`; grupo ou canal:
+`GrupoService.enviarRespostaDaIa` (mesmas travas do envio normal). A nota vai antes, como mensagem comum. Front: componente `enviar-resposta-colaborador` (diálogo com
+busca, lista de grupos e pessoas e nota) e o botão ao lado de "Copiar" na resposta gravada, só na conversa de perguntas.
+
+Testes: `shared` 362, `backend` 1809 (7 cenários novos da service, 1 do controller; o teste de rotas foi atualizado para 19), `frontend` 238 arquivos (6 testes novos), `lint:tudo` limpo.
+Ao vivo (PostgreSQL local e seed): envio a uma pessoa nos cinco formatos de desktop e nos dois temas; o destinatário vê a nota e a bolha da IA. Grupo e canal provados em integração com banco real (testes novos), não pela tela.
+Limite conhecido: o encaminhamento é indistinguível de uma resposta ao `@IA` (`IA · para <remetente>`). Relatório: `docs/specs/done/329-chat-ia-enviar-resposta-para-colaborador/verificacao.md`.
+
+Três itens que o autor trouxe na mesma conversa (P-089, P-090 e P-091) foram registrados e já corrigidos: ver o bloco acima desta task.
+
 ## 2026-11-12 — Chat de grupo: o balão de "digitando" mostra o nome de quem digita
 
 Pedido do autor, em conversa: nos grupos, como existe o "IA digitando", deveria existir o "PESSOA digitando". O cabeçalho do grupo já dizia quem digitava, mas o balão no fim da

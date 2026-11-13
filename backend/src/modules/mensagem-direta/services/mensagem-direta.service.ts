@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
+    AutorChatEnum,
     AutorMensagemDiretaEnum,
     CitacaoMensagemDto,
     ConversaDiretaListadasDto,
@@ -19,6 +20,7 @@ import {
     MensagemDiretaPreferenciaAlteradaDto,
     MensagemDiretaReagidaDto,
     MensagemDiretaReagirDto,
+    MensagemDiretaRespostaIaEnviarDto,
     MensagemDiretaPreferenciaAlterarDto,
     MensagemDiretaPessoasListadasDto,
     MensagemDiretaReferenciaBuscarDto,
@@ -38,7 +40,9 @@ import {
     MensagemDiretaResumoDto,
     StandardResponse,
     avaliarEdicaoDeMensagemDireta,
+    LIMITE_TEXTO_MENSAGEM_DIRETA,
     contemBlocoDeCodigo,
+    destinoDaRespostaDaIaValido,
     ehReacaoValida,
     montarConversaDiretaId,
     outroParticipanteDaConversaDireta,
@@ -50,6 +54,7 @@ import { UnauthorizedAccessException } from '../../../core/exceptions/unauthoriz
 import { AtividadeRepository } from '../../atividade/repositories/atividade.repository';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
+import { ARMAZENAMENTO_DE_CHAT, ArmazenamentoDeChat } from '../../chat/repositories/armazenamento-de-chat';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import { ReferenciaResolvida, montarCitacaoDireta, resolverReferenciaDireta, validarReferenciaDireta } from '../domain/mensagem-direta-referencia';
@@ -93,6 +98,7 @@ export class MensagemDiretaService {
         private readonly iaChatDiretoService: MensagemDiretaIaService,
         private readonly propostaIaService: PropostaIaService,
         private readonly grupoService: GrupoService,
+        @Inject(ARMAZENAMENTO_DE_CHAT) private readonly armazenamentoDeChat: ArmazenamentoDeChat,
     ) {}
 
     // ---------------------------------------------------------------------------
@@ -136,6 +142,57 @@ export class MensagemDiretaService {
             dados: enviada,
             mensagem: enviada.jaExistia ? 'Mensagem já enviada' : 'Mensagem enviada com sucesso',
         };
+    }
+
+    // ---------------------------------------------------------------------------
+    // Enviar a resposta da IA do Chat IA (task 329)
+    // ---------------------------------------------------------------------------
+
+    /**
+     * Entrega a um colega (ou a um grupo/canal) uma resposta da IA do Chat IA de quem envia. O texto é lido aqui, da conversa do próprio remetente:
+     * o cliente só aponta a mensagem. Sai como mensagem `IA` com `chamada_por_usuario_id` = o remetente, sem proposta e sem menção. A nota opcional vai antes,
+     * como mensagem comum. Tudo é validado antes de qualquer gravação.
+     */
+    async enviarRespostaDaIa(dto: MensagemDiretaRespostaIaEnviarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaEnviadaDto>> {
+        if (!destinoDaRespostaDaIaValido(dto)) throw new BusinessException('Informe uma pessoa ou um grupo como destino');
+        const nota = dto.nota?.trim() || undefined;
+        if (nota && !dto.notaMensagemId) throw new BusinessException('A nota precisa de um identificador de mensagem');
+        const texto = await this.lerRespostaDaIa(dto, usuarioAtivo);
+
+        if (dto.grupoId !== undefined && dto.grupoId !== null) {
+            return this.grupoService.enviarRespostaDaIa({ grupoId: dto.grupoId, mensagemId: dto.mensagemId, texto, nota, notaMensagemId: dto.notaMensagemId }, usuarioAtivo);
+        }
+
+        const destinatarioId = dto.destinatarioId as number;
+        await this.validarDestinatarioAtivo(destinatarioId, usuarioAtivo);
+        if (nota) await this.enviarMensagem({ destinatarioId, mensagemId: dto.notaMensagemId as string, texto: nota }, usuarioAtivo);
+        const enviada = await this.armazenamento.gravar({
+            mensagemId: dto.mensagemId.toLowerCase(),
+            conversaId: montarConversaDiretaId(usuarioAtivo.sub, destinatarioId),
+            autor: AutorMensagemDiretaEnum.IA,
+            autorUsuarioId: null,
+            texto,
+            contemCodigo: contemBlocoDeCodigo(texto),
+            mencoes: [],
+            referencias: [],
+            chamadaPorUsuarioId: usuarioAtivo.sub,
+            propostaIds: [],
+        });
+        if (enviada.jaExistia) enviada.mensagem = (await this.juntarReacoes([enviada.mensagem]))[0];
+        if (!enviada.jaExistia) await this.eventosService.publicarParaUsuarios({ usuarioIds: [usuarioAtivo.sub, destinatarioId], evento: { tipo: 'MENSAGEM', mensagem: enviada.mensagem } });
+        return { sucesso: true, dados: enviada, mensagem: enviada.jaExistia ? 'Resposta já enviada' : 'Resposta da IA enviada com sucesso' };
+    }
+
+    /** O texto da resposta da IA, lido do Chat IA **do próprio usuário**: outra conversa, outro autor ou mensagem inexistente é "não encontrada". */
+    private async lerRespostaDaIa(dto: MensagemDiretaRespostaIaEnviarDto, usuarioAtivo: JwtPayload): Promise<string> {
+        if (!dto.conversaId.startsWith(`${usuarioAtivo.sub}-`)) throw new ResourceNotFoundException('Mensagem');
+        const conversa = await this.armazenamentoDeChat.listarConversa({ conversaId: dto.conversaId, usuarioId: usuarioAtivo.sub });
+        const encontrada = conversa.find((mensagem) => mensagem.id === dto.chatMensagemId && mensagem.autor === AutorChatEnum.IA);
+        if (!encontrada || !encontrada.texto.trim()) throw new ResourceNotFoundException('Mensagem');
+        if (encontrada.texto.length > LIMITE_TEXTO_MENSAGEM_DIRETA) {
+            throw new BusinessException(`A resposta tem mais de ${LIMITE_TEXTO_MENSAGEM_DIRETA} caracteres e não cabe numa mensagem do chat`);
+        }
+        return encontrada.texto;
     }
 
     // ---------------------------------------------------------------------------

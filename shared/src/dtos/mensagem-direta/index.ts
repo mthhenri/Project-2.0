@@ -1,6 +1,7 @@
 export * from './ReferenciaMensagemDto';
 export * from './CitacaoMensagemDto';
 export * from './MensagemDiretaEnviarDto';
+export * from './MensagemDiretaRespostaIaEnviarDto';
 export * from './MensagemDiretaListarDto';
 export * from './MensagemDiretaBuscarDto';
 export * from './MensagemDiretaLeituraAlterarDto';

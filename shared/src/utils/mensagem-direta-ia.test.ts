@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { AutorMensagemDiretaEnum } from '../enums/autor-mensagem-direta.enum';
-import { MensagemParaPedidoDaIa, PRAZO_DO_PEDIDO_DA_IA_MINUTOS, chamadaDaIa, mencoesNoTextoDaIa, pedidoPendenteDaIa } from './mensagem-direta-ia';
+import { MensagemParaPedidoDaIa, PRAZO_DO_PEDIDO_DA_IA_MINUTOS, chamadaDaIa, destinoDaRespostaDaIaValido, mencoesNoTextoDaIa, pedidoPendenteDaIa } from './mensagem-direta-ia';
 
 test('chamadaDaIa: @IA no começo, no meio e no fim, sem diferenciar maiúsculas', () => {
     assert.deepEqual(chamadaDaIa('@IA cria uma atividade'), { pedido: 'cria uma atividade' });
@@ -111,4 +111,12 @@ test('mencoesNoTextoDaIa: código, e-mail, quem não é da conversa e @IA não m
     assert.deepEqual(mencoesNoTextoDaIa('@Diego Alves e @IA', PESSOAS, 4), []);
     assert.deepEqual(mencoesNoTextoDaIa('@todosfoo e @Brunão', PESSOAS, 4), []);
     assert.deepEqual(mencoesNoTextoDaIa('', PESSOAS, 4), []);
+});
+
+test('destinoDaRespostaDaIaValido: pessoa ou grupo, nunca os dois nem nenhum', () => {
+    assert.equal(destinoDaRespostaDaIaValido({ destinatarioId: 3 }), true);
+    assert.equal(destinoDaRespostaDaIaValido({ grupoId: 7 }), true);
+    assert.equal(destinoDaRespostaDaIaValido({ destinatarioId: 3, grupoId: 7 }), false);
+    assert.equal(destinoDaRespostaDaIaValido({}), false);
+    assert.equal(destinoDaRespostaDaIaValido({ destinatarioId: null, grupoId: null }), false);
 });

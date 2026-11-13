@@ -132,3 +132,14 @@ export function mencoesNoTextoDaIa(texto: string, pessoas: PessoaMencionavelPela
     }
     return pessoas.map((pessoa) => pessoa.usuarioId).filter((usuarioId, indice, todos) => marcadas.has(usuarioId) && todos.indexOf(usuarioId) === indice);
 }
+
+// ---------------------------------------------------------------------------
+// Resposta do Chat IA enviada a um colaborador (task 329)
+// ---------------------------------------------------------------------------
+
+/** O destino do encaminhamento: uma pessoa **ou** um grupo/canal, nunca os dois nem nenhum. */
+export function destinoDaRespostaDaIaValido(destino: { destinatarioId?: number | null; grupoId?: number | null }): boolean {
+    const temPessoa = destino.destinatarioId !== undefined && destino.destinatarioId !== null;
+    const temGrupo = destino.grupoId !== undefined && destino.grupoId !== null;
+    return temPessoa !== temGrupo;
+}

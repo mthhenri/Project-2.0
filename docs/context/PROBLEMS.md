@@ -29,9 +29,6 @@
 
 ## Ativos
 
-> P-084 e P-085 vêm da auditoria de requisições das telas (2026-11-11); os demais (P-079 a P-083) foram corrigidos nas tasks 320–325. Medição, reprodução e recomendação de cada um em
-> [`DOSSIE.md`](../specs/active/auditoria-requisicoes-telas/DOSSIE.md), pelo código R-NN citado. Os achados de impacto baixo (R-06 a R-10, R-12, R-13, R-15, R-16) ficaram só no dossiê.
-
 ### P-085 — Ação em massa nas atividades faz uma requisição por item · `ABERTO` · frontend/atividade
 
 - **Sintoma:** com N atividades selecionadas, "Mudar status", "Acrescentar tags", "Excluir" e "Desfazer" fazem N chamadas (`PUT`, `PUT .../tag`, `DELETE`, `PATCH .../restaurar`) e depois recarregam a lista. Se uma falhar, a operação fica pela metade (R-14).
