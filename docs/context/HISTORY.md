@@ -21,7 +21,7 @@ Pedido do autor (sem spec): a linha da demanda na lista da pasta mostra um balã
 - **Contrato:** `DemandaGrafoNoDto` ganhou `temChat: boolean`. `DemandaRepository.recuperarGrafo` calcula com `EXISTS (SELECT 1 FROM grupo WHERE grupo.demanda_id = demanda.id AND
   grupo.is_deleted = false)`. Só esse DTO mudou; `DemandaArvoreItemDto`, `DemandaPlanejamentoDto` e `DemandaDocumentacaoResumoDto` ficaram como estavam.
 - **UI:** `demanda-pasta-linha` ganhou um indicador não clicável (`<span role="img">` com `pi-comment`, tooltip e `aria-label`) como primeiro item do grupo de ícones; classes BEM
-  `demanda-pasta-linha__chat` e `--ativo`. Token novo `--app-icone-chat` em `styles.scss` (claro e escuro), com giro de matiz de 2× o das descrições para não se confundir com elas.
+  `demanda-pasta-linha__chat` e `--ativo`. Token novo `--app-icone-chat` em `styles.scss` (claro e escuro) = a cor primária do tema (600 no claro, 400 no escuro), com brilho duplo (drop-shadow 4px e 8px) quando ativo; a primeira versão usava matiz girada e foi trocada a pedido do autor.
   Impacto (`npm run impacto`): os 14 consumidores do DTO só leem o nó; 7 fixtures tipados de teste receberam `temChat: false`.
 - **Testes:** integração `recuperarGrafo: temChat…` (canal ativo, canal excluído, sem canal); spec do componente (ativo/apagado e posição à esquerda). Resultados: lint:tudo limpo;
   shared 362, backend 1812, integração 530 (PostgreSQL 16 local), frontend 2887 em 238 arquivos, todos passando; build do backend e do frontend ok.

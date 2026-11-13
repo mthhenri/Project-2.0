@@ -106,7 +106,8 @@
         &--ativo {
             color: var(--app-icone-chat);
             opacity: 1;
-            filter: drop-shadow(0 0 3px color-mix(in srgb, currentColor 45%, transparent));
+            filter: drop-shadow(0 0 4px color-mix(in srgb, currentColor 80%, transparent))
+                drop-shadow(0 0 8px color-mix(in srgb, currentColor 45%, transparent));
         }
     }
 
