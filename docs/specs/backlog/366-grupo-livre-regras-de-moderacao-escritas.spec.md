@@ -1,6 +1,6 @@
 # 366-grupo-livre-regras-de-moderacao-escritas.spec.md
 
-> Task 38/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-047 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Responde criador × membro × gestor no grupo livre; no canal renomear, adicionar e sair são recusados..
+> Task 38/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-047 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -15,13 +15,13 @@ O criador não tem poder próprio (`criadorUsuarioId` só é devolvido), gestor 
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.ts:240-241 — `alterarGrupo`: basta ser membro de grupo livre
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.ts:264-270 — `adicionarMembros`: basta ser membro; só exige pessoas ativas
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/repositories/grupo.repository.ts:430-438 — readicionar reabre a linha de quem tinha saído
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.ts:301-304 — a saída é sempre a do token
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/repositories/grupo.repository.ts:454 — `sairDoGrupo`: sem membros restantes, soft delete do grupo
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/controllers/mensagem-direta-grupo.controller.ts:93 — "Qualquer membro adiciona pessoas; ninguém remove ninguém."
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.ts:622 — `criadorUsuarioId` só no retorno
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:240-241 — `alterarGrupo`: basta ser membro de grupo livre
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:264-270 — `adicionarMembros`: basta ser membro; só exige pessoas ativas
+- backend/src/modules/mensagem-direta/repositories/grupo.repository.ts:430-438 — readicionar reabre a linha de quem tinha saído
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:301-304 — a saída é sempre a do token
+- backend/src/modules/mensagem-direta/repositories/grupo.repository.ts:454 — `sairDoGrupo`: sem membros restantes, soft delete do grupo
+- backend/src/modules/mensagem-direta/controllers/mensagem-direta-grupo.controller.ts:93 — "Qualquer membro adiciona pessoas; ninguém remove ninguém."
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:622 — `criadorUsuarioId` só no retorno
 
 Como observar: DESENVOLVEDOR A chama `DELETE /mensagem-direta/grupo/:grupoId/membro`; DESENVOLVEDOR B chama `POST /mensagem-direta/grupo/:grupoId/membros` com `{ usuarioIds: [A] }` → 200; A volta a ser membro e `GET .../mensagens` devolve todo o histórico.
 
@@ -52,3 +52,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Decisão do autor acima.
+

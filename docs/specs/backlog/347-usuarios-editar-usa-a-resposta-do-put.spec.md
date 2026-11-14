@@ -1,6 +1,6 @@
 # 347-usuarios-editar-usa-a-resposta-do-put.spec.md
 
-> Task 19/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-025, A-026 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 19/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-025, A-026 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/usuario.
 
 ## Objetivo
@@ -58,3 +58,4 @@ Tirar o `GET /usuario/:id` da abertura do diálogo: exigiria `horasDiariasNecess
 ## Dependências
 
 Nenhuma.
+

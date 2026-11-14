@@ -1,6 +1,6 @@
 # 370-assistente-de-descricao-com-usuario-limite-e-custo.spec.md
 
-> Task 42/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-053 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Rota irmã de POST /assistente/alterar-trecho, que está conforme..
+> Task 42/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-053 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/assistente. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -15,11 +15,11 @@ A rota não recebe o usuário ativo, não confere nenhuma entidade (o contexto �
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/assistente/controllers/assistente.controller.ts:13-16 — `auxiliarDescricao(@Body() dto)` sem `@ActiveUser()`
-- /home/user/Project-2.0/backend/src/modules/assistente/services/assistente.service.ts:49-82 — chama `iaService.gerar` e devolve, sem `iaUsoService.registrar`
-- /home/user/Project-2.0/backend/src/modules/assistente/services/assistente.service.ts:128-137 — `alterarTrecho` registra o uso com `usuarioId` e `demandaId`
-- /home/user/Project-2.0/shared/src/dtos/assistente/AssistenteDescricaoAuxiliarDto.ts:4-14 — `textoOriginal` só com `@MinLength(10)`; `contextoEntidade` só `@IsString/@IsNotEmpty`
-- /home/user/Project-2.0/shared/src/dtos/assistente/AssistenteTrechoAlterarDto.ts:24-36 — a rota irmã limita `bloco`, `selecao` (8000) e `pedido` (2000)
+- backend/src/modules/assistente/controllers/assistente.controller.ts:13-16 — `auxiliarDescricao(@Body() dto)` sem `@ActiveUser()`
+- backend/src/modules/assistente/services/assistente.service.ts:49-82 — chama `iaService.gerar` e devolve, sem `iaUsoService.registrar`
+- backend/src/modules/assistente/services/assistente.service.ts:128-137 — `alterarTrecho` registra o uso com `usuarioId` e `demandaId`
+- shared/src/dtos/assistente/AssistenteDescricaoAuxiliarDto.ts:4-14 — `textoOriginal` só com `@MinLength(10)`; `contextoEntidade` só `@IsString/@IsNotEmpty`
+- shared/src/dtos/assistente/AssistenteTrechoAlterarDto.ts:24-36 — a rota irmã limita `bloco`, `selecao` (8000) e `pedido` (2000)
 
 Como observar: Como DESENVOLVEDOR: POST /assistente/auxiliar-descricao {"textoOriginal":"<texto de dezenas de KB>","tipoEntidade":"demanda","contextoEntidade":"qualquer coisa"}. Esperado: limite de tamanho e a chamada na aba Custos em nome do usuário. O código: 200 com o texto da IA e nenhum registro de uso.
 
@@ -55,3 +55,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Decisão do autor acima.
+

@@ -1,6 +1,6 @@
 # 337-sessao-nao-reconfere-logo-apos-o-login.spec.md
 
-> Task 9/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-011 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 9/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-011 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -41,3 +41,4 @@ A reconferência a cada abertura da casca (decisão do P-062).
 ## Dependências
 
 Nenhuma.
+

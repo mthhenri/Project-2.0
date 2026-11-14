@@ -1,6 +1,6 @@
 # 329-desktop-checkin-conferencia-agendada.spec.md
 
-> Task 1/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-001 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01, corrigido no frontend e conforme; continua no Project Desktop (fora do que as tasks 320–325 tocaram).
+> Task 1/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-001 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01.
 > Severidade: Alta. Área: desktop.
 
 ## Objetivo
@@ -48,3 +48,4 @@ A conferência de 3 s com a janelinha aberta (spec do diálogo do check-in) e a 
 ## Dependências
 
 Nenhuma.
+

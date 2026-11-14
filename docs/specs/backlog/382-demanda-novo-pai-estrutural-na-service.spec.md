@@ -1,6 +1,6 @@
 # 382-demanda-novo-pai-estrutural-na-service.spec.md
 
-> Task 54/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-066 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Rota e ferramenta de IA divergentes; trava só na interface para a rota REST..
+> Task 54/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-066 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/demanda.
 
 ## Objetivo
@@ -42,3 +42,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Nenhuma.
+

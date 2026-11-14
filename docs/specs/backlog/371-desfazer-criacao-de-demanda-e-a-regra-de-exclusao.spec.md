@@ -1,6 +1,6 @@
 # 371-desfazer-criacao-de-demanda-e-a-regra-de-exclusao.spec.md
 
-> Task 43/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-054, A-055 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Único executor lido cujo desfazer chama exclusão sem usuário e sem checagem de tipo própria.; Mesma regra em dois lugares com diferença (rota × executor de IA)..
+> Task 43/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-054, A-055 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -15,10 +15,10 @@ O desfazer de `CRIAR_DEMANDA` confere só a leitura (`demandaService.recuperar`)
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/demanda/executores/criar-demanda.executor.ts:73-78 — `recuperar` (leitura), `possuiFilhasOuAtividades` e `this.demandaService.excluir({ id: demandaId })`
-- /home/user/Project-2.0/backend/src/modules/demanda/services/demanda.service.ts:692 — `async excluir(dto: DemandaRecuperarDto)`, sem usuário ativo
-- /home/user/Project-2.0/backend/src/modules/ferramenta-ia/domain/sem-exclusao.ts:9-14 — a lista fechada só tem desconectar demanda e excluir atividade
-- /home/user/Project-2.0/backend/src/modules/projeto/executores/criar-projeto.executor.ts:45 — o desfazer equivalente do projeto chama `exigirGestor` antes de excluir
+- backend/src/modules/demanda/executores/criar-demanda.executor.ts:73-78 — `recuperar` (leitura), `possuiFilhasOuAtividades` e `this.demandaService.excluir({ id: demandaId })`
+- backend/src/modules/demanda/services/demanda.service.ts:692 — `async excluir(dto: DemandaRecuperarDto)`, sem usuário ativo
+- backend/src/modules/ferramenta-ia/domain/sem-exclusao.ts:9-14 — a lista fechada só tem desconectar demanda e excluir atividade
+- backend/src/modules/projeto/executores/criar-projeto.executor.ts:45 — o desfazer equivalente do projeto chama `exigirGestor` antes de excluir
 
 Como observar: Como AUXILIAR: confirmar uma proposta CRIAR_DEMANDA e em seguida POST /proposta-ia/<id>/desfazer. Regra de referência: auxiliar não exclui demanda. O código: 200 e a demanda fica excluída; membros, tags ou textos que outra pessoa pôs nela nesse intervalo saem junto.
 
@@ -66,3 +66,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Decisão do autor acima.
+

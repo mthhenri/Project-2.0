@@ -1,6 +1,6 @@
 # 389-demanda-testes-por-tipo-de-usuario.spec.md
 
-> Task 61/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-073 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Cobre os achados de membro gestor, 403 × 404 e exclusão pelo desfazer..
+> Task 61/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-073 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda.
 
 ## Objetivo
@@ -41,3 +41,4 @@ Os testes de alvo gestor ou inativo e do desfazer de criar demanda, que vêm nas
 ## Dependências
 
 Nenhuma.
+

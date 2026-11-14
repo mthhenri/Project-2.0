@@ -1,6 +1,6 @@
 # 338-desktop-versao-so-ao-abrir-o-menu.spec.md
 
-> Task 10/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-012, A-013 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 10/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-012, A-013 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -58,3 +58,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Nenhuma.
+

@@ -1,6 +1,6 @@
 # 386-conexao-entre-projetos-regra.spec.md
 
-> Task 58/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-070 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Responde ao foco "conexões entre projetos diferentes": sem brecha para o desenvolvedor, regra de negócio em aberto para condutores..
+> Task 58/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-070 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -48,3 +48,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Decisão do autor acima.
+

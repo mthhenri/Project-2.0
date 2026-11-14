@@ -1,6 +1,6 @@
 # 359-supervisao-do-chat-auditoria-com-ou-sem-cursor.spec.md
 
-> Task 31/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-039, A-040 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Mesma raiz do achado de leitura por tipo sem auditoria (fixadas e última mensagem); o padrão pode se repetir na supervisão um a um, não lida..
+> Task 31/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-039, A-040 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/mensagem-direta.
 
 ## Objetivo
@@ -15,13 +15,13 @@ A auditoria e a mensagem "leu este grupo/canal" só acontecem quando a requisiç
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo-supervisao.service.ts:128-131 — `if (!dto.cursor) { registrarLeituraDeGrupo(...); avisarMembros(...) }`: auditoria e aviso só sem cursor
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo-supervisao.service.ts:133 — `listarConversa({ conversaId, cursor: dto.cursor, ... })` devolve as mensagens com ou sem auditoria
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/domain/mensagem-direta-consultas.ts:164-175 — `decodificarCursor` aceita qualquer base64url de `[número finito, string não vazia]`
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/repositories/mensagem-direta-postgres.repository.ts:416-420 — `(created_date, mensagem_id) < (cursorData, cursorMensagemId)`: data futura no cursor traz a página mais nova
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/repositories/mensagem-direta-postgres.repository.ts:673-679 — `lerCursor` só confere data válida e formato de UUID
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.ts:371-372 — leitor por tipo do canal repassa `dto.cursor` a `lerGrupoSupervisionado`
-- /home/user/Project-2.0/shared/src/dtos/grupo/GrupoSupervisaoLerDto.ts:10-13 — `cursor` validado só com `@IsString` e `@MaxLength`
+- backend/src/modules/mensagem-direta/services/grupo-supervisao.service.ts:128-131 — `if (!dto.cursor) { registrarLeituraDeGrupo(...); avisarMembros(...) }`: auditoria e aviso só sem cursor
+- backend/src/modules/mensagem-direta/services/grupo-supervisao.service.ts:133 — `listarConversa({ conversaId, cursor: dto.cursor, ... })` devolve as mensagens com ou sem auditoria
+- backend/src/modules/mensagem-direta/domain/mensagem-direta-consultas.ts:164-175 — `decodificarCursor` aceita qualquer base64url de `[número finito, string não vazia]`
+- backend/src/modules/mensagem-direta/repositories/mensagem-direta-postgres.repository.ts:416-420 — `(created_date, mensagem_id) < (cursorData, cursorMensagemId)`: data futura no cursor traz a página mais nova
+- backend/src/modules/mensagem-direta/repositories/mensagem-direta-postgres.repository.ts:673-679 — `lerCursor` só confere data válida e formato de UUID
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:371-372 — leitor por tipo do canal repassa `dto.cursor` a `lerGrupoSupervisionado`
+- shared/src/dtos/grupo/GrupoSupervisaoLerDto.ts:10-13 — `cursor` validado só com `@IsString` e `@MaxLength`
 
 Como observar: GESTOR, grupo livre só de desenvolvedores: `GET /mensagem-direta/supervisao/grupo/:grupoId?cursor=<base64url de [4102444800000,"00000000-0000-0000-0000-000000000000"]>` (ou `GET /mensagem-direta/grupo/:canalId/mensagens?cursor=...` num canal em que não é membro). Esperado: linha de auditoria e mensagem do sistema "..., gestor, leu este grupo". O código responde 200 com as mensagens mais novas, `membrosAvisados: false`, sem auditoria e sem aviso. Não executado: conclusão por leitura.
 
@@ -53,7 +53,7 @@ Verificação na auditoria: reproduzido na aplicação rodando em 2026-11-14 com
 
 ## Fora de Escopo
 
-Assinar ou amarrar o cursor à conversa; o que mais o gestor lê do canal sem abrir a conversa (spec `canal-leitura-por-tipo-sempre-auditada`).
+Assinar ou amarrar o cursor à conversa; o que mais o gestor lê do canal sem abrir a conversa (spec `361-canal-leitura-por-tipo-sempre-auditada`).
 
 ## Dependências
 
@@ -62,3 +62,4 @@ Nenhuma.
 ## Riscos e Mitigação
 
 A correção muda um comportamento que o comentário do código descreve como intencional ("as páginas com cursor continuam a mesma abertura"). A intenção continua atendida: quem já abriu hoje não gera auditoria nova.
+

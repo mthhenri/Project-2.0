@@ -1,6 +1,6 @@
 # 388-participacao-na-demanda-como-controle-de-edicao.spec.md
 
-> Task 60/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-072 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Conforme às regras de referência; é consequência delas, não defeito de código..
+> Task 60/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-072 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -48,3 +48,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Decisão do autor acima.
+

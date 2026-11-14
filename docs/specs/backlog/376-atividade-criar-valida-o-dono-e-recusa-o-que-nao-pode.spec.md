@@ -1,6 +1,6 @@
 # 376-atividade-criar-valida-o-dono-e-recusa-o-que-nao-pode.spec.md
 
-> Task 48/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-060 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Regra do dono repetida em service, executor e ferramenta, com três respostas diferentes..
+> Task 48/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-060 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/atividade.
 
 ## Objetivo
@@ -45,3 +45,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Nenhuma.
+

@@ -1,6 +1,6 @@
 # 349-documentacoes-abrir-a-demanda-em-paralelo.spec.md
 
-> Task 21/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-028 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 21/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-028 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/documentacao.
 
 ## Objetivo
@@ -40,4 +40,5 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 
 ## Dependências
 
-Convém depois de `documentacoes-erros-tratados-pela-tela` (o 404 da demanda precisa ser tratado pela tela).
+Convém depois de `346-documentacoes-erros-tratados-pela-tela` (o 404 da demanda precisa ser tratado pela tela).
+

@@ -1,6 +1,6 @@
 # 374-execucao-alterar-confere-ativa-e-sobreposicao.spec.md
 
-> Task 46/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-058 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Regra de negócio aplicada só no caminho da IA; a rota fica mais permissiva..
+> Task 46/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-058 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/execucao.
 
 ## Objetivo
@@ -44,3 +44,4 @@ O encerramento automático das 23:59:59.
 ## Dependências
 
 Nenhuma.
+

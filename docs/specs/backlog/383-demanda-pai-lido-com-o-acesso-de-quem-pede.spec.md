@@ -1,6 +1,6 @@
 # 383-demanda-pai-lido-com-o-acesso-de-quem-pede.spec.md
 
-> Task 55/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-067 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Mesma classe do achado de 403 × 404 nas escritas de tag e membro..
+> Task 55/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-067 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda.
 
 ## Objetivo
@@ -41,3 +41,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Nenhuma.
+

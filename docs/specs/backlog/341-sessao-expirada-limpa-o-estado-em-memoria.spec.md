@@ -1,6 +1,6 @@
 # 341-sessao-expirada-limpa-o-estado-em-memoria.spec.md
 
-> Task 13/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-016 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 13/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-016 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -37,8 +37,9 @@ Verificação na auditoria: código, por um auditor; linhas citadas conferidas p
 
 ## Fora de Escopo
 
-O estado do pad (spec `pad-encerrar-zera-o-estado`) e os catálogos em memória (spec de permissões na interface, se houver).
+O estado do pad (spec `344-pad-encerrar-zera-o-estado`) e os catálogos em memória (spec de permissões na interface, se houver).
 
 ## Dependências
 
 Nenhuma.
+

@@ -1,6 +1,6 @@
 # 332-leituras-de-fundo-sem-toast-de-erro.spec.md
 
-> Task 4/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-004 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 4/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-004 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/casca.
 
 ## Objetivo
@@ -46,3 +46,4 @@ Mensagens de erro das ações que o usuário dispara.
 ## Dependências
 
 Nenhuma.
+

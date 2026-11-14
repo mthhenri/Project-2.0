@@ -1,6 +1,6 @@
 # 340-sessao-reconfere-o-tipo-ao-receber-403.spec.md
 
-> Task 12/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-015 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 12/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-015 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -43,3 +43,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Nenhuma.
+

@@ -1,6 +1,6 @@
 # 353-usuario-tem-anotacoes-barato-e-so-para-quem-pode.spec.md
 
-> Task 25/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-032, A-033 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 25/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-032, A-033 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/usuario.
 
 ## Objetivo
@@ -58,3 +58,4 @@ Calcular o campo só para a tela Usuários (exigiria parâmetro ou DTO de seleto
 ## Dependências
 
 Nenhuma.
+

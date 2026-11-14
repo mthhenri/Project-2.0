@@ -1,6 +1,6 @@
 # 373-atividade-de-colega-so-o-dono-ou-quem-conduz-altera.spec.md
 
-> Task 45/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-057 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Mesma condição em duas funções; ligada ao achado do dono não membro (GET 403 x PUT 200)..
+> Task 45/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-057 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -56,3 +56,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Decisão do autor acima.
+

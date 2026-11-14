@@ -1,6 +1,6 @@
 # 339-encerrar-execucao-sem-reler-a-ativa.spec.md
 
-> Task 11/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-014 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 11/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-014 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -41,3 +41,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Nenhuma.
+

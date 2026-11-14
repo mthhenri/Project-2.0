@@ -1,6 +1,6 @@
 # 335-execucoes-da-atividade-as-ultimas-primeiro.spec.md
 
-> Task 7/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-007, A-008 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-07, continua (e R-05: o teto de 200 não foi trocado por allRows neste método).
+> Task 7/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-007, A-008 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-05, R-07.
 > Severidade: Média. Área: frontend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -75,3 +75,4 @@ Paginação do histórico de execuções.
 ## Dependências
 
 Decisão do autor acima.
+

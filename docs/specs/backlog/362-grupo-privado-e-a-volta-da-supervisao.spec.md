@@ -1,6 +1,6 @@
 # 362-grupo-privado-e-a-volta-da-supervisao.spec.md
 
-> Task 34/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-043 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Regra de supervisão do código; não conferi se está escrita no documento..
+> Task 34/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-043 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -15,12 +15,12 @@ A mensagem do sistema promete que "a conversa agora é privada e a supervisão n
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/domain/grupo-regras.ts:84 — texto "a conversa agora é privada e a supervisão não a lê"
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo-supervisao.service.ts:118-123 — elegibilidade pelos tipos dos membros atuais
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/repositories/grupo.repository.ts:339-375 — `listarIdsSupervisionaveis` olha só `saida_data IS NULL`
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo-supervisao.service.ts:133 — `listarConversa` sem recorte de data: o período privado vem junto
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.ts:306-310 — na saída só `textoDeSaidaDoGrupo`; nenhum aviso de que a supervisão volta a ler
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.integracao.test.ts:424 — teste "o gestor sair do grupo o torna legível de novo"
+- backend/src/modules/mensagem-direta/domain/grupo-regras.ts:84 — texto "a conversa agora é privada e a supervisão não a lê"
+- backend/src/modules/mensagem-direta/services/grupo-supervisao.service.ts:118-123 — elegibilidade pelos tipos dos membros atuais
+- backend/src/modules/mensagem-direta/repositories/grupo.repository.ts:339-375 — `listarIdsSupervisionaveis` olha só `saida_data IS NULL`
+- backend/src/modules/mensagem-direta/services/grupo-supervisao.service.ts:133 — `listarConversa` sem recorte de data: o período privado vem junto
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:306-310 — na saída só `textoDeSaidaDoGrupo`; nenhum aviso de que a supervisão volta a ler
+- backend/src/modules/mensagem-direta/services/grupo.service.integracao.test.ts:424 — teste "o gestor sair do grupo o torna legível de novo"
 
 Como observar: Grupo livre com GESTOR A e dois desenvolvedores, com mensagens; A chama `DELETE /mensagem-direta/grupo/:grupoId/membro`; GESTOR B chama `GET /mensagem-direta/supervisao/grupo/:grupoId` → 200 com todas as mensagens, inclusive as de A. Esperado pelo texto mostrado: o período privado não é lido.
 
@@ -51,3 +51,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Decisão do autor acima.
+

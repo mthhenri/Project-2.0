@@ -1,6 +1,6 @@
 # 369-proposta-de-trecho-do-plano-so-resolve-quem-edita-a-aba.spec.md
 
-> Task 41/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-052 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Mesma lacuna de `podeResolver` usada no achado do ajuste..
+> Task 41/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-052 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/plano.
 
 ## Objetivo
@@ -15,10 +15,10 @@ Quem não edita a aba (desenvolvedor e auxiliar na descrição do cliente) não 
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/proposta-ia/services/proposta-ia.service.ts:139-148 — `recusar` chama `obterDoUsuario` e `transitar` para EXPIRADA, sem executor
-- /home/user/Project-2.0/backend/src/modules/plano/executores/alterar-trecho-do-plano.executor.ts:72-80 — `podeResolver` devolve true só com `planoService.recuperar`
-- /home/user/Project-2.0/backend/src/modules/proposta-ia/domain/executor-proposta-ia.ts:24-26 — contrato: 'quem pode editar o plano a resolve'
-- /home/user/Project-2.0/shared/src/utils/plano.ts:15-17 — `podeEditarAbaDoPlano`: DESCRICAO_CLIENTE só com `temPermissaoDeGestor`
+- backend/src/modules/proposta-ia/services/proposta-ia.service.ts:139-148 — `recusar` chama `obterDoUsuario` e `transitar` para EXPIRADA, sem executor
+- backend/src/modules/plano/executores/alterar-trecho-do-plano.executor.ts:72-80 — `podeResolver` devolve true só com `planoService.recuperar`
+- backend/src/modules/proposta-ia/domain/executor-proposta-ia.ts:24-26 — contrato: 'quem pode editar o plano a resolve'
+- shared/src/utils/plano.ts:15-17 — `podeEditarAbaDoPlano`: DESCRICAO_CLIENTE só com `temPermissaoDeGestor`
 
 Como observar: Como DESENVOLVEDOR com acesso ao plano: POST /proposta-ia/P/recusar numa proposta do gestor com `aba: DESCRICAO_CLIENTE`. Esperado: 403. O código: 200 e a proposta vira EXPIRADA (o mesmo por POST /proposta-ia/grupo/recusar).
 
@@ -41,3 +41,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Nenhuma.
+

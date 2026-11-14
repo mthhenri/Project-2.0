@@ -1,6 +1,6 @@
 # 331-execucao-ativa-consulta-com-guarda.spec.md
 
-> Task 3/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-003 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-06, continua.
+> Task 3/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-003 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-06.
 > Severidade: Média. Área: frontend/casca.
 
 ## Objetivo
@@ -44,3 +44,4 @@ Recarga das listas das telas ao voltar à aba (spec própria).
 ## Dependências
 
 Nenhuma.
+

@@ -1,6 +1,6 @@
 # 343-codigo-morto-da-casca-e-do-checkin.spec.md
 
-> Task 15/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-018 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 15/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-018 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -42,3 +42,4 @@ A rota `GET /checkin/suspensao`, sem consumidor no front: remover rota é contra
 ## Dependências
 
 Nenhuma.
+

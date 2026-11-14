@@ -1,6 +1,6 @@
 # 333-checkin-dialogo-conferencia-por-evento.spec.md
 
-> Task 5/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-005 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01, corrigido e conforme (3 s só com a aba visível); ganho além da decisão.
+> Task 5/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-005 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01.
 > Severidade: Média. Área: frontend/checkin. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -56,4 +56,5 @@ A janelinha (task 322) e o processo do Desktop (spec própria).
 
 ## Dependências
 
-Decisão do autor acima. Convém depois de `execucao-ativa-consulta-com-guarda`.
+Decisão do autor acima. Convém depois de `331-execucao-ativa-consulta-com-guarda`.
+

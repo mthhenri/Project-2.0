@@ -1,6 +1,6 @@
 # 379-execucao-registrar-e-excluir-conferem-na-service.spec.md
 
-> Task 51/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-063 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Mesma classe do achado de excluir atividade: regra em camadas diferentes por módulo..
+> Task 51/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-063 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/execucao.
 
 ## Objetivo
@@ -44,3 +44,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Nenhuma.
+

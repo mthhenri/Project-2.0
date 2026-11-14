@@ -1,6 +1,6 @@
 # 372-ia-consultar-demanda-e-grafo-para-o-desenvolvedor.spec.md
 
-> Task 44/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-056 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Caso inverso do foco: aqui a ferramenta é mais estreita que a rota..
+> Task 44/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-056 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -15,10 +15,10 @@ As duas ferramentas de leitura declaram `permissao = 'AUXILIAR'`, embora chamem 
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/atividade/ferramentas/consultar-demanda.ferramenta.ts:28 — `permissao = 'AUXILIAR'`; :39 — `demandaService.recuperar({ id }, usuarioAtivo)`
-- /home/user/Project-2.0/backend/src/modules/demanda/ferramentas/consultar-grafo-do-projeto.ferramenta.ts:21 — `permissao = 'AUXILIAR'`; :29 — `demandaService.recuperarGrafo({ projetoId }, usuarioAtivo)`
-- /home/user/Project-2.0/backend/src/modules/demanda/ferramentas/listar-demandas-do-projeto.ferramenta.ts:23 e :46-47 — QUALQUER, e o caminho do desenvolvedor usa o mesmo `recuperarGrafo`
-- /home/user/Project-2.0/backend/src/modules/ferramenta-ia/services/ferramenta-ia.registro.ts:55 — a ferramenta nem é listada ao modelo para quem não passa em `usuarioPodeUsar`
+- backend/src/modules/atividade/ferramentas/consultar-demanda.ferramenta.ts:28 — `permissao = 'AUXILIAR'`; :39 — `demandaService.recuperar({ id }, usuarioAtivo)`
+- backend/src/modules/demanda/ferramentas/consultar-grafo-do-projeto.ferramenta.ts:21 — `permissao = 'AUXILIAR'`; :29 — `demandaService.recuperarGrafo({ projetoId }, usuarioAtivo)`
+- backend/src/modules/demanda/ferramentas/listar-demandas-do-projeto.ferramenta.ts:23 e :46-47 — QUALQUER, e o caminho do desenvolvedor usa o mesmo `recuperarGrafo`
+- backend/src/modules/ferramenta-ia/services/ferramenta-ia.registro.ts:55 — a ferramenta nem é listada ao modelo para quem não passa em `usuarioPodeUsar`
 
 Como observar: Como DESENVOLVEDOR membro da demanda D: a leitura HTTP de D responde 200; no chat, pedir os detalhes de D: `consultar_demanda` não existe para o modelo e ele responde sem os dados.
 
@@ -51,3 +51,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Decisão do autor acima.
+

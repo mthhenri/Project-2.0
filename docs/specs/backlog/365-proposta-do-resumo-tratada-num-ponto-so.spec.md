@@ -1,6 +1,6 @@
 # 365-proposta-do-resumo-tratada-num-ponto-so.spec.md
 
-> Task 37/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-046 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Responde "quem confirma a proposta do resumo": só quem gerou; o desvio é de fluxo, não de permissão sobre a demanda..
+> Task 37/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-046 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta e proposta-ia.
 
 ## Objetivo
@@ -15,12 +15,12 @@ A proposta de gravar o resumo é uma proposta comum do usuário; `confirmarPropo
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo-resumo-ia.service.ts:222 — proposta `ALTERAR_DEMANDA` criada em nome de quem pede
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo-resumo-ia.service.ts:229-235 — `confirmarProposta`: membro do grupo, `marcarGravado` e aviso no chat
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo-resumo-ia.service.ts:211 — `criarProposta` só barra se `gravadaData` estiver preenchida
-- /home/user/Project-2.0/backend/src/modules/proposta-ia/controllers/ (único *.controller.ts):33 e :48 — `@Post(':id/confirmar')` e `@Post(':id/desfazer')`
-- /home/user/Project-2.0/backend/src/modules/proposta-ia/services/proposta-ia.service.ts:322-327 — `obterDoUsuario` confere só o dono
-- /home/user/Project-2.0/backend/src/modules/demanda/executores/alterar-demanda.executor.ts:46 e :58-64 — executor usa `demandaService.recuperar/alterar` com o usuário
+- backend/src/modules/mensagem-direta/services/grupo-resumo-ia.service.ts:222 — proposta `ALTERAR_DEMANDA` criada em nome de quem pede
+- backend/src/modules/mensagem-direta/services/grupo-resumo-ia.service.ts:229-235 — `confirmarProposta`: membro do grupo, `marcarGravado` e aviso no chat
+- backend/src/modules/mensagem-direta/services/grupo-resumo-ia.service.ts:211 — `criarProposta` só barra se `gravadaData` estiver preenchida
+- backend/src/modules/proposta-ia/controllers/ (único *.controller.ts):33 e :48 — `@Post(':id/confirmar')` e `@Post(':id/desfazer')`
+- backend/src/modules/proposta-ia/services/proposta-ia.service.ts:322-327 — `obterDoUsuario` confere só o dono
+- backend/src/modules/demanda/executores/alterar-demanda.executor.ts:46 e :58-64 — executor usa `demandaService.recuperar/alterar` com o usuário
 
 Como observar: Membro do canal: `POST /mensagem-direta/grupo/:g/resumo/:r/proposta` e depois `POST /proposta-ia/:propostaId/confirmar`. Esperado: resumo marcado como gravado e mensagem "Resumo gravado na demanda"; pelo código a documentação é gravada sem as duas coisas e um novo `POST .../proposta` do mesmo resumo é aceito. Não executado: as transições de `PropostaIaService.confirmar` não foram lidas.
 
@@ -43,3 +43,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Nenhuma.
+

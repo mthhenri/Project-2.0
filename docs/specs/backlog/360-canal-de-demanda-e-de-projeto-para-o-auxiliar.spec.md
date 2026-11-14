@@ -1,6 +1,6 @@
 # 360-canal-de-demanda-e-de-projeto-para-o-auxiliar.spec.md
 
-> Task 32/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-041 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Explica o 403 medido no GET do canal; ligado à lacuna de teste do AUXILIAR..
+> Task 32/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-041 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta e frontend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -15,13 +15,13 @@ O acesso ao canal decide "por tipo" com `temPermissaoDeGestor`, que não inclui 
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/canal-acesso.service.ts:121 — `const porTipo = temPermissaoDeGestor(usuarioAtivo.tipo)`
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/canal-acesso.service.ts:127-129 — sem `porTipo`, exige `validarMembro` e lança 403 "Você não é membro desta demanda"
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/canal-acesso.service.ts:134-136 — projeto: exige `validarAcessoProjeto`, senão 403
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.ts:543 e :660 — lista e leitura por tipo usam a mesma `temPermissaoDeGestor`
-- /home/user/Project-2.0/shared/src/utils/permissao-usuario.ts:23-27 e :37-39 — `temVisibilidadeTotal` inclui AUXILIAR
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/domain/mensagem-direta-referencia.ts:30 — referência a demanda usa `temVisibilidadeTotal`
-- /home/user/Project-2.0/backend/src/modules/demanda/services/demanda.service.ts:315-317 — `podeEditar = temVisibilidadeTotal(tipo) || validarMembro(...)`
+- backend/src/modules/mensagem-direta/services/canal-acesso.service.ts:121 — `const porTipo = temPermissaoDeGestor(usuarioAtivo.tipo)`
+- backend/src/modules/mensagem-direta/services/canal-acesso.service.ts:127-129 — sem `porTipo`, exige `validarMembro` e lança 403 "Você não é membro desta demanda"
+- backend/src/modules/mensagem-direta/services/canal-acesso.service.ts:134-136 — projeto: exige `validarAcessoProjeto`, senão 403
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:543 e :660 — lista e leitura por tipo usam a mesma `temPermissaoDeGestor`
+- shared/src/utils/permissao-usuario.ts:23-27 e :37-39 — `temVisibilidadeTotal` inclui AUXILIAR
+- backend/src/modules/mensagem-direta/domain/mensagem-direta-referencia.ts:30 — referência a demanda usa `temVisibilidadeTotal`
+- backend/src/modules/demanda/services/demanda.service.ts:315-317 — `podeEditar = temVisibilidadeTotal(tipo) || validarMembro(...)`
 
 Como observar: AUXILIAR sem linha em `demanda_usuario`: `GET /mensagem-direta/canal/demanda/:demandaId` e `POST /mensagem-direta/canal/demanda/:demandaId` → 403 (medido no GET); a mesma demanda é devolvida pelo `DemandaService.recuperar` com `podeEditar: true`. Esperado pela visão total: 200.
 
@@ -54,3 +54,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Decisão do autor acima.
+

@@ -1,6 +1,6 @@
 # 361-canal-leitura-por-tipo-sempre-auditada.spec.md
 
-> Task 33/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-042 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Complementa o achado do cursor: os dois deixam a leitura de terceiros fora da auditoria..
+> Task 33/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-042 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -15,13 +15,13 @@ O próprio código declara que a leitura por tipo é "a da supervisão: auditada
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.ts:95 — comentário de `leitorPorTipo`: "a leitura é a da supervisão: auditada e avisada"
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo-fixada.service.ts:77-86 — `listarFixadas` usa `exigirAcessoAoGrupo` e devolve a `mensagem` inteira de cada fixada
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.ts:171-172 — `recuperarGrupo` aceita leitor por tipo e chama `montarResumo`
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.ts:624 — `ultimaMensagem` entra no resumo sem olhar se quem pede é membro
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo.service.ts:181-185 — `recuperarCanal` devolve o mesmo resumo
-- /home/user/Project-2.0/shared/src/dtos/grupo/GrupoResumoDto.ts:19 — `ultimaMensagem: MensagemDiretaResumoDto | null`
-- /home/user/Project-2.0/backend/src/modules/mensagem-direta/services/grupo-supervisao.service.ts:68-76 e :99 — lista com filtro `texto` e `ultimaMensagem`, sem `registrarLeituraDeGrupo`
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:95 — comentário de `leitorPorTipo`: "a leitura é a da supervisão: auditada e avisada"
+- backend/src/modules/mensagem-direta/services/grupo-fixada.service.ts:77-86 — `listarFixadas` usa `exigirAcessoAoGrupo` e devolve a `mensagem` inteira de cada fixada
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:171-172 — `recuperarGrupo` aceita leitor por tipo e chama `montarResumo`
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:624 — `ultimaMensagem` entra no resumo sem olhar se quem pede é membro
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:181-185 — `recuperarCanal` devolve o mesmo resumo
+- shared/src/dtos/grupo/GrupoResumoDto.ts:19 — `ultimaMensagem: MensagemDiretaResumoDto | null`
+- backend/src/modules/mensagem-direta/services/grupo-supervisao.service.ts:68-76 e :99 — lista com filtro `texto` e `ultimaMensagem`, sem `registrarLeituraDeGrupo`
 
 Como observar: GESTOR não membro do canal: `GET /mensagem-direta/grupo/:canalId/fixadas` e `GET /mensagem-direta/canal/demanda/:demandaId` → 200 com texto de mensagens; `GET /mensagem-direta/supervisao/grupos?texto=<palavra>` → grupos que contêm a palavra, com a última mensagem. Esperado pela regra do código: auditoria e aviso; o código não grava nem avisa.
 
@@ -55,4 +55,5 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 
 ## Dependências
 
-Decisão do autor acima. Depois de `supervisao-do-chat-auditoria-com-ou-sem-cursor`.
+Decisão do autor acima. Depois de `359-supervisao-do-chat-auditoria-com-ou-sem-cursor`.
+

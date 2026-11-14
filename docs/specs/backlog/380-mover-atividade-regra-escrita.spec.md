@@ -1,6 +1,6 @@
 # 380-mover-atividade-regra-escrita.spec.md
 
-> Task 52/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-064 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Mesmo fluxo do vazamento pelas ferramentas de proposta..
+> Task 52/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-064 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -52,3 +52,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Decisão do autor acima.
+

@@ -1,6 +1,6 @@
 # 334-checkin-situacao-leitura-da-execucao-ativa-enxuta.spec.md
 
-> Task 6/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-006 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 6/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-006 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01.
 > Severidade: Média. Área: backend/checkin. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -54,3 +54,4 @@ Mudar o que a rota devolve; as ferramentas de IA que também usam a execução a
 ## Dependências
 
 Decisão do autor acima.
+

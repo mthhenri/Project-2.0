@@ -1,6 +1,6 @@
 # 330-ia-disponibilidade-pausa-com-a-aba-oculta.spec.md
 
-> Task 2/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-002 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-03, corrigido e conforme (uma consulta por carga); o intervalo de 60 s é ganho além da decisão.
+> Task 2/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-002 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-03.
 > Severidade: Média. Área: frontend/casca. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -57,3 +57,4 @@ O intervalo de 60 s com a aba visível e a regra de 5 s do serviço.
 ## Dependências
 
 Nenhuma.
+

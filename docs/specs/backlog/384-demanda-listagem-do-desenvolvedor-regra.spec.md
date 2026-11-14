@@ -1,6 +1,6 @@
 # 384-demanda-listagem-do-desenvolvedor-regra.spec.md
 
-> Task 56/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-068 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Código mais restritivo que a regra "vê qualquer demanda de projeto acessível"..
+> Task 56/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-068 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -49,3 +49,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Decisão do autor acima. Rodar `npm run impacto` na listagem: vários seletores dependem dela.
+

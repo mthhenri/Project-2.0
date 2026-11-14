@@ -1,6 +1,6 @@
 # 367-ferramentas-de-atividade-conferem-o-acesso-a-demanda.spec.md
 
-> Task 39/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-048, A-049, A-050 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Mesma causa do achado de mover atividade: ferramenta de proposta lendo demanda pelo repositório em vez da service.; Mesma causa do achado de propor_criar_atividade; a parte da `AtividadeService` pertence à unidade de atividades.; A rota PUT /atividade/:id não aceita `demandaId`; o caminho é só a proposta da IA..
+> Task 39/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-048, A-049, A-050 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/atividade.
 
 ## Objetivo
@@ -15,11 +15,11 @@ A ferramenta (permissão QUALQUER) lê a demanda e os ancestrais direto no repos
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/atividade/ferramentas/propor-criar-atividade.ferramenta.ts:40 — `this.demandaRepositorio.recuperar({ id: entrada.demandaId })`, sem usuário nem recorte de acesso
-- /home/user/Project-2.0/backend/src/modules/atividade/ferramentas/propor-criar-atividade.ferramenta.ts:54-57 — `listarAncestral` e `demandaNome: [...ancestrais.map(nome), demanda.nome].join(' › ')` gravado nos dados da proposta
-- /home/user/Project-2.0/backend/src/modules/atividade/services/atividade.service.ts:58-64 — o acesso (`validarAcessoDemanda`) só é conferido na criação, depois de a proposta existir
-- /home/user/Project-2.0/backend/src/modules/proposta-ia/services/proposta-ia.service.ts:102-105 — `recuperarPorId` devolve a proposta inteira (com `dados`) ao dono
-- /home/user/Project-2.0/backend/src/modules/ferramenta-ia/ferramentas/ferramenta-proposta-ia.ts:10 — o comentário diz que nenhuma ferramenta de proposta acessa service de domínio; esta injeta `DemandaRepository` e `UsuarioService`
+- backend/src/modules/atividade/ferramentas/propor-criar-atividade.ferramenta.ts:40 — `this.demandaRepositorio.recuperar({ id: entrada.demandaId })`, sem usuário nem recorte de acesso
+- backend/src/modules/atividade/ferramentas/propor-criar-atividade.ferramenta.ts:54-57 — `listarAncestral` e `demandaNome: [...ancestrais.map(nome), demanda.nome].join(' › ')` gravado nos dados da proposta
+- backend/src/modules/atividade/services/atividade.service.ts:58-64 — o acesso (`validarAcessoDemanda`) só é conferido na criação, depois de a proposta existir
+- backend/src/modules/proposta-ia/services/proposta-ia.service.ts:102-105 — `recuperarPorId` devolve a proposta inteira (com `dados`) ao dono
+- backend/src/modules/ferramenta-ia/ferramentas/ferramenta-proposta-ia.ts:10 — o comentário diz que nenhuma ferramenta de proposta acessa service de domínio; esta injeta `DemandaRepository` e `UsuarioService`
 
 Como observar: Como DESENVOLVEDOR: POST /chat/mensagem {"texto":"crie a atividade Teste na demanda de id N"}, com N de projeto sem acesso; pegar o propostaId do evento `proposta` e chamar GET /proposta-ia/<id>. Esperado: a ferramenta recusa como demanda não encontrada e nenhuma proposta nasce. O código: 200 com `dados.demandaNome` = caminho completo da demanda (com a proposta em 'Faz e avisa' a criação falha, mas a proposta EXPIRADA guarda o mesmo dado).
 
@@ -31,11 +31,11 @@ Verificação na auditoria: código lido pelo agente principal: `propor-criar-at
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- /home/user/Project-2.0/backend/src/modules/atividade/ferramentas/propor-mover-atividade.ferramenta.ts:45-48 — `demandaRepositorio.recuperar({ id: entrada.demandaDestinoId })` e a mensagem `A demanda "${destino.nome}" está concluída/cancelada`
-- /home/user/Project-2.0/backend/src/modules/atividade/ferramentas/propor-mover-atividade.ferramenta.ts:56 — `demandaDestinoNome: destino.nome` gravado na proposta
-- /home/user/Project-2.0/backend/src/modules/atividade/services/atividade.service.ts:253-259 — 404 'Demanda de destino' e 'está concluída/cancelada' antes do acesso
-- /home/user/Project-2.0/backend/src/modules/atividade/services/atividade.service.ts:260-264 — `validarAcessoDemanda` do destino só depois
-- /home/user/Project-2.0/backend/src/modules/demanda/ferramentas/propor-criar-demanda.ferramenta.ts:61-64 — mesma leitura direta da demanda pai (distingue 'não encontrada' de 'deve pertencer ao mesmo projeto')
+- backend/src/modules/atividade/ferramentas/propor-mover-atividade.ferramenta.ts:45-48 — `demandaRepositorio.recuperar({ id: entrada.demandaDestinoId })` e a mensagem `A demanda "${destino.nome}" está concluída/cancelada`
+- backend/src/modules/atividade/ferramentas/propor-mover-atividade.ferramenta.ts:56 — `demandaDestinoNome: destino.nome` gravado na proposta
+- backend/src/modules/atividade/services/atividade.service.ts:253-259 — 404 'Demanda de destino' e 'está concluída/cancelada' antes do acesso
+- backend/src/modules/atividade/services/atividade.service.ts:260-264 — `validarAcessoDemanda` do destino só depois
+- backend/src/modules/demanda/ferramentas/propor-criar-demanda.ferramenta.ts:61-64 — mesma leitura direta da demanda pai (distingue 'não encontrada' de 'deve pertencer ao mesmo projeto')
 
 Como observar: Como DESENVOLVEDOR dono da atividade A: editar A pela rota de alteração da atividade com `demandaId` = N de projeto sem acesso. Esperado: a mesma resposta para todo N que ele não vê. O código: 404 se N não existe, erro de negócio 'está concluída/cancelada' se fechada, 403 se aberta. Pelo chat: pedir para mover A para a demanda N e ler `dados.demandaDestinoNome` em GET /proposta-ia/<id>.
 
@@ -76,3 +76,4 @@ As demais ferramentas (as que repassam `usuarioAtivo` à service já recortam).
 ## Dependências
 
 Nenhuma.
+

@@ -1,6 +1,6 @@
 # 355-usuarios-pode-editar-igual-ao-backend.spec.md
 
-> Task 27/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-035 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 27/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-035 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: frontend/usuario.
 
 ## Objetivo
@@ -44,3 +44,4 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 ## Dependências
 
 Nenhuma.
+

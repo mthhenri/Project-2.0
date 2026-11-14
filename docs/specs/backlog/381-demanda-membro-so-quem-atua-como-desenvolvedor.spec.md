@@ -1,6 +1,6 @@
 # 381-demanda-membro-so-quem-atua-como-desenvolvedor.spec.md
 
-> Task 53/61 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-065 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: Mesma regra em três lugares com diferença (tela, IA, service); a service é o único ponto que a rota REST atravessa..
+> Task 53/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-065 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/demanda.
 
 ## Objetivo
@@ -45,3 +45,4 @@ Limpar linhas já gravadas no banco de produção.
 ## Dependências
 
 Nenhuma.
+
