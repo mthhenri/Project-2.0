@@ -27,4 +27,4 @@ Nenhuma.
 
 ## Fecho
 
-Concluída em 2026-11-11. Seletores de atividade, demanda, projeto e usuário passaram a `allRows: true` (com repasse nos services do frontend de demanda, atividade e execução); `listarExecucoesPorAtividade` (histórico, não seletor) ficou como estava. Ao vivo: o seletor do Ponto traz os 108 usuários numa chamada. Relatório: [`verificacao-320-325.md`](../active/auditoria-requisicoes-telas/verificacao-320-325.md). Gates: frontend 2700 testes, backend 1733, shared 342, integração 425, `npm run lint:tudo` sem erro.
+Concluída em 2026-11-11. Seletores de atividade, demanda, projeto e usuário passaram a `allRows: true` (com repasse nos services do frontend de demanda, atividade e execução); `listarExecucoesPorAtividade` (histórico, não seletor) ficou como estava. Ao vivo: o seletor do Ponto traz os 108 usuários numa chamada. Relatório: [`verificacao-320-325.md`](../backlog/auditoria-requisicoes-telas/verificacao-320-325.md). Gates: frontend 2700 testes, backend 1733, shared 342, integração 425, `npm run lint:tudo` sem erro.

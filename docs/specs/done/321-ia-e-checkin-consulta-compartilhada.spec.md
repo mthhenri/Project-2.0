@@ -29,4 +29,4 @@ Nenhuma. Faça antes da 322, que reaproveita o sinal compartilhado do check-in.
 
 ## Fecho
 
-Concluída em 2026-11-11. `IaDisponibilidadeService.carregar()` pula a consulta com outra em curso ou resposta de menos de 5 s (`{ forcar: true }` no intervalo de 60 s da barra e na atualização do chat); `CheckinService.consultarSituacao()` compartilha a consulta em curso. Ao vivo: 1 `/ia/disponibilidade` e 1 `/checkin/situacao` por carga. Relatório: [`verificacao-320-325.md`](../active/auditoria-requisicoes-telas/verificacao-320-325.md). Gates: frontend 2700 testes, backend 1733, shared 342, integração 425, `npm run lint:tudo` sem erro.
+Concluída em 2026-11-11. `IaDisponibilidadeService.carregar()` pula a consulta com outra em curso ou resposta de menos de 5 s (`{ forcar: true }` no intervalo de 60 s da barra e na atualização do chat); `CheckinService.consultarSituacao()` compartilha a consulta em curso. Ao vivo: 1 `/ia/disponibilidade` e 1 `/checkin/situacao` por carga. Relatório: [`verificacao-320-325.md`](../backlog/auditoria-requisicoes-telas/verificacao-320-325.md). Gates: frontend 2700 testes, backend 1733, shared 342, integração 425, `npm run lint:tudo` sem erro.

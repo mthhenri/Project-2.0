@@ -1,5 +1,7 @@
 # Auditoria de requisições nos fluxos das telas
 
+> **Nota de 2026-11-13:** por decisão do autor esta auditoria voltou para `backlog/` com a cobertura incompleta em que estava. A revisão nova, que a usa como referência e acrescenta as permissões por tipo de usuário, é `../active/revisao-requisicoes-e-permissoes.spec.md`. O corpo abaixo não foi reescrito.
+
 Pedido do autor em 2026-11-05: dossiê de todas as telas e seus fluxos padrão, sem alterar código.
 
 ## Objetivo
