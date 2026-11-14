@@ -1,6 +1,6 @@
 # 376-atividade-criar-valida-o-dono-e-recusa-o-que-nao-pode.spec.md
 
-> Task 48/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-060 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 48/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-063 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/atividade.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Criar atividade para outra pessoa sem poder passa a ser recusado (em vez de troc
 
 ## Contexto
 
-**A-060 · Média · POST /atividade troca o dono em silêncio e não valida o dono pedido; a ferramenta de IA recusa e valida**
+**A-063 · Média · POST /atividade troca o dono em silêncio e não valida o dono pedido; a ferramenta de IA recusa e valida**
 
 Confirmado: para quem não tem permissão de gestor (auxiliar e desenvolvedor) a service ignora `usuarioId` e responde 201 com a atividade no nome de quem pediu; o efeito respeita a regra, mas o cliente não é avisado. Para gestor e administrador o `usuarioId` vai direto ao INSERT, sem conferir se o usuário está ativo ou excluído. Pela IA o mesmo pedido é recusado e o dono precisa existir e estar ativo.
 

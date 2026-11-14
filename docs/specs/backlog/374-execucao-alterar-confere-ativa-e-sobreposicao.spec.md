@@ -1,6 +1,6 @@
 # 374-execucao-alterar-confere-ativa-e-sobreposicao.spec.md
 
-> Task 46/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-058 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 46/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-061 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/execucao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A regra "nunca duas execuções ativas para o mesmo dono" e a de não sobrepor p
 
 ## Contexto
 
-**A-058 · Alta · PUT /execucao/:id reabre execução e muda o período sem conferir execução ativa nem sobreposição; a IA confere**
+**A-061 · Alta · PUT /execucao/:id reabre execução e muda o período sem conferir execução ativa nem sobreposição; a IA confere**
 
 A rota aceita `fimData: null` (reabre) e qualquer início/fim passados, validando só futuro e ordem das datas. Os executores da IA conferem execução ativa e sobreposição antes de chamar a mesma service, porque ela não confere. Pela API, o desenvolvedor (nas próprias) e auxiliar/gestor (nas de qualquer um) deixam o mesmo dono com duas execuções ativas ou com horas sobrepostas no ponto.
 

@@ -1,6 +1,6 @@
 # 371-desfazer-criacao-de-demanda-e-a-regra-de-exclusao.spec.md
 
-> Task 43/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-054, A-055 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 43/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-057, A-058 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O desfazer de `CRIAR_DEMANDA` (que exclui a demanda criada) passa a ter regra ex
 
 ## Contexto
 
-**A-054 · Baixa · Desfazer a criação de demanda exclui a demanda sem conferir quem pode excluir**
+**A-057 · Baixa · Desfazer a criação de demanda exclui a demanda sem conferir quem pode excluir**
 
 O desfazer de `CRIAR_DEMANDA` confere só a leitura (`demandaService.recuperar`) e chama `demandaService.excluir({ id })`, que não recebe usuário. Auxiliar e desenvolvedor, que pela regra não excluem demanda, excluem por POST /proposta-ia/:id/desfazer a demanda que a proposta criou (até 30 minutos, sem filhas nem atividades). A exceção não está na lista fechada de `sem-exclusao.ts` nem nas regras de referência.
 
@@ -24,7 +24,7 @@ Como observar: Como AUXILIAR: confirmar uma proposta CRIAR_DEMANDA e em seguida 
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-055 · Baixa · DemandaService.excluir não recebe usuário: o desfazer de CRIAR_DEMANDA exclui demanda para desenvolvedor e auxiliar**
+**A-058 · Baixa · DemandaService.excluir não recebe usuário: o desfazer de CRIAR_DEMANDA exclui demanda para desenvolvedor e auxiliar**
 
 A regra "só gestor exclui/restaura" mora apenas no @GestorOnly da rota; excluir e restaurar da service não têm parâmetro de usuário, ao contrário de criarConexao/excluirConexao, que repetem a regra na service por causa da IA. CriarDemandaExecutor.desfazer chama excluir para qualquer tipo: o dono da proposta exclui a demanda recém-criada se ela não tiver sub-demanda nem atividade e estiver no prazo. É uma exceção limitada, mas não está na lista de regras de referência (auxiliar e desenvolvedor não excluem demanda).
 

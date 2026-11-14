@@ -1,6 +1,6 @@
 # 378-atividade-excluir-e-restaurar-uma-regra-so.spec.md
 
-> Task 50/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-062 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 50/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-065 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Acabar com a diferença entre os dois caminhos: a rota recusa todo desenvolvedor
 
 ## Contexto
 
-**A-062 · Média · Excluir e restaurar atividade: a rota recusa todo desenvolvedor, a IA permite ao dono**
+**A-065 · Média · Excluir e restaurar atividade: a rota recusa todo desenvolvedor, a IA permite ao dono**
 
 DELETE /atividade/:id e PATCH /atividade/:id/restaurar exigem `podeEditarAtividadeDeOutro` no guard, então o desenvolvedor recebe 403 até na própria atividade. A service e a ferramenta `propor_excluir_atividade` (permissão QUALQUER) aceitam o dono, que exclui e restaura pelo chat a atividade sem execução. O resumo de regras lista excluir/restaurar atividade como permissão extra do auxiliar; a exceção da task 230 só está no código.
 

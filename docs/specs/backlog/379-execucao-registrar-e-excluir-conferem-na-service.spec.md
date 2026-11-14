@@ -1,6 +1,6 @@
 # 379-execucao-registrar-e-excluir-conferem-na-service.spec.md
 
-> Task 51/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-063 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 51/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-066 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/execucao.
 
 ## Objetivo
@@ -9,7 +9,7 @@
 
 ## Contexto
 
-**A-063 · Baixa · ExecucaoService.registrar e excluir não conferem tipo nem dono: a trava é só o decorador da rota**
+**A-066 · Baixa · ExecucaoService.registrar e excluir não conferem tipo nem dono: a trava é só o decorador da rota**
 
 As duas funções recebem o usuário e não o usam; quem barra o desenvolvedor é o `@ExigePermissao` do controller. Os executores da IA chamam as mesmas funções: o de registro repete a verificação por conta própria e os de iniciar/descrever chamam `excluir` com o token do desenvolvedor apoiados no `recuperar` anterior. Um chamador novo que esqueça a verificação abre a ação; em atividade a regra mora também na service.
 

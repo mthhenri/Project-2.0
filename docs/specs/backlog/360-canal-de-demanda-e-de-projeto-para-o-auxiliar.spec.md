@@ -1,6 +1,6 @@
 # 360-canal-de-demanda-e-de-projeto-para-o-auxiliar.spec.md
 
-> Task 32/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-041 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 32/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-041 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta e frontend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

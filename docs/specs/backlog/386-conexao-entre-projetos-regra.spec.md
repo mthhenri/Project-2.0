@@ -1,6 +1,6 @@
 # 386-conexao-entre-projetos-regra.spec.md
 
-> Task 58/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-070 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 58/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-073 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Decidir se `criarConexao` aceita origem e destino de projetos diferentes. Hoje a
 
 ## Contexto
 
-**A-070 · Baixa · criarConexao não confere se origem e destino são do mesmo projeto**
+**A-073 · Baixa · criarConexao não confere se origem e destino são do mesmo projeto**
 
 A service só valida existência, auto-referência, duplicidade e ciclo; nada compara os projetos das duas demandas, embora o grafo seja lido por projeto. O desenvolvedor não chega aqui (é barrado na rota e na service), então não há ligação com projeto sem acesso; resta saber se conexão entre projetos é permitida para condutores, o que o resumo de regras não diz.
 

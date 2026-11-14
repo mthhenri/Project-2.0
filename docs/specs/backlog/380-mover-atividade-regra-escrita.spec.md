@@ -1,6 +1,6 @@
 # 380-mover-atividade-regra-escrita.spec.md
 
-> Task 52/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-064 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 52/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-067 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Escrever a regra de mover atividade: hoje só existe pela IA (o corpo de `PUT /a
 
 ## Contexto
 
-**A-064 · Baixa · Mover atividade só existe pela IA e não tem regra de projeto escrita**
+**A-067 · Baixa · Mover atividade só existe pela IA e não tem regra de projeto escrita**
 
 O corpo de PUT /atividade/:id não tem `demandaId` e o ValidationPipe recusa campo fora do DTO, então a rota não move atividade; o único chamador com `demandaId` é o executor MOVER_ATIVIDADE. O documento fala em mover atividade 'inclusive pelo chat'. A service não compara projeto de origem e destino: o dono desenvolvedor move para qualquer demanda aberta de que seja membro, e auxiliar/gestor para qualquer demanda aberta.
 

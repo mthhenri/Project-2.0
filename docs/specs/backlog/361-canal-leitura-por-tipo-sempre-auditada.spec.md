@@ -1,6 +1,6 @@
 # 361-canal-leitura-por-tipo-sempre-auditada.spec.md
 
-> Task 33/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-042 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 33/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-042 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

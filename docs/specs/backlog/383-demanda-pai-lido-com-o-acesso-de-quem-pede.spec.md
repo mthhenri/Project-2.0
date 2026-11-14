@@ -1,6 +1,6 @@
 # 383-demanda-pai-lido-com-o-acesso-de-quem-pede.spec.md
 
-> Task 55/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-067 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 55/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-070 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Informar `demandaPaiId` de projeto sem acesso deixa de revelar que a demanda exi
 
 ## Contexto
 
-**A-067 · Baixa · demandaPaiId de outro projeto responde 400 (existe) em vez de 404; a ferramenta propor_criar_demanda lê o pai sem filtro de acesso**
+**A-070 · Baixa · demandaPaiId de outro projeto responde 400 (existe) em vez de 404; a ferramenta propor_criar_demanda lê o pai sem filtro de acesso**
 
 Em criar e em alterar o pai é lido sem filtro de acesso, e a resposta "A demanda pai deve pertencer ao mesmo projeto" distingue demanda existente em outro projeto de id inexistente (404). Na ferramenta, quando o projeto vem por projetoPropostaId, a conferência de mesmo projeto é pulada e o nome do pai vai para o cartão.
 

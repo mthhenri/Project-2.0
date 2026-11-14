@@ -1,6 +1,6 @@
 # 368-proposta-ajuste-que-falha-restaura-os-dados.spec.md
 
-> Task 40/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-051 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 40/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-054 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/proposta-ia.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Quando o executor recusa um ajuste, a proposta volta a `PENDENTE` com os dados o
 
 ## Contexto
 
-**A-051 · Média · Ajuste que falha deixa a proposta pendente com os dados enviados pelo cliente, inclusive em proposta de outra pessoa**
+**A-054 · Média · Ajuste que falha deixa a proposta pendente com os dados enviados pelo cliente, inclusive em proposta de outra pessoa**
 
 `resolver` grava os `dados` do ajuste ao reivindicar a proposta e, se o executor falha, devolve a `PENDENTE` sem restaurar os dados originais. Em `ALTERAR_TRECHO_PLANO`, quem só acessa o plano passa em `podeResolver` e pode ajustar a proposta de outro: um desenvolvedor manda `aba: DESCRICAO_CLIENTE` com texto seu, leva 403, e a proposta do gestor fica pendente com esse texto, pronta para ele confirmar como se fosse da IA.
 

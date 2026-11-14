@@ -1,6 +1,6 @@
-# 393-textos-somente-gestor-atualizados.spec.md
+# 407-textos-somente-gestor-atualizados.spec.md
 
-> Task 65/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-082, A-083, A-084 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 79/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-103, A-104, A-105 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: docs e backend (Swagger, comentários, ferramentas da IA).
 
 ## Objetivo
@@ -9,7 +9,7 @@ O `SYSTEM.SPEC.md`, os resumos do Swagger, os comentários e as descrições env
 
 ## Contexto
 
-**A-082 · Baixa · Textos "somente gestor" desatualizados em rotas e ferramentas que o auxiliar usa**
+**A-103 · Baixa · Textos "somente gestor" desatualizados em rotas e ferramentas que o auxiliar usa**
 
 O Swagger, comentários e a descrição enviada ao modelo dizem "só o gestor" em planejamento e conexões, mas o código libera auxiliar. Na ferramenta de IA o texto é instrução para o modelo, que pode recusar o pedido de um auxiliar autorizado.
 
@@ -25,7 +25,7 @@ Como observar: Como AUXILIAR: GET /api/demanda/planejamento?projetoId=1 responde
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-083 · Baixa · Documento, Swagger e comentários ainda dizem 'somente gestor' / @GestorOnly onde o código libera o auxiliar**
+**A-104 · Baixa · Documento, Swagger e comentários ainda dizem 'somente gestor' / @GestorOnly onde o código libera o auxiliar**
 
 A tabela de módulos do SYSTEM.SPEC cita `@GestorOnly POST /execucao/registro`, mas a rota usa `@ExigePermissao(podeEditarExecucaoDeOutro)`, que inclui o auxiliar, como diz o parágrafo do auxiliar no mesmo documento. Os resumos do Swagger e comentários de service, executor e ferramentas repetem 'somente gestor'.
 
@@ -42,7 +42,7 @@ Como observar: Auxiliar: POST /api/v1/execucao/registro com atividade, início e
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-084 · Baixa · SYSTEM.SPEC.md diz que propor_desconectar_demanda é só do gestor; o código libera ao auxiliar**
+**A-105 · Baixa · SYSTEM.SPEC.md diz que propor_desconectar_demanda é só do gestor; o código libera ao auxiliar**
 
 A tabela de módulos descreve `DESCONECTAR_DEMANDA` como 'só gestor', mas a ferramenta declara `permissao = 'AUXILIAR'`, igual a `propor_conectar_demanda`. A regra de §14 resumida para esta auditoria dá ao auxiliar criar e remover conexões, então o texto da tabela é que ficou para trás.
 

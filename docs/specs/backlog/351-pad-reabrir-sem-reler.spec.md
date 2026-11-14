@@ -1,6 +1,6 @@
 # 351-pad-reabrir-sem-reler.spec.md
 
-> Task 23/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-030 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
+> Task 23/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-030 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
 > Severidade: Baixa. Área: frontend/pad.
 
 ## Objetivo

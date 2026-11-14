@@ -1,6 +1,6 @@
 # 330-ia-disponibilidade-pausa-com-a-aba-oculta.spec.md
 
-> Task 2/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-002 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-03.
+> Task 2/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-002 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-03.
 > Severidade: Média. Área: frontend/casca. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

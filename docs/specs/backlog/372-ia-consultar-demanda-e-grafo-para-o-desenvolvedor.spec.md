@@ -1,6 +1,6 @@
 # 372-ia-consultar-demanda-e-grafo-para-o-desenvolvedor.spec.md
 
-> Task 44/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-056 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 44/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-059 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Resolver a diferença entre a rota HTTP e a IA: o desenvolvedor vê a demanda e 
 
 ## Contexto
 
-**A-056 · Baixa · consultar_demanda e consultar_grafo_do_projeto são vedadas ao desenvolvedor, que vê as duas coisas pela rota HTTP**
+**A-059 · Baixa · consultar_demanda e consultar_grafo_do_projeto são vedadas ao desenvolvedor, que vê as duas coisas pela rota HTTP**
 
 As duas ferramentas de leitura declaram `permissao = 'AUXILIAR'`, embora chamem `DemandaService.recuperar` e `recuperarGrafo` com o usuário do token, que já recortam por acesso. O desenvolvedor lista as demandas do projeto pela IA (`listar_demandas_do_projeto`, QUALQUER) mas não consulta nenhuma, nem a própria. O motivo não está nas regras de referência; pode ser intencional.
 

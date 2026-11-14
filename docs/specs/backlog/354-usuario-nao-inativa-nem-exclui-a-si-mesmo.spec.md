@@ -1,6 +1,6 @@
 # 354-usuario-nao-inativa-nem-exclui-a-si-mesmo.spec.md
 
-> Task 26/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-034 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 26/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-034 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/usuario. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

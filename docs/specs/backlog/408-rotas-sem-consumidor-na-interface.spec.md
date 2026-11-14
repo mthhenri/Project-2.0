@@ -1,6 +1,6 @@
-# 394-rotas-sem-consumidor-na-interface.spec.md
+# 408-rotas-sem-consumidor-na-interface.spec.md
 
-> Task 66/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-085, A-086 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 80/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-106, A-107 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: backend (anotacao, checkin, calendario, demanda). **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Decidir o destino das seis rotas que a interface não usa: `PATCH /anotacao/:usu
 
 ## Contexto
 
-**A-085 · Informativo · Três rotas HTTP do pad não têm chamador no frontend nem no desktop: `PATCH /anotacao/:usuarioId/:tipo/trecho`, `POST /anotacao/:usuarioId/:tipo/anexo` e `POST /anotacao/:usuarioId/feito`**
+**A-106 · Informativo · Três rotas HTTP do pad não têm chamador no frontend nem no desktop: `PATCH /anotacao/:usuarioId/:tipo/trecho`, `POST /anotacao/:usuarioId/:tipo/anexo` e `POST /anotacao/:usuarioId/feito`**
 
 O frontend só chama listar, alterar e mover. As três operações são usadas pelo executor da IA, que chama a `AnotacaoService` direto, sem HTTP. As rotas estão documentadas no `SYSTEM.SPEC.md`.
 
@@ -24,7 +24,7 @@ Como observar: Percorrer o pad inteiro na aplicação: nenhuma dessas rotas apar
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-086 · Informativo · Mais três rotas sem consumidor: `GET /checkin/suspensao`, `GET /calendario/verificar` e `GET /demanda/:id/ancestral`**
+**A-107 · Informativo · Mais três rotas sem consumidor: `GET /checkin/suspensao`, `GET /calendario/verificar` e `GET /demanda/:id/ancestral`**
 
 Varredura por script das 202 rotas contra `frontend/src` e `desktop/src`: `GET /checkin/suspensao` não tem nenhuma chamada; `GET /calendario/verificar` e `GET /demanda/:id/ancestral` só são chamadas por métodos do front que não têm chamador (`CalendarioService.verificarDiaUtil` e `DemandaService.recuperarAncestral`). As services por trás continuam em uso pela IA ou por outras rotas.
 
@@ -59,5 +59,5 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 
 ## Dependências
 
-Decisão do autor acima. Depois de `395-metodos-http-do-front-sem-chamador`.
+Decisão do autor acima. Depois de `409-metodos-http-do-front-sem-chamador`.
 

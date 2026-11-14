@@ -1,6 +1,6 @@
 # 359-supervisao-do-chat-auditoria-com-ou-sem-cursor.spec.md
 
-> Task 31/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-039, A-040 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 31/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-039, A-040 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/mensagem-direta.
 
 ## Objetivo
@@ -25,19 +25,24 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: GESTOR, grupo livre só de desenvolvedores: `GET /mensagem-direta/supervisao/grupo/:grupoId?cursor=<base64url de [4102444800000,"00000000-0000-0000-0000-000000000000"]>` (ou `GET /mensagem-direta/grupo/:canalId/mensagens?cursor=...` num canal em que não é membro). Esperado: linha de auditoria e mensagem do sistema "..., gestor, leu este grupo". O código responde 200 com as mensagens mais novas, `membrosAvisados: false`, sem auditoria e sem aviso. Não executado: conclusão por leitura.
 
-Verificação na auditoria: reproduzido na aplicação rodando em 2026-11-14 com um gestor recém-criado: `GET /mensagem-direta/supervisao/grupo/1?cursor=<forjado>` devolveu a conversa inteira, 0 linhas em `mensagem_direta_supervisao` e nenhuma mensagem de aviso no grupo; sem cursor, 1 auditoria e o aviso.
+Verificação na auditoria: reproduzido na aplicação rodando em 2026-11-14 com um gestor recém-criado: `GET /mensagem-direta/supervisao/grupo/1?cursor=<forjado>` devolveu a conversa inteira, 0 linhas em `mensagem_direta_supervisao` e nenhuma mensagem de aviso no grupo; sem cursor, 1 auditoria e o aviso. O mesmo na conversa um a um (`/supervisao/conversa/5-6`): com cursor forjado, 200 com o texto e 0 auditorias.
 
-**A-040 · Alta · A supervisão das conversas um a um tem o mesmo desvio pelo cursor**
+**A-040 · Alta · Supervisão: cursor forjado lê a conversa inteira sem auditoria nem aviso**
 
-`MensagemDiretaSupervisaoService` só registra a leitura e avisa os dois participantes quando a requisição vem sem `cursor` (`mensagem-direta-supervisao.service.ts:106`). Com um cursor montado à mão a conversa inteira é entregue sem registro.
+A auditoria e o aviso aos participantes só acontecem quando a leitura vem sem `cursor`. O cursor é só base64url de `[milissegundos, mensagemId]`, que o cliente monta sozinho; com uma data futura a consulta devolve a página mais nova. O gestor lê tudo sem linha em `mensagem_direta_supervisao` e sem a mensagem do sistema.
 
 Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
-- backend/src/modules/mensagem-direta/services/mensagem-direta-supervisao.service.ts:106 — `if (!dto.cursor) {` envolve a auditoria e o aviso
+- backend/src/modules/mensagem-direta/services/mensagem-direta-supervisao.service.ts:106 — `if (!dto.cursor)` envolve `registrarLeitura` (107) e `avisarParticipantes` (113); com cursor nada é gravado
+- backend/src/modules/mensagem-direta/domain/mensagem-direta-consultas.ts:164-173 — `decodificarCursor` aceita qualquer JSON `[número finito, string]` em base64url
+- backend/src/modules/mensagem-direta/repositories/mensagem-direta-postgres.repository.ts:673-679 — `lerCursor` só confere data válida e formato UUID
+- backend/src/modules/mensagem-direta/repositories/mensagem-direta-postgres.repository.ts:415-421 — `(created_date, mensagem_id) < (cursor)` com ORDER BY DESC: cursor no futuro devolve as mensagens mais novas
+- shared/src/dtos/mensagem-direta/MensagemDiretaSupervisaoLerDto.ts:11-14 — `cursor` é `@IsString` livre
+- backend/src/modules/mensagem-direta/services/mensagem-direta-supervisao.service.test.ts:183-185 — o teste fixa o comportamento com `cursor: 'opaco'`
 
-Como observar: Como gestor sem leitura registrada: `GET /mensagem-direta/supervisao/conversa/5-6?cursor=<base64url de [instante futuro, uuid]>` responde 200 com as mensagens e a tabela `mensagem_direta_supervisao` continua sem linha do leitor.
+Como observar: Como GESTOR: GET /api/v1/mensagem-direta/supervisao/conversa/4-9?cursor=<base64url de [4102444800000,"ffffffff-ffff-ffff-ffff-ffffffffffff"]> (4 e 9 desenvolvedores). Esperado: auditoria gravada e aviso do dia (ou recusa do cursor sem abertura prévia). O código responde 200 com as mensagens mais novas, `participantesAvisados: false`, e não grava nada.
 
-Verificação na auditoria: reproduzido na aplicação rodando em 2026-11-14 com um gestor recém-criado: com o cursor forjado, 200 com o texto das mensagens e 0 auditorias; sem cursor, 1 auditoria.
+Verificação na auditoria: reproduzido na aplicação rodando em 2026-11-14 com um gestor recém-criado: `GET /mensagem-direta/supervisao/grupo/1?cursor=<forjado>` devolveu a conversa inteira, 0 linhas em `mensagem_direta_supervisao` e nenhuma mensagem de aviso no grupo; sem cursor, 1 auditoria e o aviso. O mesmo na conversa um a um (`/supervisao/conversa/5-6`): com cursor forjado, 200 com o texto e 0 auditorias.
 
 ## Entregáveis
 

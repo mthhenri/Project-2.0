@@ -1,6 +1,6 @@
 # 341-sessao-expirada-limpa-o-estado-em-memoria.spec.md
 
-> Task 13/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-016 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 13/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-016 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo

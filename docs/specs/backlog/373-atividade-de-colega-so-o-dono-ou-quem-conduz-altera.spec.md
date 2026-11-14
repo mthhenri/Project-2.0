@@ -1,6 +1,6 @@
 # 373-atividade-de-colega-so-o-dono-ou-quem-conduz-altera.spec.md
 
-> Task 45/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-057 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 45/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-060 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Alterar atividade e tags de outra pessoa passa a exigir ser o dono ou ter a perm
 
 ## Contexto
 
-**A-057 · Alta · Desenvolvedor membro da demanda altera atividade e tags de outro usuário**
+**A-060 · Alta · Desenvolvedor membro da demanda altera atividade e tags de outro usuário**
 
 Em PUT /atividade/:id e PUT /atividade/:id/tag o desenvolvedor só é recusado quando não é o dono E não é membro da demanda; basta ser membro para mudar nome, status e prioridade, ou trocar todas as tags, da atividade de um colega. A tela trava pelo dono e a função `podeEditarAtividadeDeOutro` reserva "editar as dos outros" a auxiliar, gestor e administrador. O teste unitário consagra o comportamento, então a decisão (documento x código) é do autor.
 

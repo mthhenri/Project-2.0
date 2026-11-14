@@ -1,6 +1,6 @@
 # 370-assistente-de-descricao-com-usuario-limite-e-custo.spec.md
 
-> Task 42/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-053 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 42/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-056 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/assistente. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A rota deixa de ser um acesso à IA sem dono: recebe o usuário, limita o texto 
 
 ## Contexto
 
-**A-053 · Média · POST /assistente/auxiliar-descricao chama a IA sem usuário, sem limite de tamanho e sem registrar o uso**
+**A-056 · Média · POST /assistente/auxiliar-descricao chama a IA sem usuário, sem limite de tamanho e sem registrar o uso**
 
 A rota não recebe o usuário ativo, não confere nenhuma entidade (o contexto é texto livre do cliente) e não chama `iaUsoService.registrar`, ao contrário de `alterar-trecho` no mesmo controller. `textoOriginal` e `contextoEntidade` não têm `MaxLength`. Qualquer tipo usa a IA como proxy de texto livre e o gasto não aparece em Custos.
 

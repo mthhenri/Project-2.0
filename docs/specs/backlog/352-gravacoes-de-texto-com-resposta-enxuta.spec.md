@@ -1,6 +1,6 @@
 # 352-gravacoes-de-texto-com-resposta-enxuta.spec.md
 
-> Task 24/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-031 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 24/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-031 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/anotacao e demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

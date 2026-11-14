@@ -1,6 +1,6 @@
 # 348-documentacoes-pad-so-quando-a-vista.spec.md
 
-> Task 20/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-027 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 20/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-027 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/documentacao.
 
 ## Objetivo

@@ -1,6 +1,6 @@
 # 384-demanda-listagem-do-desenvolvedor-regra.spec.md
 
-> Task 56/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-068 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 56/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-071 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Alinhar a listagem com a regra escrita ("vê qualquer demanda de projeto acessí
 
 ## Contexto
 
-**A-068 · Baixa · GET /demanda entrega ao desenvolvedor só as demandas em que é membro, não as do projeto acessível**
+**A-071 · Baixa · GET /demanda entrega ao desenvolvedor só as demandas em que é membro, não as do projeto acessível**
 
 A listagem restringe por linha própria em demanda_usuario, enquanto a regra e as demais leituras (grafo, :id, documentacao) usam "projeto acessível". A ferramenta de IA contorna juntando os nós do grafo com a listagem, sinal de que a diferença é conhecida.
 

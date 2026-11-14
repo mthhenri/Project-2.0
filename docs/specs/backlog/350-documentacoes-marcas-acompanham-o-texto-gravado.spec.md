@@ -1,6 +1,6 @@
 # 350-documentacoes-marcas-acompanham-o-texto-gravado.spec.md
 
-> Task 22/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-029 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 22/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-029 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/documentacao.
 
 ## Objetivo

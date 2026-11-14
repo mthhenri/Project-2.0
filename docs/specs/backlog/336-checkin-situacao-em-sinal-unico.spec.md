@@ -1,6 +1,6 @@
 # 336-checkin-situacao-em-sinal-unico.spec.md
 
-> Task 8/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-009, A-010 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-03.
+> Task 8/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-009, A-010 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-03.
 > Severidade: Baixa. Área: frontend/checkin.
 
 ## Objetivo

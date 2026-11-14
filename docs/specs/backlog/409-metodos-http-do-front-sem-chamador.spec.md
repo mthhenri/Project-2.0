@@ -1,6 +1,6 @@
-# 395-metodos-http-do-front-sem-chamador.spec.md
+# 409-metodos-http-do-front-sem-chamador.spec.md
 
-> Task 67/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-087 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 81/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-108 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend (atividade, calendario, demanda, execucao).
 
 ## Objetivo
@@ -9,7 +9,7 @@ Tirar dos services do frontend os quatro métodos de requisição que não têm 
 
 ## Contexto
 
-**A-087 · Baixa · Quatro métodos HTTP de services do frontend sem nenhum chamador**
+**A-108 · Baixa · Quatro métodos HTTP de services do frontend sem nenhum chamador**
 
 Varredura por script dos 195 métodos do frontend que fazem HTTP: quatro só aparecem na própria definição e no teste do service. `AtividadeService.recuperarExecucaoAtiva()` e `ExecucaoService.buscarAtiva()` pedem `GET /execucao/ativa`, que hoje é do `ExecucaoAtivaService`; `CalendarioService.verificarDiaUtil()` pede `GET /calendario/verificar`; `DemandaService.recuperarAncestral()` pede `GET /demanda/:id/ancestral`.
 
@@ -33,7 +33,7 @@ Verificação na auditoria: varredura por script e `grep` do agente principal em
 
 ## Fora de Escopo
 
-As rotas do backend correspondentes (spec `394-rotas-sem-consumidor-na-interface`).
+As rotas do backend correspondentes (spec `408-rotas-sem-consumidor-na-interface`).
 
 ## Dependências
 

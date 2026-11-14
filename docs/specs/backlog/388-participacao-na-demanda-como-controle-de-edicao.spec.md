@@ -1,6 +1,6 @@
 # 388-participacao-na-demanda-como-controle-de-edicao.spec.md
 
-> Task 60/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-072 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 60/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-075 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Levar ao autor a consequência de duas regras escritas ("inclui só a si mesmo" 
 
 ## Contexto
 
-**A-072 · Informativo · "Edita só onde é membro" não segura o desenvolvedor: ele se inclui em qualquer demanda de projeto acessível e passa a editar**
+**A-075 · Informativo · "Edita só onde é membro" não segura o desenvolvedor: ele se inclui em qualquer demanda de projeto acessível e passa a editar**
 
 O código segue as duas regras escritas (inclui só a si mesmo; edita só onde é membro), mas a soma delas faz a participação funcionar como um passo, não como barreira. Com uma linha em demanda_usuario no projeto, o desenvolvedor entra em qualquer outra demanda do projeto e altera nome, horas, status, pai e tags.
 

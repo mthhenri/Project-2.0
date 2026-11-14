@@ -1,6 +1,6 @@
 # 345-usuarios-busca-filtro-e-paginador.spec.md
 
-> Task 17/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-021, A-022, A-023 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 17/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-021, A-022, A-023 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/usuario.
 
 ## Objetivo

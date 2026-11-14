@@ -1,6 +1,6 @@
 # 387-ia-propostas-de-demanda-recusam-quem-nao-edita.spec.md
 
-> Task 59/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-071 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 59/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-074 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O desenvolvedor que não é membro deixa de receber um cartão que só falha ao 
 
 ## Contexto
 
-**A-071 · Baixa · Ferramentas propor_concluir/alterar/descrever_demanda criam cartão para desenvolvedor que não é membro; o 403 só vem no Confirmar**
+**A-074 · Baixa · Ferramentas propor_concluir/alterar/descrever_demanda criam cartão para desenvolvedor que não é membro; o 403 só vem no Confirmar**
 
 As ferramentas leem a demanda com recuperar, que confere só o acesso ao projeto, e não usam o `podeEditar` que essa leitura já devolve. O desenvolvedor não membro recebe a proposta e só é recusado quando o executor chama DemandaService.alterar. A ferramenta de membro, ao contrário, antecipa as recusas da service.
 

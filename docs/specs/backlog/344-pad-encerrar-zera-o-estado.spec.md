@@ -1,6 +1,6 @@
 # 344-pad-encerrar-zera-o-estado.spec.md
 
-> Task 16/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-019, A-020 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 16/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-019, A-020 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/pad.
 
 ## Objetivo

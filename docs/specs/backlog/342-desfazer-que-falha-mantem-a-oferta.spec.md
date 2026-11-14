@@ -1,6 +1,6 @@
 # 342-desfazer-que-falha-mantem-a-oferta.spec.md
 
-> Task 14/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-017 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-15.
+> Task 14/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-017 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-15.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo

@@ -1,6 +1,6 @@
-# 392-escritas-com-a-funcao-de-permissao-da-acao.spec.md
+# 406-escritas-com-a-funcao-de-permissao-da-acao.spec.md
 
-> Task 64/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-080, A-081 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 78/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-101, A-102 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda, atividade e execucao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Cada escrita usa a função de permissão que foi criada para ela. Hoje criar de
 
 ## Contexto
 
-**A-080 · Baixa · Escritas de demanda decididas com temVisibilidadeTotal em vez das funções de ação**
+**A-101 · Baixa · Escritas de demanda decididas com temVisibilidadeTotal em vez das funções de ação**
 
 Criar raiz, editar sem ser membro, atribuir tag e mexer em membro de outro são decididos por temVisibilidadeTotal, função de leitura, enquanto existem podeEditarDemanda e podeAtribuirMembroOuTag para essas ações. Hoje as três resolvem para o mesmo conjunto de tipos, então o comportamento é igual; a divergência aparece no dia em que uma delas mudar. A ferramenta de IA de membro já usa podeAtribuirMembroOuTag, a rota não.
 
@@ -25,7 +25,7 @@ Como observar: Não reproduzível pela API hoje (mesmo resultado para os quatro 
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-081 · Baixa · Escritas autorizadas com temVisibilidadeTotal em vez da função da ação**
+**A-102 · Baixa · Escritas autorizadas com temVisibilidadeTotal em vez da função da ação**
 
 As services decidem quem altera atividade/tags e quem inicia, encerra e edita execução alheia com `temVisibilidadeTotal`, a função de leitura. `podeConduzirExecucaoDeOutro` só aparece numa leitura, e `podeEditarExecucaoDeOutro`, `podeAtribuirMembroOuTag` e `podeVerExecucaoEPontoDeOutro` não são usadas nessas services. Hoje todas resolvem em `conduzOTrabalho`, então o resultado é igual; um tipo novo só com visão total ganharia as escritas.
 

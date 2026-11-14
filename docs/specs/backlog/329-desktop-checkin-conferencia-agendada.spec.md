@@ -1,6 +1,6 @@
 # 329-desktop-checkin-conferencia-agendada.spec.md
 
-> Task 1/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-001 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01.
+> Task 1/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-001 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01.
 > Severidade: Alta. Área: desktop.
 
 ## Objetivo

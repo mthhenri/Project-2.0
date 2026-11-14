@@ -1,6 +1,6 @@
 # 357-documentacoes-cancelar-o-pedido-a-ia-em-curso.spec.md
 
-> Task 29/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-037 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 29/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-037 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: frontend/documentacao.
 
 ## Objetivo

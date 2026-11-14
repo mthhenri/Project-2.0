@@ -1,6 +1,6 @@
 # 382-demanda-novo-pai-estrutural-na-service.spec.md
 
-> Task 54/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-066 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 54/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-069 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A regra "só demanda estrutural tem sub-demandas" vale também ao trocar o pai d
 
 ## Contexto
 
-**A-066 · Média · PUT /demanda/:id move a demanda para pai não estrutural; POST /demanda e a IA recusam**
+**A-069 · Média · PUT /demanda/:id move a demanda para pai não estrutural; POST /demanda e a IA recusam**
 
 Ao trocar demandaPaiId, DemandaService.alterar confere existência, mesmo projeto, a própria demanda e descendentes, mas não exige que o novo pai seja estrutural. A criação exige, e a ferramenta/executor de IA aplicam validarNovoPaiDaDemanda, cujo comentário diz que a tela é quem garante a regra na rota. Quem edita a demanda (condutor ou desenvolvedor membro) coloca uma demanda dentro de uma demanda de trabalho pela API.
 

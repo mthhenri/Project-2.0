@@ -1,15 +1,15 @@
 # 364-testes-por-tipo-em-grupos-e-canais.spec.md
 
-> Task 36/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-045 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 36/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-047, A-048 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta.
 
 ## Objetivo
 
-Cobrir o que hoje nenhum teste exercita: o auxiliar em canal de demanda e de projeto, a supervisão chamada com cursor e a leitura das fixadas pelo gestor não membro.
+Cobrir o que hoje nenhum teste exercita: o auxiliar em canal de demanda e de projeto, a supervisão chamada com cursor, a leitura das fixadas pelo gestor não membro e, no chat um a um, o auxiliar na supervisão, nas referências e nas sugestões.
 
 ## Contexto
 
-**A-045 · Baixa · Nenhum teste de grupo ou canal com AUXILIAR, nem da supervisão com cursor**
+**A-047 · Baixa · Nenhum teste de grupo ou canal com AUXILIAR, nem da supervisão com cursor**
 
 Os seis arquivos de teste da unidade não mencionam o auxiliar; os casos por tipo cobrem desenvolvedor, gestor e administrador. A supervisão é testada só na abertura sem cursor, e o único teste de cursor é o do membro. A leitura das fixadas pelo gestor é testada sem tratar de auditoria.
 
@@ -22,6 +22,22 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 - backend/src/modules/mensagem-direta/services/grupo-fixada.service.integracao.test.ts:154 — "o gestor que só lê por tipo vê as fixadas mas não fixa nem busca"
 
 Como observar: Conferência por grep nos títulos e nas ocorrências dos *.test.ts da unidade; nenhum teste foi executado.
+
+Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+
+**A-048 · Baixa · Sem teste por tipo AUXILIAR no chat um a um e na supervisão; bordas da auditoria sem teste**
+
+Nos testes do módulo, AUXILIAR só aparece no teste do domínio da IA. Supervisão, referências e sugestões testam só desenvolvedor contra gestor, e não há teste de par sem mensagens, de gestor rebaixado nem de cursor montado pelo cliente.
+
+Evidência no código (linhas de 2026-11-13; confira antes de editar):
+
+- grep AUXILIAR em backend/src/modules/mensagem-direta/**/*.test.ts — só `domain/mensagem-direta-ia.test.ts`
+- backend/src/modules/mensagem-direta/services/mensagem-direta-supervisao.service.test.ts:80 e 103 — só "o desenvolvedor recebe 403"
+- backend/src/modules/mensagem-direta/domain/mensagem-direta-regras.test.ts:73-84 — `conversaEhSupervisionavel` sem AUXILIAR
+- backend/src/modules/mensagem-direta/services/mensagem-direta.service.test.ts:311 e 539 — referências: só desenvolvedor e gestor
+- backend/src/modules/mensagem-direta/services/mensagem-direta-supervisao.service.test.ts:183 — o único teste de cursor fixa "sem nova auditoria nem aviso"
+
+Como observar: `grep -rn AUXILIAR backend/src/modules/mensagem-direta --include=*.test.ts` devolve um arquivo só.
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 

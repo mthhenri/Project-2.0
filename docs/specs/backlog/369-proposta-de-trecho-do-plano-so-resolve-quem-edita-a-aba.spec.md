@@ -1,6 +1,6 @@
 # 369-proposta-de-trecho-do-plano-so-resolve-quem-edita-a-aba.spec.md
 
-> Task 41/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-052 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 41/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-055 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/plano.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Quem não edita a aba (desenvolvedor e auxiliar na descrição do cliente) não 
 
 ## Contexto
 
-**A-052 · Baixa · Quem não pode editar a aba recusa (expira) a proposta de trecho do plano de outra pessoa**
+**A-055 · Baixa · Quem não pode editar a aba recusa (expira) a proposta de trecho do plano de outra pessoa**
 
 `recusar` não passa pelo executor: basta `obterDoUsuario`, que aceita qualquer pessoa com acesso ao plano. Desenvolvedor e auxiliar conseguem expirar a proposta do gestor sobre a descrição do cliente, que eles não editam; o contrato do executor diz que resolve quem pode editar o plano. Confirmar e desfazer estão protegidos por `lerPlano`.
 

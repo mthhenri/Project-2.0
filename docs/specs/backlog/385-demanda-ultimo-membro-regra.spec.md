@@ -1,6 +1,6 @@
 # 385-demanda-ultimo-membro-regra.spec.md
 
-> Task 57/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-069 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; `PROBLEMS.md` P-023.
+> Task 57/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-072 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; `PROBLEMS.md` P-023.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Resolver a contradição: a remoção do último membro é recusada para todos o
 
 ## Contexto
 
-**A-069 · Baixa · "Último membro" trava a remoção até para o gestor, mas a demanda nasce sem membro quando criada por condutor**
+**A-072 · Baixa · "Último membro" trava a remoção até para o gestor, mas a demanda nasce sem membro quando criada por condutor**
 
 removerMembro recusa quando há um membro só, para todos os tipos. Como gestor, administrador e auxiliar criam demanda sem nenhuma linha em demanda_usuario, o invariante "ao menos um membro" não existe de fato: a demanda pode ter zero membros, mas não pode voltar a zero. A trava não consta do resumo de regras usado nesta auditoria.
 

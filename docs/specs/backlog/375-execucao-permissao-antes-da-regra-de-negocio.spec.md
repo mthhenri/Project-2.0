@@ -1,6 +1,6 @@
 # 375-execucao-permissao-antes-da-regra-de-negocio.spec.md
 
-> Task 47/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-059 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-16.
+> Task 47/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-062 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-16.
 > Severidade: Média. Área: backend/execucao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Em `iniciar` e `encerrar`, quem não pode agir sobre a atividade ou a execução
 
 ## Contexto
 
-**A-059 · Média · Execução: regra de negócio respondida antes da permissão em iniciar (2 regras) e encerrar (1 regra)**
+**A-062 · Média · Execução: regra de negócio respondida antes da permissão em iniciar (2 regras) e encerrar (1 regra)**
 
 Em `iniciar`, o status da atividade e a descrição obrigatória são validados antes de conferir o dono; em `encerrar`, 'já foi encerrada' vem antes do dono. O desenvolvedor descobre, de atividade ou execução alheia, se o status é executável, se o dono é gestor (descrição dispensada) e se a execução está encerrada. `alterar` confere a permissão antes das datas; `registrar` e `excluir` são barrados no guard da rota.
 
@@ -38,7 +38,7 @@ Verificação na auditoria: reproduzido na aplicação rodando: desenvolvedor se
 
 ## Fora de Escopo
 
-Trocar 403 por 404 (spec `390-recurso-sem-acesso-resposta-unica`).
+Trocar 403 por 404 (spec `404-recurso-sem-acesso-resposta-unica`).
 
 ## Dependências
 

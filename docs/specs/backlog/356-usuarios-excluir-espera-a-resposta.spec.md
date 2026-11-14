@@ -1,6 +1,6 @@
 # 356-usuarios-excluir-espera-a-resposta.spec.md
 
-> Task 28/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-036 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 28/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-036 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: frontend/usuario.
 
 ## Objetivo

@@ -1,6 +1,6 @@
 # 362-grupo-privado-e-a-volta-da-supervisao.spec.md
 
-> Task 34/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-043 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 34/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-043 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

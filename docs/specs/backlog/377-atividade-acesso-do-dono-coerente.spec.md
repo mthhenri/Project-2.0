@@ -1,6 +1,6 @@
 # 377-atividade-acesso-do-dono-coerente.spec.md
 
-> Task 49/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-061 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 49/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-064 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ As quatro funções de acesso à atividade (`recuperar`, `listarTags`, `alterar`
 
 ## Contexto
 
-**A-061 · Média · Dono que não é membro da demanda altera a atividade mas não consegue lê-la**
+**A-064 · Média · Dono que não é membro da demanda altera a atividade mas não consegue lê-la**
 
 `alterar` e `alterarTags` aceitam o dono sem vínculo; `recuperar` e `listarTags` exigem vínculo e respondem 403 ao próprio dono, embora a listagem mostre a atividade. Os executores da IA começam por `recuperar`, então recusam o dono que POST /execucao aceita. O caso surge quando o gestor cria atividade para alguém em demanda de que a pessoa não é membro, ou quando ela sai da demanda.
 

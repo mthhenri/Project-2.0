@@ -1,6 +1,6 @@
 # 381-demanda-membro-so-quem-atua-como-desenvolvedor.spec.md
 
-> Task 53/67 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-065 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 53/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-068 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A regra "gestor e administrador nunca entram em `demanda_usuario`" passa a valer
 
 ## Contexto
 
-**A-065 · Média · POST /demanda/:id/membro e usuarioIds do POST /demanda aceitam gestor, administrador e usuário inativo como membro**
+**A-068 · Média · POST /demanda/:id/membro e usuarioIds do POST /demanda aceitam gestor, administrador e usuário inativo como membro**
 
 A service só confere que o usuário alvo existe; não aplica podeSerMembroDeDemanda nem olha `ativo`. A regra "gestor nunca entra em demanda_usuario" está só na tela (filtro do seletor) e no caminho da IA (ferramenta e executor), cujo comentário reconhece a lacuna da service. Qualquer condutor (auxiliar, gestor, administrador) grava a linha proibida chamando a rota direto.
 
