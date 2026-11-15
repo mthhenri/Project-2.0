@@ -1,6 +1,6 @@
 # 390-supervisao-lista-sem-o-texto-das-mensagens.spec.md
 
-> Task 62/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-077 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 62/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-077 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

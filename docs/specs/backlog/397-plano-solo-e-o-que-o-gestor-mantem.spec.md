@@ -1,6 +1,6 @@
 # 397-plano-solo-e-o-que-o-gestor-mantem.spec.md
 
-> Task 69/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-084 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 69/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-084 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/plano. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

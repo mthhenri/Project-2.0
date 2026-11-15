@@ -1,6 +1,6 @@
 # 367-ferramentas-de-atividade-conferem-o-acesso-a-demanda.spec.md
 
-> Task 39/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-051, A-052, A-053 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 39/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-051, A-052, A-053 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/atividade.
 
 ## Objetivo

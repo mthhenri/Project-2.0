@@ -1,6 +1,6 @@
 # 359-supervisao-do-chat-auditoria-com-ou-sem-cursor.spec.md
 
-> Task 31/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-039, A-040 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 31/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-039, A-040 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/mensagem-direta.
 
 ## Objetivo

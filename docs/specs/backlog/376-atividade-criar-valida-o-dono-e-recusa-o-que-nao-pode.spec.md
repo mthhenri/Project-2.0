@@ -1,6 +1,6 @@
 # 376-atividade-criar-valida-o-dono-e-recusa-o-que-nao-pode.spec.md
 
-> Task 48/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-063 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 48/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-063 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/atividade.
 
 ## Objetivo

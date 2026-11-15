@@ -1,6 +1,6 @@
 # 398-ferramentas-do-plano-presas-ao-plano-da-conversa.spec.md
 
-> Task 70/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-085 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 70/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-085 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/plano e chat.
 
 ## Objetivo

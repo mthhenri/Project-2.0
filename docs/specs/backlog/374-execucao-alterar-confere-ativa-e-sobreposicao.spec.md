@@ -1,6 +1,6 @@
 # 374-execucao-alterar-confere-ativa-e-sobreposicao.spec.md
 
-> Task 46/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-061 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 46/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-061 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/execucao.
 
 ## Objetivo

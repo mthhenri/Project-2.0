@@ -1,6 +1,6 @@
 # 363-ia-em-conversa-compartilhada-e-o-dado-restrito.spec.md
 
-> Task 35/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-044, A-045, A-046 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 35/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-044, A-045, A-046 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta e chat (plano). **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

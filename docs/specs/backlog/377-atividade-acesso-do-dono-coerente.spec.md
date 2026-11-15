@@ -1,6 +1,6 @@
 # 377-atividade-acesso-do-dono-coerente.spec.md
 
-> Task 49/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-064 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 49/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-064 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

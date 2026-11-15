@@ -1,6 +1,6 @@
 # 400-plano-regras-de-permissao-no-documento.spec.md
 
-> Task 72/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-087, A-088 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 72/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-087, A-088 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: docs e backend/plano.
 
 ## Objetivo

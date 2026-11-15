@@ -1,6 +1,6 @@
 # 386-conexao-entre-projetos-regra.spec.md
 
-> Task 58/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-073 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 58/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-073 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

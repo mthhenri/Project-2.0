@@ -1,6 +1,6 @@
 # 366-grupo-livre-regras-de-moderacao-escritas.spec.md
 
-> Task 38/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-050 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 38/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-050 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

@@ -1,6 +1,6 @@
 # 395-proposta-na-mensagem-da-ia-respeita-o-pode-ver.spec.md
 
-> Task 67/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-082 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 67/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-082 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta.
 
 ## Objetivo

@@ -1,6 +1,6 @@
 # 364-testes-por-tipo-em-grupos-e-canais.spec.md
 
-> Task 36/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-047, A-048 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 36/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-047, A-048 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta.
 
 ## Objetivo

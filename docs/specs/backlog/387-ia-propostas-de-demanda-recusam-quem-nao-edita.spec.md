@@ -1,6 +1,6 @@
 # 387-ia-propostas-de-demanda-recusam-quem-nao-edita.spec.md
 
-> Task 59/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-074 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 59/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-074 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda.
 
 ## Objetivo

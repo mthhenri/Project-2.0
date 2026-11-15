@@ -1,6 +1,6 @@
 # 368-proposta-ajuste-que-falha-restaura-os-dados.spec.md
 
-> Task 40/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-054 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 40/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-054 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/proposta-ia.
 
 ## Objetivo

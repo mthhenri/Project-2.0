@@ -1,6 +1,6 @@
 # 369-proposta-de-trecho-do-plano-so-resolve-quem-edita-a-aba.spec.md
 
-> Task 41/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-055 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 41/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-055 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/plano.
 
 ## Objetivo

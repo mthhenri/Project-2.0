@@ -1,6 +1,6 @@
 # 375-execucao-permissao-antes-da-regra-de-negocio.spec.md
 
-> Task 47/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-062 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-16.
+> Task 47/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-062 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-16.
 > Severidade: Média. Área: backend/execucao.
 
 ## Objetivo
@@ -38,7 +38,7 @@ Verificação na auditoria: reproduzido na aplicação rodando: desenvolvedor se
 
 ## Fora de Escopo
 
-Trocar 403 por 404 (spec `404-recurso-sem-acesso-resposta-unica`).
+Trocar 403 por 404 (spec `421-recurso-sem-acesso-resposta-unica`).
 
 ## Dependências
 

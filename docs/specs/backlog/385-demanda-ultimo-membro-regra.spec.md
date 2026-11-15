@@ -1,6 +1,6 @@
 # 385-demanda-ultimo-membro-regra.spec.md
 
-> Task 57/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-072 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; `PROBLEMS.md` P-023.
+> Task 57/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-072 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; `PROBLEMS.md` P-023.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

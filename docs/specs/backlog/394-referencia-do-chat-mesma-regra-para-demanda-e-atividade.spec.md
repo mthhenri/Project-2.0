@@ -1,6 +1,6 @@
 # 394-referencia-do-chat-mesma-regra-para-demanda-e-atividade.spec.md
 
-> Task 66/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-081 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 66/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-081 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta.
 
 ## Objetivo

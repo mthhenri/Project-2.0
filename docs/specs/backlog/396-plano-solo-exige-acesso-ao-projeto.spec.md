@@ -1,6 +1,6 @@
 # 396-plano-solo-exige-acesso-ao-projeto.spec.md
 
-> Task 68/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-083 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 68/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-083 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/plano. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

@@ -1,6 +1,6 @@
 # 399-plano-publicar-permissao-antes-da-regra.spec.md
 
-> Task 71/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-086 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 71/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-086 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/plano.
 
 ## Objetivo

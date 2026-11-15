@@ -1,6 +1,6 @@
 # 382-demanda-novo-pai-estrutural-na-service.spec.md
 
-> Task 54/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-069 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 54/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-069 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/demanda.
 
 ## Objetivo

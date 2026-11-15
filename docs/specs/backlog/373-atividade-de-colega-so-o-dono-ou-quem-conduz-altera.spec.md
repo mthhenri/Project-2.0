@@ -1,6 +1,6 @@
 # 373-atividade-de-colega-so-o-dono-ou-quem-conduz-altera.spec.md
 
-> Task 45/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-060 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 45/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-060 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

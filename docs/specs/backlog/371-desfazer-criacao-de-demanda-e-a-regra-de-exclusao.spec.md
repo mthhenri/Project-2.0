@@ -1,6 +1,6 @@
 # 371-desfazer-criacao-de-demanda-e-a-regra-de-exclusao.spec.md
 
-> Task 43/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-057, A-058 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 43/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-057, A-058 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

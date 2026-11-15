@@ -1,6 +1,6 @@
 # 365-proposta-do-resumo-tratada-num-ponto-so.spec.md
 
-> Task 37/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-049 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 37/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-049 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta e proposta-ia.
 
 ## Objetivo

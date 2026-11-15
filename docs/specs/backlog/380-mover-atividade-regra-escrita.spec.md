@@ -1,6 +1,6 @@
 # 380-mover-atividade-regra-escrita.spec.md
 
-> Task 52/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-067 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 52/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-067 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

@@ -1,6 +1,6 @@
 # 402-plano-trocar-a-demanda-ligada-regra.spec.md
 
-> Task 74/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-090 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 74/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-090 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: backend/plano. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo

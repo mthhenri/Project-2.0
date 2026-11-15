@@ -1,6 +1,6 @@
 # 381-demanda-membro-so-quem-atua-como-desenvolvedor.spec.md
 
-> Task 53/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-068 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 53/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-068 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/demanda.
 
 ## Objetivo

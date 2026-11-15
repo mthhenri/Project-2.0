@@ -1,6 +1,6 @@
 # 379-execucao-registrar-e-excluir-conferem-na-service.spec.md
 
-> Task 51/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-066 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 51/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-066 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/execucao.
 
 ## Objetivo

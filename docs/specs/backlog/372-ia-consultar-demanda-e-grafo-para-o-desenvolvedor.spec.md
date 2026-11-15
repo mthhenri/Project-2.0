@@ -1,6 +1,6 @@
 # 372-ia-consultar-demanda-e-grafo-para-o-desenvolvedor.spec.md
 
-> Task 44/81 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-059 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 44/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-059 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
