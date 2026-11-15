@@ -1,15 +1,15 @@
-# 426-metodos-http-do-front-sem-chamador.spec.md
+# 459-metodos-http-do-front-sem-chamador.spec.md
 
-> Task 98/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-131, A-132, A-133 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
-> Severidade: Baixa. Área: frontend (atividade, calendario, demanda, execucao, mensagem-direta).
+> Task 131/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-172, A-173, A-174, A-175, A-176 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
+> Severidade: Baixa. Área: frontend (atividade, calendario, demanda, execucao, mensagem-direta, tag).
 
 ## Objetivo
 
-Tirar dos services do frontend os métodos de requisição que não têm chamador, com os testes que só os cobriam: os quatro da varredura por script, `recarregarSubDemandas` da demanda aberta e `MensagemDiretaGrupoService.recuperar`.
+Tirar dos services do frontend os métodos de requisição que não têm chamador, com os testes que só os cobriam: os quatro da varredura por script, `recarregarSubDemandas` da demanda aberta, `MensagemDiretaGrupoService.recuperar`, `ExecucaoService.iniciar` e `recuperar`, `CalendarioService.recuperar` e `TagService.recuperar`.
 
 ## Contexto
 
-**A-131 · Baixa · Métodos HTTP sem chamador: recuperarAncestral e recarregarSubDemandas**
+**A-172 · Baixa · Métodos HTTP sem chamador: recuperarAncestral e recarregarSubDemandas**
 
 DemandaService.recuperarAncestral (GET /demanda/:id/ancestral) não tem chamador desde que o /detalhe passou a trazer os ancestrais, e recarregarSubDemandas (GET /demanda/:id/arvore) também não. Removida a árvore do forkJoin, recuperarArvore fica igualmente sem uso.
 
@@ -24,7 +24,7 @@ Como observar: Não aparece na rede: nenhuma tela chama GET /demanda/:id/ancestr
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-132 · Baixa · `MensagemDiretaGrupoService.recuperar` (GET /mensagem-direta/grupo/:grupoId) não tem chamador**
+**A-173 · Baixa · `MensagemDiretaGrupoService.recuperar` (GET /mensagem-direta/grupo/:grupoId) não tem chamador**
 
 O método existe no service, mas nenhum dos cinco arquivos que injetam `MensagemDiretaGrupoService` o chama. As ocorrências de `.recuperar(` no módulo são do serviço de referências e do `recuperar()` interno do estado.
 
@@ -39,7 +39,36 @@ Como observar: A rota GET /mensagem-direta/grupo/N não aparece na aba de rede e
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-133 · Baixa · Quatro métodos HTTP de services do frontend sem nenhum chamador**
+**A-174 · Baixa · Seis métodos HTTP sem chamador e uma injeção sem uso**
+
+Nenhum componente chama `AtividadeService.recuperarExecucaoAtiva`, `ExecucaoService.iniciar`, `ExecucaoService.recuperar`, `ExecucaoService.buscarAtiva`, `CalendarioService.recuperar` nem `CalendarioService.verificarDiaUtil`; três deles só aparecem nos testes do próprio serviço. A listagem de atividades injeta `ExecucaoService` e não o usa.
+
+Evidência no código (linhas de 2026-11-13; confira antes de editar):
+
+- frontend/src/app/modules/atividade/services/atividade.service.ts:81 — `recuperarExecucaoAtiva()`; único uso em atividade.service.spec.ts:79
+- frontend/src/app/modules/execucao/services/execucao.service.ts:26, :49 e :61 — `iniciar`, `recuperar`, `buscarAtiva`; `buscarAtiva` só em execucao.service.spec.ts:63; os quatro arquivos que importam o serviço usam apenas `registrar`, `encerrar`, `listar`, `alterar` e `excluir`
+- frontend/src/app/modules/calendario/services/calendario.service.ts:30 e :47 — `recuperar`, `verificarDiaUtil`; este só em calendario.service.spec.ts:53; a única página que injeta o serviço chama `listar`, `criar`, `alterar`, `excluir` e `restaurar`
+- frontend/src/app/modules/atividade/pages/atividade-listagem/atividade-listagem.page.ts:36 e :119 — import e `inject(ExecucaoService)`, sem nenhum `this.execucaoService.` no arquivo
+
+Como observar: grep pelos nomes dos métodos em frontend/src (ts e html): só as definições e os testes de serviço.
+
+Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+
+**A-175 · Baixa · TagService.recuperar (GET /tag/:id) não tem chamador**
+
+O método existe no service mas nenhuma tela o chama: os sete arquivos que injetam TagService usam listar, listarCatalogo, criar, alterar, excluir e restaurar. A rota GET /tag/:id continua existindo no backend.
+
+Evidência no código (linhas de 2026-11-13; confira antes de editar):
+
+- frontend/src/app/modules/tag/services/tag.service.ts:44-45 — recuperar(id) faz GET `${urlBase}/${id}`
+- grep 'tagService\s*\.?\s*recuperar\(' em frontend/src (ts e html, fora de testes) — nenhuma ocorrência; os .recuperar( nos arquivos que injetam TagService são de atividadeService e demandaService (atividade-detalhe.page.ts:339, demanda-detalhe.base.ts:421, entre outros)
+- backend/src/modules/tag/controllers/tag.controller.ts:52 — @Get(':id')
+
+Como observar: Não aparece na rede em nenhum fluxo; conferir com grep por 'recuperar(' nos arquivos que injetam TagService.
+
+Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+
+**A-176 · Baixa · Quatro métodos HTTP de services do frontend sem nenhum chamador**
 
 Varredura por script dos 195 métodos do frontend que fazem HTTP: quatro só aparecem na própria definição e no teste do service. `AtividadeService.recuperarExecucaoAtiva()` e `ExecucaoService.buscarAtiva()` pedem `GET /execucao/ativa`, que hoje é do `ExecucaoAtivaService`; `CalendarioService.verificarDiaUtil()` pede `GET /calendario/verificar`; `DemandaService.recuperarAncestral()` pede `GET /demanda/:id/ancestral`.
 
@@ -63,7 +92,7 @@ Verificação na auditoria: varredura por script e `grep` do agente principal em
 
 ## Fora de Escopo
 
-As rotas do backend correspondentes (spec `425-rotas-sem-consumidor-na-interface`).
+As rotas do backend correspondentes (spec `458-rotas-sem-consumidor-na-interface`).
 
 ## Dependências
 

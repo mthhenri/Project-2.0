@@ -1,6 +1,6 @@
 # 399-plano-publicar-permissao-antes-da-regra.spec.md
 
-> Task 71/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-086 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 71/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-090 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/plano.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Em `publicar`, a permissão de editar a demanda é conferida logo depois de ler 
 
 ## Contexto
 
-**A-086 · Baixa · Publicar responde regra de negócio antes da permissão de editar a demanda**
+**A-090 · Baixa · Publicar responde regra de negócio antes da permissão de editar a demanda**
 
 A checagem de membro da demanda só acontece dentro de `DemandaService.alterar`, última etapa de `publicar`. Antes dela saem 400 (sem demanda, apagaria, textos iguais) e 409 (versão). O impacto é pequeno porque o desenvolvedor já lê o plano e a demanda do projeto, mas a ordem foge do padrão "permissão primeiro".
 

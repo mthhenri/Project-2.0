@@ -1,6 +1,6 @@
 # 353-usuario-tem-anotacoes-barato-e-so-para-quem-pode.spec.md
 
-> Task 25/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-032, A-033 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 25/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-035, A-036 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/usuario.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O campo `temAnotacoes` da listagem de usuários deixa de varrer o texto inteiro 
 
 ## Contexto
 
-**A-032 · Baixa · `GET /usuario` calcula `temAnotacoes` varrendo o texto das seções do pad de cada usuário, também nas listas de seletor que não usam o campo**
+**A-035 · Baixa · `GET /usuario` calcula `temAnotacoes` varrendo o texto das seções do pad de cada usuário, também nas listas de seletor que não usam o campo**
 
 A consulta da listagem faz, por linha, um `EXISTS` com `regexp_replace(anotacao.texto, '[[:space:]]+', '', 'g') <> ''`, que reescreve o texto inteiro de cada seção. Com `allRows` não há `LIMIT`, e é assim que Atividades, Ponto, Execuções e o catálogo de Demandas pedem os usuários. Só a tela Usuários lê `temAnotacoes`.
 
@@ -25,7 +25,7 @@ Como observar: Não aparece na aba de rede além do tempo de resposta; ver o pla
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-033 · Baixa · `GET /usuario` devolve `temAnotacoes` de todos os usuários a quem não pode abrir aquele pad**
+**A-036 · Baixa · `GET /usuario` devolve `temAnotacoes` de todos os usuários a quem não pode abrir aquele pad**
 
 A rota é aberta a auxiliar, gestor e administrador e calcula `temAnotacoes` para toda linha. Pela regra do pad, o auxiliar só abre o próprio, e ninguém abre o de outro gestor ou administrador. O frontend esconde o botão nesses casos, mas o campo vem na resposta.
 

@@ -1,6 +1,6 @@
 # 396-plano-solo-exige-acesso-ao-projeto.spec.md
 
-> Task 68/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-083 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 68/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-087 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/plano. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O criador de um plano solo ligado a projeto deixa de ler e editar o plano (com o
 
 ## Contexto
 
-**A-083 · Média · Plano solo de projeto continua com o criador depois que ele perde o acesso ao projeto**
+**A-087 · Média · Plano solo de projeto continua com o criador depois que ele perde o acesso ao projeto**
 
 No plano solo a regra olha só o criador e ignora o acesso ao projeto, tanto na leitura por id quanto na listagem. Um desenvolvedor retirado de todas as demandas do projeto segue lendo e editando o plano, com nome atual do projeto e da demanda, textos, conversa de todos e fontes. O SPEC diz apenas "solo só pelo criador" e não trata a perda de acesso, que conflita com "desenvolvedor só vê projeto com linha em demanda_usuario".
 

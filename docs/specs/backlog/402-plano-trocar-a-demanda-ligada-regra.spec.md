@@ -1,6 +1,6 @@
 # 402-plano-trocar-a-demanda-ligada-regra.spec.md
 
-> Task 74/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-090 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 74/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-094 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: backend/plano. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Decidir a regra da troca: hoje `ligarDemanda` confere a permissão só sobre a d
 
 ## Contexto
 
-**A-090 · Informativo · Trocar a demanda ligada exige editar só a demanda nova**
+**A-094 · Informativo · Trocar a demanda ligada exige editar só a demanda nova**
 
 `ligarDemanda` confere a permissão apenas sobre a demanda nova, e o repositório apaga (soft delete) a ligação anterior do plano. Quem acessa o plano e é membro da demanda B desfaz a ligação com a demanda A, de que não é membro. O SPEC só diz "ligar demanda exige poder editá-la"; a troca não está escrita.
 

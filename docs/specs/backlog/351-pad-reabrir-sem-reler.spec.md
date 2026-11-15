@@ -1,6 +1,6 @@
 # 351-pad-reabrir-sem-reler.spec.md
 
-> Task 23/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-030 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
+> Task 23/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-033 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
 > Severidade: Baixa. Área: frontend/pad.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Abrir de novo a gaveta do pad do mesmo usuário usa o que já está em memória;
 
 ## Contexto
 
-**A-030 · Baixa · Pad: toda abertura da gaveta refaz `GET /anotacao?usuarioId`, inclusive com o mesmo pad já na tela**
+**A-033 · Baixa · Pad: toda abertura da gaveta refaz `GET /anotacao?usuarioId`, inclusive com o mesmo pad já na tela**
 
 `PadService.abrir()` relê o pad sempre que não há texto local sem gravar. Em Documentações e na aba Anotações do chat o pad do usuário já está carregado e visível; teclar `n` relê as cinco seções e troca os dois painéis pelo esqueleto.
 

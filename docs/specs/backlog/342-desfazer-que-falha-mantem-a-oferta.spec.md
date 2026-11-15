@@ -1,6 +1,6 @@
 # 342-desfazer-que-falha-mantem-a-oferta.spec.md
 
-> Task 14/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-017 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-15.
+> Task 14/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-020 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-15.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Se a requisição do "Desfazer" falhar, a oferta volta para a tela com o prazo r
 
 ## Contexto
 
-**A-017 · Baixa · 'Desfazer' que falha some sem nova chance**
+**A-020 · Baixa · 'Desfazer' que falha some sem nova chance**
 
 DesfazerService.executar() retira a oferta da tela antes de chamar a reversão e só trata o sucesso. Se a chamada falhar (rede, 500), o toast de desfazer já sumiu, aposDesfazer não roda e o registro continua excluído, sem outro caminho na interface para restaurar.
 

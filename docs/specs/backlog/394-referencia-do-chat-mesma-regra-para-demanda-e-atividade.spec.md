@@ -1,6 +1,6 @@
 # 394-referencia-do-chat-mesma-regra-para-demanda-e-atividade.spec.md
 
-> Task 66/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-081 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 66/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-085 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Alinhar as duas pernas da referência: para o desenvolvedor, a demanda vale por 
 
 ## Contexto
 
-**A-081 · Baixa · Referência #: demanda vale por projeto, atividade vale por demanda**
+**A-085 · Baixa · Referência #: demanda vale por projeto, atividade vale por demanda**
 
 Para o desenvolvedor, o cartão e a sugestão de demanda aceitam qualquer demanda de projeto em que ele tem vínculo, mas os de atividade exigem vínculo na própria demanda da atividade. Ele referencia a demanda B e não uma atividade da mesma demanda B. É mais restritivo, não vaza; falta confirmar se é a regra do `AtividadeService`.
 

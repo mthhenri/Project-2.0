@@ -1,6 +1,6 @@
 # 404-demanda-excluir-e-desfazer-sem-erro.spec.md
 
-> Task 76/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-092, A-093 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; `PROBLEMS.md` P-084; auditoria anterior: R-11, R-15.
+> Task 76/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-096, A-097 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; `PROBLEMS.md` P-084; auditoria anterior: R-11, R-15.
 > Severidade: Média. Área: frontend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Excluir uma demanda deixa de mostrar um erro logo depois de dar certo, e desfaze
 
 ## Contexto
 
-**A-092 · Média · Excluir demanda: a demanda excluída é pedida de novo (404 com aviso) e a vizinha é carregada inteira**
+**A-096 · Média · Excluir demanda: a demanda excluída é pedida de novo (404 com aviso) e a vizinha é carregada inteira**
 
 Depois do DELETE 200, o evento de exclusão sobe pelo mesmo caminho de "demanda alterada": a página recarrega o grafo e manda a demanda aberta se reler antes de o componente dela ser desmontado, então sai GET /demanda/<id excluído>, que responde 404 e vira o aviso "Não encontrado". Quando o grafo novo chega, a Árvore abre a primeira demanda da pasta e faz a carga completa dela (plano, detalhe, árvore, atividades, canal e de novo a lista do projeto, porque a coluna foi recriada).
 
@@ -28,7 +28,7 @@ Como observar: Como gestor em /demanda?projetoId=<id>, abrir uma demanda, clicar
 
 Verificação na auditoria: reproduzido na aplicação rodando em 2026-11-14: `DELETE /demanda/:id` 200 seguido de `GET /demanda/:id` 404, do aviso "Não encontrado: Registro não encontrado" e de mais 7 leituras; "Desfazer" fez `PATCH /demanda/:id/restaurar` 200, nenhuma leitura, e a demanda restaurada não voltou à lista.
 
-**A-093 · Média · Desfazer a exclusão não recarrega nada: o aviso vai para um componente já desmontado**
+**A-097 · Média · Desfazer a exclusão não recarrega nada: o aviso vai para um componente já desmontado**
 
 O aposDesfazer emite demandaExcluida na instância da demanda aberta que a própria exclusão desmontou (o @if da coluna), então ninguém ouve: depois do PATCH /demanda/:id/restaurar nenhuma leitura é feita e a demanda só volta à lista na próxima recarga do grafo. Se o evento chegasse, o tratador é o de exclusão e fecharia a demanda aberta naquele momento.
 

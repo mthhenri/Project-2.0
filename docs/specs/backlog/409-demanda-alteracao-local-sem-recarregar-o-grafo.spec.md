@@ -1,6 +1,6 @@
 # 409-demanda-alteracao-local-sem-recarregar-o-grafo.spec.md
 
-> Task 81/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-100 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
+> Task 81/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-104 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
 > Severidade: Média. Área: frontend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Renomear, mexer em membro, criar ou remover conexão e trocar status deixam de d
 
 ## Contexto
 
-**A-100 · Média · Toda alteração feita na demanda aberta recarrega o grafo do projeto e relê a demanda, mesmo com a tela já atualizada**
+**A-104 · Média · Toda alteração feita na demanda aberta recarrega o grafo do projeto e relê a demanda, mesmo com a tela já atualizada**
 
 Renomear, adicionar ou remover membro, criar ou remover conexão e trocar status pela bolinha da linha terminam em aoAlteradoPlanejamento() (ou em recarregar()), que dispara GET /demanda/grafo do projeto inteiro e GET /demanda/:id. A tela já aplicou a mudança de forma otimista, o PUT devolve a demanda inteira (DemandaAlteradaDto, ignorado) e, no caso de membros, o nó do grafo nem carrega esse dado. Status pelo chip e tags do cabeçalho já mostram o caminho certo: atualizam o nó sem requisição.
 

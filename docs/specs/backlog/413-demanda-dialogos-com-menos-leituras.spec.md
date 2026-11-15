@@ -1,6 +1,6 @@
 # 413-demanda-dialogos-com-menos-leituras.spec.md
 
-> Task 85/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-104 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
+> Task 85/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-108 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
 > Severidade: Baixa. Área: frontend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Abrir a edição passa a reler a demanda, as tags e os membros numa chamada (`/d
 
 ## Contexto
 
-**A-104 · Baixa · Diálogos de edição e de tags leem em 3 a 4 chamadas o que /detalhe ou o grafo já entregam**
+**A-108 · Baixa · Diálogos de edição e de tags leem em 3 a 4 chamadas o que /detalhe ou o grafo já entregam**
 
 Abrir a edição faz GET /demanda/:id, /demanda/:id/tag e /demanda/:id/membro (a releitura é decisão vigente, mas /demanda/:id/detalhe devolve os três de uma vez) e só depois, em cascata, pede as candidatas a pai. O diálogo "Tags" do menu de contexto pede o catálogo e, em cascata, GET /demanda/:id/tag só para marcar os chips, embora as tags da demanda já estejam no nó do grafo, mantido em dia por aoTagsAlteradas.
 

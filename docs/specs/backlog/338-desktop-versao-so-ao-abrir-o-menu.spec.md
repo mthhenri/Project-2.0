@@ -1,6 +1,6 @@
 # 338-desktop-versao-so-ao-abrir-o-menu.spec.md
 
-> Task 10/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-012, A-013 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 10/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-015, A-016 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A versão do Project Desktop deixa de ser pedida em toda carga da aplicação: s
 
 ## Contexto
 
-**A-012 · Baixa · GET /desktop/versao é pedido em toda carga da aplicação, mas só aparece dentro do menu do perfil**
+**A-015 · Baixa · GET /desktop/versao é pedido em toda carga da aplicação, mas só aparece dentro do menu do perfil**
 
 O construtor da topbar pede a versão publicada do Project Desktop em toda carga. O único uso é o item 'Baixar Project Desktop' dentro do popover do perfil. O link ?baixar-desktop=1 chama baixar() direto e não depende dessa leitura. No backend a rota lê a pasta e o arquivo a cada chamada.
 
@@ -25,7 +25,7 @@ Como observar: F5 em qualquer tela: GET /desktop/versao aparece na carga, mesmo 
 
 Verificação na auditoria: medido na aplicação rodando: `GET /desktop/versao` aparece em toda carga, para os quatro perfis.
 
-**A-013 · Baixa · Perfil: `GET /desktop/versao` sai em toda carga da casca para um botão que fica dentro do menu do perfil**
+**A-016 · Baixa · Perfil: `GET /desktop/versao` sai em toda carga da casca para um botão que fica dentro do menu do perfil**
 
 O construtor da topbar chama `desktopDownload.carregar()`. O único uso de `versao()` é o botão "Baixar Project Desktop", dentro do popover do perfil. O deep-link `?baixar-desktop=1` chama `baixar()`, que não depende dessa leitura.
 

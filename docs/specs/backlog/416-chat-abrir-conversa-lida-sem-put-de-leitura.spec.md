@@ -1,6 +1,6 @@
 # 416-chat-abrir-conversa-lida-sem-put-de-leitura.spec.md
 
-> Task 88/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-109 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 88/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-113 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A primeira abertura de cada conversa ou grupo na sessão deixa de mandar `PUT ..
 
 ## Contexto
 
-**A-109 · Baixa · Abrir conversa ou grupo já lido envia PUT de leitura mesmo sem não lidas**
+**A-113 · Baixa · Abrir conversa ou grupo já lido envia PUT de leitura mesmo sem não lidas**
 
 `marcarComoLida` decide só pela data da última mensagem do outro e por um mapa em memória que nasce vazio a cada carga da página; não olha `naoLidas` da lista. Na primeira abertura de cada conversa ou grupo por sessão sai um `PUT .../leitura` mesmo com zero não lidas. No backend, a leitura da conversa direta grava e publica `LEITURA` para as duas pessoas sem conferir se algo mudou.
 

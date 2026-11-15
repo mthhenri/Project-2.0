@@ -1,6 +1,6 @@
 # 362-grupo-privado-e-a-volta-da-supervisao.spec.md
 
-> Task 34/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-043 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 34/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-047 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O que o sistema promete aos membros ("a conversa agora é privada e a supervisã
 
 ## Contexto
 
-**A-043 · Média · Grupo "privado" volta à supervisão quando o gestor sai, com todo o histórico e sem aviso**
+**A-047 · Média · Grupo "privado" volta à supervisão quando o gestor sai, com todo o histórico e sem aviso**
 
 A mensagem do sistema promete que "a conversa agora é privada e a supervisão não a lê", mas a elegibilidade é só dos membros de agora. Quando o último gestor sai, outro gestor lê tudo, inclusive o que foi escrito no período privado, e os membros recebem apenas "X saiu do grupo". O comportamento é intencional (há teste), mas contradiz o texto mostrado aos membros.
 

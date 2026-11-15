@@ -1,6 +1,6 @@
 # 408-demanda-salvar-edicao-uma-releitura-completa.spec.md
 
-> Task 80/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-098, A-099 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
+> Task 80/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-102, A-103 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
 > Severidade: Média. Área: frontend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Depois de salvar pelo botão Editar, a demanda aberta é relida uma vez pelo det
 
 ## Contexto
 
-**A-098 · Média · Salvar a edição pelo botão Editar faz GET /demanda/:id duas vezes**
+**A-102 · Média · Salvar a edição pelo botão Editar faz GET /demanda/:id duas vezes**
 
 aoDemandaAlterada() da demanda aberta relê a demanda e emite demandaAlterada; o evento chega à página, que recarrega o grafo e manda a mesma demanda aberta se reler outra vez. Resultado: PUT /demanda/:id, depois GET /demanda/:id, GET /demanda/grafo e GET /demanda/:id de novo.
 
@@ -25,7 +25,7 @@ Como observar: Abrir uma demanda, clicar em Editar, mudar o nome e Salvar. Rede:
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-099 · Média · Depois de salvar a edição, tags e membros do cabeçalho da demanda aberta não são relidos**
+**A-103 · Média · Depois de salvar a edição, tags e membros do cabeçalho da demanda aberta não são relidos**
 
 O diálogo de edição grava tags (PUT) e membros (POST/DELETE), mas a demanda aberta só relê GET /demanda/:id, que não traz tags nem membros; tagsDaDemanda e membros só são preenchidos na carga completa. As duas releituras feitas não trazem o que mudou, e os chips e avatares do cabeçalho ficam antigos até trocar de demanda (a linha da lista atualiza, porque vem do grafo).
 

@@ -1,6 +1,6 @@
 # 415-chat-evento-sincronizar-rele-so-o-que-mudou.spec.md
 
-> Task 87/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-106, A-107, A-108 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-13.
+> Task 87/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-110, A-111, A-112 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-13.
 > Severidade: Média. Área: frontend/mensagem-direta e backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Fixar uma mensagem, renomear um grupo ou mudar os membros de uma demanda deixa d
 
 ## Contexto
 
-**A-106 · Média · `SINCRONIZAR` é um único evento de "relê tudo": fixar uma mensagem faz cada membro reler lista, mensagens e fixadas**
+**A-110 · Média · `SINCRONIZAR` é um único evento de "relê tudo": fixar uma mensagem faz cada membro reler lista, mensagens e fixadas**
 
 Todo `SINCRONIZAR` dispara `GET /mensagem-direta/conversas` e, se a conversa ou o grupo do evento está aberto, também a página de mensagens e `GET /grupo/:id/fixadas`. O backend usa esse evento para mudanças pequenas: fixar/desafixar (só as fixadas mudam) e entrada/saída em demanda (só a lista muda, mas com `conversaId: null` a conversa direta aberta também é relida). Quem fixou ainda pede as fixadas duas vezes: uma depois do POST e outra pelo evento.
 
@@ -26,7 +26,7 @@ Como observar: Popup do chat com dois usuários conectados no mesmo grupo; um de
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-107 · Média · Criar ou alterar grupo, adicionar membros e sair: a resposta já traz o grupo, mas o eco `SINCRONIZAR` relê tudo no próprio autor**
+**A-111 · Média · Criar ou alterar grupo, adicionar membros e sair: a resposta já traz o grupo, mas o eco `SINCRONIZAR` relê tudo no próprio autor**
 
 A resposta de `POST /grupo`, `PATCH /grupo/:id` e `POST /grupo/:id/membros` já é aplicada na lista local. O backend inclui o autor entre os destinatários do `SINCRONIZAR`, e o cliente dele pede `GET /conversas` de novo e, com o grupo aberto (inclusive na tela de detalhes), também mensagens e fixadas. A ordem entre o evento e a resposta HTTP não foi observada, então a repetição de mensagens/fixadas na criação depende de qual chega primeiro.
 
@@ -42,7 +42,7 @@ Como observar: Popup → abrir um grupo → Detalhes → mudar o nome e salvar. 
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-108 · Média · `SINCRONIZAR` descarta o histórico já carregado da conversa ou do grupo aberto**
+**A-112 · Média · `SINCRONIZAR` descarta o histórico já carregado da conversa ou do grupo aberto**
 
 `carregarConversaAberta` e `carregarGrupoAberto` substituem todas as mensagens do servidor pela página mais nova e trocam o cursor. Isso é intencional na reconexão, mas o mesmo caminho roda quando alguém fixa uma mensagem, renomeia o grupo ou muda os membros de uma demanda. Quem rolou para cima e carregou páginas antigas perde essas páginas; o efeito na rolagem não foi observado ao vivo.
 

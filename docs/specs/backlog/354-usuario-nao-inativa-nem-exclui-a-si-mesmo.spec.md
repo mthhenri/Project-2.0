@@ -1,6 +1,6 @@
 # 354-usuario-nao-inativa-nem-exclui-a-si-mesmo.spec.md
 
-> Task 26/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-034 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 26/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-037, A-038 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/usuario. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A regra que a tela aplica ("o gestor não inativa nem exclui a própria conta") 
 
 ## Contexto
 
-**A-034 · Baixa · Usuários: a trava de "não inativar nem excluir a si mesmo" existe só na tela; `PUT /usuario/:id` e `DELETE /usuario/:id` aceitam**
+**A-037 · Baixa · Usuários: a trava de "não inativar nem excluir a si mesmo" existe só na tela; `PUT /usuario/:id` e `DELETE /usuario/:id` aceitam**
 
 A tela desabilita o switch e esconde a lixeira na própria linha. Na `UsuarioService` do backend, `alterar` só impede o gestor de rebaixar a si mesmo e `excluir` não confere quem pede; as únicas barreiras são o último administrador ativo e a existência de execuções.
 
@@ -21,6 +21,22 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 - backend/src/modules/usuario/services/usuario.service.ts:215-237 — `excluir` sem comparar com `usuarioAtivo.sub`
 
 Como observar: Como gestor, enviar `PUT /api/usuario/<meu id>` com `{ "ativo": false }` ou `DELETE /api/usuario/<meu id>` pelo DevTools: responde 200 (salvo último administrador ativo ou usuário com execução).
+
+Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+
+**A-038 · Baixa · Usuário pode inativar ou excluir a si mesmo**
+
+A única guarda 'a si mesmo' é o gestor rebaixar o próprio tipo. Inativar (ativo=false) e excluir o próprio usuário passam: o gestor sempre, o administrador quando existe outro administrador ativo; o token deixa de valer na requisição seguinte. A regra não está escrita no resumo.
+
+Evidência no código (linhas de 2026-11-13; confira antes de editar):
+
+- backend/src/modules/usuario/services/usuario.service.ts:163-166 — só 'Um gestor não pode rebaixar a si mesmo'
+- backend/src/modules/usuario/services/usuario.service.ts:170-174 — ativo=false passa só pela guarda do último administrador
+- backend/src/modules/usuario/services/usuario.service.ts:215-230 — excluir não compara dto.id com usuarioAtivo.sub
+- backend/src/modules/autenticacao/strategies/jwt.strategy.ts:31-33 — inativo/excluído vira 401 na hora
+- backend/src/modules/usuario/services/usuario.service.test.ts:112 — único teste 'a si mesmo' é o de rebaixar
+
+Como observar: Como GESTOR: PUT /usuario/<próprio id> {ativo:false} → 200; a requisição seguinte com o mesmo token → 401. Como GESTOR sem execuções: DELETE /usuario/<próprio id> → 200. Se a regra for proibir, o esperado é 400.
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 

@@ -1,6 +1,6 @@
 # 417-chat-lista-atualizada-pela-resposta.spec.md
 
-> Task 89/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-110, A-111 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-13.
+> Task 89/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-114, A-115 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-13.
 > Severidade: Baixa. Área: frontend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Enviar a primeira mensagem de uma conversa nova deixa de pedir `GET /mensagem-di
 
 ## Contexto
 
-**A-110 · Baixa · Primeira mensagem de conversa nova: a resposta do POST e o evento do stream pedem a lista cada um**
+**A-114 · Baixa · Primeira mensagem de conversa nova: a resposta do POST e o evento do stream pedem a lista cada um**
 
 `receberMensagem` chama `carregarConversas()` sempre que a conversa não está na lista, e roda duas vezes no envio: para a resposta de `POST /mensagem-direta/mensagem` e para o evento `MENSAGEM` do próprio envio. `carregarConversas` não reaproveita a requisição em voo; o contador de geração só descarta a resposta antiga. Grupo desconhecido segue o mesmo padrão.
 
@@ -26,7 +26,7 @@ Como observar: Popup → Nova conversa → escolher alguém com quem nunca falou
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-111 · Baixa · "Criar chat" da demanda/projeto relê a lista inteira embora o POST devolva o grupo**
+**A-115 · Baixa · "Criar chat" da demanda/projeto relê a lista inteira embora o POST devolva o grupo**
 
 Depois de `POST /mensagem-direta/canal/...`, `abrirCanal` espera um `carregarConversas()` quando o canal não está na lista, em vez de inserir o grupo que a resposta trouxe, como `criarGrupo` faz. O backend ainda manda `SINCRONIZAR` aos membros e ao autor, que pede a lista outra vez. O resultado é uma cascata POST → GET /conversas (até duas vezes) → GET mensagens → GET fixadas; vale para quem é membro, porque gestor e administrador leem por tipo e pulam a recarga.
 

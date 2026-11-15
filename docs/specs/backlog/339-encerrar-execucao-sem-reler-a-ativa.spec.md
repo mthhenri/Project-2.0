@@ -1,6 +1,6 @@
 # 339-encerrar-execucao-sem-reler-a-ativa.spec.md
 
-> Task 11/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-014 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 11/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-017 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Depois de `PATCH /execucao/:id/encerrar`, o interceptor atualiza a execução at
 
 ## Contexto
 
-**A-014 · Baixa · Todo PATCH /execucao/:id/encerrar é seguido de GET /execucao/ativa, embora a resposta e o id da URL já digam o resultado**
+**A-017 · Baixa · Todo PATCH /execucao/:id/encerrar é seguido de GET /execucao/ativa, embora a resposta e o id da URL já digam o resultado**
 
 O interceptor recarrega a execução ativa depois de qualquer encerramento. Se a execução encerrada é a do chip, o resultado só pode ser 'nenhuma' (o chip já faz definir(null)); se é a de outra pessoa (gestor ou auxiliar encerrando), a execução do usuário logado não mudou. Nos dois casos a leitura não traz informação. No início de execução a leitura é necessária, porque a resposta não diz quem é o dono.
 

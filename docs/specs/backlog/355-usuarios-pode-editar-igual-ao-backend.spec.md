@@ -1,6 +1,6 @@
 # 355-usuarios-pode-editar-igual-ao-backend.spec.md
 
-> Task 27/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-035 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 27/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-039 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: frontend/usuario.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A tela deixa de liberar "Editar" e "Alterar senha" para "a própria pessoa": o b
 
 ## Contexto
 
-**A-035 · Informativo · Usuários: `podeEditar` libera Editar e Alterar senha para "a própria pessoa", que o backend recusa a quem não é gestor; hoje o guard da rota esconde a diferença**
+**A-039 · Informativo · Usuários: `podeEditar` libera Editar e Alterar senha para "a própria pessoa", que o backend recusa a quem não é gestor; hoje o guard da rota esconde a diferença**
 
 A regra do front diz "gestor, ou a própria pessoa". No backend, `PUT /usuario/:id` e `PATCH /usuario/:id/senha` são só de gestor e administrador. A rota `/usuario` tem `gestorGuard`, então o ramo nunca é alcançado por outro tipo; pelo mesmo motivo os `@if (sessao.eGestor())` do template são sempre verdadeiros.
 

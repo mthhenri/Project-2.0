@@ -1,6 +1,6 @@
 # 333-checkin-dialogo-conferencia-por-evento.spec.md
 
-> Task 5/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-005 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01.
+> Task 5/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-006 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01.
 > Severidade: Média. Área: frontend/checkin. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Com o diálogo do check-in aberto, a página deixa de pedir `GET /checkin/situac
 
 ## Contexto
 
-**A-005 · Média · Diálogo do check-in aberto confere GET /checkin/situacao a cada 3 s sem teto de tempo**
+**A-006 · Média · Diálogo do check-in aberto confere GET /checkin/situacao a cada 3 s sem teto de tempo**
 
 Com o check-in em andamento a página confere a cada 3 s até o estado mudar; a única guarda é a aba oculta. O diálogo não tem fechar, então quem saiu da mesa com a execução rodando deixa a aba fazendo 1.200 requisições por hora. Os dois desfechos que o intervalo espera quase sempre nascem na própria página (confirmar o cartão ou o fim do fluxo da conversa), e o fim do fluxo já confere por conta própria. No Electron a guarda de aba oculta não vale: a janela oculta continua com visibilityState 'visible'.
 

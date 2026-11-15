@@ -1,6 +1,6 @@
 # 334-checkin-situacao-leitura-da-execucao-ativa-enxuta.spec.md
 
-> Task 6/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-006 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01.
+> Task 6/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-007 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01.
 > Severidade: Média. Área: backend/checkin. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A situação do check-in lê a execução ativa com os nomes de atividade, deman
 
 ## Contexto
 
-**A-006 · Média · GET /checkin/situacao lista todas as execuções da atividade só para achar três nomes**
+**A-007 · Média · GET /checkin/situacao lista todas as execuções da atividade só para achar três nomes**
 
 Com execução ativa, montarSituacao chama recuperarExecucaoAtivaDetalhada, que lê a execução ativa e depois lista com allRows todas as execuções da atividade para pegar os nomes da atividade, da demanda e do projeto. A listagem roda três consultas (COUNT, SUM de minutos e SELECT com quatro JOIN) e o resultado é descartado, menos uma linha. É a rota que o front confere a cada 3 s no diálogo e o Desktop a cada 15 s.
 

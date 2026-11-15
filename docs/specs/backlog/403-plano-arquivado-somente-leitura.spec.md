@@ -1,6 +1,6 @@
 # 403-plano-arquivado-somente-leitura.spec.md
 
-> Task 75/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-091 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 75/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-095 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: backend/plano. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Decidir se arquivar tira a escrita: hoje nenhuma escrita consulta `arquivado`, e
 
 ## Contexto
 
-**A-091 · Informativo · Plano arquivado continua editável e publicável por quem tem acesso**
+**A-095 · Informativo · Plano arquivado continua editável e publicável por quem tem acesso**
 
 Arquivar é restrito a criador, gestor e administrador, mas nenhuma escrita consulta o campo `arquivado`. Um colega que não pode arquivar continua alterando o texto e publicando a partir de um plano arquivado. Não achei regra escrita sobre isso.
 

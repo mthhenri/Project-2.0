@@ -1,6 +1,6 @@
 # 349-documentacoes-abrir-a-demanda-em-paralelo.spec.md
 
-> Task 21/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-028 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 21/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-031 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/documentacao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Quando há uma demanda guardada da última visita, ela começa a carregar junto 
 
 ## Contexto
 
-**A-028 · Baixa · Documentações: ao abrir, `GET /demanda/:id` espera `GET /demanda/documentacao` mesmo quando a demanda guardada já é conhecida**
+**A-031 · Baixa · Documentações: ao abrir, `GET /demanda/:id` espera `GET /demanda/documentacao` mesmo quando a demanda guardada já é conhecida**
 
 O id da demanda fica no localStorage, mas `escolhidaId` nasce `null` e só é definido depois da lista; o componente da demanda só é criado depois dela. As duas leituras saem em série.
 

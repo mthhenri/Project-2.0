@@ -1,6 +1,6 @@
 # 419-chat-grupo-abre-mensagens-e-fixadas-em-paralelo.spec.md
 
-> Task 91/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-113 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 91/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-117 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@
 
 ## Contexto
 
-**A-113 · Baixa · Abrir grupo: mensagens e fixadas em cascata, e as fixadas relidas em toda releitura**
+**A-117 · Baixa · Abrir grupo: mensagens e fixadas em cascata, e as fixadas relidas em toda releitura**
 
 `carregarGrupoAberto` só dispara `GET /grupo/:id/fixadas` depois que `GET /grupo/:id/mensagens` responde, embora uma não dependa da outra. A conversa direta abre com uma leitura; o grupo, com duas em série, repetidas a cada reconexão e a cada `SINCRONIZAR`.
 

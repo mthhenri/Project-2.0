@@ -1,6 +1,6 @@
 # 418-chat-pessoas-reaproveita-a-lista.spec.md
 
-> Task 90/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-112 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
+> Task 90/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-116 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
 > Severidade: Baixa. Área: frontend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Nova conversa, Novo grupo e Detalhes do grupo reaproveitam a lista de pessoas j�
 
 ## Contexto
 
-**A-112 · Baixa · `GET /mensagem-direta/pessoas` repetido a cada abertura de Nova conversa, Novo grupo e Detalhes do grupo**
+**A-116 · Baixa · `GET /mensagem-direta/pessoas` repetido a cada abertura de Nova conversa, Novo grupo e Detalhes do grupo**
 
 `carregarPessoas` só evita a chamada simultânea; não reaproveita a lista já carregada. Só o caminho da busca confere `pessoas() === null`; os outros quatro gatilhos pedem a lista inteira toda vez, embora a presença venha pelo stream.
 

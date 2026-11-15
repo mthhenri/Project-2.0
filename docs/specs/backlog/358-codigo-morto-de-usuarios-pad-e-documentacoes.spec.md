@@ -1,6 +1,6 @@
 # 358-codigo-morto-de-usuarios-pad-e-documentacoes.spec.md
 
-> Task 30/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-038 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 30/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-042 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/usuario.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Tirar o que não é mais usado nessas telas: os tipos de `usuario.model.ts`, `te
 
 ## Contexto
 
-**A-038 · Baixa · Código sem uso na unidade: tipos de `usuario.model.ts`, `textosPreenchidos`, opção `secoesAbertas` do pad, entrada `editavel` do diálogo do pad e parâmetro `forcar` de `TipoUsuarioAjudaService.carregar`**
+**A-042 · Baixa · Código sem uso na unidade: tipos de `usuario.model.ts`, `textosPreenchidos`, opção `secoesAbertas` do pad, entrada `editavel` do diálogo do pad e parâmetro `forcar` de `TipoUsuarioAjudaService.carregar`**
 
 Nenhum é método com HTTP: todos os métodos HTTP de `UsuarioService`, `AnotacaoService`, `TipoUsuarioAjudaService` e `AssistenteTrechoService` têm chamador. Os itens abaixo não têm uso fora de testes.
 

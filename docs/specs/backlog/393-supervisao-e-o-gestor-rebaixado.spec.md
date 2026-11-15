@@ -1,6 +1,6 @@
 # 393-supervisao-e-o-gestor-rebaixado.spec.md
 
-> Task 65/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-080 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 65/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-084 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Decidir o que vale para o histórico de um gestor que virou desenvolvedor ou aux
 
 ## Contexto
 
-**A-080 · Baixa · Gestor rebaixado: conversas antigas dele viram supervisionáveis**
+**A-084 · Baixa · Gestor rebaixado: conversas antigas dele viram supervisionáveis**
 
 A elegibilidade usa o tipo de agora dos participantes, na lista e na leitura. Se um gestor passa a desenvolvedor ou auxiliar, todo o histórico dele com desenvolvedores, escrito quando era gestor, fica legível pela supervisão, contra "conversa que envolve gestor é privada". O próprio comentário do repository diz "privada para sempre" e "o tipo é o de hoje" na mesma frase.
 

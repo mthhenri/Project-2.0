@@ -1,6 +1,6 @@
-# 421-recurso-sem-acesso-resposta-unica.spec.md
+# 454-recurso-sem-acesso-resposta-unica.spec.md
 
-> Task 93/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-115, A-116, A-117, A-118, A-119 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-16.
+> Task 126/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-155, A-156, A-157, A-158, A-159 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-16.
 > Severidade: Baixa. Área: backend (vários módulos). **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Quem não tem acesso a um registro recebe a mesma resposta de quem pede um id qu
 
 ## Contexto
 
-**A-115 · Baixa · Atividade e execução respondem 403 a quem não tem acesso; projeto e demanda respondem 404**
+**A-155 · Baixa · Atividade e execução respondem 403 a quem não tem acesso; projeto e demanda respondem 404**
 
 Confirmado no código: as services de atividade e execução buscam o registro sem recorte, respondem 404 se não existe e 403 se existe sem acesso, o que permite enumerar ids. Projeto devolve 404 de propósito e demanda aplica o recorte na consulta. O mesmo padrão vale para POST /atividade (demanda) e POST /execucao (atividade).
 
@@ -26,7 +26,7 @@ Como observar: Desenvolvedor sem vínculo: GET /api/v1/atividade/<id alheio exis
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-13 como desenvolvedor de outro projeto: `GET /demanda/:id` e `GET /projeto/:id` respondem 404; `GET /atividade/:id`, `GET /atividade/:id/tag`, `GET /execucao/:id`, `GET /demanda/grafo?projetoId=`, `GET /mensagem-direta/canal/demanda/:id` e `GET /mensagem-direta/grupo/:id` respondem 403 com mensagem que confirma a existência.
 
-**A-116 · Baixa · Escritas de tag e de membro respondem 403 ao desenvolvedor em demanda de projeto sem acesso (as leituras respondem 404)**
+**A-156 · Baixa · Escritas de tag e de membro respondem 403 ao desenvolvedor em demanda de projeto sem acesso (as leituras respondem 404)**
 
 alterarTagsDemanda, atribuirMembro e removerMembro leem a demanda sem o filtro de acesso ao projeto que as leituras avulsas usam. O desenvolvedor recebe 403 (ou 404 "Membro") quando a demanda existe em projeto que ele não vê e 404 "Demanda" quando não existe, o que confirma a existência do id. A mensagem de atribuirMembro ainda diz explicitamente que a demanda é de projeto sem acesso.
 
@@ -41,7 +41,7 @@ Como observar: Como DESENVOLVEDOR sem linha em demanda_usuario no projeto da dem
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-13 como desenvolvedor de outro projeto: `GET /demanda/:id` e `GET /projeto/:id` respondem 404; `GET /atividade/:id`, `GET /atividade/:id/tag`, `GET /execucao/:id`, `GET /demanda/grafo?projetoId=`, `GET /mensagem-direta/canal/demanda/:id` e `GET /mensagem-direta/grupo/:id` respondem 403 com mensagem que confirma a existência.
 
-**A-117 · Baixa · 403 no lugar de 404 revela a existência de demanda, projeto e grupo**
+**A-157 · Baixa · 403 no lugar de 404 revela a existência de demanda, projeto e grupo**
 
 O canal busca a demanda sem filtro de acesso: id inexistente dá 404 e demanda de projeto que o desenvolvedor não vê dá 403, enquanto o `DemandaService` responde 404 nos dois casos. O grupo faz o mesmo (404 se não existe ou foi encerrado, 403 se existe), com texto que distingue canal de grupo livre. Na proposta do resumo, "A demanda escolhida não é deste projeto" sai antes da checagem de permissão.
 
@@ -57,7 +57,7 @@ Como observar: DESENVOLVEDOR: `GET /mensagem-direta/canal/demanda/<id de demanda
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-13 como desenvolvedor de outro projeto: `GET /demanda/:id` e `GET /projeto/:id` respondem 404; `GET /atividade/:id`, `GET /atividade/:id/tag`, `GET /execucao/:id`, `GET /demanda/grafo?projetoId=`, `GET /mensagem-direta/canal/demanda/:id` e `GET /mensagem-direta/grupo/:id` respondem 403 com mensagem que confirma a existência.
 
-**A-118 · Baixa · Proposta de outro usuário responde 403 e a inexistente 404: os ids ficam enumeráveis**
+**A-158 · Baixa · Proposta de outro usuário responde 403 e a inexistente 404: os ids ficam enumeráveis**
 
 `obterDoUsuario` distingue 'não existe' (404) de 'é de outro usuário' (403) em todas as rotas de /proposta-ia, enquanto `recuperarParaParticipante`, no mesmo arquivo, e a conversa do plano respondem 404 a quem não pode ver. Só a existência vaza. O 403 está escrito no SYSTEM.SPEC.md e coberto por teste, então mudar é decisão do autor.
 
@@ -73,7 +73,7 @@ Como observar: Como DESENVOLVEDOR: GET /proposta-ia/1, /2, /3… 403 = existe e 
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-13 como desenvolvedor de outro projeto: `GET /demanda/:id` e `GET /projeto/:id` respondem 404; `GET /atividade/:id`, `GET /atividade/:id/tag`, `GET /execucao/:id`, `GET /demanda/grafo?projetoId=`, `GET /mensagem-direta/canal/demanda/:id` e `GET /mensagem-direta/grupo/:id` respondem 403 com mensagem que confirma a existência.
 
-**A-119 · Baixa · 403 no plano onde a demanda responde 404: revela existência de demanda e projeto sem acesso**
+**A-159 · Baixa · 403 no plano onde a demanda responde 404: revela existência de demanda e projeto sem acesso**
 
 `recuperarDemandaEditavel` lê a demanda sem o recorte de acesso e responde 403 quando ela existe e 404 quando não existe. A `DemandaService` lê com o recorte do desenvolvedor e responde 404 para demanda de projeto sem acesso. É a mesma regra ("poder editar a demanda") escrita em dois lugares com diferença; o projeto tem o mesmo par 404/403 em `validarAcessoAoProjeto`.
 

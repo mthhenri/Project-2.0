@@ -1,6 +1,6 @@
 # 364-testes-por-tipo-em-grupos-e-canais.spec.md
 
-> Task 36/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-047, A-048 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 36/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-051, A-052 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Cobrir o que hoje nenhum teste exercita: o auxiliar em canal de demanda e de pro
 
 ## Contexto
 
-**A-047 · Baixa · Nenhum teste de grupo ou canal com AUXILIAR, nem da supervisão com cursor**
+**A-051 · Baixa · Nenhum teste de grupo ou canal com AUXILIAR, nem da supervisão com cursor**
 
 Os seis arquivos de teste da unidade não mencionam o auxiliar; os casos por tipo cobrem desenvolvedor, gestor e administrador. A supervisão é testada só na abertura sem cursor, e o único teste de cursor é o do membro. A leitura das fixadas pelo gestor é testada sem tratar de auditoria.
 
@@ -25,7 +25,7 @@ Como observar: Conferência por grep nos títulos e nas ocorrências dos *.test.
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-048 · Baixa · Sem teste por tipo AUXILIAR no chat um a um e na supervisão; bordas da auditoria sem teste**
+**A-052 · Baixa · Sem teste por tipo AUXILIAR no chat um a um e na supervisão; bordas da auditoria sem teste**
 
 Nos testes do módulo, AUXILIAR só aparece no teste do domínio da IA. Supervisão, referências e sugestões testam só desenvolvedor contra gestor, e não há teste de par sem mensagens, de gestor rebaixado nem de cursor montado pelo cliente.
 

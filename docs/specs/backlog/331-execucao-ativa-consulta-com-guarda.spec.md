@@ -1,6 +1,6 @@
 # 331-execucao-ativa-consulta-com-guarda.spec.md
 
-> Task 3/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-003 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-06.
+> Task 3/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-003, A-004 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-06.
 > Severidade: Média. Área: frontend/casca.
 
 ## Objetivo
@@ -22,6 +22,21 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 - .artifacts/revisao-requisicoes-e-permissoes/trafego/DESENVOLVEDOR.txt — 'foco na janela 3x' = 3× GET /execucao/ativa; 'aba oculta e visivel' = 2× GET /execucao/ativa + GET /checkin/situacao; 'atividade: detalhe' repete GET /execucao/ativa
 
 Como observar: Em qualquer tela, alternar para outro programa e voltar três vezes: 3 GET /execucao/ativa. Trocar de aba do navegador e voltar: 2 GET /execucao/ativa e 1 GET /checkin/situacao no mesmo instante.
+
+Verificação na auditoria: medido na aplicação rodando em 2026-11-13: 3 focos seguidos da janela = 3 `GET /execucao/ativa`; voltar de aba oculta = 2 `GET /execucao/ativa` iguais e 1 `GET /checkin/situacao`.
+
+**A-004 · Média · GET /execucao/ativa em dobro ao voltar à aba e de novo a cada abertura do detalhe**
+
+A topbar escuta `visibilitychange` e `window:focus` no mesmo método sem guarda, e `ExecucaoAtivaService.carregar()` liga `_carregando` mas não o consulta: quando os dois eventos chegam juntos saem duas requisições iguais (medido). O detalhe da atividade soma a sua própria chamada na volta à aba e pede mais uma a cada abertura, embora o estado já esteja carregado no boot e mantido pelo interceptor.
+
+Evidência no código (linhas de 2026-11-13; confira antes de editar):
+
+- frontend/src/app/shared/layout/topbar/topbar.component.ts:142-146 — dois `@HostListener` em `ressincronizarExecucao`, que só confere `visibilityState`
+- frontend/src/app/core/services/execucao-ativa.service.ts:27-28 — `carregar()` começa com `this._carregando.set(true)`, sem retornar se já está carregando
+- frontend/src/app/modules/atividade/pages/atividade-detalhe/atividade-detalhe.page.ts:188 e :337 — `this.execucaoAtiva.carregar()` na volta à aba e em `carregarTudo`
+- .artifacts/revisao-requisicoes-e-permissoes/trafego/ADMINISTRADOR.txt:168-172 — 'foco na janela 3x': 3× GET /execucao/ativa; 'aba oculta e visivel': 2× GET /execucao/ativa; :111 — o detalhe abre com GET /execucao/ativa
+
+Como observar: Em qualquer tela, minimizar e restaurar a janela: 2 GET /execucao/ativa; em /atividade/:id são 3. Abrir /atividade/:id vindo da lista: 1 GET /execucao/ativa a mais.
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-13: 3 focos seguidos da janela = 3 `GET /execucao/ativa`; voltar de aba oculta = 2 `GET /execucao/ativa` iguais e 1 `GET /checkin/situacao`.
 

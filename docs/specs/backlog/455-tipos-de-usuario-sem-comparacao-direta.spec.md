@@ -1,7 +1,7 @@
-# 422-tipos-de-usuario-sem-comparacao-direta.spec.md
+# 455-tipos-de-usuario-sem-comparacao-direta.spec.md
 
-> Task 94/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-120, A-121, A-122, A-123 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
-> Severidade: Baixa. Área: backend (mensagem-direta, chat e plano).
+> Task 127/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-160, A-161, A-162, A-163, A-164 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Severidade: Baixa. Área: backend (mensagem-direta, chat, plano, usuario e ponto).
 
 ## Objetivo
 
@@ -9,7 +9,7 @@ Toda decisão ou rótulo por tipo de usuário passa pelas funções de `shared/s
 
 ## Contexto
 
-**A-120 · Baixa · Lista de "poder de gestor" repetida em consulta e tipo comparado direto em rótulos**
+**A-160 · Baixa · Lista de "poder de gestor" repetida em consulta e tipo comparado direto em rótulos**
 
 `listarIdsComPermissaoDeGestor` monta `[GESTOR, ADMINISTRADOR]` no repositório, fora de `temPermissaoDeGestor`, e as duas fontes decidem juntas quem é membro de canal. Os rótulos "administrador"/"gestor" das mensagens do sistema comparam o tipo direto e chamam de "gestor" qualquer tipo que não seja administrador. Hoje as listas coincidem; um tipo novo as faria divergir.
 
@@ -25,7 +25,7 @@ Como observar: Leitura de código; sem efeito observável pela API com os quatro
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-121 · Baixa · Comparação direta de tipo em chat-plano.service.ts**
+**A-161 · Baixa · Comparação direta de tipo em chat-plano.service.ts**
 
 `montarInstrucoes` compara `usuarioAtivo.tipo === TipoUsuarioEnum.AUXILIAR` para escolher o rótulo da pessoa no prompt do plano. Não decide permissão, mas é o padrão que as regras proíbem (lista positiva em `permissao-usuario.ts`).
 
@@ -37,7 +37,7 @@ Como observar: Leitura de código; não muda nenhuma resposta da API.
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-122 · Baixa · Regra "tem poder de gestor" escrita duas vezes na supervisão e comparação direta de tipo**
+**A-162 · Baixa · Regra "tem poder de gestor" escrita duas vezes na supervisão e comparação direta de tipo**
 
 A lista da supervisão exclui gestores por uma lista fixa de tipos no repository, enquanto a leitura usa `temPermissaoDeGestor`; o comentário da service afirma que as duas usam a mesma função pura. Um tipo novo com poder de gestor faria lista e leitura divergirem. O texto do aviso compara o tipo direto com ADMINISTRADOR.
 
@@ -52,7 +52,7 @@ Como observar: Só por leitura de código: hoje as duas listas coincidem (GESTOR
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-123 · Baixa · Comparação direta de tipo no prompt do plano e parâmetro `ehGestor` que carrega o auxiliar**
+**A-163 · Baixa · Comparação direta de tipo no prompt do plano e parâmetro `ehGestor` que carrega o auxiliar**
 
 O rótulo de quem fala no prompt é montado com `usuarioAtivo.tipo === TipoUsuarioEnum.AUXILIAR`, comparação direta que o projeto proíbe; um tipo novo cairia como "desenvolvedor". Na listagem, o parâmetro chamado `ehGestor` recebe `temVisibilidadeTotal`, que inclui o auxiliar. Nenhum dos dois muda resposta de API hoje.
 
@@ -63,6 +63,22 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 - backend/src/modules/plano/repositories/plano.repository.ts:159 — `dados.ehGestor ? 'true' : EXISTS(...)`
 
 Como observar: Só leitura de código: não altera a resposta de nenhuma rota hoje.
+
+Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+
+**A-164 · Baixa · Mesma regra por funções diferentes, comparação direta de tipo e textos que dizem 'gestor' onde o auxiliar passa**
+
+O ponto de outra pessoa é liberado por podeVerExecucaoEPontoDeOutro na rota /ponto/todos e por temVisibilidadeTotal na service; UsuarioService compara dto.tipo com ADMINISTRADOR direto em dois pontos e usa a função em um terceiro. Comentários e descrições de ferramentas de IA ainda afirmam 'só gestor' em ações que o auxiliar faz.
+
+Evidência no código (linhas de 2026-11-13; confira antes de editar):
+
+- backend/src/modules/ponto/controllers/ponto.controller.ts:25 — @ExigePermissao(podeVerExecucaoEPontoDeOutro) × backend/src/modules/ponto/services/ponto.service.ts:69 e :104 — temVisibilidadeTotal
+- backend/src/modules/usuario/services/usuario.service.ts:38 e :152 — dto.tipo === TipoUsuarioEnum.ADMINISTRADOR × :170 — temPermissaoDeAdministrador(dto.tipo)
+- backend/src/modules/ponto/services/ponto.service.ts:83-84 — 'Exclusivo de gestor (restrito via @GestorOnly no controller)', mas a rota usa @ExigePermissao
+- backend/src/modules/ponto/ferramentas/consultar-ponto-do-dia.ferramenta.ts:19 — descrição enviada ao modelo: 'O gestor pode informar usuarioId'
+- backend/src/modules/usuario/ferramentas/listar-usuarios.ferramenta.ts:11 × :21 — 'só para o gestor' × permissao 'AUXILIAR'
+
+Como observar: Sem diferença de resposta hoje (as duas funções devolvem conduzOTrabalho). Para ver o efeito do texto: como AUXILIAR, pedir à IA o ponto de outra pessoa; a descrição da ferramenta diz que só o gestor informa usuarioId.
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 

@@ -1,6 +1,6 @@
 # 332-leituras-de-fundo-sem-toast-de-erro.spec.md
 
-> Task 4/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-004 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 4/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-005 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/casca.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Requisição que o usuário não pediu (disponibilidade da IA, situação do che
 
 ## Contexto
 
-**A-004 · Média · Leituras de fundo da casca mostram o toast global de erro quando falham (a cada 60 s, a cada foco e a cada 3 s no check-in)**
+**A-005 · Média · Leituras de fundo da casca mostram o toast global de erro quando falham (a cada 60 s, a cada foco e a cada 3 s no check-in)**
 
 As leituras automáticas da casca usam comFeedbackProprio(), que só desliga o overlay; o errorHandlerInterceptor continua mostrando toast para qualquer erro que não seja 401. Com o backend fora do ar (deploy, rede, VPN) o usuário recebe 'Erro interno. Tente novamente.' sem ter feito nada: a cada 60 s pela barra lateral, a cada foco pela topbar, a cada 3 s com o diálogo do check-in aberto e na abertura pelo atualizarSessao. Os serviços tratam a falha em silêncio (catchError, error: () => undefined), mas o interceptor avisa antes.
 

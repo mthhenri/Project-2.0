@@ -1,6 +1,6 @@
 # 400-plano-regras-de-permissao-no-documento.spec.md
 
-> Task 72/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-087, A-088 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 72/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-091, A-092 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: docs e backend/plano.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O documento passa a dizer quem pode o quê no plano (arquivar e excluir, solo, a
 
 ## Contexto
 
-**A-087 · Baixa · SPEC se contradiz sobre quem lê a aba do cliente no plano**
+**A-091 · Baixa · SPEC se contradiz sobre quem lê a aba do cliente no plano**
 
 A linha da tabela de módulos diz que a descrição do cliente do plano "só existe para gestor e administrador" e que "para o desenvolvedor nem vem na resposta". A tabela de permissões diz que todos leem (task 254), e é isso que o código faz. Sobrou código da regra antiga: `podeVerAbaDoPlano` devolve sempre true e a ferramenta ainda testa `'descricaoCliente' in plano`.
 
@@ -25,7 +25,7 @@ Como observar: DESENVOLVEDOR: GET /plano/:id. Pela linha 1256 do SPEC, `descrica
 
 Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
 
-**A-088 · Baixa · Regras de arquivar, excluir, solo, atribuir projeto e fontes não estão escritas no SPEC**
+**A-092 · Baixa · Regras de arquivar, excluir, solo, atribuir projeto e fontes não estão escritas no SPEC**
 
 O código decide que arquivar e excluir são do criador, do gestor e do administrador (auxiliar não criador recebe 403), que solo e atribuir projeto são só do criador, e que qualquer pessoa com acesso remove a fonte trazida por outra. O trecho do SPEC que lista as rotas não diz quem pode, e a busca pelos termos não achou a regra em outro lugar. Para o auxiliar não há regra escrita nenhuma sobre plano.
 

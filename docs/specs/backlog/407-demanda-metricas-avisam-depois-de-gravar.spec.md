@@ -1,6 +1,6 @@
 # 407-demanda-metricas-avisam-depois-de-gravar.spec.md
 
-> Task 79/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-097 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 79/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-101 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Editar a estimativa ou a previsão de término deixa de disparar as releituras a
 
 ## Contexto
 
-**A-097 · Média · Estimativa/previsão inline: as releituras saem antes do PUT e podem devolver o valor antigo**
+**A-101 · Média · Estimativa/previsão inline: as releituras saem antes do PUT e podem devolver o valor antigo**
 
 app-demanda-metricas emite alterada antes de enviar o PUT; o evento sobe até aoAlteradoPlanejamento(), que dispara GET /demanda/grafo e GET /demanda/:id no mesmo instante, ainda antes de o PUT /demanda/:id sair. Se as leituras forem atendidas antes da gravação, carregarDemanda sobrescreve o valor otimista com o antigo e a barra de horas da linha fica com o dado velho. São 3 requisições para uma mudança que a tela já aplicou.
 

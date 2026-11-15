@@ -1,6 +1,6 @@
 # 406-demanda-selecao-sem-a-arvore-que-ninguem-usa.spec.md
 
-> Task 78/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-096 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
+> Task 78/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-100 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
 > Severidade: Média. Área: frontend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Cada seleção de demanda deixa de pedir a árvore de sub-demandas, que alimenta
 
 ## Contexto
 
-**A-096 · Média · GET /demanda/:id/arvore é pedido em toda seleção e a resposta não é usada em lugar nenhum**
+**A-100 · Média · GET /demanda/:id/arvore é pedido em toda seleção e a resposta não é usada em lugar nenhum**
 
 carregarTudo inclui recuperarArvore no forkJoin só para preencher o signal subDemandas, que nenhum template nem outro código lê (sobra do diálogo de detalhe antigo). É 1 das 5 requisições de cada seleção, com consulta recursiva no servidor, e ainda derruba o forkJoin inteiro se falhar. Se a tela voltar a precisar das filhas, elas saem do grafo já carregado (demandaPaiId em cada nó).
 

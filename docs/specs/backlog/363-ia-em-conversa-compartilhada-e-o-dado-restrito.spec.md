@@ -1,6 +1,6 @@
 # 363-ia-em-conversa-compartilhada-e-o-dado-restrito.spec.md
 
-> Task 35/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-044, A-045, A-046 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 35/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-048, A-049, A-050 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta e chat (plano). **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Decidir e implementar o que protege um dado restrito quando a IA responde num es
 
 ## Contexto
 
-**A-044 · Média · @IA no grupo consulta com a permissão de quem chamou e publica a resposta a todos; a única barreira é o prompt**
+**A-048 · Média · @IA no grupo consulta com a permissão de quem chamou e publica a resposta a todos; a única barreira é o prompt**
 
 As ferramentas do turno rodam com o `usuarioAtivo` de quem chamou e a resposta é gravada na conversa e enviada a todos os membros, ficando no histórico para quem entrar depois. O que impede um dado restrito de chegar a um desenvolvedor é só a instrução "Não exponha no texto o que algum deles não acessa". Não há filtro no servidor.
 
@@ -25,7 +25,7 @@ Como observar: Grupo livre com GESTOR e DESENVOLVEDOR sem acesso ao projeto X: o
 
 Verificação na auditoria: código, por três auditores independentes (grupo, conversa um a um e conversa do plano); não exercitado (a IA não tem provedor no ambiente da auditoria).
 
-**A-045 · Média · @IA no chat: dados lidos com a permissão de quem chamou vão ao outro participante, protegidos só pelo prompt**
+**A-049 · Média · @IA no chat: dados lidos com a permissão de quem chamou vão ao outro participante, protegidos só pelo prompt**
 
 O turno roda com as ferramentas e o tipo de quem chamou, e o texto da resposta é gravado e publicado aos dois participantes sem filtro de código. O que impede um gestor ou auxiliar de expor a um desenvolvedor dado de projeto sem acesso é a orientação do prompt, inclusive contra instrução escrita pelo outro participante nas mensagens anteriores.
 
@@ -39,7 +39,7 @@ Como observar: Como GESTOR: POST /api/v1/mensagem-direta/mensagem { destinatario
 
 Verificação na auditoria: código, por três auditores independentes (grupo, conversa um a um e conversa do plano); não exercitado (a IA não tem provedor no ambiente da auditoria).
 
-**A-046 · Média · Conversa do plano é lida por todos, mas as ferramentas de leitura rodam com a visão de quem enviou**
+**A-050 · Média · Conversa do plano é lida por todos, mas as ferramentas de leitura rodam com a visão de quem enviou**
 
 No escopo PLANEJAMENTO a IA recebe todas as ferramentas de leitura do sistema e as executa com o usuário que enviou a mensagem. A resposta fica gravada na conversa `plano-<id>`, devolvida sem filtro de dono a qualquer pessoa com acesso ao plano e reenviada ao modelo no turno seguinte de outra pessoa. O que a IA respondeu a um gestor (dado de outro projeto ou de outra pessoa) fica legível ao desenvolvedor que participa do plano.
 

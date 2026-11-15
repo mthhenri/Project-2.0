@@ -1,6 +1,6 @@
 # 395-proposta-na-mensagem-da-ia-respeita-o-pode-ver.spec.md
 
-> Task 67/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-082 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 67/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-086 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A rota que devolve a proposta dentro de uma mensagem da IA deixa de usar o atalh
 
 ## Contexto
 
-**A-082 · Baixa · Proposta do @IA: quem tem visão total vê a proposta sem passar pelo `podeVer` do executor**
+**A-086 · Baixa · Proposta do @IA: quem tem visão total vê a proposta sem passar pelo `podeVer` do executor**
 
 A rota confere que a proposta está na mensagem da IA daquela conversa e que é de quem chamou, e só o dono resolve. Mas para administrador, gestor e auxiliar o atalho `temVisibilidadeTotal` devolve a proposta inteira sem consultar o executor, inclusive de tipos sem `podeVer` (justificar ponto, anotação no pad, trecho de plano, check-in, criar projeto).
 

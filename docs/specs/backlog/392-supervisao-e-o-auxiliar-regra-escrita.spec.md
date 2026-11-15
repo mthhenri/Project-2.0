@@ -1,6 +1,6 @@
 # 392-supervisao-e-o-auxiliar-regra-escrita.spec.md
 
-> Task 64/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-079 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 64/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-083 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Escrever a regra do auxiliar na supervisão. O código o trata como desenvolvedo
 
 ## Contexto
 
-**A-079 · Média · Auxiliar na supervisão: o código o trata como desenvolvedor, a regra escrita não diz**
+**A-083 · Média · Auxiliar na supervisão: o código o trata como desenvolvedor, a regra escrita não diz**
 
 A conversa é supervisionável quando nenhum participante tem poder de gestor, então conversas auxiliar-desenvolvedor e auxiliar-auxiliar são lidas por gestor e administrador, e o auxiliar não supervisiona ninguém. O documento só fala em "conversas entre desenvolvedores" e em conversa com gestor ou administrador ser privada; o auxiliar não aparece.
 

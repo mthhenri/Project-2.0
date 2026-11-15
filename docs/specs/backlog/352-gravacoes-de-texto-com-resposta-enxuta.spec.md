@@ -1,6 +1,6 @@
 # 352-gravacoes-de-texto-com-resposta-enxuta.spec.md
 
-> Task 24/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-031 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 24/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-034 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/anotacao e demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A resposta de gravar uma seção do pad e de gravar os textos da demanda traz s�
 
 ## Contexto
 
-**A-031 · Baixa · Gravações do pad e dos textos da demanda devolvem o texto inteiro que acabaram de receber; a tela só lê `updatedDate` e `versao`**
+**A-034 · Baixa · Gravações do pad e dos textos da demanda devolvem o texto inteiro que acabaram de receber; a tela só lê `updatedDate` e `versao`**
 
 `PUT /anotacao/:usuarioId/:tipo` responde a seção inteira (`AnotacaoAlteradaDto = AnotacaoResumoDto`) e o pad usa só `updatedDate`. `PATCH /demanda/:id/textos` responde os três textos, mesmo gravando um, e a tela usa só `versao`.
 

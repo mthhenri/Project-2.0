@@ -1,6 +1,6 @@
 # 405-demanda-botao-do-chat-sem-pergunta-a-cada-selecao.spec.md
 
-> Task 77/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-094, A-095 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
+> Task 77/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-098, A-099 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
 > Severidade: Média. Área: frontend/demanda e mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A seleção de uma demanda volta a fazer no máximo 4 requisições (decisão da
 
 ## Contexto
 
-**A-094 · Média · Botão de chat pergunta ao servidor em toda seleção e recebe 403 para auxiliar e desenvolvedor que não são membros**
+**A-098 · Média · Botão de chat pergunta ao servidor em toda seleção e recebe 403 para auxiliar e desenvolvedor que não são membros**
 
 A quinta requisição da seleção vem do botão de chat: um effect sobre alvoId chama GET /mensagem-direta/canal/demanda/:id a cada demanda, sem guarda de permissão e sem guardar a resposta (voltar a uma demanda já vista pergunta de novo). O backend só aceita gestor/administrador ou membro da demanda, então auxiliar (vê todas, raramente é membro) e desenvolvedor não-membro recebem 403 no uso normal; é silencioso (o botão some), mas a ida ao servidor acontece. O que decide o acesso já está na tela: tipo do usuário na sessão e membros vindos do /detalhe.
 
@@ -27,7 +27,7 @@ Como observar: Entrar como auxiliar (ou desenvolvedor) e clicar em demandas de q
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-13/14 (administrador): abrir `/demanda` com projeto = 10 requisições; selecionar uma demanda = 5 (`/plano/demanda/:id`, `/demanda/:id/detalhe`, `/demanda/:id/arvore`, `/atividade?demandaId`, `/mensagem-direta/canal/demanda/:id`); voltar a uma demanda já vista = as mesmas 5. Como auxiliar, a quinta responde 403 em toda seleção.
 
-**A-095 · Média · Botão do chat da demanda/projeto pede o canal a cada demanda selecionada, sem guardar**
+**A-099 · Média · Botão do chat da demanda/projeto pede o canal a cada demanda selecionada, sem guardar**
 
 `MensagemDiretaCanalBotaoComponent` faz `GET /mensagem-direta/canal/{demanda|projeto}/:id` num `effect` a cada troca de alvo, só para escolher o rótulo "Abrir chat" ou "Criar chat". Não há memória por alvo: voltar a uma demanda já vista pede de novo. É a quinta requisição de cada seleção de demanda na medição, e o detalhe do projeto faz duas (projeto e demanda aberta).
 

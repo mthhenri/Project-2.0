@@ -1,6 +1,6 @@
 # 340-sessao-reconfere-o-tipo-ao-receber-403.spec.md
 
-> Task 12/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-015 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 12/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-018 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Quando o backend recusa por permissão, o front reconfere o usuário (tipo e ati
 
 ## Contexto
 
-**A-015 · Baixa · O tipo do usuário na sessão só é conferido quando o layout nasce; um 403 não o atualiza**
+**A-018 · Baixa · O tipo do usuário na sessão só é conferido quando o layout nasce; um 403 não o atualiza**
 
 Menus, guards e botões decidem pelo tipo guardado em usuario_sessao (localStorage). Esse valor só é trocado pelo do servidor no construtor do layout. Numa janela que fica aberta por dias (o Project Desktop) uma troca de tipo não chega à interface: o rebaixado continua vendo telas e botões que respondem 403, o promovido não vê os novos. Na abertura, os guards de rota decidem antes de a resposta do atualizarSessao chegar. O interceptor, ao receber 403, só mostra 'Acesso não permitido'.
 

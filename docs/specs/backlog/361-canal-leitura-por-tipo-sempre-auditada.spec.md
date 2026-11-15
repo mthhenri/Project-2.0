@@ -1,6 +1,6 @@
 # 361-canal-leitura-por-tipo-sempre-auditada.spec.md
 
-> Task 33/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-042 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 33/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-046 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Fechar os caminhos em que o gestor que não é membro lê conteúdo do canal sem
 
 ## Contexto
 
-**A-042 · Média · Gestor lê conteúdo do canal sem auditoria pelas fixadas, pela última mensagem e pela lista da supervisão**
+**A-046 · Média · Gestor lê conteúdo do canal sem auditoria pelas fixadas, pela última mensagem e pela lista da supervisão**
 
 O próprio código declara que a leitura por tipo é "a da supervisão: auditada e avisada", mas só `listarMensagens` passa pela auditoria. `listarFixadas`, `recuperarGrupo` e `recuperarCanal` entregam texto de mensagens ao gestor não membro sem registro nem aviso. A lista da supervisão ainda busca por texto em todos os grupos legíveis e devolve a última mensagem de cada um, também sem auditoria.
 

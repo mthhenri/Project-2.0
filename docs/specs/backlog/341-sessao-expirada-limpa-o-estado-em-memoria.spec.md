@@ -1,6 +1,6 @@
 # 341-sessao-expirada-limpa-o-estado-em-memoria.spec.md
 
-> Task 13/98 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-016 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 13/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-019 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Sessão expirada limpa o mesmo estado que o logout limpa (usuário, execução a
 
 ## Contexto
 
-**A-016 · Baixa · Sessão expirada (401) apaga só o localStorage: usuário e execução ativa da sessão anterior ficam em memória para o próximo login**
+**A-019 · Baixa · Sessão expirada (401) apaga só o localStorage: usuário e execução ativa da sessão anterior ficam em memória para o próximo login**
 
 O logout limpa UsuarioSessaoService e ExecucaoAtivaService. O caminho do 401 (interceptor e stream do chat) remove as chaves do localStorage e navega, sem limpar os serviços. Se outra pessoa entra em seguida no mesmo navegador, o chip nasce com a execução ativa da sessão anterior (jaCarregou continua verdadeiro, então nem o esqueleto aparece) até o GET /execucao/ativa responder; se esse GET falhar, fica.
 
