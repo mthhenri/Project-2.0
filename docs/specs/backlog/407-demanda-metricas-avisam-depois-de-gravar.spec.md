@@ -1,6 +1,6 @@
 # 407-demanda-metricas-avisam-depois-de-gravar.spec.md
 
-> Task 79/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-101 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 79/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-110 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Editar a estimativa ou a previsão de término deixa de disparar as releituras a
 
 ## Contexto
 
-**A-101 · Média · Estimativa/previsão inline: as releituras saem antes do PUT e podem devolver o valor antigo**
+**A-110 · Média · Estimativa/previsão inline: as releituras saem antes do PUT e podem devolver o valor antigo**
 
 app-demanda-metricas emite alterada antes de enviar o PUT; o evento sobe até aoAlteradoPlanejamento(), que dispara GET /demanda/grafo e GET /demanda/:id no mesmo instante, ainda antes de o PUT /demanda/:id sair. Se as leituras forem atendidas antes da gravação, carregarDemanda sobrescreve o valor otimista com o antigo e a barra de horas da linha fica com o dado velho. São 3 requisições para uma mudança que a tela já aplicou.
 
@@ -24,7 +24,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como gestor, abrir uma demanda e alterar "Estimado" no cabeçalho. Rede: GET /demanda/grafo e GET /demanda/:id aparecem antes do PUT /demanda/:id; conferir se as respostas dos GET trazem horasEstimadas antigo e se o valor volta na tela. Lido no código, não reproduzido nesta auditoria.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

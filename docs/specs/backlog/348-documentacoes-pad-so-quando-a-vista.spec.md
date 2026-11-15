@@ -1,6 +1,6 @@
 # 348-documentacoes-pad-so-quando-a-vista.spec.md
 
-> Task 20/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-030 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 20/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-038 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/documentacao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Com o pad recolhido, abrir Documentações não pede `GET /anotacao`; "Mostrar o
 
 ## Contexto
 
-**A-030 · Baixa · Documentações: o pad é carregado ao abrir a tela mesmo quando está recolhido**
+**A-038 · Baixa · Documentações: o pad é carregado ao abrir a tela mesmo quando está recolhido**
 
 O `effect` do construtor chama `pad.garantirCarregado()` sem olhar `padRecolhido()`, que fica guardado no navegador. Com o pad recolhido, `app-pad-painel` nem é renderizado.
 
@@ -21,7 +21,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Recolher o pad em Documentações e recarregar a página: sai `GET /anotacao?usuarioId=…` sem o pad na tela.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

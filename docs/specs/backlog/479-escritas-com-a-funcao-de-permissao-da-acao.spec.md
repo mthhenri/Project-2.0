@@ -1,6 +1,6 @@
-# 456-escritas-com-a-funcao-de-permissao-da-acao.spec.md
+# 479-escritas-com-a-funcao-de-permissao-da-acao.spec.md
 
-> Task 128/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-165, A-166 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 151/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-205, A-206 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda, atividade e execucao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Cada escrita usa a função de permissão que foi criada para ela. Hoje criar de
 
 ## Contexto
 
-**A-165 · Baixa · Escritas de demanda decididas com temVisibilidadeTotal em vez das funções de ação**
+**A-205 · Baixa · Escritas de demanda decididas com temVisibilidadeTotal em vez das funções de ação**
 
 Criar raiz, editar sem ser membro, atribuir tag e mexer em membro de outro são decididos por temVisibilidadeTotal, função de leitura, enquanto existem podeEditarDemanda e podeAtribuirMembroOuTag para essas ações. Hoje as três resolvem para o mesmo conjunto de tipos, então o comportamento é igual; a divergência aparece no dia em que uma delas mudar. A ferramenta de IA de membro já usa podeAtribuirMembroOuTag, a rota não.
 
@@ -23,9 +23,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Não reproduzível pela API hoje (mesmo resultado para os quatro tipos); visível só na leitura do código.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-166 · Baixa · Escritas autorizadas com temVisibilidadeTotal em vez da função da ação**
+**A-206 · Baixa · Escritas autorizadas com temVisibilidadeTotal em vez da função da ação**
 
 As services decidem quem altera atividade/tags e quem inicia, encerra e edita execução alheia com `temVisibilidadeTotal`, a função de leitura. `podeConduzirExecucaoDeOutro` só aparece numa leitura, e `podeEditarExecucaoDeOutro`, `podeAtribuirMembroOuTag` e `podeVerExecucaoEPontoDeOutro` não são usadas nessas services. Hoje todas resolvem em `conduzOTrabalho`, então o resultado é igual; um tipo novo só com visão total ganharia as escritas.
 
@@ -40,7 +40,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Sem diferença observável pela API hoje; aparece só na leitura do código (grep das funções `pode*` nas duas services).
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

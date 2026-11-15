@@ -1,6 +1,6 @@
 # 421-login-com-limite-de-tentativas.spec.md
 
-> Task 93/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-119 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 93/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-128 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/autenticacao. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A rota pública de login deixa de aceitar tentativas ilimitadas contra o mesmo l
 
 ## Contexto
 
-**A-119 · Média · Login sem limite de tentativas nem bloqueio**
+**A-128 · Média · Login sem limite de tentativas nem bloqueio**
 
 A rota pública de login não tem throttle, contador de falhas nem bloqueio: aceita tentativas ilimitadas contra o mesmo login. A política de senha é só tamanho mínimo 8, e os logins de todos os usuários são entregues ao auxiliar (outro achado).
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Sem token: POST /autenticacao/login {login:'<login real>', senha:'errada'} repetido centenas de vezes. Esperado: 429 ou bloqueio temporário após N falhas. O código dá sempre 400 'Usuário ou senha incorretos. Confira e tente de novo.' e segue aceitando.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

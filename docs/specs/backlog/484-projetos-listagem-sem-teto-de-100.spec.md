@@ -1,6 +1,6 @@
-# 461-projetos-listagem-sem-teto-de-100.spec.md
+# 484-projetos-listagem-sem-teto-de-100.spec.md
 
-> Task 133/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-181 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-05.
+> Task 156/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-222 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-05.
 > Severidade: Baixa. Área: frontend/projeto.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A tela Projetos mostra todos os projetos que o usuário pode ver, como os seleto
 
 ## Contexto
 
-**A-181 · Baixa · A tela Projetos pede uma página de 100 e filtra na tela: acima de 100 projetos, os demais somem em silêncio**
+**A-222 · Baixa · A tela Projetos pede uma página de 100 e filtra na tela: acima de 100 projetos, os demais somem em silêncio**
 
 A task 323 trocou os seletores por `allRows`, mas a listagem de Projetos continua com `listar({ pagina: 1, itensPorPagina: LIMITE_PROJETOS })` e faz busca e filtro por status no navegador. O service já aceita `allRows`.
 

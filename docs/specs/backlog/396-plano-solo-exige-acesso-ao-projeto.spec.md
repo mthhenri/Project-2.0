@@ -1,6 +1,6 @@
 # 396-plano-solo-exige-acesso-ao-projeto.spec.md
 
-> Task 68/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-087 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 68/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-095 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/plano. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O criador de um plano solo ligado a projeto deixa de ler e editar o plano (com o
 
 ## Contexto
 
-**A-087 · Média · Plano solo de projeto continua com o criador depois que ele perde o acesso ao projeto**
+**A-095 · Média · Plano solo de projeto continua com o criador depois que ele perde o acesso ao projeto**
 
 No plano solo a regra olha só o criador e ignora o acesso ao projeto, tanto na leitura por id quanto na listagem. Um desenvolvedor retirado de todas as demandas do projeto segue lendo e editando o plano, com nome atual do projeto e da demanda, textos, conversa de todos e fontes. O SPEC diz apenas "solo só pelo criador" e não trata a perda de acesso, que conflita com "desenvolvedor só vê projeto com linha em demanda_usuario".
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: DESENVOLVEDOR membro de uma demanda do projeto P: POST /plano {"projetoId":P}; PATCH /plano/:id/solo {"solo":true}. Gestor remove o desenvolvedor de todas as demandas de P. O mesmo desenvolvedor: GET /plano/:id, GET /chat/plano/:id, GET /plano/:id/fonte. Esperado: 404. O código responde 200 com projetoNome, demandaNome, textos, conversa e fontes.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

@@ -1,6 +1,6 @@
 # 440-mutacao-aplica-a-resposta-sem-recarregar-a-lista.spec.md
 
-> Task 112/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-141 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-10.
+> Task 112/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-152 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-10.
 > Severidade: Baixa. Área: frontend/atividade, calendario e execucao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Trocar o status na linha de uma atividade, criar ou alterar um dia no calendári
 
 ## Contexto
 
-**A-141 · Baixa · Recarga da lista inteira depois de mutação cuja resposta já traz o dado**
+**A-152 · Baixa · Recarga da lista inteira depois de mutação cuja resposta já traz o dado**
 
 Trocar o status na linha de /atividade atualiza a linha na hora e mesmo assim relê a página (prioridade, nome e tags não releem). Criar ou alterar dia no calendário relê GET /calendario; editar início ou fim em /execucao aplica a resposta na linha e relê a lista; criar ou remover justificativa relê a lista de justificativas além do mensal. Parte dessas releituras tem motivo (linha que sai do filtro de status, total do dia, meta do mês).
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: /atividade: trocar o status de uma linha: PUT /atividade/:id seguido de GET /atividade?... /calendario: salvar um dia: POST ou PUT seguido de GET /calendario. /execucao: editar o fim de uma execução: PUT /execucao/:id seguido de GET /execucao?... Não exercitado na medição.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

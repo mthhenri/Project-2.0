@@ -1,6 +1,6 @@
-# 451-visao-volume-nao-carrega-a-visao-escondida.spec.md
+# 474-visao-volume-nao-carrega-a-visao-escondida.spec.md
 
-> Task 123/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-152 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
+> Task 146/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-192 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
 > Severidade: Baixa. Área: frontend/projeto.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Com a visão Volume à frente, a lista de projetos (em `/projeto`) e a árvore d
 
 ## Contexto
 
-**A-152 · Baixa · Visão Volume: a visão que está escondida é carregada do mesmo jeito**
+**A-192 · Baixa · Visão Volume: a visão que está escondida é carregada do mesmo jeito**
 
 Em /projeto?visao=volume a lista de projetos é pedida no ngOnInit mesmo sem ser desenhada. Em /projeto/:id com a visão Volume lembrada no navegador, a árvore de demandas fica montada e escondida e GET /demanda/grafo é pedido mesmo assim. É carga antecipada de propósito para a troca de visão, mas quem só olha o volume paga as duas.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como gestor, abrir /projeto?visao=volume: na rede aparecem GET /projeto?pagina=1&itensPorPagina=100 e GET /projeto/volume?ano&mes. Em /projeto/1 com Volume escolhido antes: GET /demanda/grafo?projetoId=1 além de GET /projeto/volume/anual.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

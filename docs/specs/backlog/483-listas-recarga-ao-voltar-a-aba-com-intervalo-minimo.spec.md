@@ -1,6 +1,6 @@
-# 460-listas-recarga-ao-voltar-a-aba-com-intervalo-minimo.spec.md
+# 483-listas-recarga-ao-voltar-a-aba-com-intervalo-minimo.spec.md
 
-> Task 132/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-177, A-178, A-179, A-180 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-06.
+> Task 155/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-218, A-219, A-220, A-221 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-06.
 > Severidade: Baixa. Área: frontend (usuario, ponto, atividade, execucao, configuracao-ia).
 
 ## Objetivo
@@ -9,7 +9,7 @@ A recarga automática ao voltar à aba passa por um utilitário comum com interv
 
 ## Contexto
 
-**A-177 · Baixa · Usuários: toda volta à aba refaz `GET /usuario`, sem intervalo mínimo**
+**A-218 · Baixa · Usuários: toda volta à aba refaz `GET /usuario`, sem intervalo mínimo**
 
 O `HostListener` de `visibilitychange` chama `buscarUsuarios()` sempre que a aba fica visível, sem guarda de tempo e mesmo com diálogo aberto.
 
@@ -19,9 +19,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Na tela Usuários, trocar de aba e voltar várias vezes: uma `GET /usuario?pagina=…` por volta.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-178 · Baixa · Listas recarregam a cada foco da janela ou volta à aba, sem intervalo mínimo**
+**A-219 · Baixa · Listas recarregam a cada foco da janela ou volta à aba, sem intervalo mínimo**
 
 /atividade e /execucao releem a lista em todo `window:focus` e `visibilitychange` (cada Alt-Tab), com guarda só contra carga em andamento. /ponto relê em todo `visibilitychange` sem guarda nenhuma, e o detalhe da atividade relê atividade e execuções. Não há idade mínima do dado: voltar à janela dez vezes em um minuto são dez listagens.
 
@@ -35,9 +35,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Em /atividade ou /execucao, alternar para outro programa e voltar várias vezes: cada volta mostra GET /atividade?... (ou GET /execucao?...) além do GET /execucao/ativa. A medição só exercitou o foco em /ponto, onde apenas a topbar reage a `window:focus`.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-179 · Baixa · Custos da IA: cada foco da janela refaz a consulta, sem intervalo mínimo**
+**A-220 · Baixa · Custos da IA: cada foco da janela refaz a consulta, sem intervalo mínimo**
 
 A aba Custos escuta window:focus e document:visibilitychange e chama carregar() toda vez; a única guarda é não haver carga em andamento. Alternar de janela várias vezes com a aba aberta repete GET do custo do período a cada volta.
 
@@ -48,9 +48,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Em /configuracao-ia, aba Custos, dar Alt-Tab para outra janela e voltar três vezes. Na rede: uma consulta de custo (rota ia-custo) por volta.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-180 · Baixa · Seis telas recarregam a própria lista em toda volta à aba ou foco da janela, sem intervalo mínimo**
+**A-221 · Baixa · Seis telas recarregam a própria lista em toda volta à aba ou foco da janela, sem intervalo mínimo**
 
 Varredura por `grep` de `visibilitychange` e `window:focus`: Usuários, Ponto, Atividades (listagem e detalhe), Execuções e a aba Custos das Configurações da IA têm cada uma o seu `@HostListener` que recarrega a lista quando a aba volta a ficar visível (três delas também no foco da janela). Nenhuma confere há quanto tempo a lista foi carregada. Medido: voltar à aba em `/ponto` refaz `GET /ponto/todos`.
 

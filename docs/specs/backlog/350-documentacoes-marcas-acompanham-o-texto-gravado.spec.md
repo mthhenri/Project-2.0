@@ -1,6 +1,6 @@
 # 350-documentacoes-marcas-acompanham-o-texto-gravado.spec.md
 
-> Task 22/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-032 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 22/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-040 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/documentacao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Depois de Gravar, o ícone da aba e as marcas do seletor (`temDescricaoTecnica`,
 
 ## Contexto
 
-**A-032 · Baixa · Documentações: depois de Gravar, o ícone da aba e as marcas do seletor não acompanham o texto gravado**
+**A-040 · Baixa · Documentações: depois de Gravar, o ícone da aba e as marcas do seletor não acompanham o texto gravado**
 
 `salvar()` só atualiza `versao` em `demanda()`; `preenchidaDaAba` lê os textos antigos de `demanda()`. A lista `demandas()` da página só muda em `carregar()`, então as marcas Técnica, Cliente e Documentação do seletor ficam como estavam na abertura da tela.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Numa demanda com a aba Documentação vazia, escrever e Gravar: o ícone da aba continua cinza e, no seletor, a marca "Documentação" da demanda continua vazia até recarregar a página.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

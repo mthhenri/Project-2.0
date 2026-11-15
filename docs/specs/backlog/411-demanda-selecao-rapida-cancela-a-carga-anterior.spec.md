@@ -1,6 +1,6 @@
 # 411-demanda-selecao-rapida-cancela-a-carga-anterior.spec.md
 
-> Task 83/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-106 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 83/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-115 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Navegar depressa entre demandas (cliques ou setas) deixa de acumular requisiçõ
 
 ## Contexto
 
-**A-106 · Média · Seleção rápida de demandas: nada é cancelado e resposta atrasada pode sobrescrever a demanda aberta**
+**A-115 · Média · Seleção rápida de demandas: nada é cancelado e resposta atrasada pode sobrescrever a demanda aberta**
 
 carregarTudo, carregarAtividades e carregarDemanda assinam sem cancelar a chamada anterior e aplicam a resposta sem conferir se ela ainda é da demanda atual. Navegar depressa (cliques ou setas) deixa as 5 requisições de cada demanda correrem até o fim, e uma resposta atrasada pode pôr na coluna os dados de outra demanda. O plano de origem e o botão de chat já fazem essa conferência.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Com a rede limitada (Slow 3G), clicar em duas ou três demandas em sequência: as requisições das anteriores ficam pendentes e concluem; se a da primeira chegar por último, a coluna mostra a primeira com a outra selecionada na lista. Lido no código, não reproduzido.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

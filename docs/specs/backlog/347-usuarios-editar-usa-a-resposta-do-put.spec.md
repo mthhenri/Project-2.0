@@ -1,6 +1,6 @@
 # 347-usuarios-editar-usa-a-resposta-do-put.spec.md
 
-> Task 19/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-028, A-029 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 19/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-036, A-037 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/usuario.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Depois de salvar a edição, a linha é trocada pelo que o `PUT /usuario/:id` de
 
 ## Contexto
 
-**A-028 · Baixa · Usuários: editar faz `GET /usuario/:id`, `PUT /usuario/:id` e recarrega a lista; a resposta do PUT já traz a linha**
+**A-036 · Baixa · Usuários: editar faz `GET /usuario/:id`, `PUT /usuario/:id` e recarrega a lista; a resposta do PUT já traz a linha**
 
 Abrir a edição busca o usuário porque o resumo da listagem não tem `horasDiariasNecessarias`. Ao salvar, o diálogo emite `aoAlterar` e a página refaz `GET /usuario`, embora `UsuarioAlteradoDto` traga todos os campos da linha menos `temAnotacoes`. O switch de status, na mesma tela, já atualiza a linha sem recarga.
 
@@ -23,9 +23,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Editar um usuário: `GET /usuario/7` ao abrir; ao salvar, `PUT /usuario/7` seguido de `GET /usuario?pagina=…`.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-029 · Baixa · Usuários: editar o próprio cadastro não atualiza o nome na barra superior, embora a resposta do PUT traga o usuário**
+**A-037 · Baixa · Usuários: editar o próprio cadastro não atualiza o nome na barra superior, embora a resposta do PUT traga o usuário**
 
 Ao salvar a edição da própria linha, o diálogo só repassa a cor à sessão. Nome e login novos ficam fora de `UsuarioSessaoService` até a próxima abertura do app, quando `atualizarSessao()` relê o usuário.
 
@@ -38,7 +38,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como gestor, editar o próprio nome em Usuários e salvar: a lista mostra o nome novo; a barra superior e o menu do perfil seguem com o antigo até recarregar a página.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

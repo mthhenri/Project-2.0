@@ -1,6 +1,6 @@
 # 397-plano-solo-e-o-que-o-gestor-mantem.spec.md
 
-> Task 69/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-088 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 69/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-096 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/plano. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Definir o que gestor e administrador mantêm sobre um plano de projeto que o cri
 
 ## Contexto
 
-**A-088 · Média · Criador marca como solo um plano já compartilhado e tira gestor e administrador de tudo**
+**A-096 · Média · Criador marca como solo um plano já compartilhado e tira gestor e administrador de tudo**
 
 `marcarSolo` só confere se quem chama é o criador, sem olhar se o plano já tem texto, conversa ou fontes de outras pessoas. Depois de marcado, gestor e administrador recebem 404 em tudo, inclusive em arquivar e excluir, porque a checagem de acesso vem antes da de arquivar/excluir. O SPEC permite o solo, mas não diz quem pode marcar nem o que acontece com o conteúdo dos colegas.
 

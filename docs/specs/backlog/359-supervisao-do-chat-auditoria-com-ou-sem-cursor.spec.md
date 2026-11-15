@@ -1,6 +1,6 @@
 # 359-supervisao-do-chat-auditoria-com-ou-sem-cursor.spec.md
 
-> Task 31/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-043, A-044 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 31/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-051, A-052 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Toda leitura da supervisão (grupo, canal e conversa um a um) fica registrada e 
 
 ## Contexto
 
-**A-043 · Alta · Supervisão de grupo e canal: qualquer cursor pula a auditoria e o aviso aos membros**
+**A-051 · Alta · Supervisão de grupo e canal: qualquer cursor pula a auditoria e o aviso aos membros**
 
 A auditoria e a mensagem "leu este grupo/canal" só acontecem quando a requisição vem sem `cursor`; com cursor as mensagens são entregues do mesmo jeito. O cursor é um base64url de `[instante, mensagemId]` sem assinatura nem vínculo com a conversa ou com uma abertura auditada, então o gestor monta um com data futura e recebe a página mais nova sem deixar rastro. O mesmo caminho serve ao canal lido por tipo em `GrupoService.listarMensagens`.
 
@@ -27,7 +27,7 @@ Como observar: GESTOR, grupo livre só de desenvolvedores: `GET /mensagem-direta
 
 Verificação na auditoria: reproduzido na aplicação rodando em 2026-11-14 com um gestor recém-criado: `GET /mensagem-direta/supervisao/grupo/1?cursor=<forjado>` devolveu a conversa inteira, 0 linhas em `mensagem_direta_supervisao` e nenhuma mensagem de aviso no grupo; sem cursor, 1 auditoria e o aviso. O mesmo na conversa um a um (`/supervisao/conversa/5-6`): com cursor forjado, 200 com o texto e 0 auditorias.
 
-**A-044 · Alta · Supervisão: cursor forjado lê a conversa inteira sem auditoria nem aviso**
+**A-052 · Alta · Supervisão: cursor forjado lê a conversa inteira sem auditoria nem aviso**
 
 A auditoria e o aviso aos participantes só acontecem quando a leitura vem sem `cursor`. O cursor é só base64url de `[milissegundos, mensagemId]`, que o cliente monta sozinho; com uma data futura a consulta devolve a página mais nova. O gestor lê tudo sem linha em `mensagem_direta_supervisao` e sem a mensagem do sistema.
 

@@ -1,6 +1,6 @@
 # 423-senha-trocada-derruba-os-tokens-antigos.spec.md
 
-> Task 95/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-121 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 95/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-130 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/autenticacao e usuario. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Quem tinha um token (inclusive alguém que não devia) perde o acesso quando a s
 
 ## Contexto
 
-**A-121 · Média · Troca de senha não derruba tokens já emitidos**
+**A-130 · Média · Troca de senha não derruba tokens já emitidos**
 
 A cada requisição a strategy confere só se o usuário existe e está ativo; a troca de senha grava o hash e mais nada. Quem tinha um token (inclusive um invasor) continua com acesso até o token vencer, mesmo depois de o gestor trocar a senha da conta.
 
@@ -21,7 +21,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Login como DESENVOLVEDOR (guardar token A). Como GESTOR: PATCH /usuario/<id do dev>/senha {senhaNova:'OutraSenha#1'} → 200. Com o token A: GET /ponto/diario?data=<hoje>. Esperado: 401. O código responde 200 até o token expirar.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

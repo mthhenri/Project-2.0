@@ -1,6 +1,6 @@
-# 445-prompts-mutacao-aplica-a-resposta.spec.md
+# 468-prompts-mutacao-aplica-a-resposta.spec.md
 
-> Task 117/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-146 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-10.
+> Task 140/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-186 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-10.
 > Severidade: Média. Área: frontend/configuracao-ia.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Cada mutação de prompt deixa de pedir `GET /prompt` (os 14 prompts inteiros) e
 
 ## Contexto
 
-**A-146 · Média · Prompts: toda mutação relê GET /prompt e GET /prompt/:tipo/versoes, embora a resposta já traga o prompt gravado**
+**A-186 · Média · Prompts: toda mutação relê GET /prompt e GET /prompt/:tipo/versoes, embora a resposta já traga o prompt gravado**
 
 Salvar rascunho, ativar, restaurar padrão, descartar e desfazer chamam carregarTipos(tipo), que pede GET /prompt e, em cascata, GET /prompt/:tipo/versoes?itensPorPagina=50. As respostas de salvar e ativar são um PromptResumoDto completo, o mesmo formato de ativa/rascunho em PromptTipoResumoDto. No salvar rascunho a releitura das versões nem muda a tela, porque o histórico descarta rascunhos.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Em /configuracao-ia, aba Prompts, editar o texto e clicar em Salvar rascunho. Na rede: POST /prompt/CONVERSA/rascunho, depois GET /prompt e GET /prompt/CONVERSA/versoes?itensPorPagina=50.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

@@ -1,6 +1,6 @@
 # 433-acoes-de-administrador-com-autor-registrado.spec.md
 
-> Task 105/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-132 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 105/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-142 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: backend/prompt e configuracao-ia. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Com mais de um administrador, ativar o rascunho de outro, restaurar o padrão, d
 
 ## Contexto
 
-**A-132 · Informativo · Ativar, restaurar e descartar prompt e alterar preço não registram qual administrador agiu**
+**A-142 · Informativo · Ativar, restaurar e descartar prompt e alterar preço não registram qual administrador agiu**
 
 Salvar rascunho e gravar versão da configuração guardam o autor do token, mas ativar o rascunho, restaurar o padrão, descartar e alterar preço não recebem o usuário. Com mais de um administrador, quem ativa o rascunho de outro não deixa rastro: a versão ativa segue com o autor do rascunho, e o preço muda na versão ativa sem autor.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Administrador A: POST /prompt/CONVERSA/rascunho {conteudo}. Administrador B: POST /prompt/CONVERSA/rascunho/ativar. GET /prompt/CONVERSA/versoes mostra a versão ativa com A como autor e nada indica que B ativou; o mesmo com PUT /ia-custo/preco feito por B.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

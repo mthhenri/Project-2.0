@@ -1,6 +1,6 @@
-# 450-relatorio-do-projeto-pede-so-o-projeto.spec.md
+# 473-relatorio-do-projeto-pede-so-o-projeto.spec.md
 
-> Task 122/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-151 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
+> Task 145/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-191 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
 > Severidade: Baixa. Área: frontend/relatorio.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Em `/projeto/:id/relatorio` o cabeçalho usa `GET /projeto/:id` em vez de `GET /
 
 ## Contexto
 
-**A-151 · Baixa · Relatório aberto pelo projeto pede a lista inteira de projetos para mostrar a identidade de um**
+**A-191 · Baixa · Relatório aberto pelo projeto pede a lista inteira de projetos para mostrar a identidade de um**
 
 Em /projeto/:id/relatorio o projeto é fixo e o seletor nem é desenhado, mas a página chama GET /projeto?allRows=true só para achar nome, código e cor do projeto no cabeçalho. Bastaria GET /projeto/:id, que já existe no service.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Abrir /projeto/1 e entrar no relatório do projeto. Na rede: GET /projeto?allRows=true junto com GET /relatorio/execucao?projetoId=1..., sem seletor de projeto na tela.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

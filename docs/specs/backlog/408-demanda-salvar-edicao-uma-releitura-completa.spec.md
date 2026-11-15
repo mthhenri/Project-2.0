@@ -1,6 +1,6 @@
 # 408-demanda-salvar-edicao-uma-releitura-completa.spec.md
 
-> Task 80/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-102, A-103 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
+> Task 80/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-111, A-112 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
 > Severidade: Média. Área: frontend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Depois de salvar pelo botão Editar, a demanda aberta é relida uma vez pelo det
 
 ## Contexto
 
-**A-102 · Média · Salvar a edição pelo botão Editar faz GET /demanda/:id duas vezes**
+**A-111 · Média · Salvar a edição pelo botão Editar faz GET /demanda/:id duas vezes**
 
 aoDemandaAlterada() da demanda aberta relê a demanda e emite demandaAlterada; o evento chega à página, que recarrega o grafo e manda a mesma demanda aberta se reler outra vez. Resultado: PUT /demanda/:id, depois GET /demanda/:id, GET /demanda/grafo e GET /demanda/:id de novo.
 
@@ -23,9 +23,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Abrir uma demanda, clicar em Editar, mudar o nome e Salvar. Rede: PUT /demanda/:id; GET /demanda/:id; GET /demanda/grafo; GET /demanda/:id.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-103 · Média · Depois de salvar a edição, tags e membros do cabeçalho da demanda aberta não são relidos**
+**A-112 · Média · Depois de salvar a edição, tags e membros do cabeçalho da demanda aberta não são relidos**
 
 O diálogo de edição grava tags (PUT) e membros (POST/DELETE), mas a demanda aberta só relê GET /demanda/:id, que não traz tags nem membros; tagsDaDemanda e membros só são preenchidos na carga completa. As duas releituras feitas não trazem o que mudou, e os chips e avatares do cabeçalho ficam antigos até trocar de demanda (a linha da lista atualiza, porque vem do grafo).
 
@@ -39,7 +39,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Abrir uma demanda, Editar, trocar uma tag e um membro, Salvar. Rede: PUT /demanda/:id/tag e POST /demanda/:id/membro, depois só GET /demanda/:id (2x) e GET /demanda/grafo, nenhum GET de tags ou membros; conferir o cabeçalho da demanda aberta. Lido no código, não conferido na tela.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

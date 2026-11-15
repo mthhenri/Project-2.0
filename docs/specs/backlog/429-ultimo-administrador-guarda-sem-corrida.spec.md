@@ -1,6 +1,6 @@
 # 429-ultimo-administrador-guarda-sem-corrida.spec.md
 
-> Task 101/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-127 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 101/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-136 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/usuario.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Duas requisições ao mesmo tempo, cada uma tirando um administrador diferente, 
 
 ## Contexto
 
-**A-127 · Baixa · Guarda do último administrador ativo sem proteção de concorrência**
+**A-136 · Baixa · Guarda do último administrador ativo sem proteção de concorrência**
 
 A service lista os administradores ativos e, em outra chamada, grava a alteração/exclusão, sem transação nem trava visíveis. Duas requisições simultâneas tirando administradores diferentes podem ambas passar e deixar o sistema sem administrador ativo.
 
@@ -21,7 +21,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Com dois administradores A e B, disparar ao mesmo tempo: A faz PUT /usuario/<B> {ativo:false} e B faz PUT /usuario/<A> {ativo:false}. Esperado: uma das duas dá 400 'O sistema deve ter ao menos um administrador ativo'. O código pode responder 200 às duas.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

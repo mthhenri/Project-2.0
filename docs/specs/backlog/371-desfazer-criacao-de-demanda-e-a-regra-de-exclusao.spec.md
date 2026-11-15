@@ -1,6 +1,6 @@
 # 371-desfazer-criacao-de-demanda-e-a-regra-de-exclusao.spec.md
 
-> Task 43/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-061, A-062 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 43/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-069, A-070 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O desfazer de `CRIAR_DEMANDA` (que exclui a demanda criada) passa a ter regra ex
 
 ## Contexto
 
-**A-061 · Baixa · Desfazer a criação de demanda exclui a demanda sem conferir quem pode excluir**
+**A-069 · Baixa · Desfazer a criação de demanda exclui a demanda sem conferir quem pode excluir**
 
 O desfazer de `CRIAR_DEMANDA` confere só a leitura (`demandaService.recuperar`) e chama `demandaService.excluir({ id })`, que não recebe usuário. Auxiliar e desenvolvedor, que pela regra não excluem demanda, excluem por POST /proposta-ia/:id/desfazer a demanda que a proposta criou (até 30 minutos, sem filhas nem atividades). A exceção não está na lista fechada de `sem-exclusao.ts` nem nas regras de referência.
 
@@ -22,9 +22,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como AUXILIAR: confirmar uma proposta CRIAR_DEMANDA e em seguida POST /proposta-ia/<id>/desfazer. Regra de referência: auxiliar não exclui demanda. O código: 200 e a demanda fica excluída; membros, tags ou textos que outra pessoa pôs nela nesse intervalo saem junto.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-062 · Baixa · DemandaService.excluir não recebe usuário: o desfazer de CRIAR_DEMANDA exclui demanda para desenvolvedor e auxiliar**
+**A-070 · Baixa · DemandaService.excluir não recebe usuário: o desfazer de CRIAR_DEMANDA exclui demanda para desenvolvedor e auxiliar**
 
 A regra "só gestor exclui/restaura" mora apenas no @GestorOnly da rota; excluir e restaurar da service não têm parâmetro de usuário, ao contrário de criarConexao/excluirConexao, que repetem a regra na service por causa da IA. CriarDemandaExecutor.desfazer chama excluir para qualquer tipo: o dono da proposta exclui a demanda recém-criada se ela não tiver sub-demanda nem atividade e estiver no prazo. É uma exceção limitada, mas não está na lista de regras de referência (auxiliar e desenvolvedor não excluem demanda).
 
@@ -38,7 +38,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como DESENVOLVEDOR: pedir à IA a criação de uma sub-demanda, confirmar o cartão e acionar o desfazer da proposta dentro do prazo. Esperado pela regra geral: desenvolvedor/auxiliar não exclui demanda. O código faz soft delete da demanda (DELETE /api/demanda/:id direto continua 403).
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

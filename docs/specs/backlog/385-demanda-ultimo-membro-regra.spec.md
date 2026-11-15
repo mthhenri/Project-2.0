@@ -1,6 +1,6 @@
 # 385-demanda-ultimo-membro-regra.spec.md
 
-> Task 57/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-076 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; `PROBLEMS.md` P-023.
+> Task 57/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-084 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; `PROBLEMS.md` P-023.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Resolver a contradição: a remoção do último membro é recusada para todos o
 
 ## Contexto
 
-**A-076 · Baixa · "Último membro" trava a remoção até para o gestor, mas a demanda nasce sem membro quando criada por condutor**
+**A-084 · Baixa · "Último membro" trava a remoção até para o gestor, mas a demanda nasce sem membro quando criada por condutor**
 
 removerMembro recusa quando há um membro só, para todos os tipos. Como gestor, administrador e auxiliar criam demanda sem nenhuma linha em demanda_usuario, o invariante "ao menos um membro" não existe de fato: a demanda pode ter zero membros, mas não pode voltar a zero. A trava não consta do resumo de regras usado nesta auditoria.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como GESTOR: criar demanda sem usuarioIds (0 membros), POST /api/demanda/{id}/membro com um desenvolvedor e depois DELETE /api/demanda/{id}/membro/{usuarioId}: responde 400 "Não é possível remover o último membro da demanda".
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

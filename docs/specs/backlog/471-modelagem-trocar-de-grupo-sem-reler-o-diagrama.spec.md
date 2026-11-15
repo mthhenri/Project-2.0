@@ -1,6 +1,6 @@
-# 448-modelagem-trocar-de-grupo-sem-reler-o-diagrama.spec.md
+# 471-modelagem-trocar-de-grupo-sem-reler-o-diagrama.spec.md
 
-> Task 120/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-149 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 143/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-189 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/modelagem.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Trocar o grupo de uma tabela, soltar uma tabela num grupo e tirar da modelagem d
 
 ## Contexto
 
-**A-149 · Média · Modelagem: trocar o grupo de uma tabela relê o diagrama inteiro (28 KB), embora o PUT devolva grupo e posição**
+**A-189 · Média · Modelagem: trocar o grupo de uma tabela relê o diagrama inteiro (28 KB), embora o PUT devolva grupo e posição**
 
 Mover a tabela de grupo pelo painel, soltar uma tabela de fora dentro de um grupo e Tirar da modelagem terminam em relerDiagrama(), um GET /modelagem completo. O comentário diz que a releitura serve para saber onde a tabela caiu, mas ModelagemTabelaAlteradaDto já traz nome, grupoId, x e y. Arrastar uma tabela que já está na modelagem não tem esse problema: aplica x/y da resposta.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como gestor em /modelagem, selecionar uma tabela e trocar o grupo no painel de detalhe. Na rede: PUT /modelagem/tabela/<nome> seguido de GET /modelagem (cerca de 28 KB).
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

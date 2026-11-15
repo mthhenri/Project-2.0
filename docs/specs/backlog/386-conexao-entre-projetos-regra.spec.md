@@ -1,6 +1,6 @@
 # 386-conexao-entre-projetos-regra.spec.md
 
-> Task 58/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-077 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 58/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-085 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Decidir se `criarConexao` aceita origem e destino de projetos diferentes. Hoje a
 
 ## Contexto
 
-**A-077 · Baixa · criarConexao não confere se origem e destino são do mesmo projeto**
+**A-085 · Baixa · criarConexao não confere se origem e destino são do mesmo projeto**
 
 A service só valida existência, auto-referência, duplicidade e ciclo; nada compara os projetos das duas demandas, embora o grafo seja lido por projeto. O desenvolvedor não chega aqui (é barrado na rota e na service), então não há ligação com projeto sem acesso; resta saber se conexão entre projetos é permitida para condutores, o que o resumo de regras não diz.
 
@@ -21,7 +21,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como AUXILIAR: POST /api/demanda/{id do projeto 1}/conexao {"demandaDestinoId": <id do projeto 2>, "bidirecional": false}. O código responde 201; conferir em GET /api/demanda/grafo?projetoId=1 como a aresta aparece.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

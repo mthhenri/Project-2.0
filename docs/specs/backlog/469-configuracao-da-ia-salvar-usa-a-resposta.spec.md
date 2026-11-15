@@ -1,6 +1,6 @@
-# 446-configuracao-da-ia-salvar-usa-a-resposta.spec.md
+# 469-configuracao-da-ia-salvar-usa-a-resposta.spec.md
 
-> Task 118/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-147 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 141/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-187 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/configuracao-ia.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Depois de `POST /configuracao-ia`, a página usa a resposta como versão ativa e
 
 ## Contexto
 
-**A-147 · Média · Configurações da IA: salvar versão dispara três GETs, um deles devolve o mesmo objeto que o POST acabou de devolver**
+**A-187 · Média · Configurações da IA: salvar versão dispara três GETs, um deles devolve o mesmo objeto que o POST acabou de devolver**
 
 Depois do POST /configuracao-ia a página chama carregar(), que repete GET /configuracao-ia, GET /configuracao-ia/versoes?itensPorPagina=50 e GET /ia/estado. O POST responde ConfiguracaoIaCriadaDto, que é o mesmo tipo de GET /configuracao-ia e de cada item do histórico. Só o estado da IA pode de fato ter mudado.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Em /configuracao-ia, mudar um campo (ex.: minutos do check-in) e Salvar. Na rede: POST /configuracao-ia seguido de GET /configuracao-ia, GET /configuracao-ia/versoes?itensPorPagina=50 e GET /ia/estado.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

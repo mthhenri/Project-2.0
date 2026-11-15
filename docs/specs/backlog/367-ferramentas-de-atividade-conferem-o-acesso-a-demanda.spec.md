@@ -1,6 +1,6 @@
 # 367-ferramentas-de-atividade-conferem-o-acesso-a-demanda.spec.md
 
-> Task 39/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-055, A-056, A-057 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 39/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-063, A-064, A-065 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Alta. Área: backend/atividade.
 
 ## Objetivo
@@ -9,7 +9,7 @@ As ferramentas `propor_criar_atividade` e `propor_mover_atividade` e a `Atividad
 
 ## Contexto
 
-**A-055 · Alta · propor_criar_atividade revela o caminho de demanda de projeto sem acesso ao desenvolvedor**
+**A-063 · Alta · propor_criar_atividade revela o caminho de demanda de projeto sem acesso ao desenvolvedor**
 
 A ferramenta (permissão QUALQUER) lê a demanda e os ancestrais direto no repositório, sem conferir acesso, e grava `demandaNome` (raiz › … › demanda) na proposta. O desenvolvedor lê esse dado no cartão e em GET /proposta-ia/:id, mesmo que a criação seja barrada depois pela `AtividadeService.criar`. A leitura HTTP da mesma demanda não vaza (já medido).
 
@@ -25,7 +25,7 @@ Como observar: Como DESENVOLVEDOR: POST /chat/mensagem {"texto":"crie a atividad
 
 Verificação na auditoria: código lido pelo agente principal: `propor-criar-atividade.ferramenta.ts:40` e `:54` leem a demanda e os ancestrais no repository sem usuário e gravam o caminho em `demandaNome`; `atividade.service.ts:253` confere existência e status do destino antes do acesso. A IA não foi exercitada (sem provedor no ambiente).
 
-**A-056 · Alta · Mover atividade responde nome e status da demanda de destino antes de conferir o acesso**
+**A-064 · Alta · Mover atividade responde nome e status da demanda de destino antes de conferir o acesso**
 
 `propor_mover_atividade` lê a demanda de destino no repositório, sem acesso, e devolve o nome dela na mensagem de erro (concluída/cancelada) ou em `demandaDestinoNome` da proposta. A `AtividadeService` repete a ordem: o 404 e o status do destino saem antes do 403 de acesso. O desenvolvedor dono de uma atividade descobre existência, nome e situação de demanda de projeto que não vê.
 
@@ -41,7 +41,7 @@ Como observar: Como DESENVOLVEDOR dono da atividade A: editar A pela rota de alt
 
 Verificação na auditoria: código lido pelo agente principal: `propor-criar-atividade.ferramenta.ts:40` e `:54` leem a demanda e os ancestrais no repository sem usuário e gravam o caminho em `demandaNome`; `atividade.service.ts:253` confere existência e status do destino antes do acesso. A IA não foi exercitada (sem provedor no ambiente).
 
-**A-057 · Alta · Ferramentas propor_criar_atividade e propor_mover_atividade revelam nome, caminho e status de demanda sem acesso**
+**A-065 · Alta · Ferramentas propor_criar_atividade e propor_mover_atividade revelam nome, caminho e status de demanda sem acesso**
 
 As duas ferramentas (permissão QUALQUER) leem a demanda pelo repository sem o recorte de acesso e põem o nome na proposta: caminho completo dos ancestrais ao criar; nome e status (concluída/cancelada) ao mover. O acesso do desenvolvedor só é conferido ao confirmar, na service, que ainda responde 404 e status do destino antes do acesso. Não li a classe base da proposta nem a exibição do cartão.
 

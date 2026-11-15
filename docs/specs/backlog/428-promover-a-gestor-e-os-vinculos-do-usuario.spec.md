@@ -1,6 +1,6 @@
 # 428-promover-a-gestor-e-os-vinculos-do-usuario.spec.md
 
-> Task 100/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-126 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 100/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-135 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/usuario. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Trocar o tipo de desenvolvedor ou auxiliar para gestor ou administrador deixa de
 
 ## Contexto
 
-**A-126 · Baixa · Promover a gestor não trata as linhas de demanda_usuario nem execução ativa**
+**A-135 · Baixa · Promover a gestor não trata as linhas de demanda_usuario nem execução ativa**
 
 Ao trocar o tipo de desenvolvedor/auxiliar para gestor ou administrador, a service só aplica guardas de administrador e grava o tipo. Nada remove ou bloqueia as linhas de demanda_usuario nem a execução ativa do usuário, embora a regra diga que gestor nunca é membro de demanda.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como GESTOR: PUT /usuario/<id de dev que é membro de demanda e tem execução ativa> {tipo:'GESTOR'} → 200. Depois conferir a demanda (membros) e a execução: continuam lá. Esperado pela regra: recusar a troca ou limpar os vínculos.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

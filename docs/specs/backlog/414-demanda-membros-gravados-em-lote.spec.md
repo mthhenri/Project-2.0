@@ -1,6 +1,6 @@
 # 414-demanda-membros-gravados-em-lote.spec.md
 
-> Task 86/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-109 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-14.
+> Task 86/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-118 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-14.
 > Severidade: Baixa. Área: backend/demanda e frontend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Salvar membros deixa de fazer um `POST` ou `DELETE` por pessoa seguido da releit
 
 ## Contexto
 
-**A-109 · Baixa · Membros são gravados com uma requisição por pessoa e a lista é relida em seguida**
+**A-118 · Baixa · Membros são gravados com uma requisição por pessoa e a lista é relida em seguida**
 
 Salvar membros na edição ou no diálogo "Membros" dispara um POST ou DELETE por pessoa adicionada ou removida (em paralelo), e o diálogo ainda relê GET /demanda/:id/membro depois; "Participar" do desenvolvedor faz POST e depois GET da lista. Tags já têm o formato em lote (PUT /demanda/:id/tag com a lista).
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Editar uma demanda marcando 3 membros novos e desmarcando 1: três POST /demanda/:id/membro e um DELETE /demanda/:id/membro/:usuarioId na aba de rede.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

@@ -1,6 +1,6 @@
 # 372-ia-consultar-demanda-e-grafo-para-o-desenvolvedor.spec.md
 
-> Task 44/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-063 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 44/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-071 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Resolver a diferença entre a rota HTTP e a IA: o desenvolvedor vê a demanda e 
 
 ## Contexto
 
-**A-063 · Baixa · consultar_demanda e consultar_grafo_do_projeto são vedadas ao desenvolvedor, que vê as duas coisas pela rota HTTP**
+**A-071 · Baixa · consultar_demanda e consultar_grafo_do_projeto são vedadas ao desenvolvedor, que vê as duas coisas pela rota HTTP**
 
 As duas ferramentas de leitura declaram `permissao = 'AUXILIAR'`, embora chamem `DemandaService.recuperar` e `recuperarGrafo` com o usuário do token, que já recortam por acesso. O desenvolvedor lista as demandas do projeto pela IA (`listar_demandas_do_projeto`, QUALQUER) mas não consulta nenhuma, nem a própria. O motivo não está nas regras de referência; pode ser intencional.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como DESENVOLVEDOR membro da demanda D: a leitura HTTP de D responde 200; no chat, pedir os detalhes de D: `consultar_demanda` não existe para o modelo e ele responde sem os dados.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

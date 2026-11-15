@@ -1,6 +1,6 @@
 # 365-proposta-do-resumo-tratada-num-ponto-so.spec.md
 
-> Task 37/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-053 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 37/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-061 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta e proposta-ia.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A proposta de gravar o resumo não pode ser confirmada ou desfeita pela rota ger
 
 ## Contexto
 
-**A-053 · Baixa · Proposta do resumo pode ser confirmada ou desfeita pela rota geral, fora das checagens do resumo**
+**A-061 · Baixa · Proposta do resumo pode ser confirmada ou desfeita pela rota geral, fora das checagens do resumo**
 
 A proposta de gravar o resumo é uma proposta comum do usuário; `confirmarProposta` do resumo exige ser membro do grupo agora, marca o resumo como gravado e avisa o chat, mas `POST /proposta-ia/:id/confirmar` só confere o dono. Por ela a documentação é gravada sem marcar o resumo nem avisar o chat, e o mesmo resumo pode virar proposta de novo. A permissão sobre a demanda continua valendo, porque o executor passa pelo `DemandaService`.
 
@@ -24,7 +24,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Membro do canal: `POST /mensagem-direta/grupo/:g/resumo/:r/proposta` e depois `POST /proposta-ia/:propostaId/confirmar`. Esperado: resumo marcado como gravado e mensagem "Resumo gravado na demanda"; pelo código a documentação é gravada sem as duas coisas e um novo `POST .../proposta` do mesmo resumo é aceito. Não executado: as transições de `PropostaIaService.confirmar` não foram lidas.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

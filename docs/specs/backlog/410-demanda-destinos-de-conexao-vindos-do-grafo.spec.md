@@ -1,6 +1,6 @@
 # 410-demanda-destinos-de-conexao-vindos-do-grafo.spec.md
 
-> Task 82/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-105 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
+> Task 82/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-114 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
 > Severidade: Média. Área: frontend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Abrir a tela deixa de pedir a lista de demandas do projeto, que repete o que `GE
 
 ## Contexto
 
-**A-105 · Média · GET /demanda?projetoId&allRows repete o que o grafo já trouxe, é carga antecipada e fica desatualizada**
+**A-114 · Média · GET /demanda?projetoId&allRows repete o que o grafo já trouxe, é carga antecipada e fica desatualizada**
 
 Grafo, lista e árvore trazem o mesmo conjunto: o nó do grafo tem tudo de DemandaResumoDto e de DemandaArvoreItemDto, menos caminho, nivel e filhos, deriváveis de demandaPaiId. A lista só alimenta os destinos do "Conectar" (id e nome), é pedida ao abrir a primeira demanda mesmo sem ninguém conectar nada, nunca serve ao desenvolvedor (o botão é de quem edita) e é refeita sempre que a coluna é recriada. Como só recarrega quando o projeto muda, demanda criada, renomeada ou excluída depois não aparece certa nos destinos.
 

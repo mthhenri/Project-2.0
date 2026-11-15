@@ -1,6 +1,6 @@
 # 369-proposta-de-trecho-do-plano-so-resolve-quem-edita-a-aba.spec.md
 
-> Task 41/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-059 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 41/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-067 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/plano.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Quem não edita a aba (desenvolvedor e auxiliar na descrição do cliente) não 
 
 ## Contexto
 
-**A-059 · Baixa · Quem não pode editar a aba recusa (expira) a proposta de trecho do plano de outra pessoa**
+**A-067 · Baixa · Quem não pode editar a aba recusa (expira) a proposta de trecho do plano de outra pessoa**
 
 `recusar` não passa pelo executor: basta `obterDoUsuario`, que aceita qualquer pessoa com acesso ao plano. Desenvolvedor e auxiliar conseguem expirar a proposta do gestor sobre a descrição do cliente, que eles não editam; o contrato do executor diz que resolve quem pode editar o plano. Confirmar e desfazer estão protegidos por `lerPlano`.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como DESENVOLVEDOR com acesso ao plano: POST /proposta-ia/P/recusar numa proposta do gestor com `aba: DESCRICAO_CLIENTE`. Esperado: 403. O código: 200 e a proposta vira EXPIRADA (o mesmo por POST /proposta-ia/grupo/recusar).
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

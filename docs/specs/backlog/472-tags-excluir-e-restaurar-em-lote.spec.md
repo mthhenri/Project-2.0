@@ -1,6 +1,6 @@
-# 449-tags-excluir-e-restaurar-em-lote.spec.md
+# 472-tags-excluir-e-restaurar-em-lote.spec.md
 
-> Task 121/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-150 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-14.
+> Task 144/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-190 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-14.
 > Severidade: Baixa. Área: backend/tag e frontend/tag. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A exclusão em lote de tags deixa de fazer um `DELETE` por tag (e o desfazer um 
 
 ## Contexto
 
-**A-150 · Baixa · Tags: excluir selecionadas faz um DELETE por tag e o desfazer um PATCH por tag**
+**A-190 · Baixa · Tags: excluir selecionadas faz um DELETE por tag e o desfazer um PATCH por tag**
 
 A exclusão em lote monta um forkJoin com um DELETE /tag/:id por tag e o Desfazer outro com um PATCH /tag/:id/restaurar por tag. Se um DELETE falha, o forkJoin abandona os demais, a tela relê GET /tag e nenhum Desfazer é oferecido para as que já foram excluídas.
 
@@ -21,7 +21,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Em /tag, marcar 10 tags e clicar em excluir as selecionadas; depois Desfazer no toast. Na rede: 10 DELETE /tag/:id paralelos e, no desfazer, 10 PATCH /tag/:id/restaurar.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

@@ -1,6 +1,6 @@
 # 358-codigo-morto-de-usuarios-pad-e-documentacoes.spec.md
 
-> Task 30/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-042 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 30/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-050 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/usuario.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Tirar o que não é mais usado nessas telas: os tipos de `usuario.model.ts`, `te
 
 ## Contexto
 
-**A-042 · Baixa · Código sem uso na unidade: tipos de `usuario.model.ts`, `textosPreenchidos`, opção `secoesAbertas` do pad, entrada `editavel` do diálogo do pad e parâmetro `forcar` de `TipoUsuarioAjudaService.carregar`**
+**A-050 · Baixa · Código sem uso na unidade: tipos de `usuario.model.ts`, `textosPreenchidos`, opção `secoesAbertas` do pad, entrada `editavel` do diálogo do pad e parâmetro `forcar` de `TipoUsuarioAjudaService.carregar`**
 
 Nenhum é método com HTTP: todos os métodos HTTP de `UsuarioService`, `AnotacaoService`, `TipoUsuarioAjudaService` e `AssistenteTrechoService` têm chamador. Os itens abaixo não têm uso fora de testes.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: `grep -rn` dos nomes em `frontend/src` (ts e html), fora de `*.spec.ts` e `*.test.ts`.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

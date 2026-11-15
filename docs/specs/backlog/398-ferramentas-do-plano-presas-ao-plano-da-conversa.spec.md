@@ -1,6 +1,6 @@
 # 398-ferramentas-do-plano-presas-ao-plano-da-conversa.spec.md
 
-> Task 70/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-089 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 70/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-097 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/plano e chat.
 
 ## Objetivo
@@ -9,7 +9,7 @@
 
 ## Contexto
 
-**A-089 · Média · Ferramentas do plano aceitam `planoId` vindo do modelo, não o plano da conversa**
+**A-097 · Média · Ferramentas do plano aceitam `planoId` vindo do modelo, não o plano da conversa**
 
 `consultar_plano`, `escrever_no_plano` e as três de pontos recebem `planoId` como argumento do modelo, e nada no laço o amarra ao plano da conversa aberta. A permissão de quem enviou é respeitada, mas uma fonte de fora ou a mensagem de um colega pode induzir a IA a ler o plano privado do remetente ou a escrever em outro plano dele. `escrever_no_plano` é do tipo RASCUNHO e grava sem confirmação.
 

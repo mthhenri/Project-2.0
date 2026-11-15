@@ -1,6 +1,6 @@
-# 463-permissao-tambem-na-service.spec.md
+# 486-permissao-tambem-na-service.spec.md
 
-> Task 135/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-183, A-184 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 158/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-224, A-225 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend (projeto, calendario, tag, relatorio, ponto-justificativa, modelagem, ia, configuracao-ia).
 
 ## Objetivo
@@ -9,7 +9,7 @@ As services desses módulos passam a conferir quem pode, como manda a convençã
 
 ## Contexto
 
-**A-183 · Baixa · Trava de tipo só no controller em projeto, calendário, tag, relatório e justificativa**
+**A-224 · Baixa · Trava de tipo só no controller em projeto, calendário, tag, relatório e justificativa**
 
 Nessas services os métodos de escrita não recebem o usuário ativo: quem barra é só o decorador da rota, e cada executor/ferramenta de IA precisa repetir a regra por conta própria. Usuário, prioridade e textos dos tipos conferem na service também, então há dois padrões.
 
@@ -23,9 +23,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Pela API não há diferença hoje (as rotas respondem 403 a quem não pode). O risco é um chamador interno novo (executor, ferramenta, job) chamar ProjetoService.criar ou PontoJustificativaService.criar sem repetir a trava.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-184 · Baixa · Modelagem, duas leituras da IA e a gravação de preço só têm trava no controller; a service não confere tipo**
+**A-225 · Baixa · Modelagem, duas leituras da IA e a gravação de preço só têm trava no controller; a service não confere tipo**
 
 As cinco escritas da modelagem dependem só do `@GestorOnly()` posto método a método: `ModelagemService` nem recebe `usuarioAtivo`. O mesmo vale para `IaService.recuperarEstadoCompleto`/`listarModelos` e para `ConfiguracaoIaService.alterarPreco`. Os módulos vizinhos (configuracao-ia, prompt, ia-custo) repetem a conferência na service, que é onde a regra do projeto põe a permissão.
 
@@ -40,7 +40,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Hoje não se reproduz pela API: PUT /modelagem/grupo/1 {titulo, rotulo} como AUXILIAR ou DESENVOLVEDOR dá 403 pelo GestorGuard e GET /ia/estado dá 403 pelo AdministradorGuard (esperado = obtido). A diferença só aparece se uma rota nova nascer sem decorador ou outro módulo chamar a service: nada barra.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

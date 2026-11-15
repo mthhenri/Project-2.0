@@ -1,6 +1,6 @@
 # 333-checkin-dialogo-conferencia-por-evento.spec.md
 
-> Task 5/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-006 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01.
+> Task 5/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-010 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01.
 > Severidade: Média. Área: frontend/checkin. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Com o diálogo do check-in aberto, a página deixa de pedir `GET /checkin/situac
 
 ## Contexto
 
-**A-006 · Média · Diálogo do check-in aberto confere GET /checkin/situacao a cada 3 s sem teto de tempo**
+**A-010 · Média · Diálogo do check-in aberto confere GET /checkin/situacao a cada 3 s sem teto de tempo**
 
 Com o check-in em andamento a página confere a cada 3 s até o estado mudar; a única guarda é a aba oculta. O diálogo não tem fechar, então quem saiu da mesa com a execução rodando deixa a aba fazendo 1.200 requisições por hora. Os dois desfechos que o intervalo espera quase sempre nascem na própria página (confirmar o cartão ou o fim do fluxo da conversa), e o fim do fluxo já confere por conta própria. No Electron a guarda de aba oculta não vale: a janela oculta continua com visibilityState 'visible'.
 
@@ -24,7 +24,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Com execução ativa, esperar o horário do check-in (ou reduzir o intervalo na configuração da IA), deixar o diálogo aberto sem responder e olhar a aba de rede: 1 GET /checkin/situacao a cada 3 s, indefinidamente.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

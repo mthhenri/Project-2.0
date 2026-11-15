@@ -1,6 +1,6 @@
 # 418-chat-pessoas-reaproveita-a-lista.spec.md
 
-> Task 90/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-116 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
+> Task 90/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-125 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
 > Severidade: Baixa. Área: frontend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Nova conversa, Novo grupo e Detalhes do grupo reaproveitam a lista de pessoas j�
 
 ## Contexto
 
-**A-116 · Baixa · `GET /mensagem-direta/pessoas` repetido a cada abertura de Nova conversa, Novo grupo e Detalhes do grupo**
+**A-125 · Baixa · `GET /mensagem-direta/pessoas` repetido a cada abertura de Nova conversa, Novo grupo e Detalhes do grupo**
 
 `carregarPessoas` só evita a chamada simultânea; não reaproveita a lista já carregada. Só o caminho da busca confere `pessoas() === null`; os outros quatro gatilhos pedem a lista inteira toda vez, embora a presença venha pelo stream.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Popup → "Nova conversa" → voltar → "Nova conversa" de novo; ou abrir e fechar os Detalhes de um grupo várias vezes. Cada abertura mostra um GET /mensagem-direta/pessoas.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

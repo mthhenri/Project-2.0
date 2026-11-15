@@ -1,6 +1,6 @@
 # 346-documentacoes-erros-tratados-pela-tela.spec.md
 
-> Task 18/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-027 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 18/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-035 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/documentacao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O 409 de `PATCH /demanda/:id/textos` é tratado só pela tela, sem o toast globa
 
 ## Contexto
 
-**A-027 · Baixa · Documentações: conflito de versão (409) em `PATCH /demanda/:id/textos` mostra também o toast "Erro interno. Tente novamente."**
+**A-035 · Baixa · Documentações: conflito de versão (409) em `PATCH /demanda/:id/textos` mostra também o toast "Erro interno. Tente novamente."**
 
 `alterarTextos` não marca o erro como tratado pela tela. O interceptor global não tem caso para 409 e cai no `default`, que mostra "Erro interno. Tente novamente."; em seguida o componente mostra o aviso certo ("Outra pessoa gravou este texto…"). Nos outros erros de gravação saem dois toasts (o global e o do componente). `GET /demanda/:id` e `GET /demanda/documentacao` com erro também mostram toast global mais o estado de erro da tela.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Abrir a mesma demanda em Documentações em duas abas; gravar numa; na outra, alterar e Gravar: resposta 409, aviso "Outra pessoa gravou…" e, junto, toast vermelho "Erro interno. Tente novamente.".
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

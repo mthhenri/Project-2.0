@@ -1,6 +1,6 @@
 # 438-pausar-pelo-chip-atualiza-execucoes-e-ponto.spec.md
 
-> Task 110/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-139 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 110/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-150 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/execucao e ponto.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Depois de pausar a execução pelo chip, o bloco "Em andamento agora" de Execuç
 
 ## Contexto
 
-**A-139 · Média · Pausar pelo chip em /execucao ou /ponto não atualiza a tela**
+**A-150 · Média · Pausar pelo chip em /execucao ou /ponto não atualiza a tela**
 
 O contador `pausasDoChip` só é lido pela listagem e pelo detalhe de atividades. Em /execucao o bloco 'Em andamento agora' e em /ponto o cartão de quem está trabalhando continuam mostrando a execução como aberta depois de pausada pelo chip, até um foco, uma volta à aba ou outra ação.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Não executado. Com uma execução própria aberta, ir a /execucao e pausar pelo chip da barra superior: a rede mostra PATCH /execucao/:id/encerrar e GET /execucao/ativa, e nenhum GET /execucao; conferir se o bloco 'Em andamento agora' permanece.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

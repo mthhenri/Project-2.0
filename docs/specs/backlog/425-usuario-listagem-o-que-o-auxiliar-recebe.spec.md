@@ -1,6 +1,6 @@
 # 425-usuario-listagem-o-que-o-auxiliar-recebe.spec.md
 
-> Task 97/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-123 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 97/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-132 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/usuario. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A listagem que alimenta os seletores do auxiliar deixa de entregar o `login` de 
 
 ## Contexto
 
-**A-123 · Média · GET /usuario entrega ao auxiliar login e temAnotacoes de todos os usuários**
+**A-132 · Média · GET /usuario entrega ao auxiliar login e temAnotacoes de todos os usuários**
 
 A listagem é liberada por temVisibilidadeTotal e a service não recebe o usuário ativo: auxiliar e gestor recebem a mesma carga, com login, ativo e temAnotacoes de todos (inclusive gestores, administradores e inativos). O auxiliar não pode ver perfil nem pad de outro, mas fica sabendo o login e quem tem anotações; o gestor também vê temAnotacoes de outro gestor/administrador, cujo pad é fechado para ele.
 

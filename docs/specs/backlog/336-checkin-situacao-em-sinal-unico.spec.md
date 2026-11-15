@@ -1,6 +1,6 @@
 # 336-checkin-situacao-em-sinal-unico.spec.md
 
-> Task 8/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-012, A-013 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-03.
+> Task 8/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-016, A-017 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-03.
 > Severidade: Baixa. Área: frontend/checkin.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Janelinha, página embutida e "Próximo check-in" do menu do perfil leem a mesma
 
 ## Contexto
 
-**A-012 · Baixa · 'Próximo check-in' do menu do perfil fica montado a sessão inteira e não reconsulta ao abrir: mostra horário velho depois de suspender ou retomar**
+**A-016 · Baixa · 'Próximo check-in' do menu do perfil fica montado a sessão inteira e não reconsulta ao abrir: mostra horário velho depois de suspender ou retomar**
 
 O comentário do componente diz que o popover só monta o conteúdo aberto e que reabrir consulta de novo. Não é o que acontece: o conteúdo é projetado e nasce junto com a topbar. O componente consulta uma vez na carga e só refaz quando o id da execução ativa muda. Suspender ou retomar os check-ins (proposta SUSPENDER_CHECKIN) não muda a execução, então o menu segue contando para o horário antigo e depois fica em 'Check-in agora'. O relógio de 1 s também corre a sessão inteira com o menu fechado. Janelinha, menu e página guardam cada um a sua cópia da situação.
 
@@ -26,9 +26,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Com execução ativa, pedir no chat 'vou entrar numa reunião', confirmar a proposta e abrir o menu do perfil: continua 'Próximo check-in em mm:ss' em vez de 'Check-ins suspensos'; passado o horário antigo, mostra 'Check-in agora'. Depende de IA no ar; não executei.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-013 · Baixa · Janelinha recebe a situação 'disparado' e a página embutida pede GET /checkin/situacao de novo; ao fechar, a janelinha pede outra vez**
+**A-017 · Baixa · Janelinha recebe a situação 'disparado' e a página embutida pede GET /checkin/situacao de novo; ao fechar, a janelinha pede outra vez**
 
 A janelinha só monta a página do check-in depois de receber a situação com disparado: true. A página, ao nascer, pede a mesma situação (a consulta anterior já terminou, então não é compartilhada) e pode pedir também /ia/disponibilidade. Quando a página se encerra, ela já tem a situação nova (acabou de conferir), mas só avisa 'encerrado' e a janelinha consulta de novo.
 
@@ -42,7 +42,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: No instante em que o diálogo do check-in aparece, a aba de rede mostra dois GET /checkin/situacao em sequência (o da janelinha e o da página). Ao sumir o diálogo, mais um logo depois do último tique de 3 s.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

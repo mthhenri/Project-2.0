@@ -1,6 +1,6 @@
 # 331-execucao-ativa-consulta-com-guarda.spec.md
 
-> Task 3/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-003, A-004 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-06.
+> Task 3/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-007, A-008 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-06.
 > Severidade: Média. Área: frontend/casca.
 
 ## Objetivo
@@ -9,7 +9,7 @@
 
 ## Contexto
 
-**A-003 · Média · Cada foco da janela dispara GET /execucao/ativa sem guarda; voltar à aba dispara 2 e mais um GET /checkin/situacao**
+**A-007 · Média · Cada foco da janela dispara GET /execucao/ativa sem guarda; voltar à aba dispara 2 e mais um GET /checkin/situacao**
 
 A topbar ouve visibilitychange e window:focus no mesmo método e ExecucaoAtivaService.carregar() não tem guarda de consulta em curso nem de tempo. Um alt-tab de volta custa 1 requisição; voltar de aba oculta custa 2 iguais ao mesmo tempo, mais o GET /checkin/situacao da janelinha, que confere mesmo sem execução ativa. A página de detalhe da atividade ainda chama carregar() por conta própria na carga e na volta à aba (terceira cópia).
 
@@ -25,7 +25,7 @@ Como observar: Em qualquer tela, alternar para outro programa e voltar três vez
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-13: 3 focos seguidos da janela = 3 `GET /execucao/ativa`; voltar de aba oculta = 2 `GET /execucao/ativa` iguais e 1 `GET /checkin/situacao`.
 
-**A-004 · Média · GET /execucao/ativa em dobro ao voltar à aba e de novo a cada abertura do detalhe**
+**A-008 · Média · GET /execucao/ativa em dobro ao voltar à aba e de novo a cada abertura do detalhe**
 
 A topbar escuta `visibilitychange` e `window:focus` no mesmo método sem guarda, e `ExecucaoAtivaService.carregar()` liga `_carregando` mas não o consulta: quando os dois eventos chegam juntos saem duas requisições iguais (medido). O detalhe da atividade soma a sua própria chamada na volta à aba e pede mais uma a cada abertura, embora o estado já esteja carregado no boot e mantido pelo interceptor.
 

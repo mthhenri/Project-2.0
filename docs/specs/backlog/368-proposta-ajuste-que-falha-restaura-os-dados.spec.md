@@ -1,6 +1,6 @@
 # 368-proposta-ajuste-que-falha-restaura-os-dados.spec.md
 
-> Task 40/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-058 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 40/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-066 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/proposta-ia.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Quando o executor recusa um ajuste, a proposta volta a `PENDENTE` com os dados o
 
 ## Contexto
 
-**A-058 · Média · Ajuste que falha deixa a proposta pendente com os dados enviados pelo cliente, inclusive em proposta de outra pessoa**
+**A-066 · Média · Ajuste que falha deixa a proposta pendente com os dados enviados pelo cliente, inclusive em proposta de outra pessoa**
 
 `resolver` grava os `dados` do ajuste ao reivindicar a proposta e, se o executor falha, devolve a `PENDENTE` sem restaurar os dados originais. Em `ALTERAR_TRECHO_PLANO`, quem só acessa o plano passa em `podeResolver` e pode ajustar a proposta de outro: um desenvolvedor manda `aba: DESCRICAO_CLIENTE` com texto seu, leva 403, e a proposta do gestor fica pendente com esse texto, pronta para ele confirmar como se fosse da IA.
 
@@ -24,7 +24,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Gestor tem proposta ALTERAR_TRECHO_PLANO pendente (id P) num plano que o desenvolvedor acessa. Como DESENVOLVEDOR: POST /proposta-ia/P/ajustar {"dados":{"planoId":<id>,"aba":"DESCRICAO_CLIENTE","trechoAntigo":"<trecho que existe>","trechoNovo":"<texto do desenvolvedor>"}}. Esperado: 403 e a proposta intacta. O código: 403, mas GET /proposta-ia/P passa a mostrar os dados do desenvolvedor com status PENDENTE. O mesmo vale para o próprio dono: um ajuste que falha troca o conteúdo do cartão.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

@@ -1,6 +1,6 @@
 # 332-leituras-de-fundo-sem-toast-de-erro.spec.md
 
-> Task 4/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-005 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 4/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-009 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/casca.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Requisição que o usuário não pediu (disponibilidade da IA, situação do che
 
 ## Contexto
 
-**A-005 · Média · Leituras de fundo da casca mostram o toast global de erro quando falham (a cada 60 s, a cada foco e a cada 3 s no check-in)**
+**A-009 · Média · Leituras de fundo da casca mostram o toast global de erro quando falham (a cada 60 s, a cada foco e a cada 3 s no check-in)**
 
 As leituras automáticas da casca usam comFeedbackProprio(), que só desliga o overlay; o errorHandlerInterceptor continua mostrando toast para qualquer erro que não seja 401. Com o backend fora do ar (deploy, rede, VPN) o usuário recebe 'Erro interno. Tente novamente.' sem ter feito nada: a cada 60 s pela barra lateral, a cada foco pela topbar, a cada 3 s com o diálogo do check-in aberto e na abertura pelo atualizarSessao. Os serviços tratam a falha em silêncio (catchError, error: () => undefined), mas o interceptor avisa antes.
 
@@ -26,7 +26,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Com a aplicação aberta, parar o backend (ou marcar 'Offline' no DevTools) e esperar: um toast de erro por minuto sem tocar em nada; alt-tab e voltar mostra outro; com a janelinha do check-in aberta, um a cada 3 s.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

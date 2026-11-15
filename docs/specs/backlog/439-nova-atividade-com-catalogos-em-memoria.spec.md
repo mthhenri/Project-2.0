@@ -1,6 +1,6 @@
 # 439-nova-atividade-com-catalogos-em-memoria.spec.md
 
-> Task 111/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-140 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
+> Task 111/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-151 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
 > Severidade: Baixa. Área: frontend/atividade.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Abrir o diálogo de nova atividade e o popover de tags da listagem deixa de pedi
 
 ## Contexto
 
-**A-140 · Baixa · 'Nova atividade' recarrega três listas a cada abertura; tags fora do catálogo de 60 s**
+**A-151 · Baixa · 'Nova atividade' recarrega três listas a cada abertura; tags fora do catálogo de 60 s**
 
 O formulário é recriado a cada abertura do diálogo e o `ngOnInit` pede de novo as demandas atribuídas, todas as tags e os usuários. As tags usam `tagService.listar()` em vez de `listarCatalogo()`, aqui e no popover de tags da listagem. Abrir e fechar o diálogo três vezes são até nove requisições iguais.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: /atividade: abrir 'Nova atividade' (tecla c), fechar e abrir de novo: cada abertura repete a leitura das demandas atribuídas, GET /tag e GET /usuario?ativo=true&allRows=true. Não exercitado na medição.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

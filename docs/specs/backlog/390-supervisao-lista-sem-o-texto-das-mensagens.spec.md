@@ -1,6 +1,6 @@
 # 390-supervisao-lista-sem-o-texto-das-mensagens.spec.md
 
-> Task 62/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-081 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 62/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-089 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A listagem da supervisão deixa de ser um jeito de ler conversas sem registro: h
 
 ## Contexto
 
-**A-081 · Média · Listagem da supervisão entrega o texto das mensagens e aceita busca por texto e período sem auditoria nem aviso**
+**A-089 · Média · Listagem da supervisão entrega o texto das mensagens e aceita busca por texto e período sem auditoria nem aviso**
 
 `GET supervisao/conversas` devolve em `ultimaMensagem` a mensagem inteira (com `texto`) mais recente que casa com o filtro, por conversa, e nunca grava auditoria nem avisa. Com `texto` e deslizando `fim`, o gestor lê qualquer conversa entre desenvolvedores mensagem a mensagem sem deixar rastro.
 

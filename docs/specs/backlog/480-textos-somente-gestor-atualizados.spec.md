@@ -1,6 +1,6 @@
-# 457-textos-somente-gestor-atualizados.spec.md
+# 480-textos-somente-gestor-atualizados.spec.md
 
-> Task 129/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-167, A-168, A-169 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 152/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-207, A-208, A-209, A-210 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: docs e backend (Swagger, comentários, ferramentas da IA).
 
 ## Objetivo
@@ -9,7 +9,7 @@ O `SYSTEM.SPEC.md`, os resumos do Swagger, os comentários e as descrições env
 
 ## Contexto
 
-**A-167 · Baixa · Textos "somente gestor" desatualizados em rotas e ferramentas que o auxiliar usa**
+**A-207 · Baixa · Textos "somente gestor" desatualizados em rotas e ferramentas que o auxiliar usa**
 
 O Swagger, comentários e a descrição enviada ao modelo dizem "só o gestor" em planejamento e conexões, mas o código libera auxiliar. Na ferramenta de IA o texto é instrução para o modelo, que pode recusar o pedido de um auxiliar autorizado.
 
@@ -23,9 +23,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como AUXILIAR: GET /api/demanda/planejamento?projetoId=1 responde 200 embora o Swagger diga "somente gestor"; no chat, pedir à IA para desligar duas demandas e observar se o modelo recusa citando "só o gestor".
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-168 · Baixa · Documento, Swagger e comentários ainda dizem 'somente gestor' / @GestorOnly onde o código libera o auxiliar**
+**A-208 · Baixa · Documento, Swagger e comentários ainda dizem 'somente gestor' / @GestorOnly onde o código libera o auxiliar**
 
 A tabela de módulos do SYSTEM.SPEC cita `@GestorOnly POST /execucao/registro`, mas a rota usa `@ExigePermissao(podeEditarExecucaoDeOutro)`, que inclui o auxiliar, como diz o parágrafo do auxiliar no mesmo documento. Os resumos do Swagger e comentários de service, executor e ferramentas repetem 'somente gestor'.
 
@@ -40,9 +40,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Auxiliar: POST /api/v1/execucao/registro com atividade, início e fim válidos responde 201, embora a linha 1245 e o Swagger digam que a rota é só do gestor.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-169 · Baixa · SYSTEM.SPEC.md diz que propor_desconectar_demanda é só do gestor; o código libera ao auxiliar**
+**A-209 · Baixa · SYSTEM.SPEC.md diz que propor_desconectar_demanda é só do gestor; o código libera ao auxiliar**
 
 A tabela de módulos descreve `DESCONECTAR_DEMANDA` como 'só gestor', mas a ferramenta declara `permissao = 'AUXILIAR'`, igual a `propor_conectar_demanda`. A regra de §14 resumida para esta auditoria dá ao auxiliar criar e remover conexões, então o texto da tabela é que ficou para trás.
 
@@ -55,12 +55,29 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como AUXILIAR, pedir no chat para desconectar duas demandas conectadas: a ferramenta é listada ao modelo e a proposta nasce, ao contrário do que a linha 1254 descreve.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
+
+**A-210 · Baixa · SPEC descreve POST /execucao/registro como @GestorOnly; o código e o parágrafo do auxiliar dizem outra coisa**
+
+A tabela de módulos da SPEC diz que só o gestor registra execução manualmente, com @GestorOnly. O controller usa @ExigePermissao(podeEditarExecucaoDeOutro), o parágrafo do auxiliar na mesma SPEC lista 'registrar, editar e excluir execução' e o front mostra 'Registrar tempo' ao auxiliar. A tabela de permissões também só tem as colunas Gestor e Desenvolvedor.
+
+Evidência no código (linhas de 2026-11-13; confira antes de editar):
+
+- docs/SYSTEM.SPEC.md:1245 — 'O gestor também pode registrar manualmente ... (@GestorOnly POST /execucao/registro)'
+- backend/src/modules/execucao/controllers/execucao.controller.ts:56-57 — @ExigePermissao(podeEditarExecucaoDeOutro) sobre @Post('registro')
+- docs/SYSTEM.SPEC.md:1405 — auxiliar pode 'registrar, editar e excluir execução'
+- frontend/src/app/modules/atividade/pages/atividade-detalhe/atividade-detalhe.page.html:306-312 — 'Registrar tempo' com podeEditarExecucaoDeOutro()
+- docs/SYSTEM.SPEC.md:1407 — cabeçalho da tabela: 'Regra | Gestor | Desenvolvedor'
+
+Como observar: Comparar as linhas citadas.
+
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 
 1. No `SYSTEM.SPEC.md` §12: a linha de `proposta-ia` (`DESCONECTAR_DEMANDA`) e a de `execucao` (`POST /execucao/registro`, que usa `@ExigePermissao(podeEditarExecucaoDeOutro)`, não `@GestorOnly`).
 2. Descrições das ferramentas de IA de conexão e planejamento, summaries do Swagger e comentários de service e executor: "auxiliar, gestor e administrador".
+3. A tabela de permissões do §14 ganha a coluna Auxiliar (hoje a regra dele só existe em prosa).
 
 ## Critérios de Aceite
 

@@ -1,6 +1,6 @@
 # 435-atividades-acao-em-massa-em-lote.spec.md
 
-> Task 107/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-134, A-135 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; `PROBLEMS.md` P-085; auditoria anterior: R-14.
+> Task 107/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-144, A-145 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; `PROBLEMS.md` P-085; auditoria anterior: R-14.
 > Severidade: Média. Área: backend/atividade e frontend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Mudar status, acrescentar tags, excluir e desfazer em massa deixam de disparar u
 
 ## Contexto
 
-**A-134 · Média · Ação em massa nas atividades: uma requisição por item, todas ao mesmo tempo**
+**A-144 · Média · Ação em massa nas atividades: uma requisição por item, todas ao mesmo tempo**
 
 Mudar status, acrescentar tags, excluir e desfazer em massa disparam uma chamada por atividade selecionada em `forkJoin`, sem limite de concorrência, e depois recarregam a lista. Com 50 linhas por página são até 50 PUT ou DELETE simultâneos mais o GET, e o desfazer repete com 50 PATCH. O backend só tem rotas por id.
 
@@ -24,9 +24,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: /atividade como gestor: selecionar várias linhas e trocar o status na barra em massa: N PUT /atividade/:id em paralelo e 1 GET /atividade. Excluir: N DELETE /atividade/:id; Desfazer: N PATCH /atividade/:id/restaurar. Não exercitado na medição.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-135 · Média · Ação em massa nas atividades: não há rota; a trava do auxiliar é só da tela**
+**A-145 · Média · Ação em massa nas atividades: não há rota; a trava do auxiliar é só da tela**
 
 O backend não tem rota de ação em massa. A tela mostra a barra só com `sessao.eGestor()` e dispara N chamadas individuais de PUT /atividade/:id, PUT /atividade/:id/tag e DELETE /atividade/:id. Como cada chamada é permitida ao auxiliar, a regra 'auxiliar não faz ação em massa' não tem como ser aplicada no servidor e é só de interface.
 
@@ -40,7 +40,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Auxiliar: repetir por script PUT /api/v1/atividade/:id {"status":"DESENVOLVENDO"} para dez ids. Todas respondem 200, o mesmo efeito da barra que a tela esconde.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

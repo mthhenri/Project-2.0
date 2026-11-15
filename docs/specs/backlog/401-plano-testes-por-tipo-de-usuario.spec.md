@@ -1,6 +1,6 @@
 # 401-plano-testes-por-tipo-de-usuario.spec.md
 
-> Task 73/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-093 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 73/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-101 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/plano.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Cobrir o que nenhum teste do módulo exercita: o auxiliar não criador em arquiv
 
 ## Contexto
 
-**A-093 · Baixa · Módulo plano sem teste com AUXILIAR e sem os casos de borda de acesso**
+**A-101 · Baixa · Módulo plano sem teste com AUXILIAR e sem os casos de borda de acesso**
 
 Nenhum teste do backend do módulo plano usa o tipo AUXILIAR; no shared ele aparece só em `podeAcessarPlano` e na aba do cliente. `podeArquivarOuExcluirPlano` é testada com desenvolvedor, gestor e administrador: trocar a regra para incluir o auxiliar não quebraria teste nenhum. Faltam também o criador de plano solo sem acesso ao projeto e o 403×404 da demanda sem acesso.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Conferência por grep nos *.test.ts; nenhum teste foi rodado.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

@@ -1,6 +1,6 @@
 # 442-atividade-detalhe-com-as-tags-na-mesma-resposta.spec.md
 
-> Task 114/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-143 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 114/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-154 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/atividade e frontend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Abrir o detalhe da atividade deixa de fazer duas requisições para a atividade 
 
 ## Contexto
 
-**A-143 · Baixa · Detalhe da atividade: duas requisições para atividade e tags, e a atividade relida a cada mudança de execução**
+**A-154 · Baixa · Detalhe da atividade: duas requisições para atividade e tags, e a atividade relida a cada mudança de execução**
 
 `AtividadeRecuperadaDto` não traz as tags, então abrir o detalhe faz GET /atividade/:id e GET /atividade/:id/tag (medido), enquanto o resumo da listagem já traz `tags`. Depois de iniciar, pausar ou registrar, `carregarExecucoes` relê a atividade inteira para acompanhar o status.
 

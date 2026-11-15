@@ -1,6 +1,6 @@
 # 343-codigo-morto-da-casca-e-do-checkin.spec.md
 
-> Task 15/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-021 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 15/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-029 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Tirar o que não é mais usado: o sinal `usuarioAutenticado` e o seu teste, e o 
 
 ## Contexto
 
-**A-021 · Baixa · Código sem uso na casca e no check-in: sinal usuarioAutenticado, slot slotCheckin da topbar e rota GET /checkin/suspensao**
+**A-029 · Baixa · Código sem uso na casca e no check-in: sinal usuarioAutenticado, slot slotCheckin da topbar e rota GET /checkin/suspensao**
 
 O sinal usuarioAutenticado só é usado pelo próprio teste (a sessão vive no UsuarioSessaoService). A topbar tem um <ng-content select="[slotCheckin]"> que ninguém preenche (o layout usa <app-topbar /> sem conteúdo; o próximo check-in foi para o menu do perfil). No backend, GET /checkin/suspensao não tem chamador no frontend nem no desktop: os dois leem a suspensão dentro de GET /checkin/situacao, apesar do comentário da rota.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Não aparece na aplicação: GET /checkin/suspensao nunca surge na aba de rede em nenhum fluxo.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

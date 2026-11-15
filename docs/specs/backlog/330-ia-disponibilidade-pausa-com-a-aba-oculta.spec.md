@@ -1,15 +1,15 @@
 # 330-ia-disponibilidade-pausa-com-a-aba-oculta.spec.md
 
-> Task 2/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-002 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-03.
+> Task 2/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-005, A-006 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-01, R-03, R-06.
 > Severidade: Média. Área: frontend/casca. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
 
-A consulta periódica de `GET /ia/disponibilidade` só roda com a aba (ou a janela do Desktop) à vista, e reconfere uma vez quando ela volta.
+A consulta periódica de `GET /ia/disponibilidade` só roda com a aba (ou a janela do Desktop) à vista, e reconfere uma vez quando ela volta. No Desktop a janela fechada ou minimizada só fica oculta: a página nunca é descarregada e `document.visibilityState` continua "visible", então os temporizadores da casca precisam olhar `ProjectDesktopService.paginaOculta()`.
 
 ## Contexto
 
-**A-002 · Média · Barra lateral pede GET /ia/disponibilidade a cada 60 s em toda aba, visível ou oculta**
+**A-005 · Média · Barra lateral pede GET /ia/disponibilidade a cada 60 s em toda aba, visível ou oculta**
 
 O intervalo de 60 s da barra lateral usa forcar: true e não olha a visibilidade da aba nem da janela do Desktop. Depois da correção do check-in, é a única requisição contínua da casca: 60 por hora por aba aberta, de todo usuário, inclusive em aba esquecida em segundo plano. A resposta só muda o menu e a janelinha, que ninguém vê com a aba oculta.
 
@@ -23,6 +23,22 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 - docs/specs/backlog/auditoria-requisicoes-telas/verificacao-320-325.md:13 — o intervalo de 1 por minuto foi mantido de propósito na task 321
 
 Como observar: Abrir qualquer tela, deixar a aba em segundo plano por 5 min e voltar: a aba de rede mostra 5 GET /ia/disponibilidade feitos enquanto ela estava oculta.
+
+Verificação na auditoria: medido na aplicação rodando em 2026-11-14: 180 s parado em `/ponto`, sem execução, geram 3 `GET /ia/disponibilidade` e nenhuma outra requisição (60 por hora por aba).
+
+**A-006 · Média · Janela principal oculta na bandeja segue pedindo como se estivesse à vista**
+
+No Desktop, fechar e minimizar só ocultam a janela: a página nunca é descarregada e os temporizadores da casca continuam. A barra lateral força GET /ia/disponibilidade a cada 60 s sem guarda nenhuma, e as guardas por document.visibilityState não valem no Electron oculto segundo o próprio código. O sinal ProjectDesktopService.oculto existe, mas só os serviços do chat o consultam.
+
+Evidência no código (linhas de 2026-11-13; confira antes de editar):
+
+- desktop/src/main.ts:200-208 — close e minimize chamam ocultarJanela(); a página continua carregada
+- desktop/src/main.ts:214 e frontend/src/app/core/services/project-desktop.service.ts:59-60 — visibilityState fica 'visible'; o sinal oculto é a fonte certa
+- frontend/src/app/shared/layout/sidebar/sidebar.component.ts:15,49 — setInterval de 60_000 com iaDisponibilidade.carregar({ forcar: true }), sem guarda de visibilidade
+- frontend/src/app/modules/checkin/components/checkin-janelinha/checkin-janelinha.component.ts:41-43 — conferência de 300 s com execução, sem olhar oculto
+- frontend/src/app/modules/mensagem-direta/services/mensagem-direta-estado.service.ts:402,837 — únicos usos de desktop.oculto() (grep em frontend/src/app)
+
+Como observar: Deixar o Desktop na bandeja por 10 minutos e olhar o log do backend: cerca de 10 GET /ia/disponibilidade vindos da página, somados às leituras do processo principal. O stream /mensagem-direta/eventos também fica aberto (este é necessário para a notificação).
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-14: 180 s parado em `/ponto`, sem execução, geram 3 `GET /ia/disponibilidade` e nenhuma outra requisição (60 por hora por aba).
 

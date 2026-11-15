@@ -1,6 +1,6 @@
 # 399-plano-publicar-permissao-antes-da-regra.spec.md
 
-> Task 71/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-090 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 71/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-098 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/plano.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Em `publicar`, a permissão de editar a demanda é conferida logo depois de ler 
 
 ## Contexto
 
-**A-090 · Baixa · Publicar responde regra de negócio antes da permissão de editar a demanda**
+**A-098 · Baixa · Publicar responde regra de negócio antes da permissão de editar a demanda**
 
 A checagem de membro da demanda só acontece dentro de `DemandaService.alterar`, última etapa de `publicar`. Antes dela saem 400 (sem demanda, apagaria, textos iguais) e 409 (versão). O impacto é pequeno porque o desenvolvedor já lê o plano e a demanda do projeto, mas a ordem foge do padrão "permissão primeiro".
 
@@ -21,7 +21,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: DESENVOLVEDOR com acesso ao projeto e não membro da demanda ligada: POST /plano/:id/publicacao {"versao":<atual>,"abas":["DESCRICAO_TECNICA"]} com texto igual ao da demanda. Esperado 403. O código dá 400 'Os textos escolhidos já são iguais aos da demanda'; com versão antiga dá 409.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

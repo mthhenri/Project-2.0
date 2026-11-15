@@ -1,6 +1,6 @@
 # 412-demanda-voltar-e-trocar-de-modo.spec.md
 
-> Task 84/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-107 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
+> Task 84/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-116 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
 > Severidade: Baixa. Área: frontend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Decidir se vale guardar o detalhe por pouco tempo: hoje não há memória por de
 
 ## Contexto
 
-**A-107 · Baixa · Voltar a uma demanda já vista e trocar de modo refazem a carga inteira**
+**A-116 · Baixa · Voltar a uma demanda já vista e trocar de modo refazem a carga inteira**
 
 Não há cache por demanda: ngOnChanges zera o histórico e chama carregarTudo, por isso voltar a uma demanda vista repete as mesmas 5 (o histórico só serve ao "Voltar" interno, que ainda deixa planoDeOrigem com o plano da demanda de onde se voltou). Ir ao Grafo ou ao Controle de horas destrói a arvore-tela: na volta perde-se a demanda aberta e os ramos expandidos, abre a primeira da pasta e refaz tudo, inclusive a lista do projeto. Sem cache nenhum, só com os achados da árvore e do chat a seleção cai de 5 para 3 (plano, detalhe, atividades).
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Clicar na demanda A, na B e de novo na A: as mesmas 5 requisições de A. Abrir a demanda B, ir ao modo Grafo e voltar à Árvore: abre a primeira demanda da pasta (não a B) com GET /plano/demanda, /detalhe, /arvore, /demanda?projetoId&allRows, /atividade e /canal.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

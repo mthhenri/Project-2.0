@@ -29,6 +29,89 @@
 
 ## Ativos
 
+> P-089 a P-098 vêm da revisão de requisições e de permissões (2026-11-13 a 15): são os achados de severidade alta e os de média reproduzidos na aplicação rodando. A revisão tem 225 achados ao todo; os demais
+> estão em [`DOSSIE.md`](../specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md) (código `A-NNN`) e cada um aponta para a sua spec na guarda-chuva `docs/specs/backlog/requisicoes-e-permissoes-correcoes.spec.md` (tasks 329–486).
+
+### P-098 — Execução: regra de negócio respondida antes da permissão · `ABERTO` · backend/execucao
+
+- **Sintoma:** desenvolvedor sem acesso recebe 400 com a regra ("Só é possível iniciar execução em atividades planejadas ou em desenvolvimento", "A descrição é obrigatória", "Esta execução já foi encerrada") em `POST /execucao` e `PATCH /execucao/:id/encerrar` sobre atividade ou execução alheia, em vez de 403. Reproduzido em 2026-11-14 (é o R-16 da auditoria anterior, com mais dois casos).
+- **Causa:** em `ExecucaoService.iniciar` e `encerrar` as validações de negócio vêm antes do bloco de permissão.
+- **Contorno:** nenhum; a execução não é criada nem alterada, mas a resposta revela o estado do registro.
+- **Correção:** `375-execucao-permissao-antes-da-regra-de-negocio`.
+- **Desde:** 2026-11-11 (auditoria de requisições, R-16); ampliado em 2026-11-14.
+
+### P-097 — Auxiliar recebe 403 a cada demanda que abre · `ABERTO` · frontend/demanda e backend/mensagem-direta
+
+- **Sintoma:** como auxiliar, toda demanda selecionada gera `GET /mensagem-direta/canal/demanda/:id` com 403, e o detalhe do projeto gera `GET /mensagem-direta/canal/projeto/:id` com 403. Medido em 2026-11-13.
+- **Causa:** o botão do chat pergunta pelo canal a cada alvo, para todo tipo de usuário, e o backend só deixa entrar no canal quem é membro ou tem poder de gestor (`canal-acesso.service.ts`); a regra do auxiliar no canal não está escrita.
+- **Contorno:** nenhum (o 403 não aparece na tela; é requisição perdida a cada clique).
+- **Correção:** `360-canal-de-demanda-e-de-projeto-para-o-auxiliar`, `405-demanda-botao-do-chat-sem-pergunta-a-cada-selecao`; as duas esperam decisão do autor.
+- **Desde:** 2026-11-13 (existe desde os canais de projeto e de demanda, task 248).
+
+### P-096 — Plano marcado como "solo" tira gestor e administrador de arquivar e excluir · `ABERTO` · backend/plano
+
+- **Sintoma:** o criador marca solo um plano de projeto e o administrador passa a receber 404 em `GET /plano/:id`, `PATCH /plano/:id/arquivo` e `DELETE /plano/:id`; o plano some da lista dele. Reproduzido em 2026-11-14.
+- **Causa:** `marcarSolo` só confere se quem chama é o criador, e a checagem de acesso vem antes da de arquivar e excluir.
+- **Contorno:** o criador desmarca o solo.
+- **Correção:** `397-plano-solo-e-o-que-o-gestor-mantem` (decisão do autor).
+- **Desde:** 2026-11-14 (existe desde o modo planejamento).
+
+### P-095 — Gestor e administrador são aceitos como membros de demanda pela API · `ABERTO` · backend/demanda
+
+- **Sintoma:** `POST /demanda/:id/membro` com o id de um gestor responde 201 (para auxiliar, gestor e administrador), e `POST /demanda` com `usuarioIds` de gestor e administrador grava os dois em `demanda_usuario`. Usuário inativo também é aceito. Reproduzido em 2026-11-14.
+- **Causa:** a regra "gestor nunca é membro" (`podeSerMembroDeDemanda`) só existe no filtro do seletor da tela e no caminho da IA; `DemandaService.atribuirMembro` e `criar` não a aplicam.
+- **Contorno:** a tela não oferece gestor nem administrador no seletor.
+- **Correção:** `381-demanda-membro-so-quem-atua-como-desenvolvedor`.
+- **Desde:** 2026-11-14.
+
+### P-094 — Project Desktop consulta o check-in a cada 15 s, com ou sem execução · `ABERTO` · desktop
+
+- **Sintoma:** o processo principal pede `GET /checkin/situacao` a cada 15 s enquanto houver login (240 por hora por Desktop aberto), e `GET /mensagem-direta/preferencia` a cada 60 s; com a janelinha aberta, três consultas de 3 s correm juntas. Lido no código; o Electron não roda no ambiente da revisão.
+- **Causa:** intervalo fixo em `desktop/src/main.ts` (`CONFERENCIA_OCIOSA_MS`), sem a agenda por `proximoCheckinData` que o front ganhou na task 322.
+- **Contorno:** nenhum.
+- **Correção:** `329-desktop-checkin-conferencia-agendada`, `461-desktop-janelinha-um-so-consultor`.
+- **Desde:** 2026-11-13 (parte do R-01 que a task 322 não alcançou).
+
+### P-093 — Detalhe da atividade mostra as 5 execuções mais antigas e perde a execução em andamento · `ABERTO` · frontend/atividade
+
+- **Sintoma:** numa atividade com 6 ou mais execuções, "Execuções recentes" mostra as mais antigas, a faixa de execução em andamento não aparece e o status não é bloqueado. Confirmado no código; não foi visto na tela.
+- **Causa:** `GET /execucao` devolve em ordem crescente de início, a tela pede `itensPorPagina=200` e guarda `itens.slice(0, 5)`, procurando a execução aberta só nelas. O diálogo de encerrar usa a mesma lista.
+- **Contorno:** nenhum.
+- **Correção:** `335-execucoes-da-atividade-as-ultimas-primeiro` (a correção barata é só de front; a eficiente pede decisão do autor).
+- **Desde:** 2026-11-13.
+
+### P-092 — A IA revela nome, caminho e status de demanda de projeto sem acesso · `ABERTO` · backend/atividade (ferramentas da IA)
+
+- **Sintoma:** `propor_criar_atividade` grava na proposta o caminho completo (raiz › … › demanda) de qualquer demanda, e `propor_mover_atividade` devolve o nome e a situação da demanda de destino, sem conferir se o desenvolvedor a enxerga. Lido no código; a IA não tem provedor no ambiente da revisão.
+- **Causa:** as duas ferramentas leem a demanda direto no repository, sem usuário; `AtividadeService.validarMudancaDeDemanda` confere existência e status antes do acesso.
+- **Contorno:** nenhum.
+- **Correção:** `367-ferramentas-de-atividade-conferem-o-acesso-a-demanda`.
+- **Desde:** 2026-11-14.
+
+### P-091 — Desenvolvedor membro da demanda altera a atividade e as tags de um colega · `ABERTO` · backend/atividade
+
+- **Sintoma:** um desenvolvedor que é membro da demanda, sem ser dono da atividade, recebe 200 em `PUT /atividade/:id` e `PUT /atividade/:id/tag` da atividade de outro. Reproduzido em 2026-11-14. A tela trava pelo dono.
+- **Causa:** `AtividadeService.alterar` e `alterarTags` só recusam quem não é dono E não é membro; há testes que fixam esse comportamento.
+- **Contorno:** nenhum.
+- **Correção:** `373-atividade-de-colega-so-o-dono-ou-quem-conduz-altera` (decisão do autor: corrigir ou escrever a regra).
+- **Desde:** 2026-11-14.
+
+### P-090 — `PUT /execucao/:id` deixa o mesmo dono com duas execuções ativas · `ABERTO` · backend/execucao
+
+- **Sintoma:** reabrir duas execuções encerradas do mesmo dono (`fimData: null`) responde 200 nas duas e o banco fica com duas execuções abertas; o período também pode ser movido para cima de outra execução. Reproduzido em 2026-11-14 como auxiliar.
+- **Causa:** `ExecucaoService.alterar` só valida futuro e ordem das datas; a conferência de execução ativa e de sobreposição existe só nos executores da IA.
+- **Contorno:** a tela não oferece reabrir.
+- **Correção:** `374-execucao-alterar-confere-ativa-e-sobreposicao`.
+- **Desde:** 2026-11-14.
+
+### P-089 — Supervisão do chat pode ser lida sem auditoria nem aviso · `ABERTO` · backend/mensagem-direta
+
+- **Sintoma:** com o parâmetro `cursor` (um base64 que o cliente monta), `GET /mensagem-direta/supervisao/grupo/:id` e `GET /mensagem-direta/supervisao/conversa/:id` devolvem a conversa inteira sem gravar `mensagem_direta_supervisao` e sem a mensagem "leu esta conversa". A lista `GET /mensagem-direta/supervisao/conversas` devolve o texto da última mensagem e aceita busca por texto sem auditoria. Abrir um par que nunca conversou grava a auditoria e cria a conversa com o aviso. Os três reproduzidos em 2026-11-14.
+- **Causa:** auditoria e aviso só rodam dentro de `if (!dto.cursor)`; a lista traz `ultimaMensagem` com `texto`; a leitura não confere se há mensagem entre os dois.
+- **Contorno:** nenhum.
+- **Correção:** `359-supervisao-do-chat-auditoria-com-ou-sem-cursor`, `390-supervisao-lista-sem-o-texto-das-mensagens`, `391-supervisao-de-par-sem-conversa-nao-cria-conversa`.
+- **Desde:** 2026-11-14 (existe desde a supervisão, tasks 214 e 246).
+
 > P-084 e P-085 vêm da auditoria de requisições das telas (2026-11-11); os demais (P-079 a P-083) foram corrigidos nas tasks 320–325. Medição, reprodução e recomendação de cada um em
 > [`DOSSIE.md`](../specs/backlog/auditoria-requisicoes-telas/DOSSIE.md), pelo código R-NN citado. Os achados de impacto baixo (R-06 a R-10, R-12, R-13, R-15, R-16) ficaram só no dossiê.
 
@@ -37,15 +120,15 @@
 - **Sintoma:** com N atividades selecionadas, "Mudar status", "Acrescentar tags", "Excluir" e "Desfazer" fazem N chamadas (`PUT`, `PUT .../tag`, `DELETE`, `PATCH .../restaurar`) e depois recarregam a lista. Se uma falhar, a operação fica pela metade (R-14).
 - **Causa:** não há rota em lote; a tela percorre a seleção chamando a rota de um item.
 - **Contorno:** nenhum.
-- **Correção:** rota em lote numa transação. Envolve contrato novo, decisão do autor.
+- **Correção:** rota em lote numa transação. Envolve contrato novo, decisão do autor: `435-atividades-acao-em-massa-em-lote`.
 - **Desde:** 2026-11-11 (auditoria de requisições).
 
 ### P-084 — Excluir uma demanda mostra "Não encontrado" e recarrega a tela inteira · `ABERTO` · frontend/demanda
 
 - **Sintoma:** depois de `DELETE /demanda/:id` com sucesso, a tela pede `GET /demanda/:id` da demanda excluída (404), mostra o aviso "Não encontrado: Registro não encontrado" e faz mais 11 requisições. Reproduzido três vezes (R-11). Desfazer a exclusão não recarrega nada (R-15).
-- **Causa:** não investigada no código; pelo tráfego, a seleção continua apontando para a demanda excluída quando a tela recarrega.
+- **Causa:** o evento de exclusão sobe pelo mesmo caminho de "demanda alterada": a página recarrega o grafo e manda a demanda aberta se reler antes de o componente dela ser desmontado. O desfazer avisa um componente que a própria exclusão já desmontou, então nada é relido e a demanda restaurada não volta à tela (reproduzido em 2026-11-14).
 - **Contorno:** ignorar o aviso; a exclusão foi feita.
-- **Correção:** trocar a seleção antes de recarregar e não pedir a demanda excluída.
+- **Correção:** `404-demanda-excluir-e-desfazer-sem-erro`.
 - **Desde:** 2026-11-11 (auditoria de requisições; já aparecia na captura de 2026-11-05).
 
 ### P-077 — O Chat da IA e o chat entre colegas usam o mesmo ícone (balão duplo) · `ABERTO` · frontend/identidade visual

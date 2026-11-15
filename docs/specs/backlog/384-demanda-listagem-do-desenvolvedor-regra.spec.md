@@ -1,6 +1,6 @@
 # 384-demanda-listagem-do-desenvolvedor-regra.spec.md
 
-> Task 56/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-075 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 56/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-083 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Alinhar a listagem com a regra escrita ("vê qualquer demanda de projeto acessí
 
 ## Contexto
 
-**A-075 · Baixa · GET /demanda entrega ao desenvolvedor só as demandas em que é membro, não as do projeto acessível**
+**A-083 · Baixa · GET /demanda entrega ao desenvolvedor só as demandas em que é membro, não as do projeto acessível**
 
 A listagem restringe por linha própria em demanda_usuario, enquanto a regra e as demais leituras (grafo, :id, documentacao) usam "projeto acessível". A ferramenta de IA contorna juntando os nós do grafo com a listagem, sinal de que a diferença é conhecida.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como DESENVOLVEDOR membro de 1 demanda num projeto com 10: GET /api/demanda?projetoId=<id>&allRows=true devolve 1 item; GET /api/demanda/grafo?projetoId=<id> devolve os 10 nós.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

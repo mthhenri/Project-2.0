@@ -1,6 +1,6 @@
 # 388-participacao-na-demanda-como-controle-de-edicao.spec.md
 
-> Task 60/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-079 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 60/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-087 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: backend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Levar ao autor a consequência de duas regras escritas ("inclui só a si mesmo" 
 
 ## Contexto
 
-**A-079 · Informativo · "Edita só onde é membro" não segura o desenvolvedor: ele se inclui em qualquer demanda de projeto acessível e passa a editar**
+**A-087 · Informativo · "Edita só onde é membro" não segura o desenvolvedor: ele se inclui em qualquer demanda de projeto acessível e passa a editar**
 
 O código segue as duas regras escritas (inclui só a si mesmo; edita só onde é membro), mas a soma delas faz a participação funcionar como um passo, não como barreira. Com uma linha em demanda_usuario no projeto, o desenvolvedor entra em qualquer outra demanda do projeto e altera nome, horas, status, pai e tags.
 
@@ -21,7 +21,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como DESENVOLVEDOR membro só da demanda A do projeto: POST /api/demanda/{B}/membro {"usuarioId": <próprio id>} responde 201; em seguida PUT /api/demanda/{B} {"status":"CONCLUIDA"} responde 200.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

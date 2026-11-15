@@ -1,6 +1,6 @@
-# 444-relatorio-revisao-da-ia-do-filtro-certo.spec.md
+# 467-relatorio-revisao-da-ia-do-filtro-certo.spec.md
 
-> Task 116/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-145 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 139/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-185 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/relatorio.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Trocar projeto, mês ou ano com uma revisão por IA em andamento deixa de mostra
 
 ## Contexto
 
-**A-145 · Média · Relatório: a revisão por IA pedida antes de trocar o filtro aparece ao lado do relatório novo**
+**A-185 · Média · Relatório: a revisão por IA pedida antes de trocar o filtro aparece ao lado do relatório novo**
 
 Trocar projeto/mês/ano limpa a revisão e pede nova prévia, mas o POST /relatorio/execucao/revisar que já estava em andamento não é cancelado nem comparado com os parâmetros exibidos. Quando ele responde, a revisão do período antigo entra no painel ao lado da tabela do período novo. A chamada de IA (lenta e paga) também segue até o fim sem utilidade.
 

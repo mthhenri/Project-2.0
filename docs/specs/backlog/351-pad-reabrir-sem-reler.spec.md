@@ -1,6 +1,6 @@
 # 351-pad-reabrir-sem-reler.spec.md
 
-> Task 23/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-033 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
+> Task 23/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-041 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
 > Severidade: Baixa. Área: frontend/pad.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Abrir de novo a gaveta do pad do mesmo usuário usa o que já está em memória;
 
 ## Contexto
 
-**A-033 · Baixa · Pad: toda abertura da gaveta refaz `GET /anotacao?usuarioId`, inclusive com o mesmo pad já na tela**
+**A-041 · Baixa · Pad: toda abertura da gaveta refaz `GET /anotacao?usuarioId`, inclusive com o mesmo pad já na tela**
 
 `PadService.abrir()` relê o pad sempre que não há texto local sem gravar. Em Documentações e na aba Anotações do chat o pad do usuário já está carregado e visível; teclar `n` relê as cinco seções e troca os dois painéis pelo esqueleto.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Em Documentações, com o pad ao lado, teclar `n`: sai `GET /anotacao?usuarioId=…` e os dois painéis mostram o esqueleto. Fechar e abrir de novo: outra GET.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

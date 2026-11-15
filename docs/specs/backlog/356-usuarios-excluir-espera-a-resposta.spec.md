@@ -1,6 +1,6 @@
 # 356-usuarios-excluir-espera-a-resposta.spec.md
 
-> Task 28/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-040 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 28/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-048 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: frontend/usuario.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Excluir um usuário com execução registrada (o backend responde 400: só pode 
 
 ## Contexto
 
-**A-040 · Informativo · Usuários: Excluir aparece para todo usuário gerenciável, mas `DELETE /usuario/:id` responde 400 a quem tem execução registrada**
+**A-048 · Informativo · Usuários: Excluir aparece para todo usuário gerenciável, mas `DELETE /usuario/:id` responde 400 a quem tem execução registrada**
 
 A tela remove a linha antes da resposta e a devolve no erro. O backend recusa a exclusão de usuário com execução (só inativa). O resumo da listagem não diz se o usuário tem execuções, então a tela não tem como saber.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Clicar na lixeira de um desenvolvedor com execuções: a linha some, `DELETE /usuario/:id` responde 400, aparece "O usuário possui execuções registradas e não pode ser excluído; inative-o" e a linha volta.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

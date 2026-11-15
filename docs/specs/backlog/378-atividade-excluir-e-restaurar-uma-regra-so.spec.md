@@ -1,6 +1,6 @@
 # 378-atividade-excluir-e-restaurar-uma-regra-so.spec.md
 
-> Task 50/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-069 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 50/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-077 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/atividade. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Acabar com a diferença entre os dois caminhos: a rota recusa todo desenvolvedor
 
 ## Contexto
 
-**A-069 · Média · Excluir e restaurar atividade: a rota recusa todo desenvolvedor, a IA permite ao dono**
+**A-077 · Média · Excluir e restaurar atividade: a rota recusa todo desenvolvedor, a IA permite ao dono**
 
 DELETE /atividade/:id e PATCH /atividade/:id/restaurar exigem `podeEditarAtividadeDeOutro` no guard, então o desenvolvedor recebe 403 até na própria atividade. A service e a ferramenta `propor_excluir_atividade` (permissão QUALQUER) aceitam o dono, que exclui e restaura pelo chat a atividade sem execução. O resumo de regras lista excluir/restaurar atividade como permissão extra do auxiliar; a exceção da task 230 só está no código.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Desenvolvedor: DELETE /api/v1/atividade/<própria, sem execução> dá 403. No chat, 'exclua minha atividade X' e POST /api/v1/proposta-ia/:id/confirmar: atividade excluída; POST /api/v1/proposta-ia/:id/desfazer restaura.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

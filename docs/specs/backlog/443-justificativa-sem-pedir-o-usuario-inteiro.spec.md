@@ -1,6 +1,6 @@
 # 443-justificativa-sem-pedir-o-usuario-inteiro.spec.md
 
-> Task 115/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-144 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 115/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-155 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/ponto e frontend/ponto. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Abrir o diálogo de justificativa deixa de fazer `GET /usuario/:id` para ler ape
 
 ## Contexto
 
-**A-144 · Baixa · Diálogo de justificativa pede o usuário inteiro só pela jornada diária**
+**A-155 · Baixa · Diálogo de justificativa pede o usuário inteiro só pela jornada diária**
 
 Cada abertura do diálogo faz GET /usuario/:id e usa só `horasDiariasNecessarias` como teto das horas. O mensal que já está na tela não traz esse valor.
 
@@ -21,7 +21,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: /ponto como gestor, com um usuário escolhido: clicar em justificar num dia: GET /usuario/:id e GET /ponto-justificativa?usuarioId=&ano=&mes= em paralelo, a cada abertura. Não exercitado na medição.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

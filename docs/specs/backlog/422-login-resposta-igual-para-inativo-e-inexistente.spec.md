@@ -1,6 +1,6 @@
 # 422-login-resposta-igual-para-inativo-e-inexistente.spec.md
 
-> Task 94/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-120 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 94/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-129 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/autenticacao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O login confere a senha antes de dizer "Usuário inativo", e login inexistente c
 
 ## Contexto
 
-**A-120 · Baixa · Login distingue usuário inativo antes de conferir a senha**
+**A-129 · Baixa · Login distingue usuário inativo antes de conferir a senha**
 
 Senha errada e login inexistente dão a mesma mensagem, mas login de usuário inativo responde 'Usuário inativo' com qualquer senha, revelando sem autenticação que o login existe. Login inexistente também retorna sem rodar bcrypt, o que deixa diferença de tempo entre existente e inexistente.
 
@@ -21,7 +21,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Sem token: POST /autenticacao/login {login:'<login de usuário inativo>', senha:'qualquer'}. Esperado: 400 'Usuário ou senha incorretos. Confira e tente de novo.'. O código dá 400 'Usuário inativo'.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

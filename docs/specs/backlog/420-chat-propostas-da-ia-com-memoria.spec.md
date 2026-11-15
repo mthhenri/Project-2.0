@@ -1,6 +1,6 @@
 # 420-chat-propostas-da-ia-com-memoria.spec.md
 
-> Task 92/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-118 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 92/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-127 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Quem lê uma resposta da IA com propostas deixa de fazer um `GET` por proposta t
 
 ## Contexto
 
-**A-118 · Baixa · Propostas da IA: uma requisição por proposta, sem guardar o resultado**
+**A-127 · Baixa · Propostas da IA: uma requisição por proposta, sem guardar o resultado**
 
 Para quem não chamou a IA, `MensagemDiretaIaRespostaComponent` pede cada proposta num GET próprio, dentro de um `effect` que depende do objeto `mensagem()`. Não há cache como o das referências, então reabrir a conversa repete todos os GETs. É provável que cada releitura da conversa também repita, o que não foi confirmado.
 

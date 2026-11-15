@@ -1,6 +1,6 @@
 # 355-usuarios-pode-editar-igual-ao-backend.spec.md
 
-> Task 27/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-039 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 27/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-047 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: frontend/usuario.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A tela deixa de liberar "Editar" e "Alterar senha" para "a própria pessoa": o b
 
 ## Contexto
 
-**A-039 · Informativo · Usuários: `podeEditar` libera Editar e Alterar senha para "a própria pessoa", que o backend recusa a quem não é gestor; hoje o guard da rota esconde a diferença**
+**A-047 · Informativo · Usuários: `podeEditar` libera Editar e Alterar senha para "a própria pessoa", que o backend recusa a quem não é gestor; hoje o guard da rota esconde a diferença**
 
 A regra do front diz "gestor, ou a própria pessoa". No backend, `PUT /usuario/:id` e `PATCH /usuario/:id/senha` são só de gestor e administrador. A rota `/usuario` tem `gestorGuard`, então o ramo nunca é alcançado por outro tipo; pelo mesmo motivo os `@if (sessao.eGestor())` do template são sempre verdadeiros.
 
@@ -25,7 +25,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Não aparece na aplicação (a rota é só de gestor). Só os testes de componente montam a tela como desenvolvedor ou auxiliar (`usuario-listagem.page.spec.ts:184-200`).
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

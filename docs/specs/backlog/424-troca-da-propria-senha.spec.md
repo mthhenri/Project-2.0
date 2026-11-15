@@ -1,6 +1,6 @@
 # 424-troca-da-propria-senha.spec.md
 
-> Task 96/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-122 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 96/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-131 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/usuario. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Escrever e aplicar a regra de troca de senha. Hoje `PATCH /usuario/:id/senha` é
 
 ## Contexto
 
-**A-122 · Média · Troca de senha: só gestor/administrador, sem senha atual; auxiliar e desenvolvedor não trocam a própria**
+**A-131 · Média · Troca de senha: só gestor/administrador, sem senha atual; auxiliar e desenvolvedor não trocam a própria**
 
 PATCH /usuario/:id/senha é @GestorOnly e a service só barra alvo administrador: o gestor redefine a senha de qualquer não administrador (a própria e a de outro gestor) sem informar a senha atual. Não existe rota para auxiliar/desenvolvedor trocar a própria senha, então toda senha deles é sempre escolhida por um gestor, que pode entrar como eles. A regra não está no resumo de referência.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como DESENVOLVEDOR: PATCH /usuario/<próprio id>/senha {senhaNova:'NovaSenha#1'} → 403 'Acesso restrito a gestores' (não há como trocar a própria). Como GESTOR: PATCH /usuario/<id de outro GESTOR>/senha {senhaNova:'NovaSenha#1'} → 200, sem senha atual.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

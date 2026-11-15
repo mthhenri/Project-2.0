@@ -1,6 +1,6 @@
 # 436-usuarios-ativos-dos-seletores-pelo-catalogo.spec.md
 
-> Task 108/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-136 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
+> Task 108/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-146 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-08.
 > Severidade: Média. Área: frontend/atividade, execucao e ponto. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Atividades, Execuções, Ponto e o formulário de nova atividade deixam de pedir
 
 ## Contexto
 
-**A-136 · Média · GET /usuario?ativo=true&allRows=true a cada entrada em /atividade, /execucao e /ponto e a cada 'Nova atividade'**
+**A-146 · Média · GET /usuario?ativo=true&allRows=true a cada entrada em /atividade, /execucao e /ponto e a cada 'Nova atividade'**
 
 As três telas e o formulário de nova atividade chamam `usuarioService.listar({ ativo: true, allRows: true })` direto, sem passar pelo catálogo de 60 s que o serviço já tem. A medição mostra a mesma requisição cinco vezes numa navegação curta. O catálogo traz todos os usuários, então o filtro de ativos passaria a ser feito no cliente.
 

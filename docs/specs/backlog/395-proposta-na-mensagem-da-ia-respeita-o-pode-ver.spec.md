@@ -1,6 +1,6 @@
 # 395-proposta-na-mensagem-da-ia-respeita-o-pode-ver.spec.md
 
-> Task 67/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-086 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 67/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-094 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A rota que devolve a proposta dentro de uma mensagem da IA deixa de usar o atalh
 
 ## Contexto
 
-**A-086 · Baixa · Proposta do @IA: quem tem visão total vê a proposta sem passar pelo `podeVer` do executor**
+**A-094 · Baixa · Proposta do @IA: quem tem visão total vê a proposta sem passar pelo `podeVer` do executor**
 
 A rota confere que a proposta está na mensagem da IA daquela conversa e que é de quem chamou, e só o dono resolve. Mas para administrador, gestor e auxiliar o atalho `temVisibilidadeTotal` devolve a proposta inteira sem consultar o executor, inclusive de tipos sem `podeVer` (justificar ponto, anotação no pad, trecho de plano, check-in, criar projeto).
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: GESTOR chama `@IA` em conversa com um AUXILIAR pedindo uma anotação no próprio pad; o AUXILIAR faz GET /api/v1/mensagem-direta/conversa/<gestorId>/mensagem/<uuid>/proposta/<id>. O código devolve `acessivel: true` com os dados da proposta, `podeResolver: false`; não há regra escrita por tipo de proposta para comparar.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

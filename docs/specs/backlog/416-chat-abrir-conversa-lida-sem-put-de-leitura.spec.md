@@ -1,6 +1,6 @@
 # 416-chat-abrir-conversa-lida-sem-put-de-leitura.spec.md
 
-> Task 88/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-113 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 88/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-122 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A primeira abertura de cada conversa ou grupo na sessão deixa de mandar `PUT ..
 
 ## Contexto
 
-**A-113 · Baixa · Abrir conversa ou grupo já lido envia PUT de leitura mesmo sem não lidas**
+**A-122 · Baixa · Abrir conversa ou grupo já lido envia PUT de leitura mesmo sem não lidas**
 
 `marcarComoLida` decide só pela data da última mensagem do outro e por um mapa em memória que nasce vazio a cada carga da página; não olha `naoLidas` da lista. Na primeira abertura de cada conversa ou grupo por sessão sai um `PUT .../leitura` mesmo com zero não lidas. No backend, a leitura da conversa direta grava e publica `LEITURA` para as duas pessoas sem conferir se algo mudou.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Recarregar a página, abrir o popup e clicar numa conversa sem contador de não lidas. Rede: GET /mensagem-direta/conversa/ID e, em seguida, PUT /mensagem-direta/conversa/ID/leitura. Vale igual para grupo (PUT /mensagem-direta/grupo/N/leitura).
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

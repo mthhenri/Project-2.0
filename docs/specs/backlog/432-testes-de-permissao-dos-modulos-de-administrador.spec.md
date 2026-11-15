@@ -1,6 +1,6 @@
 # 432-testes-de-permissao-dos-modulos-de-administrador.spec.md
 
-> Task 104/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-130, A-131 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 104/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-140, A-141 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/ia-custo e autenticacao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Fixar em teste o que hoje só o decorador garante: toda rota de `ia-custo` é de
 
 ## Contexto
 
-**A-130 · Baixa · ia-custo: @AdministradorOnly por método e nenhum teste de rota fixando a trava**
+**A-140 · Baixa · ia-custo: @AdministradorOnly por método e nenhum teste de rota fixando a trava**
 
 O comentário do controller diz que a aba é só do administrador, mas a trava é por método, não de classe como em configuracao-ia e prompt. É o único dos seis controllers sem teste de metadados de rota, e a service só é testada com GESTOR. Uma rota nova no controller nasce aberta a qualquer usuário logado sem nenhum teste acusar.
 
@@ -23,9 +23,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: GET /ia-custo?ano=2026 e PUT /ia-custo/preco como GESTOR, AUXILIAR ou DESENVOLVEDOR dão 403 hoje (esperado = obtido, já medido). O risco é de regressão: remover o decorador de um método não quebra teste de rota nenhum.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-131 · Baixa · AUXILIAR não aparece em nenhum teste de permissão destes módulos nem nos testes do GestorGuard e do AdministradorGuard**
+**A-141 · Baixa · AUXILIAR não aparece em nenhum teste de permissão destes módulos nem nos testes do GestorGuard e do AdministradorGuard**
 
 Os testes de guard e de service usam ADMINISTRADOR, GESTOR e DESENVOLVEDOR; o auxiliar só é negado no teste da função pura do `shared`. Como as escritas da modelagem dependem exclusivamente do GestorGuard, 'auxiliar leva 403' não tem teste direto.
 
@@ -40,7 +40,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: PUT /modelagem/grupo/1 {titulo, rotulo} e POST /configuracao-ia como AUXILIAR: pelo código dão 403 (as duas funções não incluem AUXILIAR), que é o esperado. Nenhum teste de guard ou de service destes módulos exercita esse tipo.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

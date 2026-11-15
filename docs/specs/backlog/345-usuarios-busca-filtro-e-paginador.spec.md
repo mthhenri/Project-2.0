@@ -1,6 +1,6 @@
 # 345-usuarios-busca-filtro-e-paginador.spec.md
 
-> Task 17/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-024, A-025, A-026 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 17/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-032, A-033, A-034 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/usuario.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A listagem de Usuários busca de forma previsível: filtrar fora da página 1 mo
 
 ## Contexto
 
-**A-024 · Média · Usuários: buscar ou filtrar fora da página 1 pede a página 1, mas o paginador continua na página antiga (e às vezes dispara uma segunda requisição)**
+**A-032 · Média · Usuários: buscar ou filtrar fora da página 1 pede a página 1, mas o paginador continua na página antiga (e às vezes dispara uma segunda requisição)**
 
 `aoMudarFiltro()` zera `paginaAtual` e busca, mas a `p-table` lazy guarda o próprio `first`, que a tela não liga nem reinicia. Depois da resposta: (a) se o novo total é menor ou igual ao `first` antigo e a página anterior existe, o paginador da PrimeNG recua uma página sozinho e emite `onLazyLoad`: sai uma segunda `GET /usuario?pagina=N` e a tela mostra essa página, não a 1; (b) nos outros casos as linhas são da página 1 e o paginador indica a página antiga.
 
@@ -24,9 +24,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Com mais de 20 usuários, ir à página 3 e digitar uma busca que devolva de 11 a 20 resultados: na rede saem `GET /usuario?pagina=1&busca=…` e depois `GET /usuario?pagina=2&busca=…`; a tela fica na página 2. Com busca que devolva 21 ou mais: uma requisição, linhas da página 1 e paginador marcando a 3.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-025 · Média · Usuários: depois de "Limpar", digitar o mesmo termo de antes não busca**
+**A-033 · Média · Usuários: depois de "Limpar", digitar o mesmo termo de antes não busca**
 
 A busca passa por `debounceTime(300)` e `distinctUntilChanged()`. `limparFiltros()` zera o campo com `emitEvent: false`, então o operador continua lembrando o termo anterior. Redigitar o mesmo termo em ritmo normal emite um valor igual ao último e é descartado: nenhuma requisição sai e a lista fica sem filtro com o termo no campo.
 
@@ -37,9 +37,9 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Na tela Usuários digitar "ana" (a lista filtra), clicar "Limpar" e digitar "ana" de novo: nenhuma `GET /usuario` sai e a lista continua completa. O mesmo pelo "Limpar filtros" do estado vazio.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-**A-026 · Média · Usuários: cada busca, filtro ou recarga abre uma requisição nova sem cancelar a anterior**
+**A-034 · Média · Usuários: cada busca, filtro ou recarga abre uma requisição nova sem cancelar a anterior**
 
 `buscarUsuarios()` faz um `subscribe` novo a cada chamada. Busca, filtros, paginação, volta à aba e recarga pós-gravação podem ficar em voo ao mesmo tempo; a resposta que chegar por último vence, mesmo sendo de um pedido mais antigo, e o `finalize` da primeira já tira o estado de carregando.
 
@@ -50,7 +50,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Com a rede em "Slow 3G" no DevTools: digitar "an", esperar 300 ms e completar "ana": duas `GET /usuario?busca=` pendentes; se a primeira responder depois, a lista fica com o resultado de "an".
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

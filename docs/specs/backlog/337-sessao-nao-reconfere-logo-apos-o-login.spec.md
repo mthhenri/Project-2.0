@@ -1,6 +1,6 @@
 # 337-sessao-nao-reconfere-logo-apos-o-login.spec.md
 
-> Task 9/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-014 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 9/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-018 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/casca.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A reconferência da sessão ao abrir a casca (P-062) é pulada quando a sessão 
 
 ## Contexto
 
-**A-014 · Baixa · Logo após o login a casca pede GET /usuario/:id, que repete o usuário que o login acabou de devolver**
+**A-018 · Baixa · Logo após o login a casca pede GET /usuario/:id, que repete o usuário que o login acabou de devolver**
 
 atualizarSessao() existe para trocar o usuário guardado há dias pelo atual (P-062) e roda sempre que o layout nasce. No fluxo de login o usuário foi gravado na sessão um instante antes, pela resposta de POST /autenticacao/login, com os cinco campos que a interface usa (id, login, nomeCompleto, tipo, corAvatar).
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Fazer login: entre as requisições da casca aparece GET /usuario/:id cuja resposta não muda nada na tela.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

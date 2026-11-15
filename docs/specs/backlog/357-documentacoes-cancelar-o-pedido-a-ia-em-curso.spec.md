@@ -1,6 +1,6 @@
 # 357-documentacoes-cancelar-o-pedido-a-ia-em-curso.spec.md
 
-> Task 29/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-041 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 29/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-049 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: frontend/documentacao.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Um `POST /assistente/alterar-trecho` que ficou para trás não devolve resposta 
 
 ## Contexto
 
-**A-041 · Informativo · Documentações: novo pedido à IA ou troca de demanda não cancela o `POST /assistente/alterar-trecho` em curso**
+**A-049 · Informativo · Documentações: novo pedido à IA ou troca de demanda não cancela o `POST /assistente/alterar-trecho` em curso**
 
 Cada pedido faz um `subscribe` novo; a resposta antiga só é ignorada na chegada. O pedido pode ser aberto de novo com outro em curso, e trocar de demanda zera a proposta sem cancelar a requisição. No backend a chamada ao provedor termina e entra em custos.
 

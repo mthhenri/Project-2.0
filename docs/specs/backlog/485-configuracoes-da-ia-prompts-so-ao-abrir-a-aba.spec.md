@@ -1,6 +1,6 @@
-# 462-configuracoes-da-ia-prompts-so-ao-abrir-a-aba.spec.md
+# 485-configuracoes-da-ia-prompts-so-ao-abrir-a-aba.spec.md
 
-> Task 134/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-182 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-09.
+> Task 157/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-223 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-09.
 > Severidade: Baixa. Área: frontend/configuracao-ia.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Abrir a tela deixa de carregar os prompts antes de alguém pedir: a aba Prompts 
 
 ## Contexto
 
-**A-182 · Baixa · Abrir Configurações da IA faz 6 requisições, entre elas os 14 prompts inteiros e as versões do prompt de conversa, antes de a aba Prompts ser aberta**
+**A-223 · Baixa · Abrir Configurações da IA faz 6 requisições, entre elas os 14 prompts inteiros e as versões do prompt de conversa, antes de a aba Prompts ser aberta**
 
 O painel da aba Custos já é montado só quando ativo (`@if (abaAtiva() === "custos")`), mas o da aba Prompts é montado junto com a página e pede `GET /prompt` (14,6 KB) e `GET /prompt/CONVERSA/versoes` na abertura, com a aba Provedor à frente.
 

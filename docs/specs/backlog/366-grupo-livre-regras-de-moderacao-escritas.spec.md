@@ -1,6 +1,6 @@
 # 366-grupo-livre-regras-de-moderacao-escritas.spec.md
 
-> Task 38/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-054 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 38/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-062 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O comportamento atual do grupo livre vira regra escrita no `SYSTEM.SPEC.md`, ou 
 
 ## Contexto
 
-**A-054 · Informativo · Grupo livre sem dono: qualquer membro adiciona qualquer pessoa ativa, ninguém remove e quem entra lê todo o histórico**
+**A-062 · Informativo · Grupo livre sem dono: qualquer membro adiciona qualquer pessoa ativa, ninguém remove e quem entra lê todo o histórico**
 
 O criador não tem poder próprio (`criadorUsuarioId` só é devolvido), gestor não modera grupo livre e não existe rota de remoção. Qualquer membro renomeia, muda a aparência e adiciona qualquer pessoa ativa, inclusive quem saiu por vontade própria, que volta sem aceite e lê tudo. O grupo só é encerrado quando o último membro sai; as regras estão nos comentários do código e não foram conferidas no documento.
 
@@ -25,7 +25,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: DESENVOLVEDOR A chama `DELETE /mensagem-direta/grupo/:grupoId/membro`; DESENVOLVEDOR B chama `POST /mensagem-direta/grupo/:grupoId/membros` com `{ usuarioIds: [A] }` → 200; A volta a ser membro e `GET .../mensagens` devolve todo o histórico.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

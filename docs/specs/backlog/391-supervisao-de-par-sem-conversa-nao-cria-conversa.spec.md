@@ -1,6 +1,6 @@
 # 391-supervisao-de-par-sem-conversa-nao-cria-conversa.spec.md
 
-> Task 63/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-082 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 63/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-090 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Pedir a supervisão de dois desenvolvedores que nunca trocaram mensagem responde
 
 ## Contexto
 
-**A-082 · Média · Supervisão de par que nunca conversou: o GET grava auditoria e cria mensagem do sistema**
+**A-090 · Média · Supervisão de par que nunca conversou: o GET grava auditoria e cria mensagem do sistema**
 
 `lerConversaSupervisionada` confere só que os dois ids existem e não são gestores; não confere se há mensagem entre eles. Para um par de desenvolvedores sem conversa, a rota grava a auditoria e a mensagem do sistema "leu esta conversa", publicada aos dois, fazendo nascer uma conversa que não existia.
 

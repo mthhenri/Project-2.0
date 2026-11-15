@@ -1,6 +1,6 @@
 # 431-preco-do-modelo-na-estimativa-do-resumo.spec.md
 
-> Task 103/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-129 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 103/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-139 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta e configuracao-ia. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Resolver a contradição: custo e preço por modelo são exclusivos de administr
 
 ## Contexto
 
-**A-129 · Baixa · Preço do modelo (dado da aba Custos) chega a qualquer membro de grupo pela estimativa do resumo**
+**A-139 · Baixa · Preço do modelo (dado da aba Custos) chega a qualquer membro de grupo pela estimativa do resumo**
 
 A spec declara custo e preço por modelo exclusivos de administrador, mas `ConfiguracaoIaService.listarPrecos()` é pública e sem conferência de tipo, e o resumo de grupo a usa para devolver `custoEstimadoDolar` junto com os tokens estimados. Qualquer membro do grupo (inclusive desenvolvedor) recebe o valor em dólar; com duas estimativas de períodos diferentes dá para deduzir o preço de entrada e de saída do modelo principal do nível rápido. Não achei regra escrita que abra essa exceção.
 
@@ -24,7 +24,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como DESENVOLVEDOR membro de um grupo: POST /mensagem-direta/grupo/<id>/resumo/estimativa com o corpo de `GrupoResumoIaEstimarDto` (período e `enviaCodigo`; não li o DTO). O código responde 200 com `custoEstimadoDolar` e os tokens estimados. Pela regra 'custos exclusivos do administrador', o esperado seria não devolver valor em dólar a quem não é administrador.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

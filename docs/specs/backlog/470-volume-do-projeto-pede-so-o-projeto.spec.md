@@ -1,6 +1,6 @@
-# 447-volume-do-projeto-pede-so-o-projeto.spec.md
+# 470-volume-do-projeto-pede-so-o-projeto.spec.md
 
-> Task 119/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-148 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 142/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-188 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/projeto e frontend/projeto. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O componente de volume embutido em `/projeto/:id` deixa de pedir o volume de tod
 
 ## Contexto
 
-**A-148 · Média · Volume dentro do projeto pede o volume de todos os projetos e filtra no navegador**
+**A-188 · Média · Volume dentro do projeto pede o volume de todos os projetos e filtra no navegador**
 
 O componente de volume embutido em /projeto/:id pede GET /projeto/volume/anual?ano= (ou GET /projeto/volume?ano&mes) sem projeto e descarta os outros projetos no cliente. O DTO de consulta anual só aceita ano, então o servidor calcula o ano inteiro de todos os projetos para mostrar um. O mesmo acontece a cada troca de ano e a cada vigência gravada ou excluída.
 
@@ -24,7 +24,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como gestor, abrir /projeto/1 e escolher a visão Volume. Na rede: GET /projeto/volume/anual?ano=2026 com uma linha por projeto do sistema, embora a tela mostre só o projeto aberto.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

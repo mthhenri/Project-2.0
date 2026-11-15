@@ -1,6 +1,6 @@
 # 426-pad-o-que-o-gestor-pode-escrever.spec.md
 
-> Task 98/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-124 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 98/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-133 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/anotacao. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Separar leitura de escrita no acesso ao pad de outra pessoa. Hoje a mesma `valid
 
 ## Contexto
 
-**A-124 · Média · Pad: gestor e administrador também escrevem no pad de desenvolvedor/auxiliar, inclusive na seção PESSOAL**
+**A-133 · Média · Pad: gestor e administrador também escrevem no pad de desenvolvedor/auxiliar, inclusive na seção PESSOAL**
 
 A mesma validarAcesso serve leitura e as cinco escritas: gestor/administrador leem e sobrescrevem qualquer seção do pad de desenvolvedor e de auxiliar (não o de outro gestor/administrador). A regra de escrita não está no resumo, o comentário do controller contradiz a service e o executor da IA trata PESSOAL como 'do usuário'.
 

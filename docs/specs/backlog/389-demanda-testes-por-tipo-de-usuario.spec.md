@@ -1,6 +1,6 @@
 # 389-demanda-testes-por-tipo-de-usuario.spec.md
 
-> Task 61/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-080 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 61/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-088 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Cobrir na service o que hoje só tem teste de metadado do decorador ou nenhum: a
 
 ## Contexto
 
-**A-080 · Baixa · Regras sensíveis de demanda sem teste por tipo de usuário**
+**A-088 · Baixa · Regras sensíveis de demanda sem teste por tipo de usuário**
 
 Não há teste da service para: auxiliar recusado ao gravar descricaoCliente em alterarTextos; auxiliar editando demanda sem ser membro em alterar (caso positivo); alvo gestor ou inativo em atribuirMembro/criar; desenvolvedor em projeto inacessível nas escritas de tag e membro. Excluir e restaurar só têm teste de metadado do decorador, e o desfazer de CRIAR_DEMANDA não é testado por tipo.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: grep -n "AUXILIAR" backend/src/modules/demanda/services/*.test.ts e leitura dos títulos de teste: os casos listados não aparecem.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

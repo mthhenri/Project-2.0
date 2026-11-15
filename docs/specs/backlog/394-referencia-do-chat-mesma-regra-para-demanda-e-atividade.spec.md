@@ -1,6 +1,6 @@
 # 394-referencia-do-chat-mesma-regra-para-demanda-e-atividade.spec.md
 
-> Task 66/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-085 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 66/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-093 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Alinhar as duas pernas da referência: para o desenvolvedor, a demanda vale por 
 
 ## Contexto
 
-**A-085 · Baixa · Referência #: demanda vale por projeto, atividade vale por demanda**
+**A-093 · Baixa · Referência #: demanda vale por projeto, atividade vale por demanda**
 
 Para o desenvolvedor, o cartão e a sugestão de demanda aceitam qualquer demanda de projeto em que ele tem vínculo, mas os de atividade exigem vínculo na própria demanda da atividade. Ele referencia a demanda B e não uma atividade da mesma demanda B. É mais restritivo, não vaza; falta confirmar se é a regra do `AtividadeService`.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como DESENVOLVEDOR membro só da demanda A do projeto P: GET /api/v1/mensagem-direta/referencia/DEMANDA/<B de P> dá `acessivel: true`; GET /api/v1/mensagem-direta/referencia/ATIVIDADE/<atividade de B> dá `acessivel: false`, e POST mensagem com essa referência dá erro de negócio.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

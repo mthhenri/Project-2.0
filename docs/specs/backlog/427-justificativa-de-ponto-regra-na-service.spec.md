@@ -1,6 +1,6 @@
 # 427-justificativa-de-ponto-regra-na-service.spec.md
 
-> Task 99/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-125 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 99/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-134 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/ponto-justificativa.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A rota deixa de aceitar o que a IA recusa: o gestor justificar o próprio ponto,
 
 ## Contexto
 
-**A-125 · Baixa · Justificativa: a rota aceita o próprio ponto e qualquer alvo; a IA recusa o próprio**
+**A-134 · Baixa · Justificativa: a rota aceita o próprio ponto e qualquer alvo; a IA recusa o próprio**
 
 PontoJustificativaService.criar só valida existência do alvo, horas e duplicidade: não compara o alvo com quem pede nem confere se o alvo atua como desenvolvedor ou está ativo. A regra 'só de outra pessoa' vive apenas na ferramenta e no executor da IA, então a mesma ação tem resultado diferente pela rota.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como GESTOR: POST /ponto-justificativa {usuarioId:<próprio id>, diaData:'2026-11-10', nome:'x', descricao:'y', horasCobertas:1} → 201. Pela IA a mesma ação dá 400 'Só se justifica o ponto de outra pessoa, não o seu'. Vale também com usuarioId de outro gestor/administrador (que não tem ponto) ou de usuário inativo.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

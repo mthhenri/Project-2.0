@@ -1,6 +1,6 @@
 # 382-demanda-novo-pai-estrutural-na-service.spec.md
 
-> Task 54/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-073 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 54/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-081 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/demanda.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A regra "só demanda estrutural tem sub-demandas" vale também ao trocar o pai d
 
 ## Contexto
 
-**A-073 · Média · PUT /demanda/:id move a demanda para pai não estrutural; POST /demanda e a IA recusam**
+**A-081 · Média · PUT /demanda/:id move a demanda para pai não estrutural; POST /demanda e a IA recusam**
 
 Ao trocar demandaPaiId, DemandaService.alterar confere existência, mesmo projeto, a própria demanda e descendentes, mas não exige que o novo pai seja estrutural. A criação exige, e a ferramenta/executor de IA aplicam validarNovoPaiDaDemanda, cujo comentário diz que a tela é quem garante a regra na rota. Quem edita a demanda (condutor ou desenvolvedor membro) coloca uma demanda dentro de uma demanda de trabalho pela API.
 
@@ -23,7 +23,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Como DESENVOLVEDOR membro da demanda 20 (ou GESTOR): PUT /api/demanda/20 com {"demandaPaiId": <id de demanda de trabalho, estrutural=false, do mesmo projeto>}. Esperado: 400 "Apenas demandas estruturais podem ter sub-demandas". O código responde 200 e grava o pai.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

@@ -1,6 +1,6 @@
 # 360-canal-de-demanda-e-de-projeto-para-o-auxiliar.spec.md
 
-> Task 32/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-045 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 32/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-053 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: backend/mensagem-direta e frontend/demanda. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ O auxiliar, que vê e edita qualquer demanda, deixa de receber 403 a cada demand
 
 ## Contexto
 
-**A-045 · Média · AUXILIAR recebe 403 no chat de demanda e de projeto apesar da visão total**
+**A-053 · Média · AUXILIAR recebe 403 no chat de demanda e de projeto apesar da visão total**
 
 O acesso ao canal decide "por tipo" com `temPermissaoDeGestor`, que não inclui o auxiliar; ele só entra com linha em `demanda_usuario`, como o desenvolvedor. No mesmo módulo a referência a demanda e a gravação do resumo usam `temVisibilidadeTotal`/`podeEditarDemanda`, que incluem o auxiliar: ele cita e edita qualquer demanda, mas não abre nem cria o chat dela. A regra do auxiliar no canal não está escrita no resumo de referência.
 

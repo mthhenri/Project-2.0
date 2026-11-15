@@ -1,6 +1,6 @@
 # 441-atividade-texto-da-demanda-sem-reler-ao-salvar.spec.md
 
-> Task 113/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-142 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-12.
+> Task 113/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-153 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-12.
 > Severidade: Baixa. Área: frontend/atividade.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Salvar um texto da demanda pelo painel ao lado da lista de atividades atualiza o
 
 ## Contexto
 
-**A-142 · Baixa · Demanda ao lado da lista de atividades: demanda inteira para um texto, relida depois de salvar**
+**A-153 · Baixa · Demanda ao lado da lista de atividades: demanda inteira para um texto, relida depois de salvar**
 
 Abrir um dos ícones de texto da linha pede GET /demanda/:id completo; ao salvar, o painel zera a demanda e pede tudo de novo, embora o editor já tenha o texto gravado. O chip 'Demanda: X' com a lista vazia também pede a demanda inteira só pelo nome.
 
@@ -21,7 +21,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: /atividade: clicar no ícone de descrição técnica de uma linha: GET /demanda/:id; editar e salvar: a gravação do editor seguida de outro GET /demanda/:id, com o painel voltando ao estado de carga. Não exercitado na medição.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

@@ -1,6 +1,6 @@
-# 452-projeto-desfazer-exclusao-reinsere-sem-recarregar.spec.md
+# 475-projeto-desfazer-exclusao-reinsere-sem-recarregar.spec.md
 
-> Task 124/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-153 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 147/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-193 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: frontend/projeto.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Depois de `PATCH /projeto/:id/restaurar`, o projeto volta para a lista local (co
 
 ## Contexto
 
-**A-153 · Baixa · Desfazer a exclusão de um projeto recarrega a lista inteira**
+**A-193 · Baixa · Desfazer a exclusão de um projeto recarrega a lista inteira**
 
 Depois do PATCH /projeto/:id/restaurar a listagem chama buscarProjetos() e pede de novo GET /projeto?pagina=1&itensPorPagina=100. O card removido está na closure (projeto e listaAnterior) e a tela de Tags, no mesmo fluxo, só reinsere o item local.
 
@@ -20,7 +20,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Em /projeto, excluir um projeto pelo menu do card e clicar em Desfazer no toast. Na rede: DELETE /projeto/:id, PATCH /projeto/:id/restaurar e GET /projeto?pagina=1&itensPorPagina=100.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

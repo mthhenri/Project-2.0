@@ -1,6 +1,6 @@
 # 434-custos-da-ia-documento-e-teste-de-prompt.spec.md
 
-> Task 106/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-133 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 106/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-143 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Informativo. Área: docs e backend/ia-custo. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Atualizar o `SYSTEM.SPEC.md` e o comentário de `IaCustoService`, que ainda dize
 
 ## Contexto
 
-**A-133 · Informativo · Spec e comentário da service de custos dizem que só o chat entra na conta, mas o código já registra chamadas fora do chat; o teste de prompt não é registrado**
+**A-143 · Informativo · Spec e comentário da service de custos dizem que só o chat entra na conta, mas o código já registra chamadas fora do chat; o teste de prompt não é registrado**
 
 A linha do módulo `ia-custo` na spec e o JSDoc de `IaCustoService` afirmam que o que não passa pelo chat não aparece nos custos. `IaUsoService` (task 260) grava essas chamadas como mensagem de uso que a aba soma. Já o teste de prompt (até 10 chamadas ao provedor por pedido) não usa `IaUsoService`.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Leitura de código, sem execução: como ADMINISTRADOR, POST /prompt/CONVERSA/testar {conteudo, narrativas:['x']} e depois GET /ia-custo?ano=<ano>&mes=<mês> — pelo código os totais não mudam, embora o provedor tenha sido chamado duas vezes.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

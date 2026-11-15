@@ -1,6 +1,6 @@
 # 405-demanda-botao-do-chat-sem-pergunta-a-cada-selecao.spec.md
 
-> Task 77/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-098, A-099 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
+> Task 77/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-106, A-107, A-108 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-02.
 > Severidade: Média. Área: frontend/demanda e mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ A seleção de uma demanda volta a fazer no máximo 4 requisições (decisão da
 
 ## Contexto
 
-**A-098 · Média · Botão de chat pergunta ao servidor em toda seleção e recebe 403 para auxiliar e desenvolvedor que não são membros**
+**A-106 · Média · Botão de chat pergunta ao servidor em toda seleção e recebe 403 para auxiliar e desenvolvedor que não são membros**
 
 A quinta requisição da seleção vem do botão de chat: um effect sobre alvoId chama GET /mensagem-direta/canal/demanda/:id a cada demanda, sem guarda de permissão e sem guardar a resposta (voltar a uma demanda já vista pergunta de novo). O backend só aceita gestor/administrador ou membro da demanda, então auxiliar (vê todas, raramente é membro) e desenvolvedor não-membro recebem 403 no uso normal; é silencioso (o botão some), mas a ida ao servidor acontece. O que decide o acesso já está na tela: tipo do usuário na sessão e membros vindos do /detalhe.
 
@@ -27,7 +27,7 @@ Como observar: Entrar como auxiliar (ou desenvolvedor) e clicar em demandas de q
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-13/14 (administrador): abrir `/demanda` com projeto = 10 requisições; selecionar uma demanda = 5 (`/plano/demanda/:id`, `/demanda/:id/detalhe`, `/demanda/:id/arvore`, `/atividade?demandaId`, `/mensagem-direta/canal/demanda/:id`); voltar a uma demanda já vista = as mesmas 5. Como auxiliar, a quinta responde 403 em toda seleção.
 
-**A-099 · Média · Botão do chat da demanda/projeto pede o canal a cada demanda selecionada, sem guardar**
+**A-107 · Média · Botão do chat da demanda/projeto pede o canal a cada demanda selecionada, sem guardar**
 
 `MensagemDiretaCanalBotaoComponent` faz `GET /mensagem-direta/canal/{demanda|projeto}/:id` num `effect` a cada troca de alvo, só para escolher o rótulo "Abrir chat" ou "Criar chat". Não há memória por alvo: voltar a uma demanda já vista pede de novo. É a quinta requisição de cada seleção de demanda na medição, e o detalhe do projeto faz duas (projeto e demanda aberta).
 
@@ -41,6 +41,22 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 - .artifacts/revisao-requisicoes-e-permissoes/trafego/ADMINISTRADOR.txt:87 — `GET /mensagem-direta/canal/demanda/2` ao selecionar a demanda; :119 e :125 — `canal/projeto/1` e `canal/demanda/7` no detalhe do projeto
 
 Como observar: Tela /demanda?projetoId=DEMO: clicar numa demanda, em outra e voltar à primeira. Em cada clique a aba de rede mostra GET /mensagem-direta/canal/demanda/ID, inclusive na volta.
+
+Verificação na auditoria: medido na aplicação rodando em 2026-11-13/14 (administrador): abrir `/demanda` com projeto = 10 requisições; selecionar uma demanda = 5 (`/plano/demanda/:id`, `/demanda/:id/detalhe`, `/demanda/:id/arvore`, `/atividade?demandaId`, `/mensagem-direta/canal/demanda/:id`); voltar a uma demanda já vista = as mesmas 5. Como auxiliar, a quinta responde 403 em toda seleção.
+
+**A-108 · Média · Botão de canal consulta o backend para todos os tipos e usa o 403 como resposta; auxiliar não membro sempre recebe 403**
+
+O app-mensagem-direta-canal-botao é renderizado para qualquer tipo e chama GET /mensagem-direta/canal/... a cada alvo, tratando 403 como estado 'SEM_ACESSO'. No backend só o membro ou quem tem temPermissaoDeGestor lê o canal; o auxiliar tem visão total mas não é membro, então recebe 403 em toda demanda e projeto abertos. A requisição usa comFeedbackProprioEErroTratado, por isso não há toast, só a chamada recusada.
+
+Evidência no código (linhas de 2026-11-13; confira antes de editar):
+
+- frontend/src/app/modules/projeto/pages/projeto-detalhe/projeto-detalhe.page.html:107-112 e 136-140 — o botão aparece nos dois ramos (com e sem podeEditarDemanda), sem checar tipo ou membresia
+- frontend/src/app/modules/mensagem-direta/components/mensagem-direta-canal-botao/mensagem-direta-canal-botao.component.ts:48-60 — effect chama recuperarCanal sempre que tipo/alvoId mudam
+- frontend/src/app/modules/mensagem-direta/components/mensagem-direta-canal-botao/mensagem-direta-canal-botao.component.ts:66 — status 403 vira situacao 'SEM_ACESSO'
+- frontend/src/app/modules/mensagem-direta/services/mensagem-direta-grupo.service.ts:154-155 — recuperarCanal usa comFeedbackProprioEErroTratado()
+- backend/src/modules/mensagem-direta/services/grupo.service.ts:660 — leitorPorTipo exige temPermissaoDeGestor(usuarioAtivo.tipo)
+
+Como observar: Como auxiliar não atribuído, abrir /projeto/<id> ou uma demanda: a aba Rede mostra GET /mensagem-direta/canal/... com 403 a cada abertura.
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-13/14 (administrador): abrir `/demanda` com projeto = 10 requisições; selecionar uma demanda = 5 (`/plano/demanda/:id`, `/demanda/:id/detalhe`, `/demanda/:id/arvore`, `/atividade?demandaId`, `/mensagem-direta/canal/demanda/:id`); voltar a uma demanda já vista = as mesmas 5. Como auxiliar, a quinta responde 403 em toda seleção.
 

@@ -1,6 +1,6 @@
 # 344-pad-encerrar-zera-o-estado.spec.md
 
-> Task 16/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-022, A-023 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 16/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achados A-030, A-031 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Média. Área: frontend/pad.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Depois que um lugar que mostrava o pad é destruído (sair da tela Usuários, sa
 
 ## Contexto
 
-**A-022 · Média · Pad: depois de sair da tela Usuários (ou de sair e entrar de novo na mesma aba), o pad de Documentações e da aba Anotações do chat para de gravar sozinho**
+**A-030 · Média · Pad: depois de sair da tela Usuários (ou de sair e entrar de novo na mesma aba), o pad de Documentações e da aba Anotações do chat para de gravar sozinho**
 
 `UsuarioAnotacoesDialogComponent` chama `pad.encerrar()` ao ser destruído. Há duas instâncias (topbar e tela Usuários); a da tela é destruída a cada saída de `/usuario`. `encerrar()` cancela a assinatura `valueChanges` de cada seção, mas deixa `secoes()` e `usuarioId()` como estavam. `garantirCarregado()` não relê quando é o mesmo usuário com seções em memória. O painel passa a mostrar seções sem assinatura: digitar não agenda o PUT, o estado não vira "Editando…" e o botão Salvar fica desabilitado. Só Ctrl+S, abrir e fechar a gaveta ou sair do painel do chat gravam.
 
@@ -28,7 +28,7 @@ Como observar: Como gestor: teclar `n` (abre o próprio pad) e fechar; entrar em
 
 Verificação na auditoria: código lido pelo agente principal (`usuario-anotacoes-dialog.component.ts:47` chama `pad.encerrar()` ao destruir; `pad.service.ts:152` para o relógio e encerra as seções sem zerar `secoes` nem `usuarioId`). O efeito na tela não foi reproduzido: um teste de 12 s em Documentações não gravou nem no caminho direto nem depois de passar por Usuários, então a gravação automática tem prazo maior que o do teste.
 
-**A-023 · Média · Pad: o texto das seções fica em memória depois de sair; se a carga do pad do próximo usuário falhar, o painel mostra o pad do anterior**
+**A-031 · Média · Pad: o texto das seções fica em memória depois de sair; se a carga do pad do próximo usuário falhar, o painel mostra o pad do anterior**
 
 `logout()` navega para `/autenticacao` sem recarregar a página e ninguém limpa `PadService` (`providedIn: 'root'`). No login seguinte na mesma aba, `garantirCarregado(B)` troca `usuarioId` e chama `carregar(B)`; se o `GET /anotacao` falhar, o `error` não limpa `secoes` e `app-pad-painel` renderiza as seções do usuário anterior sob o título "Minhas anotações".
 

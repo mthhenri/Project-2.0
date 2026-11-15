@@ -1,6 +1,6 @@
 # 393-supervisao-e-o-gestor-rebaixado.spec.md
 
-> Task 65/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-084 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 65/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-092 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/mensagem-direta. **Tem decisão do autor pendente** (seção própria): não implementar antes dela.
 
 ## Objetivo
@@ -9,7 +9,7 @@ Decidir o que vale para o histórico de um gestor que virou desenvolvedor ou aux
 
 ## Contexto
 
-**A-084 · Baixa · Gestor rebaixado: conversas antigas dele viram supervisionáveis**
+**A-092 · Baixa · Gestor rebaixado: conversas antigas dele viram supervisionáveis**
 
 A elegibilidade usa o tipo de agora dos participantes, na lista e na leitura. Se um gestor passa a desenvolvedor ou auxiliar, todo o histórico dele com desenvolvedores, escrito quando era gestor, fica legível pela supervisão, contra "conversa que envolve gestor é privada". O próprio comentário do repository diz "privada para sempre" e "o tipo é o de hoje" na mesma frase.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Gestor G (id 7) conversa com o desenvolvedor 4; um administrador altera G para DESENVOLVEDOR; outro GESTOR faz GET /api/v1/mensagem-direta/supervisao/conversa/4-7. Esperado pela regra escrita: 403 (conversa privada). O código responde 200 com todo o histórico.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Decisão do autor pendente
 

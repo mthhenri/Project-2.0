@@ -110,4 +110,8 @@ await browser.newContext({ viewport: { width: 1366, height: 768 } });
 - **Provar um bug de "recarrega a página"**: plante `window.__sentinela` e confira depois do clique; reverta o arquivo corrigido só para a contraprova
   (`cp` antes, `cp` de volta) e confirme com `git status` que nada ficou.
 
+- **`ng serve` sem o proxy devolve o `index.html` para toda chamada à API** (revisão de requisições, 2026-11-13): subir o front com `npx ng serve` direto, sem `--proxy-config proxy.conf.json`, faz `/api/...` responder
+  200 com HTML (o fallback da SPA) e o stream de eventos responder 404. A tela abre vazia e uma medição de tráfego parece "funcionar". Suba por `npm run frontend:dev` (o script já passa o proxy) ou acrescente o
+  `--proxy-config`, e confira antes de medir: `curl -s -o /dev/null -w '%{content_type}' localhost:4200/api/v1/execucao/ativa` tem de responder `application/json`.
+
 Entra aqui na hora em que morder: sintoma → causa → como evitar.

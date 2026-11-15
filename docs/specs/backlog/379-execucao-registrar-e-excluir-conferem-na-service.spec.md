@@ -1,6 +1,6 @@
 # 379-execucao-registrar-e-excluir-conferem-na-service.spec.md
 
-> Task 51/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-070 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
+> Task 51/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-078 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`.
 > Severidade: Baixa. Área: backend/execucao.
 
 ## Objetivo
@@ -9,7 +9,7 @@
 
 ## Contexto
 
-**A-070 · Baixa · ExecucaoService.registrar e excluir não conferem tipo nem dono: a trava é só o decorador da rota**
+**A-078 · Baixa · ExecucaoService.registrar e excluir não conferem tipo nem dono: a trava é só o decorador da rota**
 
 As duas funções recebem o usuário e não o usam; quem barra o desenvolvedor é o `@ExigePermissao` do controller. Os executores da IA chamam as mesmas funções: o de registro repete a verificação por conta própria e os de iniciar/descrever chamam `excluir` com o token do desenvolvedor apoiados no `recuperar` anterior. Um chamador novo que esqueça a verificação abre a ação; em atividade a regra mora também na service.
 
@@ -24,7 +24,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Pela API não há falha hoje: desenvolvedor em POST /api/v1/execucao/registro e DELETE /api/v1/execucao/:id recebe 403 do guard. O risco aparece na leitura: chamar `execucaoService.excluir({ id }, usuarioDesenvolvedor)` direto exclui execução de qualquer pessoa.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 

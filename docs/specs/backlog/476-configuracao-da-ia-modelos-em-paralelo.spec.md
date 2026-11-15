@@ -1,6 +1,6 @@
-# 453-configuracao-da-ia-modelos-em-paralelo.spec.md
+# 476-configuracao-da-ia-modelos-em-paralelo.spec.md
 
-> Task 125/135 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-154 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-09.
+> Task 148/158 da guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md`. Origem: achado A-194 do dossiê `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`; auditoria anterior: R-09.
 > Severidade: Baixa. Área: frontend/configuracao-ia.
 
 ## Objetivo
@@ -9,7 +9,7 @@
 
 ## Contexto
 
-**A-154 · Baixa · Configurações da IA: GET /ia/modelos só começa depois que as três leituras da página terminam**
+**A-194 · Baixa · Configurações da IA: GET /ia/modelos só começa depois que as três leituras da página terminam**
 
 A aba Provedor pede a lista de modelos no próprio ngOnInit, mas ela só é montada quando jaCarregou() vira verdadeiro, isto é, depois do forkJoin de GET /configuracao-ia, /configuracao-ia/versoes e /ia/estado. A consulta não depende dessas respostas e poderia sair junto. A medição confirma /ia/modelos como a última das seis.
 
@@ -22,7 +22,7 @@ Evidência no código (linhas de 2026-11-13; confira antes de editar):
 
 Como observar: Abrir /configuracao-ia com a rede limitada (Slow 3G). GET /ia/modelos só aparece depois que as três primeiras respondem; o seletor de modelo fica em carregamento nesse intervalo.
 
-Verificação na auditoria: código, por um auditor; linhas citadas conferidas pelo agente principal.
+Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
 ## Entregáveis
 
