@@ -86,6 +86,14 @@ describe('AtividadeListagemPage: busca e filtros na URL', () => {
         expect(montado.componente.filtrosAtivos()).toBe(5);
     });
 
+    it('o filtro de usuário oferece só quem tem atividade (e está ativo)', async () => {
+        const { montado } = await montarPagina();
+        const consulta = esperarRequisicao(montado.http, 'GET', '/usuario');
+        expect(consulta.request.params.get('comAtividades')).toBe('true');
+        expect(consulta.request.params.get('ativo')).toBe('true');
+        await carregar(montado);
+    });
+
     it('desenvolvedor não filtra por usuário: o parâmetro da URL é ignorado', async () => {
         const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR, consulta: { usuarioId: '3' } });
         expect(esperarRequisicao(montado.http, 'GET', '/atividade').request.params.has('usuarioId')).toBe(false);

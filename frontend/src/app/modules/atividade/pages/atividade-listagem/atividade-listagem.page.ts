@@ -810,7 +810,8 @@ export class AtividadeListagemPage implements OnInit {
     // ---------------------------------------------------------------------------
 
     private carregarUsuarios(): void {
-        this.usuarioService.listar({ ativo: true, allRows: true }).subscribe({
+        // O filtro só oferece quem tem atividade: usuário sem nenhuma daria sempre uma lista vazia.
+        this.usuarioService.listar({ ativo: true, comAtividades: true, allRows: true }).subscribe({
             next: (resposta) => {
                 if (resposta.sucesso && resposta.dados) this.usuarios.set(resposta.dados.itens);
             },

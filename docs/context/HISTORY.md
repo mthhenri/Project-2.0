@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-11-16 — Listagem e criação de atividade: ordem, filtro de usuário e formulário
+
+Pedido do autor, sem spec. **Ordem** da listagem de atividades: nome do usuário, prioridade, criação (a mais nova primeiro; antes a prioridade vinha antes do usuário). **Filtro de usuário** só com quem tem atividade não excluída: `UsuarioListarDto.comAtividades` (`GET /usuario?comAtividades=true`, `EXISTS` no repository). **Criação de atividade:** sem a escolha de tags (só depois de criada; a API segue aceitando `tagIds`) e a prioridade na linha do nome, em 70/30. O filtro continua restrito a usuários ativos, então o dono inativo com atividades não aparece nele.
+
+**Verificação.** Backend 1861 unitários e 544 de integração, `shared` 363, frontend 238 arquivos (2895 testes), `lint:tudo` e builds sem erro; ao vivo num stack isolado (removido): ordem conferida por API e na tela, filtro sem o usuário sem atividade, diálogo com nome e prioridade em 70/30 a 1366×768 e 720×1280. Sem conferência do tema escuro nem dos outros três formatos.
+
 ## 2026-11-16 — Conta própria, login por tipo, pad e documentações, parte 5 (tasks 354, 384, 425, 426, 428)
 
 Decisões do autor: **354** (ninguém inativa nem exclui a própria conta pela API), **384** (por tela: criação de atividade e Documentações só com as demandas de que a pessoa é membro; visão de demandas do projeto com todas), **425** (o `login` só para quem tem permissão de gestor), **426** (o gestor só lê o pad de outra pessoa) e **428** (promover a gestor só sem demanda nem execução em andamento).

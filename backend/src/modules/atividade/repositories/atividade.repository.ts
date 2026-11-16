@@ -412,8 +412,8 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
                 WHERE
                     ${clausulaWhere}
                 ORDER BY
-                    tipo_atividade_prioridade.ordem ASC,
                     usuario.nome_completo ASC,
+                    tipo_atividade_prioridade.ordem ASC,
                     atividade.created_date DESC,
                     atividade.nome ASC ${clausulaPaginacao}
             `,

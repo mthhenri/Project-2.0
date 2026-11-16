@@ -115,6 +115,20 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
             parametros.ativo = filtros.ativo;
         }
 
+        if (filtros.comAtividades) {
+            condicoes.push(`
+                EXISTS (
+                    SELECT
+                        1
+                    FROM
+                        atividade
+                    WHERE
+                        atividade.usuario_id = usuario.id
+                        AND atividade.is_deleted = false
+                )
+            `);
+        }
+
         if (filtros.busca !== undefined && filtros.busca.trim() !== '') {
             // Sem permissão de gestor o login não aparece, então a busca também não o usa (senão daria para descobri-lo por tentativa).
             condicoes.push(filtros.incluiLogin

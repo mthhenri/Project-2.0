@@ -7,7 +7,7 @@ import {
 } from '../../../testes/fabricas';
 import { AtividadeRepository } from './atividade.repository';
 
-// Listagem (ordem pela prioridade, filtros da URL), tags, soft delete e restauração da atividade (SYSTEM.SPEC.md §12/§13 e SCHEMA.md).
+// Listagem (ordem por executor, prioridade e criação; filtros da URL), tags, soft delete e restauração da atividade (SYSTEM.SPEC.md §12/§13 e SCHEMA.md).
 
 const ids = (itens: Array<{ id: number }>) => itens.map((item) => item.id);
 const repositorioDe = (conexao: ConexaoTeste) => criarRepositorio(AtividadeRepository, conexao);
@@ -38,7 +38,7 @@ testarComBanco('listar: ordena pela ordem da prioridade, da mais para a menos ur
     assert.deepEqual(itens.map((item) => item.prioridade.ordem), [1, 2, 3, 4, 5]);
 });
 
-testarComBanco('listar: dentro da mesma prioridade ordena por executor, depois a mais nova primeiro, depois por nome', async (conexao) => {
+testarComBanco('listar: dentro do mesmo executor e da mesma prioridade, a mais nova primeiro, depois por nome', async (conexao) => {
     const { demanda } = await cenario(conexao);
     const ana = await criarDesenvolvedor(conexao, { nomeCompleto: 'Ana' });
     const bruno = await criarDesenvolvedor(conexao, { nomeCompleto: 'Bruno' });
@@ -53,13 +53,13 @@ testarComBanco('listar: dentro da mesma prioridade ordena por executor, depois a
     assert.deepEqual(ids(itens), [anaNovaA.id, anaNovaB.id, anaAntiga.id, doBruno.id]);
 });
 
-testarComBanco('listar: a prioridade vence o executor (urgente de quem vem depois no alfabeto aparece antes)', async (conexao) => {
+testarComBanco('listar: o executor vem antes da prioridade (a baixa de quem vem antes no alfabeto aparece antes da urgente de quem vem depois)', async (conexao) => {
     const { demanda } = await cenario(conexao);
     const ana = await criarDesenvolvedor(conexao, { nomeCompleto: 'Ana' });
     const zeca = await criarDesenvolvedor(conexao, { nomeCompleto: 'Zeca' });
     const daAna = await criarAtividade(conexao, { demandaId: demanda.id, usuarioId: ana.id, prioridadeCodigo: 'BAIXA' });
     const doZeca = await criarAtividade(conexao, { demandaId: demanda.id, usuarioId: zeca.id, prioridadeCodigo: 'URGENTE' });
-    assert.deepEqual(ids((await repositorioDe(conexao).listar({ demandaId: demanda.id })).itens), [doZeca.id, daAna.id]);
+    assert.deepEqual(ids((await repositorioDe(conexao).listar({ demandaId: demanda.id })).itens), [daAna.id, doZeca.id]);
 });
 
 testarComBanco('listar: devolve a prioridade como objeto com codigo, descricao, ordem e cor', async (conexao) => {

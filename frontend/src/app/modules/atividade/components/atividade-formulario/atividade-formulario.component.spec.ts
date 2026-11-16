@@ -14,7 +14,6 @@ const DEMANDAS = [
     { id: 10, nome: 'Login', projetoId: 3, nomeProjeto: 'Portal' },
     { id: 11, nome: 'Relatório', projetoId: 3, nomeProjeto: 'Portal' },
 ];
-const TAGS = [{ id: 1, nome: 'Backend', cor: '#112233' }, { id: 2, nome: 'Frontend', cor: '#445566' }];
 const PRIORIDADES = [{ codigo: TipoAtividadePrioridadeEnum.INDEFINIDA, descricao: 'Indefinida', ordem: 5, cor: '#999999' }];
 const USUARIOS = [{ id: 2, nomeCompleto: 'Ana', login: 'ana', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true }];
 
@@ -29,24 +28,22 @@ async function abrir(tipo: TipoUsuarioEnum, entradas: Record<string, unknown> = 
 async function responderAbertura(montado: Montado, gestor: boolean): Promise<void> {
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), PRIORIDADES);
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/atribuidas'), DEMANDAS);
-    responderSucesso(esperarRequisicao(montado.http, 'GET', '/tag'), TAGS);
     if (gestor) responderSucesso(esperarRequisicao(montado.http, 'GET', '/usuario'), { itens: USUARIOS, totalItens: 1, paginaAtual: 1, itensPorPagina: 100, totalPaginas: 1 });
     await montado.atualizar();
 }
 
 describe('AtividadeFormularioComponent — abrir', () => {
-    it('gestor: carrega demandas atribuídas, tags, prioridades e a lista de usuários ativos para escolher o responsável', async () => {
+    it('gestor: carrega demandas atribuídas, prioridades e a lista de usuários ativos para escolher o responsável', async () => {
         const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
         const consultaUsuarios = esperarRequisicao(montado.http, 'GET', '/usuario');
         expect(consultaUsuarios.request.params.get('ativo')).toBe('true');
         consultaUsuarios.flush({ sucesso: true, dados: { itens: USUARIOS, totalItens: 1, paginaAtual: 1, itensPorPagina: 100, totalPaginas: 1 }, mensagem: '' });
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), PRIORIDADES);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/atribuidas'), DEMANDAS);
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/tag'), TAGS);
         await montado.atualizar();
 
         expect(montado.componente.demandasAtribuidas().map((demanda) => demanda.rotulo)).toEqual(['Portal - Login', 'Portal - Relatório']);
-        expect(montado.componente.todasAsTags()).toHaveLength(2);
+        montado.http.expectNone((requisicao) => requisicao.url.endsWith('/tag'));
         expect(montado.componente.usuarios().map((usuario) => usuario.id)).toEqual([2]);
         expect(montado.elemento.querySelector('#nova-usuario')).not.toBeNull();
     });
@@ -59,11 +56,11 @@ describe('AtividadeFormularioComponent — abrir', () => {
         expect(montado.elemento.querySelector('#nova-prioridade')).not.toBeNull();
     });
 
-    it('abre limpo: status Desenvolvendo, prioridade Indefinida, sem tags; a demanda inicial vem preenchida', async () => {
+    it('abre limpo: status Desenvolvendo, prioridade Indefinida; a demanda inicial vem preenchida', async () => {
         const { montado } = await abrir(TipoUsuarioEnum.GESTOR, { demandaIdInicial: 11 });
         await responderAbertura(montado, true);
         expect(montado.componente.formulario.getRawValue()).toEqual({
-            nome: '', demandaId: 11, usuarioId: null, status: TipoAtividadeStatusEnum.DESENVOLVENDO, prioridade: TipoAtividadePrioridadeEnum.INDEFINIDA, tagIds: [],
+            nome: '', demandaId: 11, usuarioId: null, status: TipoAtividadeStatusEnum.DESENVOLVENDO, prioridade: TipoAtividadePrioridadeEnum.INDEFINIDA,
         });
     });
 
@@ -103,7 +100,7 @@ describe('AtividadeFormularioComponent — validação', () => {
 });
 
 describe('AtividadeFormularioComponent — criar', () => {
-    it('desenvolvedor: envia o corpo sem usuarioId (a atividade é dele) e sem tagIds quando nenhuma foi marcada', async () => {
+    it('desenvolvedor: envia o corpo sem usuarioId (a atividade é dele) e sem tags', async () => {
         const { montado, criadas } = await abrir(TipoUsuarioEnum.DESENVOLVEDOR, { demandaIdInicial: 10 });
         await responderAbertura(montado, false);
         montado.componente.formulario.patchValue({ nome: 'Nova atividade', usuarioId: 2 });
@@ -116,17 +113,13 @@ describe('AtividadeFormularioComponent — criar', () => {
         expect(criadas).toEqual([{ id: 90, criarOutra: false }]);
     });
 
-    it('gestor: envia o responsável escolhido, as tags marcadas, o status e a prioridade', async () => {
+    it('gestor: envia o responsável escolhido, o status e a prioridade (sem tags: elas entram depois de criada)', async () => {
         const { montado } = await abrir(TipoUsuarioEnum.GESTOR, { demandaIdInicial: 10 });
         await responderAbertura(montado, true);
-        const controles = montado.componente.formulario.controls;
         montado.componente.formulario.patchValue({ nome: 'Para a Ana', usuarioId: 2, status: TipoAtividadeStatusEnum.PLANEJADA, prioridade: TipoAtividadePrioridadeEnum.INDEFINIDA });
-        montado.componente.alternarTagSelecao(controles.tagIds, 1);
-        montado.componente.alternarTagSelecao(controles.tagIds, 2);
-        montado.componente.alternarTagSelecao(controles.tagIds, 2);
         montado.componente.salvar();
         expect(esperarRequisicao(montado.http, 'POST', '/atividade').request.body).toEqual({
-            demandaId: 10, nome: 'Para a Ana', status: 'PLANEJADA', prioridade: 'INDEFINIDA', usuarioId: 2, tagIds: [1],
+            demandaId: 10, nome: 'Para a Ana', status: 'PLANEJADA', prioridade: 'INDEFINIDA', usuarioId: 2,
         });
     });
 
@@ -165,15 +158,15 @@ describe('AtividadeFormularioComponent — criar', () => {
         expect(oferta?.rotulo).toBe('Ver atividade');
     });
 
-    it('"criar outra" limpa só o nome e preserva demanda, status, tags e responsável', async () => {
+    it('"criar outra" limpa só o nome e preserva demanda, status, prioridade e responsável', async () => {
         const { montado, criadas } = await abrir(TipoUsuarioEnum.GESTOR, { demandaIdInicial: 10 });
         await responderAbertura(montado, true);
-        montado.componente.formulario.patchValue({ nome: 'Primeira', usuarioId: 2, status: TipoAtividadeStatusEnum.PLANEJADA, tagIds: [1] });
+        montado.componente.formulario.patchValue({ nome: 'Primeira', usuarioId: 2, status: TipoAtividadeStatusEnum.PLANEJADA, prioridade: TipoAtividadePrioridadeEnum.ALTA });
         montado.componente.salvar(true);
         responderSucesso(esperarRequisicao(montado.http, 'POST', '/atividade'), { id: 92 }, 201);
         await montado.atualizar();
         expect(criadas).toEqual([{ id: 92, criarOutra: true }]);
-        expect(montado.componente.formulario.getRawValue()).toMatchObject({ nome: '', demandaId: 10, usuarioId: 2, status: TipoAtividadeStatusEnum.PLANEJADA, tagIds: [1] });
+        expect(montado.componente.formulario.getRawValue()).toMatchObject({ nome: '', demandaId: 10, usuarioId: 2, status: TipoAtividadeStatusEnum.PLANEJADA, prioridade: TipoAtividadePrioridadeEnum.ALTA });
     });
 
     it('enquanto salva o estado fica ocupado; erro do backend não emite nada e libera o formulário', async () => {
@@ -189,31 +182,26 @@ describe('AtividadeFormularioComponent — criar', () => {
     });
 });
 
-describe('AtividadeFormularioComponent — tags e status', () => {
-    it('clicar numa tag a marca e desmarca, e o botão de status troca o status do formulário', async () => {
+describe('AtividadeFormularioComponent — status e layout', () => {
+    it('o botão de status troca o status do formulário; não há escolha de tags', async () => {
         const { montado } = await abrir(TipoUsuarioEnum.DESENVOLVEDOR);
         await responderAbertura(montado, false);
-        const chips = Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.nova-atividade__tag-chip'));
-        expect(chips.map((chip) => chip.textContent?.trim())).toEqual(['Backend', 'Frontend']);
-        chips[0].click();
-        await montado.atualizar();
-        expect(montado.componente.formulario.controls.tagIds.value).toEqual([1]);
-        expect(chips[0].classList.contains('nova-atividade__tag-chip--ativo')).toBe(true);
-        chips[0].click();
-        await montado.atualizar();
-        expect(montado.componente.formulario.controls.tagIds.value).toEqual([]);
+        expect(montado.elemento.querySelector('.nova-atividade__tag-chip')).toBeNull();
+        expect(montado.elemento.textContent).not.toContain('Tags');
 
         const segmentos = Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.nova-atividade__segmento'));
         segmentos.find((segmento) => segmento.textContent?.trim() === 'Pendente')!.click();
         expect(montado.componente.formulario.controls.status.value).toBe(TipoAtividadeStatusEnum.PENDENTE);
     });
 
-    it('sem tags cadastradas mostra o estado vazio', async () => {
+    it('nome e prioridade dividem a mesma linha, em 70/30', async () => {
         const { montado } = await abrir(TipoUsuarioEnum.DESENVOLVEDOR);
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), PRIORIDADES);
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/atribuidas'), DEMANDAS);
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/tag'), []);
-        await montado.atualizar();
-        expect(montado.elemento.textContent).toContain('Nenhuma tag cadastrada');
+        await responderAbertura(montado, false);
+        const nome = montado.elemento.querySelector('.nova-atividade__campo--nome')!;
+        const prioridade = montado.elemento.querySelector('.nova-atividade__campo--prioridade')!;
+        expect(nome.parentElement).toBe(prioridade.parentElement);
+        expect(nome.querySelector('#nova-nome')).not.toBeNull();
+        expect(prioridade.querySelector('#nova-prioridade')).not.toBeNull();
+        expect(nome.compareDocumentPosition(prioridade) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 });

@@ -20,7 +20,6 @@ async function abrirDialog(demandaId: number | null = null): Promise<{ montado: 
     await montado.atualizar();
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), []);
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/atribuidas'), DEMANDAS);
-    responderSucesso(esperarRequisicao(montado.http, 'GET', '/tag'), []);
     await montado.atualizar();
     return { montado, criacoes };
 }
@@ -62,7 +61,6 @@ describe('AtividadeNovaDialogComponent', () => {
         montado.componente.abrir(10);
         await montado.atualizar();
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/atribuidas'), DEMANDAS);
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/tag'), []);
         await montado.atualizar();
         const formulario = formularioHospedado(montado).formulario;
         expect([formulario.controls.nome.value, formulario.controls.demandaId.value]).toEqual(['', 10]);

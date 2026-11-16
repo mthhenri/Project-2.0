@@ -19,6 +19,16 @@ export class UsuarioListarDto {
     })
     ativo?: boolean;
 
+    @ApiPropertyOptional({ example: true, description: 'Quando true, só os usuários que são donos de ao menos uma atividade (o filtro de usuário da listagem de atividades)' })
+    @IsOptional()
+    @IsBoolean()
+    @Transform(({ value }) => {
+        if (value === 'true') return true;
+        if (value === 'false') return false;
+        return value;
+    })
+    comAtividades?: boolean;
+
     @ApiPropertyOptional({ example: 'joão' })
     @IsOptional()
     @IsString()

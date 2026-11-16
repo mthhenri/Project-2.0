@@ -1,5 +1,5 @@
 import { Component, DestroyRef, ElementRef, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { of, finalize } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -11,7 +11,6 @@ import {
     DemandaAtribuidaDto,
     MENSAGEM_CARACTERES_PROIBIDOS,
     REGEX_SEM_CARACTERES_PROIBIDOS,
-    TagResumoDto,
     TipoAtividadePrioridadeEnum,
     TipoAtividadeStatusEnum,
     UsuarioResumoDto,
@@ -22,7 +21,6 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { DemandaService } from '../../../demanda/services/demanda.service';
-import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { AtividadeService } from '../../services/atividade.service';
 import { ATIVIDADE_STATUS_OPCOES, severidadeStatusAtividade } from '../../models/atividade.model';
@@ -42,7 +40,6 @@ type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
 })
 export class AtividadeFormularioComponent implements OnInit {
     private readonly atividadeService = inject(AtividadeService);
-    private readonly tagService = inject(TagService);
     private readonly usuarioService = inject(UsuarioService);
     private readonly demandaService = inject(DemandaService);
     private readonly messageService = inject(MessageService);
@@ -64,8 +61,6 @@ export class AtividadeFormularioComponent implements OnInit {
     readonly salvando = signal<boolean>(false);
     readonly demandasAtribuidas = signal<DemandaAtribuidaOpcao[]>([]);
     readonly carregandoDemandasAtribuidas = signal<boolean>(false);
-    readonly todasAsTags = signal<TagResumoDto[]>([]);
-    readonly carregandoTags = signal<boolean>(false);
     readonly usuarios = signal<UsuarioResumoDto[]>([]);
 
     readonly statusOpcoes = ATIVIDADE_STATUS_OPCOES;
@@ -78,14 +73,12 @@ export class AtividadeFormularioComponent implements OnInit {
         usuarioId: [null as number | null],
         status:    [TipoAtividadeStatusEnum.DESENVOLVENDO as TipoAtividadeStatusEnum, [Validators.required]],
         prioridade: [TipoAtividadePrioridadeEnum.INDEFINIDA as TipoAtividadePrioridadeEnum, [Validators.required]],
-        tagIds:    [[] as number[]],
     });
 
     ngOnInit(): void {
         this.formulario.patchValue({ demandaId: this.demandaIdInicial() });
         this.prioridadeService.carregar();
         this.carregarDemandasAtribuidas();
-        this.carregarTodasAsTags();
         if (this.sessao.eGestor()) {
             this.carregarUsuarios();
             // A atividade só nasce em demanda a que o dono tem acesso: trocar o dono refaz a lista de demandas (task 377).
@@ -95,7 +88,7 @@ export class AtividadeFormularioComponent implements OnInit {
         setTimeout(() => (this.demandaIdInicial() ? this.campoNome()?.nativeElement.focus() : this.seletorDemanda()?.focus()));
     }
 
-    /** `criarOutra`: mantém demanda, responsável, status e tags e limpa o nome, para cadastro em série. */
+    /** `criarOutra`: mantém demanda, responsável, status e prioridade e limpa o nome, para cadastro em série. */
     salvar(criarOutra = false): void {
         if (this.formulario.invalid) {
             this.formulario.markAllAsTouched();
@@ -111,7 +104,6 @@ export class AtividadeFormularioComponent implements OnInit {
             prioridade: valor.prioridade!,
         };
         if (this.sessao.eGestor() && valor.usuarioId) dto.usuarioId = valor.usuarioId;
-        if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
 
         this.atividadeService
             .criar(dto)
@@ -146,18 +138,6 @@ export class AtividadeFormularioComponent implements OnInit {
         return !!(controle?.invalid && controle?.touched);
     }
 
-    alternarTagSelecao(controle: AbstractControl, tagId: number): void {
-        const selecionadas = (controle.value as number[] | null) ?? [];
-        controle.setValue(
-            selecionadas.includes(tagId) ? selecionadas.filter((id) => id !== tagId) : [...selecionadas, tagId],
-        );
-        controle.markAsDirty();
-    }
-
-    tagEstaSelecionada(controle: AbstractControl, tagId: number): boolean {
-        return ((controle.value as number[] | null) ?? []).includes(tagId);
-    }
-
     private carregarDemandasAtribuidas(): void {
         this.carregandoDemandasAtribuidas.set(true);
         this.demandaService
@@ -173,18 +153,6 @@ export class AtividadeFormularioComponent implements OnInit {
                         const escolhida = this.formulario.controls.demandaId.value;
                         if (escolhida && !resposta.dados.some((demanda) => demanda.id === escolhida)) this.formulario.controls.demandaId.setValue(null);
                     }
-                },
-            });
-    }
-
-    private carregarTodasAsTags(): void {
-        this.carregandoTags.set(true);
-        this.tagService
-            .listar()
-            .pipe(finalize(() => this.carregandoTags.set(false)))
-            .subscribe({
-                next: (resposta) => {
-                    if (resposta.sucesso && resposta.dados) this.todasAsTags.set(resposta.dados);
                 },
             });
     }

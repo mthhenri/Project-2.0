@@ -437,3 +437,20 @@ testarComBanco('listar sem incluiLogin: o login volta nulo e a busca não o proc
     assert.equal(porNome.itens.length >= 1, true);
     assert.equal(porNome.itens.every((usuario) => usuario.login === null), true, 'login nulo para quem não é gestor');
 });
+
+testarComBanco('listar com comAtividades: só quem é dono de atividade não excluída', async (conexao) => {
+    const repositorio = criarRepositorio(UsuarioRepository, conexao);
+    const marca = `comativ${Date.now()}`;
+    const com = await criarDesenvolvedor(conexao, { login: `${marca}.a`, nomeCompleto: `${marca} Com` });
+    const sem = await criarDesenvolvedor(conexao, { login: `${marca}.b`, nomeCompleto: `${marca} Sem` });
+    const soExcluida = await criarDesenvolvedor(conexao, { login: `${marca}.c`, nomeCompleto: `${marca} Excluida` });
+    await criarAtividade(conexao, { usuarioId: com.id });
+    const atividadeExcluida = await criarAtividade(conexao, { usuarioId: soExcluida.id });
+    await excluirLinha(conexao, 'atividade', atividadeExcluida.id);
+
+    const todos = await repositorio.listar({ incluiLogin: true, busca: marca, allRows: true });
+    assert.deepEqual(todos.itens.map((usuario) => usuario.id).sort(), [com.id, sem.id, soExcluida.id].sort());
+    const comAtividades = await repositorio.listar({ incluiLogin: true, busca: marca, comAtividades: true, allRows: true });
+    assert.deepEqual(comAtividades.itens.map((usuario) => usuario.id), [com.id]);
+    assert.equal(comAtividades.total, 1);
+});
