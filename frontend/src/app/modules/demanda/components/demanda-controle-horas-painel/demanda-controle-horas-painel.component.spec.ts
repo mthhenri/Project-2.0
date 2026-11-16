@@ -11,7 +11,7 @@ const haDias = (dias: number) => new Date(Date.now() - dias * DIA);
 function criarNo(id: number, sobrescritas: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
         id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false, horasEstimadas: 10, minutosExecutados: 0,
-        demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...sobrescritas,
+        demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, temChat: false, tags: [], ...sobrescritas,
     };
 }
 

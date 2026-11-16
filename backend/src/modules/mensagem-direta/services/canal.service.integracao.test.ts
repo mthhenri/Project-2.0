@@ -425,3 +425,28 @@ testarComBanco('a busca do gestor não alcança o canal cuja demanda foi excluí
 
     assert.deepEqual(await service.listarGrupoIdsDoUsuario(como(gestor)), []);
 });
+
+// --- resposta da IA do Chat IA enviada ao canal (task 329) ------------------
+
+testarComBanco('enviarRespostaDaIa no canal: membro da demanda envia, de fora recebe 403 e o gestor que envia vira membro', async (conexao) => {
+    const { service } = montar(conexao);
+    const { ana, bruno, davi, raiz } = await cenario(conexao);
+    const gestor = await criarGestor(conexao);
+    const canal = (await service.criarCanal(demanda(raiz.id), como(ana))).dados!.grupo;
+
+    const deAna = (await service.enviarRespostaDaIa({ grupoId: canal.grupoId, mensagemId: randomUUID(), texto: 'Resposta da IA', nota: 'veja', notaMensagemId: randomUUID() }, como(ana))).dados!;
+    assert.equal(deAna.mensagem.autor, AutorMensagemDiretaEnum.IA);
+    assert.equal(deAna.mensagem.chamadaPorUsuarioId, ana.id);
+
+    await recusaCom(service.enviarRespostaDaIa({ grupoId: canal.grupoId, mensagemId: randomUUID(), texto: 'fora' }, como(davi)), UnauthorizedAccessException);
+
+    const membrosAntes = (await service.recuperarGrupo(canal.grupoId, como(ana))).dados!.grupo.membros.map((membro) => membro.usuarioId);
+    assert.equal(membrosAntes.includes(gestor.id), false);
+    await service.enviarRespostaDaIa({ grupoId: canal.grupoId, mensagemId: randomUUID(), texto: 'Do gestor' }, como(gestor));
+    const membrosDepois = (await service.recuperarGrupo(canal.grupoId, como(ana))).dados!.grupo.membros.map((membro) => membro.usuarioId);
+    assert.equal(membrosDepois.includes(gestor.id), true, 'o gestor que escreve num canal passa a ser membro');
+    assert.deepEqual(membrosDepois.filter((id) => id === bruno.id), [bruno.id]);
+
+    const textosLidos = (await service.listarMensagens({ grupoId: canal.grupoId } as never, como(ana))).dados!.mensagens.filter((mensagem) => mensagem.autor !== AutorMensagemDiretaEnum.SISTEMA).map((mensagem) => mensagem.texto);
+    assert.deepEqual(textosLidos.reverse(), ['veja', 'Resposta da IA', 'Do gestor'], 'a listagem vem da mais nova para a mais antiga');
+});

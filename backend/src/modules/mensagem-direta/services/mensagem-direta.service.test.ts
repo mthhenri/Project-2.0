@@ -64,6 +64,8 @@ interface Cenario {
     ativos?: { id: number; nome: string; tipo?: TipoUsuarioEnum; corAvatar?: string | null }[];
     demandasAchadas?: { id: number; projetoId: number; nome: string; status: string }[];
     atividadesAchadas?: { id: number; nome: string; status: string; demandaId: number; nomeDemanda: string; projetoId: number }[];
+    /** As mensagens do Chat IA do remetente (task 329), lidas pelo armazenamento do chat. */
+    chatMensagens?: { id: string; conversaId: string; autor: string; texto: string }[];
     /** Os grupos da pessoa (task 246): a service da lista só os repassa. */
     grupos?: { grupoId: number; nome: string }[];
 }
@@ -163,6 +165,13 @@ function montar(cenario: Cenario = {}) {
         {
             listarResumos: async () => (cenario.grupos ?? []),
             listarGrupoIdsDoUsuario: async () => (cenario.grupos ?? []).map((grupo) => grupo.grupoId),
+            enviarRespostaDaIa: async (dto: unknown) => { registrar('grupoRespostaIa', dto); return { sucesso: true, dados: { mensagem: mensagem(), jaExistia: false }, mensagem: 'ok' }; },
+        } as never,
+        {
+            listarConversa: async (consulta: { conversaId: string; usuarioId: number }) => {
+                registrar('listarChat', consulta);
+                return (cenario.chatMensagens ?? []).filter((item) => item.conversaId === consulta.conversaId);
+            },
         } as never,
     );
     return { service, chamadas };
@@ -765,4 +774,80 @@ test('buscar: manda ao armazenamento os grupos de que a pessoa é membro agora, 
     const semGrupos = montar();
     await semGrupos.service.buscar({ texto: 'balanço' }, ANA);
     assert.deepEqual((semGrupos.chamadas.buscar[0] as { grupoIds: number[] }).grupoIds, []);
+});
+
+// --- enviar a resposta da IA do Chat IA (task 329) ----------------------------
+
+const CONVERSA_DA_IA = '4-2026-11-13';
+const IA_ID = 'chat-ia-1';
+const NOTA_UUID = '1A2B3C4D-5E6F-4A8B-9C0D-1E2F3A4B5C6D';
+const respostaIa = (parcial: Record<string, unknown> = {}) => ({ conversaId: CONVERSA_DA_IA, chatMensagemId: IA_ID, destinatarioId: BRUNO_ID, mensagemId: UUID, ...parcial }) as never;
+const chatComResposta = [{ id: IA_ID, conversaId: CONVERSA_DA_IA, autor: 'IA', texto: 'Use `let`.' }, { id: 'chat-usuario-1', conversaId: CONVERSA_DA_IA, autor: 'USUARIO', texto: 'pergunta' }];
+
+test('enviarRespostaDaIa: grava como IA, chamada pelo remetente, com o texto lido do Chat IA e sem proposta nem menção', async () => {
+    const { service, chamadas } = montar({ chatMensagens: chatComResposta });
+    const resposta = await service.enviarRespostaDaIa(respostaIa({ texto: 'forjado pelo cliente' }), ANA);
+
+    assert.equal(resposta.sucesso, true);
+    assert.deepEqual(chamadas.listarChat[0], { conversaId: CONVERSA_DA_IA, usuarioId: 4 });
+    assert.deepEqual(chamadas.gravar[0], {
+        mensagemId: UUID.toLowerCase(),
+        conversaId: '4-9',
+        autor: AutorMensagemDiretaEnum.IA,
+        autorUsuarioId: null,
+        texto: 'Use `let`.',
+        contemCodigo: false,
+        mencoes: [],
+        referencias: [],
+        chamadaPorUsuarioId: 4,
+        propostaIds: [],
+    });
+    assert.deepEqual((chamadas.publicar[0] as { usuarioIds: number[] }).usuarioIds, [4, BRUNO_ID]);
+    assert.equal(chamadas.ia, undefined, 'a resposta encaminhada não chama a IA');
+});
+
+test('enviarRespostaDaIa: a nota vai antes, como mensagem comum do remetente', async () => {
+    const { service, chamadas } = montar({ chatMensagens: chatComResposta });
+    await service.enviarRespostaDaIa(respostaIa({ nota: '  olha isso  ', notaMensagemId: NOTA_UUID }), ANA);
+
+    assert.equal(chamadas.gravar.length, 2);
+    assert.deepEqual(
+        chamadas.gravar.map((item) => (item as { autor: string }).autor),
+        [AutorMensagemDiretaEnum.USUARIO, AutorMensagemDiretaEnum.IA],
+    );
+    assert.equal((chamadas.gravar[0] as { texto: string }).texto, 'olha isso');
+    assert.equal((chamadas.gravar[0] as { mensagemId: string }).mensagemId, NOTA_UUID.toLowerCase());
+});
+
+test('enviarRespostaDaIa: nota sem identificador, destino duplo ou ausente são recusados antes de gravar', async () => {
+    const { service, chamadas } = montar({ chatMensagens: chatComResposta });
+    await recusaComMensagem(service.enviarRespostaDaIa(respostaIa({ nota: 'oi' }), ANA), /identificador/);
+    await recusaComMensagem(service.enviarRespostaDaIa(respostaIa({ grupoId: 3 }), ANA), /pessoa ou um grupo/);
+    await recusaComMensagem(service.enviarRespostaDaIa(respostaIa({ destinatarioId: undefined }), ANA), /pessoa ou um grupo/);
+    assert.equal(chamadas.gravar, undefined);
+});
+
+test('enviarRespostaDaIa: só a resposta da IA da conversa do próprio remetente; o resto é "não encontrada"', async () => {
+    const { service, chamadas } = montar({ chatMensagens: [...chatComResposta, { id: 'outra', conversaId: '9-2026-11-13', autor: 'IA', texto: 'de outro' }] });
+    await assert.rejects(service.enviarRespostaDaIa(respostaIa({ chatMensagemId: 'chat-usuario-1' }), ANA), ResourceNotFoundException);
+    await assert.rejects(service.enviarRespostaDaIa(respostaIa({ chatMensagemId: 'não existe' }), ANA), ResourceNotFoundException);
+    await assert.rejects(service.enviarRespostaDaIa(respostaIa({ conversaId: '9-2026-11-13', chatMensagemId: 'outra' }), ANA), ResourceNotFoundException);
+    assert.equal(chamadas.gravar, undefined);
+});
+
+test('enviarRespostaDaIa: destinatário inativo é recusado e resposta longa demais não cabe', async () => {
+    const inativo = montar({ usuarios: { [BRUNO_ID]: { ativo: false } }, chatMensagens: chatComResposta });
+    await recusaComMensagem(inativo.service.enviarRespostaDaIa(respostaIa(), ANA), /inativo/);
+    assert.equal(inativo.chamadas.gravar, undefined);
+
+    const longa = montar({ chatMensagens: [{ id: IA_ID, conversaId: CONVERSA_DA_IA, autor: 'IA', texto: 'x'.repeat(10_001) }] });
+    await recusaComMensagem(longa.service.enviarRespostaDaIa(respostaIa(), ANA), /não cabe/);
+});
+
+test('enviarRespostaDaIa: para um grupo ou canal, a service do grupo recebe o texto lido do servidor', async () => {
+    const { service, chamadas } = montar({ chatMensagens: chatComResposta });
+    await service.enviarRespostaDaIa(respostaIa({ destinatarioId: undefined, grupoId: 7, nota: 'time', notaMensagemId: NOTA_UUID }), ANA);
+
+    assert.deepEqual(chamadas.grupoRespostaIa[0], { grupoId: 7, mensagemId: UUID, texto: 'Use `let`.', nota: 'time', notaMensagemId: NOTA_UUID });
+    assert.equal(chamadas.gravar, undefined);
 });

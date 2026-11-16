@@ -9,6 +9,7 @@ import {
     MensagemDiretaListarDto,
     MensagemDiretaPreferenciaAlterarDto,
     MensagemDiretaReagirDto,
+    MensagemDiretaRespostaIaEnviarDto,
     MensagemDiretaReferenciaBuscarDto,
     MensagemDiretaSilencioAlterarDto,
     MensagemDiretaSupervisaoLerDto,
@@ -103,6 +104,12 @@ export class MensagemDiretaController {
     @Post('mensagem')
     enviarMensagem(@Body() dto: MensagemDiretaEnviarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
         return this.mensagemDiretaService.enviarMensagem(dto, usuarioAtivo);
+    }
+
+    /** Encaminha uma resposta da IA do Chat IA do próprio usuário a um colega, grupo ou canal (task 329). */
+    @Post('resposta-ia')
+    enviarRespostaDaIa(@Body() dto: MensagemDiretaRespostaIaEnviarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.mensagemDiretaService.enviarRespostaDaIa(dto, usuarioAtivo);
     }
 
     @Patch('mensagem')

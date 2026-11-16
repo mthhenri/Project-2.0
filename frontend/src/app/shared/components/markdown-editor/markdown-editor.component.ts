@@ -235,7 +235,12 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
 
     /** Clique na caixa de uma tarefa marca ou desmarca. */
     aoClicarFormatado(evento: MouseEvent): void {
-        if (this.editorFormatado?.alternarMarcacaoNoClique(evento.target, evento.clientX)) evento.preventDefault();
+        if (this.editorFormatado?.alternarMarcacaoNoClique(evento.target, evento.clientX)) {
+            evento.preventDefault();
+            return;
+        }
+        // Clique no respiro da caixa (fora da área editável): leva o cursor ao fim, como num campo de texto comum (P-090).
+        if (evento.target === evento.currentTarget && !this.desabilitado()) this.editorFormatado?.focar();
     }
 
     aoTeclarFormatado(evento: KeyboardEvent): void {

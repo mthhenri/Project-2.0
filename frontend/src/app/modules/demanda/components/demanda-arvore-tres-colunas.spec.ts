@@ -16,7 +16,7 @@ import { DemandaPastasComponent } from './demanda-pastas/demanda-pastas.componen
 function no(id: number, nome: string, opcoes: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
         id, nome, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false, horasEstimadas: 6, minutosExecutados: 120, demandaPaiId: null,
-        temDescricaoTecnica: true, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...opcoes,
+        temDescricaoTecnica: true, temDescricaoCliente: false, temDocumentacao: false, temChat: false, tags: [], ...opcoes,
     };
 }
 
@@ -169,6 +169,22 @@ describe('DemandaPastaLinhaComponent', () => {
         expect(montado.elemento.querySelector('[aria-label="Documentação (vazia)"]')).not.toBeNull();
         expect(montado.elemento.querySelector('.pi-plus')).toBeNull();
         expect(montado.elemento.querySelector('.pi-ellipsis-v')).toBeNull();
+    });
+
+    it('mostra o balão de chat à esquerda dos ícones de descrição: ativo com chat, apagado sem chat', async () => {
+        const sem = await montar({ no: { ...NOS[3], temChat: false } });
+        const indicadorSem = sem.montado.elemento.querySelector('.demanda-pasta-linha__chat');
+        expect(indicadorSem).not.toBeNull();
+        expect(indicadorSem!.classList.contains('demanda-pasta-linha__chat--ativo')).toBe(false);
+        expect(indicadorSem!.getAttribute('aria-label')).toBe('Esta demanda não tem chat');
+        TestBed.resetTestingModule();
+
+        const com = await montar({ no: { ...NOS[3], temChat: true } });
+        const indicadorCom = com.montado.elemento.querySelector('.demanda-pasta-linha__chat');
+        expect(indicadorCom!.classList.contains('demanda-pasta-linha__chat--ativo')).toBe(true);
+        expect(indicadorCom!.getAttribute('aria-label')).toBe('Esta demanda tem chat');
+        const grupo = com.montado.elemento.querySelector('.demanda-pasta-linha__descricoes')!;
+        expect(grupo.firstElementChild).toBe(indicadorCom);
     });
 
     it('clicar na linha escolhe; clicar no ícone da descrição pede a descrição e não escolhe a linha', async () => {

@@ -66,6 +66,7 @@ function montar(conexao: ConexaoTeste) {
         { atenderSeChamada: async () => undefined } as never,
         { recuperarParaParticipante: async () => { throw new Error('não usada aqui'); } } as never,
         grupoService,
+        { listarConversa: async () => [] } as never,
     );
 }
 

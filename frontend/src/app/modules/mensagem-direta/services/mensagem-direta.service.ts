@@ -9,6 +9,7 @@ import {
     MensagemDiretaEditarDto,
     MensagemDiretaEnviadaDto,
     MensagemDiretaEnviarDto,
+    MensagemDiretaRespostaIaEnviarDto,
     MensagemDiretaLeituraAlteradaDto,
     MensagemDiretaListadasDto,
     MensagemDiretaPessoasListadasDto,
@@ -61,6 +62,11 @@ export class MensagemDiretaService {
 
     enviarMensagem(dto: MensagemDiretaEnviarDto): Observable<StandardResponse<MensagemDiretaEnviadaDto>> {
         return this.httpClient.post<StandardResponse<MensagemDiretaEnviadaDto>>(`${this.urlBase}/mensagem`, dto, comFeedbackProprioEErroTratado());
+    }
+
+    /** Envia a resposta da IA do Chat IA a uma pessoa ou grupo (task 329); o servidor lê o texto da conversa do próprio usuário. */
+    enviarRespostaDaIa(dto: MensagemDiretaRespostaIaEnviarDto): Observable<StandardResponse<MensagemDiretaEnviadaDto>> {
+        return this.httpClient.post<StandardResponse<MensagemDiretaEnviadaDto>>(`${this.urlBase}/resposta-ia`, dto, comFeedbackProprioEErroTratado());
     }
 
     /** Marca a conversa como lida até a data da última mensagem que a pessoa viu. */

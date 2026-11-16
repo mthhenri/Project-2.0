@@ -15,7 +15,7 @@ import {
 function no(id: number, sobrescritas: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
         id, nome: `D${id}`, status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false, horasEstimadas: 0, minutosExecutados: 0,
-        demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...sobrescritas,
+        demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, temChat: false, tags: [], ...sobrescritas,
     };
 }
 

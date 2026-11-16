@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AtividadeModule } from '../atividade/atividade.module';
+import { ChatModule } from '../chat/chat.module';
 import { ConfiguracaoIaModule } from '../configuracao-ia/configuracao-ia.module';
 import { DemandaModule } from '../demanda/demanda.module';
 import { FerramentaIaModule } from '../ferramenta-ia/ferramenta-ia.module';
@@ -37,7 +38,7 @@ import { MensagemDiretaService } from './services/mensagem-direta.service';
  * (task 209: stream, barramento entre instâncias e presença), a supervisão pelo gestor (task 214), o `@IA` (task 315) e o grupo livre (task 246).
  */
 @Module({
-    imports:     [UsuarioModule, DemandaModule, ProjetoModule, ConfiguracaoIaModule, AtividadeModule, IaModule, FerramentaIaModule, PromptModule, PropostaIaModule, IaCustoModule],
+    imports:     [ChatModule, UsuarioModule, DemandaModule, ProjetoModule, ConfiguracaoIaModule, AtividadeModule, IaModule, FerramentaIaModule, PromptModule, PropostaIaModule, IaCustoModule],
     controllers: [MensagemDiretaController, MensagemDiretaGrupoController],
     providers:   [
         armazenamentoDeMensagemDiretaProvider,

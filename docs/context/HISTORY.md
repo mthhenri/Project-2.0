@@ -26,6 +26,57 @@ Pedido do autor em 2026-11-13: refazer do zero a revisão das requisições, tel
 
 **Gates.** Só documentos: `npm run repo:verificar` aprovado. Testes, build e lint não rodaram porque nenhum código mudou. Evidências brutas (cenário, roteiros, tráfego por perfil, varreduras) em `.artifacts/revisao-requisicoes-e-permissoes/`, fora do Git.
 
+## 2026-11-13 — Balão de chat na linha da demanda (lista "Árvore"): indica que a demanda tem canal
+
+Pedido do autor (sem spec): a linha da demanda na lista da pasta mostra um balão de chat à esquerda do ícone da descrição técnica quando a demanda tem chat.
+
+- **Decisões do autor (modelagem, perguntadas antes):** o balão acende quando **o canal da demanda existe** (não exige mensagem) e mostra **só presença**, como os três ícones de
+  descrição (apagado sem chat, colorido com chat). Sem migration: o canal é a linha de `grupo` com `demanda_id` (índice único `uix_grupo_demanda`, migration `0087`).
+- **Contrato:** `DemandaGrafoNoDto` ganhou `temChat: boolean`. `DemandaRepository.recuperarGrafo` calcula com `EXISTS (SELECT 1 FROM grupo WHERE grupo.demanda_id = demanda.id AND
+  grupo.is_deleted = false)`. Só esse DTO mudou; `DemandaArvoreItemDto`, `DemandaPlanejamentoDto` e `DemandaDocumentacaoResumoDto` ficaram como estavam.
+- **UI:** `demanda-pasta-linha` ganhou um indicador não clicável (`<span role="img">` com `pi-comment`, tooltip e `aria-label`) como primeiro item do grupo de ícones; classes BEM
+  `demanda-pasta-linha__chat` e `--ativo`. Token novo `--app-icone-chat` em `styles.scss` (claro e escuro) = a cor primária do tema (600 no claro, 400 no escuro), com brilho duplo (drop-shadow 4px e 8px) quando ativo; a primeira versão usava matiz girada e foi trocada a pedido do autor.
+  Impacto (`npm run impacto`): os 14 consumidores do DTO só leem o nó; 7 fixtures tipados de teste receberam `temChat: false`.
+- **Testes:** integração `recuperarGrafo: temChat…` (canal ativo, canal excluído, sem canal); spec do componente (ativo/apagado e posição à esquerda). Resultados: lint:tudo limpo;
+  shared 362, backend 1812, integração 530 (PostgreSQL 16 local), frontend 2887 em 238 arquivos, todos passando; build do backend e do frontend ok.
+- **Verificado ao vivo** (stack real, projeto com 5 demandas e 3 canais criados por SQL): `GET /demanda/grafo` devolveu `temChat` verdadeiro nas três com canal e falso nas duas sem;
+  capturas nos cinco formatos (1920×1080, 1366×768, 1080×1920, 720×1280, 960×1080) e nos dois temas (classe `app-escuro` conferida), em `.artifacts/chat-na-linha-da-demanda/`.
+  Limite: o balão é só indicador; clicar nele não abre o chat (o botão "Abrir chat" continua na demanda aberta).
+
+## 2026-11-13 — P-089, P-090 e P-091 corrigidos: canal da demanda, área do editor e "X" do membro
+
+Três relatos do autor na mesma conversa da 329, corrigidos sem spec própria (sem mudança de modelagem).
+
+- **P-089 (canal de demanda não incluía quem entrou depois).** O servidor já listava o novo membro (o acesso ao canal é derivado de `demanda_usuario`); o defeito era o aviso:
+  o `CanalMembrosObservadorService` mandava `SINCRONIZAR` só a quem teve o vínculo alterado, então quem já estava no canal (e quem adicionou) continuava com a lista de membros
+  antiga na tela. Agora o aviso vai também a quem está nos canais criados da demanda e do projeto dela (`listarCanais` + `listarMembrosDeGrupos`). Provado ao vivo: um
+  desenvolvedor que já era membro recebeu o `SINCRONIZAR` quando o gestor adicionou outro. Testes: 2 cenários novos no observador.
+- **P-090 (editor do texto da demanda só clicava numa faixa).** Causa medida no app: a caixa do editor tinha 655 px e a área editável (`.ProseMirror`) 21 px, porque os editores que
+  ocupam o espaço que sobra (`alturaMinima` 0: Atividades, Demandas) não faziam a área editável crescer junto. Correção no componente compartilhado `markdown-editor`: o `.milkdown`
+  e o `.ProseMirror` preenchem a caixa (flex) e o clique no respiro da borda leva o foco ao editor (`aoClicarFormatado`). Depois: 635 px; clique embaixo foca e digita; na tela de
+  Atividades 579 px. Consumidores (`npm run impacto`): `plano-documento`, `prompts-aba`, `pad-painel`, `documentacao-demanda`, `demanda-arvore-painel`, `demanda-descricao-editor`;
+  conferi ao vivo Demandas, Atividades e o pad em Documentações; `plano-documento` (Planejamento do chat) e `prompts-aba` também conferidos ao vivo depois, sem regressão.
+- **P-091 ("X" de remover membro).** O botão vermelho cheio virou um selo neutro e pequeno (fundo da superfície, borda e ícone discretos) que só fica vermelho sob o cursor ou o
+  foco do teclado; só o SCSS de `demanda-membros-cabecalho` mudou.
+
+Testes: `npm test` verde (shared 362, backend 1812, frontend 238 arquivos, desktop 49); `lint:tudo` limpo.
+
+## 2026-11-13 — Task 329: "Enviar para colaborador" no Chat IA
+
+Pedido do autor, em conversa: um botão na resposta da IA do Chat IA que a manda a uma pessoa, grupo ou canal do chat entre colaboradores. **Decisão de modelagem do
+autor:** reaproveitar `autor = IA` de `mensagem_direta` com `chamada_por_usuario_id` = quem enviou (sem migration); nota opcional.
+
+`POST /mensagem-direta/resposta-ia` (`MensagemDiretaRespostaIaEnviarDto`): o cliente aponta a resposta (`conversaId` + `chatMensagemId`) e o servidor lê o texto da conversa
+do próprio remetente (só `autor = IA`; outro caso é 404), para ninguém forjar "resposta da IA". Pessoa: `MensagemDiretaService.enviarRespostaDaIa`; grupo ou canal:
+`GrupoService.enviarRespostaDaIa` (mesmas travas do envio normal). A nota vai antes, como mensagem comum. Front: componente `enviar-resposta-colaborador` (diálogo com
+busca, lista de grupos e pessoas e nota) e o botão ao lado de "Copiar" na resposta gravada, só na conversa de perguntas.
+
+Testes: `shared` 362, `backend` 1809 (7 cenários novos da service, 1 do controller; o teste de rotas foi atualizado para 19), `frontend` 238 arquivos (6 testes novos), `lint:tudo` limpo.
+Ao vivo (PostgreSQL local e seed): envio a uma pessoa nos cinco formatos de desktop e nos dois temas; o destinatário vê a nota e a bolha da IA. Grupo e canal provados em integração com banco real (testes novos), não pela tela.
+Limite conhecido: o encaminhamento é indistinguível de uma resposta ao `@IA` (`IA · para <remetente>`). Relatório: `docs/specs/done/329-chat-ia-enviar-resposta-para-colaborador/verificacao.md`.
+
+Três itens que o autor trouxe na mesma conversa (P-089, P-090 e P-091) foram registrados e já corrigidos: ver o bloco acima desta task.
+
 ## 2026-11-12 — Chat de grupo: o balão de "digitando" mostra o nome de quem digita
 
 Pedido do autor, em conversa: nos grupos, como existe o "IA digitando", deveria existir o "PESSOA digitando". O cabeçalho do grupo já dizia quem digitava, mas o balão no fim da
