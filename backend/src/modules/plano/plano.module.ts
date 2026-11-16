@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleInit, forwardRef } from '@nestjs/common';
 import { PlanoController } from './controllers/plano.controller';
 import { PlanoService } from './services/plano.service';
 import { PlanoRepository } from './repositories/plano.repository';
@@ -8,6 +8,7 @@ import { PlanoFonteRepository } from './repositories/plano-fonte.repository';
 import { PlanoFonteService } from './services/plano-fonte.service';
 import { PlanoPublicacaoService } from './services/plano-publicacao.service';
 import { AnotarPontoEmAbertoFerramenta, ListarPontosDoPlanoFerramenta, ResolverPontoDoPlanoFerramenta } from './ferramentas/pontos-do-plano.ferramentas';
+import { ChatModule } from '../chat/chat.module';
 import { DemandaModule } from '../demanda/demanda.module';
 import { ProjetoModule } from '../projeto/projeto.module';
 import { IaModule } from '../ia/ia.module';
@@ -22,7 +23,7 @@ import { ProporAlterarTrechoDoPlanoFerramenta } from './ferramentas/propor-alter
 import { AlterarTrechoDoPlanoExecutor } from './executores/alterar-trecho-do-plano.executor';
 
 @Module({
-    imports:     [DemandaModule, ProjetoModule, FerramentaIaModule, PropostaIaModule, IaModule],
+    imports:     [DemandaModule, ProjetoModule, forwardRef(() => ChatModule), FerramentaIaModule, PropostaIaModule, IaModule],
     controllers: [PlanoController],
     providers:   [
         PlanoService,

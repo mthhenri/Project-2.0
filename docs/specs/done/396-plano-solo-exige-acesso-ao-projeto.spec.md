@@ -24,7 +24,7 @@ Como observar: DESENVOLVEDOR membro de uma demanda do projeto P: POST /plano {"p
 
 Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** no ramo solo, `podeAcessarPlano` e a listagem olham só o criador.
 
@@ -34,6 +34,8 @@ Verificação na auditoria: código, por um auditor; arquivo e linha das evidên
 2. O solo sobrevive à perda do projeto: registrar no `SYSTEM.SPEC.md`.
 
 Recomendação da auditoria: opção 1.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor concordou com a recomendação da auditoria, **opção 1**: o plano solo de projeto exige o criador **e** o acesso ao projeto. Aplicado em `podeAcessarPlano` (`shared/src/utils/plano.ts`) e no `listar` do repository; gestor, administrador e auxiliar têm acesso por tipo.
 
 ## Entregáveis
 

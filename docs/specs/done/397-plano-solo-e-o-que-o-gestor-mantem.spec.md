@@ -24,7 +24,7 @@ Como observar: DESENVOLVEDOR criador de plano de projeto em que colegas escrever
 
 Verificação na auditoria: reproduzido na aplicação rodando em 2026-11-14: o desenvolvedor criador marcou solo um plano de projeto; o administrador passou a receber 404 em `GET /plano/:id`, `PATCH /plano/:id/arquivo` e `DELETE /plano/:id`, e o plano sumiu da lista dele.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** `marcarSolo` só confere se quem chama é o criador; a checagem de acesso vem antes da de arquivar e excluir.
 
@@ -33,6 +33,8 @@ Verificação na auditoria: reproduzido na aplicação rodando em 2026-11-14: o 
 1. Gestor e administrador mantêm arquivar e excluir de plano solo de projeto, sem ler o conteúdo.
 2. Marcar solo só é aceito enquanto ninguém além do criador contribuiu.
 3. As duas.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor seguiu a recomendação da auditoria, **opção 3** (as duas): gestor e administrador mantêm arquivar e excluir do plano solo de projeto sem ler o conteúdo (`PlanoService.recuperarPlanoParaArquivarOuExcluir`), e marcar solo só é aceito enquanto ninguém além do criador contribuiu (fonte trazida por outra pessoa ou mensagem dela na conversa; os pontos e os textos não guardam autor, então não contam). Limite: o plano solo de outra pessoa não aparece na lista do gestor, então arquivar e excluir só existem pelo id (rota), sem entrada na tela.
 
 ## Entregáveis
 

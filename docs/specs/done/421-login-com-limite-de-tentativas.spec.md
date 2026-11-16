@@ -25,7 +25,7 @@ Como observar: Sem token: POST /autenticacao/login {login:'<login real>', senha:
 
 Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** sem limite por login nem por IP, sem atraso e sem registro de falhas; a política de senha é só o tamanho mínimo.
 
@@ -33,6 +33,8 @@ Verificação na auditoria: código, por um auditor; arquivo e linha das evidên
 
 1. Limite na aplicação, só na rota de login (por login e por IP, com atraso progressivo). Pede dependência nova (`@nestjs/throttler`) ou um contador próprio.
 2. Limite no proxy da hospedagem: registrar no `SYSTEM.SPEC.md` §11 e no README de deploy onde ele está configurado.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor seguiu a recomendação da auditoria, **opção 1**: limite na aplicação, só na rota de login, por login e por IP, com atraso progressivo. Contador próprio em memória (`LimiteDeTentativasDeLogin`), sem dependência nova; os números e o comportamento estão no `SYSTEM.SPEC.md` §11.
 
 ## Entregáveis
 

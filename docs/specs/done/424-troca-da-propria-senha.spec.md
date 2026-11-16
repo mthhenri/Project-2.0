@@ -25,7 +25,7 @@ Como observar: Como DESENVOLVEDOR: PATCH /usuario/<próprio id>/senha {senhaNova
 
 Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** a regra não está no `SYSTEM.SPEC.md`.
 
@@ -33,6 +33,8 @@ Verificação na auditoria: código, por um auditor; arquivo e linha das evidên
 
 1. Rota própria para qualquer usuário trocar a sua senha informando a atual; a redefinição pelo gestor continua para terceiros.
 2. Manter: só o gestor redefine; registrar no documento.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor decidiu: **apenas gestor e administrador trocam a senha de usuários** (a **opção 2**, manter). Não há rota de troca da própria senha nem pedido da senha atual; a regra foi escrita no `SYSTEM.SPEC.md` §12 (`usuario`). Não houve mudança de código.
 
 ## Entregáveis
 

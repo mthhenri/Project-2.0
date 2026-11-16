@@ -42,3 +42,4 @@ export * from './PlanoInternoPublicarDto';
 export * from './PlanoPublicadoDto';
 export * from './PlanoDemandaOrigemRecuperarDto';
 export * from './PlanoDemandaOrigemRecuperadoDto';
+export * from './PlanoFonteDeOutroVerificarDto';

@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-11-16 — Plano solo, limite de login e regra de senha, parte 4 (tasks 396, 397, 421, 424; 423 adiada)
+
+Decisões do autor: **396** (plano solo de projeto exige o criador e o acesso ao projeto), **397** (gestor e administrador mantêm arquivar e excluir do solo sem ler, e só vira solo enquanto ninguém além do criador contribuiu), **421** (limite de tentativas do login na aplicação), **424** (apenas gestor e administrador trocam a senha de usuários; só escrever a regra) e **423** (apenas anotar: `P-102`).
+
+**O que mudou.** `podeAcessarPlano` e o `listar` do plano olham o acesso ao projeto também no solo; `PlanoService` ganhou a exceção de arquivar e excluir para o gestor e a trava de `marcarSolo` (fonte ou mensagem de outra pessoa), o que trouxe o armazenamento do chat para o módulo do plano com `forwardRef`. O login passou a bloquear por login (5 falhas) e por IP (20) com atraso progressivo e 429 (`LimiteDeTentativasDeLogin`). A regra de senha foi escrita no `SYSTEM.SPEC.md`. Corrigido e removido de `PROBLEMS.md`: P-099; aberto: P-102.
+
+**Verificação.** Backend 1851 unitários e 540 de integração, `shared` 363, frontend 238 arquivos (2893 testes), `lint:tudo` e builds sem erro; 16 conferências ao vivo por API num stack isolado, removido. Relatório em `docs/specs/done/396-plano-solo-exige-acesso-ao-projeto/verificacao.md`.
+
+**Limites.** O gestor não vê o solo alheio na lista (arquivar e excluir só pela rota). O limite do login é em memória e por processo. Sem verificação visual (nenhuma tela mudou). Ficam 42 decisões pendentes na guarda-chuva.
+
 ## 2026-11-16 — Permissão e regras de atividade, parte 3: execuções recentes, dono com acesso, excluir sem execução, auxiliar na supervisão e grupo privado (tasks 335, 377, 378, 392 e 362)
 
 As cinco tasks seguintes que esperavam decisão do autor, decididas por ele na mesma data: **335** (só front por enquanto, com anotação no código para ajustar a rota se houver muitas execuções), **377** (criar atividade para alguém exige que a pessoa tenha acesso à demanda, e a tela refaz as demandas ao trocar o dono), **378** (dono e gestores excluem, mas só atividade sem nenhuma execução), **392** (o auxiliar conta como desenvolvedor na supervisão) e **362** (a supervisão lê só depois da saída do último gestor do grupo).

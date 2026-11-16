@@ -51,6 +51,14 @@ test('plano solo: só o criador, mesmo para gestor e administrador', () => {
     assert.equal(podeAcessarPlano({ ...solo, tipoUsuario: TipoUsuarioEnum.DESENVOLVEDOR, usuarioId: 1 }), true);
 });
 
+test('plano solo de projeto: o criador só enquanto tem acesso ao projeto (task 396)', () => {
+    const solo = { ...base, solo: true, usuarioId: 1, tipoUsuario: TipoUsuarioEnum.DESENVOLVEDOR };
+    assert.equal(podeAcessarPlano({ ...solo, temAcessoAoProjeto: true }), true);
+    assert.equal(podeAcessarPlano({ ...solo, temAcessoAoProjeto: false }), false, 'retirado de todas as demandas do projeto');
+    assert.equal(podeAcessarPlano({ ...solo, tipoUsuario: TipoUsuarioEnum.GESTOR, temAcessoAoProjeto: false }), true, 'gestor tem acesso por tipo');
+    assert.equal(podeAcessarPlano({ ...solo, tipoUsuario: TipoUsuarioEnum.AUXILIAR, temAcessoAoProjeto: false }), true, 'auxiliar tem acesso por tipo');
+});
+
 test('plano amplo (sem projeto): só o criador', () => {
     const amplo = { ...base, projetoId: null };
     assert.equal(podeAcessarPlano({ ...amplo, tipoUsuario: TipoUsuarioEnum.ADMINISTRADOR }), false);

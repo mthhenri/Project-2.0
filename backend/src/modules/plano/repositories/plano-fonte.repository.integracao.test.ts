@@ -64,6 +64,20 @@ testarComBanco('excluir é soft delete: some da lista, do contexto e da contagem
     assert.equal(rows[0].is_deleted, true);
 });
 
+testarComBanco('validarFonteDeOutro: só vale com fonte ativa trazida por quem não é o criador (task 397)', async (conexao) => {
+    const repositorio = criarRepositorio(PlanoFonteRepository, conexao);
+    const { planoId, usuarioId } = await cenario(conexao);
+    const colega = await criarGestor(conexao);
+
+    assert.equal(await repositorio.validarFonteDeOutro({ planoId, usuarioId }), false, 'sem fonte');
+    await repositorio.inserir({ planoId, titulo: 'Minha', conteudo: 'a', origem: Origem.COLADO, usuarioId });
+    assert.equal(await repositorio.validarFonteDeOutro({ planoId, usuarioId }), false, 'só do criador');
+    const dela = await repositorio.inserir({ planoId, titulo: 'Da colega', conteudo: 'b', origem: Origem.COLADO, usuarioId: colega.id });
+    assert.equal(await repositorio.validarFonteDeOutro({ planoId, usuarioId }), true, 'a colega trouxe uma');
+    await repositorio.excluir({ planoId, id: dela.id });
+    assert.equal(await repositorio.validarFonteDeOutro({ planoId, usuarioId }), false, 'a fonte excluída não conta');
+});
+
 testarComBanco('a fonte de outro plano não é achada nem removida', async (conexao) => {
     const repositorio = criarRepositorio(PlanoFonteRepository, conexao);
     const { planoId, usuarioId } = await cenario(conexao);

@@ -151,7 +151,7 @@ export class PlanoRepository extends BaseRepository<Plano> {
     }
 
     /**
-   * Lista os planos que a pessoa vê, do mais recente para o mais antigo. Plano amplo e plano solo, só do criador; plano de projeto,
+   * Lista os planos que a pessoa vê, do mais recente para o mais antigo. Plano amplo, só do criador; plano solo de projeto, do criador enquanto tem acesso ao projeto (task 396); plano de projeto,
    * de quem tem acesso ao projeto (a mesma regra de `podeAcessarPlano`, do `shared`). Arquivado só aparece com `incluirArquivados` ou com busca.
    */
     async listar(dados: PlanoListarDados): Promise<PlanoResumoDto[]> {
@@ -177,7 +177,7 @@ export class PlanoRepository extends BaseRepository<Plano> {
             PLANO_DE_PROJETO_ATIVO,
             `(
          (plano.projeto_id IS NULL AND plano.usuario_id = :usuarioId)
-         OR (plano.projeto_id IS NOT NULL AND plano.solo = true AND plano.usuario_id = :usuarioId)
+         OR (plano.projeto_id IS NOT NULL AND plano.solo = true AND plano.usuario_id = :usuarioId AND ${acessoAoProjeto})
          OR (plano.projeto_id IS NOT NULL AND plano.solo = false AND ${acessoAoProjeto})
        )`,
         ];

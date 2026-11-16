@@ -23,7 +23,7 @@ Como observar: Login como DESENVOLVEDOR (guardar token A). Como GESTOR: PATCH /u
 
 Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 Exige um dado novo no usuário: é modelagem.
 
@@ -33,6 +33,8 @@ Exige um dado novo no usuário: é modelagem.
 
 1. Coluna com o instante da última troca de senha; a strategy recusa token com `iat` anterior.
 2. Versão de credencial no usuário, gravada no token e comparada a cada requisição.
+
+**Decisão (2026-11-16):** o autor mandou **anotar como problema e não resolver agora** (`P-102` em `docs/context/PROBLEMS.md`). A spec fica no backlog, sem opção escolhida; a escolha entre a coluna com o instante da última troca e a versão de credencial continua do autor quando for retomada.
 
 ## Entregáveis
 

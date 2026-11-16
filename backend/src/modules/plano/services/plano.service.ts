@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PlanoCompletoDto, PlanoRepository } from '../repositories/plano.repository';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
 import { ProjetoRepository } from '../../projeto/repositories/projeto.repository';
+import { PlanoFonteRepository } from '../repositories/plano-fonte.repository';
+import { ARMAZENAMENTO_DE_CHAT, ArmazenamentoDeChat } from '../../chat/repositories/armazenamento-de-chat';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
@@ -31,6 +33,8 @@ import {
     podeAcessarPlano,
     podeArquivarOuExcluirPlano,
     podeEditarAbaDoPlano,
+    montarConversaIdDoPlano,
+    temPermissaoDeGestor,
     textoInicialDaAba,
     temVisibilidadeTotal,
     podeEditarDemanda,
@@ -44,6 +48,8 @@ export class PlanoService {
         private readonly planoRepositorio: PlanoRepository,
         private readonly demandaRepositorio: DemandaRepository,
         private readonly projetoRepositorio: ProjetoRepository,
+        private readonly planoFonteRepositorio: PlanoFonteRepository,
+        @Inject(ARMAZENAMENTO_DE_CHAT) private readonly chatMensagemRepositorio: ArmazenamentoDeChat,
     ) {}
 
     /**
@@ -123,11 +129,18 @@ export class PlanoService {
         return { sucesso: true, dados: planoAlterado, mensagem: 'Plano alterado com sucesso' };
     }
 
-    /** Só o criador marca e desmarca o plano como solo. */
+    /**
+   * Só o criador marca e desmarca o plano como solo. Marcar só é aceito enquanto ninguém além do criador contribuiu (fonte trazida ou mensagem
+   * na conversa do plano): o solo não tira de outras pessoas o que elas já puseram ali (task 397). Desmarcar não tem essa trava.
+   */
     async marcarSolo(dto: PlanoSoloInternoMarcarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<PlanoSoloMarcadoDto>> {
         const plano = await this.recuperarPlanoAcessivel(dto.id, usuarioAtivo);
         if (plano.criadorId !== usuarioAtivo.sub) {
             throw new UnauthorizedAccessException('Apenas quem criou o plano o marca como solo');
+        }
+
+        if (dto.solo && (await this.outraPessoaContribuiu(plano))) {
+            throw new BusinessException('Este plano já tem contribuição de outras pessoas (fontes ou conversa) e não pode virar solo');
         }
 
         const planoMarcado = await this.planoRepositorio.marcarSolo({ id: dto.id, solo: dto.solo });
@@ -136,7 +149,7 @@ export class PlanoService {
 
     /** Arquiva (sai do seletor, continua na busca) ou desarquiva. Criador, gestor e administrador. */
     async arquivar(dto: PlanoInternoArquivarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<PlanoArquivadoDto>> {
-        const plano = await this.recuperarPlanoAcessivel(dto.id, usuarioAtivo);
+        const plano = await this.recuperarPlanoParaArquivarOuExcluir(dto.id, usuarioAtivo);
         this.validarPodeArquivarOuExcluir(plano, usuarioAtivo);
 
         const planoArquivado = await this.planoRepositorio.arquivar({ id: dto.id, arquivado: dto.arquivado });
@@ -145,7 +158,7 @@ export class PlanoService {
 
     /** Soft delete do plano e da ligação dele com a demanda. Criador, gestor e administrador. */
     async excluir(dto: PlanoRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<void>> {
-        const plano = await this.recuperarPlanoAcessivel(dto.id, usuarioAtivo);
+        const plano = await this.recuperarPlanoParaArquivarOuExcluir(dto.id, usuarioAtivo);
         this.validarPodeArquivarOuExcluir(plano, usuarioAtivo);
 
         await this.planoRepositorio.excluir({ id: dto.id });
@@ -230,6 +243,25 @@ export class PlanoService {
         const plano = await this.planoRepositorio.recuperar({ id });
         if (!plano || !(await this.podeAcessar(plano, usuarioAtivo))) throw new ResourceNotFoundException('Plano');
         return plano;
+    }
+
+    /**
+   * Arquivar e excluir: quem acessa o plano e, além disso, gestor e administrador no plano **solo de projeto** de outra pessoa, que não leem o
+   * conteúdo mas mantêm a gestão dele (task 397). O resto segue "não encontrado".
+   */
+    private async recuperarPlanoParaArquivarOuExcluir(id: number, usuarioAtivo: JwtPayload): Promise<PlanoCompletoDto> {
+        const plano = await this.planoRepositorio.recuperar({ id });
+        if (!plano) throw new ResourceNotFoundException('Plano');
+        const soloDeProjetoDeOutro = plano.solo && plano.projetoId !== null && temPermissaoDeGestor(usuarioAtivo.tipo);
+        if (!soloDeProjetoDeOutro && !(await this.podeAcessar(plano, usuarioAtivo))) throw new ResourceNotFoundException('Plano');
+        return plano;
+    }
+
+    /** Alguém além do criador pôs algo no plano: uma fonte ou uma mensagem na conversa dele. (Os pontos e os textos não guardam quem os escreveu.) */
+    private async outraPessoaContribuiu(plano: PlanoCompletoDto): Promise<boolean> {
+        if (await this.planoFonteRepositorio.validarFonteDeOutro({ planoId: plano.id, usuarioId: plano.criadorId })) return true;
+        const mensagens = await this.chatMensagemRepositorio.listarConversa({ conversaId: montarConversaIdDoPlano(plano.id) });
+        return mensagens.some((mensagem) => mensagem.usuarioId !== plano.criadorId);
     }
 
     /** A pessoa vê e edita o plano? (`podeAcessarPlano`, do `shared`, com o acesso ao projeto que só o banco sabe.) */

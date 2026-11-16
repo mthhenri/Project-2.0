@@ -3,13 +3,17 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import { Usuario } from '../../usuario/domain/models/usuario.model';
-import { AutenticacaoLoginDto, AutenticacaoTokenDto } from '@project20/shared';
+import { AutenticacaoInternoLoginDto, AutenticacaoTokenDto } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../domain/interfaces/jwt-payload.interface';
+import { LimiteDeTentativasDeLogin } from '../domain/limite-de-tentativas-de-login';
 
 @Injectable()
 export class AutenticacaoService {
+    /** Tentativas seguidas que falharam, por login e por IP (task 421): em memória, por processo. */
+    private readonly limiteDeTentativas = new LimiteDeTentativasDeLogin();
+
     constructor(
         private readonly usuarioRepositorio: UsuarioRepository,
         private readonly jwtService: JwtService,
@@ -59,13 +63,21 @@ export class AutenticacaoService {
         };
     }
 
-    /** Endpoint de login: valida credenciais e retorna token. */
-    async login(dto: AutenticacaoLoginDto): Promise<StandardResponse<AutenticacaoTokenDto>> {
+    /**
+   * Endpoint de login: valida credenciais e retorna token. Antes de conferir a senha, recusa (429) o login ou o IP com falhas demais;
+   * senha errada ou login inexistente contam como falha, e o login certo zera a contagem do login (task 421).
+   */
+    async login(dto: AutenticacaoInternoLoginDto): Promise<StandardResponse<AutenticacaoTokenDto>> {
+        const tentativa = { login: dto.login, ip: dto.ip };
+        this.limiteDeTentativas.verificar(tentativa);
+
         const usuarioValidado = await this.validarCredenciais(dto.login, dto.senha);
 
         if (!usuarioValidado) {
+            this.limiteDeTentativas.registrarFalha(tentativa);
             throw new BusinessException('Usuário ou senha incorretos. Confira e tente de novo.');
         }
+        this.limiteDeTentativas.registrarSucesso(tentativa);
 
         const tokenGerado = await this.gerarToken(usuarioValidado);
 

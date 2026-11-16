@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleInit, forwardRef } from '@nestjs/common';
 import { ConfiguracaoIaModule } from '../configuracao-ia/configuracao-ia.module';
 import { FerramentaIaModule } from '../ferramenta-ia/ferramenta-ia.module';
 import { FerramentaIaRegistro } from '../ferramenta-ia/services/ferramenta-ia.registro';
@@ -17,7 +17,7 @@ import { ChatPlanoService } from './services/chat-plano.service';
 import { ChatService } from './services/chat.service';
 
 @Module({
-    imports:     [ConfiguracaoIaModule, IaModule, PromptModule, FerramentaIaModule, PropostaIaModule, UsuarioModule, PlanoModule],
+    imports:     [ConfiguracaoIaModule, IaModule, PromptModule, FerramentaIaModule, PropostaIaModule, UsuarioModule, forwardRef(() => PlanoModule)],
     controllers: [ChatController],
     providers:   [
         armazenamentoDeChatProvider,

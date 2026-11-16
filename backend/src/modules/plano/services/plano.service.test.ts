@@ -33,6 +33,10 @@ interface Cenario {
     demanda?: unknown;
     projeto?: unknown;
     alterarDevolve?: unknown;
+    /** Alguém além do criador trouxe uma fonte para o plano. */
+    fonteDeOutro?: boolean;
+    /** Autores (ids) das mensagens da conversa do plano. */
+    autoresDasMensagens?: number[];
 }
 
 function demandaBase(sobrescrita: Record<string, unknown> = {}) {
@@ -65,6 +69,8 @@ function criarServico(cenario: Cenario = {}) {
         validarMembro:        async (dto: { usuarioId: number }) => (cenario.membros ?? []).includes(dto.usuarioId),
         validarAcessoProjeto: async (dto: { usuarioId: number }) => (cenario.comAcessoAoProjeto ?? []).includes(dto.usuarioId),
     };
+    servico.planoFonteRepositorio = { validarFonteDeOutro: async () => cenario.fonteDeOutro ?? false };
+    servico.chatMensagemRepositorio = { listarConversa: async () => (cenario.autoresDasMensagens ?? []).map((usuarioId) => ({ usuarioId })) };
     servico.projetoRepositorio = {
         recuperar: async () => ('projeto' in cenario ? cenario.projeto : { id: 10 }),
     };
@@ -182,6 +188,44 @@ test('arquivar e excluir: criador, gestor e administrador; colega desenvolvedor 
         await servico.excluir({ id: 7 }, autorizado);
     }
     assert.deepEqual(metodos(chamadas), ['arquivar', 'excluir', 'arquivar', 'excluir', 'arquivar', 'excluir']);
+});
+
+test('plano solo de projeto: o criador que perdeu o acesso ao projeto recebe "não encontrado" (task 396)', async () => {
+    const { servico } = criarServico({ plano: planoBase({ solo: true }), comAcessoAoProjeto: [] });
+    await assert.rejects(() => servico.recuperar({ id: 7 }, CRIADOR_DEV), ResourceNotFoundException);
+    await assert.rejects(() => servico.arquivar({ id: 7, arquivado: true }, CRIADOR_DEV), ResourceNotFoundException);
+    const comAcesso = criarServico({ plano: planoBase({ solo: true }), comAcessoAoProjeto: [1] });
+    assert.equal((await comAcesso.servico.recuperar({ id: 7 }, CRIADOR_DEV)).dados.id, 7);
+});
+
+test('marcarSolo: recusa quando outra pessoa trouxe fonte ou escreveu na conversa; desmarcar não tem a trava (task 397)', async () => {
+    for (const cenario of [{ fonteDeOutro: true }, { autoresDasMensagens: [1, 2] }]) {
+        const { servico, chamadas } = criarServico({ comAcessoAoProjeto: [1], ...cenario });
+        await assert.rejects(() => servico.marcarSolo({ id: 7, solo: true }, CRIADOR_DEV), BusinessException);
+        assert.deepEqual(metodos(chamadas), []);
+        await servico.marcarSolo({ id: 7, solo: false }, CRIADOR_DEV);
+        assert.deepEqual(metodos(chamadas), ['marcarSolo']);
+    }
+    const sozinho = criarServico({ comAcessoAoProjeto: [1], autoresDasMensagens: [1, 1] });
+    await sozinho.servico.marcarSolo({ id: 7, solo: true }, CRIADOR_DEV);
+    assert.deepEqual(metodos(sozinho.chamadas), ['marcarSolo']);
+});
+
+test('arquivar e excluir: gestor e administrador mantêm a gestão do plano solo de projeto sem lê-lo; os outros seguem sem ver (task 397)', async () => {
+    const { servico, chamadas } = criarServico({ plano: planoBase({ solo: true }), comAcessoAoProjeto: [1, 2] });
+    for (const gestor of [GESTOR, ADMINISTRADOR]) {
+        await assert.rejects(() => servico.recuperar({ id: 7 }, gestor), ResourceNotFoundException, 'ler continua fechado');
+        await servico.arquivar({ id: 7, arquivado: true }, gestor);
+        await servico.excluir({ id: 7 }, gestor);
+    }
+    assert.deepEqual(metodos(chamadas), ['arquivar', 'excluir', 'arquivar', 'excluir']);
+    await assert.rejects(() => servico.arquivar({ id: 7, arquivado: true }, COLEGA_DEV), ResourceNotFoundException);
+    await assert.rejects(() => servico.excluir({ id: 7 }, COLEGA_DEV), ResourceNotFoundException);
+});
+
+test('arquivar e excluir: o plano amplo de outra pessoa segue fechado ao gestor (só o solo de projeto abre a exceção)', async () => {
+    const { servico } = criarServico({ plano: planoBase({ projetoId: null, solo: true }) });
+    await assert.rejects(() => servico.arquivar({ id: 7, arquivado: true }, GESTOR), ResourceNotFoundException);
 });
 
 // ---------------------------------------------------------------------------

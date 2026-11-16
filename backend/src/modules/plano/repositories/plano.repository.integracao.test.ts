@@ -80,6 +80,25 @@ testarComBanco('listar: plano amplo e plano solo só do criador; plano de projet
     assert.deepEqual(await ids(gestor.id, true), [planoCompartilhado], 'gestor vê o de projeto e nunca o solo nem o amplo de outra pessoa');
 });
 
+testarComBanco('listar: plano solo de projeto some para o criador que perdeu o acesso ao projeto; o gestor criador mantém (task 396)', async (conexao) => {
+    const repositorio = criarRepositorio(PlanoRepository, conexao);
+    const retirado = await criarDesenvolvedor(conexao);
+    const gestor = await criarGestor(conexao);
+    const projeto = await criarProjeto(conexao);
+    const demanda = await criarDemanda(conexao, { projetoId: projeto.id });
+    const vinculo = await criarDemandaUsuario(conexao, { demandaId: demanda.id, usuarioId: retirado.id });
+    const { id: soloDoDev } = await repositorio.inserir({ titulo: 'Solo do dev', projetoId: projeto.id, usuarioId: retirado.id });
+    await repositorio.marcarSolo({ id: soloDoDev, solo: true });
+    const { id: soloDoGestor } = await repositorio.inserir({ titulo: 'Solo do gestor', projetoId: projeto.id, usuarioId: gestor.id });
+    await repositorio.marcarSolo({ id: soloDoGestor, solo: true });
+
+    const ids = async (usuarioId: number, ehGestor: boolean) => (await repositorio.listar({ usuarioId, ehGestor })).map((plano) => plano.id);
+    assert.deepEqual(await ids(retirado.id, false), [soloDoDev], 'com acesso ao projeto ainda vê o próprio solo');
+    await conexao('demanda_usuario').where({ id: vinculo.id }).update({ is_deleted: true, deleted_date: new Date() });
+    assert.deepEqual(await ids(retirado.id, false), [], 'retirado de todas as demandas do projeto, o solo sai da lista');
+    assert.deepEqual(await ids(gestor.id, true), [soloDoGestor], 'gestor tem acesso por tipo');
+});
+
 testarComBanco('listar: arquivado some do seletor, volta com incluirArquivados ou com busca; busca por título e filtro por projeto', async (conexao) => {
     const repositorio = criarRepositorio(PlanoRepository, conexao);
     const criador = await criarGestor(conexao);

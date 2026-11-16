@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
+import { TooManyRequestsException } from '../../../core/exceptions/too-many-requests.exception';
 import { AutenticacaoService } from './autenticacao.service';
 
 const SEGREDO = 'segredo-de-teste';
@@ -24,7 +25,7 @@ const ATIVO = { id: 7, login: 'maria', nomeCompleto: 'Maria', tipo: TipoUsuarioE
 
 test('credencial válida gera token com o JwtPayload esperado (sub, login, tipo) e devolve o usuário sem dado sensível', async () => {
     const { servico, jwt } = await criarServico([ATIVO]);
-    const resposta = await servico.login({ login: 'maria', senha: 'SenhaCerta#1' });
+    const resposta = await servico.login({ login: 'maria', senha: 'SenhaCerta#1', ip: '10.0.0.1' });
 
     assert.equal(resposta.sucesso, true);
     assert.equal(resposta.dados?.tipo, 'Bearer');
@@ -40,14 +41,14 @@ test('credencial válida gera token com o JwtPayload esperado (sub, login, tipo)
 
 test('o token de administrador carrega o tipo ADMINISTRADOR', async () => {
     const { servico, jwt } = await criarServico([{ ...ATIVO, tipo: TipoUsuarioEnum.ADMINISTRADOR }]);
-    const resposta = await servico.login({ login: 'maria', senha: 'SenhaCerta#1' });
+    const resposta = await servico.login({ login: 'maria', senha: 'SenhaCerta#1', ip: '10.0.0.1' });
     assert.equal((await jwt.verifyAsync(resposta.dados!.accessToken)).tipo, TipoUsuarioEnum.ADMINISTRADOR);
 });
 
 test('senha errada e login inexistente dão a MESMA mensagem de erro', async () => {
     const { servico } = await criarServico([ATIVO]);
-    const senhaErrada = await servico.login({ login: 'maria', senha: 'errada' }).catch((erro) => erro);
-    const loginInexistente = await servico.login({ login: 'fantasma', senha: 'SenhaCerta#1' }).catch((erro) => erro);
+    const senhaErrada = await servico.login({ login: 'maria', senha: 'errada', ip: '10.0.0.1' }).catch((erro) => erro);
+    const loginInexistente = await servico.login({ login: 'fantasma', senha: 'SenhaCerta#1', ip: '10.0.0.1' }).catch((erro) => erro);
 
     assert.ok(senhaErrada instanceof BusinessException);
     assert.ok(loginInexistente instanceof BusinessException);
@@ -57,7 +58,7 @@ test('senha errada e login inexistente dão a MESMA mensagem de erro', async () 
 
 test('usuário inativo não entra, mesmo com a senha certa', async () => {
     const { servico } = await criarServico([{ ...ATIVO, ativo: false }]);
-    await assert.rejects(() => servico.login({ login: 'maria', senha: 'SenhaCerta#1' }), (erro: BusinessException) => {
+    await assert.rejects(() => servico.login({ login: 'maria', senha: 'SenhaCerta#1', ip: '10.0.0.1' }), (erro: BusinessException) => {
         assert.equal((erro.getResponse() as { mensagem: string }).mensagem, 'Usuário inativo');
         return true;
     });
@@ -65,7 +66,7 @@ test('usuário inativo não entra, mesmo com a senha certa', async () => {
 
 test('usuário excluído não entra: o repository não o devolve e o login cai na mensagem de credencial incorreta', async () => {
     const { servico } = await criarServico([]);
-    await assert.rejects(() => servico.login({ login: 'maria', senha: 'SenhaCerta#1' }), (erro: BusinessException) => {
+    await assert.rejects(() => servico.login({ login: 'maria', senha: 'SenhaCerta#1', ip: '10.0.0.1' }), (erro: BusinessException) => {
         assert.equal((erro.getResponse() as { mensagem: string }).mensagem, 'Usuário ou senha incorretos. Confira e tente de novo.');
         return true;
     });
@@ -75,4 +76,23 @@ test('validarCredenciais devolve null para senha errada e o usuário para senha 
     const { servico } = await criarServico([ATIVO]);
     assert.equal(await servico.validarCredenciais('maria', 'errada'), null);
     assert.equal((await servico.validarCredenciais('maria', 'SenhaCerta#1'))?.id, 7);
+});
+
+test('login: depois de cinco senhas erradas o login fica bloqueado (429) até com a senha certa; login certo antes disso zera a contagem (task 421)', async () => {
+    const { servico } = await criarServico([ATIVO]);
+    const errar = () => servico.login({ login: 'maria', senha: 'errada', ip: '10.0.0.1' }).catch((erro: unknown) => erro);
+    for (let tentativa = 0; tentativa < 4; tentativa++) assert.ok((await errar()) instanceof BusinessException);
+    assert.equal((await servico.login({ login: 'maria', senha: 'SenhaCerta#1', ip: '10.0.0.1' })).sucesso, true, 'o login certo zera a contagem');
+
+    for (let tentativa = 0; tentativa < 5; tentativa++) assert.ok((await errar()) instanceof BusinessException);
+    const bloqueado = await servico.login({ login: 'maria', senha: 'SenhaCerta#1', ip: '10.0.0.1' }).catch((erro: unknown) => erro);
+    assert.ok(bloqueado instanceof TooManyRequestsException, 'a senha certa também é recusada enquanto bloqueado');
+    assert.equal((bloqueado as TooManyRequestsException).getStatus(), 429);
+});
+
+test('login: o login inexistente também conta, e a resposta é a mesma (não revela quem existe)', async () => {
+    const { servico } = await criarServico([ATIVO]);
+    for (let tentativa = 0; tentativa < 5; tentativa++) await servico.login({ login: 'fantasma', senha: 'x', ip: '10.0.0.2' }).catch(() => undefined);
+    const bloqueado = await servico.login({ login: 'fantasma', senha: 'x', ip: '10.0.0.2' }).catch((erro: unknown) => erro);
+    assert.ok(bloqueado instanceof TooManyRequestsException);
 });

@@ -81,6 +81,17 @@ describe('LoginPage', () => {
         expect(localStorage.getItem('access_token')).toBeNull();
     });
 
+    it('limite de tentativas (429): mostra o tempo de espera do servidor e reabilita o formulário (task 421)', async () => {
+        const { montado, irPara } = await montarLogin();
+        await preencher(montado, 'maria', 'errada');
+        await enviar(montado);
+        responderErro(esperarRequisicao(montado.http, 'POST', '/autenticacao/login'), 429, 'Muitas tentativas de login. Tente de novo em 30 segundos.');
+        await montado.atualizar();
+        expect(texto(montado)).toContain('Tente de novo em 30 segundos');
+        expect(montado.componente.formulario.enabled).toBe(true);
+        expect(irPara).not.toHaveBeenCalled();
+    });
+
     it('servidor fora do ar (status 0 ou 500) avisa que está indisponível', async () => {
         const { montado } = await montarLogin();
         await preencher(montado, 'maria', 'segredo');

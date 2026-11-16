@@ -1,4 +1,4 @@
-import { Controller, HttpCode, HttpStatus, Post, Body } from '@nestjs/common';
+import { Controller, HttpCode, HttpStatus, Post, Body, Ip } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AutenticacaoService } from '../services/autenticacao.service';
 import { AutenticacaoLoginDto } from '@project20/shared';
@@ -43,10 +43,15 @@ export class AutenticacaoController {
             },
         },
     })
+    @ApiResponse({
+        status: 429,
+        description: 'Falhas demais com este login ou deste IP: tente de novo depois do tempo informado',
+        schema: { example: { sucesso: false, dados: null, mensagem: 'Muitas tentativas de login. Tente de novo em 30 segundos.', erros: [] } },
+    })
     @Public()
     @HttpCode(HttpStatus.OK)
     @Post('login')
-    login(@Body() dto: AutenticacaoLoginDto) {
-        return this.autenticacaoService.login(dto);
+    login(@Body() dto: AutenticacaoLoginDto, @Ip() ip: string) {
+        return this.autenticacaoService.login({ ...dto, ip });
     }
 }

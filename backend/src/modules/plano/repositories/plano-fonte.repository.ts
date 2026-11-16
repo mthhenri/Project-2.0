@@ -4,6 +4,7 @@ import { BaseRepository } from '../../../core/base/base.repository';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 import {
     PlanoFonteCriadoDto,
+    PlanoFonteDeOutroVerificarDto,
     PlanoFonteExcluidaDto,
     PlanoFonteExcluirDto,
     PlanoFonteInternoCriarDto,
@@ -153,6 +154,27 @@ export class PlanoFonteRepository extends BaseRepository<BaseEntity> {
             { planoId: dto.planoId },
         );
         return resultado[0].total;
+    }
+
+    /** Há fonte ativa trazida por alguém que não seja `usuarioId`? (O plano só vira solo enquanto ninguém além do criador contribuiu: task 397.) */
+    async validarFonteDeOutro(dto: PlanoFonteDeOutroVerificarDto): Promise<boolean> {
+        const resultado = await this.executarConsulta<{ existe: boolean }>(
+            `
+                SELECT
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            plano_fonte
+                        WHERE
+                            plano_fonte.plano_id = :planoId
+                            AND plano_fonte.usuario_id <> :usuarioId
+                            AND plano_fonte.is_deleted = false
+                    ) AS existe
+            `,
+            { planoId: dto.planoId, usuarioId: dto.usuarioId },
+        );
+        return resultado[0].existe;
     }
 
     /** Soft delete: a fonte some da lista e do contexto da IA. `null` se não é do plano. */

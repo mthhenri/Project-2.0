@@ -29,16 +29,16 @@
 
 ## Ativos
 
-> P-092 a P-101 (os que seguem abertos; os corrigidos saíram daqui) vêm da revisão de requisições e de permissões (2026-11-13 a 15): são os achados de severidade alta e os de média reproduzidos na aplicação rodando. A revisão tem 225 achados ao todo; os demais
+> P-092 a P-102 (os que seguem abertos; os corrigidos saíram daqui) vêm da revisão de requisições e de permissões (2026-11-13 a 15): são os achados de severidade alta e os de média reproduzidos na aplicação rodando. A revisão tem 225 achados ao todo; os demais
 > estão em [`DOSSIE.md`](../specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md) (código `A-NNN`) e cada um aponta para a sua spec na guarda-chuva `docs/specs/backlog/requisicoes-e-permissoes-correcoes.spec.md` (tasks 330–487).
 
-### P-099 — Plano marcado como "solo" tira gestor e administrador de arquivar e excluir · `ABERTO` · backend/plano
+### P-102 — Trocar a senha não derruba os tokens já emitidos · `ABERTO` · backend/autenticacao e usuario
 
-- **Sintoma:** o criador marca solo um plano de projeto e o administrador passa a receber 404 em `GET /plano/:id`, `PATCH /plano/:id/arquivo` e `DELETE /plano/:id`; o plano some da lista dele. Reproduzido em 2026-11-14.
-- **Causa:** `marcarSolo` só confere se quem chama é o criador, e a checagem de acesso vem antes da de arquivar e excluir.
-- **Contorno:** o criador desmarca o solo.
-- **Correção:** `397-plano-solo-e-o-que-o-gestor-mantem` (decisão do autor).
-- **Desde:** 2026-11-14 (existe desde o modo planejamento).
+- **Sintoma:** quem tinha um token (inclusive alguém que não devia) segue com acesso até ele vencer (7 dias), mesmo depois de a senha da conta ser trocada. A `JwtStrategy` só confere que o usuário existe e está ativo.
+- **Causa:** o token não carrega nada que a troca de senha invalide, e o usuário não guarda o instante da última troca.
+- **Contorno:** inativar e reativar o usuário não ajuda (o token volta a valer); só esperar vencer ou trocar o segredo do JWT (derruba todos).
+- **Correção:** `423-senha-trocada-derruba-os-tokens-antigos` (decisão do autor, que mandou apenas anotar: precisa de dado novo no usuário, coluna com o instante da última troca ou versão de credencial).
+- **Desde:** sempre (achado A-130 da revisão de 2026-11).
 
 ### P-097 — Project Desktop consulta o check-in a cada 15 s, com ou sem execução · `ABERTO` · desktop
 

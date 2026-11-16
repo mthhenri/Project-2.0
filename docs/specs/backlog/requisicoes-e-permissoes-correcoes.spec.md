@@ -9,7 +9,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 ## Entregáveis
 
 1. As 158 tasks da tabela abaixo, cada uma implementada pela própria spec: 6 de severidade alta, 58 média, 82 baixa e 12 informativas.
-2. As 47 decisões do autor ainda pendentes, listadas em "Decisões do autor pendentes", registradas na spec de cada task antes de ela começar.
+2. As 42 decisões do autor ainda pendentes, listadas em "Decisões do autor pendentes", registradas na spec de cada task antes de ela começar.
 
 ## Regras para todas as tasks
 
@@ -39,16 +39,11 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **386** | Conexão de demandas de projetos diferentes: permitir ou recusar |
 | **388** | Desenvolvedor entra sozinho em qualquer demanda do projeto e passa a editar: é a regra? |
 | **393** | Supervisão: conversas antigas de quem deixou de ser gestor |
-| **396** | Plano solo de projeto: o criador que perdeu o acesso ao projeto perde o plano |
-| **397** | Plano: marcar "solo" não tira gestor e administrador de arquivar e excluir |
 | **402** | Plano: trocar a demanda ligada exige o quê sobre a demanda antiga? |
 | **403** | Plano arquivado: continua editável e publicável? |
 | **412** | Demandas: voltar a uma demanda vista e trocar de modo refazem a carga inteira |
 | **414** | Demandas: gravar membros numa requisição só |
 | **415** | Chat: o evento `SINCRONIZAR` deixa de ser "relê tudo" |
-| **421** | Login: limitar tentativas |
-| **423** | Troca de senha: os tokens emitidos antes deixam de valer |
-| **424** | Senha: quem troca a de quem, e com qual confirmação |
 | **425** | `GET /usuario`: o que o auxiliar recebe de cada usuário |
 | **426** | Pad: o gestor lê o pad de outro; e escreve? |
 | **428** | Promover a gestor: o que fazer com as demandas e a execução ativa do usuário |
@@ -164,8 +159,8 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **393** | Baixa | backend/mensagem-direta | Supervisão: conversas antigas de quem deixou de ser gestor | A-092 | pendente |
 | **394** | Baixa | backend/mensagem-direta | Referência `#` no chat: demanda e atividade com a mesma regra de acesso | A-093 | — |
 | **395** | Baixa | backend/mensagem-direta | Proposta do `@IA` numa conversa: quem tem visão total não vê proposta de tipos pessoais | A-094 | — |
-| **396** | Média | backend/plano | Plano solo de projeto: o criador que perdeu o acesso ao projeto perde o plano | A-095 | pendente |
-| **397** | Média | backend/plano | Plano: marcar "solo" não tira gestor e administrador de arquivar e excluir | A-096 | pendente |
+| **396** | Média | backend/plano | Plano solo de projeto: o criador que perdeu o acesso ao projeto perde o plano | A-095 | decidida e feita |
+| **397** | Média | backend/plano | Plano: marcar "solo" não tira gestor e administrador de arquivar e excluir | A-096 | decidida e feita |
 | **398** | Média | backend/plano e chat | IA no plano: as ferramentas só agem no plano da conversa aberta | A-097 | — |
 | **399** | Baixa | backend/plano | Publicar plano na demanda: conferir a permissão de editar antes das outras respostas | A-098 | — |
 | **400** | Baixa | docs e backend/plano | Plano: escrever as regras de permissão no `SYSTEM.SPEC.md` e tirar a sobra da regra antiga | A-099, A-100 | — |
@@ -204,10 +199,10 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 
 | Task | Severidade | Área | Entrega | Achados | Decisão |
 |---|---|---|---|---|---|
-| **421** | Média | backend/autenticacao | Login: limitar tentativas | A-128 | pendente |
+| **421** | Média | backend/autenticacao | Login: limitar tentativas | A-128 | decidida e feita |
 | **422** | Baixa | backend/autenticacao | Login: não revelar que um login existe e está inativo | A-129 | — |
-| **423** | Média | backend/autenticacao e usuario | Troca de senha: os tokens emitidos antes deixam de valer | A-130 | pendente |
-| **424** | Média | backend/usuario | Senha: quem troca a de quem, e com qual confirmação | A-131 | pendente |
+| **423** | Média | backend/autenticacao e usuario | Troca de senha: os tokens emitidos antes deixam de valer | A-130 | adiada (P-102) |
+| **424** | Média | backend/usuario | Senha: quem troca a de quem, e com qual confirmação | A-131 | decidida e feita |
 | **425** | Média | backend/usuario | `GET /usuario`: o que o auxiliar recebe de cada usuário | A-132 | pendente |
 | **426** | Média | backend/anotacao | Pad: o gestor lê o pad de outro; e escreve? | A-133 | pendente |
 | **427** | Baixa | backend/ponto-justificativa | Justificativa de ponto: a regra "só de outra pessoa" na service | A-134 | — |

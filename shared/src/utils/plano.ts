@@ -29,13 +29,14 @@ export interface PlanoAcessoEntrada {
 }
 
 /**
- * Quem vê e edita o plano: plano amplo e plano solo, só o criador (nem gestor nem administrador entram);
- * plano de projeto, quem tem acesso ao projeto (auxiliar, gestor e administrador por tipo, desenvolvedor por `demanda_usuario`).
+ * Quem vê e edita o plano: plano amplo, só o criador (nem gestor nem administrador entram); plano solo de projeto, o criador **e** só enquanto ele
+ * tem acesso ao projeto (task 396); plano de projeto, quem tem acesso ao projeto (auxiliar, gestor e administrador por tipo, desenvolvedor por `demanda_usuario`).
  * Ver e editar são a mesma regra.
  */
 export function podeAcessarPlano(entrada: PlanoAcessoEntrada): boolean {
-    if (entrada.projetoId === null || entrada.solo) return entrada.usuarioId === entrada.criadorId;
-    return temVisibilidadeTotal(entrada.tipoUsuario) || entrada.temAcessoAoProjeto;
+    if (entrada.projetoId === null) return entrada.usuarioId === entrada.criadorId;
+    const temAcesso = temVisibilidadeTotal(entrada.tipoUsuario) || entrada.temAcessoAoProjeto;
+    return entrada.solo ? entrada.usuarioId === entrada.criadorId && temAcesso : temAcesso;
 }
 
 /** Arquivar e excluir: o criador, o gestor e o administrador (quem já acessa o plano). */
