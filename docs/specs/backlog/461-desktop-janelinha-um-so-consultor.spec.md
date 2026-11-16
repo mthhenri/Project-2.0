@@ -44,5 +44,5 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 
 ## Dependências
 
-Depois de `329-desktop-checkin-conferencia-agendada`.
+Depois de `487-desktop-checkin-conferencia-agendada`.
 

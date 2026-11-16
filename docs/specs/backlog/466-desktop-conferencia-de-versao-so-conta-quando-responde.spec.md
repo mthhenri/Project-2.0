@@ -39,5 +39,5 @@ Qualquer outro achado do dossiê; cada um tem a sua spec.
 
 ## Dependências
 
-Convém junto com `329-desktop-checkin-conferencia-agendada` (as duas mexem em `conferirCheckin`).
+Convém junto com `487-desktop-checkin-conferencia-agendada` (as duas mexem em `conferirCheckin`).
 

@@ -1,6 +1,6 @@
 # requisicoes-e-permissoes-correcoes.spec.md
 
-> Guarda-chuva (tasks **329–486**, todas já com spec própria em `backlog/`). Origem: a revisão de requisições e de permissões pedida pelo autor em 2026-11-13 (`docs/specs/active/revisao-requisicoes-e-permissoes.spec.md`); os achados, a evidência e o que foi medido estão em `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`. O autor pediu uma spec por ponto, juntando só os de mesma causa.
+> Guarda-chuva (tasks **330–487**, todas já com spec própria em `backlog/`). Origem: a revisão de requisições e de permissões pedida pelo autor em 2026-11-13 (`docs/specs/active/revisao-requisicoes-e-permissoes.spec.md`); os achados, a evidência e o que foi medido estão em `docs/specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md`. O autor pediu uma spec por ponto, juntando só os de mesma causa.
 
 ## Objetivo
 
@@ -87,7 +87,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 
 | Task | Severidade | Área | Entrega | Achados | Decisão |
 |---|---|---|---|---|---|
-| **329** | Alta | desktop | Project Desktop: conferir o check-in pelo horário sorteado, não a cada 15 s | A-001, A-002, A-003, A-004 | — |
+| **487** | Alta | desktop | Project Desktop: conferir o check-in pelo horário sorteado, não a cada 15 s | A-001, A-002, A-003, A-004 | — |
 | **330** | Média | frontend/casca | Disponibilidade da IA: não consultar a cada 60 s com a aba oculta | A-005, A-006 | pendente |
 | **331** | Média | frontend/casca | Execução ativa: foco e volta à aba não disparam consultas repetidas | A-007, A-008 | — |
 | **332** | Média | frontend/casca | Leituras automáticas da casca não mostram o toast global de erro | A-009 | — |

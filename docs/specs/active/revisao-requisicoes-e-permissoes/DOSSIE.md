@@ -1,6 +1,6 @@
 # Dossiê — Revisão de requisições e de permissões por tipo de usuário
 
-Spec: `../revisao-requisicoes-e-permissoes.spec.md`. Anexos: [`MAPAS-DE-REQUISICOES.md`](MAPAS-DE-REQUISICOES.md) e [`MATRIZES-DE-PERMISSAO.md`](MATRIZES-DE-PERMISSAO.md). Specs de correção: `docs/specs/backlog/requisicoes-e-permissoes-correcoes.spec.md` (tasks 329–486). Evidências brutas, ignoradas pelo Git: `.artifacts/revisao-requisicoes-e-permissoes/`.
+Spec: `../revisao-requisicoes-e-permissoes.spec.md`. Anexos: [`MAPAS-DE-REQUISICOES.md`](MAPAS-DE-REQUISICOES.md) e [`MATRIZES-DE-PERMISSAO.md`](MATRIZES-DE-PERMISSAO.md). Specs de correção: `docs/specs/backlog/requisicoes-e-permissoes-correcoes.spec.md` (tasks 330–487). Evidências brutas, ignoradas pelo Git: `.artifacts/revisao-requisicoes-e-permissoes/`.
 
 **Estado: cobertura incompleta em três pontos (seção 7); a revisão continua em `active/`.** Nenhum código foi alterado.
 
@@ -15,7 +15,7 @@ Spec: `../revisao-requisicoes-e-permissoes.spec.md`. Anexos: [`MAPAS-DE-REQUISIC
 
 | Task | Achado | Como foi verificado |
 |---|---|---|
-| **329** | Project Desktop: conferir o check-in pelo horário sorteado, não a cada 15 s | código, pelo agente principal |
+| **487** | Project Desktop: conferir o check-in pelo horário sorteado, não a cada 15 s | código, pelo agente principal |
 | **335** | Execuções de uma atividade: detalhe e diálogo de encerrar mostram as últimas, não as mais antigas | código, pelo agente principal |
 | **359** | Supervisão do chat: a auditoria e o aviso não dependem do parâmetro `cursor` | ao vivo |
 | **367** | IA: propor criar e mover atividade conferem o acesso à demanda antes de ler | código, pelo agente principal |
@@ -24,7 +24,7 @@ Spec: `../revisao-requisicoes-e-permissoes.spec.md`. Anexos: [`MAPAS-DE-REQUISIC
 
 ### O que mais pesa no tráfego
 
-- **Project Desktop** pede `GET /checkin/situacao` a cada 15 s, com ou sem execução (240 por hora por usuário): task **329**.
+- **Project Desktop** pede `GET /checkin/situacao` a cada 15 s, com ou sem execução (240 por hora por usuário): task **487**.
 - **Tela de Demandas**: 10 requisições para abrir e 5 por demanda selecionada (a decisão da task 325 era 4). Uma das 5 não é usada por ninguém (**406**) e outra é o botão do chat perguntando pelo canal (**405**); a lista de destinos de conexão repete o grafo (**410**). Com as três, abrir cai para 7 e selecionar para 3.
 - **Toda aba aberta** pede `GET /ia/disponibilidade` a cada 60 s, mesmo oculta (**330**), e cada foco da janela pede `GET /execucao/ativa` (**331**).
 - **Carga da casca**: 8 requisições antes da tela (sessão, execução ativa, versão do Desktop, IA, check-in, stream do chat, lista de conversas e preferência). Duas saem com as tasks **338**, **337**.
@@ -102,10 +102,10 @@ As quatro tabelas estão em [`MATRIZES-DE-PERMISSAO.md`](MATRIZES-DE-PERMISSAO.m
 
 | Achado | Sev. | Tipo | O que é | Verificação | Task |
 |---|---|---|---|---|---|
-| A-001 | Alta | ineficiência | Project Desktop: o processo principal pede GET /checkin/situacao a cada 15 s, com ou sem execução (240/h por usuário) | código, pelo agente principal | **329** |
-| A-002 | Alta | ineficiência | Processo principal do Desktop pede GET /checkin/situacao a cada 15 s, com ou sem execução, com a janela à vista ou na bandeja | código, pelo agente principal | **329** |
-| A-003 | Alta | ineficiência | Processo principal pede GET /mensagem-direta/preferencia a cada 60 s só para saber o atalho global | código, pelo agente principal | **329** |
-| A-004 | Alta | requisição inútil | GET /ia/disponibilidade a cada 15 s enquanto o check-in está disparado e a janelinha não pode abrir | código, pelo agente principal | **329** |
+| A-001 | Alta | ineficiência | Project Desktop: o processo principal pede GET /checkin/situacao a cada 15 s, com ou sem execução (240/h por usuário) | código, pelo agente principal | **487** |
+| A-002 | Alta | ineficiência | Processo principal do Desktop pede GET /checkin/situacao a cada 15 s, com ou sem execução, com a janela à vista ou na bandeja | código, pelo agente principal | **487** |
+| A-003 | Alta | ineficiência | Processo principal pede GET /mensagem-direta/preferencia a cada 60 s só para saber o atalho global | código, pelo agente principal | **487** |
+| A-004 | Alta | requisição inútil | GET /ia/disponibilidade a cada 15 s enquanto o check-in está disparado e a janelinha não pode abrir | código, pelo agente principal | **487** |
 | A-005 | Média | ineficiência | Barra lateral pede GET /ia/disponibilidade a cada 60 s em toda aba, visível ou oculta | ao vivo | **330** |
 | A-006 | Média | ineficiência | Janela principal oculta na bandeja segue pedindo como se estivesse à vista | ao vivo | **330** |
 | A-007 | Média | ineficiência | Cada foco da janela dispara GET /execucao/ativa sem guarda; voltar à aba dispara 2 e mais um GET /checkin/situacao | ao vivo | **331** |

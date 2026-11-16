@@ -20,7 +20,7 @@ desenvolvedor) consegue ler e alterar. Cada ponto confirmado vira uma spec de co
 2. **Anexos** na mesma pasta: `MAPAS-DE-REQUISICOES.md` (os mapas por tela e as tabelas das varreduras
    transversais) e `MATRIZES-DE-PERMISSAO.md` (rota × tipo de usuário, por módulo do backend).
 3. **Specs de correção** em `docs/specs/backlog/`: a guarda-chuva `requisicoes-e-permissoes-correcoes.spec.md` e uma
-   spec numerada por ponto, a partir da 329. Achados com a mesma causa no mesmo arquivo dividem uma spec. Correção
+   spec numerada por ponto, a partir da 330 (a primeira, a do Desktop, ficou com a 487). Achados com a mesma causa no mesmo arquivo dividem uma spec. Correção
    que muda contrato (DTO, rota, enum, modelagem) traz o antes → depois e as opções, marcada como **decisão do
    autor pendente**.
 4. **Contexto**: `PROBLEMS.md` com os defeitos confirmados que ainda não estavam lá, `CONTEXT.md` e `HISTORY.md`
