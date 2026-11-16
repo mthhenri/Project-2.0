@@ -77,7 +77,7 @@ Como observar: /atividade/:id: GET /execucao?atividadeId=:id&itensPorPagina=200 
 
 Verificação na auditoria: código lido pelo agente principal: `atividade.service.ts:93` pede `itensPorPagina=200`, o repository ordena por `inicio_data ASC` e `atividade-detalhe.page.ts:356` guarda `itens.slice(0, 5)`; medido que o detalhe pede `GET /execucao?atividadeId=:id&itensPorPagina=200`. Dois auditores chegaram ao mesmo defeito por caminhos diferentes. Não foi reproduzido na tela com uma atividade de 6 ou mais execuções.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 A correção barata fica só no front; a eficiente pede parâmetro novo na rota de listagem.
 
@@ -89,6 +89,8 @@ A correção barata fica só no front; a eficiente pede parâmetro novo na rota 
 2. Rota: `GET /execucao` aceitar ordem decrescente e limite (parâmetros novos no DTO de filtro), e as telas pedirem só as N últimas.
 
 Recomendação da auditoria: opção 1 agora (corrige o defeito); a 2 se o volume de execuções por atividade incomodar.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor decidiu a **opção 1**, por enquanto: só no front, pedindo todas as execuções (`allRows`) e usando as mais novas primeiro; deixar **anotado no código** que, havendo muitas execuções por atividade, a rota é que será ajustada (ordem decrescente e limite em `GET /execucao`). A anotação está em `AtividadeService.listarExecucoesPorAtividade` (frontend).
 
 ## Entregáveis
 

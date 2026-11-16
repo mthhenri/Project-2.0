@@ -1,7 +1,8 @@
-import { Component, ElementRef, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { of, finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { InputTextModule } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { MessageService } from 'primeng/api';
@@ -48,6 +49,7 @@ export class AtividadeFormularioComponent implements OnInit {
     private readonly desfazerService = inject(DesfazerService);
     private readonly router = inject(Router);
     private readonly formBuilder = inject(FormBuilder);
+    private readonly destroyRef = inject(DestroyRef);
     readonly sessao = inject(UsuarioSessaoService);
     protected readonly prioridadeService = inject(AtividadePrioridadeService);
 
@@ -84,7 +86,11 @@ export class AtividadeFormularioComponent implements OnInit {
         this.prioridadeService.carregar();
         this.carregarDemandasAtribuidas();
         this.carregarTodasAsTags();
-        if (this.sessao.eGestor()) this.carregarUsuarios();
+        if (this.sessao.eGestor()) {
+            this.carregarUsuarios();
+            // A atividade só nasce em demanda a que o dono tem acesso: trocar o dono refaz a lista de demandas (task 377).
+            this.formulario.controls.usuarioId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.carregarDemandasAtribuidas());
+        }
         // Com a demanda definida o foco vai para o nome; sem ela, para o seletor de demanda.
         setTimeout(() => (this.demandaIdInicial() ? this.campoNome()?.nativeElement.focus() : this.seletorDemanda()?.focus()));
     }
@@ -155,7 +161,7 @@ export class AtividadeFormularioComponent implements OnInit {
     private carregarDemandasAtribuidas(): void {
         this.carregandoDemandasAtribuidas.set(true);
         this.demandaService
-            .listarAtribuidas()
+            .listarAtribuidas(this.sessao.eGestor() ? this.formulario.controls.usuarioId.value : null)
             .pipe(finalize(() => this.carregandoDemandasAtribuidas.set(false)))
             .subscribe({
                 next: (resposta) => {
@@ -163,6 +169,9 @@ export class AtividadeFormularioComponent implements OnInit {
                         this.demandasAtribuidas.set(
                             resposta.dados.map((demanda) => ({ ...demanda, rotulo: `${demanda.nomeProjeto} - ${demanda.nome}` })),
                         );
+                        // A demanda escolhida que o novo dono não tem sai da seleção, para não enviar um pedido que o servidor recusa.
+                        const escolhida = this.formulario.controls.demandaId.value;
+                        if (escolhida && !resposta.dados.some((demanda) => demanda.id === escolhida)) this.formulario.controls.demandaId.setValue(null);
                     }
                 },
             });

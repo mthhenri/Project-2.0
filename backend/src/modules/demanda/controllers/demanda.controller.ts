@@ -15,6 +15,7 @@ import { DemandaService } from '../services/demanda.service';
 import {
     DemandaCriarDto,
     DemandaListarDto,
+    DemandaAtribuidaListarDto,
     DemandaExecutadaListarDto,
     DemandaAlterarDto,
     DemandaTextosAlterarDto,
@@ -112,10 +113,12 @@ export class DemandaController {
 
     @ApiOperation({ summary: 'Listar demandas planejadas/pendentes para criação de atividade (desenvolvedor vê as atribuídas; gestor vê todas)' })
     @ApiResponse({ status: 200, description: 'Demandas atribuídas listadas com sucesso' })
+    @ApiResponse({ status: 403, description: 'Só gestor e administrador pedem as demandas de outra pessoa', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+    @ApiResponse({ status: 404, description: 'Usuário não encontrado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @Get('atribuidas')
-    listarAtribuidas(@ActiveUser() usuarioAtivo: JwtPayload) {
-        return this.demandaService.listarAtribuidas(usuarioAtivo);
+    listarAtribuidas(@Query() filtros: DemandaAtribuidaListarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.demandaService.listarAtribuidas(filtros, usuarioAtivo);
     }
 
     @ApiOperation({ summary: 'Listar as últimas demandas que o próprio usuário executou, da execução mais recente para a mais antiga' })

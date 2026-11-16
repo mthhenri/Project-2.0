@@ -25,7 +25,7 @@ Como observar: Como GESTOR: GET /api/v1/mensagem-direta/supervisao/conversa/<aux
 
 Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** `conversaEhSupervisionavel` é verdadeira quando nenhum participante tem poder de gestor.
 
@@ -33,6 +33,8 @@ Verificação na auditoria: código, por um auditor; arquivo e linha das evidên
 
 1. É isso: registrar no documento que o auxiliar conta como desenvolvedor na supervisão.
 2. A conversa que envolve auxiliar é privada: mudar a função e os testes.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor seguiu a recomendação da auditoria, **opção 1**: o auxiliar conta como desenvolvedor na supervisão. Sem mudança de código; a regra foi escrita no `SYSTEM.SPEC.md` e `conversaEhSupervisionavel` ganhou o teste com auxiliar.
 
 ## Entregáveis
 

@@ -35,6 +35,7 @@ export * from './GrupoSupervisaoLidoDto';
 export * from './GrupoDigitacaoAvisarDto';
 export * from './GrupoSupervisaoRegistrarDto';
 export * from './GrupoSupervisionavelListarDto';
+export * from './GrupoPrivacidadeEncerradaRecuperarDto';
 export * from './GrupoMembroDeGruposListarDto';
 export * from './GrupoPorIdsListarDto';
 export * from './GrupoCanalRecuperarDto';

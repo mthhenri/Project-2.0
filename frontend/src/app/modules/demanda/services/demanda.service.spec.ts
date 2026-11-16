@@ -78,7 +78,9 @@ describe('DemandaService (frontend)', () => {
         servico.recuperarAncestral(3).subscribe();
         pedido('GET', '/demanda/3/ancestral');
         servico.listarAtribuidas().subscribe();
-        pedido('GET', '/demanda/atribuidas');
+        expect(pedido('GET', '/demanda/atribuidas').request.params.has('usuarioId')).toBe(false);
+        servico.listarAtribuidas(9).subscribe();
+        expect(pedido('GET', '/demanda/atribuidas').request.params.get('usuarioId')).toBe('9');
     });
 
     it('conexões: criar (com e sem erro tratado pela tela), listar e excluir', () => {

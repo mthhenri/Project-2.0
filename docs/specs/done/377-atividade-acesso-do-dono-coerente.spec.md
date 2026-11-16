@@ -26,7 +26,7 @@ Como observar: Gestor: POST /api/v1/atividade com usuarioId de desenvolvedor X q
 
 Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** gestor cria atividade para alguém em demanda de que a pessoa não é membro: a pessoa vê na lista, altera e inicia execução, mas `GET /atividade/:id` responde 403 (e a IA, que começa por `recuperar`, recusa).
 
@@ -34,6 +34,8 @@ Verificação na auditoria: código, por um auditor; arquivo e linha das evidên
 
 1. O dono sempre acessa a própria atividade (ler e alterar).
 2. Criar atividade para alguém exige que a pessoa seja membro da demanda (ou a inclui).
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor decidiu a **opção 2**: criar atividade para um usuário exige que ele tenha acesso à demanda; e, na tela, trocar o usuário da nova atividade refaz a lista de demandas, filtrando pelas que o selecionado tem. Aplicado: `AtividadeService.criar` recusa o dono sem acesso (membro, ou visibilidade total) e `GET /demanda/atribuidas` aceita `usuarioId` (só gestor e administrador; contrato `DemandaAtribuidaListarDto`). Com isso o dono sempre acessa a própria atividade criada; `recuperar` e `listarTags` ficam como estão.
 
 ## Entregáveis
 

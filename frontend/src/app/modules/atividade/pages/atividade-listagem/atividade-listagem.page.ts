@@ -615,14 +615,30 @@ export class AtividadeListagemPage implements OnInit {
     // Menu ⋮ da linha
     // ---------------------------------------------------------------------------
 
-    /** Menu ⋮ do auxiliar e do gestor: registrar execução e excluir. Tags são editadas na própria célula da linha. */
+    /** O "Excluir" só existe para a atividade **sem nenhuma execução** e para quem pode: o dono, o auxiliar, o gestor e o administrador (task 378). */
+    podeExcluir(atividade: AtividadeResumoDto): boolean {
+        return atividade.totalExecucoes === 0 && (this.sessao.podeEditarAtividadeDeOutro() || atividade.usuarioId === this.sessao.id());
+    }
+
+    /** O menu ⋮ existe para quem conduz o trabalho (nome e execução) e para o dono que pode excluir a própria atividade. */
+    temMenu(atividade: AtividadeResumoDto): boolean {
+        return this.sessao.podeEditarAtividadeDeOutro() || this.podeExcluir(atividade);
+    }
+
+    /** Menu ⋮: editar nome e registrar execução (auxiliar, gestor e administrador) e excluir (quando a atividade nunca teve execução). Tags são editadas na célula. */
     abrirMenu(evento: Event, atividade: AtividadeResumoDto): void {
-        this.itensMenu = [
-            { label: 'Editar nome', icon: 'pi pi-pencil', command: () => this.abrirEdicaoDoNome(atividade) },
-            { label: 'Registrar execução', icon: 'pi pi-calendar-plus', command: () => this.abrirDialogRegistro(atividade) },
-            { separator: true },
-            { label: 'Excluir', icon: 'pi pi-trash', styleClass: 'atividade-listagem__menu-excluir', command: () => this.excluir(atividade) },
-        ];
+        const itens: MenuItem[] = [];
+        if (this.sessao.podeEditarAtividadeDeOutro()) {
+            itens.push(
+                { label: 'Editar nome', icon: 'pi pi-pencil', command: () => this.abrirEdicaoDoNome(atividade) },
+                { label: 'Registrar execução', icon: 'pi pi-calendar-plus', command: () => this.abrirDialogRegistro(atividade) },
+            );
+        }
+        if (this.podeExcluir(atividade)) {
+            if (itens.length) itens.push({ separator: true });
+            itens.push({ label: 'Excluir', icon: 'pi pi-trash', styleClass: 'atividade-listagem__menu-excluir', command: () => this.excluir(atividade) });
+        }
+        this.itensMenu = itens;
         this.menuAcoes()?.toggle(evento);
     }
 

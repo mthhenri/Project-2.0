@@ -8,6 +8,7 @@ import {
     DemandaCriadaDto,
     DemandaListarDto,
     DemandaAtribuidaDto,
+    DemandaAtribuidaListarDto,
     DemandaExecutadaListarDto,
     DemandaExecutadaResumoDto,
     LIMITE_PADRAO_DEMANDAS_EXECUTADAS,
@@ -235,13 +236,28 @@ export class DemandaService {
    * Lista as demandas planejadas/pendentes para seleção na criação de atividades.
    * Desenvolvedor recebe apenas as demandas às quais está atribuído (demanda_usuario);
    * gestor recebe todas as demandas não-concluídas de todos os projetos (acesso total).
+   * Com `filtros.usuarioId` de outra pessoa (só gestor e administrador), a lista é a que **ela** teria: a tela de nova
+   * atividade a pede ao trocar o dono, porque a atividade só nasce em demanda a que o dono tem acesso (task 377).
    */
     async listarAtribuidas(
+        filtros: DemandaAtribuidaListarDto,
         usuarioAtivo: JwtPayload,
     ): Promise<StandardResponse<DemandaAtribuidaDto[]>> {
+        let alvo = { usuarioId: usuarioAtivo.sub, tipo: usuarioAtivo.tipo };
+        if (filtros.usuarioId !== undefined && filtros.usuarioId !== usuarioAtivo.sub) {
+            if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
+                throw new UnauthorizedAccessException('Apenas gestor ou administrador consulta as demandas de outro usuário');
+            }
+            const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: filtros.usuarioId });
+            if (!usuarioEncontrado) {
+                throw new ResourceNotFoundException('Usuário');
+            }
+            alvo = { usuarioId: usuarioEncontrado.id, tipo: usuarioEncontrado.tipo };
+        }
+
         const demandas = await this.demandaRepositorio.listarAtribuidas({
-            usuarioId: usuarioAtivo.sub,
-            apenasAtribuidas: !temVisibilidadeTotal(usuarioAtivo.tipo),
+            usuarioId: alvo.usuarioId,
+            apenasAtribuidas: !temVisibilidadeTotal(alvo.tipo),
         });
 
         return {

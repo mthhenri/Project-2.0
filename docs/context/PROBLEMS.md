@@ -48,14 +48,6 @@
 - **Correção:** `487-desktop-checkin-conferencia-agendada`, `461-desktop-janelinha-um-so-consultor`.
 - **Desde:** 2026-11-13 (parte do R-01 que a task 322 não alcançou).
 
-### P-096 — Detalhe da atividade mostra as 5 execuções mais antigas e perde a execução em andamento · `ABERTO` · frontend/atividade
-
-- **Sintoma:** numa atividade com 6 ou mais execuções, "Execuções recentes" mostra as mais antigas, a faixa de execução em andamento não aparece e o status não é bloqueado. Confirmado no código; não foi visto na tela.
-- **Causa:** `GET /execucao` devolve em ordem crescente de início, a tela pede `itensPorPagina=200` e guarda `itens.slice(0, 5)`, procurando a execução aberta só nelas. O diálogo de encerrar usa a mesma lista.
-- **Contorno:** nenhum.
-- **Correção:** `335-execucoes-da-atividade-as-ultimas-primeiro` (a correção barata é só de front; a eficiente pede decisão do autor).
-- **Desde:** 2026-11-13.
-
 ### P-085 — Ação em massa nas atividades faz uma requisição por item · `ABERTO` · frontend/atividade
 
 - **Sintoma:** com N atividades selecionadas, "Mudar status", "Acrescentar tags", "Excluir" e "Desfazer" fazem N chamadas (`PUT`, `PUT .../tag`, `DELETE`, `PATCH .../restaurar`) e depois recarregam a lista. Se uma falhar, a operação fica pela metade (R-14).

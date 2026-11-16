@@ -84,10 +84,23 @@ describe('AtividadeService (frontend)', () => {
         expect(pedido('PATCH', '/execucao/9/encerrar').request.body).toEqual({ descricao: 'feito' });
     });
 
-    it('listar execuções da atividade pede até 200 itens daquela atividade', () => {
-        servico.listarExecucoesPorAtividade(3).subscribe();
+    it('listar execuções da atividade pede todas e entrega da mais nova para a mais antiga (task 335)', () => {
+        let itens: { id: number }[] = [];
+        servico.listarExecucoesPorAtividade(3).subscribe((resposta) => (itens = resposta.dados!.itens as never));
         const requisicao = http.expectOne((registro) => registro.url.endsWith('/execucao'));
         expect(requisicao.request.params.get('atividadeId')).toBe('3');
-        expect(requisicao.request.params.get('itensPorPagina')).toBe('200');
+        expect(requisicao.request.params.get('allRows')).toBe('true');
+        expect(requisicao.request.params.has('itensPorPagina')).toBe(false);
+        requisicao.flush({
+            sucesso: true,
+            dados: {
+                itens: [
+                    { id: 1, inicioData: '2026-01-01T10:00:00Z' },
+                    { id: 3, inicioData: '2026-03-01T10:00:00Z' },
+                    { id: 2, inicioData: '2026-02-01T10:00:00Z' },
+                ],
+            },
+        });
+        expect(itens.map((execucao) => execucao.id)).toEqual([3, 2, 1]);
     });
 });

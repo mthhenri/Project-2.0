@@ -286,9 +286,32 @@ test('listar: calcula as páginas; allRows devolve tudo em uma página só', asy
 test('listarAtribuidas: desenvolvedor recebe só as atribuídas; gestor, todas', async () => {
     const chamadas: unknown[] = [];
     const servico = criarServico(repositorio({ listarAtribuidas: async (dto: unknown) => { chamadas.push(dto); return []; } }));
-    await servico.listarAtribuidas(DESENVOLVEDOR);
-    await servico.listarAtribuidas(GESTOR);
+    await servico.listarAtribuidas({}, DESENVOLVEDOR);
+    await servico.listarAtribuidas({}, GESTOR);
     assert.deepEqual(chamadas, [{ usuarioId: 3, apenasAtribuidas: true }, { usuarioId: 1, apenasAtribuidas: false }]);
+});
+
+test('listarAtribuidas: gestor pede as de outro usuário e recebe as que ele teria (task 377)', async () => {
+    const chamadas: unknown[] = [];
+    const repo = repositorio({ listarAtribuidas: async (dto: unknown) => { chamadas.push(dto); return []; } });
+    const usuarios = { recuperar: async ({ id }: { id: number }) => (id === 9 ? { id, tipo: TipoUsuarioEnum.DESENVOLVEDOR } : id === 8 ? { id, tipo: TipoUsuarioEnum.AUXILIAR } : null) };
+    const servico = criarServico(repo, {}, usuarios);
+    await servico.listarAtribuidas({ usuarioId: 9 }, GESTOR);
+    await servico.listarAtribuidas({ usuarioId: 8 }, GESTOR);
+    await servico.listarAtribuidas({ usuarioId: 1 }, GESTOR);
+    assert.deepEqual(chamadas, [
+        { usuarioId: 9, apenasAtribuidas: true },
+        { usuarioId: 8, apenasAtribuidas: false },
+        { usuarioId: 1, apenasAtribuidas: false },
+    ]);
+    await assert.rejects(() => servico.listarAtribuidas({ usuarioId: 77 }, GESTOR), ResourceNotFoundException);
+});
+
+test('listarAtribuidas: quem não é gestor não pede as demandas de outro usuário (task 377)', async () => {
+    const servico = criarServico(repositorio());
+    for (const usuario of [DESENVOLVEDOR, AUXILIAR]) {
+        await assert.rejects(() => servico.listarAtribuidas({ usuarioId: 9 }, usuario), UnauthorizedAccessException);
+    }
 });
 
 // ---------------------------------------------------------------------------

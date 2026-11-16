@@ -15,6 +15,7 @@ import {
     GrupoPorIdsListarDto,
     GrupoRecuperarDto,
     GrupoSupervisionavelListarDto,
+    GrupoPrivacidadeEncerradaRecuperarDto,
     TipoGrupoEnum,
 } from '@project20/shared';
 import { BaseRepository } from '../../../core/base/base.repository';
@@ -375,6 +376,29 @@ export class GrupoRepository extends BaseRepository<GrupoRegistrado> {
             { tipo: TipoGrupoEnum.LIVRE, usuarioIdsComPoderDeGestor: dto.usuarioIdsComPoderDeGestor },
         );
         return encontrados.map((grupo) => grupo.id);
+    }
+
+    /**
+   * Quando o grupo deixou de ser privado: a data de saída mais recente de quem tem poder de gestor (`usuarioIdsComPoderDeGestor`), ou `null` se nenhum
+   * gestor ou administrador jamais saiu dele. A supervisão só lê o que foi escrito a partir dela (task 362). Só vale para o grupo já legível
+   * (sem gestor entre os membros de agora), que é quando o service a consulta.
+   */
+    async recuperarPrivacidadeEncerradaData(dto: GrupoPrivacidadeEncerradaRecuperarDto): Promise<Date | null> {
+        const encontrado = await this.executarConsulta<{ saidaData: Date | null }>(
+            `
+                SELECT
+                    MAX(grupo_membro.saida_data) AS "saidaData"
+                FROM
+                    grupo_membro
+                WHERE
+                    grupo_membro.grupo_id = :grupoId
+                    AND grupo_membro.saida_data IS NOT NULL
+                    AND grupo_membro.is_deleted = false
+                    AND grupo_membro.usuario_id = ANY (CAST(:usuarioIdsComPoderDeGestor AS integer[]))
+            `,
+            { grupoId: dto.grupoId, usuarioIdsComPoderDeGestor: dto.usuarioIdsComPoderDeGestor },
+        );
+        return encontrado[0]?.saidaData ?? null;
     }
 
     /** A linha da pessoa no grupo, mesmo que ela tenha saído (`saidaData` preenchida); `null` quando nunca entrou ou o grupo foi encerrado. */

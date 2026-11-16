@@ -9,7 +9,7 @@ const USUARIO = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as
 function criar(quantidade: number) {
     const chamadas: number[] = [];
     const servico = {
-        listarAtribuidas: async (usuarioAtivo: { sub: number }) => {
+        listarAtribuidas: async (_filtros: unknown, usuarioAtivo: { sub: number }) => {
             chamadas.push(usuarioAtivo.sub);
             return { dados: Array.from({ length: quantidade }, (_, indice) => ({ id: indice + 1, nome: `Demanda ${indice + 1}`, projetoId: 1, nomeProjeto: 'Loja' })) };
         },

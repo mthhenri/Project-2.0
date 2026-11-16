@@ -77,6 +77,14 @@ test('conversaEhSupervisionavel: só quando nenhum participante tem poder de ges
     assert.equal(conversaEhSupervisionavel([ADMINISTRADOR, DESENVOLVEDOR]), false);
 });
 
+test('conversaEhSupervisionavel: o auxiliar conta como desenvolvedor (task 392)', () => {
+    const { AUXILIAR, DESENVOLVEDOR, GESTOR, ADMINISTRADOR } = TipoUsuarioEnum;
+    assert.equal(conversaEhSupervisionavel([AUXILIAR, DESENVOLVEDOR]), true, 'auxiliar com desenvolvedor');
+    assert.equal(conversaEhSupervisionavel([AUXILIAR, AUXILIAR]), true, 'auxiliar com auxiliar');
+    assert.equal(conversaEhSupervisionavel([AUXILIAR, GESTOR]), false, 'auxiliar com gestor é privada');
+    assert.equal(conversaEhSupervisionavel([AUXILIAR, ADMINISTRADOR]), false, 'auxiliar com administrador é privada');
+});
+
 test('conversaEhSupervisionavel: vale para N participantes e recusa a lista vazia', () => {
     const { DESENVOLVEDOR, GESTOR } = TipoUsuarioEnum;
     assert.equal(conversaEhSupervisionavel([DESENVOLVEDOR, DESENVOLVEDOR, DESENVOLVEDOR]), true);

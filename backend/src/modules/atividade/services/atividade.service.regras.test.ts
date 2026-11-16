@@ -22,11 +22,17 @@ const ATIVIDADE = {
     prioridade: { codigo: TipoAtividadePrioridadeEnum.INDEFINIDA, descricao: 'Indefinida', ordem: 5, cor: '#94a3b8' },
 };
 
-function criarServico(repositorio: Dublê = {}, tags: Dublê = {}, demandas: Dublê = {}): AtividadeService {
+/** `UsuarioRepository` em memória: o usuário 55 é desenvolvedor, o 56 é gestor. */
+const usuarioExistente = {
+    recuperar: async ({ id }: { id: number }) => ({ id, nomeCompleto: `Pessoa ${id}`, tipo: id === 56 ? TipoUsuarioEnum.GESTOR : TipoUsuarioEnum.DESENVOLVEDOR }),
+};
+
+function criarServico(repositorio: Dublê = {}, tags: Dublê = {}, demandas: Dublê = {}, usuarios: Dublê = usuarioExistente): AtividadeService {
     const servico = Object.create(AtividadeService.prototype) as Record<string, unknown>;
     servico.atividadeRepositorio = repositorio;
     servico.tagRepositorio = tags;
     servico.demandaRepositorio = demandas;
+    servico.usuarioRepositorio = usuarios;
     return servico as unknown as AtividadeService;
 }
 
@@ -39,6 +45,7 @@ function repositorio(sobrescrita: Dublê = {}) {
         recuperar: async () => ATIVIDADE,
         validarAcessoDemanda: async () => true,
         possuiExecucaoAtiva: async () => false,
+        possuiExecucao: async () => false,
         listar: async () => ({ itens: [], total: 0 }),
         listarTags: async () => [{ id: 1, nome: 'Bug', cor: '#ef4444' }],
         inserir: escrever('inserir', { ...ATIVIDADE, id: 99 }),
@@ -77,12 +84,32 @@ test('criar: desenvolvedor membro da demanda cria a atividade para si, mesmo ped
     assert.equal((repo.gravacoes[0].argumento as { usuarioId: number }).usuarioId, 3);
 });
 
-test('criar: gestor e administrador não precisam de vínculo com a demanda e podem escolher o dono', async () => {
+test('criar: gestor e administrador não precisam de vínculo com a demanda e podem escolher o dono (que é membro dela)', async () => {
     for (const usuario of [GESTOR, ADMINISTRADOR]) {
-        const repo = repositorio({ validarAcessoDemanda: async () => false });
+        const repo = repositorio({ validarAcessoDemanda: async ({ usuarioId }: { usuarioId: number }) => usuarioId === 55 });
         await criarServico(repo, tagExistente, demandaExistente).criar({ ...DADOS_CRIAR, usuarioId: 55 }, usuario);
         assert.equal((repo.gravacoes[0].argumento as { usuarioId: number }).usuarioId, 55);
     }
+});
+
+test('criar: gestor criando para desenvolvedor que não é membro da demanda é recusado e nada é gravado (task 377)', async () => {
+    const repo = repositorio({ validarAcessoDemanda: async () => false });
+    await assert.rejects(() => criarServico(repo, tagExistente, demandaExistente).criar({ ...DADOS_CRIAR, usuarioId: 55 }, GESTOR), BusinessException);
+    assert.equal(gravou(repo), false);
+});
+
+test('criar: gestor criando para desenvolvedor membro da demanda confere o vínculo do dono, não o do gestor (task 377)', async () => {
+    const consultas: number[] = [];
+    const repo = repositorio({ validarAcessoDemanda: async ({ usuarioId }: { usuarioId: number }) => { consultas.push(usuarioId); return true; } });
+    await criarServico(repo, tagExistente, demandaExistente).criar({ ...DADOS_CRIAR, usuarioId: 55 }, GESTOR);
+    assert.deepEqual(consultas, [55]);
+});
+
+test('criar: dono inexistente é 404 e dono gestor não precisa de vínculo (task 377)', async () => {
+    const repo = repositorio({ validarAcessoDemanda: async () => false });
+    await assert.rejects(() => criarServico(repo, tagExistente, demandaExistente, { recuperar: async () => null }).criar({ ...DADOS_CRIAR, usuarioId: 55 }, GESTOR), ResourceNotFoundException);
+    await criarServico(repo, tagExistente, demandaExistente).criar({ ...DADOS_CRIAR, usuarioId: 56 }, ADMINISTRADOR);
+    assert.equal((repo.gravacoes[0].argumento as { usuarioId: number }).usuarioId, 56);
 });
 
 test('criar: auxiliar não precisa de vínculo com a demanda, mas só cria para si (o dono pedido é ignorado)', async () => {
@@ -283,6 +310,25 @@ test('excluir: o dono (desenvolvedor) exclui a própria atividade; quem não é 
     const outroExclui = repositorio();
     await assert.rejects(() => criarServico(outroExclui).excluir({ id: 10 }, OUTRO_DESENVOLVEDOR), UnauthorizedAccessException);
     assert.equal(gravou(outroExclui), false);
+});
+
+test('excluir: atividade com execução registrada não é excluída por ninguém, e nada é gravado (task 378)', async () => {
+    for (const usuario of [DESENVOLVEDOR, AUXILIAR, GESTOR, ADMINISTRADOR]) {
+        const repo = repositorio({ possuiExecucao: async () => true });
+        await assert.rejects(() => criarServico(repo).excluir({ id: 10 }, usuario), BusinessException);
+        assert.equal(gravou(repo), false);
+    }
+});
+
+test('restaurar: o dono (desenvolvedor) e quem conduz o trabalho restauram; outro desenvolvedor é recusado (task 378)', async () => {
+    const excluida = { ...ATIVIDADE, demandaAtiva: true };
+    const restaurada = async () => ({ ...ATIVIDADE });
+    for (const usuario of [DESENVOLVEDOR, AUXILIAR, GESTOR]) {
+        const repo = repositorio({ recuperarExcluida: async () => excluida, restaurar: restaurada });
+        assert.equal((await criarServico(repo).restaurar({ id: 10 }, usuario)).sucesso, true);
+    }
+    const recusada = repositorio({ recuperarExcluida: async () => excluida, restaurar: restaurada });
+    await assert.rejects(() => criarServico(recusada).restaurar({ id: 10 }, OUTRO_DESENVOLVEDOR), UnauthorizedAccessException);
 });
 
 test('excluir: o auxiliar exclui a atividade de outra pessoa (menu da linha); o outro desenvolvedor segue recusado', async () => {

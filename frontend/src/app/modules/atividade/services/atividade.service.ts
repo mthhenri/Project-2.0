@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import {
     AtividadeCriarDto,
     AtividadeCriadaDto,
@@ -90,10 +90,20 @@ export class AtividadeService {
         return this.httpClient.patch<StandardResponse<ExecucaoEncerradaDto>>(`${this.urlExecucao}/${id}/encerrar`, dto);
     }
 
+    /**
+     * As execuções da atividade, **da mais nova para a mais antiga** (task 335). A rota devolve por nome do usuário e início crescente; pedir
+     * uma página fixa cortava as mais novas, inclusive a execução aberta. Por isso pede todas (`allRows`) e inverte aqui.
+     * TODO (decisão do autor, task 335): se uma atividade passar a ter muitas execuções, ajustar a rota `GET /execucao` para aceitar
+     * ordem decrescente e limite, e as telas pedirem só as N últimas.
+     */
     listarExecucoesPorAtividade(atividadeId: number): Observable<StandardResponse<PaginatedResult<ExecucaoItemDto>>> {
-        const params = new HttpParams()
-            .set('atividadeId', String(atividadeId))
-            .set('itensPorPagina', '200');
-        return this.httpClient.get<StandardResponse<PaginatedResult<ExecucaoItemDto>>>(this.urlExecucao, { params });
+        const params = new HttpParams().set('atividadeId', String(atividadeId)).set('allRows', 'true');
+        return this.httpClient.get<StandardResponse<PaginatedResult<ExecucaoItemDto>>>(this.urlExecucao, { params }).pipe(
+            map((resposta) => {
+                if (!resposta.sucesso || !resposta.dados) return resposta;
+                const itens = [...resposta.dados.itens].sort((maisAntiga, maisNova) => new Date(maisNova.inicioData).getTime() - new Date(maisAntiga.inicioData).getTime());
+                return { ...resposta, dados: { ...resposta.dados, itens } };
+            }),
+        );
     }
 }

@@ -26,7 +26,7 @@ Como observar: Grupo livre com GESTOR A e dois desenvolvedores, com mensagens; A
 
 Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** a elegibilidade para supervisão olha só os membros de agora: quando o último gestor sai, outro gestor lê todo o histórico, inclusive o período privado, e os membros veem apenas "X saiu do grupo". Há teste que fixa esse comportamento.
 
@@ -34,6 +34,8 @@ Verificação na auditoria: código, por um auditor; arquivo e linha das evidên
 
 1. A supervisão lê só o que foi escrito depois da saída do último gestor.
 2. O texto deixa de prometer privacidade e a saída do gestor avisa os membros de que a supervisão volta a ler.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor decidiu a **opção 1**: a supervisão lê só o que foi escrito depois da saída do último gestor ou administrador do grupo. Aplicado em `GrupoSupervisaoService.lerGrupoSupervisionado` (recorte pela data de `GrupoRepository.recuperarPrivacidadeEncerradaData`). Limite: a lista da supervisão (total, data e busca por texto) ainda considera o histórico inteiro, porque o recorte por grupo não existe no armazenamento das mensagens; fica como pendência.
 
 ## Entregáveis
 

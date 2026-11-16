@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-11-16 — Permissão e regras de atividade, parte 3: execuções recentes, dono com acesso, excluir sem execução, auxiliar na supervisão e grupo privado (tasks 335, 377, 378, 392 e 362)
+
+As cinco tasks seguintes que esperavam decisão do autor, decididas por ele na mesma data: **335** (só front por enquanto, com anotação no código para ajustar a rota se houver muitas execuções), **377** (criar atividade para alguém exige que a pessoa tenha acesso à demanda, e a tela refaz as demandas ao trocar o dono), **378** (dono e gestores excluem, mas só atividade sem nenhuma execução), **392** (o auxiliar conta como desenvolvedor na supervisão) e **362** (a supervisão lê só depois da saída do último gestor do grupo).
+
+**O que mudou.** O detalhe da atividade e os diálogos de iniciar/encerrar pedem todas as execuções e as mostram da mais nova para a mais antiga (a execução aberta deixa de sumir). `AtividadeService.criar` recusa o dono sem acesso, e `GET /demanda/atribuidas` aceita `usuarioId` (só gestor e administrador; `DemandaAtribuidaListarDto`). Excluir e restaurar atividade não têm mais guard na rota: a service decide e recusa atividade com execução; a lista só oferece "Excluir" nesse caso e o dono desenvolvedor ganha o menu ⋮ com esse item. A leitura da supervisão do grupo livre exclui o período privado (`recuperarPrivacidadeEncerradaData`). Corrigido e removido de `PROBLEMS.md`: P-096.
+
+**Verificação.** Backend 1837 unitários e 538 de integração, `shared` 362, frontend 238 arquivos (2892 testes, com o contorno do P-087), `lint:tudo` e builds sem erro; 19 conferências ao vivo por API e a estrutura da tela conferida (rede e DOM) num stack isolado, removido. Relatório em `docs/specs/done/335-execucoes-da-atividade-as-ultimas-primeiro/verificacao.md`.
+
+**Limites.** Os formatos de tela e o tema escuro não foram vistos (a janela do navegador embutido não desenhou). Na 362 só a leitura é recortada: a lista da supervisão ainda considera o histórico inteiro, o que pede mudar o contrato do armazenamento (a decidir). Ficam 47 decisões pendentes na guarda-chuva.
+
 ## 2026-11-16 — Permissão no servidor, parte 2: atividade de colega, leitura por tipo, lista da supervisão e chat do auxiliar (tasks 373, 361, 390, 360 e 405)
 
 As cinco tasks que esperavam decisão do autor, decididas por ele na mesma data: **373** (um usuário altera as próprias atividades; auxiliar, gestor e administrador alteram as de qualquer um; o auxiliar não cria atividade para outro), **361** e **390** (a recomendação da auditoria: o leitor por tipo e a lista da supervisão só com metadados) e **360** com **405** (o auxiliar continua sendo um desenvolvedor, então o chat da demanda responde a isso: só quem é membro abre; e a tela não pergunta ao servidor, o detalhe já diz).

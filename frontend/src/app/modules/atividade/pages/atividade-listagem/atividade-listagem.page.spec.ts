@@ -402,7 +402,7 @@ describe('AtividadeListagemPage: menu ⋮ e permissões da linha', () => {
 
     it('o menu traz "Editar nome", "Registrar execução" e "Excluir" (tags se editam na célula)', async () => {
         const { montado } = await montarPagina();
-        await carregar(montado, [criarAtividade(1)]);
+        await carregar(montado, [criarAtividade(1, { totalExecucoes: 0 })]);
         botaoPorRotulo(montado, 'Mais ações')[0].click();
         await montado.atualizar();
         const rotulos = montado.componente.itensMenu.filter((item) => !item.separator).map((item) => item.label);
@@ -424,9 +424,29 @@ describe('AtividadeListagemPage: menu ⋮ e permissões da linha', () => {
         expect(montado.componente.atividadeNomeEdicao()).toBeNull();
     });
 
+    it('atividade com execução: o menu não oferece "Excluir" (task 378)', async () => {
+        const { montado } = await montarPagina();
+        await carregar(montado, [criarAtividade(1, { totalExecucoes: 1 })]);
+        botaoPorRotulo(montado, 'Mais ações')[0].click();
+        await montado.atualizar();
+        const rotulos = montado.componente.itensMenu.filter((item) => !item.separator).map((item) => item.label);
+        expect(rotulos).toEqual(['Editar nome', 'Registrar execução']);
+        expect(montado.componente.itensMenu.some((item) => item.separator)).toBe(false);
+    });
+
+    it('desenvolvedor dono: só a própria atividade sem execução tem menu, e ele só traz "Excluir" (task 378)', async () => {
+        const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+        const propria = criarAtividade(1, { totalExecucoes: 0, usuarioId: montado.componente.sessao.id()! });
+        expect(montado.componente.temMenu(propria)).toBe(true);
+        expect(montado.componente.temMenu({ ...propria, totalExecucoes: 3 })).toBe(false);
+        expect(montado.componente.temMenu({ ...propria, usuarioId: propria.usuarioId + 1 })).toBe(false);
+        montado.componente.abrirMenu({} as Event, propria);
+        expect(montado.componente.itensMenu.map((item) => item.label)).toEqual(['Excluir']);
+    });
+
     it('"Excluir" do menu tira a linha na hora e chama a exclusão da atividade', async () => {
         const { montado } = await montarPagina();
-        await carregar(montado, [criarAtividade(1), criarAtividade(2)], 2);
+        await carregar(montado, [criarAtividade(1, { totalExecucoes: 0 }), criarAtividade(2)], 2);
         botaoPorRotulo(montado, 'Mais ações')[0].click();
         montado.componente.itensMenu.find((item) => item.label === 'Excluir')!.command!({} as never);
         expect(montado.componente.atividades().map((atividade) => atividade.id)).toEqual([2]);

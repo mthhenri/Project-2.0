@@ -458,6 +458,28 @@ testarComBanco('supervisão: a elegibilidade é a de agora; o gestor sair do gru
     assert.equal(await visivel(), true, 'o gestor saiu: legível de novo');
 });
 
+testarComBanco('supervisão: depois que o último gestor sai, lê só o que foi escrito dali em diante; o período privado não vem (task 362)', async (conexao) => {
+    const { service, supervisao } = montar(conexao);
+    const { ana, bruno } = await trio(conexao);
+    const gestor = await criarGestor(conexao);
+    const leitor = await criarGestor(conexao);
+    const grupo = (await service.criarGrupo({ nome: 'Período privado', membroUsuarioIds: [bruno.id] }, como(ana))).dados!.grupo;
+    await enviarNoGrupo(service, grupo.grupoId, ana, 'antes do gestor');
+    await service.adicionarMembros({ grupoId: grupo.grupoId, usuarioIds: [gestor.id] }, como(ana));
+    await enviarNoGrupo(service, grupo.grupoId, ana, 'durante o período privado');
+    await enviarNoGrupo(service, grupo.grupoId, bruno, 'segredo entre os membros');
+    await service.sairDoGrupo(grupo.grupoId, como(gestor));
+    await enviarNoGrupo(service, grupo.grupoId, ana, 'depois da saída do gestor');
+
+    const lida = (await supervisao.lerGrupoSupervisionado({ grupoId: grupo.grupoId, limite: 50 } as never, como(leitor))).dados!;
+    const textosLidos = textos(lida.mensagens);
+    assert.ok(textosLidos.includes('depois da saída do gestor'));
+    assert.equal(textosLidos.includes('durante o período privado'), false);
+    assert.equal(textosLidos.includes('segredo entre os membros'), false);
+    assert.equal(textosLidos.includes('antes do gestor'), false, 'só o que veio depois da saída do último gestor');
+    assert.equal(lida.proximoCursor, null, 'não há o que ler para trás do período privado');
+});
+
 testarComBanco('supervisão: o gestor que é membro não abre o próprio grupo pela supervisão; grupo encerrado e sem mensagens não aparece', async (conexao) => {
     const { service, supervisao } = montar(conexao);
     const { ana } = await trio(conexao);

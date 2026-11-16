@@ -130,6 +130,21 @@ describe('AtividadeFormularioComponent — criar', () => {
         });
     });
 
+    it('gestor: trocar o responsável refaz a lista de demandas com as dele e limpa a demanda que ele não tem (task 377)', async () => {
+        const { montado } = await abrir(TipoUsuarioEnum.GESTOR, { demandaIdInicial: 10 });
+        await responderAbertura(montado, true);
+        montado.componente.formulario.patchValue({ usuarioId: 2 });
+        const nova = esperarRequisicao(montado.http, 'GET', '/demanda/atribuidas');
+        expect(nova.request.params.get('usuarioId')).toBe('2');
+        responderSucesso(nova, [DEMANDAS[1]]);
+        await montado.atualizar();
+        expect(montado.componente.demandasAtribuidas().map((demanda) => demanda.id)).toEqual([11]);
+        expect(montado.componente.formulario.controls.demandaId.value).toBeNull();
+        // Voltar a "eu mesmo" pede a lista sem usuarioId.
+        montado.componente.formulario.patchValue({ usuarioId: null });
+        expect(esperarRequisicao(montado.http, 'GET', '/demanda/atribuidas').request.params.has('usuarioId')).toBe(false);
+    });
+
     it('gestor sem responsável escolhido não manda usuarioId (a atividade fica com ele mesmo)', async () => {
         const { montado } = await abrir(TipoUsuarioEnum.GESTOR, { demandaIdInicial: 10 });
         await responderAbertura(montado, true);

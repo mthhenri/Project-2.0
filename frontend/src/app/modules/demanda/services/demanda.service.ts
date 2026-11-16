@@ -50,8 +50,11 @@ export class DemandaService {
         return this.httpClient.get<StandardResponse<PaginatedResult<DemandaResumoDto>>>(this.urlBase, { params });
     }
 
-    listarAtribuidas(): Observable<StandardResponse<DemandaAtribuidaDto[]>> {
-        return this.httpClient.get<StandardResponse<DemandaAtribuidaDto[]>>(`${this.urlBase}/atribuidas`);
+    /** As demandas que a nova atividade pode usar; com `usuarioId` (só gestor), as que **aquela pessoa** teria (task 377). */
+    listarAtribuidas(usuarioId?: number | null): Observable<StandardResponse<DemandaAtribuidaDto[]>> {
+        let params = new HttpParams();
+        if (usuarioId) params = params.set('usuarioId', String(usuarioId));
+        return this.httpClient.get<StandardResponse<DemandaAtribuidaDto[]>>(`${this.urlBase}/atribuidas`, { params });
     }
 
     /** As últimas demandas que o próprio usuário executou, da execução mais recente para a mais antiga (a lateral "Minhas demandas" do chat). */

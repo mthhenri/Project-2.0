@@ -26,7 +26,7 @@ export class ListarMinhasDemandasFerramenta extends FerramentaIa<MinhasDemandasL
     }
 
     async executar(_entrada: MinhasDemandasListarDto, usuarioAtivo: JwtPayload): Promise<MinhasDemandasListadasDto> {
-        const atribuidas = (await this.demandaService.listarAtribuidas(usuarioAtivo)).dados ?? [];
+        const atribuidas = (await this.demandaService.listarAtribuidas({}, usuarioAtivo)).dados ?? [];
         return {
             demandas: atribuidas.slice(0, LIMITE_DEMANDAS_DA_FERRAMENTA).map((demanda) => ({ id: demanda.id, nome: demanda.nome, projeto: demanda.nomeProjeto })),
             total: atribuidas.length,

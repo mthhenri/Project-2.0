@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AtividadeRepository } from '../repositories/atividade.repository';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
 import { TagRepository } from '../../tag/repositories/tag.repository';
+import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import {
     AtividadeCriarDto,
     AtividadeCriadaDto,
@@ -34,6 +35,7 @@ export class AtividadeService {
         private readonly atividadeRepositorio: AtividadeRepository,
         private readonly demandaRepositorio: DemandaRepository,
         private readonly tagRepositorio: TagRepository,
+        private readonly usuarioRepositorio: UsuarioRepository,
     ) {}
 
     /**
@@ -41,6 +43,8 @@ export class AtividadeService {
    * O usuário autenticado torna-se o executor principal.
    * Verifica existência da demanda; o acesso via demanda_usuario só é exigido do
    * desenvolvedor (gestor tem acesso total a qualquer demanda, sem atribuição).
+   * O dono da atividade também precisa ter acesso à demanda (task 377): quem não tem visibilidade total
+   * tem de ser membro dela; o gestor que escolhe outro dono não cria atividade para quem não é membro.
    */
     async criar(
         dto: AtividadeCriarDto,
@@ -63,6 +67,19 @@ export class AtividadeService {
             });
             if (!temAcesso) {
                 throw new UnauthorizedAccessException('Usuário não tem acesso à demanda informada');
+            }
+        }
+
+        if (executorId !== usuarioAtivo.sub) {
+            const executorEncontrado = await this.usuarioRepositorio.recuperar({ id: executorId });
+            if (!executorEncontrado) {
+                throw new ResourceNotFoundException('Usuário');
+            }
+            if (
+                !temVisibilidadeTotal(executorEncontrado.tipo) &&
+                !(await this.atividadeRepositorio.validarAcessoDemanda({ demandaId: dto.demandaId, usuarioId: executorId }))
+            ) {
+                throw new BusinessException(`${executorEncontrado.nomeCompleto} não é membro da demanda: atribua-o à demanda antes de criar a atividade para ele`);
             }
         }
 
@@ -273,6 +290,10 @@ export class AtividadeService {
         if (!podeEditarAtividadeDeOutro(usuarioAtivo.tipo) && atividadeEncontrada.usuarioId !== usuarioAtivo.sub) {
             throw new UnauthorizedAccessException('Só o dono da atividade, o auxiliar ou o gestor exclui a atividade');
         }
+        // Com execução registrada a atividade é histórico de trabalho: o excluir não existe para ninguém (task 378).
+        if (await this.atividadeRepositorio.possuiExecucao({ id: dto.id })) {
+            throw new BusinessException('Atividade com execução registrada não pode ser excluída');
+        }
 
         await this.atividadeRepositorio.excluir({ id: dto.id });
 
@@ -283,7 +304,7 @@ export class AtividadeService {
         };
     }
 
-    /** Restaura a atividade excluída (soft delete revertido, sem cascata). A rota é do gestor; pela IA, também o dono da atividade (task 230). */
+    /** Restaura a atividade excluída (soft delete revertido, sem cascata). Rota e IA com a mesma regra: o dono da atividade ou quem conduz o trabalho (tasks 230 e 378). */
     async restaurar(dto: AtividadeRestaurarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<AtividadeRestauradaDto>> {
         const atividadeExcluida = await this.atividadeRepositorio.recuperarExcluida({ id: dto.id });
         if (!atividadeExcluida) {

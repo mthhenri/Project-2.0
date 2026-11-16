@@ -134,7 +134,12 @@ export class GrupoSupervisaoService {
             avisou = await this.avisarMembros(usuarioAtivo, conversaId, grupo, membrosIds, auditoria.id);
         }
 
-        const pagina = await this.armazenamento.listarConversa({ conversaId, cursor: dto.cursor, limite: dto.limite ?? LIMITE_PADRAO_DA_CONVERSA_DIRETA });
+        const paginaLida = await this.armazenamento.listarConversa({ conversaId, cursor: dto.cursor, limite: dto.limite ?? LIMITE_PADRAO_DA_CONVERSA_DIRETA });
+        // O período em que um gestor ou administrador estava no grupo foi privado e continua sendo: a supervisão lê só o que veio depois da saída do último deles (task 362).
+        const privacidadeEncerradaData = ehCanal
+            ? null
+            : await this.grupoRepositorio.recuperarPrivacidadeEncerradaData({ grupoId: grupo.grupoId, usuarioIdsComPoderDeGestor: await this.usuarioRepositorio.listarIdsComPermissaoDeGestor() });
+        const pagina = privacidadeEncerradaData ? this.recortarPeriodoPrivado(paginaLida, privacidadeEncerradaData) : paginaLida;
         return {
             sucesso: true,
             dados: {
@@ -149,6 +154,13 @@ export class GrupoSupervisaoService {
             },
             mensagem: 'Grupo recuperado com sucesso',
         };
+    }
+
+    /** Tira da página o que foi escrito antes de `privadoAte`; achando algo mais antigo, não há mais o que ler para trás, então o cursor some. */
+    private recortarPeriodoPrivado<T extends { mensagens: { createdDate: Date | string }[]; proximoCursor: string | null }>(pagina: T, privadoAte: Date): T {
+        const mensagens = pagina.mensagens.filter((mensagem) => new Date(mensagem.createdDate).getTime() >= privadoAte.getTime());
+        const cortou = mensagens.length !== pagina.mensagens.length;
+        return { ...pagina, mensagens, proximoCursor: cortou ? null : pagina.proximoCursor };
     }
 
     /**

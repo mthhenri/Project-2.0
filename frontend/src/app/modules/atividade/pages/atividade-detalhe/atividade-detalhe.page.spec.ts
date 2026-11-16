@@ -104,6 +104,21 @@ describe('AtividadeDetalhePage: carga e estados', () => {
         expect(irPara).toHaveBeenCalledWith(['/execucao'], { queryParams: { atividadeId: 7 } });
     });
 
+    it('com sete execuções e a mais nova aberta, a faixa "em andamento" aparece e o status trava (task 335)', async () => {
+        const { montado } = await montarPagina();
+        const encerradas = [1, 2, 3, 4, 5, 6].map((id) => criarExecucao(id, { inicioData: new Date(`2026-02-0${id}T10:00:00.000Z`), fimData: new Date(`2026-02-0${id}T11:00:00.000Z`) }));
+        const aberta = criarExecucao(7, { fimData: null, duracaoMinutos: null, descricao: 'Em andamento', inicioData: new Date() });
+        // O serviço entrega da mais nova para a mais antiga; aqui a lista já chega nessa ordem.
+        await carregar(montado, {
+            execucoes: [aberta, ...encerradas.reverse()],
+            execucaoAtiva: { id: 7, atividadeId: 7, descricao: 'Em andamento', inicioData: aberta.inicioData },
+        });
+        expect(montado.componente.execucaoAberta()?.id).toBe(7);
+        expect(montado.componente.statusBloqueado()).toBe(true);
+        expect(secao(montado, 'Execução em andamento')).not.toBeNull();
+        expect(montado.elemento.querySelectorAll('li.atividade-detalhe__execucao').length).toBe(5);
+    });
+
     it('sem execuções, mostra o vazio e oferece iniciar a primeira', async () => {
         const { montado } = await montarPagina();
         await carregar(montado);

@@ -2,23 +2,19 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { rotasPorNome } from '../../../testes/rotas-do-controller';
 import { AtividadeController } from './atividade.controller';
-import { podeEditarAtividadeDeOutro } from '@project20/shared';
 
-// SYSTEM.SPEC.md §14: excluir e restaurar atividade são de quem edita atividade de outro (auxiliar, gestor e administrador); criar, listar, recuperar, alterar e tags ficam abertos a qualquer
-// autenticado e a service decide por tipo e vínculo. As ações em massa da listagem (task 102) não têm rota própria: a tela chama estas
+// SYSTEM.SPEC.md §14: nenhuma rota de atividade tem guard por tipo; a service decide por tipo, dono e vínculo (excluir e restaurar: o dono ou quem conduz o trabalho, task 378). As ações em massa da listagem (task 102) não têm rota própria: a tela chama estas
 // mesmas rotas uma vez por atividade, então valem as mesmas permissões.
 
 const rotas = () => rotasPorNome(AtividadeController);
 
-test('nenhuma rota é @GestorOnly; excluir e restaurar exigem podeEditarAtividadeDeOutro', () => {
+test('nenhuma rota é @GestorOnly nem tem guard de permissão: a service decide (excluir e restaurar também, task 378)', () => {
     assert.deepEqual(Object.values(rotas()).filter((rota) => rota.gestorOnly), []);
-    const comPermissao = Object.values(rotas()).filter((rota) => rota.permissao).map((rota) => rota.nome).sort();
-    assert.deepEqual(comPermissao, ['excluir', 'restaurar']);
-    for (const nome of ['excluir', 'restaurar']) assert.equal(rotas()[nome].permissao, podeEditarAtividadeDeOutro, nome);
+    assert.deepEqual(Object.values(rotas()).filter((rota) => rota.permissao).map((rota) => rota.nome), []);
 });
 
 test('criar, listar, recuperar, alterar e tags ficam abertos: a service decide por tipo e vínculo', () => {
-    for (const nome of ['criar', 'listar', 'recuperar', 'alterar', 'alterarTags', 'listarTags']) {
+    for (const nome of ['criar', 'listar', 'recuperar', 'alterar', 'alterarTags', 'listarTags', 'excluir', 'restaurar']) {
         assert.equal(rotas()[nome].gestorOnly, false, nome);
     }
 });

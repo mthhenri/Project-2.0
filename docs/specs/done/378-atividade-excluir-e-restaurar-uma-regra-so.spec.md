@@ -25,7 +25,7 @@ Como observar: Desenvolvedor: DELETE /api/v1/atividade/<própria, sem execução
 
 Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** `DELETE /atividade/:id` e `PATCH /atividade/:id/restaurar` exigem `podeEditarAtividadeDeOutro` no guard; a service e a ferramenta aceitam o dono.
 
@@ -33,6 +33,8 @@ Verificação na auditoria: código, por um auditor; arquivo e linha das evidên
 
 1. O dono exclui a própria atividade sem execução também pela rota (o guard sai e a service decide).
 2. A IA segue a rota: só quem conduz o trabalho exclui.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor decidiu: o dono da atividade e os gestores excluem (e restauram) pela rota, pela tela e pela IA, **mas só a atividade sem nenhuma execução**; com execução o excluir não existe. Aplicado: o guard da rota saiu e a service decide (dono ou quem conduz o trabalho, e `possuiExecucao` recusa o resto); a tela só oferece "Excluir" quando `totalExecucoes` é 0, e o desenvolvedor dono ganha o menu ⋮ só com esse item.
 
 ## Entregáveis
 

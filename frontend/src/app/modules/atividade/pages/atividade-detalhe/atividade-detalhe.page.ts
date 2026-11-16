@@ -87,7 +87,9 @@ export class AtividadeDetalhePage implements OnInit {
     readonly atividade = signal<AtividadeRecuperadaDto | null>(null);
     readonly tagsDaAtividade = signal<TagResumoDto[]>([]);
     readonly tagsDisponiveis = signal<TagResumoDto[]>([]);
-    readonly execucoesRecentes = signal<ExecucaoItemDto[]>([]);
+    /** Todas as execuções da atividade, da mais nova para a mais antiga (task 335). */
+    private readonly execucoes = signal<ExecucaoItemDto[]>([]);
+    readonly execucoesRecentes = computed(() => this.execucoes().slice(0, EXECUCOES_RECENTES));
     readonly carregando = signal<boolean>(false);
     readonly jaCarregou = signal<boolean>(false);
     readonly executando = signal<boolean>(false);
@@ -112,7 +114,7 @@ export class AtividadeDetalhePage implements OnInit {
         return !!atividade && (this.sessao.podeEditarAtividadeDeOutro() || atividade.usuarioId === this.sessao.id());
     });
 
-    readonly execucaoAberta = computed(() => this.execucoesRecentes().find((execucao) => execucao.fimData === null) ?? null);
+    readonly execucaoAberta = computed(() => this.execucoes().find((execucao) => execucao.fimData === null) ?? null);
 
     /** A execução aberta nesta atividade é a do usuário logado (o timer e a pausa usam a execução ativa compartilhada). */
     readonly execucaoAbertaEhMinha = computed(() => {
@@ -149,7 +151,7 @@ export class AtividadeDetalhePage implements OnInit {
     });
 
     /** A última descrição já usada nesta atividade, oferecida como atalho ("↩ Reutilizar última"). */
-    readonly ultimaDescricao = computed(() => this.execucoesRecentes().find((execucao) => execucao.fimData !== null && !!execucao.descricao)?.descricao ?? null);
+    readonly ultimaDescricao = computed(() => this.execucoes().find((execucao) => execucao.fimData !== null && !!execucao.descricao)?.descricao ?? null);
 
     constructor() {
         effect(() => {
@@ -353,7 +355,7 @@ export class AtividadeDetalhePage implements OnInit {
                     }
                     if (tags.sucesso && tags.dados) this.tagsDaAtividade.set(tags.dados);
                     if (todasTags.sucesso && todasTags.dados) this.tagsDisponiveis.set(todasTags.dados);
-                    if (execucoes.sucesso && execucoes.dados) this.execucoesRecentes.set(execucoes.dados.itens.slice(0, EXECUCOES_RECENTES));
+                    if (execucoes.sucesso && execucoes.dados) this.execucoes.set(execucoes.dados.itens);
                 },
             });
     }
@@ -371,7 +373,7 @@ export class AtividadeDetalhePage implements OnInit {
                     this.atividade.set(atividade.dados);
                     this.formularioStatus.patchValue({ status: atividade.dados.status }, { emitEvent: false });
                 }
-                if (execucoes.sucesso && execucoes.dados) this.execucoesRecentes.set(execucoes.dados.itens.slice(0, EXECUCOES_RECENTES));
+                if (execucoes.sucesso && execucoes.dados) this.execucoes.set(execucoes.dados.itens);
             },
         });
     }

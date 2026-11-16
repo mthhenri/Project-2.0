@@ -44,6 +44,7 @@ export * from './DemandaGrafoRecuperarDto';
 export * from './DemandaConexaoListarDto';
 export * from './DemandaAtribuidaDto';
 export * from './DemandaAtribuidasListarDto';
+export * from './DemandaAtribuidaListarDto';
 export * from './DemandaMembroRemoverDto';
 export * from './DemandaPlanejamentoDto';
 export * from './ExecutorAtivoDto';
