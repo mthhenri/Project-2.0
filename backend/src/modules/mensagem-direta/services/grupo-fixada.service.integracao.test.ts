@@ -37,7 +37,7 @@ function montar(conexao: ConexaoTeste) {
     const grupoService = new GrupoService(
         armazenamento, grupos, criarRepositorio(GrupoLeituraRepository, conexao), criarRepositorio(UsuarioRepository, conexao), criarRepositorio(DemandaRepository, conexao),
         criarRepositorio(AtividadeRepository, conexao), eventosService as never, canais, supervisao, criarRepositorio(MensagemDiretaReacaoRepository, conexao), { atenderSeChamada: async () => undefined } as never, {} as never);
-    const service = new GrupoFixadaService(armazenamento, grupoService, criarRepositorio(GrupoFixadaRepository, conexao), eventosService as never);
+    const service = new GrupoFixadaService(armazenamento, grupoService, criarRepositorio(GrupoFixadaRepository, conexao), eventosService as never, criarRepositorio(MensagemDiretaSupervisaoRepository, conexao));
     return { service, grupoService, armazenamento, eventos };
 }
 
@@ -151,7 +151,7 @@ testarComBanco('quem saiu do grupo não busca mais nele', async (conexao) => {
     await recusaCom(service.buscarNoGrupo({ grupoId: grupo.grupoId, texto: 'segredo' }, como(bruno)), UnauthorizedAccessException);
 });
 
-testarComBanco('no canal: o membro por demanda_usuario fixa e busca; o gestor que só lê por tipo vê as fixadas mas não fixa nem busca', async (conexao) => {
+testarComBanco('no canal: o membro por demanda_usuario fixa e busca; o gestor que só lê por tipo vê as fixadas depois de abrir o canal, mas não fixa nem busca', async (conexao) => {
     const { service, grupoService, armazenamento } = montar(conexao);
     const [ana, davi] = [await criarDesenvolvedor(conexao), await criarDesenvolvedor(conexao)];
     const gestor = await criarGestor(conexao);
@@ -164,7 +164,9 @@ testarComBanco('no canal: o membro por demanda_usuario fixa e busca; o gestor qu
     await service.fixarMensagem({ grupoId: canal.grupoId, mensagemId }, como(ana));
     assert.equal((await service.buscarNoGrupo({ grupoId: canal.grupoId, texto: 'decisao' }, como(ana))).dados!.mensagens.length, 1);
 
-    assert.equal((await service.listarFixadas({ grupoId: canal.grupoId }, como(gestor))).dados!.fixadas.length, 1, 'o gestor lê as fixadas por tipo');
+    assert.deepEqual((await service.listarFixadas({ grupoId: canal.grupoId }, como(gestor))).dados!.fixadas, [], 'antes de abrir o canal o gestor não recebe o texto das fixadas');
+    await grupoService.listarMensagens({ grupoId: canal.grupoId }, como(gestor));
+    assert.equal((await service.listarFixadas({ grupoId: canal.grupoId }, como(gestor))).dados!.fixadas.length, 1, 'depois de abrir (leitura auditada do dia) o gestor lê as fixadas por tipo');
     await recusaCom(service.fixarMensagem({ grupoId: canal.grupoId, mensagemId }, como(gestor)), UnauthorizedAccessException);
     await recusaCom(service.buscarNoGrupo({ grupoId: canal.grupoId, texto: 'decisao' }, como(gestor)), UnauthorizedAccessException);
     await recusaCom(service.listarFixadas({ grupoId: canal.grupoId }, como(davi)), UnauthorizedAccessException);

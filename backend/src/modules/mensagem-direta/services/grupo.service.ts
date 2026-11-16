@@ -643,6 +643,8 @@ export class GrupoService {
             const conversaId = montarConversaGrupoId(grupo.grupoId);
             const membrosDoGrupo = membrosPorGrupo.get(grupo.grupoId) ?? [];
             const ehMembro = entradaDoUsuario.has(grupo.grupoId);
+            // O gestor que lê o canal por tipo recebe só metadados: o texto da última mensagem só vem ao abrir a conversa, que é auditada.
+            const leituraPorSupervisao = grupoEhCanal(grupo.tipo) && !ehMembro && temPermissaoDeGestor(usuarioAtivo.tipo);
             return {
                 grupoId: grupo.grupoId,
                 conversaId,
@@ -652,11 +654,11 @@ export class GrupoService {
                 emojiAvatar: grupo.emojiAvatar,
                 criadorUsuarioId: grupo.criadorUsuarioId,
                 membros: membrosDoGrupo,
-                ultimaMensagem: conversaPorGrupo.get(conversaId)?.ultimaMensagem ?? null,
+                ultimaMensagem: leituraPorSupervisao ? null : (conversaPorGrupo.get(conversaId)?.ultimaMensagem ?? null),
                 naoLidas: naoLidas[conversaId] ?? 0,
                 silenciada: marcadorPorGrupo.get(grupo.grupoId)?.silenciada ?? false,
                 privado: grupoEhPrivado(membrosDoGrupo.map((membro) => membro.tipo), grupo.tipo),
-                leituraPorSupervisao: grupoEhCanal(grupo.tipo) && !ehMembro && temPermissaoDeGestor(usuarioAtivo.tipo),
+                leituraPorSupervisao,
             };
         });
         const instante = (resumo: GrupoResumoDto, grupo: GrupoRegistrado) => (resumo.ultimaMensagem ? resumo.ultimaMensagem.createdDate.getTime() : grupo.createdDate.getTime());

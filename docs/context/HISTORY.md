@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-11-16 — Permissão no servidor, parte 2: atividade de colega, leitura por tipo, lista da supervisão e chat do auxiliar (tasks 373, 361, 390, 360 e 405)
+
+As cinco tasks que esperavam decisão do autor, decididas por ele na mesma data: **373** (um usuário altera as próprias atividades; auxiliar, gestor e administrador alteram as de qualquer um; o auxiliar não cria atividade para outro), **361** e **390** (a recomendação da auditoria: o leitor por tipo e a lista da supervisão só com metadados) e **360** com **405** (o auxiliar continua sendo um desenvolvedor, então o chat da demanda responde a isso: só quem é membro abre; e a tela não pergunta ao servidor, o detalhe já diz).
+
+**O que mudou.** `AtividadeService.alterar` e `alterarTags` exigem dono ou quem conduz o trabalho (membro da demanda não basta). O resumo do canal para o leitor por tipo vem sem a última mensagem, e as fixadas só voltam depois de ele abrir a conversa no dia. A lista da supervisão troca `ultimaMensagem` por `ultimaMensagemData` e a tela perde a prévia. O detalhe da demanda e o do projeto ganham `canalChatExiste` e `podeAbrirCanalChat` (campos escolhidos pelo autor; novo `ProjetoDetalheRecuperadoDto`), e o botão do chat não faz mais chamada ao aparecer. Corrigidos e removidos de `PROBLEMS.md`: P-092, P-094 e P-100.
+
+**Verificação.** Backend 1830 unitários e 537 de integração, `shared` 362, frontend 238 arquivos (com o contorno do P-087), `lint:tudo` e builds sem erro; 19 conferências ao vivo por API e a tela conferida como auxiliar e como gestor num stack isolado (removido). Relatório e limites em `docs/specs/done/373-atividade-de-colega-so-o-dono-ou-quem-conduz-altera/verificacao.md`.
+
+**Limites.** Não percorridos 1366×768, 1080×1920 e o tema escuro (a mudança de tela é remover uma linha da lista); o clique em "Abrir chat" com o chat existente só tem teste de componente. Ficam para a guarda-chuva as demais tasks com decisão pendente do autor (as outras 52).
+
 ## 2026-11-16 — Permissão no servidor: supervisão, execução, destino de mover atividade e membro de demanda (tasks 359, 391, 374, 375, 367 e 381)
 
 Primeira frente da guarda-chuva `requisicoes-e-permissoes-correcoes`, escolhida pelo autor (opção A: matar as questões de permissão). Entraram as seis tasks da fila que não esperam decisão do autor; as que esperam (360, 361, 373, 390 e a 405 do P-100) ficaram no backlog. Antes, a branch `claude/bold-ride-9uipdt` foi mesclada na master e a numeração acertada: a task 329 do Desktop virou **487** (a 329 da master é o "Enviar para colaborador"), a guarda-chuva passou a 330–487 e os problemas da revisão viraram P-092 a P-101 (P-089 a P-091 já eram da master).

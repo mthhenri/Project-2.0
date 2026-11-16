@@ -223,10 +223,11 @@ test('recuperarDetalhe: um bloco só com demanda, ancestrais, tags, membros e co
         listarAncestral: async () => { chamadas.push('listarAncestral'); return [{ id: 1, nome: 'Raiz' }]; },
         listarMembrosDemanda: async () => { chamadas.push('listarMembrosDemanda'); return [{ usuarioId: 3, nomeCompleto: 'Dev' }]; },
         listarConexoes: async () => { chamadas.push('listarConexoes'); return [{ id: 9 }]; },
+        validarCanalDaDemanda: async () => true,
     });
     const resposta = await criarServico(repo).recuperarDetalhe({ id: 10 }, DESENVOLVEDOR);
     assert.equal(resposta.sucesso, true);
-    assert.deepEqual(Object.keys(resposta.dados!).sort(), ['ancestrais', 'conexoes', 'demanda', 'membros', 'tags']);
+    assert.deepEqual(Object.keys(resposta.dados!).sort(), ['ancestrais', 'canalChatExiste', 'conexoes', 'demanda', 'membros', 'podeAbrirCanalChat', 'tags']);
     assert.equal(resposta.dados!.demanda.id, 10);
     assert.equal(resposta.dados!.demanda.podeEditar, true);
     assert.deepEqual(resposta.dados!.ancestrais, [{ id: 1, nome: 'Raiz' }]);
@@ -234,6 +235,19 @@ test('recuperarDetalhe: um bloco só com demanda, ancestrais, tags, membros e co
     assert.equal(resposta.dados!.membros.length, 1);
     assert.deepEqual(resposta.dados!.conexoes, [{ id: 9 }]);
     assert.equal(chamadas.filter((chamada) => chamada === 'recuperar').length, 1, 'o acesso é conferido uma vez só');
+});
+
+test('recuperarDetalhe: o chat da demanda abre para gestor e administrador sempre e para os demais (auxiliar incluído) só sendo membro', async () => {
+    const detalhe = async (usuario: never, membros: Array<{ usuarioId: number }>, canal: boolean) => (await criarServico(repositorio({
+        recuperar: async () => ({ ...DEMANDA }), validarMembro: async () => false, listarMembrosDemanda: async () => membros, validarCanalDaDemanda: async () => canal,
+        listarAncestral: async () => [], listarTagsDemanda: async () => [], listarConexoes: async () => [],
+    })).recuperarDetalhe({ id: 10 }, usuario)).dados!;
+    for (const usuario of [GESTOR, ADMINISTRADOR]) assert.equal((await detalhe(usuario, [], false)).podeAbrirCanalChat, true);
+    const doAuxiliar = await detalhe(AUXILIAR, [], true);
+    assert.deepEqual([doAuxiliar.canalChatExiste, doAuxiliar.podeAbrirCanalChat], [true, false], 'auxiliar que não é membro: vê a demanda, não abre o chat');
+    assert.equal((await detalhe(AUXILIAR, [{ usuarioId: 6 }], true)).podeAbrirCanalChat, true);
+    assert.equal((await detalhe(DESENVOLVEDOR, [{ usuarioId: 99 }], true)).podeAbrirCanalChat, false);
+    assert.equal((await detalhe(DESENVOLVEDOR, [{ usuarioId: 3 }], false)).podeAbrirCanalChat, true);
 });
 
 test('recuperarDetalhe: aplica ao desenvolvedor a mesma restrição de acesso de recuperar e não lê nada de apoio se a demanda não é dele', async () => {

@@ -401,7 +401,8 @@ testarComBanco('supervisão: o gestor lista e abre só grupos sem gestor entre o
     const doHistorico = lista.grupos.find((grupo) => grupo.grupoId === comHistorico.grupoId)!;
     assert.equal(doHistorico.nome, 'Com conversa');
     assert.deepEqual(doHistorico.membros.map((membro) => membro.usuarioId).sort(), [ana.id, carla.id].sort());
-    assert.equal(doHistorico.ultimaMensagem.texto, 'conteúdo supervisionável');
+    assert.ok(doHistorico.ultimaMensagemData instanceof Date, 'a lista traz a data da última mensagem');
+    assert.equal('ultimaMensagem' in doHistorico, false, 'e nunca o texto dela (361 e 390)');
 
     const filtrada = (await supervisao.listarGruposSupervisionados({ texto: 'supervisionável' }, como(gestor))).dados!;
     assert.deepEqual(filtrada.grupos.map((grupo) => grupo.grupoId), [comHistorico.grupoId]);

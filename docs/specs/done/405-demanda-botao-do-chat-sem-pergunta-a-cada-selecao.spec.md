@@ -72,6 +72,10 @@ Verificação na auditoria: medido na aplicação rodando em 2026-11-13/14 (admi
 
 Recomendação da auditoria: opção 1 ou 2; a 3 só se o rótulo exato na seleção for importante.
 
+## Decisão do autor
+
+Em 2026-11-16 o autor decidiu a **opção 3**, para evitar uma requisição à toa: o detalhe da demanda e o do projeto passam a dizer se o chat existe e se quem pede pode abri-lo. Campos escolhidos pelo autor: dois booleanos, `canalChatExiste` e `podeAbrirCanalChat` (`DemandaDetalheRecuperadoDto` e o novo `ProjetoDetalheRecuperadoDto`, que estende `ProjetoRecuperadoDto`). O botão não faz nenhuma chamada ao aparecer; o servidor só é chamado no clique.
+
 ## Entregáveis
 
 1. A opção escolhida em `mensagem-direta-canal-botao`, com teste de componente contando as requisições por seleção.

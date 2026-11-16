@@ -39,6 +39,10 @@ O `SYSTEM.SPEC.md` diz que o desenvolvedor mexe só nas próprias atividades, e 
 
 Recomendação da auditoria: opção 1.
 
+## Decisão do autor
+
+Em 2026-11-16 o autor decidiu a **opção 1**: um usuário altera as próprias atividades; auxiliar, gestor e administrador alteram as próprias e as de outros usuários (inclusive as tags). Ser membro da demanda não basta. E o auxiliar não cria atividade para outro usuário (já era assim: só gestor e administrador informam `usuarioId` ao criar).
+
 ## Entregáveis
 
 1. A regra escolhida na `AtividadeService`, com os dois testes existentes ajustados e casos novos por tipo de usuário.

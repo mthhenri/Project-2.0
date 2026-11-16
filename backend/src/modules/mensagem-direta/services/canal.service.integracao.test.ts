@@ -127,6 +127,24 @@ testarComBanco('recuperarCanal devolve null enquanto o chat não existe e o cana
     assert.equal((await service.recuperarCanal(demanda(raiz.id), como(ana))).dados!.grupo?.grupoId, criado.grupoId);
 });
 
+testarComBanco('validarCanalDaDemanda e validarCanalDoProjeto dizem se o chat existe, cada um olhando só o seu alvo', async (conexao) => {
+    const { service } = montar(conexao);
+    const { ana, raiz, filha, projeto: projetoFabricado } = await cenario(conexao);
+    const demandas = criarRepositorio(DemandaRepository, conexao);
+    const projetos = criarRepositorio(ProjetoRepository, conexao);
+
+    assert.equal(await demandas.validarCanalDaDemanda({ id: raiz.id }), false);
+    assert.equal(await projetos.validarCanalDoProjeto({ id: projetoFabricado.id }), false);
+
+    await service.criarCanal(demanda(raiz.id), como(ana));
+    assert.equal(await demandas.validarCanalDaDemanda({ id: raiz.id }), true);
+    assert.equal(await demandas.validarCanalDaDemanda({ id: filha.id }), false, 'a demanda filha tem canal próprio');
+    assert.equal(await projetos.validarCanalDoProjeto({ id: projetoFabricado.id }), false, 'o canal da demanda não vale para o projeto');
+
+    await service.criarCanal(projeto(projetoFabricado.id), como(ana));
+    assert.equal(await projetos.validarCanalDoProjeto({ id: projetoFabricado.id }), true);
+});
+
 testarComBanco('o canal do projeto reúne quem está em qualquer demanda dele, e a demanda filha tem canal próprio', async (conexao) => {
     const { service } = montar(conexao);
     const { ana, bruno, carla, davi, projeto: projetoDoCenario, raiz, filha } = await cenario(conexao);
@@ -256,6 +274,7 @@ testarComBanco('o gestor lê o canal sem ser membro (auditado e avisado, uma vez
 
     const resumoDoGestor = (await service.recuperarGrupo(canal.grupoId, como(gestor))).dados!.grupo;
     assert.equal(resumoDoGestor.leituraPorSupervisao, true);
+    assert.equal(resumoDoGestor.ultimaMensagem, null, 'o resumo do leitor por tipo traz só metadados, sem o texto da última mensagem');
     assert.equal(resumoDoGestor.membros.some((membro) => membro.usuarioId === gestor.id), false);
 
     const lidas = await service.listarMensagens({ grupoId: canal.grupoId }, como(gestor));

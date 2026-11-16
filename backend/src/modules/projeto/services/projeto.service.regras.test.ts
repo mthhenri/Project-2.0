@@ -140,8 +140,8 @@ test('recuperar: projeto inexistente ou excluído lança ResourceNotFoundExcepti
 
 test('recuperar: gestor e administrador veem qualquer projeto sem consultar o acesso por demanda', async () => {
     let consultouAcesso = false;
-    const servico = criarServico({ recuperar: async () => PROJETO, validarAcesso: async () => { consultouAcesso = true; return false; } });
-    for (const usuario of [AUXILIAR, GESTOR, ADMINISTRADOR]) assert.equal((await servico.recuperar({ id: 10 }, usuario)).dados?.id, 10);
+    const servico = criarServico({ recuperar: async () => PROJETO, validarCanalDoProjeto: async () => false, validarAcesso: async () => { consultouAcesso = true; return false; } });
+    for (const usuario of [GESTOR, ADMINISTRADOR]) assert.equal((await servico.recuperar({ id: 10 }, usuario)).dados?.id, 10);
     assert.equal(consultouAcesso, false);
 });
 
@@ -152,9 +152,23 @@ test('recuperar: desenvolvedor sem demanda no projeto recebe 404 (não revela qu
 
 test('recuperar: desenvolvedor com demanda no projeto o recupera', async () => {
     const consultas: unknown[] = [];
-    const servico = criarServico({ recuperar: async () => PROJETO, validarAcesso: async (dto: unknown) => { consultas.push(dto); return true; } });
+    const servico = criarServico({ recuperar: async () => PROJETO, validarCanalDoProjeto: async () => false, validarAcesso: async (dto: unknown) => { consultas.push(dto); return true; } });
     assert.equal((await servico.recuperar({ id: 10 }, DESENVOLVEDOR)).dados?.id, 10);
     assert.deepEqual(consultas, [{ usuarioId: 3, projetoId: 10 }]);
+});
+
+test('recuperar: traz se o projeto tem chat e se quem pede pode abri-lo (gestor e administrador sempre; os demais com demanda no projeto, o auxiliar também)', async () => {
+    const comCanal = (membro: boolean, existe: boolean) => criarServico({ recuperar: async () => PROJETO, validarCanalDoProjeto: async () => existe, validarAcesso: async () => membro });
+    for (const usuario of [GESTOR, ADMINISTRADOR]) {
+        const dados = (await comCanal(false, true).recuperar({ id: 10 }, usuario)).dados!;
+        assert.deepEqual([dados.canalChatExiste, dados.podeAbrirCanalChat], [true, true]);
+    }
+    assert.deepEqual(Object.values((await comCanal(true, false).recuperar({ id: 10 }, DESENVOLVEDOR)).dados!).slice(-2), [false, true]);
+    const auxiliarSemDemanda = (await comCanal(false, true).recuperar({ id: 10 }, AUXILIAR)).dados!;
+    assert.equal(auxiliarSemDemanda.id, 10, 'o auxiliar vê o projeto por tipo');
+    assert.deepEqual([auxiliarSemDemanda.canalChatExiste, auxiliarSemDemanda.podeAbrirCanalChat], [true, false], 'mas só abre o chat com demanda nele');
+    const auxiliarComDemanda = (await comCanal(true, true).recuperar({ id: 10 }, AUXILIAR)).dados!;
+    assert.equal(auxiliarComDemanda.podeAbrirCanalChat, true);
 });
 
 // ---------------------------------------------------------------------------

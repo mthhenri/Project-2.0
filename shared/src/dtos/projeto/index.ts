@@ -2,6 +2,7 @@ export * from './ProjetoCriarDto';
 export * from './ProjetoCriadoDto';
 export * from './ProjetoResumoDto';
 export * from './ProjetoRecuperadoDto';
+export * from './ProjetoDetalheRecuperadoDto';
 export * from './ProjetoRecuperarDto';
 export * from './ProjetoListarDto';
 export * from './ProjetoUsuarioListarDto';

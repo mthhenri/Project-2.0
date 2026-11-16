@@ -76,7 +76,7 @@ export class MensagemDiretaSupervisaoService {
             conversaId: conversa.conversaId,
             participantes: conversa.participantes.map((usuarioId) => participantes.get(usuarioId) ?? this.participanteRemovido(usuarioId)),
             totalMensagens: conversa.totalMensagens,
-            ultimaMensagem: conversa.ultimaMensagem,
+            ultimaMensagemData: conversa.ultimaMensagem.createdDate,
         }));
 
         return { sucesso: true, dados: { conversas, total: encontradas.total, pagina, porPagina }, mensagem: 'Conversas listadas com sucesso' };

@@ -8,8 +8,8 @@ import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-esta
 import { MensagemDiretaEventosService, OuvintesDoStream } from '../../services/mensagem-direta-eventos.service';
 import { MensagemDiretaCanalBotaoComponent } from './mensagem-direta-canal-botao.component';
 
-// O botão "Criar chat" / "Abrir chat" das telas da demanda e do projeto (task 248): os cinco estados (carregando, sem acesso, sem chat, com chat, erro) e o
-// que cada clique faz.
+// O botão "Criar chat" / "Abrir chat" das telas da demanda e do projeto (tasks 248, 360 e 405): o rótulo e a permissão vêm da tela (do detalhe), sem
+// nenhuma requisição ao aparecer; o servidor só é chamado no clique.
 
 class EventosFalso {
     readonly conectado = signal(true);
@@ -22,10 +22,11 @@ const CANAL = {
     membros: [], ultimaMensagem: null, naoLidas: 0, silenciada: false, privado: false, leituraPorSupervisao: false,
 } as GrupoResumoDto;
 
-async function montar(tipo: TipoGrupoEnum.DEMANDA | TipoGrupoEnum.PROJETO = TipoGrupoEnum.DEMANDA, alvoId = 12) {
+async function montar(opcoes: { tipo?: TipoGrupoEnum.DEMANDA | TipoGrupoEnum.PROJETO; alvoId?: number; canalExiste?: boolean; podeAbrir?: boolean } = {}) {
+    const { tipo = TipoGrupoEnum.DEMANDA, alvoId = 12, canalExiste = false, podeAbrir = true } = opcoes;
     const tela = await montarComponente(MensagemDiretaCanalBotaoComponent, {
         usuario: TipoUsuarioEnum.DESENVOLVEDOR,
-        entradas: { tipo, alvoId },
+        entradas: { tipo, alvoId, canalExiste, podeAbrir },
         provedores: [{ provide: MensagemDiretaEventosService, useClass: EventosFalso }],
     });
     const caminho = `/mensagem-direta/canal/${tipo === TipoGrupoEnum.DEMANDA ? 'demanda' : 'projeto'}/${alvoId}`;
@@ -35,20 +36,24 @@ async function montar(tipo: TipoGrupoEnum.DEMANDA | TipoGrupoEnum.PROJETO = Tipo
 const botao = (elemento: HTMLElement) => elemento.querySelector<HTMLButtonElement>('button');
 
 describe('MensagemDiretaCanalBotaoComponent', () => {
-    it('enquanto pergunta ao servidor o botão aparece desabilitado e carregando', async () => {
+    it('ao aparecer não faz nenhuma requisição: o rótulo vem da tela', async () => {
         const { tela } = await montar();
-        expect(botao(tela.elemento)?.disabled).toBe(true);
-        tela.http.expectOne((requisicao) => requisicao.method === 'GET');
+        tela.http.expectNone(() => true);
+        expect(botao(tela.elemento)?.textContent).toContain('Criar chat');
+        expect(botao(tela.elemento)?.disabled).toBe(false);
+    });
+
+    it('quem não pode abrir o chat (ex.: auxiliar que não é membro da demanda) não vê o botão e nada é pedido', async () => {
+        const { tela } = await montar({ podeAbrir: false, canalExiste: true });
+        expect(botao(tela.elemento)).toBeNull();
+        tela.http.expectNone(() => true);
     });
 
     it('sem chat oferece "Criar chat"; clicar cria o chat e abre o popup nele', async () => {
         const { tela, caminho } = await montar();
-        responderSucesso(esperarRequisicao(tela.http, 'GET', caminho), { grupo: null });
-        await tela.atualizar();
         expect(botao(tela.elemento)?.textContent).toContain('Criar chat');
 
-        const estado = TestBed.inject(MensagemDiretaEstadoService);
-        const abrir = vi.spyOn(estado, 'abrirCanal').mockResolvedValue();
+        const abrir = vi.spyOn(TestBed.inject(MensagemDiretaEstadoService), 'abrirCanal').mockResolvedValue();
         botao(tela.elemento)!.click();
         responderSucesso(esperarRequisicao(tela.http, 'POST', caminho), { grupo: CANAL, jaExistia: false });
         await tela.atualizar();
@@ -57,56 +62,38 @@ describe('MensagemDiretaCanalBotaoComponent', () => {
         expect(botao(tela.elemento)?.textContent).toContain('Abrir chat');
     });
 
-    it('com chat oferece "Abrir chat" e clicar só abre, sem criar nada', async () => {
-        const { tela, caminho } = await montar(TipoGrupoEnum.PROJETO, 3);
-        responderSucesso(esperarRequisicao(tela.http, 'GET', caminho), { grupo: { ...CANAL, tipo: TipoGrupoEnum.PROJETO } });
-        await tela.atualizar();
+    it('com chat oferece "Abrir chat"; clicar busca o chat existente e abre, sem criar nada', async () => {
+        const { tela, caminho } = await montar({ tipo: TipoGrupoEnum.PROJETO, alvoId: 3, canalExiste: true });
         expect(botao(tela.elemento)?.textContent).toContain('Abrir chat');
+        tela.http.expectNone(() => true);
 
         const abrir = vi.spyOn(TestBed.inject(MensagemDiretaEstadoService), 'abrirCanal').mockResolvedValue();
         botao(tela.elemento)!.click();
+        responderSucesso(esperarRequisicao(tela.http, 'GET', caminho), { grupo: { ...CANAL, tipo: TipoGrupoEnum.PROJETO } });
         await tela.atualizar();
 
         expect(abrir).toHaveBeenCalledTimes(1);
         tela.http.expectNone((requisicao) => requisicao.method === 'POST');
     });
 
-    it('quem não tem acesso (403) não vê o botão', async () => {
+    it('criar que falha no servidor mostra "Chat indisponível", sem abrir o popup, e clicar tenta de novo', async () => {
         const { tela, caminho } = await montar();
-        responderErro(esperarRequisicao(tela.http, 'GET', caminho), 403, 'Você não é membro desta demanda');
-        await tela.atualizar();
-        expect(botao(tela.elemento)).toBeNull();
-    });
-
-    it('na falha mostra o botão de aviso e clicar pergunta de novo', async () => {
-        const { tela, caminho } = await montar();
-        responderErro(esperarRequisicao(tela.http, 'GET', caminho), 500, 'Erro interno');
-        await tela.atualizar();
-        expect(botao(tela.elemento)?.textContent).toContain('Chat indisponível');
-
-        botao(tela.elemento)!.click();
-        responderSucesso(esperarRequisicao(tela.http, 'GET', caminho), { grupo: null });
-        await tela.atualizar();
-        expect(botao(tela.elemento)?.textContent).toContain('Criar chat');
-    });
-
-    it('criar que falha no servidor volta ao estado de erro, sem abrir o popup', async () => {
-        const { tela, caminho } = await montar();
-        responderSucesso(esperarRequisicao(tela.http, 'GET', caminho), { grupo: null });
-        await tela.atualizar();
         const abrir = vi.spyOn(TestBed.inject(MensagemDiretaEstadoService), 'abrirCanal').mockResolvedValue();
 
         botao(tela.elemento)!.click();
         responderErro(esperarRequisicao(tela.http, 'POST', caminho), 500, 'Erro interno');
         await tela.atualizar();
-
         expect(abrir).not.toHaveBeenCalled();
         expect(botao(tela.elemento)?.textContent).toContain('Chat indisponível');
+
+        botao(tela.elemento)!.click();
+        responderSucesso(esperarRequisicao(tela.http, 'POST', caminho), { grupo: CANAL, jaExistia: false });
+        await tela.atualizar();
+        expect(abrir).toHaveBeenCalledWith(CANAL);
     });
 
     it('o canal é pedido pela rota da demanda ou pela do projeto, conforme o tipo', async () => {
-        const demanda = await montar(TipoGrupoEnum.DEMANDA, 12);
+        const demanda = await montar({ tipo: TipoGrupoEnum.DEMANDA, alvoId: 12 });
         expect(demanda.caminho).toBe('/mensagem-direta/canal/demanda/12');
-        responderSucesso(esperarRequisicao(demanda.tela.http, 'GET', demanda.caminho), { grupo: null });
     });
 });

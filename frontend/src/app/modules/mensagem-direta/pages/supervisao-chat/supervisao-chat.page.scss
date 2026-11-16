@@ -187,14 +187,6 @@
         white-space: nowrap;
     }
 
-    &__item-previa {
-        font-size: 0.875rem;
-        color: var(--p-text-muted-color);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
     &__mais {
         display: flex;
         justify-content: center;

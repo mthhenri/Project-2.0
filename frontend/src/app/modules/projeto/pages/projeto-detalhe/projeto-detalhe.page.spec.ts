@@ -10,6 +10,7 @@ type Montado = ComponenteMontado<ProjetoDetalhePage>;
 const PROJETO = {
     id: 5, nome: 'Portal do Cliente', codigo: 'PORTAL', cor: '#336699', status: TipoProjetoStatusEnum.ATIVO,
     inicioData: null as string | null, previsaoFimData: null as string | null, createdDate: '2026-01-01T00:00:00Z',
+    canalChatExiste: false, podeAbrirCanalChat: true,
 };
 
 const GRAFO_VAZIO = { nos: [], conexoes: [] };
@@ -74,19 +75,22 @@ describe('ProjetoDetalhePage', () => {
     it('o cabeçalho tem o botão do chat do projeto: entre as ações de quem edita demanda, e sozinho para o desenvolvedor', async () => {
         const gestor = await montarDetalhe(TipoUsuarioEnum.GESTOR);
         await carregar(gestor.montado);
-        responderSucesso(esperarRequisicao(gestor.montado.http, 'GET', '/mensagem-direta/canal/projeto/5'), { grupo: null });
-        await gestor.montado.atualizar();
+        gestor.montado.http.expectNone((requisicao) => requisicao.url.includes('/mensagem-direta/canal/'));
         expect(gestor.montado.elemento.querySelector('.projeto-detalhe__botoes app-mensagem-direta-canal-botao')?.textContent).toContain('Criar chat');
     });
 
-    it('o desenvolvedor, que não edita demanda, também tem o botão do chat do projeto (e abre o existente)', async () => {
+    it('o desenvolvedor, que não edita demanda, também tem o botão do chat do projeto, com o rótulo do detalhe e sem perguntar pelo canal', async () => {
         const { montado } = await montarDetalhe(TipoUsuarioEnum.DESENVOLVEDOR);
-        await carregar(montado);
-        const canal = { grupoId: 3, conversaId: 'G3', nome: 'Portal do Cliente', tipo: 'PROJETO', corAvatar: null, emojiAvatar: null, criadorUsuarioId: 1, membros: [], ultimaMensagem: null, naoLidas: 0, silenciada: false, privado: false, leituraPorSupervisao: false };
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/mensagem-direta/canal/projeto/5'), { grupo: canal });
-        await montado.atualizar();
+        await carregar(montado, { ...PROJETO, canalChatExiste: true });
+        montado.http.expectNone((requisicao) => requisicao.url.includes('/mensagem-direta/canal/'));
         expect(montado.elemento.querySelector('.projeto-detalhe__botoes')).toBeNull();
         expect(montado.elemento.querySelector('.projeto-detalhe__cabecalho-acoes app-mensagem-direta-canal-botao')?.textContent).toContain('Abrir chat');
+    });
+
+    it('sem permissão para o chat do projeto (auxiliar sem demanda nele) o botão não aparece (360)', async () => {
+        const { montado } = await montarDetalhe(TipoUsuarioEnum.AUXILIAR);
+        await carregar(montado, { ...PROJETO, canalChatExiste: true, podeAbrirCanalChat: false });
+        expect(montado.elemento.querySelector('app-mensagem-direta-canal-botao button')).toBeNull();
     });
 
     it('desenvolvedor não vê as ações de gestão nem troca de status, mas vê o projeto', async () => {

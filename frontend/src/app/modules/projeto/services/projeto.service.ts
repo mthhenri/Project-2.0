@@ -6,7 +6,7 @@ import {
     ProjetoCriadoDto,
     ProjetoListarDto,
     ProjetoResumoDto,
-    ProjetoRecuperadoDto,
+    ProjetoDetalheRecuperadoDto,
     ProjetoAlterarDto,
     ProjetoAlteradoDto,
     StandardResponse,
@@ -69,8 +69,8 @@ export class ProjetoService {
         return this.httpClient.post<StandardResponse<ProjetoCriadoDto>>(this.urlBase, dto);
     }
 
-    recuperar(id: number): Observable<StandardResponse<ProjetoRecuperadoDto>> {
-        return this.httpClient.get<StandardResponse<ProjetoRecuperadoDto>>(`${this.urlBase}/${id}`);
+    recuperar(id: number): Observable<StandardResponse<ProjetoDetalheRecuperadoDto>> {
+        return this.httpClient.get<StandardResponse<ProjetoDetalheRecuperadoDto>>(`${this.urlBase}/${id}`);
     }
 
     alterar(id: number, dto: ProjetoAlterarDto): Observable<StandardResponse<ProjetoAlteradoDto>> {

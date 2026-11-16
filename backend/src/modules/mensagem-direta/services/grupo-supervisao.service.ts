@@ -96,7 +96,7 @@ export class GrupoSupervisaoService {
                     .filter((membro) => membro.grupoId === grupo.grupoId)
                     .map((membro) => usuarios.get(membro.usuarioId) ?? this.participanteRemovido(membro.usuarioId)),
                 totalMensagens: conversa.totalMensagens,
-                ultimaMensagem: conversa.ultimaMensagem,
+                ultimaMensagemData: conversa.ultimaMensagem.createdDate,
             });
         }
         return { sucesso: true, dados: { grupos: lista, total: encontrados.total, pagina, porPagina }, mensagem: 'Grupos listados com sucesso' };

@@ -75,3 +75,15 @@ testarComBanco('par que nunca trocou mensagem: 404, sem conversa, sem auditoria 
     assert.equal(eventos.length, 0, 'nenhum aviso publicado');
     assert.equal((await armazenamento.listarConversa({ conversaId, limite: 50 })).mensagens.length, 0, 'a conversa não nasceu');
 });
+
+testarComBanco('a lista da supervisão traz a data da última mensagem que casa com a busca, nunca o texto, e não grava auditoria', async (conexao) => {
+    const { service, gestor, conversaId, conversaJaLida, gravarMensagem } = await montar(conexao);
+    await gravarMensagem('a senha é segredo-industrial');
+
+    const lista = (await service.listarConversasSupervisionadas({ texto: 'segredo-industrial' }, como(gestor))).dados!;
+    const item = lista.conversas.find((conversa) => conversa.conversaId === conversaId)!;
+    assert.ok(item, 'a busca por texto acha a conversa');
+    assert.ok(new Date(item.ultimaMensagemData).getTime() > 0);
+    assert.equal(JSON.stringify(lista).includes('segredo-industrial'), false, 'o texto não aparece em lugar nenhum da resposta');
+    assert.equal(await conversaJaLida(), false, 'listar não é ler: nenhuma auditoria');
+});

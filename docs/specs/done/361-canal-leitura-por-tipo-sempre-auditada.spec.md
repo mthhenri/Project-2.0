@@ -38,6 +38,10 @@ Verificação na auditoria: código, por um auditor; arquivo e linha das evidên
 
 Recomendação da auditoria: opção 2 (menos avisos e nenhuma leitura sem abrir).
 
+## Decisão do autor
+
+Em 2026-11-16 o autor seguiu a recomendação da auditoria, **opção 2**: o leitor por tipo recebe só metadados. `ultimaMensagem` do resumo do canal vem `null` para ele, e as fixadas vêm vazias até ele abrir a conversa no dia (a abertura é a leitura auditada); depois de aberta hoje, voltam com o texto. Sem mudança de contrato.
+
 ## Entregáveis
 
 1. A opção escolhida em `grupo.service.ts`, `grupo-fixada.service.ts` e na lista da supervisão.

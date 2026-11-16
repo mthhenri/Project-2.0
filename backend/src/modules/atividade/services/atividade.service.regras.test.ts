@@ -206,20 +206,19 @@ test('alterar: atividade inexistente é 404 e nada é gravado', async () => {
     assert.equal(gravou(repo), false);
 });
 
-test('alterar: desenvolvedor que não é o dono nem membro da demanda é recusado e nada é gravado', async () => {
-    const repo = repositorio({ validarAcessoDemanda: async () => false });
-    await assert.rejects(() => criarServico(repo).alterar({ id: 10, nome: 'X' }, OUTRO_DESENVOLVEDOR), UnauthorizedAccessException);
-    assert.equal(gravou(repo), false);
+test('alterar: desenvolvedor que não é o dono é recusado, mesmo sendo membro da demanda, e nada é gravado', async () => {
+    for (const membro of [false, true]) {
+        const repo = repositorio({ validarAcessoDemanda: async () => membro });
+        await assert.rejects(() => criarServico(repo).alterar({ id: 10, nome: 'X' }, OUTRO_DESENVOLVEDOR), UnauthorizedAccessException);
+        assert.equal(gravou(repo), false);
+    }
 });
 
-test('alterar: o dono altera mesmo sem vínculo com a demanda; o membro altera a atividade de outro', async () => {
+test('alterar: o dono altera mesmo sem vínculo com a demanda', async () => {
     const donoSemVinculo = repositorio({ validarAcessoDemanda: async () => false });
     await criarServico(donoSemVinculo).alterar({ id: 10, nome: 'X' }, DESENVOLVEDOR);
     assert.equal(donoSemVinculo.gravacoes.length, 1);
 
-    const membro = repositorio();
-    await criarServico(membro).alterar({ id: 10, nome: 'X' }, OUTRO_DESENVOLVEDOR);
-    assert.equal(membro.gravacoes.length, 1);
 });
 
 test('alterar: auxiliar, gestor e administrador alteram qualquer atividade', async () => {
@@ -311,17 +310,20 @@ test('alterarTags: atividade inexistente é 404', async () => {
     assert.equal(gravou(repo), false);
 });
 
-test('alterarTags: desenvolvedor que não é o dono nem membro é recusado e nada é gravado', async () => {
-    const repo = repositorio({ validarAcessoDemanda: async () => false });
-    await assert.rejects(() => criarServico(repo, tagExistente).alterarTags({ id: 10, tagIds: [1] }, OUTRO_DESENVOLVEDOR), UnauthorizedAccessException);
-    assert.equal(gravou(repo), false);
+test('alterarTags: desenvolvedor que não é o dono é recusado, mesmo sendo membro, e nada é gravado', async () => {
+    for (const membro of [false, true]) {
+        const repo = repositorio({ validarAcessoDemanda: async () => membro });
+        await assert.rejects(() => criarServico(repo, tagExistente).alterarTags({ id: 10, tagIds: [1] }, OUTRO_DESENVOLVEDOR), UnauthorizedAccessException);
+        assert.equal(gravou(repo), false);
+    }
 });
 
-test('alterarTags: dono, membro e gestor sincronizam as tags e recebem o conjunto final', async () => {
+test('alterarTags: dono, auxiliar, gestor e administrador sincronizam as tags e recebem o conjunto final', async () => {
     const casos = [
         { usuario: DESENVOLVEDOR, acesso: false },
-        { usuario: OUTRO_DESENVOLVEDOR, acesso: true },
+        { usuario: AUXILIAR, acesso: false },
         { usuario: GESTOR, acesso: false },
+        { usuario: ADMINISTRADOR, acesso: false },
     ];
     for (const { usuario, acesso } of casos) {
         const repo = repositorio({ validarAcessoDemanda: async () => acesso });

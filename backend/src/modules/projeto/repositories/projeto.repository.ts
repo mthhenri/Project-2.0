@@ -471,6 +471,30 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
         return resultado[0].existe;
     }
 
+    /** O projeto já tem canal de chat (grupo do tipo PROJETO)? A tela de detalhe usa para escolher entre "Abrir chat" e "Criar chat". */
+    async validarCanalDoProjeto(dto: ProjetoRecuperarDto): Promise<boolean> {
+        const resultado = await this.executarConsulta<{ existe: boolean }>(
+            `
+                SELECT
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            grupo
+                            INNER JOIN tipo_grupo ON tipo_grupo.id = grupo.tipo_grupo_id
+                            AND tipo_grupo.is_deleted = false
+                        WHERE
+                            grupo.is_deleted = false
+                            AND tipo_grupo.codigo = 'PROJETO'
+                            AND grupo.demanda_id IS NULL
+                            AND grupo.projeto_id = :projetoId
+                    ) AS existe
+            `,
+            { projetoId: dto.id },
+        );
+        return resultado[0].existe;
+    }
+
     /** Altera campos do projeto. O código não pode ser alterado. */
     async alterar(dto: ProjetoInternoAlterarDto): Promise<ProjetoAlteradoDto> {
         const setClauses: string[] = ['updated_date = NOW()'];

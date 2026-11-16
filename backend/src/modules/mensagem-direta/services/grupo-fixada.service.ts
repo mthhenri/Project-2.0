@@ -20,6 +20,7 @@ import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.int
 import { lerPeriodoDaBusca } from '../domain/mensagem-direta-regras';
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, ArmazenamentoDeMensagemDireta } from '../repositories/armazenamento-de-mensagem-direta';
 import { GrupoFixadaRegistrada, GrupoFixadaRepository } from '../repositories/grupo-fixada.repository';
+import { MensagemDiretaSupervisaoRepository } from '../repositories/mensagem-direta-supervisao.repository';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 import { GrupoService } from './grupo.service';
 
@@ -36,6 +37,7 @@ export class GrupoFixadaService {
         private readonly grupoService: GrupoService,
         private readonly fixadaRepositorio: GrupoFixadaRepository,
         private readonly eventosService: MensagemDiretaEventosService,
+        private readonly supervisaoRepositorio: MensagemDiretaSupervisaoRepository,
     ) {}
 
     async fixarMensagem(dto: GrupoMensagemFixarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<GrupoMensagemFixadaDto>> {
@@ -72,11 +74,17 @@ export class GrupoFixadaService {
         return { sucesso: true, dados: { grupoId: grupo.grupoId, mensagemId, estavaFixada }, mensagem: estavaFixada ? 'Mensagem desafixada com sucesso' : 'A mensagem não estava fixada' };
     }
 
-    /** As fixadas com o texto de cada uma. A que o armazenamento já não tem é ignorada (não quebra a lista). Membro, ou o gestor que lê o canal por tipo. */
+    /**
+   * As fixadas com o texto de cada uma. A que o armazenamento já não tem é ignorada (não quebra a lista). Membro, ou o gestor que lê o canal por tipo:
+   * este só recebe o texto depois de abrir a conversa hoje (a abertura é a leitura auditada); antes disso a lista vem vazia (task 361).
+   */
     async listarFixadas(dto: GrupoMensagemFixadaListarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<GrupoMensagemFixadaListadasDto>> {
-        const { grupo } = await this.grupoService.exigirAcessoAoGrupo(dto.grupoId, usuarioAtivo);
-        const registradas = await this.fixadaRepositorio.listarFixadas({ grupoId: grupo.grupoId });
+        const { grupo, leitorPorTipo } = await this.grupoService.exigirAcessoAoGrupo(dto.grupoId, usuarioAtivo);
         const conversaId = montarConversaGrupoId(grupo.grupoId);
+        if (leitorPorTipo && !(await this.supervisaoRepositorio.validarLeituraDoDia({ leitorUsuarioId: usuarioAtivo.sub, conversaId, agora: new Date() }))) {
+            return { sucesso: true, dados: { grupoId: grupo.grupoId, fixadas: [] }, mensagem: 'Mensagens fixadas listadas com sucesso' };
+        }
+        const registradas = await this.fixadaRepositorio.listarFixadas({ grupoId: grupo.grupoId });
         const resolvidas = await Promise.all(
             registradas.map(async (registrada: GrupoFixadaRegistrada): Promise<GrupoMensagemFixadaResumoDto | null> => {
                 const mensagem = await this.armazenamento.recuperarMensagem({ conversaId, mensagemId: registrada.mensagemId });

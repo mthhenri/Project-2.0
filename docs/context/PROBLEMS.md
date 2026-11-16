@@ -29,16 +29,8 @@
 
 ## Ativos
 
-> P-092 a P-101 vêm da revisão de requisições e de permissões (2026-11-13 a 15): são os achados de severidade alta e os de média reproduzidos na aplicação rodando. A revisão tem 225 achados ao todo; os demais
+> P-092 a P-101 (os que seguem abertos; os corrigidos saíram daqui) vêm da revisão de requisições e de permissões (2026-11-13 a 15): são os achados de severidade alta e os de média reproduzidos na aplicação rodando. A revisão tem 225 achados ao todo; os demais
 > estão em [`DOSSIE.md`](../specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md) (código `A-NNN`) e cada um aponta para a sua spec na guarda-chuva `docs/specs/backlog/requisicoes-e-permissoes-correcoes.spec.md` (tasks 330–487).
-
-### P-100 — Auxiliar recebe 403 a cada demanda que abre · `ABERTO` · frontend/demanda e backend/mensagem-direta
-
-- **Sintoma:** como auxiliar, toda demanda selecionada gera `GET /mensagem-direta/canal/demanda/:id` com 403, e o detalhe do projeto gera `GET /mensagem-direta/canal/projeto/:id` com 403. Medido em 2026-11-13.
-- **Causa:** o botão do chat pergunta pelo canal a cada alvo, para todo tipo de usuário, e o backend só deixa entrar no canal quem é membro ou tem poder de gestor (`canal-acesso.service.ts`); a regra do auxiliar no canal não está escrita.
-- **Contorno:** nenhum (o 403 não aparece na tela; é requisição perdida a cada clique).
-- **Correção:** `360-canal-de-demanda-e-de-projeto-para-o-auxiliar`, `405-demanda-botao-do-chat-sem-pergunta-a-cada-selecao`; as duas esperam decisão do autor.
-- **Desde:** 2026-11-13 (existe desde os canais de projeto e de demanda, task 248).
 
 ### P-099 — Plano marcado como "solo" tira gestor e administrador de arquivar e excluir · `ABERTO` · backend/plano
 
@@ -63,22 +55,6 @@
 - **Contorno:** nenhum.
 - **Correção:** `335-execucoes-da-atividade-as-ultimas-primeiro` (a correção barata é só de front; a eficiente pede decisão do autor).
 - **Desde:** 2026-11-13.
-
-### P-094 — Desenvolvedor membro da demanda altera a atividade e as tags de um colega · `ABERTO` · backend/atividade
-
-- **Sintoma:** um desenvolvedor que é membro da demanda, sem ser dono da atividade, recebe 200 em `PUT /atividade/:id` e `PUT /atividade/:id/tag` da atividade de outro. Reproduzido em 2026-11-14. A tela trava pelo dono.
-- **Causa:** `AtividadeService.alterar` e `alterarTags` só recusam quem não é dono E não é membro; há testes que fixam esse comportamento.
-- **Contorno:** nenhum.
-- **Correção:** `373-atividade-de-colega-so-o-dono-ou-quem-conduz-altera` (decisão do autor: corrigir ou escrever a regra).
-- **Desde:** 2026-11-14.
-
-### P-092 — Supervisão do chat pode ser lida sem auditoria nem aviso · `ABERTO` · backend/mensagem-direta
-
-- **Sintoma:** com o parâmetro `cursor` (um base64 que o cliente monta), `GET /mensagem-direta/supervisao/grupo/:id` e `GET /mensagem-direta/supervisao/conversa/:id` devolvem a conversa inteira sem gravar `mensagem_direta_supervisao` e sem a mensagem "leu esta conversa". A lista `GET /mensagem-direta/supervisao/conversas` devolve o texto da última mensagem e aceita busca por texto sem auditoria. Abrir um par que nunca conversou grava a auditoria e cria a conversa com o aviso. Os três reproduzidos em 2026-11-14.
-- **Causa:** auditoria e aviso só rodam dentro de `if (!dto.cursor)`; a lista traz `ultimaMensagem` com `texto`; a leitura não confere se há mensagem entre os dois.
-- **Contorno:** nenhum.
-- **Correção:** a leitura sem rastro com cursor (`359`) e o par sem conversa (`391`) foram corrigidos em 2026-11-16 (`docs/specs/done/`); falta a `390-supervisao-lista-sem-o-texto-das-mensagens`, que espera decisão do autor.
-- **Desde:** 2026-11-14 (existe desde a supervisão, tasks 214 e 246).
 
 ### P-085 — Ação em massa nas atividades faz uma requisição por item · `ABERTO` · frontend/atividade
 

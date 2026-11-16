@@ -18,6 +18,7 @@ import {
     temPermissaoDeGestor,
     temVisibilidadeTotal,
     podeEditarAtividadeDeOutro,
+    podeAtribuirMembroOuTag,
 } from '@project20/shared';
 import { StandardResponse, TipoAtividadePrioridadeEnum } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
@@ -187,8 +188,7 @@ export class AtividadeService {
 
     /**
    * Altera campos da atividade.
-   * Desenvolvedor só pode alterar atividades cuja autoria é sua (usuarioId) ou
-   * onde está atribuído à demanda.
+   * O desenvolvedor só altera as próprias atividades (usuarioId); auxiliar, gestor e administrador alteram as de qualquer um.
    */
     async alterar(
         dto: AtividadeInternoAlterarDto,
@@ -199,18 +199,9 @@ export class AtividadeService {
             throw new ResourceNotFoundException('Atividade');
         }
 
-        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
-            const eAutor = atividadeEncontrada.usuarioId === usuarioAtivo.sub;
-            const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
-                demandaId: atividadeEncontrada.demandaId,
-                usuarioId: usuarioAtivo.sub,
-            });
-
-            if (!eAutor && !temAcesso) {
-                throw new UnauthorizedAccessException(
-                    'Desenvolvedor não tem permissão para alterar esta atividade',
-                );
-            }
+        // Cada um altera as próprias atividades; só quem conduz o trabalho (auxiliar, gestor, administrador) altera as dos outros. Ser membro da demanda não basta.
+        if (atividadeEncontrada.usuarioId !== usuarioAtivo.sub && !podeEditarAtividadeDeOutro(usuarioAtivo.tipo)) {
+            throw new UnauthorizedAccessException('Só o dono da atividade, o auxiliar ou o gestor altera esta atividade');
         }
 
         if (dto.demandaId !== undefined && dto.demandaId !== atividadeEncontrada.demandaId) {
@@ -317,8 +308,7 @@ export class AtividadeService {
 
     /**
    * Sincroniza as tags de uma atividade com a lista enviada.
-   * Desenvolvedor só pode alterar as tags de atividades cuja autoria é sua
-   * (usuarioId) ou onde está atribuído à demanda. Gestor é sempre liberado.
+   * O desenvolvedor só altera as tags das próprias atividades; auxiliar, gestor e administrador alteram as de qualquer um.
    */
     async alterarTags(
         dto: AtividadeTagsAtribuirDto & { id: number },
@@ -331,18 +321,9 @@ export class AtividadeService {
             throw new ResourceNotFoundException('Atividade');
         }
 
-        if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
-            const eAutor = atividadeEncontrada.usuarioId === usuarioAtivo.sub;
-            const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
-                demandaId: atividadeEncontrada.demandaId,
-                usuarioId: usuarioAtivo.sub,
-            });
-
-            if (!eAutor && !temAcesso) {
-                throw new UnauthorizedAccessException(
-                    'Desenvolvedor não tem permissão para alterar esta atividade',
-                );
-            }
+        // Cada um altera as próprias atividades; só quem conduz o trabalho (auxiliar, gestor, administrador) altera as dos outros. Ser membro da demanda não basta.
+        if (atividadeEncontrada.usuarioId !== usuarioAtivo.sub && !podeAtribuirMembroOuTag(usuarioAtivo.tipo)) {
+            throw new UnauthorizedAccessException('Só o dono da atividade, o auxiliar ou o gestor altera esta atividade');
         }
 
         for (const tagId of dto.tagIds) {

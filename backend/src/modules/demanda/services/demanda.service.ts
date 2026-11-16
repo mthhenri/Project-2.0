@@ -336,16 +336,19 @@ export class DemandaService {
     ): Promise<StandardResponse<DemandaDetalheRecuperadoDto>> {
         const demandaRecuperada = (await this.recuperar({ id: dto.id }, usuarioAtivo)).dados!;
 
-        const [ancestrais, tags, membros, conexoes] = await Promise.all([
+        const [ancestrais, tags, membros, conexoes, canalChatExiste] = await Promise.all([
             this.demandaRepositorio.listarAncestral({ demandaId: dto.id }),
             this.demandaRepositorio.listarTagsDemanda({ demandaId: dto.id }),
             this.demandaRepositorio.listarMembrosDemanda({ demandaId: dto.id }),
             this.demandaRepositorio.listarConexoes({ demandaId: dto.id }),
+            this.demandaRepositorio.validarCanalDaDemanda({ id: dto.id }),
         ]);
+        // A mesma regra do canal (`CanalAcessoService.validarAcessoAoAlvo`): gestor e administrador por tipo; os demais, incluindo o auxiliar, só como membro.
+        const podeAbrirCanalChat = temPermissaoDeGestor(usuarioAtivo.tipo) || membros.some((membro) => membro.usuarioId === usuarioAtivo.sub);
 
         return {
             sucesso:  true,
-            dados:    { demanda: demandaRecuperada, ancestrais, tags, membros, conexoes },
+            dados:    { demanda: demandaRecuperada, ancestrais, tags, membros, conexoes, canalChatExiste, podeAbrirCanalChat },
             mensagem: 'Detalhe da demanda recuperado com sucesso',
         };
     }

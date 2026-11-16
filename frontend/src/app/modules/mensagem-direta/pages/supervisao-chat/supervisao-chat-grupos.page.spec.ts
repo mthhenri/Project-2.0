@@ -16,7 +16,7 @@ function mensagem(parcial: Record<string, unknown> = {}) {
     };
 }
 
-const GRUPO = { grupoId: 7, conversaId: 'G7', tipo: TipoGrupoEnum.LIVRE, nome: 'Time do backend', corAvatar: null, emojiAvatar: null, membros: [ANA, BRUNO], totalMensagens: 2, ultimaMensagem: mensagem() };
+const GRUPO = { grupoId: 7, conversaId: 'G7', tipo: TipoGrupoEnum.LIVRE, nome: 'Time do backend', corAvatar: null, emojiAvatar: null, membros: [ANA, BRUNO], totalMensagens: 2, ultimaMensagemData: '2026-10-21T14:00:00.000Z' };
 
 function leitura(parcial: Record<string, unknown> = {}) {
     return { grupoId: 7, conversaId: 'G7', tipo: TipoGrupoEnum.LIVRE, nome: 'Time do backend', membros: [ANA, BRUNO], proximoCursor: null, membrosAvisados: false, mensagens: [mensagem()], ...parcial };
@@ -39,7 +39,7 @@ async function irParaOsGrupos(tela: Awaited<ReturnType<typeof montar>>, grupos: 
 }
 
 describe('SupervisaoChatPage — grupos', () => {
-    it('o seletor começa em Chats internos e trocar para Grupos lista os grupos com o nome, a prévia e o total', async () => {
+    it('o seletor começa em Chats internos e trocar para Grupos lista os grupos com o nome e o total, sem a prévia (390)', async () => {
         const tela = await montar();
         expect(['Chats internos', 'Grupos'].map((rotulo) => botaoDoModo(tela, rotulo).getAttribute('aria-pressed'))).toEqual(['true', 'false']);
 
@@ -47,7 +47,6 @@ describe('SupervisaoChatPage — grupos', () => {
         expect(botaoDoModo(tela, 'Grupos').getAttribute('aria-pressed')).toBe('true');
         expect(tela.elemento.textContent).toContain('1 grupo');
         expect(tela.elemento.querySelector('.supervisao-chat__item-nomes')?.textContent).toContain('Time do backend');
-        expect(tela.elemento.textContent).toContain('Subi o PR do filtro');
         expect(tela.elemento.textContent).toContain('Grupos sem gestor nem administrador entre os membros');
     });
 

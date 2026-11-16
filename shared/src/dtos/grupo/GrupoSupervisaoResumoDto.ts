@@ -1,5 +1,4 @@
 import { TipoGrupoEnum } from '../../enums/tipo-grupo.enum';
-import { MensagemDiretaResumoDto } from '../mensagem-direta/MensagemDiretaResumoDto';
 import { MensagemDiretaSupervisaoParticipanteDto } from '../mensagem-direta/MensagemDiretaSupervisaoParticipanteDto';
 
 /** Um grupo supervisionável, para a lista da supervisão. */
@@ -12,5 +11,6 @@ export interface GrupoSupervisaoResumoDto {
     emojiAvatar: string | null;
     membros: MensagemDiretaSupervisaoParticipanteDto[];
     totalMensagens: number;
-    ultimaMensagem: MensagemDiretaResumoDto;
+    /** Quando foi a última mensagem (que casa com o filtro). O texto não vem na lista: ler o conteúdo é abrir o grupo, que é auditado. */
+    ultimaMensagemData: Date;
 }

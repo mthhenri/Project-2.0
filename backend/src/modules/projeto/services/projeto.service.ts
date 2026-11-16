@@ -5,7 +5,7 @@ import {
     ProjetoCriadoDto,
     ProjetoListarDto,
     ProjetoResumoDto,
-    ProjetoRecuperadoDto,
+    ProjetoDetalheRecuperadoDto,
     ProjetoRecuperarDto,
     ProjetoInternoAlterarDto,
     ProjetoAlteradoDto,
@@ -14,6 +14,7 @@ import {
     ProjetoVolumeAnualListarDto,
     ProjetoVolumeAnualResumoDto,
     temVisibilidadeTotal,
+    temPermissaoDeGestor,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
@@ -128,24 +129,34 @@ export class ProjetoService {
     async recuperar(
         dto: ProjetoRecuperarDto,
         usuarioAtivo: JwtPayload,
-    ): Promise<StandardResponse<ProjetoRecuperadoDto>> {
+    ): Promise<StandardResponse<ProjetoDetalheRecuperadoDto>> {
         const projetoEncontrado = await this.projetoRepositorio.recuperar({ id: dto.id });
 
         if (!projetoEncontrado) {
             throw new ResourceNotFoundException('Projeto');
         }
 
+        let temDemandaNoProjeto: boolean | undefined;
         if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
-            const temAcesso = await this.projetoRepositorio.validarAcesso({ usuarioId: usuarioAtivo.sub, projetoId: dto.id });
+            temDemandaNoProjeto = await this.projetoRepositorio.validarAcesso({ usuarioId: usuarioAtivo.sub, projetoId: dto.id });
 
-            if (!temAcesso) {
+            if (!temDemandaNoProjeto) {
                 throw new ResourceNotFoundException('Projeto');
             }
         }
 
+        // O chat do projeto (mesma regra de `CanalAcessoService.validarAcessoAoAlvo`): gestor e administrador por tipo; os demais, incluindo o auxiliar,
+        // só com ao menos uma demanda no projeto.
+        const [canalChatExiste, podeAbrirCanalChat] = await Promise.all([
+            this.projetoRepositorio.validarCanalDoProjeto({ id: dto.id }),
+            temPermissaoDeGestor(usuarioAtivo.tipo)
+                ? Promise.resolve(true)
+                : Promise.resolve(temDemandaNoProjeto ?? this.projetoRepositorio.validarAcesso({ usuarioId: usuarioAtivo.sub, projetoId: dto.id })),
+        ]);
+
         return {
             sucesso:  true,
-            dados:    projetoEncontrado,
+            dados:    { ...projetoEncontrado, canalChatExiste, podeAbrirCanalChat },
             mensagem: 'Projeto recuperado com sucesso',
         };
     }

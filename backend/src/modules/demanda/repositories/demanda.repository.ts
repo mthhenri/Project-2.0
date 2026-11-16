@@ -1841,6 +1841,29 @@ export class DemandaRepository extends BaseRepository<Demanda> {
         return resultado[0].existe;
     }
 
+    /** A demanda já tem canal de chat (grupo do tipo DEMANDA)? A tela de detalhe usa para escolher entre "Abrir chat" e "Criar chat". */
+    async validarCanalDaDemanda(dto: DemandaRecuperarDto): Promise<boolean> {
+        const resultado = await this.executarConsulta<{ existe: boolean }>(
+            `
+                SELECT
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            grupo
+                            INNER JOIN tipo_grupo ON tipo_grupo.id = grupo.tipo_grupo_id
+                            AND tipo_grupo.is_deleted = false
+                        WHERE
+                            grupo.is_deleted = false
+                            AND tipo_grupo.codigo = 'DEMANDA'
+                            AND grupo.demanda_id = :demandaId
+                    ) AS existe
+            `,
+            { demandaId: dto.id },
+        );
+        return resultado[0].existe;
+    }
+
     /**
    * As demandas em que a pessoa tem linha ativa em `demanda_usuario` (demanda e projeto existentes), com a data da atribuição. É a fonte da verdade do
    * acesso aos canais do chat (task 248): o canal de uma demanda é de quem está nela; o de um projeto, de quem está em alguma demanda dele.

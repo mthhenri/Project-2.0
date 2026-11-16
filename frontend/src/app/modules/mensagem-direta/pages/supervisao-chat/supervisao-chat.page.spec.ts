@@ -16,7 +16,7 @@ function mensagem(parcial: Record<string, unknown> = {}) {
     };
 }
 
-const CONVERSA = { conversaId: '4-9', participantes: [ANA, BRUNO], totalMensagens: 2, ultimaMensagem: mensagem() };
+const CONVERSA = { conversaId: '4-9', participantes: [ANA, BRUNO], totalMensagens: 2, ultimaMensagemData: '2026-10-21T14:00:00.000Z' };
 
 async function montar() {
     return montarComponente(SupervisaoChatPage, { usuario: TipoUsuarioEnum.GESTOR });
@@ -27,7 +27,7 @@ function responderLista(tela: Awaited<ReturnType<typeof montar>>, conversas: unk
 }
 
 describe('SupervisaoChatPage', () => {
-    it('lista as conversas com os nomes, a prévia e o total, e pede a primeira página', async () => {
+    it('lista as conversas com os nomes e o total, sem o texto da última mensagem (390), e pede a primeira página', async () => {
         const tela = await montar();
         const requisicao = esperarRequisicao(tela.http, 'GET', '/mensagem-direta/supervisao/conversas');
         expect(requisicao.request.params.get('pagina')).toBe('1');
@@ -35,7 +35,7 @@ describe('SupervisaoChatPage', () => {
         await tela.atualizar();
 
         expect(tela.elemento.textContent).toContain('Ana Souza e Bruno Lima');
-        expect(tela.elemento.textContent).toContain('Alguém viu o bug do login?');
+        expect(tela.elemento.querySelector('.supervisao-chat__lista')?.textContent).not.toContain('Alguém viu o bug do login?');
         expect(tela.elemento.textContent).toContain('1 conversa');
         expect(tela.elemento.textContent).toContain('Escolha uma conversa');
     });

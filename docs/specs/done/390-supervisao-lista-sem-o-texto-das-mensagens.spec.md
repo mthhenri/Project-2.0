@@ -35,6 +35,10 @@ Verificação na auditoria: reproduzido na aplicação rodando em 2026-11-14: `G
 
 Recomendação da auditoria: opção 1.
 
+## Decisão do autor
+
+Em 2026-11-16 o autor seguiu a recomendação da auditoria, **opção 1**: a lista da supervisão (conversas um a um e grupos) traz participantes, total e **a data** da última mensagem que casa com o filtro (`ultimaMensagemData`, no lugar de `ultimaMensagem`); a busca por texto continua dizendo em quais conversas há ocorrência, sem o trecho. A tela tirou a prévia da linha.
+
 ## Entregáveis
 
 1. A opção escolhida na service e no repository da supervisão (conversas um a um e grupos), com o DTO ajustado no `shared` se for a opção 1.

@@ -36,6 +36,10 @@ Verificação na auditoria: medido na aplicação rodando em 2026-11-13: como au
 1. O auxiliar entra no canal por tipo, como o gestor. Falta decidir se lê como membro ou pela leitura auditada da supervisão (hoje só de gestor).
 2. Manter o código: o auxiliar só entra onde é membro da demanda. A tela deixa de pedir e de oferecer o botão do chat ao auxiliar fora das demandas dele, e a regra vai para o documento.
 
+## Decisão do autor
+
+Em 2026-11-16 o autor decidiu a **opção 2**: o auxiliar é um desenvolvedor com acesso mais amplo, mas continua sendo desenvolvedor; não está em todas as demandas, como o gestor não está por tipo no chat. O chat da demanda e do projeto responde a isso: só abre quem é membro (o projeto, quem tem demanda nele); gestor e administrador por tipo. A tela deixa de pedir e de oferecer o botão fora disso (feito junto com a 405).
+
 ## Entregáveis
 
 1. A regra escolhida implementada no backend (se for a opção 1) e escrita no `SYSTEM.SPEC.md` §12, linha `mensagem-direta`.

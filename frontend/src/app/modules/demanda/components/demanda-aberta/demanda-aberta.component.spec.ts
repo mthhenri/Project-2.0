@@ -24,7 +24,7 @@ function responderPendentes(montado: Montado, podeEditar: boolean): string[] {
         let dados: unknown = [];
         // Qualquer id: o teste de troca de página também carrega a demanda 12 e não pode receber o `[]` padrão abaixo.
         const detalhe = /^\/demanda\/(\d+)\/detalhe$/.exec(caminho);
-        if (detalhe) dados = { demanda: { ...DEMANDA, id: Number(detalhe[1]), podeEditar }, ancestrais: [], tags: [], membros: [], conexoes: [] };
+        if (detalhe) dados = { demanda: { ...DEMANDA, id: Number(detalhe[1]), podeEditar }, ancestrais: [], tags: [], membros: [], conexoes: [], canalChatExiste: false, podeAbrirCanalChat: true };
         else if (/^\/demanda\/\d+\/arvore$/.test(caminho)) dados = { id: Number(caminho.split('/')[2]), nome: 'Demanda de teste', filhos: [] };
         else if (/^\/plano\/demanda\/\d+$/.test(caminho)) dados = null;
         else if (['/usuario', '/demanda', '/atividade'].includes(caminho)) dados = PAGINA([]);
@@ -53,10 +53,27 @@ const botao = (montado: Montado, rotulo: string) => Array.from(montado.elemento.
 const editarDescricao = (montado: Montado) => montado.elemento.querySelector<HTMLButtonElement>('.demanda-aberta__acoes-texto button');
 
 describe('DemandaAbertaComponent — o que mostra', () => {
-    it('o cabeçalho tem o botão do chat da demanda, que pergunta pelo canal da própria demanda', async () => {
+    it('o cabeçalho tem o botão do chat da demanda, escolhido pelo detalhe, sem perguntar pelo canal (405)', async () => {
         const { montado, carga } = await abrir(TipoUsuarioEnum.DESENVOLVEDOR);
-        expect(carga).toContain('GET /mensagem-direta/canal/demanda/10');
+        expect(carga.filter((chamada) => chamada.includes('/mensagem-direta/canal/'))).toEqual([]);
         expect(montado.elemento.querySelector('.demanda-aberta__pessoas app-mensagem-direta-canal-botao')?.textContent).toContain('Criar chat');
+    });
+
+    it('sem permissão para o chat (ex.: auxiliar que não é membro) o botão não aparece, e nenhuma requisição de canal sai (360)', async () => {
+        const montado = await montarComponente(DemandaAbertaComponent, { usuario: TipoUsuarioEnum.AUXILIAR, entradas: { demandaId: 10, minutosExecutados: 120 } });
+        montado.componente.ngOnChanges({ demandaId: { currentValue: 10, previousValue: undefined, firstChange: true, isFirstChange: () => true } });
+        const requisicoes: string[] = [];
+        for (const requisicao of montado.http.match(() => true)) {
+            const caminho = requisicao.request.url.replace(/^.*\/api\/v1/, '');
+            requisicoes.push(caminho);
+            const detalhe = /^\/demanda\/(\d+)\/detalhe$/.test(caminho);
+            responderSucesso(requisicao, detalhe
+                ? { demanda: { ...DEMANDA, podeEditar: true }, ancestrais: [], tags: [], membros: [], conexoes: [], canalChatExiste: true, podeAbrirCanalChat: false }
+                : /^\/demanda\/\d+\/arvore$/.test(caminho) ? { id: 10, nome: 'Demanda de teste', filhos: [] } : ['/usuario', '/demanda', '/atividade'].includes(caminho) ? PAGINA([]) : []);
+        }
+        await montado.atualizar();
+        expect(requisicoes.some((caminho) => caminho.includes('/mensagem-direta/canal/'))).toBe(false);
+        expect(montado.elemento.querySelector('app-mensagem-direta-canal-botao button')).toBeNull();
     });
 
     it('gestor: nome, status com o nome, barra de horas, as cinco abas e o texto da técnica para leitura', async () => {

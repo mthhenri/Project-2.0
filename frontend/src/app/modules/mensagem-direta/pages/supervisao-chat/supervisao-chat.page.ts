@@ -21,7 +21,6 @@ import {
     formatarHora,
     mesclarMensagens,
     normalizarMensagem,
-    previaDaMensagem,
     rotuloDaLista,
     rotuloDaRespostaDaIa,
 } from '../../utils/mensagem-direta.util';
@@ -129,7 +128,7 @@ export class SupervisaoChatPage {
                 ? this.grupoService.listarGruposSupervisionados(filtros).pipe(
                     map((resposta) => ({
                         itens: resposta.dados!.grupos.map(
-                            (grupo): ItemDaSupervisao => ({ conversaId: grupo.conversaId, tipoDoGrupo: grupo.tipo, titulo: grupo.nome, participantes: grupo.membros, totalMensagens: grupo.totalMensagens, ultimaMensagem: grupo.ultimaMensagem }),
+                            (grupo): ItemDaSupervisao => ({ conversaId: grupo.conversaId, tipoDoGrupo: grupo.tipo, titulo: grupo.nome, participantes: grupo.membros, totalMensagens: grupo.totalMensagens, ultimaMensagemData: grupo.ultimaMensagemData }),
                         ),
                         total: resposta.dados!.total,
                     })),
@@ -279,12 +278,8 @@ export class SupervisaoChatPage {
         return total === 1 ? 'A IA propôs 1 ação.' : `A IA propôs ${total} ações.`;
     }
 
-    protected previa(conversa: ItemDaSupervisao): string {
-        return previaDaMensagem(conversa.ultimaMensagem.texto, conversa.ultimaMensagem.contemCodigo, false, conversa.ultimaMensagem.autor === AutorMensagemDiretaEnum.IA);
-    }
-
     protected quando(conversa: ItemDaSupervisao): string {
-        return rotuloDaLista(new Date(conversa.ultimaMensagem.createdDate), new Date());
+        return rotuloDaLista(new Date(conversa.ultimaMensagemData), new Date());
     }
 
     protected hora(data: Date): string {

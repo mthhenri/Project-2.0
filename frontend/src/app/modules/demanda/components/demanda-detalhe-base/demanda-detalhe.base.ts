@@ -83,6 +83,9 @@ export abstract class DemandaDetalheBase {
     /** O plano de que a demanda nasceu, só se a pessoa pode vê-lo (task 237). */
     readonly planoDeOrigem = signal<PlanoDemandaOrigemRecuperadoDto | null>(null);
     readonly conexoes = signal<DemandaConexaoResumoDto[]>([]);
+    /** O chat da demanda já existe? Quem pode abri-lo? Vêm no detalhe, para o botão não perguntar ao servidor a cada seleção. */
+    readonly canalChatExiste = signal(false);
+    readonly podeAbrirCanalChat = signal(false);
     /** Demandas visitadas antes da atual (pilha): "← Voltar" restaura a última sem refazer as chamadas. */
     readonly historico = signal<EstadoDetalhe[]>([]);
     private projetoDasDemandas = 0;
@@ -397,12 +400,14 @@ export abstract class DemandaDetalheBase {
             .subscribe({
                 next: ({ detalhe, arvore, tags, usuarios }) => {
                     if (detalhe.sucesso && detalhe.dados) {
-                        const { demanda, ancestrais, tags: tagsDaDemanda, membros, conexoes } = detalhe.dados;
+                        const { demanda, ancestrais, tags: tagsDaDemanda, membros, conexoes, canalChatExiste, podeAbrirCanalChat } = detalhe.dados;
                         this.demanda.set(demanda);
                         this.ancestrais.set(ancestrais);
                         this.tagsDaDemanda.set(tagsDaDemanda);
                         this.membros.set(membros);
                         this.conexoes.set(conexoes);
+                        this.canalChatExiste.set(canalChatExiste);
+                        this.podeAbrirCanalChat.set(podeAbrirCanalChat);
                         this.carregarDemandasParaConexao(demanda.projetoId);
                         if (this.eMembro()) this.carregarAtividades(identificador);
                         else this.atividades.set([]);

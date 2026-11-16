@@ -8,7 +8,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import {
     ProjetoAlterarDto,
-    ProjetoRecuperadoDto,
+    ProjetoDetalheRecuperadoDto,
     TipoDemandaStatusEnum,
     TipoGrupoEnum,
     DemandaGrafoNoDto,
@@ -81,7 +81,7 @@ export class ProjetoDetalhePage implements OnInit {
     private readonly arvoreTela = viewChild<DemandaArvoreTelaComponent>('arvoreTela');
     private readonly volume = viewChild(ProjetoVolumeComponent);
 
-    readonly projeto = signal<ProjetoRecuperadoDto | null>(null);
+    readonly projeto = signal<ProjetoDetalheRecuperadoDto | null>(null);
     /** Selo do cabeçalho: sigla do nome e texto legível sobre a cor do projeto. */
     readonly siglaDoSelo = computed(() => siglaDoProjeto(this.projeto()?.nome ?? ''));
     readonly corTextoSelo = computed(() => corTextoSobre(this.projeto()?.cor ?? ''));

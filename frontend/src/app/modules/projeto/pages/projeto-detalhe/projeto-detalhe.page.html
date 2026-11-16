@@ -109,6 +109,8 @@
                             <app-mensagem-direta-canal-botao
                                 [tipo]="tipoDoChat"
                                 [alvoId]="projeto()!.id"
+                                [canalExiste]="projeto()!.canalChatExiste"
+                                [podeAbrir]="projeto()!.podeAbrirCanalChat"
                             />
                             <p-button
                                 label="Nova Demanda"
@@ -137,6 +139,8 @@
                         <app-mensagem-direta-canal-botao
                             [tipo]="tipoDoChat"
                             [alvoId]="projeto()!.id"
+                            [canalExiste]="projeto()!.canalChatExiste"
+                            [podeAbrir]="projeto()!.podeAbrirCanalChat"
                         />
                     }
                     @if (sessao.eGestor()) {
