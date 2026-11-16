@@ -17,13 +17,22 @@ function usuario(id: number) {
 
 test('listar usuários pede só os ativos, repassa os filtros e não devolve dado além de nome, login, cargo e tipo', async () => {
     const filtros: UsuarioListarDto[] = [];
-    const servico = { listar: async (dto: UsuarioListarDto) => { filtros.push(dto); return { sucesso: true, dados: { itens: [usuario(2)] }, mensagem: '' }; } };
+    const servico = { listar: async (dto: UsuarioListarDto, _usuarioAtivo: unknown) => { filtros.push(dto); return { sucesso: true, dados: { itens: [usuario(2)] }, mensagem: '' }; } };
     const ferramenta = new ListarUsuariosFerramenta(servico as unknown as UsuarioService);
     const resultado = await ferramenta.executar({ tipo: TipoUsuarioEnum.DESENVOLVEDOR, busca: 'pes' }, GESTOR);
     assert.deepEqual(filtros[0], { tipo: TipoUsuarioEnum.DESENVOLVEDOR, busca: 'pes', ativo: true, allRows: true });
     assert.deepEqual(resultado.usuarios, [{ id: 2, nome: 'Pessoa 2', login: 'user.2', cargo: 'Desenvolvedor', tipo: 'DESENVOLVEDOR' }]);
     assert.equal(JSON.stringify(resultado).includes('nao-pode-vazar'), false);
     assert.equal(ferramenta.permissao, 'AUXILIAR');
+});
+
+test('listar usuários repassa quem pede à service, que decide se o login vai (task 425)', async () => {
+    const quemPediu: unknown[] = [];
+    const servico = { listar: async (_dto: UsuarioListarDto, usuarioAtivo: unknown) => { quemPediu.push(usuarioAtivo); return { sucesso: true, dados: { itens: [{ ...usuario(2), login: null }] }, mensagem: '' }; } };
+    const auxiliar = { sub: 5, login: 'aux', tipo: TipoUsuarioEnum.AUXILIAR } as never;
+    const resultado = await new ListarUsuariosFerramenta(servico as unknown as UsuarioService).executar({}, auxiliar);
+    assert.deepEqual(quemPediu, [auxiliar]);
+    assert.equal(resultado.usuarios[0].login, null);
 });
 
 test('listar usuários limita a resposta e avisa que há mais', async () => {

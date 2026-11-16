@@ -24,7 +24,7 @@ Como observar: Como DESENVOLVEDOR membro de 1 demanda num projeto com 10: GET /a
 
 Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** a ferramenta de IA já contorna a diferença juntando os nós do grafo com a listagem.
 
@@ -32,6 +32,8 @@ Verificação na auditoria: código, por um auditor; arquivo e linha das evidên
 
 1. A listagem passa a seguir o projeto acessível.
 2. A restrição é intencional: registrar no `SYSTEM.SPEC.md` §14.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor decidiu por tela, e não por uma das duas opções: na **criação de atividade**, só as demandas de que a pessoa é membro; na **listagem de Documentações**, só as de que é membro; na **visão de demandas** do projeto (grafo, árvore, detalhe), todas as do projeto acessível. Das telas que listavam demandas, só a de Documentações mudava (listava as do projeto inteiro e deixava editar as dele); a criação de atividade (`GET /demanda/atribuidas`), a lista "Minhas demandas" e `GET /demanda` já eram só das dele, e o grafo já era do projeto todo. `GET /demanda` segue como está e a regra por tela foi escrita no `SYSTEM.SPEC.md` §14.
 
 ## Entregáveis
 

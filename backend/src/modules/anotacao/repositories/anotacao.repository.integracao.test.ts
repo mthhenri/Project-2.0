@@ -24,6 +24,8 @@ const ORDEM = [
 
 const configService = { obter: () => ({ aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) } as unknown as ConfigService;
 const GESTOR = { sub: 999, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as never;
+/** Escrever é só no próprio pad (task 426): as gravações entram como o dono. */
+const donoDe = (usuario: { id: number }) => ({ sub: usuario.id, login: 'dono', tipo: TipoUsuarioEnum.DESENVOLVEDOR }) as never;
 
 /** O cadastro do usuário cria o pad (usuario.repository); a fábrica de usuário não, então as cinco seções entram aqui. */
 async function criarPad(conexao: ConexaoTeste, textos: Partial<Record<TipoAnotacaoEnum, string>> = {}) {
@@ -135,7 +137,7 @@ testarComBanco('listar com tipos num usuário sem pad cria o pad inteiro e devol
 testarComBanco('anotar num usuário sem pad também funciona (a IA e o PUT não dependem de abrir o pad antes)', async (conexao) => {
     const { repositorio, servico } = criarServico(conexao);
     const semPad = await criarDesenvolvedor(conexao);
-    const gravada = await servico.anexarTexto({ usuarioId: semPad.id, tipo: TipoAnotacaoEnum.LEMBRETE, texto: 'ligar para o cliente' }, GESTOR);
+    const gravada = await servico.anexarTexto({ usuarioId: semPad.id, tipo: TipoAnotacaoEnum.LEMBRETE, texto: 'ligar para o cliente' }, donoDe(semPad));
     assert.match(gravada.dados!.texto, /ligar para o cliente/);
     assert.equal((await repositorio.listar({ usuarioId: semPad.id })).length, 5);
 });
@@ -179,12 +181,12 @@ testarComBanco('alterar com a versão lida grava; com versão velha não grava (
     const lida = await secaoDe(repositorio, usuario.id, TipoAnotacaoEnum.PESSOAL);
 
     const gravada = await servico.alterar(
-        { usuarioId: usuario.id, tipo: TipoAnotacaoEnum.PESSOAL, texto: 'primeira', updatedDateLido: lida.updatedDate }, GESTOR);
+        { usuarioId: usuario.id, tipo: TipoAnotacaoEnum.PESSOAL, texto: 'primeira', updatedDateLido: lida.updatedDate }, donoDe(usuario));
     assert.equal(gravada.dados?.texto, 'primeira');
     assert.notEqual(new Date(gravada.dados!.updatedDate).getTime(), new Date(lida.updatedDate).getTime(), 'a versão avança');
 
     await assert.rejects(
-        servico.alterar({ usuarioId: usuario.id, tipo: TipoAnotacaoEnum.PESSOAL, texto: 'segunda', updatedDateLido: lida.updatedDate }, GESTOR),
+        servico.alterar({ usuarioId: usuario.id, tipo: TipoAnotacaoEnum.PESSOAL, texto: 'segunda', updatedDateLido: lida.updatedDate }, donoDe(usuario)),
         ConflictException);
     assert.equal(await textoDe(repositorio, usuario.id, TipoAnotacaoEnum.PESSOAL), 'primeira');
 });
@@ -194,7 +196,7 @@ testarComBanco('alterar só mexe na seção pedida e no pad do usuário certo', 
     const usuario = await criarPad(conexao, { LEMBRETE: 'fica' });
     const outro = await criarPad(conexao, { PESSOAL: 'dele' });
     const lida = await secaoDe(repositorio, usuario.id, TipoAnotacaoEnum.PESSOAL);
-    await servico.alterar({ usuarioId: usuario.id, tipo: TipoAnotacaoEnum.PESSOAL, texto: 'novo', updatedDateLido: lida.updatedDate }, GESTOR);
+    await servico.alterar({ usuarioId: usuario.id, tipo: TipoAnotacaoEnum.PESSOAL, texto: 'novo', updatedDateLido: lida.updatedDate }, donoDe(usuario));
 
     assert.equal(await textoDe(repositorio, usuario.id, TipoAnotacaoEnum.LEMBRETE), 'fica');
     assert.equal(await textoDe(repositorio, outro.id, TipoAnotacaoEnum.PESSOAL), 'dele');
@@ -209,7 +211,7 @@ testarComBanco('mover tira o trecho da origem e o põe no fim do destino, nas du
     const movido = await servico.moverTrecho({
         usuarioId: usuario.id, tipoOrigem: TipoAnotacaoEnum.EM_ANDAMENTO, tipoDestino: TipoAnotacaoEnum.PENDENCIA,
         trecho: 'Validar senha.', updatedDateOrigemLido: origem.updatedDate, updatedDateDestinoLido: destino.updatedDate,
-    }, GESTOR);
+    }, donoDe(usuario));
 
     assert.equal(movido.dados?.origem.tipo, TipoAnotacaoEnum.EM_ANDAMENTO);
     assert.equal(movido.dados?.destino.tipo, TipoAnotacaoEnum.PENDENCIA);
@@ -223,12 +225,12 @@ testarComBanco('mover com a versão velha de uma das seções não grava nenhuma
     const origem = await secaoDe(repositorio, usuario.id, TipoAnotacaoEnum.EM_ANDAMENTO);
     const destino = await secaoDe(repositorio, usuario.id, TipoAnotacaoEnum.PENDENCIA);
     // O destino é alterado "em outro lugar" depois que a tela leu.
-    await servico.alterar({ usuarioId: usuario.id, tipo: TipoAnotacaoEnum.PENDENCIA, texto: 'Pendente 2', updatedDateLido: destino.updatedDate }, GESTOR);
+    await servico.alterar({ usuarioId: usuario.id, tipo: TipoAnotacaoEnum.PENDENCIA, texto: 'Pendente 2', updatedDateLido: destino.updatedDate }, donoDe(usuario));
 
     await assert.rejects(servico.moverTrecho({
         usuarioId: usuario.id, tipoOrigem: TipoAnotacaoEnum.EM_ANDAMENTO, tipoDestino: TipoAnotacaoEnum.PENDENCIA,
         trecho: 'Tarefa A', updatedDateOrigemLido: origem.updatedDate, updatedDateDestinoLido: destino.updatedDate,
-    }, GESTOR), ConflictException);
+    }, donoDe(usuario)), ConflictException);
 
     assert.equal(await textoDe(repositorio, usuario.id, TipoAnotacaoEnum.EM_ANDAMENTO), 'Tarefa A');
     assert.equal(await textoDe(repositorio, usuario.id, TipoAnotacaoEnum.PENDENCIA), 'Pendente 2');
@@ -244,8 +246,8 @@ testarComBanco('mover trecho ausente ou repetido recusa e não grava', async (co
         updatedDateOrigemLido: origem.updatedDate, updatedDateDestinoLido: destino.updatedDate,
     };
 
-    await assert.rejects(servico.moverTrecho({ ...base, trecho: 'inexistente' }, GESTOR), BusinessException);
-    await assert.rejects(servico.moverTrecho({ ...base, trecho: 'igual' }, GESTOR), BusinessException);
+    await assert.rejects(servico.moverTrecho({ ...base, trecho: 'inexistente' }, donoDe(usuario)), BusinessException);
+    await assert.rejects(servico.moverTrecho({ ...base, trecho: 'igual' }, donoDe(usuario)), BusinessException);
     assert.equal(await textoDe(repositorio, usuario.id, TipoAnotacaoEnum.EM_ANDAMENTO), 'igual\nigual');
     assert.equal(await textoDe(repositorio, usuario.id, TipoAnotacaoEnum.LEMBRETE), 'x');
 });

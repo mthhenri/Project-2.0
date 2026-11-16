@@ -5,8 +5,8 @@ export class UsuarioResumoDto {
     @ApiProperty({ example: 1 })
     id: number;
 
-    @ApiProperty({ example: 'joao.silva' })
-    login: string;
+    @ApiProperty({ example: 'joao.silva', nullable: true, description: 'Identificador de entrada no sistema; só quem tem permissão de gestor recebe (para os demais, null)' })
+    login: string | null;
 
     @ApiProperty({ example: 'João Silva' })
     nomeCompleto: string;

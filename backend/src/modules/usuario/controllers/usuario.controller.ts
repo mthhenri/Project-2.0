@@ -102,8 +102,8 @@ export class UsuarioController {
     @ApiResponse({ status: 403, description: 'Sem permissão para esta ação', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
     @ExigePermissao(temVisibilidadeTotal)
     @Get()
-    listar(@Query() dto: UsuarioListarDto) {
-        return this.usuarioService.listar(dto);
+    listar(@Query() dto: UsuarioListarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.usuarioService.listar(dto, usuarioAtivo);
     }
 
     @ApiOperation({ summary: 'Alterar a cor da própria bolinha (qualquer usuário autenticado; null volta à cor padrão)' })

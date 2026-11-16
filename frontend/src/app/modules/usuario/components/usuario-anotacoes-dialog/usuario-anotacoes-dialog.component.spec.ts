@@ -96,6 +96,16 @@ describe('UsuarioAnotacoesDialogComponent — abrir', () => {
         expect(montado.componente.editavel()).toBe(true);
     });
 
+    it('o pad de outra pessoa abre só para leitura, até para o gestor; o próprio pad abre editável (task 426)', async () => {
+        const deOutro = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { PESSOAL: 'segredo' });
+        expect(painel(deOutro).editavel()).toBe(false);
+        expect(textoDaTela()).not.toContain('Limpar');
+        TestBed.resetTestingModule();
+
+        const proprio = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO);
+        expect(painel(proprio).editavel()).toBe(true);
+    });
+
     it('falha ao carregar fecha o drawer e avisa', async () => {
         const montado = await montarComponente(UsuarioAnotacoesDialogComponent, { usuario: TipoUsuarioEnum.GESTOR });
         const avisos = avisosDe(montado);
@@ -248,30 +258,30 @@ describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () =
     }
 
     it('o menu esconde a própria seção e lista as outras quatro', async () => {
-        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'x' });
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO, { EM_ANDAMENTO: 'x' });
         painel(montado).abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: 1, texto: 'x', selecao: 'x', evento: new MouseEvent('contextmenu') });
         const visiveis = painel(montado).itensMenu[0].items!.filter((item) => item.visible !== false).map((item) => item.id);
         expect(visiveis).toEqual(['PESSOAL', 'PENDENCIA', 'LEMBRETE', 'FEITO']);
     });
 
     it('mostra o ícone correspondente em cada destino do menu', async () => {
-        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'x' });
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO, { EM_ANDAMENTO: 'x' });
         const itens = painel(montado).itensMenu[0].items!;
         expect(itens.find((item) => item.id === TipoAnotacaoEnum.PESSOAL)?.icon).toBe('pi pi-user');
         expect(itens.find((item) => item.id === TipoAnotacaoEnum.FEITO)?.icon).toBe('pi pi-check-circle');
     });
     const respostaDoMover = (origem: [TipoAnotacaoEnum, string], destino: [TipoAnotacaoEnum, string]) => ({
-        origem: { id: 1, usuarioId: ID_DE_OUTRA_PESSOA, tipo: origem[0], texto: origem[1], updatedDate: VERSAO_NOVA },
-        destino: { id: 3, usuarioId: ID_DE_OUTRA_PESSOA, tipo: destino[0], texto: destino[1], updatedDate: VERSAO_NOVA },
+        origem: { id: 1, usuarioId: ID_LOGADO, tipo: origem[0], texto: origem[1], updatedDate: VERSAO_NOVA },
+        destino: { id: 3, usuarioId: ID_LOGADO, tipo: destino[0], texto: destino[1], updatedDate: VERSAO_NOVA },
     });
     const pedidoDeMover = async (montado: Montado) => {
         await montado.atualizar();
         await montado.atualizar();
-        return esperarRequisicao(montado.http, 'POST', `/anotacao/${ID_DE_OUTRA_PESSOA}/mover`);
+        return esperarRequisicao(montado.http, 'POST', `/anotacao/${ID_LOGADO}/mover`);
     };
 
     it('move o trecho com as duas versões lidas, atualiza as duas seções e oferece Desfazer por 7 s', async () => {
-        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'A\nB', PENDENCIA: 'P' });
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO, { EM_ANDAMENTO: 'A\nB', PENDENCIA: 'P' });
         const desfazer = TestBed.inject(DesfazerService);
         await enviar(montado, 'B', TipoAnotacaoEnum.PENDENCIA);
 
@@ -291,7 +301,7 @@ describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () =
     });
 
     it('bloqueia as duas seções durante o envio e libera após a resposta', async () => {
-        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'A\nB', PENDENCIA: 'P' });
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO, { EM_ANDAMENTO: 'A\nB', PENDENCIA: 'P' });
         await enviar(montado, 'B', TipoAnotacaoEnum.PENDENCIA);
         const requisicao = await pedidoDeMover(montado);
         expect(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO).controle.disabled).toBe(true);
@@ -304,7 +314,7 @@ describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () =
         expect(secao(montado, TipoAnotacaoEnum.PENDENCIA).controle.enabled).toBe(true);
     });
     it('Desfazer devolve o trecho: o movimento inverso sai com as versões novas', async () => {
-        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'A\nB', PENDENCIA: 'P' });
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO, { EM_ANDAMENTO: 'A\nB', PENDENCIA: 'P' });
         const desfazer = TestBed.inject(DesfazerService);
         await enviar(montado, 'B', TipoAnotacaoEnum.PENDENCIA);
         responderSucesso(await pedidoDeMover(montado), respostaDoMover([TipoAnotacaoEnum.EM_ANDAMENTO, 'A'], [TipoAnotacaoEnum.PENDENCIA, 'P\nB']));
@@ -322,22 +332,22 @@ describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () =
     });
 
     it('antes de enviar, salva o que a pessoa digitou nas duas seções (envia o que ela vê)', async () => {
-        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'A\nB' });
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO, { EM_ANDAMENTO: 'A\nB' });
         secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO).controle.setValue('A\nB\nC');
         await enviar(montado, 'B', TipoAnotacaoEnum.PENDENCIA);
         await montado.atualizar();
 
-        const gravacao = esperarRequisicao(montado.http, 'PUT', `/anotacao/${ID_DE_OUTRA_PESSOA}/EM_ANDAMENTO`);
+        const gravacao = esperarRequisicao(montado.http, 'PUT', `/anotacao/${ID_LOGADO}/EM_ANDAMENTO`);
         expect(gravacao.request.body.texto).toBe('A\nB\nC');
         montado.http.expectNone((registroAtual) => registroAtual.method === 'POST');
-        responderSucesso(gravacao, { id: 1, usuarioId: ID_DE_OUTRA_PESSOA, tipo: 'EM_ANDAMENTO', texto: 'A\nB\nC', updatedDate: VERSAO_NOVA });
+        responderSucesso(gravacao, { id: 1, usuarioId: ID_LOGADO, tipo: 'EM_ANDAMENTO', texto: 'A\nB\nC', updatedDate: VERSAO_NOVA });
         const requisicao = await pedidoDeMover(montado);
         expect(requisicao.request.body.updatedDateOrigemLido).toBe(VERSAO_NOVA);
         requisicao.flush(null, { status: 500, statusText: 'x' });
     });
 
     it('seção alterada em outro lugar (409): nada é movido, recarrega as duas e avisa', async () => {
-        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'A\nB', PENDENCIA: 'P' });
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO, { EM_ANDAMENTO: 'A\nB', PENDENCIA: 'P' });
         const avisos = avisosDe(montado);
         await enviar(montado, 'B', TipoAnotacaoEnum.PENDENCIA);
         responderErro(await pedidoDeMover(montado), 409, 'A seção foi alterada em outro lugar');
@@ -348,8 +358,8 @@ describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () =
         expect(secao(montado, TipoAnotacaoEnum.PENDENCIA).controle.disabled).toBe(true);
         expect(recarga.request.params.get('tipos')).toBe('EM_ANDAMENTO,PENDENCIA');
         responderSucesso(recarga, [
-            { id: 1, usuarioId: ID_DE_OUTRA_PESSOA, tipo: 'EM_ANDAMENTO', texto: 'A\nB\nX', updatedDate: VERSAO_NOVA },
-            { id: 3, usuarioId: ID_DE_OUTRA_PESSOA, tipo: 'PENDENCIA', texto: 'P2', updatedDate: VERSAO_NOVA },
+            { id: 1, usuarioId: ID_LOGADO, tipo: 'EM_ANDAMENTO', texto: 'A\nB\nX', updatedDate: VERSAO_NOVA },
+            { id: 3, usuarioId: ID_LOGADO, tipo: 'PENDENCIA', texto: 'P2', updatedDate: VERSAO_NOVA },
         ]);
         await montado.atualizar();
 
@@ -360,19 +370,19 @@ describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () =
     });
 
     it('trecho ausente ou repetido (400): nada é movido e o aviso diz isso', async () => {
-        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'A\nB' });
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO, { EM_ANDAMENTO: 'A\nB' });
         const avisos = avisosDe(montado);
         await enviar(montado, 'B', TipoAnotacaoEnum.LEMBRETE);
         responderErro(await pedidoDeMover(montado), 400, 'O trecho não foi encontrado na seção');
         await montado.atualizar();
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/anotacao'), secoesDe(ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'A\nB' }).filter((s) => ['EM_ANDAMENTO', 'LEMBRETE'].includes(s.tipo)));
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/anotacao'), secoesDe(ID_LOGADO, { EM_ANDAMENTO: 'A\nB' }).filter((s) => ['EM_ANDAMENTO', 'LEMBRETE'].includes(s.tipo)));
 
         expect(avisos.some((aviso) => aviso.summary === 'Trecho não enviado' && /aparece mais de uma vez/.test(aviso.detail ?? ''))).toBe(true);
         expect(TestBed.inject(DesfazerService).oferta()).toBeNull();
     });
 
     it('erro de servidor ao mover só avisa que não foi possível enviar', async () => {
-        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'A\nB' });
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO, { EM_ANDAMENTO: 'A\nB' });
         const avisos = avisosDe(montado);
         await enviar(montado, 'B', TipoAnotacaoEnum.LEMBRETE);
         responderErro(await pedidoDeMover(montado), 500, 'falhou');
@@ -382,7 +392,7 @@ describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () =
     });
 
     it('seção vazia não tem o que limpar', async () => {
-        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA);
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO);
         painel(montado).limpar(secao(montado, TipoAnotacaoEnum.PESSOAL));
         expect(TestBed.inject(DesfazerService).oferta()).toBeNull();
     });

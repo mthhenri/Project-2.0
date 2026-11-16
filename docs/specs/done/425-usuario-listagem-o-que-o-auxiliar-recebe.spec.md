@@ -25,7 +25,7 @@ Como observar: Como AUXILIAR: GET /usuario?allRows=true → 200 com login e temA
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-13: como auxiliar, `GET /usuario?allRows=true` devolve `login`, `tipo`, `ativo` e `temAnotacoes` de todos os usuários, inclusive gestores e administradores.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** a rota é liberada por `temVisibilidadeTotal` e a service não recebe o usuário: auxiliar e gestor recebem a mesma carga.
 
@@ -34,6 +34,8 @@ Verificação na auditoria: medido na aplicação rodando em 2026-11-13: como au
 1. O `login` vem só para quem tem permissão de gestor (o campo fica nulo ou ausente para o auxiliar: muda o DTO de saída).
 2. Listagem enxuta própria para seletores (id, nome, tipo, ativo, cor).
 3. Manter e registrar que o auxiliar vê os logins.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor seguiu a recomendação da auditoria, **opção 1**: o `login` vem só para quem tem permissão de gestor; para o auxiliar o campo volta `null` (`UsuarioResumoDto.login` virou `string | null`) e a busca não procura pelo login. A ferramenta de IA `listar_usuarios` segue a mesma regra.
 
 ## Entregáveis
 

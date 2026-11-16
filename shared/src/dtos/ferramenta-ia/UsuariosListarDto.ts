@@ -18,7 +18,7 @@ export class UsuariosListarDto {
 export interface UsuarioDaFerramentaDto {
     id: number;
     nome: string;
-    login: string;
+    login: string | null;
     cargo: string;
     tipo: string;
 }

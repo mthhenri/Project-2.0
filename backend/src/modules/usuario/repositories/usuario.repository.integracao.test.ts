@@ -3,7 +3,7 @@ import { TipoUsuarioEnum } from '@project20/shared';
 import { testarComBanco } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import {
-    criarAdministrador, criarAtividade, criarAuxiliar, criarDesenvolvedor, criarExecucao, criarGestor, criarUsuario, excluirLinha,
+    criarAdministrador, criarAtividade, criarAuxiliar, criarDemanda, criarDemandaUsuario, criarDesenvolvedor, criarExecucao, criarGestor, criarUsuario, excluirLinha,
 } from '../../../testes/fabricas';
 import { UsuarioRepository } from './usuario.repository';
 
@@ -72,18 +72,18 @@ testarComBanco('listar: só não excluídos, ordenados por nome, com filtros de 
     const excluido = await criarDesenvolvedor(conexao, { login: `${marca}.d`, nomeCompleto: `${marca} Duda` });
     await repositorio.excluir({ id: excluido.id });
 
-    const todos = await repositorio.listar({ busca: marca, allRows: true });
+    const todos = await repositorio.listar({ incluiLogin: true, busca: marca, allRows: true });
     assert.deepEqual(todos.itens.map((item) => item.nomeCompleto), [`${marca} Ana`, `${marca} Beto`, `${marca} Caio`]);
     assert.equal(todos.total, 3);
     assert.equal(JSON.stringify(todos.itens).toLowerCase().includes('senha'), false);
 
-    const soDesenvolvedores = await repositorio.listar({ busca: marca, tipo: TipoUsuarioEnum.DESENVOLVEDOR, allRows: true });
+    const soDesenvolvedores = await repositorio.listar({ incluiLogin: true, busca: marca, tipo: TipoUsuarioEnum.DESENVOLVEDOR, allRows: true });
     assert.deepEqual(soDesenvolvedores.itens.map((item) => item.login), [`${marca}.b`, `${marca}.c`]);
 
-    const soAtivos = await repositorio.listar({ busca: marca, ativo: true, allRows: true });
+    const soAtivos = await repositorio.listar({ incluiLogin: true, busca: marca, ativo: true, allRows: true });
     assert.equal(soAtivos.total, 2);
 
-    const porLogin = await repositorio.listar({ busca: `${marca}.a`, allRows: true });
+    const porLogin = await repositorio.listar({ incluiLogin: true, busca: `${marca}.a`, allRows: true });
     assert.deepEqual(porLogin.itens.map((item) => item.login), [`${marca}.a`]);
 });
 
@@ -91,7 +91,7 @@ testarComBanco('listar pagina com LIMIT/OFFSET e o total é o de toda a busca', 
     const repositorio = criarRepositorio(UsuarioRepository, conexao);
     const marca = 'zzpagina';
     for (const letra of ['a', 'b', 'c']) await criarDesenvolvedor(conexao, { login: `${marca}.${letra}`, nomeCompleto: `${marca} ${letra}` });
-    const segunda = await repositorio.listar({ busca: marca, pagina: 2, itensPorPagina: 2 });
+    const segunda = await repositorio.listar({ incluiLogin: true, busca: marca, pagina: 2, itensPorPagina: 2 });
     assert.equal(segunda.total, 3);
     assert.deepEqual(segunda.itens.map((item) => item.login), [`${marca}.c`]);
 });
@@ -127,7 +127,7 @@ testarComBanco('listar marca temAnotacoes só quando alguma seção do pad tem t
                 1
         `, { usuarioId: comPad.id });
 
-    const itens = (await repositorio.listar({ busca: marca, allRows: true })).itens;
+    const itens = (await repositorio.listar({ incluiLogin: true, busca: marca, allRows: true })).itens;
     assert.deepEqual(itens.map((item) => [item.login, item.temAnotacoes]), [[`${marca}.com`, true], [`${marca}.sem`, false]]);
 });
 
@@ -344,7 +344,7 @@ testarComBanco('cor da bolinha: nasce sem cor, alterarCor grava e limpa só a do
     assert.equal(nomes.find((usuario) => usuario.id === outro.id)!.corAvatar, null);
     assert.equal((await repositorio.listarAtivos()).find((usuario) => usuario.id === dono.id)!.corAvatar, '#1E3A8A');
     assert.equal((await repositorio.listarAtivosComMeta()).find((usuario) => usuario.id === dono.id)!.corAvatar, '#1E3A8A');
-    assert.equal((await repositorio.listar({ itensPorPagina: 100 })).itens.find((usuario) => usuario.id === dono.id)!.corAvatar, '#1E3A8A', 'a listagem de usuários também');
+    assert.equal((await repositorio.listar({ incluiLogin: true, itensPorPagina: 100 })).itens.find((usuario) => usuario.id === dono.id)!.corAvatar, '#1E3A8A', 'a listagem de usuários também');
     assert.equal((await repositorio.listarTiposPorIds({ usuarioIds: [dono.id] }))[0].corAvatar, '#1E3A8A');
 
     assert.deepEqual(await repositorio.alterarCor({ id: dono.id, corAvatar: null }), { corAvatar: null });
@@ -384,4 +384,56 @@ testarComBanco('validarExecucoes: só execução não excluída, em atividade n�
 
     await excluirLinha(conexao, 'atividade', atividadeAtiva.id);
     assert.equal(await repositorio.validarExecucoes({ id: ativa.id }), false, 'atividade excluída');
+});
+
+testarComBanco('validarVinculoComDemanda: só a linha de demanda_usuario não excluída, em demanda não excluída, do próprio usuário', async (conexao) => {
+    const repositorio = criarRepositorio(UsuarioRepository, conexao);
+    const livre = await criarDesenvolvedor(conexao);
+    assert.equal(await repositorio.validarVinculoComDemanda({ id: livre.id }), false, 'sem vínculo');
+
+    const membro = await criarDesenvolvedor(conexao);
+    const demanda = await criarDemanda(conexao);
+    const vinculo = await criarDemandaUsuario(conexao, { demandaId: demanda.id, usuarioId: membro.id });
+    assert.equal(await repositorio.validarVinculoComDemanda({ id: membro.id }), true, 'membro');
+    assert.equal(await repositorio.validarVinculoComDemanda({ id: livre.id }), false, 'vínculo de outro não conta');
+
+    await excluirLinha(conexao, 'demanda_usuario', vinculo.id);
+    assert.equal(await repositorio.validarVinculoComDemanda({ id: membro.id }), false, 'vínculo excluído');
+
+    const emDemandaExcluida = await criarDesenvolvedor(conexao);
+    const demandaExcluida = await criarDemanda(conexao);
+    await criarDemandaUsuario(conexao, { demandaId: demandaExcluida.id, usuarioId: emDemandaExcluida.id });
+    await excluirLinha(conexao, 'demanda', demandaExcluida.id);
+    assert.equal(await repositorio.validarVinculoComDemanda({ id: emDemandaExcluida.id }), false, 'demanda excluída');
+});
+
+testarComBanco('validarExecucaoAtiva: só a execução sem fim, não excluída, em atividade não excluída do próprio usuário', async (conexao) => {
+    const repositorio = criarRepositorio(UsuarioRepository, conexao);
+    const encerrada = await criarDesenvolvedor(conexao);
+    const atividadeEncerrada = await criarAtividade(conexao, { usuarioId: encerrada.id });
+    await criarExecucao(conexao, { atividadeId: atividadeEncerrada.id, inicioData: '2026-01-05T09:00:00Z', fimData: '2026-01-05T10:00:00Z' });
+    assert.equal(await repositorio.validarExecucaoAtiva({ id: encerrada.id }), false, 'só execução encerrada');
+
+    const ativa = await criarDesenvolvedor(conexao);
+    const atividadeAtiva = await criarAtividade(conexao, { usuarioId: ativa.id });
+    const execucao = await criarExecucao(conexao, { atividadeId: atividadeAtiva.id, inicioData: '2026-01-05T09:00:00Z', fimData: null });
+    assert.equal(await repositorio.validarExecucaoAtiva({ id: ativa.id }), true, 'execução sem fim');
+    assert.equal(await repositorio.validarExecucaoAtiva({ id: encerrada.id }), false, 'execução de outro não conta');
+
+    await excluirLinha(conexao, 'execucao', execucao.id);
+    assert.equal(await repositorio.validarExecucaoAtiva({ id: ativa.id }), false, 'execução excluída');
+});
+
+testarComBanco('listar sem incluiLogin: o login volta nulo e a busca não o procura (task 425)', async (conexao) => {
+    const repositorio = criarRepositorio(UsuarioRepository, conexao);
+    const marca = `semlogin${Date.now()}`;
+    await criarDesenvolvedor(conexao, { login: `${marca}.a`, nomeCompleto: 'Pessoa Sem Marca' });
+    const comLogin = await repositorio.listar({ incluiLogin: true, busca: marca, allRows: true });
+    assert.deepEqual(comLogin.itens.map((usuario) => usuario.login), [`${marca}.a`]);
+
+    const semLogin = await repositorio.listar({ incluiLogin: false, busca: marca, allRows: true });
+    assert.equal(semLogin.total, 0, 'o login não é pesquisável');
+    const porNome = await repositorio.listar({ incluiLogin: false, busca: 'Pessoa Sem Marca', allRows: true });
+    assert.equal(porNome.itens.length >= 1, true);
+    assert.equal(porNome.itens.every((usuario) => usuario.login === null), true, 'login nulo para quem não é gestor');
 });

@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-11-16 — Conta própria, login por tipo, pad e documentações, parte 5 (tasks 354, 384, 425, 426, 428)
+
+Decisões do autor: **354** (ninguém inativa nem exclui a própria conta pela API), **384** (por tela: criação de atividade e Documentações só com as demandas de que a pessoa é membro; visão de demandas do projeto com todas), **425** (o `login` só para quem tem permissão de gestor), **426** (o gestor só lê o pad de outra pessoa) e **428** (promover a gestor só sem demanda nem execução em andamento).
+
+**O que mudou.** `UsuarioService.alterar`/`excluir` recusam a própria conta e a promoção com vínculos (dois `validar*` novos no repository de usuário). `GET /usuario` e a ferramenta de IA `listar_usuarios` devolvem o `login` nulo ao auxiliar (`UsuarioResumoDto.login: string | null`, `UsuarioInternoListarDto`), e a busca deixa de procurar pelo login. `AnotacaoService` separa `validarEscrita` (só o dono) de `validarAcesso` (leitura); o drawer do pad abre o de outra pessoa só para leitura. A listagem da tela de Documentações do desenvolvedor passou a ter só as demandas de que ele é membro. As regras estão no `SYSTEM.SPEC.md` §12 e §14.
+
+**Verificação.** Backend 1861 unitários e 543 de integração, `shared` 363, frontend 238 arquivos (2894 testes), `lint:tudo` e builds sem erro; 33 conferências ao vivo por API num stack isolado, removido. Relatório em `docs/specs/done/354-usuario-nao-inativa-nem-exclui-a-si-mesmo/verificacao.md`.
+
+**Limites.** Sem captura de tela (o painel do navegador abriu com viewport zero): o pad alheio só foi conferido pelo DOM e por teste de componente. Ficam 37 decisões pendentes na guarda-chuva.
+
 ## 2026-11-16 — Plano solo, limite de login e regra de senha, parte 4 (tasks 396, 397, 421, 424; 423 adiada)
 
 Decisões do autor: **396** (plano solo de projeto exige o criador e o acesso ao projeto), **397** (gestor e administrador mantêm arquivar e excluir do solo sem ler, e só vira solo enquanto ninguém além do criador contribuiu), **421** (limite de tentativas do login na aplicação), **424** (apenas gestor e administrador trocam a senha de usuários; só escrever a regra) e **423** (apenas anotar: `P-102`).

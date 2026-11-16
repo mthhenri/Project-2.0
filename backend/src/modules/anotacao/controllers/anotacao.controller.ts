@@ -12,7 +12,7 @@ import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator'
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { AnotacaoService } from '../services/anotacao.service';
 
-/** Pad do usuário em cinco seções. O dono usa o próprio; gestor e administrador, o de qualquer um. */
+/** Pad do usuário em cinco seções. O dono lê e escreve no próprio; gestor e administrador **leem** o dos desenvolvedores e auxiliares, sem escrever (task 426). */
 @Controller('anotacao')
 export class AnotacaoController {
     constructor(private readonly anotacaoService: AnotacaoService) {}

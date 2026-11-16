@@ -1232,13 +1232,11 @@ export class DemandaRepository extends BaseRepository<Demanda> {
                             SELECT
                                 1
                             FROM
-                                demanda AS demanda_do_projeto
-                                INNER JOIN demanda_usuario ON demanda_usuario.demanda_id = demanda_do_projeto.id
+                                demanda_usuario
+                            WHERE
+                                demanda_usuario.demanda_id = demanda.id
                                 AND demanda_usuario.usuario_id = :usuarioId
                                 AND demanda_usuario.is_deleted = false
-                            WHERE
-                                demanda_do_projeto.projeto_id = demanda.projeto_id
-                                AND demanda_do_projeto.is_deleted = false
                         )
                     )
                 ORDER BY

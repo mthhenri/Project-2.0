@@ -8,8 +8,9 @@ import { UsuarioService } from '../services/usuario.service';
 export const LIMITE_USUARIOS_DA_FERRAMENTA = 50;
 
 /**
- * Os usuários ativos, só para o gestor (o registro esconde a ferramenta dos demais). Devolve nome, login, cargo e tipo: nada de senha,
- * horas de meta nem anotações. Serve para achar o `usuarioId` das outras ferramentas.
+ * Os usuários ativos, para o gestor e o auxiliar (quem tem visibilidade total). Devolve nome, login, cargo e tipo: nada de senha, horas de
+ * meta nem anotações; o login só vem para quem tem permissão de gestor (task 425, a mesma regra de `GET /usuario`). Serve para achar o
+ * `usuarioId` das outras ferramentas.
  */
 @Injectable()
 export class ListarUsuariosFerramenta extends FerramentaIa<UsuariosListarDto> {
@@ -25,9 +26,9 @@ export class ListarUsuariosFerramenta extends FerramentaIa<UsuariosListarDto> {
         super();
     }
 
-    async executar(entrada: UsuariosListarDto, _usuarioAtivo: JwtPayload): Promise<UsuariosListadosDto> {
+    async executar(entrada: UsuariosListarDto, usuarioAtivo: JwtPayload): Promise<UsuariosListadosDto> {
         const itens =
-            (await this.usuarioService.listar({ tipo: entrada.tipo, busca: entrada.busca, ativo: true, allRows: true })).dados?.itens ?? [];
+            (await this.usuarioService.listar({ tipo: entrada.tipo, busca: entrada.busca, ativo: true, allRows: true }, usuarioAtivo)).dados?.itens ?? [];
         return {
             usuarios: itens
                 .slice(0, LIMITE_USUARIOS_DA_FERRAMENTA)

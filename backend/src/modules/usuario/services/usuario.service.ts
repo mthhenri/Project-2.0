@@ -19,6 +19,7 @@ import {
     ehCorAvatarValida,
     TipoUsuarioEnum,
     podeAtribuirMembroOuTag,
+    podeSerMembroDeDemanda,
     temPermissaoDeAdministrador,
     temPermissaoDeGestor,
 } from '@project20/shared';
@@ -63,9 +64,12 @@ export class UsuarioService {
         };
     }
 
-    /** Lista usuários com filtros opcionais e paginação. */
-    async listar(filtros: UsuarioListarDto): Promise<StandardResponse<PaginatedResult<UsuarioResumoDto>>> {
-        const { itens, total } = await this.usuarioRepositorio.listar(filtros);
+    /**
+   * Lista usuários com filtros opcionais e paginação. Alimenta os seletores de quem tem visibilidade total (auxiliar inclusive); o `login`
+   * só vai para quem tem permissão de gestor (task 425), nos demais volta nulo e a busca não o usa.
+   */
+    async listar(filtros: UsuarioListarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<PaginatedResult<UsuarioResumoDto>>> {
+        const { itens, total } = await this.usuarioRepositorio.listar({ ...filtros, incluiLogin: temPermissaoDeGestor(usuarioAtivo.tipo) });
 
         if (filtros.allRows) {
             return {
@@ -160,12 +164,13 @@ export class UsuarioService {
       dto.tipo !== undefined &&
       !temPermissaoDeGestor(dto.tipo);
 
-        if (estaRebaixandoGestor) {
-            if (usuarioAtivo.sub === dto.id) {
-                throw new BusinessException('Um gestor não pode rebaixar a si mesmo');
-            }
-
+        if (estaRebaixandoGestor && usuarioAtivo.sub === dto.id) {
+            throw new BusinessException('Um gestor não pode rebaixar a si mesmo');
         }
+        if (dto.ativo === false && usuarioAtivo.sub === dto.id) {
+            throw new BusinessException('Você não pode inativar a própria conta');
+        }
+        await this.validarPromocaoSemVinculos(usuarioEncontrado, dto.tipo);
 
         const deixaDeSerAdministrador = dto.tipo !== undefined && !temPermissaoDeAdministrador(dto.tipo);
         const deixaDeSerAtivo = dto.ativo === false;
@@ -180,6 +185,22 @@ export class UsuarioService {
             dados:    usuarioAlterado,
             mensagem: 'Usuário alterado com sucesso',
         };
+    }
+
+    /**
+   * Gestor e administrador nunca são membros de demanda nem têm execução (task 428): quem atua como desenvolvedor só vira um deles
+   * depois de sair das demandas e encerrar a execução em andamento. Trocar entre desenvolvedor e auxiliar, ou entre gestor e
+   * administrador, não passa por aqui.
+   */
+    private async validarPromocaoSemVinculos(usuario: Usuario, novoTipo: TipoUsuarioEnum | undefined): Promise<void> {
+        if (novoTipo === undefined || !podeSerMembroDeDemanda(usuario.tipo) || podeSerMembroDeDemanda(novoTipo)) return;
+
+        if (await this.usuarioRepositorio.validarVinculoComDemanda({ id: usuario.id })) {
+            throw new BusinessException('O usuário é membro de demanda; retire-o das demandas antes de torná-lo gestor ou administrador');
+        }
+        if (await this.usuarioRepositorio.validarExecucaoAtiva({ id: usuario.id })) {
+            throw new BusinessException('O usuário tem execução em andamento; encerre-a antes de torná-lo gestor ou administrador');
+        }
     }
 
     /**
@@ -219,6 +240,9 @@ export class UsuarioService {
             throw new ResourceNotFoundException('Usuário');
         }
 
+        if (usuarioAtivo.sub === dto.id) {
+            throw new BusinessException('Você não pode excluir a própria conta');
+        }
         this.validarPermissaoSobreAdministrador(usuarioEncontrado, usuarioAtivo);
         await this.validarPermanenciaDeAdministradorAtivo(usuarioEncontrado);
 

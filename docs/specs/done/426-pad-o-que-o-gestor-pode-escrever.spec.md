@@ -25,7 +25,7 @@ Como observar: Como GESTOR: GET /anotacao?usuarioId=<id de dev>&tipos=PESSOAL �
 
 Verificação na auditoria: medido na aplicação rodando em 2026-11-14: como gestor, `PUT /anotacao/<id de um desenvolvedor>/EM_ANDAMENTO` passou da permissão (respondeu 409 de versão, não 403).
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** a regra de escrita não está escrita e o comentário do controller contradiz o código.
 
@@ -34,6 +34,8 @@ Verificação na auditoria: medido na aplicação rodando em 2026-11-14: como ge
 1. O gestor só lê.
 2. O gestor lê e escreve, menos na seção PESSOAL.
 3. Como está: registrar.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor seguiu a recomendação da auditoria, **opção 1**: o gestor (e o administrador) só **lê** o pad de outra pessoa. As cinco escritas passam por `validarEscrita` (só o dono, 403 para os demais) e a leitura segue em `validarAcesso`; a tela abre o pad alheio só para leitura.
 
 ## Entregáveis
 

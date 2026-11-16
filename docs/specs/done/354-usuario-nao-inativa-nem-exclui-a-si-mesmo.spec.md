@@ -40,7 +40,7 @@ Como observar: Como GESTOR: PUT /usuario/<próprio id> {ativo:false} → 200; a 
 
 Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** os botões ficam desabilitados para a própria linha, mas `PUT /usuario/:id` com `ativo: false` e `DELETE /usuario/:id` aceitam o próprio id.
 
@@ -50,6 +50,8 @@ Verificação na auditoria: código, por um auditor; arquivo e linha das evidên
 2. É só conveniência da tela: nada muda no backend e o `SYSTEM.SPEC.md` registra isso.
 
 Recomendação da auditoria: opção 1 (o último administrador já é protegido; um gestor comum ainda consegue se trancar para fora pela API).
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor confirmou a recomendação da auditoria, **opção 1**: é regra de negócio. `UsuarioService.alterar` (com `ativo: false`) e `excluir` recusam com 400 quando o alvo é quem pede, para gestor e administrador; a regra está no `SYSTEM.SPEC.md` §14.
 
 ## Entregáveis
 

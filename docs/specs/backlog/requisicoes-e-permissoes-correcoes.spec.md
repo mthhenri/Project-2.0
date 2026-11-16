@@ -9,7 +9,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 ## Entregáveis
 
 1. As 158 tasks da tabela abaixo, cada uma implementada pela própria spec: 6 de severidade alta, 58 média, 82 baixa e 12 informativas.
-2. As 42 decisões do autor ainda pendentes, listadas em "Decisões do autor pendentes", registradas na spec de cada task antes de ela começar.
+2. As 37 decisões do autor ainda pendentes, listadas em "Decisões do autor pendentes", registradas na spec de cada task antes de ela começar.
 
 ## Regras para todas as tasks
 
@@ -27,14 +27,12 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **333** | Check-in aberto: conferir a situação por evento, não a cada 3 s |
 | **334** | Backend: `GET /checkin/situacao` não lista todas as execuções da atividade |
 | **352** | Gravações do pad e dos textos da demanda: não devolver o texto inteiro |
-| **354** | Usuário não inativa nem exclui a si mesmo: a trava também no backend |
 | **363** | IA chamada em conversa compartilhada: resposta com dado que nem todo leitor pode ver |
 | **366** | Grupo livre: escrever (ou mudar) quem adiciona, quem remove e quem lê o histórico |
 | **370** | `POST /assistente/auxiliar-descricao`: identificar quem usa, limitar o tamanho e registrar o custo |
 | **371** | Desfazer a criação de demanda pela proposta: exceção escrita ou mesma permissão da exclusão |
 | **372** | IA: `consultar_demanda` e `consultar_grafo_do_projeto` para o desenvolvedor |
 | **380** | Mover atividade de demanda: onde existe e entre quais projetos |
-| **384** | `GET /demanda` para o desenvolvedor: demandas do projeto acessível ou só as dele? |
 | **385** | Demanda: a trava do "último membro" e a demanda que nasce sem membro |
 | **386** | Conexão de demandas de projetos diferentes: permitir ou recusar |
 | **388** | Desenvolvedor entra sozinho em qualquer demanda do projeto e passa a editar: é a regra? |
@@ -44,9 +42,6 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **412** | Demandas: voltar a uma demanda vista e trocar de modo refazem a carga inteira |
 | **414** | Demandas: gravar membros numa requisição só |
 | **415** | Chat: o evento `SINCRONIZAR` deixa de ser "relê tudo" |
-| **425** | `GET /usuario`: o que o auxiliar recebe de cada usuário |
-| **426** | Pad: o gestor lê o pad de outro; e escreve? |
-| **428** | Promover a gestor: o que fazer com as demandas e a execução ativa do usuário |
 | **430** | Calendário: a leitura dos dias não úteis é aberta a todos? |
 | **431** | Custo estimado do resumo do grupo mostra o preço do modelo a qualquer membro |
 | **433** | Ativar ou restaurar prompt e alterar preço: registrar qual administrador fez |
@@ -102,7 +97,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **351** | Baixa | frontend/pad | Pad: reabrir a gaveta com o mesmo pad em memória não mostra esqueleto nem relê na hora | A-041 | — |
 | **352** | Baixa | backend/anotacao e demanda | Gravações do pad e dos textos da demanda: não devolver o texto inteiro | A-042 | pendente |
 | **353** | Baixa | backend/usuario | `GET /usuario`: `temAnotacoes` mais barato e só para quem pode abrir o pad | A-043, A-044 | — |
-| **354** | Baixa | backend/usuario | Usuário não inativa nem exclui a si mesmo: a trava também no backend | A-045, A-046 | pendente |
+| **354** | Baixa | backend/usuario | Usuário não inativa nem exclui a si mesmo: a trava também no backend | A-045, A-046 | decidida e feita |
 | **355** | Informativo | frontend/usuario | Usuários: `podeEditar` da tela igual à regra do backend | A-047 | — |
 | **356** | Informativo | frontend/usuario | Usuários: a linha só sai da lista depois que o `DELETE` responde | A-048 | — |
 | **357** | Informativo | frontend/documentacao | Documentações: novo pedido à IA ou troca de demanda cancela o pedido em curso | A-049 | — |
@@ -142,7 +137,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **381** | Média | backend/demanda | Demanda: a API não aceita gestor, administrador nem usuário inativo como membro | A-080 | — |
 | **382** | Média | backend/demanda | `PUT /demanda/:id`: mover para pai não estrutural é recusado na service | A-081 | — |
 | **383** | Baixa | backend/demanda | Demanda: o pai informado é lido com o acesso do usuário | A-082 | — |
-| **384** | Baixa | backend/demanda | `GET /demanda` para o desenvolvedor: demandas do projeto acessível ou só as dele? | A-083 | pendente |
+| **384** | Baixa | backend/demanda | `GET /demanda` para o desenvolvedor: demandas do projeto acessível ou só as dele? | A-083 | decidida e feita |
 | **385** | Baixa | backend/demanda | Demanda: a trava do "último membro" e a demanda que nasce sem membro | A-084 | pendente |
 | **386** | Baixa | backend/demanda | Conexão de demandas de projetos diferentes: permitir ou recusar | A-085 | pendente |
 | **387** | Baixa | backend/demanda | IA: propostas de concluir, alterar e descrever demanda recusam na hora quem não pode editar | A-086 | — |
@@ -203,10 +198,10 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **422** | Baixa | backend/autenticacao | Login: não revelar que um login existe e está inativo | A-129 | — |
 | **423** | Média | backend/autenticacao e usuario | Troca de senha: os tokens emitidos antes deixam de valer | A-130 | adiada (P-102) |
 | **424** | Média | backend/usuario | Senha: quem troca a de quem, e com qual confirmação | A-131 | decidida e feita |
-| **425** | Média | backend/usuario | `GET /usuario`: o que o auxiliar recebe de cada usuário | A-132 | pendente |
-| **426** | Média | backend/anotacao | Pad: o gestor lê o pad de outro; e escreve? | A-133 | pendente |
+| **425** | Média | backend/usuario | `GET /usuario`: o que o auxiliar recebe de cada usuário | A-132 | decidida e feita |
+| **426** | Média | backend/anotacao | Pad: o gestor lê o pad de outro; e escreve? | A-133 | decidida e feita |
 | **427** | Baixa | backend/ponto-justificativa | Justificativa de ponto: a regra "só de outra pessoa" na service | A-134 | — |
-| **428** | Baixa | backend/usuario | Promover a gestor: o que fazer com as demandas e a execução ativa do usuário | A-135 | pendente |
+| **428** | Baixa | backend/usuario | Promover a gestor: o que fazer com as demandas e a execução ativa do usuário | A-135 | decidida e feita |
 | **429** | Baixa | backend/usuario | Último administrador ativo: a guarda resiste a duas requisições simultâneas | A-136 | — |
 | **430** | Informativo | docs, backend/calendario e frontend/calendario | Calendário: a leitura dos dias não úteis é aberta a todos? | A-137, A-138 | pendente |
 | **431** | Baixa | backend/mensagem-direta e configuracao-ia | Custo estimado do resumo do grupo mostra o preço do modelo a qualquer membro | A-139 | pendente |

@@ -54,7 +54,9 @@ export class PadService implements OnDestroy {
     private reabrir: (() => void) | null = null;
     private aoFalharAoCarregar: (() => void) | null = null;
 
-    readonly titulo = computed(() => (this.sessao.id() === this.usuarioId() ? 'Minhas anotações' : `Anotações de ${this.nomeCompleto()}`));
+    /** O pad aberto é o da própria pessoa: só nele ela escreve; o gestor lê o de outra pessoa e não escreve (task 426). */
+    readonly ePadProprio = computed(() => this.sessao.id() === this.usuarioId());
+    readonly titulo = computed(() => (this.ePadProprio() ? 'Minhas anotações' : `Anotações de ${this.nomeCompleto()}`));
 
     readonly editadoHa = computed(() => {
         const data = this.alteracaoData();

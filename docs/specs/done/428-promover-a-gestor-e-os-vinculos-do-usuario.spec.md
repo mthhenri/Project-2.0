@@ -25,7 +25,7 @@ Como observar: Como GESTOR: PUT /usuario/<id de dev que é membro de demanda e t
 
 Verificação na auditoria: código, por um auditor; arquivo e linha das evidências conferidos por script.
 
-## Decisão do autor pendente
+## Decisão do autor
 
 **Antes:** `UsuarioService.alterar` aplica as guardas de administrador e grava o tipo; as linhas de `demanda_usuario` e a execução ativa ficam.
 
@@ -33,6 +33,8 @@ Verificação na auditoria: código, por um auditor; arquivo e linha das evidên
 
 1. Recusar a promoção enquanto houver vínculo ou execução ativa.
 2. Encerrar a execução e remover os vínculos na mesma operação.
+
+**Decisão (2026-11-16):** Em 2026-11-16 o autor seguiu a recomendação da auditoria, **opção 1**: promover desenvolvedor ou auxiliar a gestor ou administrador é recusado (400) enquanto ele for membro de alguma demanda ou tiver execução em andamento.
 
 ## Entregáveis
 

@@ -4,6 +4,7 @@ export * from './UsuarioResumoDto';
 export * from './UsuarioRecuperadoDto';
 export * from './UsuarioRecuperarDto';
 export * from './UsuarioListarDto';
+export * from './UsuarioInternoListarDto';
 export * from './UsuarioAlterarDto';
 export * from './UsuarioAlteradoDto';
 export * from './UsuarioInternoAlterarDto';

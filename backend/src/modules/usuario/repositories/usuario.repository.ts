@@ -7,7 +7,7 @@ import {
     UsuarioCriadoDto,
     UsuarioRecuperarDto,
     UsuarioResumoDto,
-    UsuarioListarDto,
+    UsuarioInternoListarDto,
     UsuarioAlteradoDto,
     UsuarioInternoAlterarDto,
     UsuarioValidarLoginDto,
@@ -98,7 +98,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     }
 
     /** Lista usuários com filtros e paginação. */
-    async listar(filtros: UsuarioListarDto): Promise<{ itens: UsuarioResumoDto[]; total: number }> {
+    async listar(filtros: UsuarioInternoListarDto): Promise<{ itens: UsuarioResumoDto[]; total: number }> {
         const pagina = filtros.pagina ?? 1;
         const itensPorPagina = filtros.itensPorPagina ?? 20;
 
@@ -116,12 +116,15 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
         }
 
         if (filtros.busca !== undefined && filtros.busca.trim() !== '') {
-            condicoes.push(`
-                (
-                    usuario.nome_completo ILIKE :busca
-                    OR usuario.login ILIKE :busca
-                )
-            `);
+            // Sem permissão de gestor o login não aparece, então a busca também não o usa (senão daria para descobri-lo por tentativa).
+            condicoes.push(filtros.incluiLogin
+                ? `
+                    (
+                        usuario.nome_completo ILIKE :busca
+                        OR usuario.login ILIKE :busca
+                    )
+                `
+                : 'usuario.nome_completo ILIKE :busca');
             parametros.busca = `%${filtros.busca.trim()}%`;
         }
 
@@ -157,7 +160,9 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
             `
                 SELECT
                     usuario.id,
-                    usuario.login,
+                    CASE
+                        WHEN CAST(:incluiLogin AS boolean) THEN usuario.login
+                    END AS login,
                     usuario.nome_completo AS "nomeCompleto",
                     usuario.cargo_titulo AS "cargoTitulo",
                     tipo_usuario.codigo AS tipo,
@@ -182,7 +187,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                 ORDER BY
                     usuario.nome_completo ASC ${clausulaPaginacao}
             `,
-            parametros,
+            { ...parametros, incluiLogin: filtros.incluiLogin },
         );
 
         return { itens, total };
@@ -440,6 +445,54 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                         FROM
                             atividade
                             INNER JOIN execucao ON execucao.atividade_id = atividade.id
+                            AND execucao.is_deleted = false
+                        WHERE
+                            atividade.usuario_id = :id
+                            AND atividade.is_deleted = false
+                    ) AS existe
+            `,
+            { id: dto.id },
+        );
+        return resultado[0].existe;
+    }
+
+    /**
+   * Confere se o usuário é membro de alguma demanda: linha de `demanda_usuario` não excluída em demanda não excluída.
+   * Quem é não vira gestor nem administrador, que nunca são membros (task 428).
+   */
+    async validarVinculoComDemanda(dto: UsuarioRecuperarDto): Promise<boolean> {
+        const resultado = await this.executarConsulta<{ existe: boolean }>(
+            `
+                SELECT
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            demanda_usuario
+                            INNER JOIN demanda ON demanda.id = demanda_usuario.demanda_id
+                            AND demanda.is_deleted = false
+                        WHERE
+                            demanda_usuario.usuario_id = :id
+                            AND demanda_usuario.is_deleted = false
+                    ) AS existe
+            `,
+            { id: dto.id },
+        );
+        return resultado[0].existe;
+    }
+
+    /** Confere se o usuário tem execução em andamento (sem `fim_data`) em atividade sua (a execução não tem coluna de usuário: vale o dono da atividade). */
+    async validarExecucaoAtiva(dto: UsuarioRecuperarDto): Promise<boolean> {
+        const resultado = await this.executarConsulta<{ existe: boolean }>(
+            `
+                SELECT
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            atividade
+                            INNER JOIN execucao ON execucao.atividade_id = atividade.id
+                            AND execucao.fim_data IS NULL
                             AND execucao.is_deleted = false
                         WHERE
                             atividade.usuario_id = :id

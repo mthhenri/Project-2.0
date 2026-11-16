@@ -65,18 +65,19 @@ test('criar: o repository recebe o status inicial só por ele (a service não de
 test('listar: com paginação calcula total de páginas; com allRows devolve tudo numa página só', async () => {
     const itens = [{ id: 1 }, { id: 2 }];
     const servico = criarServico({ listar: async () => ({ itens, total: 45 }) });
+    const GESTOR_PARA_LISTAR = { sub: 1, tipo: TipoUsuarioEnum.GESTOR } as never;
 
-    const paginada = (await servico.listar({ pagina: 2, itensPorPagina: 20 })).dados!;
+    const paginada = (await servico.listar({ pagina: 2, itensPorPagina: 20 }, GESTOR_PARA_LISTAR)).dados!;
     assert.deepEqual(
         { totalItens: paginada.totalItens, paginaAtual: paginada.paginaAtual, itensPorPagina: paginada.itensPorPagina, totalPaginas: paginada.totalPaginas },
         { totalItens: 45, paginaAtual: 2, itensPorPagina: 20, totalPaginas: 3 },
     );
 
-    const padrao = (await servico.listar({})).dados!;
+    const padrao = (await servico.listar({}, GESTOR_PARA_LISTAR)).dados!;
     assert.equal(padrao.paginaAtual, 1);
     assert.equal(padrao.itensPorPagina, 20);
 
-    const tudo = (await servico.listar({ allRows: true })).dados!;
+    const tudo = (await servico.listar({ allRows: true }, GESTOR_PARA_LISTAR)).dados!;
     assert.deepEqual({ totalItens: tudo.totalItens, totalPaginas: tudo.totalPaginas, paginaAtual: tudo.paginaAtual }, { totalItens: 2, totalPaginas: 1, paginaAtual: 1 });
 });
 
@@ -84,8 +85,22 @@ test('listar: repassa os filtros ao repository', async () => {
     let recebido: unknown;
     const servico = criarServico({ listar: async (filtros: unknown) => { recebido = filtros; return { itens: [], total: 0 }; } });
     const filtros = { tipo: TipoUsuarioEnum.GESTOR, ativo: true, busca: 'ana' };
-    await servico.listar(filtros);
-    assert.deepEqual(recebido, filtros);
+    await servico.listar(filtros, { sub: 1, tipo: TipoUsuarioEnum.GESTOR } as never);
+    assert.deepEqual(recebido, { ...filtros, incluiLogin: true });
+});
+
+// Task 425: o login dos usuários só vai para quem tem permissão de gestor; o auxiliar recebe a lista sem ele.
+test('listar: gestor e administrador recebem o login; auxiliar não (o repository é avisado)', async () => {
+    const recebidos: unknown[] = [];
+    const servico = criarServico({ listar: async (filtros: unknown) => { recebidos.push(filtros); return { itens: [], total: 0 }; } });
+    for (const tipo of [TipoUsuarioEnum.GESTOR, TipoUsuarioEnum.ADMINISTRADOR, TipoUsuarioEnum.AUXILIAR]) {
+        await servico.listar({ allRows: true, busca: 'ana' }, { sub: 1, tipo } as never);
+    }
+    assert.deepEqual(recebidos, [
+        { allRows: true, busca: 'ana', incluiLogin: true },
+        { allRows: true, busca: 'ana', incluiLogin: true },
+        { allRows: true, busca: 'ana', incluiLogin: false },
+    ]);
 });
 
 test('recuperar: desenvolvedor vê o próprio perfil, não o de outro', async () => {

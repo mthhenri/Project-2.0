@@ -800,7 +800,7 @@ testarComBanco('documentação: o gestor vê as demandas de todos os projetos, c
     assert.equal(resumoDaFilha.podeEditar, true, 'gestor edita todas');
 });
 
-testarComBanco('documentação: o desenvolvedor só vê projetos em que é membro de alguma demanda, e edita só as próprias', async (conexao) => {
+testarComBanco('documentação: o desenvolvedor só vê as demandas de que é membro (task 384), em qualquer projeto, e edita todas elas', async (conexao) => {
     const repositorio = criarRepositorio(DemandaRepository, conexao);
     const desenvolvedor = await criarDesenvolvedor(conexao);
     const projetoDele = await criarProjeto(conexao);
@@ -811,10 +811,10 @@ testarComBanco('documentação: o desenvolvedor só vê projetos em que é membr
     const alheia = await criarDemanda(conexao, { projetoId: projetoAlheio.id, nome: 'Alheia' });
 
     const lista = await repositorio.listarParaDocumentacao({ usuarioId: desenvolvedor.id, todosOsProjetos: false });
-    assert.deepEqual(ids(lista).sort(), [minha.id, colega.id].sort());
+    assert.deepEqual(ids(lista), [minha.id]);
+    assert.equal(lista.some((item) => item.id === colega.id), false, 'demanda do colega no mesmo projeto não entra');
     assert.equal(lista.some((item) => item.id === alheia.id), false);
-    assert.equal(lista.find((item) => item.id === minha.id)!.podeEditar, true);
-    assert.equal(lista.find((item) => item.id === colega.id)!.podeEditar, false, 'de fora da demanda: só leitura');
+    assert.equal(lista[0].podeEditar, true);
 });
 
 testarComBanco('documentação: emExecucao só acende com execução ativa da própria pessoa na demanda', async (conexao) => {

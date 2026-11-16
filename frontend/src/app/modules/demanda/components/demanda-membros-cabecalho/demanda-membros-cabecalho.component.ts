@@ -57,7 +57,7 @@ export class DemandaMembrosCabecalhoComponent {
             this.usuariosDisponiveis().filter(
                 (usuario) =>
                     !jaMembros.has(usuario.id) &&
-          (normalizarTexto(usuario.nomeCompleto).includes(termo) || normalizarTexto(usuario.login).includes(termo)),
+          (normalizarTexto(usuario.nomeCompleto).includes(termo) || normalizarTexto(usuario.login ?? '').includes(termo)),
             ),
         );
     }
@@ -69,7 +69,7 @@ export class DemandaMembrosCabecalhoComponent {
             usuarioId: usuario.id,
             nomeCompleto: usuario.nomeCompleto,
             corAvatar: usuario.corAvatar,
-            login: usuario.login,
+            login: usuario.login ?? '',
             tipo: usuario.tipo,
             cargoTitulo: usuario.cargoTitulo,
         };

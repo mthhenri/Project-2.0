@@ -54,7 +54,7 @@ function criarServico(repositorio: ReturnType<typeof criarRepositorio>): Anotaca
 
 // --- Permissão ---------------------------------------------------------------------------------
 
-test('o dono lê e altera o próprio pad; gestor e administrador, o de qualquer desenvolvedor', async () => {
+test('o dono lê o próprio pad; gestor e administrador, o de qualquer desenvolvedor', async () => {
     const servico = criarServico(criarRepositorio());
     for (const usuario of [DESENVOLVEDOR_DONO, GESTOR, ADMINISTRADOR]) {
         const resposta = await servico.listar({ usuarioId: 7 }, usuario);
@@ -82,6 +82,32 @@ test('task 195: gestor e administrador não tocam no pad de outro gestor ou admi
     }
 });
 
+// Task 426: ler é do gestor e do administrador (pad de desenvolvedor e de auxiliar); escrever é só do dono, em qualquer seção.
+test('gestor e administrador não escrevem no pad de outra pessoa (403) em nenhuma operação nem seção, nem na PESSOAL; leem normalmente', async () => {
+    const repositorio = criarRepositorio({ FEITO: 'x', PESSOAL: 'segredo' });
+    const servico = criarServico(repositorio);
+    const data = new Date(1_000);
+    for (const ator of [GESTOR, ADMINISTRADOR]) {
+        for (const tipo of [TipoAnotacaoEnum.PESSOAL, TipoAnotacaoEnum.FEITO]) {
+            await assert.rejects(() => servico.alterar({ usuarioId: 7, tipo, texto: 'y', updatedDateLido: data }, ator), UnauthorizedAccessException);
+            await assert.rejects(() => servico.trocarTrecho({ usuarioId: 7, tipo, trechoAntigo: 'x', trechoNovo: 'y' }, ator), UnauthorizedAccessException);
+            await assert.rejects(() => servico.anexarTexto({ usuarioId: 7, tipo, texto: 'y' }, ator), UnauthorizedAccessException);
+        }
+        await assert.rejects(() => servico.anexarFeito({ usuarioId: 7, texto: 'y' }, ator), UnauthorizedAccessException);
+        await assert.rejects(() => servico.moverTrecho({ usuarioId: 7, tipoOrigem: TipoAnotacaoEnum.FEITO, tipoDestino: TipoAnotacaoEnum.PESSOAL, trecho: 'x', updatedDateOrigemLido: data, updatedDateDestinoLido: data }, ator), UnauthorizedAccessException);
+        assert.equal((await servico.listar({ usuarioId: 7, tipos: [TipoAnotacaoEnum.PESSOAL] }, ator)).dados![0].texto, 'segredo');
+    }
+    assert.equal(repositorio.gravacoes, 0);
+});
+
+test('o dono escreve em qualquer seção do próprio pad, inclusive a PESSOAL', async () => {
+    const repositorio = criarRepositorio({ FEITO: 'x' });
+    const servico = criarServico(repositorio);
+    const gravada = await servico.alterar({ usuarioId: 7, tipo: TipoAnotacaoEnum.PESSOAL, texto: 'meu', updatedDateLido: new Date(1_000) }, DESENVOLVEDOR_DONO);
+    assert.equal(gravada.dados!.texto, 'meu');
+    assert.equal(repositorio.gravacoes, 1);
+});
+
 test('desenvolvedor não toca no pad de outro (403) em nenhuma operação', async () => {
     const repositorio = criarRepositorio({ FEITO: 'x' });
     const servico = criarServico(repositorio);
@@ -99,7 +125,7 @@ test('usuário sem seções (inexistente) dá 404', async () => {
     const servico = criarServico(criarRepositorio({}, false));
     await assert.rejects(() => servico.listar({ usuarioId: 7 }, GESTOR), ResourceNotFoundException);
     await assert.rejects(
-        () => servico.alterar({ usuarioId: 7, tipo: TipoAnotacaoEnum.FEITO, texto: 'x', updatedDateLido: new Date(1_000) }, GESTOR),
+        () => servico.alterar({ usuarioId: 7, tipo: TipoAnotacaoEnum.FEITO, texto: 'x', updatedDateLido: new Date(1_000) }, DESENVOLVEDOR_DONO),
         ResourceNotFoundException,
     );
 });
@@ -140,15 +166,15 @@ test('trocarTrecho troca um trecho único e preserva o resto', async () => {
 test('trocarTrecho recusa trecho ausente e ambíguo sem gravar', async () => {
     const repositorio = criarRepositorio({ EM_ANDAMENTO: 'x y x' });
     const servico = criarServico(repositorio);
-    await assert.rejects(() => servico.trocarTrecho({ usuarioId: 7, tipo: TipoAnotacaoEnum.EM_ANDAMENTO, trechoAntigo: 'z', trechoNovo: 'a' }, GESTOR), BusinessException);
-    await assert.rejects(() => servico.trocarTrecho({ usuarioId: 7, tipo: TipoAnotacaoEnum.EM_ANDAMENTO, trechoAntigo: 'x', trechoNovo: 'a' }, GESTOR), BusinessException);
+    await assert.rejects(() => servico.trocarTrecho({ usuarioId: 7, tipo: TipoAnotacaoEnum.EM_ANDAMENTO, trechoAntigo: 'z', trechoNovo: 'a' }, DESENVOLVEDOR_DONO), BusinessException);
+    await assert.rejects(() => servico.trocarTrecho({ usuarioId: 7, tipo: TipoAnotacaoEnum.EM_ANDAMENTO, trechoAntigo: 'x', trechoNovo: 'a' }, DESENVOLVEDOR_DONO), BusinessException);
     assert.equal(repositorio.gravacoes, 0);
 });
 
 test('trocarTrecho com a data lida velha dá conflito', async () => {
     const servico = criarServico(criarRepositorio({ EM_ANDAMENTO: 'a' }));
     await assert.rejects(
-        () => servico.trocarTrecho({ usuarioId: 7, tipo: TipoAnotacaoEnum.EM_ANDAMENTO, trechoAntigo: 'a', trechoNovo: 'b', updatedDateLido: new Date(1) }, GESTOR),
+        () => servico.trocarTrecho({ usuarioId: 7, tipo: TipoAnotacaoEnum.EM_ANDAMENTO, trechoAntigo: 'a', trechoNovo: 'b', updatedDateLido: new Date(1) }, DESENVOLVEDOR_DONO),
         ConflictException,
     );
 });
@@ -157,8 +183,8 @@ test('trocarTrecho com a data lida velha dá conflito', async () => {
 
 test('anexarTexto em seção vazia e em seção com conteúdo', async () => {
     const servico = criarServico(criarRepositorio({ LEMBRETE: 'um' }));
-    assert.equal((await servico.anexarTexto({ usuarioId: 7, tipo: TipoAnotacaoEnum.PENDENCIA, texto: 'a' }, GESTOR)).dados!.texto, 'a');
-    assert.equal((await servico.anexarTexto({ usuarioId: 7, tipo: TipoAnotacaoEnum.LEMBRETE, texto: 'dois' }, GESTOR)).dados!.texto, 'um\n\ndois');
+    assert.equal((await servico.anexarTexto({ usuarioId: 7, tipo: TipoAnotacaoEnum.PENDENCIA, texto: 'a' }, DESENVOLVEDOR_DONO)).dados!.texto, 'a');
+    assert.equal((await servico.anexarTexto({ usuarioId: 7, tipo: TipoAnotacaoEnum.LEMBRETE, texto: 'dois' }, DESENVOLVEDOR_DONO)).dados!.texto, 'um\n\ndois');
 });
 
 test('anexarFeito cria o título do dia uma vez e reaproveita nas chamadas seguintes', async () => {
@@ -192,7 +218,7 @@ test('moverTrecho tira da origem e anexa ao fim do destino', async () => {
 
 test('moverTrecho: se a origem não tem o trecho, nenhuma das duas muda', async () => {
     const repositorio = criarRepositorio({ EM_ANDAMENTO: 'a', PENDENCIA: 'p' });
-    await assert.rejects(() => criarServico(repositorio).moverTrecho(dadosDeMover(repositorio, 'z'), GESTOR), BusinessException);
+    await assert.rejects(() => criarServico(repositorio).moverTrecho(dadosDeMover(repositorio, 'z'), DESENVOLVEDOR_DONO), BusinessException);
     assert.equal(repositorio.gravacoes, 0);
     assert.equal(repositorio.secoes.get(TipoAnotacaoEnum.PENDENCIA)!.texto, 'p');
 });
@@ -200,15 +226,15 @@ test('moverTrecho: se a origem não tem o trecho, nenhuma das duas muda', async 
 test('moverTrecho: versão velha de qualquer uma das duas dá conflito e nada muda', async () => {
     const repositorio = criarRepositorio({ EM_ANDAMENTO: 'a', PENDENCIA: 'p' });
     const servico = criarServico(repositorio);
-    await assert.rejects(() => servico.moverTrecho({ ...dadosDeMover(repositorio, 'a'), updatedDateOrigemLido: new Date(1) }, GESTOR), ConflictException);
-    await assert.rejects(() => servico.moverTrecho({ ...dadosDeMover(repositorio, 'a'), updatedDateDestinoLido: new Date(1) }, GESTOR), ConflictException);
+    await assert.rejects(() => servico.moverTrecho({ ...dadosDeMover(repositorio, 'a'), updatedDateOrigemLido: new Date(1) }, DESENVOLVEDOR_DONO), ConflictException);
+    await assert.rejects(() => servico.moverTrecho({ ...dadosDeMover(repositorio, 'a'), updatedDateDestinoLido: new Date(1) }, DESENVOLVEDOR_DONO), ConflictException);
     assert.equal(repositorio.gravacoes, 0);
 });
 
 test('moverTrecho recusa origem igual ao destino e trecho ambíguo', async () => {
     const repositorio = criarRepositorio({ EM_ANDAMENTO: 'x x', PENDENCIA: '' });
     const servico = criarServico(repositorio);
-    await assert.rejects(() => servico.moverTrecho({ ...dadosDeMover(repositorio, 'x'), tipoDestino: TipoAnotacaoEnum.EM_ANDAMENTO }, GESTOR), BusinessException);
-    await assert.rejects(() => servico.moverTrecho(dadosDeMover(repositorio, 'x'), GESTOR), BusinessException);
+    await assert.rejects(() => servico.moverTrecho({ ...dadosDeMover(repositorio, 'x'), tipoDestino: TipoAnotacaoEnum.EM_ANDAMENTO }, DESENVOLVEDOR_DONO), BusinessException);
+    await assert.rejects(() => servico.moverTrecho(dadosDeMover(repositorio, 'x'), DESENVOLVEDOR_DONO), BusinessException);
     assert.equal(repositorio.gravacoes, 0);
 });

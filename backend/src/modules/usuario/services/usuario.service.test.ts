@@ -34,7 +34,7 @@ test('restaurar: recusa quando o login foi reutilizado por um usuário ativo', a
 
 // Permanência do último administrador ativo (substitui a guarda de gestor, P-002): rebaixar, inativar e
 // excluir passam pela mesma guarda.
-function criarRepositorioDeUsuarios(alvo: { id: number; tipo: TipoUsuarioEnum; ativo: boolean }, administradoresAtivos: number[], possuiExecucoes = false) {
+function criarRepositorioDeUsuarios(alvo: { id: number; tipo: TipoUsuarioEnum; ativo: boolean }, administradoresAtivos: number[], possuiExecucoes = false, vinculos = { comDemanda: false, execucaoAtiva: false }) {
     const chamadas: string[] = [];
     return {
         chamadas,
@@ -44,6 +44,8 @@ function criarRepositorioDeUsuarios(alvo: { id: number; tipo: TipoUsuarioEnum; a
         listarAdministradoresAtivos: async () => administradoresAtivos.map((id) => ({ id })),
         alterar: async () => { chamadas.push('alterar'); return {}; },
         validarExecucoes: async () => possuiExecucoes,
+        validarVinculoComDemanda: async () => vinculos.comDemanda,
+        validarExecucaoAtiva: async () => vinculos.execucaoAtiva,
         excluir: async () => { chamadas.push('excluir'); },
         restaurar: async () => { chamadas.push('restaurar'); return {}; },
         alterarSenha: async () => { chamadas.push('alterarSenha'); },
@@ -295,4 +297,75 @@ test('alterarCor: recusa cor fora de #RRGGBB maiúsculo sem tocar no banco', asy
 test('alterarCor: usuário que não existe mais lança ResourceNotFoundException', async () => {
     const servico = criarServico({ alterarCor: async () => undefined });
     await assert.rejects(() => servico.alterarCor({ id: 7, corAvatar: '#1E3A8A' }), ResourceNotFoundException);
+});
+
+// Task 354: a conta própria não se inativa nem se exclui pela API (a tela já escondia os controles).
+test('alterar: ninguém inativa a própria conta, nem o administrador havendo outro; reativar e editar a si mesmo seguem livres', async () => {
+    const gestor = criarRepositorioDeUsuarios({ ...GESTOR_ATIVO, id: 9 }, [1]);
+    await assert.rejects(() => criarServico(gestor).alterar({ id: 9, ativo: false }, GESTOR_LOGADO), BusinessException);
+    const administrador = criarRepositorioDeUsuarios({ ...ADMINISTRADOR_ATIVO, id: 1 }, [1, 2]);
+    await assert.rejects(() => criarServico(administrador).alterar({ id: 1, ativo: false }, ADMINISTRADOR_LOGADO), BusinessException);
+    assert.deepEqual([...gestor.chamadas, ...administrador.chamadas], []);
+
+    await criarServico(gestor).alterar({ id: 9, ativo: true, nomeCompleto: 'Novo Nome' }, GESTOR_LOGADO);
+    assert.deepEqual(gestor.chamadas, ['alterar']);
+});
+
+test('excluir: ninguém exclui a própria conta, mesmo sem execução; excluir outro segue permitido', async () => {
+    const gestor = criarRepositorioDeUsuarios({ ...GESTOR_ATIVO, id: 9 }, [1]);
+    await assert.rejects(() => criarServico(gestor).excluir({ id: 9 }, GESTOR_LOGADO), BusinessException);
+    const administrador = criarRepositorioDeUsuarios({ ...ADMINISTRADOR_ATIVO, id: 1 }, [1, 2]);
+    await assert.rejects(() => criarServico(administrador).excluir({ id: 1 }, ADMINISTRADOR_LOGADO), BusinessException);
+    assert.deepEqual([...gestor.chamadas, ...administrador.chamadas], []);
+
+    const desenvolvedor = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, []);
+    await criarServico(desenvolvedor).excluir({ id: 3 }, GESTOR_LOGADO);
+    assert.deepEqual(desenvolvedor.chamadas, ['excluir']);
+});
+
+function mensagemContem(trecho: string) {
+    return (erro: BusinessException) => String((erro.getResponse() as { mensagem: string }).mensagem).includes(trecho);
+}
+
+// Task 428: gestor e administrador nunca são membros de demanda nem têm execução; a promoção espera os vínculos saírem.
+test('alterar: promover a gestor ou administrador é recusado enquanto o usuário é membro de demanda ou tem execução ativa', async () => {
+    for (const novoTipo of [TipoUsuarioEnum.GESTOR, TipoUsuarioEnum.ADMINISTRADOR]) {
+        for (const vinculos of [{ comDemanda: true, execucaoAtiva: false }, { comDemanda: false, execucaoAtiva: true }]) {
+            const repositorio = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, [1], false, vinculos);
+            await assert.rejects(() => criarServico(repositorio).alterar({ id: 3, tipo: novoTipo }, ADMINISTRADOR_LOGADO), BusinessException);
+            assert.deepEqual(repositorio.chamadas, []);
+        }
+    }
+});
+
+test('alterar: a mensagem da promoção recusada diz o que falta tirar', async () => {
+    const comDemanda = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, [1], false, { comDemanda: true, execucaoAtiva: false });
+    await assert.rejects(() => criarServico(comDemanda).alterar({ id: 3, tipo: TipoUsuarioEnum.GESTOR }, GESTOR_LOGADO), mensagemContem('membro de demanda'));
+    const comExecucao = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, [1], false, { comDemanda: false, execucaoAtiva: true });
+    await assert.rejects(() => criarServico(comExecucao).alterar({ id: 3, tipo: TipoUsuarioEnum.GESTOR }, GESTOR_LOGADO), mensagemContem('execução em andamento'));
+});
+
+test('alterar: promover quem não tem vínculo passa; trocar entre desenvolvedor e auxiliar e editar dados não consultam os vínculos', async () => {
+    const livre = criarRepositorioDeUsuarios({ ...DESENVOLVEDOR_ATIVO, tipo: TipoUsuarioEnum.AUXILIAR }, [1]);
+    await criarServico(livre).alterar({ id: 3, tipo: TipoUsuarioEnum.GESTOR }, GESTOR_LOGADO);
+    assert.deepEqual(livre.chamadas, ['alterar']);
+
+    let consultou = false;
+    const comVinculos = {
+        ...criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, [1], false, { comDemanda: true, execucaoAtiva: true }),
+        validarVinculoComDemanda: async () => { consultou = true; return true; },
+    };
+    await criarServico(comVinculos).alterar({ id: 3, tipo: TipoUsuarioEnum.AUXILIAR }, GESTOR_LOGADO);
+    await criarServico(comVinculos).alterar({ id: 3, nomeCompleto: 'Outro Nome' }, GESTOR_LOGADO);
+    assert.equal(consultou, false);
+});
+
+test('alterar: quem já é gestor trocando para administrador não passa pela trava dos vínculos', async () => {
+    let consultou = false;
+    const repositorio = {
+        ...criarRepositorioDeUsuarios(GESTOR_ATIVO, [1]),
+        validarVinculoComDemanda: async () => { consultou = true; return true; },
+    };
+    await criarServico(repositorio).alterar({ id: 4, tipo: TipoUsuarioEnum.ADMINISTRADOR }, ADMINISTRADOR_LOGADO);
+    assert.equal(consultou, false);
 });

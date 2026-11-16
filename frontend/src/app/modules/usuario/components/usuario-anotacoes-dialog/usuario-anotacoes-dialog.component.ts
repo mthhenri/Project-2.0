@@ -29,6 +29,9 @@ export class UsuarioAnotacoesDialogComponent {
     /** Falso mostra cada seção só no visualizador, sem salvar e sem "Limpar". */
     readonly editavel = input(true);
 
+    /** O que o painel recebe: o pad de outra pessoa abre só para leitura, mesmo para o gestor (task 426). */
+    protected readonly editavelNoPad = computed(() => this.editavel() && this.pad.ePadProprio());
+
     /** Emitido a cada salvamento bem-sucedido, para a listagem atualizar o ícone sem recarregar. */
     readonly aoAlterar = output<AnotacoesAlteradasEvento>();
 

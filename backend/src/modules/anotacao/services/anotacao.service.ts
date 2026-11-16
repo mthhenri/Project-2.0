@@ -55,7 +55,7 @@ export class AnotacaoService {
         dto: AnotacaoAlterarDto & AnotacaoRecuperarDto,
         usuarioAtivo: JwtPayload,
     ): Promise<StandardResponse<AnotacaoAlteradaDto>> {
-        await this.validarAcesso(dto.usuarioId, usuarioAtivo);
+        this.validarEscrita(dto.usuarioId, usuarioAtivo);
         const [gravada] = await this.anotacaoRepositorio.modificarSecoes(
             { usuarioId: dto.usuarioId, tipos: [dto.tipo] },
             ([atual]) => {
@@ -73,7 +73,7 @@ export class AnotacaoService {
         dto: AnotacaoTrechoTrocarDto & AnotacaoRecuperarDto,
         usuarioAtivo: JwtPayload,
     ): Promise<StandardResponse<AnotacaoTrechoTrocadoDto>> {
-        await this.validarAcesso(dto.usuarioId, usuarioAtivo);
+        this.validarEscrita(dto.usuarioId, usuarioAtivo);
         const [gravada] = await this.anotacaoRepositorio.modificarSecoes(
             { usuarioId: dto.usuarioId, tipos: [dto.tipo] },
             ([atual]) => {
@@ -92,7 +92,7 @@ export class AnotacaoService {
         dto: AnotacaoTextoAnexarDto & AnotacaoRecuperarDto,
         usuarioAtivo: JwtPayload,
     ): Promise<StandardResponse<AnotacaoTextoAnexadoDto>> {
-        await this.validarAcesso(dto.usuarioId, usuarioAtivo);
+        this.validarEscrita(dto.usuarioId, usuarioAtivo);
         const [gravada] = await this.anotacaoRepositorio.modificarSecoes(
             { usuarioId: dto.usuarioId, tipos: [dto.tipo] },
             ([atual]) => {
@@ -109,7 +109,7 @@ export class AnotacaoService {
         dto: AnotacaoFeitoAnexarDto & Pick<AnotacaoRecuperarDto, 'usuarioId'>,
         usuarioAtivo: JwtPayload,
     ): Promise<StandardResponse<AnotacaoFeitoAnexadoDto>> {
-        await this.validarAcesso(dto.usuarioId, usuarioAtivo);
+        this.validarEscrita(dto.usuarioId, usuarioAtivo);
         const diaMes = diaMesNoFuso(new Date(), this.configService.obter().aplicacao.fusoHorario);
         const [gravada] = await this.anotacaoRepositorio.modificarSecoes(
             { usuarioId: dto.usuarioId, tipos: [TipoAnotacaoEnum.FEITO] },
@@ -127,7 +127,7 @@ export class AnotacaoService {
         dto: AnotacaoTrechoMoverDto & Pick<AnotacaoRecuperarDto, 'usuarioId'>,
         usuarioAtivo: JwtPayload,
     ): Promise<StandardResponse<AnotacaoTrechoMovidoDto>> {
-        await this.validarAcesso(dto.usuarioId, usuarioAtivo);
+        this.validarEscrita(dto.usuarioId, usuarioAtivo);
         if (dto.tipoOrigem === dto.tipoDestino) {
             throw new BusinessException('A seção de destino deve ser diferente da de origem');
         }
@@ -157,10 +157,20 @@ export class AnotacaoService {
         };
     }
 
-    /** O dono acessa o próprio pad; gestor e administrador, o de qualquer um. */
     /**
-   * Cada um acessa o próprio pad; gestor e administrador também o dos **desenvolvedores**, nunca o de outro gestor ou administrador
-   * (task 195). O desenvolvedor só o próprio. Pad de usuário que não existe é 404, sem dizer que o usuário existe ou não.
+   * Escrever é só no próprio pad (task 426): o gestor e o administrador **leem** o de outras pessoas (`validarAcesso`), mas não escrevem
+   * nele, em nenhuma seção. O pad é o espaço de trabalho de cada um; texto escrito por outro ficaria sem autoria.
+   */
+    private validarEscrita(usuarioId: number, usuarioAtivo: JwtPayload): void {
+        if (usuarioAtivo.sub === usuarioId) return;
+        throw new UnauthorizedAccessException(
+            temPermissaoDeGestor(usuarioAtivo.tipo) ? 'O pad de outra pessoa é só de leitura' : 'Desenvolvedor acessa apenas o próprio pad',
+        );
+    }
+
+    /**
+   * Ler: cada um lê o próprio pad; gestor e administrador também o dos **desenvolvedores e auxiliares**, nunca o de outro gestor ou
+   * administrador (task 195). O desenvolvedor só o próprio. Pad de usuário que não existe é 404, sem dizer que o usuário existe ou não.
    */
     private async validarAcesso(usuarioId: number, usuarioAtivo: JwtPayload): Promise<void> {
         if (usuarioAtivo.sub === usuarioId) return;
