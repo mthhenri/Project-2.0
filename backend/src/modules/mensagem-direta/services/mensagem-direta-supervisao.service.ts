@@ -101,9 +101,22 @@ export class MensagemDiretaSupervisaoService {
             throw new UnauthorizedAccessException('Esta conversa envolve um gestor ou administrador e é privada');
         }
 
-        // Abrir a conversa é a primeira página; as mais antigas (com cursor) continuam a mesma abertura e não geram nova auditoria nem novo aviso.
+        const limite = dto.limite ?? LIMITE_PADRAO_DA_CONVERSA_DIRETA;
+        let pagina = await this.armazenamento.listarConversa({ conversaId: dto.conversaId, cursor: dto.cursor, limite });
+        // Par que nunca trocou mensagem não tem conversa: não há o que ler, nem auditar, nem avisar (o GET não pode criar a conversa).
+        if (pagina.mensagens.length === 0) {
+            if (!dto.cursor) throw new ResourceNotFoundException('Conversa');
+            return this.respostaDaConversa(dto.conversaId, encontrados, pagina, false);
+        }
+
+        // Toda leitura fica auditada: abrir (sem cursor) registra sempre; uma página com cursor, que o cliente monta sozinho, registra se o leitor
+        // ainda não leu esta conversa hoje. O aviso aos participantes é um por dia por leitor e conversa (`avisarParticipantes`).
+        const agora = new Date();
+        const jaAuditadoHoje = dto.cursor
+            ? await this.supervisaoRepositorio.validarLeituraDoDia({ leitorUsuarioId: usuarioAtivo.sub, conversaId: dto.conversaId, agora })
+            : false;
         let avisou = false;
-        if (!dto.cursor) {
+        if (!jaAuditadoHoje) {
             const auditoria = await this.supervisaoRepositorio.registrarLeitura({
                 leitorUsuarioId: usuarioAtivo.sub,
                 conversaId: dto.conversaId,
@@ -114,21 +127,26 @@ export class MensagemDiretaSupervisaoService {
                 usuarioAtivo,
                 conversaId: dto.conversaId,
                 participantes: [ids.usuarioMenorId, ids.usuarioMaiorId],
-                agora: new Date(),
+                agora,
                 supervisaoId: auditoria.id,
             });
+            // O aviso é a mensagem mais nova da conversa: lê de novo para que a primeira página já o traga.
+            if (avisou) pagina = await this.armazenamento.listarConversa({ conversaId: dto.conversaId, cursor: dto.cursor, limite });
         }
 
-        const pagina = await this.armazenamento.listarConversa({
-            conversaId: dto.conversaId,
-            cursor: dto.cursor,
-            limite: dto.limite ?? LIMITE_PADRAO_DA_CONVERSA_DIRETA,
-        });
+        return this.respostaDaConversa(dto.conversaId, encontrados, pagina, avisou);
+    }
 
+    private respostaDaConversa(
+        conversaId: string,
+        encontrados: UsuarioTipoListadoDto[],
+        pagina: { mensagens: MensagemDiretaSupervisaoListadasDto['mensagens']; proximoCursor: string | null },
+        avisou: boolean,
+    ): StandardResponse<MensagemDiretaSupervisaoListadasDto> {
         return {
             sucesso: true,
             dados: {
-                conversaId: dto.conversaId,
+                conversaId,
                 participantes: encontrados.map((usuario) => this.paraParticipante(usuario)).sort((mensagemDiretaSupervisaoParticipanteDto, segundo) => mensagemDiretaSupervisaoParticipanteDto.usuarioId - segundo.usuarioId),
                 mensagens: pagina.mensagens,
                 proximoCursor: pagina.proximoCursor,

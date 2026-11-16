@@ -57,7 +57,7 @@ function repositorio(sobrescrita: Dublê = {}) {
     };
 }
 
-const usuarioExistente = { recuperar: async ({ id }: { id: number }) => ({ id, nomeCompleto: `Pessoa ${id}`, login: `p${id}`, tipo: TipoUsuarioEnum.DESENVOLVEDOR }) };
+const usuarioExistente = { recuperar: async ({ id }: { id: number }) => ({ id, nomeCompleto: `Pessoa ${id}`, login: `p${id}`, tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true }) };
 const tagExistente = { recuperar: async ({ id }: { id: number }) => ({ id, nome: `Tag ${id}`, cor: '#000000' }) };
 
 const DADOS_CRIAR = { projetoId: 7, nome: 'Nova', horasEstimadas: 4, status: TipoDemandaStatusEnum.PENDENTE, estrutural: false };
@@ -637,4 +637,39 @@ test('conectar e desconectar demandas: o auxiliar chega até a regra do grafo; o
     await assert.rejects(() => criarServico(semOrigem).excluirConexao({ demandaId: 1, conexaoId: 9 }, AUXILIAR), ResourceNotFoundException);
     await assert.rejects(() => criarServico(repositorio()).criarConexao(dto, DESENVOLVEDOR), UnauthorizedAccessException);
     await assert.rejects(() => criarServico(repositorio()).excluirConexao({ demandaId: 1, conexaoId: 9 }, DESENVOLVEDOR), UnauthorizedAccessException);
+});
+
+// ---------------------------------------------------------------------------
+// P-098: quem pode ser membro de demanda (desenvolvedor e auxiliar ativos)
+// ---------------------------------------------------------------------------
+
+const alvoDoTipo = (tipo: TipoUsuarioEnum, ativo = true) => ({ recuperar: async ({ id }: { id: number }) => ({ id, nomeCompleto: `Pessoa ${id}`, login: `p${id}`, tipo, ativo }) });
+
+test('atribuirMembro: desenvolvedor e auxiliar ativos entram; gestor, administrador e inativo são recusados sem gravar', async () => {
+    for (const tipo of [TipoUsuarioEnum.DESENVOLVEDOR, TipoUsuarioEnum.AUXILIAR]) {
+        const repo = repositorio({ validarMembro: async () => false });
+        await criarServico(repo, tagExistente, alvoDoTipo(tipo)).atribuirMembro({ demandaId: 10, usuarioId: 8 }, GESTOR);
+        assert.equal(repo.gravacoes.some((gravacao) => gravacao.metodo === 'atribuirMembroDemanda'), true, tipo);
+    }
+    const recusados: Array<[TipoUsuarioEnum, boolean, RegExp]> = [
+        [TipoUsuarioEnum.GESTOR, true, /gestor ou administrador/],
+        [TipoUsuarioEnum.ADMINISTRADOR, true, /gestor ou administrador/],
+        [TipoUsuarioEnum.DESENVOLVEDOR, false, /inativo/],
+    ];
+    for (const [tipo, ativo, mensagem] of recusados) {
+        const repo = repositorio({ validarMembro: async () => false });
+        await assert.rejects(
+            () => criarServico(repo, tagExistente, alvoDoTipo(tipo, ativo)).atribuirMembro({ demandaId: 10, usuarioId: 8 }, AUXILIAR),
+            (erro: unknown) => erro instanceof BusinessException && mensagem.test((erro.getResponse() as { mensagem: string }).mensagem),
+        );
+        assert.equal(repo.gravacoes.length, 0);
+    }
+});
+
+test('criar: usuarioIds com gestor, administrador ou inativo é recusado e nada é gravado', async () => {
+    for (const [tipo, ativo] of [[TipoUsuarioEnum.GESTOR, true], [TipoUsuarioEnum.ADMINISTRADOR, true], [TipoUsuarioEnum.DESENVOLVEDOR, false]] as const) {
+        const repo = repositorio();
+        await assert.rejects(() => criarServico(repo, tagExistente, alvoDoTipo(tipo, ativo)).criar({ ...DADOS_CRIAR, usuarioIds: [5] }, GESTOR), BusinessException);
+        assert.equal(repo.gravacoes.length, 0);
+    }
 });

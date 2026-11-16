@@ -355,15 +355,6 @@ test('listarUltimaPorAtividade: só auxiliar, gestor e administrador consultam',
         assert.deepEqual((await criarServico(repo).listarUltimaPorAtividade({ atividadeIds: [1] }, usuario)).dados, []);
     }
 });
-
-test('existeSobreposicao repassa o pedido ao repository, inclusive a execução a ignorar', async () => {
-    const recebidos: unknown[] = [];
-    const repo = repositorio({ validarSobreposicao: async (dto: unknown) => { recebidos.push(dto); return true; } });
-    const dto = { usuarioId: 3, inicioData: new Date('2026-01-15T12:00:00Z'), fimData: new Date('2026-01-15T13:00:00Z'), ignorarExecucaoId: 50 };
-    assert.equal(await criarServico(repo).existeSobreposicao(dto), true);
-    assert.deepEqual(recebidos, [dto]);
-});
-
 // ---------------------------------------------------------------------------
 // excluir (rota @GestorOnly)
 // ---------------------------------------------------------------------------
@@ -414,4 +405,78 @@ test('onModuleInit registra o job às 23:59:59 no fuso APP_TIMEZONE, seja ele qu
             registrados[0].job.stop();
         }
     }
+});
+
+// ---------------------------------------------------------------------------
+// P-093 / P-101: alterar confere ativa e sobreposição; iniciar e encerrar conferem a permissão primeiro
+// ---------------------------------------------------------------------------
+
+test('alterar: reabrir (fimData null) com outra execução em andamento do dono é recusado sem gravar', async () => {
+    const repo = repositorio({ recuperar: async () => EXECUCAO_ENCERRADA, recuperarAtiva: async () => ({ ...EXECUCAO_ABERTA, id: 51 }) });
+    await assert.rejects(() => criarServico(repo).alterar({ id: 50, descricao: 'x', fimData: null } as never, DESENVOLVEDOR), recusa(/já tem uma execução em andamento/));
+    naoGravou(repo);
+});
+
+test('alterar: o gestor reabrindo a execução de outro recebe a mensagem sobre o dono', async () => {
+    const repo = repositorio({ recuperar: async () => EXECUCAO_ENCERRADA, recuperarAtiva: async () => ({ ...EXECUCAO_ABERTA, id: 51 }) });
+    await assert.rejects(() => criarServico(repo).alterar({ id: 50, descricao: 'x', fimData: null } as never, GESTOR), recusa(/O dono desta execução já tem/));
+    naoGravou(repo);
+});
+
+test('alterar: a própria execução em andamento não conta como "outra" ao ser alterada', async () => {
+    const repo = repositorio({ recuperar: async () => EXECUCAO_ABERTA, recuperarAtiva: async () => EXECUCAO_ABERTA });
+    await criarServico(repo).alterar({ id: 50, descricao: 'novo' } as never, DESENVOLVEDOR);
+    assert.equal(repo.gravacoes.length, 1);
+});
+
+test('alterar: período que se sobrepõe a outra execução do dono é recusado; a própria execução é ignorada na conferência', async () => {
+    let pedido: any;
+    const repo = repositorio({
+        recuperar: async () => EXECUCAO_ENCERRADA,
+        validarSobreposicao: async (argumento: unknown) => { pedido = argumento; return true; },
+    });
+    await assert.rejects(
+        () => criarServico(repo).alterar({ id: 50, descricao: 'x', inicioData: '2026-01-15T11:00:00Z', fimData: '2026-01-15T13:00:00Z' } as never, DESENVOLVEDOR),
+        recusa(/se sobrepõe/),
+    );
+    naoGravou(repo);
+    assert.equal(pedido.usuarioId, 3);
+    assert.equal(pedido.ignorarExecucaoId, 50);
+});
+
+test('alterar: só a descrição não confere sobreposição; mudar o período válido grava', async () => {
+    let conferencias = 0;
+    const repo = repositorio({ recuperar: async () => EXECUCAO_ENCERRADA, validarSobreposicao: async () => { conferencias++; return false; } });
+    await criarServico(repo).alterar({ id: 50, descricao: 'só o texto' } as never, DESENVOLVEDOR);
+    assert.equal(conferencias, 0);
+    await criarServico(repo).alterar({ id: 50, descricao: 'x', inicioData: '2026-01-15T11:30:00Z' } as never, DESENVOLVEDOR);
+    assert.equal(conferencias, 1);
+    assert.equal(repo.gravacoes.length, 2);
+});
+
+test('iniciar: desenvolvedor em atividade alheia recebe o 403 antes da regra de status e da descrição', async () => {
+    for (const [status, descricao] of [[TipoAtividadeStatusEnum.PENDENTE, 'x'], [TipoAtividadeStatusEnum.PLANEJADA, undefined]] as const) {
+        const repo = repositorio();
+        const servico = criarServico(repo, { recuperar: async () => ({ ...ATIVIDADE, usuarioId: 9, status }) });
+        await assert.rejects(() => servico.iniciar({ atividadeId: 10, descricao } as never, DESENVOLVEDOR), UnauthorizedAccessException);
+        naoGravou(repo);
+    }
+});
+
+test('encerrar: desenvolvedor em execução alheia já encerrada recebe o 403, não o "já foi encerrada"', async () => {
+    const repo = repositorio({ recuperar: async () => EXECUCAO_ENCERRADA, recuperarUsuario: async () => 9 });
+    await assert.rejects(() => criarServico(repo).encerrar({ id: 50 } as never, DESENVOLVEDOR), UnauthorizedAccessException);
+    naoGravou(repo);
+});
+
+test('alterar: reabrir sem outra ativa, mas com execução posterior do dono, confere a sobreposição até o infinito', async () => {
+    let pedido: any;
+    const repo = repositorio({
+        recuperar: async () => EXECUCAO_ENCERRADA,
+        recuperarAtiva: async () => null,
+        validarSobreposicao: async (argumento: unknown) => { pedido = argumento; return true; },
+    });
+    await assert.rejects(() => criarServico(repo).alterar({ id: 50, descricao: 'x', fimData: null } as never, DESENVOLVEDOR), recusa(/se sobrepõe/));
+    naoGravou(repo);
+    assert.equal(pedido.fimData.getTime(), 8.64e15);
 });

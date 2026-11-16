@@ -122,10 +122,14 @@ export class GrupoSupervisaoService {
             throw new UnauthorizedAccessException('Este grupo envolve um gestor ou administrador e é privado');
         }
 
-        // Abrir o grupo é a primeira página; as mais antigas (com cursor) continuam a mesma abertura e não geram nova auditoria nem novo aviso.
+        // Toda leitura fica auditada: abrir (sem cursor) registra sempre; uma página com cursor, que o cliente monta sozinho, registra se o leitor
+        // ainda não leu este grupo hoje. O aviso aos membros é um por dia por leitor e conversa (`avisarMembros`).
         const conversaId = montarConversaGrupoId(grupo.grupoId);
+        const jaAuditadoHoje = dto.cursor
+            ? await this.supervisaoRepositorio.validarLeituraDoDia({ leitorUsuarioId: usuarioAtivo.sub, conversaId, agora: new Date() })
+            : false;
         let avisou = false;
-        if (!dto.cursor) {
+        if (!jaAuditadoHoje) {
             const auditoria = await this.supervisaoRepositorio.registrarLeituraDeGrupo({ leitorUsuarioId: usuarioAtivo.sub, grupoId: grupo.grupoId });
             avisou = await this.avisarMembros(usuarioAtivo, conversaId, grupo, membrosIds, auditoria.id);
         }

@@ -32,14 +32,6 @@
 > P-092 a P-101 vêm da revisão de requisições e de permissões (2026-11-13 a 15): são os achados de severidade alta e os de média reproduzidos na aplicação rodando. A revisão tem 225 achados ao todo; os demais
 > estão em [`DOSSIE.md`](../specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md) (código `A-NNN`) e cada um aponta para a sua spec na guarda-chuva `docs/specs/backlog/requisicoes-e-permissoes-correcoes.spec.md` (tasks 330–487).
 
-### P-101 — Execução: regra de negócio respondida antes da permissão · `ABERTO` · backend/execucao
-
-- **Sintoma:** desenvolvedor sem acesso recebe 400 com a regra ("Só é possível iniciar execução em atividades planejadas ou em desenvolvimento", "A descrição é obrigatória", "Esta execução já foi encerrada") em `POST /execucao` e `PATCH /execucao/:id/encerrar` sobre atividade ou execução alheia, em vez de 403. Reproduzido em 2026-11-14 (é o R-16 da auditoria anterior, com mais dois casos).
-- **Causa:** em `ExecucaoService.iniciar` e `encerrar` as validações de negócio vêm antes do bloco de permissão.
-- **Contorno:** nenhum; a execução não é criada nem alterada, mas a resposta revela o estado do registro.
-- **Correção:** `375-execucao-permissao-antes-da-regra-de-negocio`.
-- **Desde:** 2026-11-11 (auditoria de requisições, R-16); ampliado em 2026-11-14.
-
 ### P-100 — Auxiliar recebe 403 a cada demanda que abre · `ABERTO` · frontend/demanda e backend/mensagem-direta
 
 - **Sintoma:** como auxiliar, toda demanda selecionada gera `GET /mensagem-direta/canal/demanda/:id` com 403, e o detalhe do projeto gera `GET /mensagem-direta/canal/projeto/:id` com 403. Medido em 2026-11-13.
@@ -55,14 +47,6 @@
 - **Contorno:** o criador desmarca o solo.
 - **Correção:** `397-plano-solo-e-o-que-o-gestor-mantem` (decisão do autor).
 - **Desde:** 2026-11-14 (existe desde o modo planejamento).
-
-### P-098 — Gestor e administrador são aceitos como membros de demanda pela API · `ABERTO` · backend/demanda
-
-- **Sintoma:** `POST /demanda/:id/membro` com o id de um gestor responde 201 (para auxiliar, gestor e administrador), e `POST /demanda` com `usuarioIds` de gestor e administrador grava os dois em `demanda_usuario`. Usuário inativo também é aceito. Reproduzido em 2026-11-14.
-- **Causa:** a regra "gestor nunca é membro" (`podeSerMembroDeDemanda`) só existe no filtro do seletor da tela e no caminho da IA; `DemandaService.atribuirMembro` e `criar` não a aplicam.
-- **Contorno:** a tela não oferece gestor nem administrador no seletor.
-- **Correção:** `381-demanda-membro-so-quem-atua-como-desenvolvedor`.
-- **Desde:** 2026-11-14.
 
 ### P-097 — Project Desktop consulta o check-in a cada 15 s, com ou sem execução · `ABERTO` · desktop
 
@@ -80,14 +64,6 @@
 - **Correção:** `335-execucoes-da-atividade-as-ultimas-primeiro` (a correção barata é só de front; a eficiente pede decisão do autor).
 - **Desde:** 2026-11-13.
 
-### P-095 — A IA revela nome, caminho e status de demanda de projeto sem acesso · `ABERTO` · backend/atividade (ferramentas da IA)
-
-- **Sintoma:** `propor_criar_atividade` grava na proposta o caminho completo (raiz › … › demanda) de qualquer demanda, e `propor_mover_atividade` devolve o nome e a situação da demanda de destino, sem conferir se o desenvolvedor a enxerga. Lido no código; a IA não tem provedor no ambiente da revisão.
-- **Causa:** as duas ferramentas leem a demanda direto no repository, sem usuário; `AtividadeService.validarMudancaDeDemanda` confere existência e status antes do acesso.
-- **Contorno:** nenhum.
-- **Correção:** `367-ferramentas-de-atividade-conferem-o-acesso-a-demanda`.
-- **Desde:** 2026-11-14.
-
 ### P-094 — Desenvolvedor membro da demanda altera a atividade e as tags de um colega · `ABERTO` · backend/atividade
 
 - **Sintoma:** um desenvolvedor que é membro da demanda, sem ser dono da atividade, recebe 200 em `PUT /atividade/:id` e `PUT /atividade/:id/tag` da atividade de outro. Reproduzido em 2026-11-14. A tela trava pelo dono.
@@ -96,20 +72,12 @@
 - **Correção:** `373-atividade-de-colega-so-o-dono-ou-quem-conduz-altera` (decisão do autor: corrigir ou escrever a regra).
 - **Desde:** 2026-11-14.
 
-### P-093 — `PUT /execucao/:id` deixa o mesmo dono com duas execuções ativas · `ABERTO` · backend/execucao
-
-- **Sintoma:** reabrir duas execuções encerradas do mesmo dono (`fimData: null`) responde 200 nas duas e o banco fica com duas execuções abertas; o período também pode ser movido para cima de outra execução. Reproduzido em 2026-11-14 como auxiliar.
-- **Causa:** `ExecucaoService.alterar` só valida futuro e ordem das datas; a conferência de execução ativa e de sobreposição existe só nos executores da IA.
-- **Contorno:** a tela não oferece reabrir.
-- **Correção:** `374-execucao-alterar-confere-ativa-e-sobreposicao`.
-- **Desde:** 2026-11-14.
-
 ### P-092 — Supervisão do chat pode ser lida sem auditoria nem aviso · `ABERTO` · backend/mensagem-direta
 
 - **Sintoma:** com o parâmetro `cursor` (um base64 que o cliente monta), `GET /mensagem-direta/supervisao/grupo/:id` e `GET /mensagem-direta/supervisao/conversa/:id` devolvem a conversa inteira sem gravar `mensagem_direta_supervisao` e sem a mensagem "leu esta conversa". A lista `GET /mensagem-direta/supervisao/conversas` devolve o texto da última mensagem e aceita busca por texto sem auditoria. Abrir um par que nunca conversou grava a auditoria e cria a conversa com o aviso. Os três reproduzidos em 2026-11-14.
 - **Causa:** auditoria e aviso só rodam dentro de `if (!dto.cursor)`; a lista traz `ultimaMensagem` com `texto`; a leitura não confere se há mensagem entre os dois.
 - **Contorno:** nenhum.
-- **Correção:** `359-supervisao-do-chat-auditoria-com-ou-sem-cursor`, `390-supervisao-lista-sem-o-texto-das-mensagens`, `391-supervisao-de-par-sem-conversa-nao-cria-conversa`.
+- **Correção:** a leitura sem rastro com cursor (`359`) e o par sem conversa (`391`) foram corrigidos em 2026-11-16 (`docs/specs/done/`); falta a `390-supervisao-lista-sem-o-texto-das-mensagens`, que espera decisão do autor.
 - **Desde:** 2026-11-14 (existe desde a supervisão, tasks 214 e 246).
 
 ### P-085 — Ação em massa nas atividades faz uma requisição por item · `ABERTO` · frontend/atividade

@@ -40,6 +40,8 @@ interface Cenario {
 function montar(opcoes: {
     usuarios?: { id: number; nomeCompleto: string; tipo: TipoUsuarioEnum }[];
     avisoDoDia?: boolean;
+    leituraDoDia?: boolean;
+    paginaVazia?: boolean;
     falhaAoGravar?: boolean;
     falhaAoPublicar?: boolean;
     idsDeGestor?: number[];
@@ -47,7 +49,7 @@ function montar(opcoes: {
     const usuarios = opcoes.usuarios ?? [ANA, BRUNO, CARLA];
     const chamadas: Cenario['chamadas'] = { auditorias: [], avisosMarcados: [], gravadas: [], publicadas: [], consultasDeLista: [] };
     const armazenamento = {
-        listarConversa: async () => ({ mensagens: [mensagem()], proximoCursor: null }),
+        listarConversa: async () => ({ mensagens: opcoes.paginaVazia ? [] : [mensagem()], proximoCursor: null }),
         listarTodasConversas: async (consulta: unknown) => {
             chamadas.consultasDeLista.push(consulta);
             return { conversas: [{ conversaId: '4-9', participantes: [4, 9], totalMensagens: 3, ultimaMensagem: mensagem() }], total: 1 };
@@ -62,6 +64,7 @@ function montar(opcoes: {
         registrarLeitura: async (dto: unknown) => { chamadas.auditorias.push(dto); return { id: 77 }; },
         marcarAvisoDado: async (dto: unknown) => { chamadas.avisosMarcados.push(dto); },
         existeAvisoDoDia: async () => opcoes.avisoDoDia ?? false,
+        validarLeituraDoDia: async () => opcoes.leituraDoDia ?? false,
     };
     const usuarioRepositorio = {
         listarIdsComPermissaoDeGestor: async () => opcoes.idsDeGestor ?? [1],
@@ -180,11 +183,35 @@ test('ler: falha em publicar o aviso não falha a leitura', async () => {
     assert.equal(resposta.sucesso, true);
 });
 
-test('ler: a página mais antiga (com cursor) continua a mesma abertura: sem nova auditoria nem aviso', async () => {
+test('ler: página com cursor, sem leitura do dia, audita e avisa como a abertura (o cursor não decide)', async () => {
     const { service, chamadas } = montar();
+    const resposta = await service.lerConversaSupervisionada({ conversaId: '4-9', cursor: 'forjado' }, GESTOR);
+
+    assert.equal(chamadas.auditorias.length, 1);
+    assert.equal(chamadas.gravadas.length, 1);
+    assert.equal(resposta.dados.participantesAvisados, true);
+});
+
+test('ler: página com cursor, com leitura do dia, não duplica a auditoria nem o aviso', async () => {
+    const { service, chamadas } = montar({ leituraDoDia: true });
     const resposta = await service.lerConversaSupervisionada({ conversaId: '4-9', cursor: 'opaco' }, GESTOR);
 
     assert.equal(chamadas.auditorias.length, 0);
     assert.equal(chamadas.gravadas.length, 0);
     assert.equal(resposta.dados.participantesAvisados, false);
+});
+
+test('ler: par que nunca trocou mensagem é "não encontrada" e nada é auditado nem avisado', async () => {
+    const { service, chamadas } = montar({ paginaVazia: true });
+    await assert.rejects(service.lerConversaSupervisionada({ conversaId: '4-9' }, GESTOR), ResourceNotFoundException);
+    assert.equal(chamadas.auditorias.length, 0);
+    assert.equal(chamadas.gravadas.length, 0);
+});
+
+test('ler: cursor forjado num par sem conversa devolve página vazia sem auditar nem avisar', async () => {
+    const { service, chamadas } = montar({ paginaVazia: true });
+    const resposta = await service.lerConversaSupervisionada({ conversaId: '4-9', cursor: 'forjado' }, GESTOR);
+    assert.deepEqual(resposta.dados.mensagens, []);
+    assert.equal(chamadas.auditorias.length, 0);
+    assert.equal(chamadas.gravadas.length, 0);
 });

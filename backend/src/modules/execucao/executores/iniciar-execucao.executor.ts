@@ -62,7 +62,7 @@ export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
             };
         } catch (erro) {
             if (statusAnterior) await this.restaurarStatus(entrada.atividadeId, statusAnterior, usuarioAtivo).catch(() => undefined);
-            if (anterior) await this.reabrir(anterior.id, anterior.descricao.trim() || DESCRICAO_PAUSA_PARA_INICIAR_OUTRA, donoId, usuarioAtivo).catch(() => undefined);
+            if (anterior) await this.reabrir(anterior.id, anterior.descricao.trim() || DESCRICAO_PAUSA_PARA_INICIAR_OUTRA, usuarioAtivo).catch(() => undefined);
             throw erro;
         }
     }
@@ -86,8 +86,7 @@ export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
         if (statusAnterior && Number.isInteger(atividadeId)) await this.restaurarStatus(atividadeId, statusAnterior, usuarioAtivo);
         const pausadaId = Number(resultado['pausouExecucaoId']);
         if (Number.isInteger(pausadaId)) {
-            const donoId = Number.isInteger(Number(resultado['donoId'])) ? Number(resultado['donoId']) : usuarioAtivo.sub;
-            await this.reabrir(pausadaId, String(resultado['pausouDescricao'] ?? DESCRICAO_PAUSA_PARA_INICIAR_OUTRA), donoId, usuarioAtivo);
+            await this.reabrir(pausadaId, String(resultado['pausouDescricao'] ?? DESCRICAO_PAUSA_PARA_INICIAR_OUTRA), usuarioAtivo);
         }
     }
 
@@ -102,11 +101,8 @@ export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
         return atividade.usuarioId;
     }
 
-    /** Reabre uma execução encerrada (fim nulo), desde que o dono não tenha outra em andamento. */
-    private async reabrir(execucaoId: number, descricao: string, donoId: number, usuarioAtivo: JwtPayload): Promise<void> {
-        if ((await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: donoId }, usuarioAtivo)).dados) {
-            throw new BusinessException('Há outra execução em andamento: a anterior não pôde ser reaberta');
-        }
+    /** Reabre uma execução encerrada (fim nulo); a `ExecucaoService.alterar` recusa se o dono tem outra em andamento ou se haveria sobreposição. */
+    private async reabrir(execucaoId: number, descricao: string, usuarioAtivo: JwtPayload): Promise<void> {
         await this.execucaoService.alterar({ id: execucaoId, descricao, fimData: null }, usuarioAtivo);
     }
 }

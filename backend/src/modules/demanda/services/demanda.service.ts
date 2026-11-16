@@ -40,6 +40,7 @@ import {
     temPermissaoDeGestor,
     temVisibilidadeTotal,
     podeSerMembroDeDemanda,
+    TipoUsuarioEnum,
     podeEditarDemanda,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
@@ -136,6 +137,7 @@ export class DemandaService {
                 if (!usuarioEncontrado) {
                     throw new ResourceNotFoundException(`Usuário com id ${membroId}`);
                 }
+                this.validarAlvoDeMembro(usuarioEncontrado);
             }
         }
 
@@ -893,6 +895,7 @@ export class DemandaService {
         if (!usuarioEncontrado) {
             throw new ResourceNotFoundException('Usuário');
         }
+        this.validarAlvoDeMembro(usuarioEncontrado);
 
         const jaAtribuido = await this.demandaRepositorio.validarMembro({
             demandaId,
@@ -964,5 +967,18 @@ export class DemandaService {
             dados:    null,
             mensagem: 'Membro removido da demanda com sucesso',
         };
+    }
+
+    /**
+   * Quem pode ser membro de demanda (SYSTEM.SPEC.md §14): desenvolvedor e auxiliar, ativos. Gestor e administrador têm acesso por tipo e nunca
+   * entram em `demanda_usuario`; a tela só esconde essas opções, então a regra mora aqui, para valer também na rota e na IA.
+   */
+    private validarAlvoDeMembro(usuario: { nomeCompleto: string; tipo: TipoUsuarioEnum; ativo: boolean }): void {
+        if (!podeSerMembroDeDemanda(usuario.tipo)) {
+            throw new BusinessException(`${usuario.nomeCompleto} é gestor ou administrador: o acesso é por tipo e não é atribuído como membro da demanda`);
+        }
+        if (!usuario.ativo) {
+            throw new BusinessException(`${usuario.nomeCompleto} está inativo e não pode ser atribuído à demanda`);
+        }
     }
 }

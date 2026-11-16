@@ -371,9 +371,18 @@ test('alterar demanda: desenvolvedor que não é o dono é recusado, mesmo sendo
     assert.equal(gravou(repo), false);
 });
 
-test('alterar demanda: o dono sem acesso à demanda de destino é recusado', async () => {
+test('alterar demanda: o dono que vê o projeto mas não é membro da demanda de destino recebe 403', async () => {
     const repo = repositorio({ validarAcessoDemanda: async ({ demandaId }: { demandaId: number }) => demandaId !== 20 });
     await assert.rejects(() => criarServico(repo, {}, demandaDeDestino()).alterar({ id: 10, demandaId: 20 }, DESENVOLVEDOR), UnauthorizedAccessException);
+    assert.equal(gravou(repo), false);
+});
+
+test('alterar demanda: o dono sem acesso ao projeto do destino recebe "não encontrada", mesmo com o destino concluído', async () => {
+    const repo = repositorio();
+    for (const status of ['PENDENTE', 'CONCLUIDA']) {
+        const semProjeto = { recuperar: async (_dto: unknown, filtro?: unknown) => (filtro ? null : { id: 20, status }) };
+        await assert.rejects(() => criarServico(repo, {}, semProjeto).alterar({ id: 10, demandaId: 20 }, DESENVOLVEDOR), ResourceNotFoundException);
+    }
     assert.equal(gravou(repo), false);
 });
 

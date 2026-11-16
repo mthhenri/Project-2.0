@@ -250,7 +250,12 @@ export class AtividadeService {
         if (!podeEditarAtividadeDeOutro(usuarioAtivo.tipo) && donoId !== usuarioAtivo.sub) {
             throw new UnauthorizedAccessException('Só o dono da atividade, o auxiliar ou o gestor muda a atividade de demanda');
         }
-        const demandaDestino = await this.demandaRepositorio.recuperar({ id: demandaDestinoId });
+        // Quem não vê o projeto da demanda de destino recebe a mesma "não encontrada" que quando ela não existe (mesmo recorte da leitura HTTP);
+        // existência e situação só são respondidas a quem a vê. Ver não basta: o desenvolvedor também precisa ser membro (403 abaixo).
+        const demandaDestino = await this.demandaRepositorio.recuperar(
+            { id: demandaDestinoId },
+            temVisibilidadeTotal(usuarioAtivo.tipo) ? undefined : { usuarioId: usuarioAtivo.sub },
+        );
         if (!demandaDestino) {
             throw new ResourceNotFoundException('Demanda de destino');
         }

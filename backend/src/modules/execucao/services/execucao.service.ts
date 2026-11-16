@@ -16,7 +16,6 @@ import {
     ExecucaoRecuperarDto,
     ExecucaoAtivaDto,
     ExecucaoAtivaRecuperarDto,
-    ExecucaoSobreposicaoValidarDto,
     ExecucaoRegistrarDto,
     ExecucaoRegistradaDto,
     temPermissaoDeGestor,
@@ -89,15 +88,6 @@ export class ExecucaoService implements OnModuleInit {
             throw new ResourceNotFoundException('Atividade');
         }
 
-        if (!ExecucaoService.STATUS_EXECUTAVEL.includes(atividadeEncontrada.status)) {
-            throw new BusinessException('Só é possível iniciar execução em atividades planejadas ou em desenvolvimento');
-        }
-
-        const descricao = dto.descricao?.trim() ?? '';
-        if (!descricao && (await this.descricaoObrigatoria(dto.atividadeId))) {
-            throw new BusinessException('A descrição é obrigatória');
-        }
-
         // Autorização: gestor inicia qualquer atividade; desenvolvedor apenas as próprias.
         // O gestor não tem linha em demanda_usuario, então o acesso é por tipo + posse da
         // atividade (execucao → atividade.usuario_id), nunca via validarAcessoDemanda.
@@ -106,6 +96,15 @@ export class ExecucaoService implements OnModuleInit {
       atividadeEncontrada.usuarioId !== usuarioAtivo.sub
         ) {
             throw new UnauthorizedAccessException('Desenvolvedor não pode iniciar execução em atividade de outro usuário');
+        }
+
+        if (!ExecucaoService.STATUS_EXECUTAVEL.includes(atividadeEncontrada.status)) {
+            throw new BusinessException('Só é possível iniciar execução em atividades planejadas ou em desenvolvimento');
+        }
+
+        const descricao = dto.descricao?.trim() ?? '';
+        if (!descricao && (await this.descricaoObrigatoria(dto.atividadeId))) {
+            throw new BusinessException('A descrição é obrigatória');
         }
 
         // A regra "sem duas execuções ativas por usuário" recai sobre o DONO da atividade,
@@ -198,15 +197,15 @@ export class ExecucaoService implements OnModuleInit {
             throw new ResourceNotFoundException('Execução');
         }
 
-        if (execucaoEncontrada.fimData !== null) {
-            throw new BusinessException('Esta execução já foi encerrada');
-        }
-
         if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: dto.id });
             if (usuarioDaExecucao !== usuarioAtivo.sub) {
                 throw new UnauthorizedAccessException('Desenvolvedor não pode encerrar execução de outro usuário');
             }
+        }
+
+        if (execucaoEncontrada.fimData !== null) {
+            throw new BusinessException('Esta execução já foi encerrada');
         }
 
         const descricao = dto.descricao?.trim() ?? '';
@@ -244,14 +243,6 @@ export class ExecucaoService implements OnModuleInit {
             dados:    execucaoAtiva,
             mensagem: execucaoAtiva ? 'Execução ativa recuperada com sucesso' : 'Nenhuma execução ativa',
         };
-    }
-
-    /**
-   * Há execução do usuário que se sobreponha a este período (`ignorarExecucaoId` desconsidera a que está sendo reaberta ou corrigida)?
-   * Quem reabre ou corrige uma execução usa isto antes: `alterar` não confere sobreposição, e uma execução sem fim vale até "o infinito".
-   */
-    async existeSobreposicao(dto: ExecucaoSobreposicaoValidarDto): Promise<boolean> {
-        return this.execucaoRepositorio.validarSobreposicao(dto);
     }
 
     /**
@@ -387,6 +378,33 @@ export class ExecucaoService implements OnModuleInit {
             }
             if (fimData <= inicioData) {
                 throw new BusinessException('A data de fim deve ser posterior à data de início');
+            }
+        }
+
+        // Mesma regra do iniciar e dos executores da IA: o dono nunca tem duas execuções em andamento nem horas sobrepostas.
+        const donoId = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: dto.id });
+        if (fimData === null) {
+            const execucaoAtiva = await this.execucaoRepositorio.recuperarAtiva({ usuarioId: donoId });
+            if (execucaoAtiva && execucaoAtiva.id !== dto.id) {
+                throw new BusinessException(
+                    donoId === usuarioAtivo.sub
+                        ? 'Você já tem uma execução em andamento. Encerre-a antes de reabrir esta'
+                        : 'O dono desta execução já tem uma execução em andamento. Encerre-a antes de reabrir esta',
+                );
+            }
+        }
+        const periodoMudou =
+            inicioData.getTime() !== new Date(execucaoEncontrada.inicioData).getTime() ||
+            (fimData?.getTime() ?? null) !== (execucaoEncontrada.fimData ? new Date(execucaoEncontrada.fimData).getTime() : null);
+        if (periodoMudou) {
+            const sobreposta = await this.execucaoRepositorio.validarSobreposicao({
+                usuarioId: donoId,
+                inicioData,
+                fimData: fimData ?? new Date(8.64e15),
+                ignorarExecucaoId: dto.id,
+            });
+            if (sobreposta) {
+                throw new BusinessException('O período se sobrepõe a outra execução da mesma pessoa');
             }
         }
 

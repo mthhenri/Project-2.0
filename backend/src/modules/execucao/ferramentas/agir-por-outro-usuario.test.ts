@@ -157,7 +157,7 @@ test('iniciar para outra pessoa: o executor pausa a execução dela, inicia a no
     // Depois do início, o Matheus não tem mais nenhuma ativa para o desfazer reabrir a anterior.
     const cenario = montarCenario({ 1: ATIVA_DO_GESTOR });
     await cenario.iniciarExecutor.desfazer(resultado, GESTOR);
-    assert.deepEqual(cenario.chamadas, ['excluir:100', 'ativa-de:8', 'reabrir:2']);
+    assert.deepEqual(cenario.chamadas, ['excluir:100', 'reabrir:2']);
 });
 
 test('iniciar para outra pessoa: obsoleta olha a execução dela, não a do gestor', async () => {

@@ -54,3 +54,21 @@ testarComBanco('existeAvisoDoDia: o aviso de hoje não vale para o dia seguinte 
     assert.equal(await pergunta(new Date(Date.now() + umDia)), false, 'amanhã avisa de novo');
     assert.equal(await pergunta(new Date(Date.now() - umDia)), false, 'ontem não tinha aviso');
 });
+
+testarComBanco('validarLeituraDoDia: conta a abertura mesmo sem aviso, só para o mesmo leitor, a mesma conversa e o mesmo dia', async (conexao) => {
+    const { dto, gestor } = await criarCenario(conexao);
+    const outroGestor = await criarGestor(conexao);
+    const agora = new Date();
+    const umDia = 24 * 60 * 60 * 1000;
+    const pergunta = (parcial: { leitorUsuarioId?: number; conversaId?: string; agora?: Date } = {}) =>
+        supervisao(conexao).validarLeituraDoDia({ leitorUsuarioId: gestor.id, conversaId: dto.conversaId, agora, ...parcial });
+
+    assert.equal(await pergunta(), false, 'nada lido ainda');
+
+    await supervisao(conexao).registrarLeitura(dto);
+
+    assert.equal(await pergunta(), true, 'a abertura conta, mesmo sem aviso dado');
+    assert.equal(await pergunta({ leitorUsuarioId: outroGestor.id }), false, 'outro leitor');
+    assert.equal(await pergunta({ conversaId: '999998-999999' }), false, 'outra conversa');
+    assert.equal(await pergunta({ agora: new Date(Date.now() + umDia) }), false, 'amanhã');
+});

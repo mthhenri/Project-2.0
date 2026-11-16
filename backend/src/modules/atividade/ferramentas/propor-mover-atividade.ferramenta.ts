@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProporMoverAtividadeDto, PropostaMoverAtividadeDadosDto, TipoDemandaStatusEnum, TipoPropostaIaEnum, podeEditarAtividadeDeOutro } from '@project20/shared';
+import { ProporMoverAtividadeDto, PropostaMoverAtividadeDadosDto, TipoDemandaStatusEnum, TipoPropostaIaEnum, podeEditarAtividadeDeOutro, temVisibilidadeTotal } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
@@ -42,7 +42,11 @@ export class ProporMoverAtividadeFerramenta extends FerramentaPropostaIa<ProporM
             throw new BusinessException(`A atividade "${atividade.nome}" já está nessa demanda: não há o que mover. Avise o usuário.`);
         }
         const origem = await this.demandaRepositorio.recuperar({ id: atividade.demandaId });
-        const destino = await this.demandaRepositorio.recuperar({ id: entrada.demandaDestinoId });
+        // O destino é lido com o recorte de acesso: quem não vê o projeto recebe "não encontrada", sem nome nem situação da demanda.
+        const destino = await this.demandaRepositorio.recuperar(
+            { id: entrada.demandaDestinoId },
+            temVisibilidadeTotal(usuarioAtivo.tipo) ? undefined : { usuarioId: usuarioAtivo.sub },
+        );
         if (!destino) throw new ResourceNotFoundException('Demanda de destino');
         if (destino.status === TipoDemandaStatusEnum.CONCLUIDA || destino.status === TipoDemandaStatusEnum.CANCELADA) {
             throw new BusinessException(`A demanda "${destino.nome}" está ${destino.status === TipoDemandaStatusEnum.CONCLUIDA ? 'concluída' : 'cancelada'}: escolha uma demanda em aberto.`);

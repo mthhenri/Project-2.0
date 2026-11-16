@@ -13,11 +13,11 @@ import { ProporCriarAtividadeFerramenta } from './propor-criar-atividade.ferrame
 const DESENVOLVEDOR = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 const GESTOR = { sub: 1, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as never;
 
-function montar(opcoes: { demanda?: unknown; dono?: Record<string, unknown> | null; ancestrais?: { id: number; nome: string; nivel: number }[] } = {}) {
+function montar(opcoes: { semAcesso?: boolean; demanda?: unknown; dono?: Record<string, unknown> | null; ancestrais?: { id: number; nome: string; nivel: number }[] } = {}) {
     const propostas: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
     const propostaIaService = { criarComAutonomia: async (dto: (typeof propostas)[number]) => { propostas.push(dto); return { id: 55, status: 'PENDENTE' }; } };
     const demandaRepositorio = {
-        recuperar: async () => (opcoes.demanda === undefined ? { id: 9, nome: 'Autenticação' } : opcoes.demanda),
+        recuperar: async (_dto: unknown, filtro?: { usuarioId: number }) => (filtro && opcoes.semAcesso ? null : opcoes.demanda === undefined ? { id: 9, nome: 'Autenticação' } : opcoes.demanda),
         listarAncestral: async () => opcoes.ancestrais ?? [],
     };
     const usuarioService = {
@@ -81,4 +81,19 @@ test('gestor não propõe para usuário inexistente nem inativo', async () => {
 test('é ferramenta de proposta, aberta a qualquer usuário', () => {
     const { ferramenta } = montar();
     assert.deepEqual([ferramenta.tipo, ferramenta.permissao, ferramenta.tipoProposta], ['PROPOSTA', 'QUALQUER', TipoPropostaIaEnum.CRIAR_ATIVIDADE]);
+});
+
+test('desenvolvedor sem acesso ao projeto da demanda recebe "não encontrada": nenhuma proposta, nenhum nome ou caminho', async () => {
+    const { ferramenta, propostas } = montar({ semAcesso: true, ancestrais: [{ id: 1, nome: 'Projeto secreto', nivel: 1 }] });
+    await assert.rejects(ferramenta.executar({ demandaId: 9, nome: 'Ajustar login' }, DESENVOLVEDOR), ResourceNotFoundException);
+    assert.deepEqual(propostas, []);
+});
+
+test('o gestor lê a demanda sem o recorte de acesso, e o desenvolvedor com acesso propõe como antes', async () => {
+    const gestor = montar({ semAcesso: true });
+    await gestor.ferramenta.executar({ demandaId: 9, nome: 'Ajustar login' }, GESTOR);
+    assert.equal(gestor.propostas.length, 1);
+    const comAcesso = montar();
+    await comAcesso.ferramenta.executar({ demandaId: 9, nome: 'Ajustar login' }, DESENVOLVEDOR);
+    assert.equal(comAcesso.propostas.length, 1);
 });

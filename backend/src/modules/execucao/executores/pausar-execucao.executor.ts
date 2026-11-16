@@ -45,16 +45,9 @@ export class PausarExecucaoExecutor implements ExecutorPropostaIa {
     async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
         const execucaoId = Number(resultado['execucaoId']);
         if (!Number.isInteger(execucaoId)) throw new BusinessException('Não há execução a desfazer nesta proposta');
-        const alvoId = Number.isInteger(Number(resultado['usuarioId'])) ? Number(resultado['usuarioId']) : usuarioAtivo.sub;
-        if ((await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: alvoId }, usuarioAtivo)).dados) {
-            throw new BusinessException(alvoId === usuarioAtivo.sub ? 'Você já tem outra execução em andamento: a pausa não pôde ser desfeita' : 'Essa pessoa já tem outra execução em andamento: a pausa não pôde ser desfeita');
-        }
+        // A execução em andamento do dono e a sobreposição de períodos são conferidas por `alterar`.
         const pausada = (await this.execucaoService.recuperar({ id: execucaoId }, usuarioAtivo)).dados;
         if (!pausada?.fimData) throw new BusinessException('A execução já está em andamento');
-        // Reabrir vale até "o infinito": se o dono fez outra execução depois da pausa, reabrir esta se sobreporia a ela.
-        if (await this.execucaoService.existeSobreposicao({ usuarioId: alvoId, inicioData: new Date(pausada.inicioData), fimData: new Date(8.64e15), ignorarExecucaoId: execucaoId })) {
-            throw new BusinessException('O usuário já fez outra execução depois desta pausa: não dá para reabri-la sem sobrepor');
-        }
         await this.execucaoService.alterar({ id: execucaoId, descricao: String(resultado['descricaoAnterior'] ?? pausada.descricao), fimData: null }, usuarioAtivo);
     }
 }

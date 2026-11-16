@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { PropostaAtribuirMembroDadosDto, TipoPropostaIaEnum, podeSerMembroDeDemanda } from '@project20/shared';
+import { PropostaAtribuirMembroDadosDto, TipoPropostaIaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { alvoAcessivel, idDoAlvo } from '../../proposta-ia/domain/alvo-acessivel';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
-import { UsuarioService } from '../../usuario/services/usuario.service';
 import { DemandaService } from '../services/demanda.service';
 
 /**
@@ -19,7 +18,6 @@ export class AtribuirMembroExecutor implements ExecutorPropostaIa {
 
     constructor(
         private readonly demandaService: DemandaService,
-        private readonly usuarioService: UsuarioService,
     ) {}
 
     /** Task 315: a outra pessoa da conversa vê a proposta se vê a demanda (as regras da service, com o usuário dela). */
@@ -37,12 +35,7 @@ export class AtribuirMembroExecutor implements ExecutorPropostaIa {
         const entrada = validarDadosDaProposta(PropostaAtribuirMembroDadosDto, dados);
         const alvo = { demandaId: entrada.demandaId, usuarioId: entrada.usuarioId ?? usuarioAtivo.sub };
         if (entrada.acao === 'ADICIONAR') {
-            // A `DemandaService.atribuirMembro` não confere o tipo do alvo, e a rota de ajuste aceita dados alterados: a regra "gestor não entra em
-            // `demanda_usuario`" vale aqui também, não só na ferramenta que propôs.
-            const dono = (await this.usuarioService.recuperarParaAtribuicao({ id: alvo.usuarioId }, usuarioAtivo)).dados;
-            if (!dono) throw new BusinessException('Usuário não encontrado');
-            if (!podeSerMembroDeDemanda(dono.tipo)) throw new BusinessException(`${dono.nomeCompleto} é gestor: gestores têm acesso por tipo e não são atribuídos como membros`);
-            if (!dono.ativo) throw new BusinessException(`${dono.nomeCompleto} está inativo e não pode ser atribuído`);
+            // O tipo e a situação do alvo (gestor e inativo não entram) são conferidos pela `DemandaService.atribuirMembro`.
             await this.demandaService.atribuirMembro(alvo, usuarioAtivo);
         } else {
             await this.demandaService.removerMembro(alvo, usuarioAtivo);

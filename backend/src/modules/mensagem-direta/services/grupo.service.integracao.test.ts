@@ -1,6 +1,6 @@
 import * as assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { AutorMensagemDiretaEnum, MensagemDiretaEventoPublicarDto } from '@project20/shared';
+import { AutorMensagemDiretaEnum, MensagemDiretaEventoPublicarDto, montarConversaGrupoId } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
@@ -419,6 +419,27 @@ testarComBanco('supervisão: o gestor lista e abre só grupos sem gestor entre o
     await recusaCom(supervisao.lerGrupoSupervisionado({ grupoId: 999_999 } as never, como(gestor)), ResourceNotFoundException);
     await recusaCom(supervisao.listarGruposSupervisionados({}, como(ana)), UnauthorizedAccessException);
     await recusaCom(supervisao.lerGrupoSupervisionado({ grupoId: aberto.grupoId } as never, como(ana)), UnauthorizedAccessException);
+});
+
+testarComBanco('supervisão: cursor forjado não pula a auditoria nem o aviso; a segunda leitura do dia não duplica', async (conexao) => {
+    const { service, supervisao } = montar(conexao);
+    const { ana, bruno } = await trio(conexao);
+    const gestor = await criarGestor(conexao);
+    const grupo = (await service.criarGrupo({ nome: 'Cursor forjado', membroUsuarioIds: [bruno.id] }, como(ana))).dados!.grupo;
+    await enviarNoGrupo(service, grupo.grupoId, ana, 'conteúdo do grupo');
+    const forjado = Buffer.from(JSON.stringify([4102444800000, 'ffffffff-ffff-ffff-ffff-ffffffffffff'])).toString('base64url');
+    const leituras = criarRepositorio(MensagemDiretaSupervisaoRepository, conexao);
+    const lida = () => leituras.validarLeituraDoDia({ leitorUsuarioId: gestor.id, conversaId: montarConversaGrupoId(grupo.grupoId), agora: new Date() });
+
+    assert.equal(await lida(), false);
+    const primeira = (await supervisao.lerGrupoSupervisionado({ grupoId: grupo.grupoId, cursor: forjado } as never, como(gestor))).dados!;
+    assert.equal(primeira.membrosAvisados, true, 'a primeira leitura do dia avisa, com ou sem cursor');
+    assert.equal(await lida(), true, 'a leitura ficou auditada');
+
+    const segunda = (await supervisao.lerGrupoSupervisionado({ grupoId: grupo.grupoId, cursor: forjado } as never, como(gestor))).dados!;
+    assert.equal(segunda.membrosAvisados, false);
+    const noGrupo = textos((await service.listarMensagens({ grupoId: grupo.grupoId, limite: 50 } as never, como(ana))).dados!.mensagens);
+    assert.equal(noGrupo.filter((texto) => /gestor, leu este grupo/.test(texto)).length, 1, 'um aviso por leitor, grupo e dia');
 });
 
 testarComBanco('supervisão: a elegibilidade é a de agora; o gestor sair do grupo o torna legível de novo e entrar o esconde', async (conexao) => {

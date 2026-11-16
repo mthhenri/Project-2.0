@@ -140,4 +140,30 @@ export class MensagemDiretaSupervisaoRepository extends BaseRepository<Supervisa
         );
         return encontrados[0].existe;
     }
+
+    /**
+   * Já houve leitura deste leitor nesta conversa no dia de `agora`, com ou sem aviso? Quem pede uma página com cursor só audita se ainda não
+   * há leitura do dia (o cursor vem do cliente: ele não prova que a conversa foi aberta e auditada).
+   */
+    async validarLeituraDoDia(dto: MensagemDiretaSupervisaoAvisoVerificarDto): Promise<boolean> {
+        const encontrados = await this.executarConsulta<{ existe: boolean }>(
+            `
+                SELECT
+                    EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            mensagem_direta_supervisao
+                        WHERE
+                            mensagem_direta_supervisao.leitor_usuario_id = :leitorUsuarioId
+                            AND mensagem_direta_supervisao.conversa_id = :conversaId
+                            AND mensagem_direta_supervisao.is_deleted = false
+                            AND mensagem_direta_supervisao.created_date >= date_trunc('day', CAST(:agora AS timestamptz))
+                            AND mensagem_direta_supervisao.created_date < date_trunc('day', CAST(:agora AS timestamptz)) + INTERVAL '1 day'
+                    ) AS existe
+            `,
+            { leitorUsuarioId: dto.leitorUsuarioId, conversaId: dto.conversaId, agora: dto.agora.toISOString() },
+        );
+        return encontrados[0].existe;
+    }
 }

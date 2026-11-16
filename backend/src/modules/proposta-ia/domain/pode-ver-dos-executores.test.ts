@@ -74,7 +74,7 @@ test('atribuir tag: o alvo é a demanda ou a atividade, conforme o campo', async
 test('alvo demanda: alterar, atribuir membro, concluir e descrever', async () => {
     for (const executor of [
         new AlterarDemandaExecutor(demandaService as never, {} as never),
-        new AtribuirMembroExecutor(demandaService as never, {} as never),
+        new AtribuirMembroExecutor(demandaService as never),
         new ConcluirDemandaExecutor(demandaService as never),
         new DescreverDemandaExecutor(demandaService as never),
     ]) {

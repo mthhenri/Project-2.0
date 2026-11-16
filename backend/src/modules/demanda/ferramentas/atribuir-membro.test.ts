@@ -24,9 +24,6 @@ const USUARIOS: Record<number, { nomeCompleto: string; cargoTitulo: string; tipo
     10: { nomeCompleto: 'Caio Inativo', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: false },
 };
 
-/** `UsuarioService` que lê a tabela de usuários do teste (o executor confere o tipo e a situação do alvo). */
-const usuarioServiceDoTeste = { recuperarParaAtribuicao: async ({ id }: { id: number }) => ({ dados: USUARIOS[id] ? { id, ...USUARIOS[id] } : { id, nomeCompleto: 'Caio Novo', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, ativo: true } }) } as unknown as UsuarioService;
-
 /** `DemandaService` em memória: a demanda 4 com os membros informados e o registro das chamadas. */
 function criarServico(membrosIniciais: number[]) {
     const membros = new Set(membrosIniciais);
@@ -74,7 +71,7 @@ test('propor recusa gestor, usuário inativo, já membro, não membro e o últim
 
 test('executar adiciona e remove pela service e desfazer faz a ação inversa', async () => {
     const { servico, chamadas, membros } = criarServico([7, 8]);
-    const executor = new AtribuirMembroExecutor(servico, usuarioServiceDoTeste);
+    const executor = new AtribuirMembroExecutor(servico);
     const adicionado = await executor.executar({ demandaId: 4, usuarioId: 11, acao: 'ADICIONAR' }, GESTOR);
     assert.ok(membros.has(11));
     await executor.desfazer(adicionado, GESTOR);
@@ -88,7 +85,7 @@ test('executar adiciona e remove pela service e desfazer faz a ação inversa', 
 
 test('desfazer é recusado se o estado mudou depois', async () => {
     const { servico, chamadas, membros } = criarServico([7]);
-    const executor = new AtribuirMembroExecutor(servico, usuarioServiceDoTeste);
+    const executor = new AtribuirMembroExecutor(servico);
     const resultado = await executor.executar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR' }, GESTOR);
     membros.delete(8);
     chamadas.length = 0;
@@ -117,7 +114,7 @@ test('o gestor sem informar a pessoa é recusado (ele mesmo é gestor e não ent
 
 test('o executor do desenvolvedor usa ele mesmo quando o usuarioId não veio, e a service confere o resto', async () => {
     const { servico, chamadas, membros } = criarServico([8]);
-    const executor = new AtribuirMembroExecutor(servico, usuarioServiceDoTeste);
+    const executor = new AtribuirMembroExecutor(servico);
     const resultado = await executor.executar({ demandaId: 4, acao: 'ADICIONAR' }, DESENVOLVEDOR);
     assert.ok(membros.has(7));
     assert.equal(resultado['usuarioId'], 7);
@@ -129,7 +126,7 @@ test('o executor do desenvolvedor usa ele mesmo quando o usuarioId não veio, e 
 
 test('validar confere os dados; obsoleta quando a pessoa já está como a proposta pede', async () => {
     const { servico } = criarServico([7]);
-    const executor = new AtribuirMembroExecutor(servico, usuarioServiceDoTeste);
+    const executor = new AtribuirMembroExecutor(servico);
     assert.doesNotThrow(() => executor.validar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR', usuarioNome: 'Ana' }));
     assert.throws(() => executor.validar({ demandaId: 4, usuarioId: 8, acao: 'EXCLUIR' }), BusinessException);
     assert.throws(() => executor.validar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR', senha: 'x' }), BusinessException);
@@ -138,14 +135,18 @@ test('validar confere os dados; obsoleta quando a pessoa já está como a propos
     assert.equal(await executor.estaObsoleta({ demandaId: 4, usuarioId: 8, acao: 'REMOVER' }, GESTOR), true);
 });
 
-test('o executor também recusa gestor e inativo como alvo (a rota de ajuste aceita dados alterados e a service não confere o tipo)', async () => {
+test('o executor entrega a atribuição à service, que recusa gestor e inativo como alvo (a rota de ajuste aceita dados alterados)', async () => {
     const { servico, chamadas, membros } = criarServico([7]);
-    const executor = new AtribuirMembroExecutor(servico, usuarioServiceDoTeste);
-    await assert.rejects(executor.executar({ demandaId: 4, usuarioId: 9, acao: 'ADICIONAR' }, GESTOR), contem('é gestor'));
-    await assert.rejects(executor.executar({ demandaId: 4, usuarioId: 1, acao: 'ADICIONAR' }, GESTOR), contem('é gestor'));
+    const recusadoPelaService = servico as unknown as { atribuirMembro: (dto: { usuarioId: number }) => Promise<unknown> };
+    recusadoPelaService.atribuirMembro = async (dto) => {
+        if (dto.usuarioId === 10) throw new BusinessException('Pessoa está inativo e não pode ser atribuído à demanda');
+        throw new BusinessException('Pessoa é gestor ou administrador: o acesso é por tipo');
+    };
+    const executor = new AtribuirMembroExecutor(servico);
+    await assert.rejects(executor.executar({ demandaId: 4, usuarioId: 9, acao: 'ADICIONAR' }, GESTOR), contem('gestor'));
     await assert.rejects(executor.executar({ demandaId: 4, usuarioId: 10, acao: 'ADICIONAR' }, GESTOR), contem('inativo'));
     assert.deepEqual(chamadas, []);
-    assert.ok(!membros.has(9) && !membros.has(1) && !membros.has(10));
+    assert.ok(!membros.has(9) && !membros.has(10));
 });
 
 test('o auxiliar propõe e executa a entrada de outra pessoa (como o gestor); o desenvolvedor só a de si mesmo', async () => {
@@ -154,6 +155,6 @@ test('o auxiliar propõe e executa a entrada de outra pessoa (como o gestor); o 
     assert.equal(propostas.length, 1);
     await assert.rejects(ferramenta.executar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR' }, DESENVOLVEDOR), BusinessException);
     const { servico, chamadas } = criarServico([7]);
-    await new AtribuirMembroExecutor(servico, usuarioServiceDoTeste).executar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR' }, AUXILIAR);
+    await new AtribuirMembroExecutor(servico).executar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR' }, AUXILIAR);
     assert.deepEqual(chamadas, ['adicionar:8']);
 });

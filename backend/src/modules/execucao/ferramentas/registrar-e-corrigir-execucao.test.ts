@@ -87,7 +87,7 @@ test('propor corrigir sem nada para corrigir, com período inválido ou sobrepos
 
 // ------------------------------------------------------------------ executores
 
-function criarServicoDeExecucao(inicial: { inicioData: Date; fimData: Date | null; descricao: string }) {
+function criarServicoDeExecucao(inicial: { inicioData: Date; fimData: Date | null; descricao: string }, recusaAlterar = false) {
     const execucao = { id: 5, atividadeId: 9, ...inicial };
     const chamadas: string[] = [];
     const servico = {
@@ -96,6 +96,7 @@ function criarServicoDeExecucao(inicial: { inicioData: Date; fimData: Date | nul
         recuperar: async () => ({ dados: { ...execucao } }),
         recuperarAtiva: async () => ({ dados: null }),
         alterar: async (dto: ExecucaoAlterarDto & { id: number }) => {
+            if (recusaAlterar) throw new BusinessException('O período se sobrepõe a outra execução da mesma pessoa');
             chamadas.push(`alterar:${dto.id}:${dto.inicioData}:${dto.fimData}:${dto.descricao}`);
             if (dto.inicioData !== undefined) execucao.inicioData = new Date(dto.inicioData);
             if (dto.fimData !== undefined) execucao.fimData = dto.fimData ? new Date(dto.fimData) : null;
@@ -113,9 +114,8 @@ const NOVA_DADOS = {
 };
 const ANTES = { inicioData: new Date('2026-10-17T17:00:00Z'), fimData: new Date('2026-10-17T19:00:00Z'), descricao: 'Ajustes do login' };
 
-function executorDeCorrecao(servico: ExecucaoService, sobreposicao = false) {
-    const repositorio = { validarSobreposicao: async () => sobreposicao } as unknown as ExecucaoRepository;
-    return new CorrigirExecucaoExecutor(servico, repositorio, atividadeService);
+function executorDeCorrecao(servico: ExecucaoService) {
+    return new CorrigirExecucaoExecutor(servico);
 }
 
 test('registrar: só o gestor executa e desfaz; o registro passa pela service com os instantes resolvidos', async () => {
@@ -150,8 +150,8 @@ test('corrigir: altera pela service, guarda o antes e o desfazer devolve períod
 test('corrigir: proposta velha (a execução mudou), sobreposição e desfazer inseguro são recusados sem alterar', async () => {
     const velha = criarServicoDeExecucao({ ...ANTES, fimData: new Date('2026-10-17T19:30:00Z') });
     await assert.rejects(executorDeCorrecao(velha.servico).executar(NOVA_DADOS, DESENVOLVEDOR), BusinessException);
-    const sobreposta = criarServicoDeExecucao(ANTES);
-    await assert.rejects(executorDeCorrecao(sobreposta.servico, true).executar(NOVA_DADOS, DESENVOLVEDOR), BusinessException);
+    const sobreposta = criarServicoDeExecucao(ANTES, true);
+    await assert.rejects(executorDeCorrecao(sobreposta.servico).executar(NOVA_DADOS, DESENVOLVEDOR), BusinessException);
     const mudada = criarServicoDeExecucao(ANTES);
     const executor = executorDeCorrecao(mudada.servico);
     const resultado = await executor.executar(NOVA_DADOS, DESENVOLVEDOR);
@@ -162,9 +162,8 @@ test('corrigir: proposta velha (a execução mudou), sobreposição e desfazer i
 });
 
 test('corrigir: desfazer que se sobreporia a uma execução feita depois é recusado, sem alterar', async () => {
-    const { servico, chamadas } = criarServicoDeExecucao(ANTES);
-    const ocupado = { validarSobreposicao: async () => true } as unknown as ExecucaoRepository;
-    const executor = new CorrigirExecucaoExecutor(servico, ocupado, atividadeService);
+    const { servico, chamadas } = criarServicoDeExecucao(ANTES, true);
+    const executor = executorDeCorrecao(servico);
     const resultado = { execucaoId: 5, inicioAnteriorData: NOVA_DADOS.inicioAnteriorData, fimAnteriorData: NOVA_DADOS.fimAnteriorData, descricaoAnterior: 'x', novoInicioData: ANTES.inicioData.toISOString(), novoFimData: ANTES.fimData!.toISOString(), descricaoNova: ANTES.descricao };
     await assert.rejects(executor.desfazer(resultado, DESENVOLVEDOR), BusinessException);
     assert.deepEqual(chamadas, []);

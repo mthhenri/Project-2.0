@@ -49,6 +49,8 @@ function criarServico(inicial: Execucao[] = [], opcoes: { falharAoIniciar?: bool
             execucoes.find((execucao) => execucao.id === dto.id)!.excluida = true;
         },
         alterar: async (dto: { id: number; descricao: string; fimData: null }) => {
+            // Como a service real: reabrir não vale com outra execução do dono em andamento.
+            if (dto.fimData === null && ativaDoUsuario() && ativaDoUsuario()!.id !== dto.id) throw new BusinessException('Você já tem uma execução em andamento');
             chamadas.push(`reabrir:${dto.id}:${dto.descricao}`);
             const execucao = execucoes.find((item) => item.id === dto.id)!;
             execucao.fimData = dto.fimData;
@@ -58,7 +60,6 @@ function criarServico(inicial: Execucao[] = [], opcoes: { falharAoIniciar?: bool
     };
     // O executor lê a ativa do DONO da atividade; nos testes o dono é sempre o usuário do token.
     (servico as Record<string, unknown>)['recuperarAtivaDoUsuario'] = servico.recuperarAtiva;
-    (servico as Record<string, unknown>)['existeSobreposicao'] = async () => false;
     return { servico: servico as unknown as ExecucaoService, chamadas, execucoes };
 }
 

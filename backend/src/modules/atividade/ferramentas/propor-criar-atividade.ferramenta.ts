@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PropostaCriarAtividadeDadosDto, ProporCriarAtividadeDto, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
+import { PropostaCriarAtividadeDadosDto, ProporCriarAtividadeDto, TipoPropostaIaEnum, temPermissaoDeGestor, temVisibilidadeTotal } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
@@ -37,7 +37,11 @@ export class ProporCriarAtividadeFerramenta extends FerramentaPropostaIa<ProporC
     }
 
     protected async montarDados(entrada: ProporCriarAtividadeDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-        const demanda = await this.demandaRepositorio.recuperar({ id: entrada.demandaId });
+        // Mesmo recorte da leitura HTTP: quem não vê o projeto da demanda recebe "não encontrada", sem nome nem caminho na proposta.
+        const demanda = await this.demandaRepositorio.recuperar(
+            { id: entrada.demandaId },
+            temVisibilidadeTotal(usuarioAtivo.tipo) ? undefined : { usuarioId: usuarioAtivo.sub },
+        );
         if (!demanda) throw new ResourceNotFoundException('Demanda');
 
         // Para si mesmo, `usuarioId` é só ruído: some da proposta. Para outra pessoa, só o gestor; a pessoa precisa existir e estar ativa.

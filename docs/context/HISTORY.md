@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-11-16 — Permissão no servidor: supervisão, execução, destino de mover atividade e membro de demanda (tasks 359, 391, 374, 375, 367 e 381)
+
+Primeira frente da guarda-chuva `requisicoes-e-permissoes-correcoes`, escolhida pelo autor (opção A: matar as questões de permissão). Entraram as seis tasks da fila que não esperam decisão do autor; as que esperam (360, 361, 373, 390 e a 405 do P-100) ficaram no backlog. Antes, a branch `claude/bold-ride-9uipdt` foi mesclada na master e a numeração acertada: a task 329 do Desktop virou **487** (a 329 da master é o "Enviar para colaborador"), a guarda-chuva passou a 330–487 e os problemas da revisão viraram P-092 a P-101 (P-089 a P-091 já eram da master).
+
+**O que mudou.** (1) A supervisão do chat deixou de decidir a auditoria pela presença do `cursor`, que o cliente monta sozinho: página com cursor audita se o leitor ainda não leu a conversa no dia (`existeLeituraDoDia`); o par que nunca conversou responde 404 sem criar conversa. (2) `ExecucaoService.alterar` confere execução ativa e sobreposição; `iniciar` e `encerrar` conferem a permissão antes de qualquer regra; a conferência duplicada saiu dos executores da IA. (3) As ferramentas de criar e mover atividade e o `validarMudancaDeDemanda` não revelam mais nome, caminho nem status de demanda de projeto sem acesso. (4) `DemandaService` recusa gestor, administrador e inativo como membro (criar e atribuir). Corrigidos e removidos de `PROBLEMS.md`: P-093, P-095, P-098 e P-101; o P-092 ficou só com a 390.
+
+**Verificação.** Backend 1828 testes unitários e 535 de integração, `lint:tudo` e build sem erro; 13 conferências ao vivo por API num stack isolado (banco `project20_verify`, porta 3001, removidos). Banco de desenvolvimento sem nenhuma linha de `demanda_usuario` para gestor, administrador ou inativo. Relatório completo e limites em `docs/specs/done/359-supervisao-do-chat-auditoria-com-ou-sem-cursor/verificacao.md`.
+
+Uma revisão independente achou uma regressão na 367 (404 no lugar de 403 para quem vê o projeto e não é membro do destino), corrigida e testada. **Limites.** A IA não foi exercitada ao vivo (sem provedor): a 367 está provada por teste de unidade. A ferramenta `propor-atribuir-membro` manteve a conferência própria, além da service (a spec 381 pedia retirá-la). Nada mudou no frontend.
+
 ## 2026-11-15 — Revisão de requisições e de permissões: dossiê com 225 achados e 158 specs de correção (330–487)
 
 Pedido do autor em 2026-11-13: refazer do zero a revisão das requisições, tela a tela, de tudo que pede ao servidor no `frontend/` e no `desktop/`, para remover o que é inútil e deixar o resto mais eficiente, com um resumo e uma spec de correção por ponto; na confirmação do entendimento ele acrescentou reforçar as permissões entre os tipos de usuário e pediu que a auditoria anterior fosse para `backlog/`. Nenhum código foi alterado.
