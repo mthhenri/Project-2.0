@@ -203,11 +203,11 @@ export class MensagemDiretaIaService {
                     mensagens: [{ papel: 'usuario', conteudo: contexto }],
                     trocasIniciais: [],
                     // A saudação só cumprimenta e oferece: sem ferramentas, nada é proposto antes de a pessoa confirmar.
-                    ferramentas: ehSaudacao ? [] : this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo),
+                    ferramentas: ehSaudacao ? [] : this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo, 'COLABORADORES'),
                     maximoTokens: ehSaudacao ? MAXIMO_TOKENS_DA_SAUDACAO : MAXIMO_TOKENS_DO_CHAT,
                     pesquisaWeb: false,
                     // As ferramentas tratam o `@IA` como o chat da IA (nada nelas depende de ser o chat entre colaboradores).
-                    origem: { contexto: ContextoChatEnum.CHAT },
+                    origem: { contexto: ContextoChatEnum.CHAT, escopo: 'COLABORADORES' },
                     propostasDoTurno,
                     // A resposta chega inteira no fim (sem streaming no chat entre colaboradores): os eventos do turno não vão a lugar nenhum.
                     emitir: () => undefined,

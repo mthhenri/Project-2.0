@@ -71,6 +71,7 @@ function montar(cenario: Cenario = {}) {
     const publicados: Array<{ usuarioIds: number[]; evento: { tipo: string } }> = [];
     const solicitacoes: IaSolicitacao[] = [];
     const listasDeFerramentas: unknown[] = [];
+    const escoposPedidos: unknown[] = [];
     const usos: unknown[] = [];
     const recusadas: number[] = [];
     let conversa: MensagemDiretaResumoDto[] = [...(cenario.anteriores ?? [])];
@@ -107,7 +108,8 @@ function montar(cenario: Cenario = {}) {
         },
     };
     const ferramentas = {
-        listarParaUsuario: (usuario: unknown) => {
+        listarParaUsuario: (usuario: unknown, escopo?: unknown) => {
+            escoposPedidos.push(escopo);
             listasDeFerramentas.push(usuario);
             return [{ nome: 'propor_criar_atividade', descricao: 'd', esquemaEntrada: {} }];
         },
@@ -139,15 +141,16 @@ function montar(cenario: Cenario = {}) {
             grupo: { nome, tipo, lerMembrosIds: async () => membros.atuais },
         });
     };
-    return { service, enviar, enviarNoGrupo, membros, gravadas, publicados, solicitacoes, listasDeFerramentas, usos, recusadas };
+    return { service, enviar, enviarNoGrupo, membros, gravadas, publicados, solicitacoes, listasDeFerramentas, escoposPedidos, usos, recusadas };
 }
 
 test('@IA com pedido: atende quem chamou, com as ferramentas dele, e grava a resposta como mensagem da IA para as duas pontas', async () => {
-    const { enviar, gravadas, publicados, solicitacoes, listasDeFerramentas } = montar();
+    const { enviar, gravadas, publicados, solicitacoes, listasDeFerramentas, escoposPedidos } = montar();
     await enviar('@IA cria uma atividade de revisão');
 
     assert.equal(solicitacoes.length, 1);
     assert.deepEqual(listasDeFerramentas, [ANA], 'as ferramentas são as de quem chamou');
+    assert.deepEqual(escoposPedidos, ['COLABORADORES'], 'o que é só do chat privado (as conversas antigas de quem chamou) não vai a quem lê a resposta (spec 488)');
     assert.equal(solicitacoes[0].nivel, NivelIaEnum.RAPIDO);
     assert.match(solicitacoes[0].instrucoes, /^Você é o assistente\./);
     assert.match(solicitacoes[0].instrucoes, /Quem chamou: Ana Lima \(desenvolvedor\)/);
