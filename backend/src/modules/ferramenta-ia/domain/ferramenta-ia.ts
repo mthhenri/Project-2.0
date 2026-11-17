@@ -7,8 +7,11 @@ import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.int
  */
 export type TipoFerramentaIa = 'LEITURA' | 'PROPOSTA' | 'RASCUNHO';
 
-/** Onde a IA conversa: o chat de perguntas (e o check-in) ou a conversa de um plano. Cada um enxerga o seu conjunto de ferramentas. */
-export type EscopoDaFerramentaIa = 'CHAT' | 'PLANEJAMENTO';
+/**
+ * Onde a IA conversa: o chat de perguntas (e o check-in), a conversa de um plano ou o `@IA` do chat entre colaboradores (task 315), em que a
+ * resposta é lida por outras pessoas. Cada um enxerga o seu conjunto de ferramentas.
+ */
+export type EscopoDaFerramentaIa = 'CHAT' | 'PLANEJAMENTO' | 'COLABORADORES';
 
 /** Quem pode usar a ferramenta (as mesmas regras de tipo de usuário do resto do sistema). */
 export type PermissaoFerramentaIa = 'QUALQUER' | 'AUXILIAR' | 'GESTOR' | 'ADMINISTRADOR';
@@ -30,6 +33,8 @@ export type ClasseDeEntrada<T extends object> = new () => T;
 /** De onde a IA está chamando a ferramenta; só quem decide algo por isso lê (as propostas, para o nível). */
 export interface OrigemDaFerramentaIa {
     contexto: ContextoChatEnum;
+    /** Onde a IA está respondendo; ausente vale `CHAT`. Quem barra a ferramenta `somenteChatPrivado` é o registro, por aqui. */
+    escopo?: EscopoDaFerramentaIa;
 }
 
 export abstract class FerramentaIa<TEntrada extends object = object> {
@@ -41,6 +46,11 @@ export abstract class FerramentaIa<TEntrada extends object = object> {
     abstract readonly classeDeEntrada: ClasseDeEntrada<TEntrada>;
     /** Ferramenta do plano: só a conversa do planejamento a vê (o chat de perguntas nunca a lista). */
     readonly somentePlanejamento?: boolean;
+    /**
+     * Ferramenta que lê o que é só de quem pergunta (as conversas dele com a IA): só o chat privado a vê. Fica de fora do `@IA` entre colaboradores
+     * e da conversa do plano, onde a resposta é lida por outras pessoas (spec 363), e é recusada se for chamada de lá.
+     */
+    readonly somenteChatPrivado?: boolean;
 
     /**
    * Ferramenta que depende de uma configuração (flag da IA): quando devolve `false` ela some da lista do modelo e, se for chamada

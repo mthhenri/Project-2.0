@@ -12,6 +12,18 @@
 
 ---
 
+
+## 2026-11-17 — Spec 488: o ChatIA pesquisa as conversas antigas da própria pessoa
+
+Pedido do autor: dar ao ChatIA, como ferramenta, a pesquisa nas conversas antigas. Decidido com ele: **duas ferramentas** (`buscar_nas_minhas_conversas` e `consultar_minha_conversa`), de leitura, para **todos os tipos de usuário**, sempre sobre as conversas do usuário do token. O gestor segue com as três ferramentas sobre conversas de desenvolvedores (task 201), que não serviam: outro dono e só gestor.
+
+- **shared:** `MinhasConversasBuscarDto` e `MinhaConversaConsultarDto` (entrada) e as saídas `MinhasConversasBuscadasDto` e `MinhaConversaConsultadaDto`. Sem `usuarioId`: não há como pedir a conversa de outra pessoa (o `forbidNonWhitelisted` do registro recusa o campo, coberto em teste).
+- **backend:** `ChatMinhasConversasService` reaproveita o contrato `ArmazenamentoDeChat` e os limites/ajudantes de `domain/conversa-do-desenvolvedor.ts`. O período vai ao armazenamento com 2 dias de folga e o corte exato é feito pelo dia do `conversaId`, sem depender do fuso. Sem migration e sem mudar o armazenamento.
+- **Privacidade (achado ao desenhar):** o registro entrega ao `@IA` do chat entre colaboradores as mesmas ferramentas de leitura de quem o chamou, e a resposta é lida pelos outros (spec 363). Uma ferramenta de conversas antigas ali vazaria a conversa privada. Por isso `FerramentaIa.somenteChatPrivado`, o escopo novo `COLABORADORES` em `listarParaUsuario` (usado por `MensagemDiretaIaService`) e `origem.escopo` na execução: a ferramenta some das duas listas (colaboradores e plano) e é recusada se alguém a chamar de lá.
+- **Testes:** `chat-minhas-conversas.service.test.ts` (5), `ferramentas-das-minhas-conversas.test.ts` (3: todos os tipos, some em colaboradores e plano, execução recusada, entrada) e uma asserção no teste do `@IA`. Backend 1869 e shared 363 passando; build do backend e `npm run lint:tudo` sem erro.
+- **Não verificado:** o turno real com a IA (não há provedor neste ambiente): a ferramenta só foi exercitada por teste. Conferir ao vivo, com a IA ligada, perguntando por algo de um dia anterior.
+- **Fora de escopo, registrado:** a busca herda o limite de 50 achados do armazenamento (P-025); não há "listar conversas" do próprio usuário como ferramenta.
+
 ## 2026-11-16 — Listagem e criação de atividade: ordem, filtro de usuário e formulário
 
 Pedido do autor, sem spec. **Ordem** da listagem de atividades: nome do usuário, prioridade, criação (a mais nova primeiro; antes a prioridade vinha antes do usuário). **Filtro de usuário** só com quem tem atividade não excluída: `UsuarioListarDto.comAtividades` (`GET /usuario?comAtividades=true`, `EXISTS` no repository). **Criação de atividade:** sem a escolha de tags (só depois de criada; a API segue aceitando `tagIds`) e a prioridade na linha do nome, em 70/30. O filtro continua restrito a usuários ativos, então o dono inativo com atividades não aparece nele.

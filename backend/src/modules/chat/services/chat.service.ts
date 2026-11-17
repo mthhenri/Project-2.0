@@ -369,7 +369,7 @@ export class ChatService {
             maximoTokens: opcoes.maximoTokens ?? MAXIMO_TOKENS_DO_CHAT,
             // A dúvida de código (ligada pelo administrador) pode precisar de documentação atual: o provedor pesquisa por conta própria quando o modelo achar útil.
             pesquisaWeb: doChat && configuracao.duvidasCodigo,
-            origem: { contexto },
+            origem: { contexto, escopo: opcoes.escopoDeFerramentas ?? 'CHAT' },
             propostasDoTurno,
             emitir,
         });

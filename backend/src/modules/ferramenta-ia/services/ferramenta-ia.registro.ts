@@ -1,7 +1,7 @@
 import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { TipoUsuarioEnum } from '@project20/shared';
+import { ContextoChatEnum, TipoUsuarioEnum } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { IaFerramenta } from '../../ia/domain/ia.tipos';
 import { gerarEsquemaDeClasse } from '../domain/esquema-da-classe';
@@ -49,8 +49,10 @@ export class FerramentaIaRegistro {
    * pausar ou registrar execução, criar atividade...).
    */
     listarParaUsuario(usuarioAtivo: JwtPayload, escopo: EscopoDaFerramentaIa = 'CHAT'): IaFerramenta[] {
-        const doEscopo = (ferramenta: FerramentaIa) =>
-            escopo === 'PLANEJAMENTO' ? ferramenta.somentePlanejamento === true || ferramenta.tipo === 'LEITURA' : ferramenta.somentePlanejamento !== true;
+        const doEscopo = (ferramenta: FerramentaIa) => {
+            if (escopo !== 'CHAT' && ferramenta.somenteChatPrivado === true) return false;
+            return escopo === 'PLANEJAMENTO' ? ferramenta.somentePlanejamento === true || ferramenta.tipo === 'LEITURA' : ferramenta.somentePlanejamento !== true;
+        };
         return this.listarTodas()
             .filter((ferramenta) => doEscopo(ferramenta) && usuarioPodeUsar(ferramenta.permissao, usuarioAtivo.tipo) && (ferramenta.habilitada?.() ?? true))
             .map((ferramenta) => ({
@@ -65,6 +67,10 @@ export class FerramentaIaRegistro {
         if (!ferramenta) return this.erro(`A ferramenta "${nome}" não existe.`);
         if (!usuarioPodeUsar(ferramenta.permissao, usuarioAtivo.tipo as TipoUsuarioEnum)) {
             return this.erro(`Você não tem permissão para usar a ferramenta "${nome}".`);
+        }
+
+        if (ferramenta.somenteChatPrivado && ((origem?.escopo ?? 'CHAT') !== 'CHAT' || origem?.contexto === ContextoChatEnum.PLANEJAMENTO)) {
+            return this.erro(`A ferramenta "${nome}" só existe na conversa privada com a IA.`);
         }
 
         if (ferramenta.habilitada && !ferramenta.habilitada()) return this.erro(`A ferramenta "${nome}" está desabilitada na configuração da IA.`);

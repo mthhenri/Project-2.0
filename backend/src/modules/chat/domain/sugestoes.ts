@@ -20,6 +20,8 @@ export const FRASE_DA_FERRAMENTA: Readonly<Record<string, string>> = {
     consultar_ponto_do_mes: 'ver as horas e o saldo do mês',
     consultar_dias_nao_uteis: 'ver feriados e recessos',
     consultar_pad: 'ver o pad de anotações',
+    buscar_nas_minhas_conversas: 'procurar nas conversas antigas com a IA',
+    consultar_minha_conversa: 'reler a conversa de um dia anterior',
     propor_anotar_pad: 'anotar algo no pad',
     propor_criar_atividade: 'criar uma atividade (o gestor também para outra pessoa)',
     propor_alterar_atividade: 'mudar o status, a prioridade ou o nome de uma atividade, ou marcá-la como pronta',
