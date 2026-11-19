@@ -97,6 +97,30 @@ export function ancestraisDaPasta(nos: readonly DemandaGrafoNoDto[], pastaId: nu
     return ancestrais;
 }
 
+/**
+ * A demanda que fica aberta quando a aberta é excluída (task 404): a próxima da lista, ou a anterior se era a última; `null` se não sobra nenhuma. Quem é filha (em qualquer
+ * nível) da excluída some junto (excluir uma pasta leva as sub-demandas), então não serve de vizinha.
+ */
+export function vizinhaDaDemandaExcluida(itens: readonly DemandaGrafoNoDto[], nos: readonly DemandaGrafoNoDto[], excluidaId: number): number | null {
+    const porId = new Map(nos.map((no) => [no.id, no]));
+    const saiJunto = (no: DemandaGrafoNoDto): boolean => {
+        let atual: number | null = no.demandaPaiId ?? null;
+        const vistos = new Set<number>();
+        while (atual !== null && !vistos.has(atual)) {
+            if (atual === excluidaId) return true;
+            vistos.add(atual);
+            atual = porId.get(atual)?.demandaPaiId ?? null;
+        }
+        return false;
+    };
+    const posicao = itens.findIndex((item) => item.id === excluidaId);
+    const restantes = itens.filter((item) => item.id !== excluidaId && !saiJunto(item));
+    if (restantes.length === 0) return null;
+    if (posicao < 0) return restantes[0].id;
+    const seguinte = itens.slice(posicao + 1).find((item) => restantes.includes(item));
+    return (seguinte ?? [...itens.slice(0, posicao)].reverse().find((item) => restantes.includes(item)) ?? restantes[0]).id;
+}
+
 /** O caminho em nomes até a pasta, com o nome dela no fim ("Sem pasta" quando `null`). */
 export function caminhoDaPasta(nos: readonly DemandaGrafoNoDto[], pastaId: PastaId): string[] {
     if (pastaId === null) return ['Sem pasta'];

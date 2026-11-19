@@ -15,6 +15,7 @@ import {
     demandasDaPasta,
     listarPastasEmOrdem,
     pastaDaDemanda,
+    vizinhaDaDemandaExcluida,
 } from '../../utils/demanda-pasta.util';
 import { AbaDemandaAberta, DemandaAbertaComponent } from '../demanda-aberta/demanda-aberta.component';
 import { DemandaDescricaoEditorComponent } from '../demanda-descricao-editor/demanda-descricao-editor.component';
@@ -68,6 +69,7 @@ export class DemandaArvoreTelaComponent implements OnInit {
 
     readonly pastaChange = output<PastaId>();
     readonly alterado = output<void>();
+    readonly demandaExcluida = output<{ demandaId: number; nome: string }>();
     readonly statusAlterado = output<{ demandaId: number; status: TipoDemandaStatusEnum }>();
     readonly tagsAlteradas = output<{ demandaId: number; tags: TagResumoDto[] }>();
     readonly horasEstimadasAlteradas = output<{ demandaId: number; horasEstimadas: number }>();
@@ -335,9 +337,13 @@ export class DemandaArvoreTelaComponent implements OnInit {
         });
     }
 
-    aoExcluida(): void {
-        this.demandaAbertaId.set(null);
-        this.alterado.emit();
+    /**
+     * A demanda aberta foi excluída (task 404): abre a vizinha na hora (sem reler a excluída, que a coluna ainda tem montada) e avisa a página pela saída própria da exclusão, que
+     * recarrega o grafo e oferece o "Desfazer"; não passa por `alterado`, que mandaria a demanda aberta se reler.
+     */
+    aoExcluida(excluida: { demandaId: number; nome: string }): void {
+        this.demandaAbertaId.set(vizinhaDaDemandaExcluida(this.itens(), this.nos(), excluida.demandaId));
+        this.demandaExcluida.emit(excluida);
     }
 
     aoDemandaAquiCriada(): void {

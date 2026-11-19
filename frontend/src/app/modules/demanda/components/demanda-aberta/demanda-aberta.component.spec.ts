@@ -5,6 +5,7 @@ import { TipoDemandaStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { responderSucesso, esperarRequisicao } from '../../../../../testes/http-teste';
 import { DemandaMetricasComponent } from '../demanda-metricas/demanda-metricas.component';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { DemandaAbertaComponent } from './demanda-aberta.component';
 
 // A demanda aberta da Árvore (task 239) faz o que o diálogo de detalhe fazia, com as abas Técnica, Cliente, Documentação, Atividades e Conexões.
@@ -78,6 +79,25 @@ describe('DemandaAbertaComponent — estimativa editada no cabeçalho (task 407)
         expect(alteradas, 'a demanda não é "alterada" para a página reler').toBe(0);
         montado.http.expectNone(() => true);
         expect(montado.componente.demanda()?.horasEstimadas).toBe(20);
+    });
+});
+
+describe('DemandaAbertaComponent — excluir a demanda (task 404)', () => {
+    it('depois do DELETE avisa a página com a demanda excluída e não oferece o Desfazer (a oferta é da página, que sobrevive a esta coluna) nem se relê', async () => {
+        const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
+        const excluidas: unknown[] = [];
+        let alteradas = 0;
+        montado.componente.demandaExcluida.subscribe((valor) => excluidas.push(valor));
+        montado.componente.demandaAlterada.subscribe(() => alteradas++);
+
+        (montado.componente as unknown as { excluirDemanda(): void }).excluirDemanda();
+        responderSucesso(esperarRequisicao(montado.http, 'DELETE', '/demanda/10'), null);
+        await montado.atualizar();
+
+        expect(excluidas).toEqual([{ demandaId: 10, nome: 'Demanda de teste' }]);
+        expect(alteradas).toBe(0);
+        expect(TestBed.inject(DesfazerService).oferta()).toBeNull();
+        montado.http.expectNone(() => true);
     });
 });
 

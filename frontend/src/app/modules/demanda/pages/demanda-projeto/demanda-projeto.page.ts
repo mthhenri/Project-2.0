@@ -18,6 +18,7 @@ import {
 import { DemandaService } from '../../services/demanda.service';
 import { ProjetoService } from '../../../projeto/services/projeto.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { DemandaToolbarComponent } from '../../components/demanda-toolbar/demanda-toolbar.component';
 import { DemandaGrafoComponent } from '../../components/demanda-grafo/demanda-grafo.component';
 import { DemandaFormularioDialogComponent } from '../../components/demanda-formulario-dialog/demanda-formulario-dialog.component';
@@ -94,6 +95,7 @@ export class DemandaProjetoPage implements OnInit {
     private readonly demandaService = inject(DemandaService);
     private readonly projetoService = inject(ProjetoService);
     private readonly messageService = inject(MessageService);
+    private readonly desfazerService = inject(DesfazerService);
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     readonly sessao = inject(UsuarioSessaoService);
@@ -308,6 +310,20 @@ export class DemandaProjetoPage implements OnInit {
     }
 
     /**
+     * A demanda aberta foi excluída (task 404): recarrega o grafo (a Árvore já abriu a vizinha e não relê a excluída) e oferece o "Desfazer". A oferta mora aqui porque a página
+     * sobrevive à demanda aberta, que a exclusão desmonta; ao desfazer, o grafo é recarregado e a demanda restaurada volta à lista e fica aberta.
+     */
+    aoDemandaExcluida(excluida: { demandaId: number; nome: string }): void {
+        this.recarregarGrafo();
+        if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.temVisaoTotal()) this.carregarPlanejamento();
+        this.desfazerService.oferecer({
+            mensagem: `Demanda "${excluida.nome}" excluída`,
+            desfazer: () => this.demandaService.restaurar(excluida.demandaId),
+            aposDesfazer: () => this.recarregarGrafo(() => this.abrirNaArvore(excluida.demandaId)),
+        });
+    }
+
+    /**
    * Status trocado no Controle de horas (otimista, com rollback): aplica no nó do grafo e na linha do
    * planejamento sem refazer nenhuma consulta. Concluída sai do planejamento (ele só lista não-concluídas).
    */
@@ -345,8 +361,8 @@ export class DemandaProjetoPage implements OnInit {
         );
     }
 
-    /** Recarrega o grafo após qualquer alteração feita pelo painel da árvore. */
-    recarregarGrafo(): void {
+    /** Recarrega o grafo após qualquer alteração feita pelo painel da árvore; `aposCarregar` roda quando o grafo novo já está na tela (por exemplo, para abrir uma demanda que acabou de voltar). */
+    recarregarGrafo(aposCarregar?: () => void): void {
         this.demandaService.recuperarGrafo(this.projetoId()).subscribe({
             next: (resposta) => {
                 if (resposta.sucesso && resposta.dados) {
@@ -354,6 +370,7 @@ export class DemandaProjetoPage implements OnInit {
                     // A pasta escolhida pode ter sido excluída: nesse caso cai na pasta de partida.
                     const atual = this.pastaId();
                     if (atual !== null && !resposta.dados.nos.some((no) => no.id === atual && no.estrutural)) this.aoEscolherPasta(pastaInicial(resposta.dados.nos, undefined));
+                    aposCarregar?.();
                 }
             },
             error: () => {

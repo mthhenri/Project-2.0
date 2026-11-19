@@ -377,15 +377,24 @@ describe('DemandaArvoreTelaComponent', () => {
         expect(eventos.status[1]).toEqual({ demandaId: 4, status: TipoDemandaStatusEnum.PENDENTE });
     });
 
-    it('a demanda aberta que sai do projeto (excluída) cai para a primeira da pasta; excluir pela coluna avisa a página', async () => {
-        const { montado, eventos } = await montar();
+    it('a demanda aberta que sai do projeto (excluída) cai para a primeira da pasta', async () => {
+        const { montado } = await montar();
         montado.componente.escolherDemanda(4);
         montado.fixture.componentRef.setInput('nos', NOS.filter((item) => item.id !== 4));
         await montado.atualizar();
         montado.http.match(() => true);
         expect(montado.componente.demandaAbertaId()).toBe(3);
-        montado.componente.aoExcluida();
-        expect(eventos.alterado).toBe(1);
+    });
+
+    it('excluir a demanda aberta abre a vizinha na hora e avisa a página pela saída da exclusão, sem passar por "alterado" (task 404)', async () => {
+        const { montado, eventos } = await montar();
+        const excluidas: unknown[] = [];
+        montado.componente.demandaExcluida.subscribe((valor) => excluidas.push(valor));
+        montado.componente.escolherDemanda(3);
+        montado.componente.aoExcluida({ demandaId: 3, nome: 'Tela de login' });
+        expect(montado.componente.demandaAbertaId(), 'a próxima da lista (3 e 4 estão na pasta)').toBe(4);
+        expect(excluidas).toEqual([{ demandaId: 3, nome: 'Tela de login' }]);
+        expect(eventos.alterado, 'a demanda aberta não é mandada reler').toBe(0);
     });
 });
 

@@ -30,9 +30,14 @@ import {
 } from '../../../atividade/models/atividade.model';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
-import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
+
+/** A demanda que acabou de ser excluída pela demanda aberta. */
+export interface DemandaExcluidaEvento {
+    demandaId: number;
+    nome: string;
+}
 
 /** Tudo o que o detalhe mostra de uma demanda: guardado ao navegar para "← Voltar" restaurar sem nova chamada. */
 interface EstadoDetalhe {
@@ -52,7 +57,8 @@ interface EstadoDetalhe {
 @Directive()
 export abstract class DemandaDetalheBase {
     @Input({ required: true }) demandaId!: number;
-    @Output() demandaExcluida = new EventEmitter<void>();
+    /** Excluída por aqui (task 404): a página recarrega o grafo e oferece o "Desfazer", que precisa sobreviver a esta demanda aberta, desmontada logo em seguida. */
+    @Output() demandaExcluida = new EventEmitter<DemandaExcluidaEvento>();
     @Output() demandaAlterada = new EventEmitter<void>();
     /** A estimativa da demanda já foi gravada: o nó do grafo e a linha do planejamento recebem o valor sem recarregar (task 407). */
     @Output() horasEstimadasAlteradas = new EventEmitter<{ demandaId: number; horasEstimadas: number }>();
@@ -68,7 +74,6 @@ export abstract class DemandaDetalheBase {
     private readonly atividadeService = inject(AtividadeService);
     private readonly router = inject(Router);
     private readonly confirmationService = inject(ConfirmationService);
-    private readonly desfazerService = inject(DesfazerService);
     readonly sessao = inject(UsuarioSessaoService);
 
     readonly demandaIdAtual = signal<number>(0);
@@ -336,13 +341,8 @@ export abstract class DemandaDetalheBase {
 
         this.demandaService.excluir(demandaDados.id).subscribe({
             next: () => {
-                this.demandaExcluida.emit();
+                this.demandaExcluida.emit({ demandaId: demandaDados.id, nome: demandaDados.nome });
                 this.aoExcluida();
-                this.desfazerService.oferecer({
-                    mensagem: `Demanda "${demandaDados.nome}" excluída`,
-                    desfazer: () => this.demandaService.restaurar(demandaDados.id),
-                    aposDesfazer: () => this.demandaExcluida.emit(),
-                });
             },
         });
     }
