@@ -260,11 +260,11 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 
 | Task | Severidade | Área | Entrega | Achados | Decisão |
 |---|---|---|---|---|---|
-| **467** | Média | frontend/relatorio | Relatório: a revisão da IA não aparece ao lado de um relatório de outro período | A-185 | — |
-| **468** | Média | frontend/configuracao-ia | Prompts: salvar, ativar, restaurar e descartar aplicam a resposta em vez de reler tudo | A-186 | — |
-| **469** | Média | frontend/configuracao-ia | Configurações da IA: salvar uma versão não relê o que o `POST` devolveu | A-187 | — |
+| **467** | Média | frontend/relatorio | Relatório: a revisão da IA não aparece ao lado de um relatório de outro período | A-185 | feita |
+| **468** | Média | frontend/configuracao-ia | Prompts: salvar, ativar, restaurar e descartar aplicam a resposta em vez de reler tudo | A-186 | feita |
+| **469** | Média | frontend/configuracao-ia | Configurações da IA: salvar uma versão não relê o que o `POST` devolveu | A-187 | feita |
 | **470** | Média | backend/projeto e frontend/projeto | Volume dentro do projeto: pedir só o volume daquele projeto | A-188 | pendente |
-| **471** | Média | frontend/modelagem | Modelagem: mover uma tabela de grupo não relê o diagrama inteiro | A-189 | — |
+| **471** | Média | frontend/modelagem | Modelagem: mover uma tabela de grupo não relê o diagrama inteiro | A-189 | não aplicada: a premissa não confere (ver HISTORY de 2026-11-19) |
 | **472** | Baixa | backend/tag e frontend/tag | Tags: excluir selecionadas e desfazer numa requisição só | A-190 | pendente |
 | **473** | Baixa | frontend/relatorio | Relatório aberto pelo projeto: pedir o projeto, não a lista inteira | A-191 | — |
 | **474** | Baixa | frontend/projeto | Projetos: a visão que está escondida não é carregada | A-192 | — |

@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpResponse } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Subject, catchError, finalize, map, of, switchMap, timer } from 'rxjs';
+import { Subject, Subscription, catchError, finalize, map, of, switchMap, timer } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { Select } from 'primeng/select';
@@ -161,6 +161,8 @@ export class RelatorioExecucaoPage implements OnInit {
             this.projetoIdEscolhido.set(this.formulario.getRawValue().projetoId);
             this.sincronizado.set(false);
             this.revisao.set(null);
+            // Mudar o filtro cancela a revisão em andamento: a chamada de IA (lenta e paga) é inútil e a resposta do período antigo não pode aparecer ao lado do relatório novo (task 467).
+            this.revisaoEmCurso?.unsubscribe();
             this.pedidoPreview.next(ATRASO_MUDANCA_FILTRO_MS);
         });
 
@@ -246,13 +248,16 @@ export class RelatorioExecucaoPage implements OnInit {
             });
     }
 
+    private revisaoEmCurso: Subscription | null = null;
+
     revisarComIa(): void {
         const params = this.parametrosExibidos();
         if (!params || !this.podeExportar()) return;
 
         this.painelAberto.set(true);
         this.carregandoRevisao.set(true);
-        this.relatorioService
+        this.revisaoEmCurso?.unsubscribe();
+        this.revisaoEmCurso = this.relatorioService
             .revisarRelatorio(params)
             .pipe(finalize(() => this.carregandoRevisao.set(false)))
             .subscribe({

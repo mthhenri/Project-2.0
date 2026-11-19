@@ -1,3 +1,4 @@
+import { tap } from 'rxjs';
 import { Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -173,10 +174,29 @@ export class PromptsAbaComponent implements OnInit {
             next: (resposta) => {
                 this.operando.set(false);
                 this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: resposta.mensagem });
-                this.carregarTipos(tipo);
+                // A resposta é o rascunho gravado: aplica-se no tipo, sem reler nada (task 468); o histórico descarta rascunhos, então a lista de versões não muda.
+                if (resposta.dados) this.aplicarRascunho(tipo, resposta.dados);
+                else this.carregarTipos(tipo);
             },
             error: () => this.operando.set(false),
         });
+    }
+
+    /** Põe o rascunho (ou nenhum) no tipo e refaz o editor a partir dele; sem rascunho, o editor volta ao texto da ativa. */
+    private aplicarRascunho(tipo: TipoPromptEnum, rascunho: PromptResumoDto | null): void {
+        this.tipos.update((lista) => lista.map((item) => (item.tipo === tipo ? { ...item, rascunho } : item)));
+        const resumo = this.tipos().find((item) => item.tipo === tipo);
+        this.preencherEditor(resumo?.rascunho?.conteudo ?? resumo?.ativa.conteudo ?? '');
+    }
+
+    /** Passa a versão ativa do tipo e a marca na lista local (a que estava ativa deixa de ser); `descartaRascunho` quando a ativação consumiu o rascunho. */
+    private aplicarAtiva(tipo: TipoPromptEnum, ativa: PromptResumoDto, descartaRascunho: boolean): void {
+        this.tipos.update((lista) => lista.map((item) => (item.tipo === tipo ? { ...item, ativa, rascunho: descartaRascunho ? null : item.rascunho } : item)));
+        const existe = this.versoes().some((versao) => versao.id === ativa.id);
+        this.versoes.update((lista) => [...(existe ? [] : [ativa]), ...lista].map((versao) => (versao.id === ativa.id ? ativa : { ...versao, ativo: false })).sort((anterior, seguinte) => seguinte.versao - anterior.versao));
+        this.versaoVista.set(null);
+        const resumo = this.tipos().find((item) => item.tipo === tipo);
+        this.preencherEditor(resumo?.rascunho?.conteudo ?? resumo?.ativa.conteudo ?? '');
     }
 
     ativarRascunho(): void {
@@ -199,7 +219,9 @@ export class PromptsAbaComponent implements OnInit {
             next: (resposta) => {
                 this.operando.set(false);
                 this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: resposta.mensagem });
-                this.carregarTipos(tipo);
+                // O rascunho virou a versão ativa: a resposta é essa versão (task 468).
+                if (resposta.dados) this.aplicarAtiva(tipo, resposta.dados, true);
+                else this.carregarTipos(tipo);
             },
             error: () => this.operando.set(false),
         });
@@ -222,7 +244,9 @@ export class PromptsAbaComponent implements OnInit {
                     next: (resposta) => {
                         this.operando.set(false);
                         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: resposta.mensagem });
-                        this.carregarTipos(tipo);
+                        // A versão 1 volta a ser a ativa (o rascunho não muda): a resposta é essa versão (task 468).
+                        if (resposta.dados) this.aplicarAtiva(tipo, resposta.dados, false);
+                        else this.carregarTipos(tipo);
                     },
                     error: () => this.operando.set(false),
                 });
@@ -239,11 +263,10 @@ export class PromptsAbaComponent implements OnInit {
         this.promptService.descartarRascunho(tipo).subscribe({
             next: () => {
                 this.operando.set(false);
-                this.carregarTipos(tipo);
+                this.aplicarRascunho(tipo, null);
                 this.desfazerService.oferecer({
                     mensagem: 'Rascunho descartado',
-                    desfazer: () => this.promptService.salvarRascunho(tipo, { conteudo: rascunho.conteudo }),
-                    aposDesfazer: () => this.carregarTipos(tipo),
+                    desfazer: () => this.promptService.salvarRascunho(tipo, { conteudo: rascunho.conteudo }).pipe(tap((resposta) => resposta.dados && this.aplicarRascunho(tipo, resposta.dados))),
                 });
             },
             error: () => this.operando.set(false),

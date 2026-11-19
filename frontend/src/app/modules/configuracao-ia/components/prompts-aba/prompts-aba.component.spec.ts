@@ -148,7 +148,7 @@ describe('PromptsAbaComponent — rascunho', () => {
         expect(textoDaTela()).not.toContain('Alterações não salvas');
     });
 
-    it('"Salvar rascunho" faz POST em /prompt/:tipo/rascunho, avisa o sucesso e recarrega: o rascunho passa a "Salvo" e pode ser ativado', async () => {
+    it('"Salvar rascunho" faz POST em /prompt/:tipo/rascunho, avisa o sucesso e aplica a resposta sem reler: o rascunho passa a "Salvo" e pode ser ativado', async () => {
         const montado = await abrir();
         const avisos = avisosDe(montado);
         montado.componente.controleRascunho.setValue('Texto novo da conversa');
@@ -157,12 +157,10 @@ describe('PromptsAbaComponent — rascunho', () => {
         botao('Salvar rascunho').click();
         const requisicao = esperarRequisicao(montado.http, 'POST', '/prompt/CONVERSA/rascunho');
         expect(requisicao.request.body).toEqual({ conteudo: 'Texto novo da conversa' });
-        responderSucesso(requisicao, { id: 9 });
+        // A resposta é o rascunho gravado: o tipo o recebe e nenhuma leitura sai (task 468).
+        responderSucesso(requisicao, versao(TipoPromptEnum.CONVERSA, 4, 'Texto novo da conversa', { rascunho: true }));
         await montado.atualizar();
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/prompt'), TIPOS('Texto novo da conversa'));
-        await montado.atualizar();
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/prompt/CONVERSA/versoes'), { itens: VERSOES_CONVERSA });
-        await montado.atualizar();
+        montado.http.expectNone((pedido) => pedido.method === 'GET');
 
         expect(avisos.some((aviso) => aviso.severity === 'success')).toBe(true);
         expect(textoDaTela()).toContain('Salvo');
@@ -193,16 +191,16 @@ describe('PromptsAbaComponent — rascunho', () => {
         expect(oferta?.mensagem).toBe('Rascunho descartado');
         desfazer.dispensarSemEncerrar();
         await montado.atualizar();
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/prompt'), TIPOS());
-        await montado.atualizar();
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/prompt/CONVERSA/versoes'), { itens: VERSOES_CONVERSA });
-        await montado.atualizar();
+        montado.http.expectNone((pedido) => pedido.method === 'GET'); // descartar não relê (task 468)
         expect(textoDaTela()).toContain('Sem rascunho');
 
         oferta?.desfazer().subscribe();
         const regravacao = esperarRequisicao(montado.http, 'POST', '/prompt/CONVERSA/rascunho');
         expect(regravacao.request.body).toEqual({ conteudo: 'Rascunho da conversa' });
-        responderSucesso(regravacao, { id: 9 });
+        responderSucesso(regravacao, versao(TipoPromptEnum.CONVERSA, 4, 'Rascunho da conversa', { rascunho: true }));
+        await montado.atualizar();
+        montado.http.expectNone((pedido) => pedido.method === 'GET'); // o desfazer aplica a resposta da regravação
+        expect(textoDaTela()).toContain('Salvo');
     });
 });
 
@@ -218,12 +216,14 @@ describe('PromptsAbaComponent — ativar e restaurar o padrão', () => {
 
         botaoExato('Ativar').click();
         const requisicao = esperarRequisicao(montado.http, 'POST', '/prompt/CONVERSA/rascunho/ativar');
-        responderSucesso(requisicao, { id: 9 });
+        responderSucesso(requisicao, versao(TipoPromptEnum.CONVERSA, 4, 'Rascunho da conversa', { ativo: true }));
         await montado.atualizar();
         expect(avisos.some((aviso) => aviso.severity === 'success')).toBe(true);
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/prompt'), TIPOS());
-        await montado.atualizar();
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/prompt/CONVERSA/versoes'), { itens: VERSOES_CONVERSA });
+        // A resposta é a versão ativada: vira a ativa e entra no topo do histórico, sem leitura (task 468).
+        montado.http.expectNone((pedido) => pedido.method === 'GET');
+        expect(montado.componente.tipoAtual()?.ativa.versao).toBe(4);
+        expect(montado.componente.tipoAtual()?.rascunho).toBeNull();
+        expect(montado.componente.versoesNavegaveis().map((item) => [item.versao, item.ativo])).toEqual([[4, true], [3, false], [2, false], [1, false]]);
     });
 
     it('cancelar a confirmação de ativação não faz requisição', async () => {
@@ -244,11 +244,11 @@ describe('PromptsAbaComponent — ativar e restaurar o padrão', () => {
         montado.http.expectNone((requisicao) => requisicao.url.endsWith('/restaurar-padrao'));
 
         botaoExato('Restaurar').click();
-        responderSucesso(esperarRequisicao(montado.http, 'POST', '/prompt/CONVERSA/restaurar-padrao'), { id: 1 });
+        responderSucesso(esperarRequisicao(montado.http, 'POST', '/prompt/CONVERSA/restaurar-padrao'), versao(TipoPromptEnum.CONVERSA, 1, 'Texto original v1', { ativo: true }));
         await montado.atualizar();
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/prompt'), TIPOS());
-        await montado.atualizar();
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/prompt/CONVERSA/versoes'), { itens: VERSOES_CONVERSA });
+        montado.http.expectNone((pedido) => pedido.method === 'GET'); // task 468
+        expect(montado.componente.tipoAtual()?.ativa.versao).toBe(1);
+        expect(montado.componente.versoesNavegaveis().map((item) => [item.versao, item.ativo])).toEqual([[3, false], [2, false], [1, true]]);
     });
 
     it('com a versão 1 já ativa, "Restaurar padrão" fica desabilitado', async () => {

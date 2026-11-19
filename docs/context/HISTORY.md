@@ -13,6 +13,17 @@
 ---
 
 
+## 2026-11-19 — Tasks 467, 468 e 469 (e a 471, que não se aplica): relatório, prompts e configurações da IA aplicam a resposta em vez de reler
+
+Da revisão de requisições e de permissões (achados A-185, A-186, A-187 e A-189).
+
+- **467 (A-185):** `RelatorioExecucaoPage` guarda a assinatura da revisão por IA e a cancela quando o filtro muda (e antes de uma revisão nova): a chamada de IA, lenta e paga, não segue sem utilidade e a revisão do período antigo não aparece mais ao lado do relatório novo.
+- **468 (A-186):** na aba Prompts, salvar rascunho aplica a resposta (o rascunho gravado) no tipo; ativar rascunho e restaurar padrão aplicam a versão devolvida como a ativa (`aplicarAtiva`: marca a anterior como inativa, põe a versão no topo do histórico local quando não está lá, e o ativar consome o rascunho, o restaurar não o toca, que é o que o servidor faz); descartar tira o rascunho; o "Desfazer" do toast aplica a resposta da regravação (`tap`), sem `aposDesfazer`. Nenhuma mutação faz mais `GET /prompt` nem `GET /prompt/:tipo/versoes`; a releitura fica na abertura e no botão de recarregar.
+- **469 (A-187):** salvar uma versão em Configurações da IA aplica o que o `POST /configuracao-ia` devolveu (ativa, topo do histórico, formulário) e só relê `GET /ia/estado`, o único dado que pode ter mudado; antes eram três `GET`.
+- **471 (A-189) não foi aplicada, e a spec continua no backlog:** a premissa do achado não confere. O teste existente da tela (`modelagem.page.spec.ts`: "mover a tabela de grupo pelo painel…") registra que as tabelas que herdam o grupo de quem se mexeu (as `tipo_*`) só mudam relendo o diagrama, e a resposta do `PUT` traz só a tabela movida (`nome`, `grupoId`, `x`, `y`). Aplicar só a resposta deixaria as `tipo_*` com o grupo antigo na tela até o próximo F5. Se o autor quiser mesmo cortar a releitura, o caminho é o servidor devolver também as tabelas afetadas (decisão de contrato, `shared/`); a spec fica aberta para isso.
+- **Testes:** relatório (cancela a revisão pendente), configurações da IA (salvar sem GET da ativa nem do histórico), prompts (os cinco fluxos sem `GET`, com o histórico local em ordem): 108 testes nos três arquivos passando; `npm run lint:tudo` e build sem erro.
+- **Não verificado ao vivo:** nenhum dos três (revisão por IA e prompts exigem administrador e IA; só o teste de componente cobre).
+
 ## 2026-11-19 — Tasks 444, 445 e 449: o chat com a IA e o plano deixam de reler listas à toa
 
 Da revisão de requisições e de permissões (achados A-156 a A-158 e A-162), todos em `modules/chat`.

@@ -192,6 +192,23 @@ describe('ConfiguracaoIaPage — editar e salvar', () => {
         montado.http.expectNone((requisicao) => requisicao.method === 'POST');
     });
 
+    it('salvar aplica a versão que o POST devolveu e só relê o estado da IA: nada de GET da ativa nem do histórico (task 469)', async () => {
+        const montado = await abrir();
+        montado.componente.formulario.controls.cadeiaAnalitico.at(0).patchValue({ esforco: EsforcoIaEnum.ALTO });
+        await montado.atualizar();
+        botao('Salvar nova versão').click();
+        const nova = versao(4, { cadeiaAnalitico: [{ ...item(A, 'claude-opus-5-5'), esforco: EsforcoIaEnum.ALTO }] });
+        responderSucesso(esperarRequisicao(montado.http, 'POST', '/configuracao-ia'), nova);
+        await montado.atualizar();
+
+        const leituras = montado.http.match(() => true).map((pedido) => `${pedido.request.method} ${pedido.request.url.replace(/^.*\/api\/v1/, '').split('?')[0]}`);
+        expect(leituras.filter((leitura) => leitura.includes('/configuracao-ia')), 'nenhuma leitura da ativa nem do histórico').toEqual([]);
+        expect(leituras).toContain('GET /ia/estado');
+        expect(montado.componente.ativa()?.id).toBe(4);
+        expect(montado.componente.versoes()[0].id).toBe(4);
+        expect(montado.componente.semAlteracoes()).toBe(true);
+    });
+
     it('adicionar contingência põe o próximo provedor livre no fim da cadeia, e o POST leva as três cadeias', async () => {
         const montado = await abrir();
         (document.body.querySelector('[aria-label="Adicionar contingência ao nível Rápido"]') as HTMLButtonElement).click();
@@ -289,7 +306,7 @@ describe('ConfiguracaoIaPage — editar e salvar', () => {
         montado.http.expectNone((requisicao) => requisicao.method === 'POST');
     });
 
-    it('salvar faz POST em /configuracao-ia com os nomes aparados, avisa o sucesso e recarrega mostrando a versão nova', async () => {
+    it('salvar faz POST em /configuracao-ia com os nomes aparados, avisa o sucesso e mostra a versão nova', async () => {
         const montado = await abrir();
         const avisos = avisosDe(montado);
         montado.componente.formulario.controls.cadeiaPadrao.at(0).patchValue({ modelo: '  claude-sonnet-5-6 ' });
@@ -302,13 +319,11 @@ describe('ConfiguracaoIaPage — editar e salvar', () => {
             iaDesligada: true, checkinMinimoMinutos: 20, checkinMaximoMinutos: 40,
             cadeiaPadrao: [item(A, 'claude-sonnet-5-6')],
         });
-        responderSucesso(requisicao, { id: 4, versao: 4 });
+        // A resposta traz a versão criada: a tela a aplica sem reler a ativa nem o histórico (task 469).
+        const nova = versao(4, { cadeiaPadrao: [item(A, 'claude-sonnet-5-6')], iaDesligada: true });
+        responderSucesso(requisicao, nova);
         await montado.atualizar();
         expect(avisos.some((aviso) => aviso.severity === 'success')).toBe(true);
-
-        const nova = versao(4, { cadeiaPadrao: [item(A, 'claude-sonnet-5-6')], iaDesligada: true });
-        responderCarga(montado, { ativa: nova, historico: [nova, ...HISTORICO] });
-        await montado.atualizar();
 
         expect(textoDaTela()).toContain('versão 4 ativa');
         expect(textoDaTela()).toContain('Nada a salvar: o formulário é igual à versão 4.');
