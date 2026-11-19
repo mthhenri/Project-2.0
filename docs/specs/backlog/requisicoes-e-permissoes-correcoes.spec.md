@@ -124,7 +124,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **373** | Alta | backend/atividade | Atividade: desenvolvedor membro da demanda não altera a atividade nem as tags de um colega | A-072 | decidida e feita |
 | **374** | Alta | backend/execucao | `PUT /execucao/:id` não reabre nem move execução criando duas ativas ou sobreposição | A-073 | — |
 | **375** | Média | backend/execucao | Execução: conferir a permissão antes de responder regra de negócio | A-074 | — |
-| **376** | Média | backend/atividade | `POST /atividade`: recusar dono que o tipo não pode escolher e validar o dono informado | A-075 | — |
+| **376** | Média | backend/atividade | `POST /atividade`: recusar dono que o tipo não pode escolher e validar o dono informado | A-075 | feita |
 | **377** | Média | backend/atividade | Atividade: o dono que não é membro da demanda lê o que consegue alterar | A-076 | decidida e feita |
 | **378** | Média | backend/atividade | Excluir e restaurar atividade: a rota e a IA com a mesma regra | A-077 | decidida e feita |
 | **379** | Baixa | backend/execucao | Execução: registrar e excluir conferem a permissão na service, não só no decorador | A-078 | — |

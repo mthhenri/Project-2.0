@@ -13,6 +13,15 @@
 ---
 
 
+## 2026-11-19 — Task 376: `POST /atividade` recusa o dono que o tipo não pode escolher e valida o dono informado
+
+Da revisão de requisições e de permissões (achado A-075), decisão do autor de 2026-11-19 (seguir a regra da spec). Auxiliar e desenvolvedor que mandavam `usuarioId` de outra pessoa levavam 201 com a atividade no próprio nome, sem aviso; o dono escolhido por gestor ou administrador só era conferido quanto à existência e ao vínculo com a demanda, não quanto a estar ativo.
+
+- **backend:** `AtividadeService.criar` responde `UnauthorizedAccessException` (403, "Só o gestor cria atividade para outra pessoa") quando `usuarioId` é de outra pessoa e o usuário do token não tem permissão de gestor; o dono escolhido precisa existir (404 se não) e estar **ativo** (`BusinessException`, 400: "<nome> está inativo e não recebe atividades"). O excluído já caía no 404 (`recuperar` filtra `is_deleted`). A cópia da recusa saiu de `CriarAtividadeExecutor.executar` (a service é a fonte única). A `ProporCriarAtividadeFerramenta` **manteve** a recusa e a checagem do dono na hora de propor: ela monta o cartão com o nome do dono e devolve a mensagem ao modelo antes de a pessoa ser incomodada, e não é só validação (decisão minha: a spec pedia tirar a duplicação, mas aqui a leitura serve ao cartão).
+- **frontend:** nada a mudar: `atividade-formulario` já só manda `usuarioId` quando `sessao.eGestor()`.
+- **Testes:** `atividade.service.regras.test.ts`: os dois testes que fixavam "o dono pedido é ignorado" viraram "pedir outro dono é 403 sem gravar" (desenvolvedor e auxiliar, também com o dono igual a si, que continua valendo) e um novo para dono inativo (400); módulo atividade 151 passando; `npm run lint:tudo` sem erro.
+- **Ao vivo (API real):** desenvolvedor com `usuarioId` do gestor: 403; com o próprio id: 201; gestor com um usuário recém-criado e inativado: 400 "Inativo Teste está inativo e não recebe atividades".
+
 ## 2026-11-19 — Chat em grupo: histórico dos resumos da IA ("Resumos anteriores")
 
 Pedido do autor: no chat em grupo, depois de pedir um resumo à IA e fechar o diálogo, o resumo se perdia e não havia onde ver os resumos já feitos. A causa era uma decisão da task 249: o texto não era guardado (só a linha de `grupo_resumo`). Decisão do autor (2026-11-19), entre três opções: **guardar o texto em coluna de `grupo_resumo`**.
