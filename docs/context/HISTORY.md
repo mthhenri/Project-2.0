@@ -13,6 +13,15 @@
 ---
 
 
+## 2026-11-19 — Task 345: busca e filtro de Usuários previsíveis (paginador, termo repetido e carga anterior)
+
+Da revisão de requisições (achados A-032, A-033 e A-034). `aoMudarFiltro()` zerava `paginaAtual` mas a `p-table` lazy guarda o próprio `first`, que a tela não ligava: buscar fora da página 1 podia disparar uma segunda `GET /usuario?pagina=N` (o paginador recuava sozinho quando o novo total era menor ou igual ao `first` antigo) ou deixar o paginador na página antiga; o `distinctUntilChanged()` sobre o campo descartava o mesmo termo digitado de novo depois de "Limpar"; e cada carga abria uma requisição sem cancelar a anterior.
+
+- **frontend:** `[first]="primeiroRegistro()"` na tabela (sinal atualizado por `aoCarregarTabela` e zerado em `aoMudarFiltro`); a busca compara o termo com o **termo aplicado** (`termoBusca()`), no lugar do `distinctUntilChanged()`; `buscarUsuarios()` guarda a assinatura (`cargaEmCurso`) e cancela a anterior antes de pedir.
+- **Testes de componente (5):** buscar na página 3 (total 15, menor que o `first` antigo) faz 1 GET e marca a página 1; mudar o filtro fora da página 1 idem; "Limpar" + mesmo termo busca de novo; o mesmo termo sem "Limpar" não repete; carga nova cancela a anterior. Nota: o `debounceTime` do rxjs lê `Date.now()`, então o teste precisa simular `Date` além dos temporizadores. Frontend completo, `npm run lint:tudo` e build no fecho.
+- **Ao vivo (Playwright, `1920×1080`, gestor, 28 usuários, 15 com "alfa"):** página 3, busca "alfa": **1 `GET /usuario`**, paginador na **página 1**; "Limpar" e "alfa" de novo busca. **Contraprova** (página do `HEAD`, restaurada depois): **2 GETs**, paginador na **página 2** e o termo repetido **não busca** — as três falhas da auditoria reproduzidas.
+- **Fora de escopo, como a spec manda:** as outras telas com `p-table` lazy podem ter o mesmo defeito do paginador; não foram verificadas aqui.
+
 ## 2026-11-19 — Task 344: o pad volta ao estado de partida ao ser encerrado
 
 Da revisão de requisições (achados A-030 e A-031). `PadService.encerrar()` (chamado ao destruir o diálogo de anotações, inclusive o da tela Usuários, a cada saída de `/usuario`) cancelava a assinatura de cada seção mas deixava `secoes()` e `usuarioId()`; `garantirCarregado` do mesmo usuário então não relia, e o painel de Documentações e a aba Anotações do chat mostravam seções sem assinatura (digitar não agendava o PUT, o rodapé não virava "Editando…"). Além disso, se a carga do pad do usuário seguinte falhasse, ficava à mostra o pad do anterior.

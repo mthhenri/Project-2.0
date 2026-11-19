@@ -85,7 +85,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | Task | Severidade | Área | Entrega | Achados | Decisão |
 |---|---|---|---|---|---|
 | **344** | Média | frontend/pad | Pad: encerrar zera o estado, para voltar a gravar e não mostrar o pad de outro usuário | A-030, A-031 | feita |
-| **345** | Média | frontend/usuario | Usuários: busca e filtro voltam o paginador, aceitam o termo repetido e cancelam a carga anterior | A-032, A-033, A-034 | — |
+| **345** | Média | frontend/usuario | Usuários: busca e filtro voltam o paginador, aceitam o termo repetido e cancelam a carga anterior | A-032, A-033, A-034 | feita |
 | **346** | Baixa | frontend/documentacao | Documentações: conflito de versão não mostra também "Erro interno" | A-035 | — |
 | **347** | Baixa | frontend/usuario | Usuários: editar usa a resposta do `PUT` em vez de recarregar a lista | A-036, A-037 | — |
 | **348** | Baixa | frontend/documentacao | Documentações: carregar o pad só quando ele está à vista | A-038 | — |
