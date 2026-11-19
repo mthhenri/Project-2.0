@@ -336,7 +336,6 @@ export class AtividadeDetalhePage implements OnInit {
 
     private carregarTudo(id: number): void {
         this.carregando.set(true);
-        this.execucaoAtiva.carregar();
         forkJoin({
             atividade: this.atividadeService.recuperar(id),
             tags:      this.atividadeService.listarTags(id),

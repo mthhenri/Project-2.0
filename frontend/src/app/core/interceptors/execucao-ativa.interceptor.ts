@@ -24,7 +24,7 @@ export const execucaoAtivaInterceptor: HttpInterceptorFn = (requisicao, proximo)
     const execucaoAtiva = inject(ExecucaoAtivaService);
     return proximo(requisicao).pipe(
         tap((evento) => {
-            if (evento.type === HttpEventType.Response) execucaoAtiva.carregar();
+            if (evento.type === HttpEventType.Response) execucaoAtiva.carregar({ forcar: true });
         }),
     );
 };

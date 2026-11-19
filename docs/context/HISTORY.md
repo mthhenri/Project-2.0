@@ -13,6 +13,14 @@
 ---
 
 
+## 2026-11-19 — Task 331: execução ativa lida com guarda (foco e volta à aba)
+
+Da revisão de requisições (achados A-007 e A-008). Cada foco da janela disparava `GET /execucao/ativa` sem guarda; voltar de uma aba oculta disparava duas iguais (topbar com `visibilitychange` e `window:focus`) mais um `GET /checkin/situacao` da janelinha; o detalhe da atividade pedia a sua própria cópia na carga e na volta à aba.
+
+- **frontend:** `ExecucaoAtivaService.carregar({ forcar })` não abre consulta nova com outra em curso e, sem `forcar`, pula a releitura se a última resposta tem menos de 5 s (`JANELA_DE_FRESCOR_MS`, como o `IaDisponibilidadeService`). Só a resposta que chegou conta como fresca: depois de falha a próxima tentativa não espera. Decisão de desenho (sugestão aceita pelo autor): `forcar` com consulta em curso não duplica, mas agenda **uma** releitura ao fim, porque a resposta em voo pode ser anterior à mudança. O interceptor de execução e o chat (proposta executada) passam `forcar`; a topbar e o detalhe, não. O detalhe deixou de pedir na carga (o estado vem do boot e é mantido pelo interceptor) e segue sem `forcar` na volta à aba. Novo sinal `jaCarregou`; a janelinha do check-in só confere na volta à aba com execução ativa **ou** antes da primeira resposta (para não pular uma conferência necessária). `limpar()` zera a janela de frescor.
+- **Testes:** 7 novos no serviço (consulta em curso, janela, `forcar`, releitura ao fim, falha, `jaCarregou`), 1 na topbar (foco e volta logo após o boot não repetem), 1 na janelinha (sem execução carregada não confere; com execução confere); specs do detalhe e da topbar ajustados (o detalhe recebe o estado já carregado). Frontend 2906 passando; `npm run lint:tudo` e build do frontend sem erro.
+- **Não verificado:** o critério ao vivo (3 focos seguidos geram no máximo 1 `GET /execucao/ativa`; voltar de aba oculta sem execução gera 1 e nenhum `GET /checkin/situacao`) não foi executado; a task fica com a verificação ao vivo em aberto.
+
 ## 2026-11-19 — Task 332: leituras de fundo da casca falham em silêncio
 
 Da revisão de requisições (achado A-009). As leituras que a casca faz sozinha usavam `comFeedbackProprio()`, que só desliga o overlay; o `errorHandlerInterceptor` seguia mostrando "Erro interno. Tente novamente." (um por minuto pela barra lateral, um por foco, um a cada 3 s com o check-in aberto) quando o backend caía.

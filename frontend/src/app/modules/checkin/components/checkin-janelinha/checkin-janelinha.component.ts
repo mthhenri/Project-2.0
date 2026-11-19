@@ -42,7 +42,8 @@ export class CheckinJanelinhaComponent implements OnInit {
             if (this.execucaoAtiva.ativa() !== null) this.conferir();
         }, INTERVALO_DE_SEGURANCA_MS);
         const aoVoltar = () => {
-            if (document.visibilityState === 'visible') this.conferir();
+            // Sem execução ativa não há check-in a conferir; antes da primeira resposta "sem execução" ainda não é informação.
+            if (document.visibilityState === 'visible' && (this.execucaoAtiva.ativa() !== null || !this.execucaoAtiva.jaCarregou())) this.conferir();
         };
         document.addEventListener('visibilitychange', aoVoltar);
 

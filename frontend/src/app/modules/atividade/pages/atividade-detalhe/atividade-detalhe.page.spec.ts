@@ -64,8 +64,8 @@ interface Carga {
 /** Atende a carga inicial da tela (prioridades, execução ativa, atividade, tags, todas as tags e execuções). */
 async function carregar(montado: Montado, { atividade = criarAtividade(), execucoes = [], tags = [], execucaoAtiva = null }: Carga = {}): Promise<void> {
     for (const requisicao of montado.http.match((resultadoSeguinte) => resultadoSeguinte.method === 'GET' && resultadoSeguinte.url.endsWith('/atividade-prioridade'))) responderSucesso(requisicao, [PRIORIDADE]);
-    const ativa = esperarRequisicao(montado.http, 'GET', '/execucao/ativa');
-    responderSucesso(ativa, execucaoAtiva);
+    // A execução ativa vem do boot da casca (a tela não a relê ao abrir): o teste entrega o estado já carregado.
+    TestBed.inject(ExecucaoAtivaService).definir(execucaoAtiva as never);
     responderSucesso(esperarRequisicao(montado.http, 'GET', `/atividade/${atividade.id}`), atividade);
     responderSucesso(esperarRequisicao(montado.http, 'GET', `/atividade/${atividade.id}/tag`), tags);
     responderSucesso(montado.http.expectOne((resultadoAtual) => resultadoAtual.method === 'GET' && /\/tag$/.test(resultadoAtual.url) && !resultadoAtual.url.includes('/atividade/')), tags);

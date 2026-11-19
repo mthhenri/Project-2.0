@@ -69,7 +69,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 |---|---|---|---|---|---|
 | **487** | Alta | desktop | Project Desktop: conferir o check-in pelo horário sorteado, não a cada 15 s | A-001, A-002, A-003, A-004 | — |
 | **330** | Média | frontend/casca | Disponibilidade da IA: não consultar a cada 60 s com a aba oculta | A-005, A-006 | pendente |
-| **331** | Média | frontend/casca | Execução ativa: foco e volta à aba não disparam consultas repetidas | A-007, A-008 | — |
+| **331** | Média | frontend/casca | Execução ativa: foco e volta à aba não disparam consultas repetidas | A-007, A-008 | feita |
 | **332** | Média | frontend/casca | Leituras automáticas da casca não mostram o toast global de erro | A-009 | feita |
 | **333** | Média | frontend/checkin | Check-in aberto: conferir a situação por evento, não a cada 3 s | A-010 | pendente |
 | **334** | Média | backend/checkin | Backend: `GET /checkin/situacao` não lista todas as execuções da atividade | A-011 | pendente |

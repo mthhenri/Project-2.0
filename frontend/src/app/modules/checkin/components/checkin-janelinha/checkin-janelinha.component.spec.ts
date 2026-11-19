@@ -252,6 +252,20 @@ describe('CheckinJanelinhaComponent — conferência periódica', () => {
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ disparado: false }));
     });
 
+    it('ao voltar para a aba sem execução ativa (já carregada) não confere; com execução ativa confere', async () => {
+        const montado = await montarJanelinha({ situacao: situacao({ disparado: false }) });
+        const execucaoAtiva = TestBed.inject(ExecucaoAtivaService);
+        execucaoAtiva.carregar({ forcar: true });
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/execucao/ativa'), null);
+
+        document.dispatchEvent(new Event('visibilitychange'));
+        montado.http.expectNone(URL_SITUACAO);
+
+        execucaoAtiva.definir({ id: 9, atividadeId: 4 } as ExecucaoAtivaDto);
+        document.dispatchEvent(new Event('visibilitychange'));
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ disparado: false }));
+    });
+
     it('aba oculta não confere', async () => {
         const montado = await montarJanelinha({ situacao: situacao({ disparado: false }) });
         const visibilidade = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');

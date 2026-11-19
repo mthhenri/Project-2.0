@@ -41,6 +41,7 @@ const botaoPorTexto = (rotulo: string) =>
 
 afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
     document.querySelectorAll('.p-popover').forEach((popover) => popover.remove());
     localStorage.removeItem('tema');
 });
@@ -79,9 +80,23 @@ describe('TopbarComponent — conteúdo', () => {
     });
 });
 
+/** O boot acabou de ler a execução ativa: foco e volta à aba só releem depois da janela de frescor do serviço. */
+function passarDaJanelaDeFrescor(): void {
+    const agora = Date.now();
+    vi.spyOn(Date, 'now').mockReturnValue(agora + 10_000);
+}
+
 describe('TopbarComponent — execução ativa e retorno à aba', () => {
+    it('foco e volta à aba logo depois do boot não repetem a leitura', async () => {
+        const montado = await montarBarra();
+        window.dispatchEvent(new Event('focus'));
+        document.dispatchEvent(new Event('visibilitychange'));
+        montado.http.expectNone((requisicao) => requisicao.url.endsWith('/execucao/ativa'));
+    });
+
     it('voltar a ver a aba (visibilitychange) confere a execução ativa de novo', async () => {
         const montado = await montarBarra();
+        passarDaJanelaDeFrescor();
         document.dispatchEvent(new Event('visibilitychange'));
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/execucao/ativa'), ATIVA);
         await montado.atualizar();
@@ -90,6 +105,7 @@ describe('TopbarComponent — execução ativa e retorno à aba', () => {
 
     it('o foco da janela também confere a execução ativa de novo', async () => {
         const montado = await montarBarra();
+        passarDaJanelaDeFrescor();
         window.dispatchEvent(new Event('focus'));
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/execucao/ativa'), null);
     });
