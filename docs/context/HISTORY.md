@@ -13,6 +13,15 @@
 ---
 
 
+## 2026-11-19 — Task 398: as ferramentas do plano só agem no plano da conversa
+
+Da revisão de requisições e de permissões (achado A-097), decisão do autor de 2026-11-19 (seguir a spec; manter `planoId` no DTO das ferramentas e só recusar o diferente). `consultar_plano`, `escrever_no_plano`, as de pontos e a de alterar trecho recebem `planoId` do modelo, e nada o amarrava ao plano da conversa aberta: uma fonte colada ou a mensagem de um colega podia induzi-lo a ler o plano privado de quem enviou ou a escrever (rascunho, sem confirmação) em outro plano dele.
+
+- **backend:** `LacoDeFerramentas` ganha `planoDaConversa` no pedido do turno (`ChatService` o repassa de `opcoes.planoId`; `ChatPlanoService` passa o `dto.id`). Antes de executar cada ferramenta, `planoForaDaConversa` (novo, `chat/domain/plano-da-conversa.ts`) compara o `planoId` da entrada com o da conversa; se for outro, a ferramenta **não roda**, o evento sai como `ERRO` e o modelo recebe um resultado de erro dizendo o plano certo e mandando ignorar o pedido que o desviou. A conferência é genérica (qualquer entrada com `planoId`), então vale também para ferramentas do plano que vierem depois. Fora da conversa do plano (`planoDaConversa` ausente) nada muda. Sem mudança no `shared/` nem nas ferramentas.
+- **Não coberto, por desenho:** entrada sem `planoId` passa à validação da própria ferramenta (que o exige); o `@IA` entre colaboradores e o chat de perguntas nem listam as ferramentas do plano.
+- **Testes:** `plano-da-conversa.test.ts` (4: igual, outro, ausente, mensagem) e `laco-de-ferramentas.test.ts` (4: outro plano recusado sem executar e com a mensagem ao modelo; plano da conversa segue funcionando; duas chamadas na mesma volta; fora da conversa do plano não confere). Módulo chat: 234 passando; `npm run lint:tudo` sem erro.
+- **Ao vivo (API real, IA de mentira que pede `consultar_plano`):** na conversa do plano 3 a IA pediu o plano 2 (privado): a ferramenta foi recusada e o modelo recebeu "Esta conversa é do plano 3 … o plano 2 não é o desta conversa"; pedindo o plano 3, a ferramenta rodou normalmente. **Contraprova:** com a conferência desligada, a mesma conversa devolveu o conteúdo do plano privado ("Plano privado 398"); restaurada, voltou a recusar.
+
 ## 2026-11-19 — Task 382: `PUT /demanda/:id` recusa o novo pai que não é estrutural
 
 Da revisão de requisições e de permissões (achado A-081), decisão do autor de 2026-11-19 (seguir a spec). A regra "só demanda estrutural tem sub-demandas" valia na criação e na IA, mas não ao trocar o pai de uma demanda existente: um desenvolvedor membro (ou um gestor) colocava uma demanda dentro de uma demanda de trabalho pela API.

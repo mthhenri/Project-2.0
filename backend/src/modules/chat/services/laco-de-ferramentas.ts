@@ -4,6 +4,7 @@ import { OrigemDaFerramentaIa } from '../../ferramenta-ia/domain/ferramenta-ia';
 import { FerramentaIaRegistro } from '../../ferramenta-ia/services/ferramenta-ia.registro';
 import { IaBloco, IaFerramenta, IaMensagem } from '../../ia/domain/ia.tipos';
 import { IaService } from '../../ia/services/ia.service';
+import { planoForaDaConversa, recusaDePlanoForaDaConversa } from '../domain/plano-da-conversa';
 import { separadorEntreVoltas } from '../domain/separador-entre-voltas';
 
 /** Voltas de ferramenta por mensagem do usuário: cada volta é uma chamada ao modelo. */
@@ -22,6 +23,11 @@ export interface TurnoComFerramentasPedido {
     maximoTokens: number;
     pesquisaWeb: boolean;
     origem: OrigemDaFerramentaIa;
+    /**
+     * O plano da conversa, quando ela é a de um plano (escopo `PLANEJAMENTO`): a ferramenta que trouxer outro `planoId` é recusada sem ser executada
+     * (task 398), porque o `planoId` é escolha do modelo e uma fonte ou a mensagem de um colega pode induzi-lo a mexer em outro plano.
+     */
+    planoDaConversa?: number;
     /** Recebe o id de cada proposta que as ferramentas criarem neste turno, na ordem. */
     propostasDoTurno: number[];
     /** Os eventos do turno (trecho, ferramenta, proposta); quem não transmite passa uma função vazia. */
@@ -97,6 +103,12 @@ export class LacoDeFerramentas {
         for (const bloco of blocos) {
             if (bloco.tipo !== 'uso_ferramenta') continue;
             emitir({ tipo: 'ferramenta', nome: bloco.nome, situacao: 'EXECUTANDO' });
+            const planoInformado = pedido.planoDaConversa === undefined ? null : planoForaDaConversa(bloco.entrada, pedido.planoDaConversa);
+            if (planoInformado !== null && pedido.planoDaConversa !== undefined) {
+                emitir({ tipo: 'ferramenta', nome: bloco.nome, situacao: 'ERRO' });
+                resultados.push({ tipo: 'resultado_ferramenta', usoId: bloco.id, conteudo: recusaDePlanoForaDaConversa(planoInformado, pedido.planoDaConversa), erro: true });
+                continue;
+            }
             const resultado = await this.ferramentaIaRegistro.executar(bloco.nome, bloco.entrada, pedido.usuarioAtivo, pedido.origem);
             emitir({ tipo: 'ferramenta', nome: bloco.nome, situacao: resultado.erro ? 'ERRO' : 'CONCLUIDA' });
             if (resultado.propostaId !== undefined) {

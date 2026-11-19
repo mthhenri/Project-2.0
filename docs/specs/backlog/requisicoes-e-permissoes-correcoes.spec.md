@@ -151,7 +151,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **395** | Baixa | backend/mensagem-direta | Proposta do `@IA` numa conversa: quem tem visão total não vê proposta de tipos pessoais | A-094 | — |
 | **396** | Média | backend/plano | Plano solo de projeto: o criador que perdeu o acesso ao projeto perde o plano | A-095 | decidida e feita |
 | **397** | Média | backend/plano | Plano: marcar "solo" não tira gestor e administrador de arquivar e excluir | A-096 | decidida e feita |
-| **398** | Média | backend/plano e chat | IA no plano: as ferramentas só agem no plano da conversa aberta | A-097 | — |
+| **398** | Média | backend/plano e chat | IA no plano: as ferramentas só agem no plano da conversa aberta | A-097 | feita |
 | **399** | Baixa | backend/plano | Publicar plano na demanda: conferir a permissão de editar antes das outras respostas | A-098 | — |
 | **400** | Baixa | docs e backend/plano | Plano: escrever as regras de permissão no `SYSTEM.SPEC.md` e tirar a sobra da regra antiga | A-099, A-100 | — |
 | **401** | Baixa | backend/plano | Plano: testes de permissão com auxiliar e casos de borda de acesso | A-101 | — |
