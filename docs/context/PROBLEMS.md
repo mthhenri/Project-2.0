@@ -32,6 +32,14 @@
 > P-092 a P-102 (os que seguem abertos; os corrigidos saíram daqui) vêm da revisão de requisições e de permissões (2026-11-13 a 15): são os achados de severidade alta e os de média reproduzidos na aplicação rodando. A revisão tem 225 achados ao todo; os demais
 > estão em [`DOSSIE.md`](../specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md) (código `A-NNN`) e cada um aponta para a sua spec na guarda-chuva `docs/specs/backlog/requisicoes-e-permissoes-correcoes.spec.md` (tasks 330–487).
 
+### P-103 — O logout não zera os demais services de memória nem as chaves de conteúdo do navegador · `ABERTO` · frontend/casca
+
+- **Sintoma:** depois de sair (ou de a sessão expirar) e entrar com outra pessoa na mesma aba, ficam: as narrativas de teste de prompt (`localStorage`, chave só por tipo de prompt), o modo convencional da IA (signal e `sessionStorage`) e uma oferta de "Desfazer" ainda dentro do prazo. O login, o nome e a cor do último usuário ficam de propósito na tela de login.
+- **Causa:** `encerrarSessao` (task 341) limpa token, usuário e execução ativa; os outros services `providedIn: root` e as chaves sem o id do usuário não entram nela (achado A-027 do dossiê).
+- **Contorno:** recarregar a página limpa a memória; as chaves do navegador seguem até serem apagadas à mão.
+- **Correção:** zerar os services com estado no `encerrarSessao` (ou recarregar a página) e passar as chaves de conteúdo a levar o id do usuário. Sem spec própria ainda.
+- **Desde:** revisão de requisições, 2026-11-13 (A-027); separado da task 341 em 2026-11-19.
+
 ### P-102 — Trocar a senha não derruba os tokens já emitidos · `ABERTO` · backend/autenticacao e usuario
 
 - **Sintoma:** quem tinha um token (inclusive alguém que não devia) segue com acesso até ele vencer (7 dias), mesmo depois de a senha da conta ser trocada. A `JwtStrategy` só confere que o usuário existe e está ativo.

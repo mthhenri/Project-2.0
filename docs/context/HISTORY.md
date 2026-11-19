@@ -13,6 +13,15 @@
 ---
 
 
+## 2026-11-19 — Task 341: o 401 encerra a sessão pelo mesmo caminho do logout
+
+Da revisão de requisições (achados A-025 e A-026). O 401 (interceptor de erros e stream de eventos do chat) removia só as chaves do `localStorage` e navegava; o logout limpava também `UsuarioSessaoService` e `ExecucaoAtivaService`. Quem entrasse em seguida na mesma aba herdava o usuário e a execução ativa de quem saiu (o chip nascia com a descrição da execução anterior, sem esqueleto, até o `GET /execucao/ativa` responder).
+
+- **frontend:** `AutenticacaoService.encerrarSessao({ expirada? })` é o caminho único: remove o token, limpa usuário e execução ativa, zera o estado da conferência de tipo (task 340: o próximo login espera a conferência de novo) e navega ao login; `expirada` acrescenta `returnUrl`. O logout, o `errorHandlerInterceptor` (401, resolvido por `Injector`) e o `MensagemDiretaEventosService` (401 do stream) passam por ele; o interceptor e o stream deixaram de manipular o `localStorage` e o roteador.
+- **Testes:** interceptor (401 também zera usuário e execução ativa), serviço (limpa tudo e leva o `returnUrl`; o próximo login volta a esperar a conferência). Frontend 2923 passando; `npm run lint:tudo` e build sem erro.
+- **Ao vivo (Playwright, `1920×1080`):** A com execução ativa; token invalidado no `localStorage` e foco na janela; o 401 levou a `/autenticacao?returnUrl=%2Fatividade` sem recarregar (sentinela viva); B entrou na mesma aba com `GET /execucao/ativa` atrasado 4 s: o chip de B ficou vazio. **Contraprova** (interceptor com o código antigo, restaurado depois): o chip de B mostrou "Execução do usuário A 00:00:42".
+- **Fora de escopo, anotado:** A-027 (o logout não zera os demais services `providedIn: root` — narrativas de teste de prompt, modo convencional da IA, oferta de desfazer — nem as chaves de conteúdo do navegador sem o id do usuário) fica registrado em `PROBLEMS.md` (P-103); esta task entrega o caminho único e a limpeza do que o logout já limpava.
+
 ## 2026-11-19 — Verificação ao vivo das tasks 330, 331, 332, 333, 334 e 340 e da prioridade da listagem
 
 A pedido do autor, antes de seguir: o stack real (backend, SPA com proxy, PostgreSQL 16 local com as 90 migrations) dirigido pelo Playwright com `page.clock` para o tempo. **Todos os critérios ao vivo passaram** e as contraprovas também (a 332 mostra o toast quando é uma tela pedida pelo usuário; a 340 sem o `sessaoConferidaGuard` joga o promovido em `/ponto`). Números: 3 focos = 1 `GET /execucao/ativa`; 3 min com a aba oculta = 0 `GET /ia/disponibilidade` e 1 na volta; 2 min de diálogo do check-in = 4 `GET /checkin/situacao` (antes ~40); `GET /checkin/situacao` = 1 `SELECT` de `execucao` no log do PostgreSQL; rebaixado vê o menu mudar e sair da tela sem F5. Relatório: `docs/specs/done/332-leituras-de-fundo-sem-toast-de-erro/verificacao-ao-vivo-330-340.md`. **Limites:** só `1920×1080` em tema claro e o Project Desktop (Electron) não foi exercitado.

@@ -76,7 +76,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **338** | Baixa | frontend/casca | `GET /desktop/versao` só quando o menu do perfil é aberto | A-019, A-020, A-021 | — |
 | **339** | Baixa | frontend/casca | Encerrar execução: não reler `GET /execucao/ativa` quando a resposta já diz o resultado | A-022 | — |
 | **340** | Média | frontend/casca | Sessão: os guards esperam a reconferência do usuário, e o 403 reconfere | A-023, A-024 | feita |
-| **341** | Média | frontend/casca | Encerrar a sessão (logout e 401) por um caminho só, que limpa memória e navegador | A-025, A-026, A-027 | — |
+| **341** | Média | frontend/casca | Encerrar a sessão (logout e 401) por um caminho só, que limpa memória e navegador | A-025, A-026, A-027 | feita |
 | **342** | Baixa | frontend/casca | "Desfazer" que falha continua disponível | A-028 | — |
 | **343** | Baixa | frontend/casca | Remover código sem uso na casca e no check-in | A-029 | — |
 

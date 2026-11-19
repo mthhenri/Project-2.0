@@ -6,6 +6,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TipoUsuarioEnum } from '@project20/shared';
 import { AutenticacaoService } from './autenticacao.service';
 import { UsuarioSessaoService } from './usuario-sessao.service';
+import { ExecucaoAtivaService } from './execucao-ativa.service';
 import { usuarioAutenticado } from '../signals/usuario-autenticado.signal';
 import { criarUsuarioTeste } from '../../../testes/usuarios-teste';
 
@@ -100,6 +101,42 @@ describe('AutenticacaoService', () => {
             { sucesso: false, mensagem: 'Credenciais inválidas' }, { status: 400, statusText: 'Bad Request' });
         expect(localStorage.getItem('access_token')).toBeNull();
         expect(servico.estaAutenticado()).toBe(false);
+    });
+
+    it('encerrarSessao (expirada): limpa token, usuário e execução ativa, e leva ao login guardando a tela de origem', () => {
+        localStorage.setItem('access_token', 'abc');
+        const servico = TestBed.inject(AutenticacaoService);
+        const execucaoAtiva = TestBed.inject(ExecucaoAtivaService);
+        TestBed.inject(UsuarioSessaoService).definirUsuario(criarUsuarioTeste());
+        execucaoAtiva.definir({ id: 9, atividadeId: 4 } as never);
+        const roteador = TestBed.inject(Router);
+        vi.spyOn(roteador, 'url', 'get').mockReturnValue('/demanda?pagina=2');
+        const navegar = vi.spyOn(roteador, 'navigate').mockResolvedValue(true);
+
+        servico.encerrarSessao({ expirada: true });
+
+        expect(localStorage.getItem('access_token')).toBeNull();
+        expect(localStorage.getItem('usuario_sessao')).toBeNull();
+        expect(TestBed.inject(UsuarioSessaoService).usuarioAtual()).toBeNull();
+        expect(execucaoAtiva.ativa()).toBeNull();
+        expect(navegar).toHaveBeenCalledWith(['/autenticacao'], { queryParams: { returnUrl: '/demanda?pagina=2' } });
+    });
+
+    it('encerrarSessao: o próximo login volta a esperar a conferência do tipo na primeira navegação', () => {
+        localStorage.setItem('access_token', 'abc');
+        const servico = TestBed.inject(AutenticacaoService);
+        const http = TestBed.inject(HttpTestingController);
+        TestBed.inject(UsuarioSessaoService).definirUsuario(criarUsuarioTeste(TipoUsuarioEnum.GESTOR));
+        vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+        servico.garantirSessaoConferida().subscribe();
+        http.expectOne((registro) => registro.url.includes('/usuario/')).flush({ sucesso: true, mensagem: 'ok', dados: criarUsuarioTeste(TipoUsuarioEnum.GESTOR) });
+
+        servico.encerrarSessao();
+        localStorage.setItem('access_token', 'def');
+        TestBed.inject(UsuarioSessaoService).definirUsuario(criarUsuarioTeste(TipoUsuarioEnum.GESTOR));
+        servico.garantirSessaoConferida().subscribe();
+
+        http.expectOne((registro) => registro.url.includes('/usuario/'));
     });
 
     it('logout apaga token e sessão e vai para o login', () => {

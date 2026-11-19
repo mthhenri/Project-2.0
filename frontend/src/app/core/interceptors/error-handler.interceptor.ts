@@ -1,6 +1,5 @@
 import { HttpContext, HttpContextToken, HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { Injector, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { catchError, throwError } from 'rxjs';
 import { AutenticacaoService } from '../services/autenticacao.service';
@@ -19,7 +18,6 @@ export const comErroTratadoPelaTela = (): { context: HttpContext } => ({
 });
 
 export const errorHandlerInterceptor: HttpInterceptorFn = (requisicao, proximo) => {
-    const roteador = inject(Router);
     const messageService = inject(MessageService);
     // Resolvido só no 403 (o `inject` não vale dentro do `catchError`, e instanciar o serviço em toda requisição seria à toa).
     const injetor = inject(Injector);
@@ -34,10 +32,8 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (requisicao, proximo) 
 
             switch (erro.status) {
                 case 401:
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('usuario_sessao');
-                    // Sessão expirada: volta ao login e, depois dele, à tela em que o usuário estava.
-                    roteador.navigate(['/autenticacao'], { queryParams: parametrosRetorno(roteador.url) });
+                    // Sessão expirada: o mesmo encerramento do logout (limpa também o que está em memória) e, depois do login, volta à tela de origem.
+                    injetor.get(AutenticacaoService).encerrarSessao({ expirada: true });
                     break;
                 case 403:
                     messageService.add({ severity: 'error', summary: 'Erro', detail: 'Acesso não permitido' });

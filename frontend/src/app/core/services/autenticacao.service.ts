@@ -5,7 +5,7 @@ import { Observable, catchError, finalize, map, of, shareReplay, tap, timeout } 
 import { AutenticacaoLoginDto, AutenticacaoTokenDto, StandardResponse, UsuarioRecuperadoDto } from '@project20/shared';
 import { UsuarioSessaoService } from './usuario-sessao.service';
 import { ExecucaoAtivaService } from './execucao-ativa.service';
-import { comErroTratadoPelaTela } from '../interceptors/error-handler.interceptor';
+import { comErroTratadoPelaTela, parametrosRetorno } from '../interceptors/error-handler.interceptor';
 import { comLeituraDeFundo } from '../interceptors/loading.interceptor';
 import { ambiente } from '../../../environments/environment';
 
@@ -41,10 +41,24 @@ export class AutenticacaoService {
     }
 
     logout(): void {
+        this.encerrarSessao();
+    }
+
+    /**
+   * O único caminho que encerra a sessão: o logout, o 401 do interceptor e o do stream do chat passam por aqui, para o próximo login na mesma aba
+   * não herdar o usuário nem a execução ativa de quem saiu. `expirada` (o servidor recusou o token) leva ao login guardando a tela de origem em
+   * `returnUrl`; o logout pedido pela pessoa não guarda.
+   */
+    encerrarSessao(opcoes: { expirada?: boolean } = {}): void {
+        const urlDeOrigem = this.router.url;
         localStorage.removeItem('access_token');
         this.sessao.limpar();
         this.execucaoAtiva.limpar();
-        this.router.navigate(['/autenticacao']);
+        // O próximo login confere o tipo de novo na primeira navegação, e uma conferência a caminho não vale para a conta seguinte.
+        this.conferenciaEmCurso$ = null;
+        this.conferidaNestaAbertura = false;
+        this.ultimaReconferenciaPorAcessoNegadoEm = 0;
+        void this.router.navigate(['/autenticacao'], opcoes.expirada ? { queryParams: parametrosRetorno(urlDeOrigem) } : {});
     }
 
     /**

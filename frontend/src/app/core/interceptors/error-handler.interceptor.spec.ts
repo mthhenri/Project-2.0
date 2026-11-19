@@ -6,13 +6,16 @@ import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { comLeituraDeFundo } from './loading.interceptor';
 import { AutenticacaoService } from '../services/autenticacao.service';
+import { ExecucaoAtivaService } from '../services/execucao-ativa.service';
+import { UsuarioSessaoService } from '../services/usuario-sessao.service';
+import { criarUsuarioTeste } from '../../../testes/usuarios-teste';
 import { comErroTratadoPelaTela, errorHandlerInterceptor, parametrosRetorno } from './error-handler.interceptor';
 
 let http: HttpClient;
 let controlador: HttpTestingController;
 const navegar = vi.fn();
 const adicionar = vi.fn();
-const reconferir = vi.fn();
+let reconferir: ReturnType<typeof vi.spyOn>;
 const roteador = { navigate: navegar, url: '/demanda?pagina=2' };
 
 function configurar(): void {
@@ -22,11 +25,11 @@ function configurar(): void {
             provideHttpClientTesting(),
             { provide: Router, useValue: roteador },
             { provide: MessageService, useValue: { add: adicionar } },
-            { provide: AutenticacaoService, useValue: { reconferirAposAcessoNegado: reconferir } },
         ],
     });
     http = TestBed.inject(HttpClient);
     controlador = TestBed.inject(HttpTestingController);
+    reconferir = vi.spyOn(TestBed.inject(AutenticacaoService), 'reconferirAposAcessoNegado').mockImplementation(() => undefined);
 }
 
 /** Dispara um GET que falha e devolve o erro relançado pelo interceptor. */
@@ -40,7 +43,6 @@ function falhar(status: number, corpo: object | null = null, opcoes: object = {}
 beforeEach(() => {
     navegar.mockClear();
     adicionar.mockClear();
-    reconferir.mockClear();
     roteador.url = '/demanda?pagina=2';
     localStorage.clear();
     configurar();
@@ -93,6 +95,20 @@ describe('errorHandlerInterceptor', () => {
         expect(localStorage.getItem('tema')).toBe('escuro');
         expect(navegar).toHaveBeenCalledWith(['/autenticacao'], { queryParams: { returnUrl: '/demanda?pagina=2' } });
         expect(adicionar).not.toHaveBeenCalled();
+    });
+
+    it('401 também limpa o que está em memória: usuário e execução ativa da sessão que expirou (task 341)', () => {
+        localStorage.setItem('access_token', 'abc');
+        const sessao = TestBed.inject(UsuarioSessaoService);
+        const execucaoAtiva = TestBed.inject(ExecucaoAtivaService);
+        sessao.definirUsuario(criarUsuarioTeste());
+        execucaoAtiva.definir({ id: 9, atividadeId: 4 } as never);
+
+        falhar(401);
+
+        expect(sessao.usuarioAtual()).toBeNull();
+        expect(execucaoAtiva.ativa()).toBeNull();
+        expect(execucaoAtiva.jaCarregou()).toBe(false);
     });
 
     it('401 vindo da própria tela de login não grava returnUrl', () => {
