@@ -24,7 +24,6 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | Task | Decisão |
 |---|---|
 | **352** | Gravações do pad e dos textos da demanda: não devolver o texto inteiro |
-| **363** | IA chamada em conversa compartilhada: resposta com dado que nem todo leitor pode ver |
 | **366** | Grupo livre: escrever (ou mudar) quem adiciona, quem remove e quem lê o histórico |
 | **370** | `POST /assistente/auxiliar-descricao`: identificar quem usa, limitar o tamanho e registrar o custo |
 | **371** | Desfazer a criação de demanda pela proposta: exceção escrita ou mesma permissão da exclusão |
@@ -108,7 +107,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **360** | Média | backend/mensagem-direta e frontend/demanda | Canal de demanda e de projeto: definir e aplicar a regra do auxiliar | A-053 | decidida e feita |
 | **361** | Média | backend/mensagem-direta | Canal: o gestor não membro não lê texto de mensagem sem auditoria | A-054 | decidida e feita |
 | **362** | Média | backend/mensagem-direta | Grupo "privado": o que acontece quando o último gestor sai | A-055 | decidida e feita |
-| **363** | Média | backend/mensagem-direta e chat (plano) | IA chamada em conversa compartilhada: resposta com dado que nem todo leitor pode ver | A-056, A-057, A-058 | pendente |
+| **363** | Média | backend/mensagem-direta e chat (plano) | IA chamada em conversa compartilhada: resposta com dado que nem todo leitor pode ver | A-056, A-057, A-058 | decidida e feita |
 | **364** | Baixa | backend/mensagem-direta | Testes de permissão por tipo de usuário em grupos, canais e supervisão | A-059, A-060 | — |
 | **365** | Baixa | backend/mensagem-direta e proposta-ia | Proposta nascida do resumo do grupo: confirmar e desfazer por um caminho só | A-061 | — |
 | **366** | Informativo | backend/mensagem-direta | Grupo livre: escrever (ou mudar) quem adiciona, quem remove e quem lê o histórico | A-062 | pendente |

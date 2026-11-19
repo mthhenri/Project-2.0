@@ -13,6 +13,14 @@
 ---
 
 
+## 2026-11-19 — Task 363: IA em conversa compartilhada — risco aceito e registrado como ponto de atenção
+
+Da revisão de requisições e de permissões (achado A-056), com a decisão do autor de 2026-11-19 pela **opção 1** ("risco aceito"), pedindo que fosse anotado como ponto de atenção. Nenhum código mudou: no grupo, no canal, na conversa um a um com `@IA` e no plano, as ferramentas de leitura rodam com a permissão de quem chamou a IA e a resposta fica gravada para todos os leitores; a barreira é só a instrução do prompt (`mensagem-direta-ia.ts`).
+
+- **Documento:** `SYSTEM.SPEC.md` §14, "Acesso e Permissões", ganhou a regra assumida (equivale a quem chama colar o texto na conversa) e o gatilho para revê-la.
+- **Ponto de atenção:** `PROBLEMS.md` P-104, `ACEITO`, com o sintoma, a causa, o contorno e as opções 2 e 3 da spec para o dia em que o risco deixar de ser aceitável.
+- **Verificação:** só documentação (`npm run repo:verificar`); não há comportamento a observar ao vivo.
+
 ## 2026-11-19 — Task 345: busca e filtro de Usuários previsíveis (paginador, termo repetido e carga anterior)
 
 Da revisão de requisições (achados A-032, A-033 e A-034). `aoMudarFiltro()` zerava `paginaAtual` mas a `p-table` lazy guarda o próprio `first`, que a tela não ligava: buscar fora da página 1 podia disparar uma segunda `GET /usuario?pagina=N` (o paginador recuava sozinho quando o novo total era menor ou igual ao `first` antigo) ou deixar o paginador na página antiga; o `distinctUntilChanged()` sobre o campo descartava o mesmo termo digitado de novo depois de "Limpar"; e cada carga abria uma requisição sem cancelar a anterior.
