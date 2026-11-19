@@ -298,6 +298,15 @@ describe('DemandaArvoreTelaComponent', () => {
         expect(montado.componente.projetoInteiro()).toBe(false);
     });
 
+    it('o "Projeto inteiro" lista só as demandas de trabalho (as pastas ficam de fora) e a contagem é a mesma da lista', async () => {
+        const { montado } = await montar({ iniciarProjetoInteiro: true });
+        const itens = montado.componente.itens();
+        expect(itens.length).toBeGreaterThan(0);
+        expect(itens.every((item) => !item.estrutural)).toBe(true);
+        expect(montado.componente.totalDeDemandas()).toBe(itens.length);
+        expect(montado.componente.caminhoDaLista()).toContain(`${itens.length} demandas`);
+    });
+
     it('a lista mostra só as demandas direto na pasta e abre a primeira', async () => {
         const { montado } = await montar();
         expect(montado.componente.itens().map((item) => item.id)).toEqual([3, 4]);

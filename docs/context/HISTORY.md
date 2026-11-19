@@ -13,6 +13,13 @@
 ---
 
 
+## 2026-11-19 — Ajuste da Árvore de demandas: o "Projeto inteiro" não lista as pastas
+
+Pedido do autor (com um print): ao ver todas as demandas do projeto, as demandas de estrutura (pastas, como "Suporte") apareciam na lista como se fossem demandas de trabalho. As pastas já têm a coluna própria e aparecem como caminho acima do nome de cada demanda.
+
+- **frontend:** `DemandaArvoreTelaComponent.itens` no "Projeto inteiro" passa só as demandas com `estrutural = false`; o número do "Projeto inteiro" na coluna das pastas e o "N demandas em todas as pastas" vêm de `totalDeDemandas` (antes `nos().length`, que contava as pastas), então a contagem bate com a lista. A **busca** continua achando pastas (decisão não pedida de mudar).
+- **Testes:** 1 teste novo em `demanda-arvore-tres-colunas.spec.ts` (lista sem pastas e contagem igual); o arquivo passa com 38 testes.
+
 ## 2026-11-19 — Task 370: `POST /assistente/auxiliar-descricao` com usuário, limite de tamanho e custo registrado
 
 Da revisão de requisições e de permissões (achado A-068), com a decisão do autor de 2026-11-19 pela **opção 1** (limites iguais aos de `alterar-trecho`). A rota chamava a IA sem saber quem pedia, sem limite de tamanho e sem registrar o uso: qualquer tipo de usuário a usava como proxy de texto livre e o gasto não aparecia em Custos.

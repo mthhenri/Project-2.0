@@ -44,7 +44,7 @@
             [pastaId]="emBusca() ? undefined : pastaId()"
             [expandidas]="expandidas()"
             [projetoInteiro]="projetoInteiro()"
-            [totalQuantidade]="nos().length"
+            [totalQuantidade]="totalDeDemandas()"
             (projetoInteiroEscolhido)="escolherProjetoInteiro()"
             (pastaEscolhida)="escolherPasta($event)"
             (expansaoAlternada)="alternarExpansao($event)"

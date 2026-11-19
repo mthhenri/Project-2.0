@@ -93,13 +93,17 @@ export class DemandaArvoreTelaComponent implements OnInit {
 
     readonly pastas = computed(() => construirPastas(this.nos()));
     readonly semPastaQuantidade = computed(() => contarSemPasta(this.nos()));
+    /** Quantas demandas de trabalho o projeto tem (as pastas não contam): o número do "Projeto inteiro". */
+    readonly totalDeDemandas = computed(() => this.nos().filter((no) => !no.estrutural).length);
     readonly emBusca = computed(() => this.filtro().termo.trim() !== '');
     readonly filtroEstaAtivo = computed(() => filtroAtivo(this.filtro()));
 
-    /** As demandas da lista: as da pasta escolhida ou, com busca, as de todas as pastas; em qualquer caso, só as que passam no filtro. */
+    /** As demandas da lista: as da pasta escolhida ou, com busca, as de todas as pastas; em qualquer caso, só as que passam no filtro. O "Projeto inteiro" não lista as pastas (demandas de estrutura): elas aparecem como caminho acima do nome. */
     readonly itens = computed<DemandaGrafoNoDto[]>(() => {
         const todos = this.nos();
-        return this.emBusca() || this.projetoInteiro() ? nosCorrespondentes(todos, this.filtro()) : nosCorrespondentes(demandasDaPasta(todos, this.pastaId()), this.filtro());
+        if (this.emBusca()) return nosCorrespondentes(todos, this.filtro());
+        if (this.projetoInteiro()) return nosCorrespondentes(todos.filter((no) => !no.estrutural), this.filtro());
+        return nosCorrespondentes(demandasDaPasta(todos, this.pastaId()), this.filtro());
     });
 
     readonly nomesDasPastas = computed<ReadonlyMap<number, string> | null>(() =>
