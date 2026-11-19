@@ -13,6 +13,10 @@
 ---
 
 
+## 2026-11-19 — Diálogo "Iniciar execução": sai o botão "Usar" de uma descrição passada
+
+Pedido do autor. O diálogo (`execucao-iniciar-dialog`) listava as últimas execuções da atividade, cada uma com o botão "Usar", que copiava a descrição dela para o campo. O botão, o método `usarDescricao`, o estilo `__usar` e o teste saíram; a lista das últimas execuções continua, só para leitura. O bloco "Reutilizar última" da página de detalhe da atividade (seção inline, não diálogo) **não** foi tocado: se o autor quiser tirá-lo também, é pedido à parte. Diálogo: 4 testes passando; `npm run lint:tudo` sem erro.
+
 ## 2026-11-19 — Task 404: excluir demanda sem erro e desfazer que traz a demanda de volta à tela
 
 Da revisão de requisições e de permissões (achados A-104 e A-105, `PROBLEMS.md` P-084), decisão do autor de 2026-11-19 (seguir a spec). Depois do `DELETE`, o evento de exclusão subia pelo caminho de "demanda alterada": a página recarregava o grafo e mandava a demanda aberta se reler antes de ser desmontada, então saía `GET /demanda/<excluída>` (404, toast "Não encontrado") e, quando o grafo novo chegava, a Árvore carregava por inteiro a primeira demanda da pasta. O "Desfazer" emitia o aviso numa instância que a exclusão já desmontara: depois do `PATCH .../restaurar` nada era lido e a demanda só voltava à lista na próxima recarga.
