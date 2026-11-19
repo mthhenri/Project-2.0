@@ -186,6 +186,8 @@
                             [abrirDemanda]="pedidoAbrirDemanda()"
                             (pastaChange)="aoEscolherPasta($event)"
                             (alterado)="aoAlteradoPlanejamento()"
+                            (estruturaAlterada)="aoEstruturaAlterada()"
+                            (nomeAlterado)="aoNomeAlterado($event)"
                             (demandaExcluida)="aoDemandaExcluida($event)"
                             (statusAlterado)="aoStatusAlterado($event)"
                             (tagsAlteradas)="aoTagsAlteradas($event)"

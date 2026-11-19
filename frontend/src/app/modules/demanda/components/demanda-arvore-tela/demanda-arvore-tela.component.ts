@@ -69,6 +69,9 @@ export class DemandaArvoreTelaComponent implements OnInit {
 
     readonly pastaChange = output<PastaId>();
     readonly alterado = output<void>();
+    /** A estrutura mudou por esta tela (conexão, edição pelo diálogo): a página recarrega o grafo, sem mandar a demanda aberta se reler (ela já se atualizou). */
+    readonly estruturaAlterada = output<void>();
+    readonly nomeAlterado = output<{ demandaId: number; nome: string }>();
     readonly demandaExcluida = output<{ demandaId: number; nome: string }>();
     readonly statusAlterado = output<{ demandaId: number; status: TipoDemandaStatusEnum }>();
     readonly tagsAlteradas = output<{ demandaId: number; tags: TagResumoDto[] }>();
@@ -330,7 +333,7 @@ export class DemandaArvoreTelaComponent implements OnInit {
             next: (resposta) => {
                 if (resposta.sucesso) {
                     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' });
-                    if (alteracao.demandaId === this.demandaAbertaId()) this.recarregar();
+                    if (alteracao.demandaId === this.demandaAbertaId()) this.aberta()?.aplicarStatus(alteracao.para);
                 }
             },
             error: () => this.statusAlterado.emit({ demandaId: alteracao.demandaId, status: alteracao.de }),

@@ -166,10 +166,10 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **405** | Média | frontend/demanda e mensagem-direta | Demandas e Projetos: o botão do chat não pergunta ao servidor a cada seleção | A-106, A-107, A-108 | decidida e feita |
 | **406** | Média | frontend/demanda | Demandas: tirar `GET /demanda/:id/arvore` da seleção (a resposta não é usada) | A-109 | feita |
 | **407** | Média | frontend/demanda | Demandas: estimativa e previsão editadas na linha só avisam a página depois do `PUT` | A-110 | feita |
-| **408** | Média | frontend/demanda | Demandas: salvar a edição faz uma releitura só, e ela atualiza tags e membros | A-111, A-112 | — |
-| **409** | Média | frontend/demanda | Demandas: alteração que não muda a estrutura não recarrega o grafo do projeto | A-113 | — |
-| **410** | Média | frontend/demanda | Demandas: os destinos de "Conectar" vêm do grafo já carregado | A-114 | — |
-| **411** | Média | frontend/demanda | Demandas: trocar de demanda cancela a carga da anterior | A-115 | — |
+| **408** | Média | frontend/demanda | Demandas: salvar a edição faz uma releitura só, e ela atualiza tags e membros | A-111, A-112 | feita |
+| **409** | Média | frontend/demanda | Demandas: alteração que não muda a estrutura não recarrega o grafo do projeto | A-113 | feita |
+| **410** | Média | frontend/demanda | Demandas: os destinos de "Conectar" vêm do grafo já carregado | A-114 | feita |
+| **411** | Média | frontend/demanda | Demandas: trocar de demanda cancela a carga da anterior | A-115 | feita |
 | **412** | Baixa | frontend/demanda | Demandas: voltar a uma demanda vista e trocar de modo refazem a carga inteira | A-116 | pendente |
 | **413** | Baixa | frontend/demanda | Demandas: diálogos de edição e de tags com menos leituras | A-117 | — |
 | **414** | Baixa | backend/demanda e frontend/demanda | Demandas: gravar membros numa requisição só | A-118 | pendente |

@@ -379,6 +379,17 @@ describe('DemandaProjetoPage', () => {
             expect(montado.componente.modoVisualizacao()).toBe('arvore');
         });
 
+        it('renomear atualiza o nó sem pedir nada; a estrutura alterada recarrega só o grafo, sem reler a demanda aberta (task 409)', async () => {
+            const { montado } = await comGrafo({ nos: [criarNo(1), criarNo(2)], arestas: [] });
+            montado.componente.aoNomeAlterado({ demandaId: 2, nome: 'Nome novo' });
+            expect(montado.componente.grafo()?.nos.find((no) => no.id === 2)?.nome).toBe('Nome novo');
+            montado.http.expectNone(() => true);
+
+            montado.componente.aoEstruturaAlterada();
+            const pedidos = montado.http.match(() => true).map((pedido) => `${pedido.request.method} ${pedido.request.url.replace(/^.*\/api\/v1/, '').split('?')[0]}`);
+            expect(pedidos).toEqual(['GET /demanda/grafo']);
+        });
+
         it('navegar para o projeto leva ao detalhe; sem projeto leva à lista de projetos', async () => {
             const { montado, irPara } = await comGrafo();
             montado.componente.navegarParaProjeto();

@@ -377,6 +377,17 @@ describe('DemandaArvoreTelaComponent', () => {
         expect(eventos.status[1]).toEqual({ demandaId: 4, status: TipoDemandaStatusEnum.PENDENTE });
     });
 
+    it('depois do PUT do status pela bolinha, a demanda aberta recebe o status sem reler (task 409)', async () => {
+        const { montado } = await montar();
+        montado.componente.escolherDemanda(4);
+        await montado.atualizar();
+        montado.http.match(() => true);
+        montado.componente.aoStatusEscolhido({ demandaId: 4, de: TipoDemandaStatusEnum.PENDENTE, para: TipoDemandaStatusEnum.CONCLUIDA });
+        responderSucesso(esperarRequisicao(montado.http, 'PUT', '/demanda/4'), { id: 4 });
+        await montado.atualizar();
+        montado.http.expectNone((pedido) => pedido.method === 'GET' && /\/demanda\/4(\/|$)/.test(pedido.url));
+    });
+
     it('a demanda aberta que sai do projeto (excluída) cai para a primeira da pasta', async () => {
         const { montado } = await montar();
         montado.componente.escolherDemanda(4);

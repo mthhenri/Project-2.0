@@ -309,6 +309,20 @@ export class DemandaProjetoPage implements OnInit {
         }
     }
 
+    /** A estrutura mudou pela Árvore (task 409): só o grafo é recarregado; a demanda aberta já se atualizou e não é relida. */
+    aoEstruturaAlterada(): void {
+        this.recarregarGrafo();
+        if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.temVisaoTotal()) this.carregarPlanejamento();
+    }
+
+    /** Renomeada pelo título da demanda aberta: o nó do grafo recebe o nome sem recarregar; as linhas do planejamento levam o caminho em nomes e só são relidas se estiverem à vista. */
+    aoNomeAlterado(alteracao: { demandaId: number; nome: string }): void {
+        this.grafo.update((grafoAtual) =>
+            grafoAtual ? { ...grafoAtual, nos: grafoAtual.nos.map((no) => (no.id === alteracao.demandaId ? { ...no, nome: alteracao.nome } : no)) } : grafoAtual,
+        );
+        if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.temVisaoTotal()) this.carregarPlanejamento();
+    }
+
     /**
      * A demanda aberta foi excluída (task 404): recarrega o grafo (a Árvore já abriu a vizinha e não relê a excluída) e oferece o "Desfazer". A oferta mora aqui porque a página
      * sobrevive à demanda aberta, que a exclusão desmonta; ao desfazer, o grafo é recarregado e a demanda restaurada volta à lista e fica aberta.

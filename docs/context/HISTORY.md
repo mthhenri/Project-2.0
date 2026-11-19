@@ -13,6 +13,18 @@
 ---
 
 
+## 2026-11-19 — Tasks 408, 409, 410 e 411: a demanda aberta deixa de se reler à toa (edição, grafo, destinos de "Conectar" e troca rápida)
+
+Da revisão de requisições e de permissões (achados A-111 a A-115), todos no mesmo caminho do código (`DemandaDetalheBase` → `DemandaArvoreTelaComponent` → `DemandaProjetoPage`), por isso numa passagem só.
+
+- **408 (A-111, A-112):** `aoDemandaAlterada` (o diálogo de edição salvou) faz **uma** leitura, `GET /demanda/:id/detalhe`, e aplica demanda, ancestrais, tags, membros, conexões e dados do chat (`aplicarDetalhe`, compartilhado com `carregarTudo`), então o cabeçalho mostra os chips e avatares recém-gravados sem trocar de demanda. A resposta só é aplicada se a demanda aberta ainda é a mesma.
+- **409 (A-113):** o que a tela já aplicou não manda reler. Renomear pelo título emite o novo `nomeAlterado({ demandaId, nome })` só depois do `PUT`; a Árvore o repassa e a página (`aoNomeAlterado`) troca o nome no nó do grafo (e relê o planejamento só se o Controle de horas está à vista, porque as linhas dele levam o caminho em nomes). Mexer em membro deixou de emitir `demandaAlterada` (o nó do grafo não tem membros). Conexões e edição pelo diálogo seguem emitindo `demandaAlterada`, agora ligado à nova saída `estruturaAlterada` da Árvore e à `aoEstruturaAlterada` da página, que recarrega **só o grafo** e não manda a demanda aberta se reler. O status pela bolinha da linha atualiza a demanda aberta por `aplicarStatus`, sem `GET`. Os diálogos do menu de contexto (painel escondido) continuam por `alterado` (relêem a demanda aberta, porque a editada pode ser ela).
+- **410 (A-114):** `DemandaAberta.destinosConexao` é derivado de `grafo().nos` (menos a demanda atual); saíram `todasDemandas`, `carregarDemandasParaConexao` e o `GET /demanda?projetoId&allRows=true` que a abertura fazia. A lista agora inclui a demanda criada na mesma sessão (o grafo é recarregado ao criar).
+- **411 (A-115):** `carregarTudo` guarda a assinatura (e a das atividades) e cancela a anterior ao trocar de demanda; `carregarDemanda` e `carregarAtividades` só aplicam a resposta se o id ainda é o da demanda aberta.
+- **Testes:** `demanda-aberta.component.spec.ts` (7 novos: uma releitura e chips novos; renomear só avisa depois do `PUT`; status sem pedir; abrir sem `GET /demanda` e destinos do grafo com a demanda nova; troca de demanda cancela a carga da anterior), `demanda-projeto.page.spec.ts` (nome no nó sem pedir; estrutura alterada recarrega só o grafo), `demanda-arvore-tres-colunas.spec.ts` (status pela bolinha sem reler). Módulo demanda do frontend: 277 passando; `npm run lint:tudo` e build sem erro.
+- **Ao vivo (frontend e API reais):** abrir `/demanda` não faz `GET /demanda`; renomear pelo título gera só `PUT /demanda/8`; clicar em três demandas seguidas com o `detalhe` atrasado cancelou as cargas de `/demanda/10/detalhe` e `/demanda/9/detalhe`, e a coluna mostra a última selecionada.
+- **Não verificado ao vivo:** salvar pelo botão Editar com tags e membros trocados (só o teste de componente cobre os chips novos).
+
 ## 2026-11-19 — Diálogo "Iniciar execução": sai o botão "Usar" de uma descrição passada
 
 Pedido do autor. O diálogo (`execucao-iniciar-dialog`) listava as últimas execuções da atividade, cada uma com o botão "Usar", que copiava a descrição dela para o campo. O botão, o método `usarDescricao`, o estilo `__usar` e o teste saíram; a lista das últimas execuções continua, só para leitura. O bloco "Reutilizar última" da página de detalhe da atividade (seção inline, não diálogo) **não** foi tocado: se o autor quiser tirá-lo também, é pedido à parte. Diálogo: 4 testes passando; `npm run lint:tudo` sem erro.
