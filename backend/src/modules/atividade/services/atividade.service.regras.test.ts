@@ -24,7 +24,7 @@ const ATIVIDADE = {
 
 /** `UsuarioRepository` em memória: o usuário 55 é desenvolvedor, o 56 é gestor. */
 const usuarioExistente = {
-    recuperar: async ({ id }: { id: number }) => ({ id, nomeCompleto: `Pessoa ${id}`, tipo: id === 56 ? TipoUsuarioEnum.GESTOR : TipoUsuarioEnum.DESENVOLVEDOR }),
+    recuperar: async ({ id }: { id: number }) => ({ id, ativo: true, nomeCompleto: `Pessoa ${id}`, tipo: id === 56 ? TipoUsuarioEnum.GESTOR : TipoUsuarioEnum.DESENVOLVEDOR }),
 };
 
 function criarServico(repositorio: Dublê = {}, tags: Dublê = {}, demandas: Dublê = {}, usuarios: Dublê = usuarioExistente): AtividadeService {
@@ -78,10 +78,14 @@ test('criar: desenvolvedor sem vínculo com a demanda é recusado e nada é grav
     assert.equal(gravou(repo), false);
 });
 
-test('criar: desenvolvedor membro da demanda cria a atividade para si, mesmo pedindo outro dono', async () => {
+test('criar: desenvolvedor membro da demanda cria a atividade para si, e pedir outro dono é recusado (403) sem gravar nada', async () => {
     const repo = repositorio();
-    await criarServico(repo, tagExistente, demandaExistente).criar({ ...DADOS_CRIAR, usuarioId: 55 }, DESENVOLVEDOR);
+    await criarServico(repo, tagExistente, demandaExistente).criar({ ...DADOS_CRIAR, usuarioId: 3 }, DESENVOLVEDOR);
     assert.equal((repo.gravacoes[0].argumento as { usuarioId: number }).usuarioId, 3);
+
+    const recusado = repositorio();
+    await assert.rejects(() => criarServico(recusado, tagExistente, demandaExistente).criar({ ...DADOS_CRIAR, usuarioId: 55 }, DESENVOLVEDOR), UnauthorizedAccessException);
+    assert.equal(gravou(recusado), false);
 });
 
 test('criar: gestor e administrador não precisam de vínculo com a demanda e podem escolher o dono (que é membro dela)', async () => {
@@ -112,10 +116,21 @@ test('criar: dono inexistente é 404 e dono gestor não precisa de vínculo (tas
     assert.equal((repo.gravacoes[0].argumento as { usuarioId: number }).usuarioId, 56);
 });
 
-test('criar: auxiliar não precisa de vínculo com a demanda, mas só cria para si (o dono pedido é ignorado)', async () => {
+test('criar: auxiliar não precisa de vínculo com a demanda, mas só cria para si (pedir outro dono é 403)', async () => {
     const repo = repositorio({ validarAcessoDemanda: async () => false });
-    await criarServico(repo, tagExistente, demandaExistente).criar({ ...DADOS_CRIAR, usuarioId: 55 }, AUXILIAR);
+    await criarServico(repo, tagExistente, demandaExistente).criar(DADOS_CRIAR, AUXILIAR);
     assert.equal((repo.gravacoes[0].argumento as { usuarioId: number }).usuarioId, 5);
+
+    const recusado = repositorio({ validarAcessoDemanda: async () => false });
+    await assert.rejects(() => criarServico(recusado, tagExistente, demandaExistente).criar({ ...DADOS_CRIAR, usuarioId: 55 }, AUXILIAR), UnauthorizedAccessException);
+    assert.equal(gravou(recusado), false);
+});
+
+test('criar: gestor escolhendo um dono inativo é recusado (400) e nada é gravado', async () => {
+    const repo = repositorio();
+    const inativo = { recuperar: async ({ id }: { id: number }) => ({ id, ativo: false, nomeCompleto: 'Pessoa Inativa', tipo: TipoUsuarioEnum.DESENVOLVEDOR }) };
+    await assert.rejects(() => criarServico(repo, tagExistente, demandaExistente, inativo).criar({ ...DADOS_CRIAR, usuarioId: 55 }, GESTOR), BusinessException);
+    assert.equal(gravou(repo), false);
 });
 
 test('criar: gestor sem dono informado é o dono da atividade', async () => {

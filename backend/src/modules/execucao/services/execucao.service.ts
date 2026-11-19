@@ -15,6 +15,7 @@ import {
     ExecucaoAlterarDto,
     ExecucaoRecuperarDto,
     ExecucaoAtivaDto,
+    ExecucaoAtivaDetalhadaRecuperadaDto,
     ExecucaoAtivaRecuperarDto,
     ExecucaoRegistrarDto,
     ExecucaoRegistradaDto,
@@ -257,6 +258,26 @@ export class ExecucaoService implements OnModuleInit {
             throw new UnauthorizedAccessException('Desenvolvedor só consulta a própria execução ativa');
         }
         const execucaoAtiva = await this.execucaoRepositorio.recuperarAtiva({ usuarioId: dto.usuarioId });
+
+        return {
+            sucesso:  true,
+            dados:    execucaoAtiva,
+            mensagem: execucaoAtiva ? 'Execução ativa recuperada com sucesso' : 'Nenhuma execução ativa',
+        };
+    }
+
+    /**
+   * A execução ativa de um usuário com os nomes da atividade, da demanda e do projeto, lida numa consulta só. Mesma regra de acesso de
+   * `recuperarAtivaDoUsuario`: o gestor lê a de qualquer um; o desenvolvedor, só a própria.
+   */
+    async recuperarAtivaDetalhada(
+        dto: ExecucaoAtivaRecuperarDto,
+        usuarioAtivo: JwtPayload,
+    ): Promise<StandardResponse<ExecucaoAtivaDetalhadaRecuperadaDto | null>> {
+        if (dto.usuarioId !== usuarioAtivo.sub && !podeConduzirExecucaoDeOutro(usuarioAtivo.tipo)) {
+            throw new UnauthorizedAccessException('Desenvolvedor só consulta a própria execução ativa');
+        }
+        const execucaoAtiva = await this.execucaoRepositorio.recuperarAtivaDetalhada({ usuarioId: dto.usuarioId });
 
         return {
             sucesso:  true,

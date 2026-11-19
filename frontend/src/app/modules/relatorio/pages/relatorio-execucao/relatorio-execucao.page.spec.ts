@@ -306,6 +306,23 @@ describe('RelatorioExecucaoPage — revisão por IA', () => {
     });
 });
 
+describe('RelatorioExecucaoPage — revisão em andamento e filtro novo (task 467)', () => {
+    it('mudar o filtro com a revisão pendente cancela a chamada, e a resposta do período antigo não aparece ao lado do relatório novo', async () => {
+        const montado = await abrirComRelatorio([linha()]);
+        botao('Revisar com IA').click();
+        await montado.atualizar();
+        const pendente = esperarRequisicao(montado.http, 'POST', '/relatorio/execucao/revisar');
+
+        montado.componente.escolherAtalho('PASSADO');
+        await montado.atualizar();
+        expect(pendente.cancelled, 'a revisão do período antigo foi cancelada').toBe(true);
+        expect(montado.componente.revisao()).toBeNull();
+        expect(montado.componente.carregandoRevisao()).toBe(false);
+        await esperarFiltro();
+        esperarRequisicao(montado.http, 'GET', '/relatorio/execucao');
+    });
+});
+
 describe('RelatorioExecucaoPage — painel da revisão (task 272)', () => {
     async function comRevisao(): Promise<Montado> {
         const montado = await abrirComRelatorio([linha()]);

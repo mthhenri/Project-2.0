@@ -14,7 +14,9 @@ import {
     GrupoResumoIaPropostaDecidirDto,
     GrupoResumoIaPropostaRecusadaDto,
     GrupoResumoIaRecuperadoDto,
+    GrupoResumoIaListarDto,
     GrupoResumoIaRecuperarDto,
+    GrupoResumoIaResumoDto,
     IaModeloPrecoDto,
     LIMITE_MAXIMO_DA_CONVERSA_DIRETA,
     NivelIaEnum,
@@ -70,8 +72,7 @@ interface PeriodoLido {
 /**
  * Resumo de grupo e canal com a IA (task 249). A pessoa pede com `/resumir`: **estimar** não chama o provedor; **resumir** lê **todas** as mensagens de pessoa
  * do período, troca os blocos de código por `[trecho de código omitido]` **antes** de qualquer envio (se a pessoa não os quer enviados), divide em blocos,
- * resume cada um, fecha num único texto sem nomes de autor e termina com a linha de IA. O texto volta à tela e não é guardado; só a linha de `grupo_resumo`
- * (período, modelo e tokens) fica, e o custo entra na aba Custos pela mensagem de uso do chat. Gravar na documentação é uma **proposta** de alterar a demanda
+ * resume cada um, fecha num único texto sem nomes de autor e termina com a linha de IA. O texto volta à tela e fica guardado em `grupo_resumo.texto` (histórico "Resumos anteriores", migration 0091) junto do período, do modelo e dos tokens; e o custo entra na aba Custos pela mensagem de uso do chat. Gravar na documentação é uma **proposta** de alterar a demanda
  * (`ALTERAR_DEMANDA`, acrescentando ao fim) que a pessoa confirma ou recusa; ao confirmar, o canal recebe a mensagem do sistema com o cartão da demanda.
  */
 @Injectable()
@@ -103,6 +104,28 @@ export class GrupoResumoIaService {
                 projetoId: grupo.tipo === TipoGrupoEnum.PROJETO ? grupo.projetoId : null,
             },
             mensagem: 'Opções do resumo recuperadas com sucesso',
+        };
+    }
+
+    /** O histórico do grupo ("Resumos anteriores"): os resumos já feitos, do mais recente para o mais antigo, a todo membro do grupo. */
+    async listar(dto: GrupoResumoIaListarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<GrupoResumoIaResumoDto[]>> {
+        const { grupo } = await this.grupoService.exigirMembroDoGrupo(dto.grupoId, usuarioAtivo);
+        const resumos = await this.resumoRepositorio.listarResumos({ grupoId: grupo.grupoId });
+        return {
+            sucesso: true,
+            dados: resumos.map((resumo) => ({
+                resumoId: resumo.resumoId,
+                texto: resumo.texto,
+                quantidadeMensagens: resumo.quantidadeMensagens,
+                inicioData: resumo.inicioData,
+                fimData: resumo.fimData,
+                criadoData: resumo.criadoData,
+                pedidoPorUsuarioId: resumo.usuarioId,
+                pedidoPorNome: resumo.nomeDoUsuario,
+                pedidoPorVoce: resumo.usuarioId === usuarioAtivo.sub,
+                gravado: resumo.gravadaData !== null,
+            })),
+            mensagem: 'Resumos recuperados com sucesso',
         };
     }
 
@@ -175,6 +198,7 @@ export class GrupoResumoIaService {
             }
         }
 
+        const textoFinal = fecharTextoDoResumo(texto);
         const registrado = await this.resumoRepositorio.criarResumo({
             grupoId: grupo.grupoId,
             usuarioId: usuarioAtivo.sub,
@@ -182,6 +206,7 @@ export class GrupoResumoIaService {
             fimData: periodo.fim,
             enviouCodigo: dto.enviaCodigo,
             quantidadeMensagens: periodo.mensagens.length,
+            texto: textoFinal,
             modelo: uso.modelo,
             tokensEntrada: uso.tokensEntrada,
             tokensSaida: uso.tokensSaida,
@@ -190,7 +215,7 @@ export class GrupoResumoIaService {
             sucesso: true,
             dados: {
                 resumoId: registrado.resumoId,
-                texto: fecharTextoDoResumo(texto),
+                texto: textoFinal,
                 quantidadeMensagens: registrado.quantidadeMensagens,
                 inicioData: registrado.inicioData,
                 fimData: registrado.fimData,

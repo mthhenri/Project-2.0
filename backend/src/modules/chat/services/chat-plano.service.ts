@@ -108,6 +108,7 @@ export class ChatPlanoService {
             nivel: NIVEL_DO_TIPO_DE_PROMPT[TipoPromptEnum.PLANEJAMENTO],
             maximoTokens: MAXIMO_TOKENS_DO_PLANEJAMENTO,
             escopoDeFerramentas: 'PLANEJAMENTO',
+            planoId: dto.id,
             // Duas ou mais pessoas na conversa: o modelo precisa saber quem disse o quê.
             rotularMensagemDoUsuario: (lida) => (falamVarios ? `[${autores.get(lida.usuarioId) ?? 'Alguém'}] ${lida.texto}` : lida.texto),
         });

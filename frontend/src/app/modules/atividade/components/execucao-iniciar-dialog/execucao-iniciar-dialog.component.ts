@@ -36,7 +36,7 @@ export interface AtividadeParaIniciar {
 
 /**
  * Diálogo "Iniciar execução": a descrição do que vai ser feito (obrigatória quando o dono da atividade é desenvolvedor, opcional quando é gestor)
- * e as últimas execuções da atividade, com "Usar" para retomar uma descrição. Usado pela listagem de atividades e pelo cartão da atividade na
+ * e as últimas execuções da atividade. Usado pela listagem de atividades e pelo cartão da atividade na
  * demanda aberta; quem abre chama `abrir()` e escuta `iniciada` para se recarregar. Encerrar é o diálogo compartilhado `ExecucaoEncerrarDialog`.
  */
 @Component({
@@ -115,12 +115,6 @@ export class ExecucaoIniciarDialogComponent {
                     this.iniciada.emit();
                 },
             });
-    }
-
-    /** Copia a descrição de uma execução anterior para o campo, para retomar o trabalho sem digitar. */
-    usarDescricao(descricao: string): void {
-        this.formulario.patchValue({ descricao });
-        this.formulario.controls.descricao.markAsDirty();
     }
 
     aceitarDescricaoDoAssistente(texto: string): void {

@@ -37,6 +37,8 @@ export class DemandaMetricasComponent {
     readonly editavel = input<boolean>(false);
     /** Valor já aplicado pela tela; `anterior` serve ao rollback de quem hospeda. */
     readonly alterada = output<Partial<Pick<DemandaAlterarDto, 'horasEstimadas' | 'previsaoFimData'>> & { reverter?: boolean }>();
+    /** O `PUT` respondeu com sucesso: só agora o resto da tela pode saber (uma releitura antes da gravação traria o valor antigo por cima do novo, task 407). */
+    readonly gravada = output<Partial<Pick<DemandaAlterarDto, 'horasEstimadas' | 'previsaoFimData'>>>();
 
     readonly campoEditando = signal<CampoMetrica | null>(null);
     valorHoras = 0;
@@ -94,6 +96,7 @@ export class DemandaMetricasComponent {
     private gravar(novo: DemandaAlterarDto, anterior: DemandaAlterarDto): void {
         this.alterada.emit(novo);
         this.demandaService.alterar(this.demandaId(), novo).subscribe({
+            next: () => this.gravada.emit(novo),
             error: () => this.alterada.emit({ ...anterior, reverter: true }),
         });
     }

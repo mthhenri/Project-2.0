@@ -23,13 +23,8 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 
 | Task | Decisão |
 |---|---|
-| **330** | Disponibilidade da IA: não consultar a cada 60 s com a aba oculta |
-| **333** | Check-in aberto: conferir a situação por evento, não a cada 3 s |
-| **334** | Backend: `GET /checkin/situacao` não lista todas as execuções da atividade |
 | **352** | Gravações do pad e dos textos da demanda: não devolver o texto inteiro |
-| **363** | IA chamada em conversa compartilhada: resposta com dado que nem todo leitor pode ver |
 | **366** | Grupo livre: escrever (ou mudar) quem adiciona, quem remove e quem lê o histórico |
-| **370** | `POST /assistente/auxiliar-descricao`: identificar quem usa, limitar o tamanho e registrar o custo |
 | **371** | Desfazer a criação de demanda pela proposta: exceção escrita ou mesma permissão da exclusão |
 | **372** | IA: `consultar_demanda` e `consultar_grafo_do_projeto` para o desenvolvedor |
 | **380** | Mover atividade de demanda: onde existe e entre quais projetos |
@@ -68,18 +63,18 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | Task | Severidade | Área | Entrega | Achados | Decisão |
 |---|---|---|---|---|---|
 | **487** | Alta | desktop | Project Desktop: conferir o check-in pelo horário sorteado, não a cada 15 s | A-001, A-002, A-003, A-004 | — |
-| **330** | Média | frontend/casca | Disponibilidade da IA: não consultar a cada 60 s com a aba oculta | A-005, A-006 | pendente |
-| **331** | Média | frontend/casca | Execução ativa: foco e volta à aba não disparam consultas repetidas | A-007, A-008 | — |
-| **332** | Média | frontend/casca | Leituras automáticas da casca não mostram o toast global de erro | A-009 | — |
-| **333** | Média | frontend/checkin | Check-in aberto: conferir a situação por evento, não a cada 3 s | A-010 | pendente |
-| **334** | Média | backend/checkin | Backend: `GET /checkin/situacao` não lista todas as execuções da atividade | A-011 | pendente |
+| **330** | Média | frontend/casca | Disponibilidade da IA: não consultar a cada 60 s com a aba oculta | A-005, A-006 | decidida e feita |
+| **331** | Média | frontend/casca | Execução ativa: foco e volta à aba não disparam consultas repetidas | A-007, A-008 | feita |
+| **332** | Média | frontend/casca | Leituras automáticas da casca não mostram o toast global de erro | A-009 | feita |
+| **333** | Média | frontend/checkin | Check-in aberto: conferir a situação por evento, não a cada 3 s | A-010 | decidida e feita |
+| **334** | Média | backend/checkin | Backend: `GET /checkin/situacao` não lista todas as execuções da atividade | A-011 | decidida e feita |
 | **335** | Alta | frontend/atividade | Execuções de uma atividade: detalhe e diálogo de encerrar mostram as últimas, não as mais antigas | A-012, A-013, A-014, A-015 | decidida e feita |
 | **336** | Baixa | frontend/checkin | Check-in: a situação mora num sinal só do serviço | A-016, A-017 | — |
 | **337** | Baixa | frontend/casca | Login: não pedir `GET /usuario/:id` do usuário que o login acabou de devolver | A-018 | — |
 | **338** | Baixa | frontend/casca | `GET /desktop/versao` só quando o menu do perfil é aberto | A-019, A-020, A-021 | — |
 | **339** | Baixa | frontend/casca | Encerrar execução: não reler `GET /execucao/ativa` quando a resposta já diz o resultado | A-022 | — |
-| **340** | Média | frontend/casca | Sessão: os guards esperam a reconferência do usuário, e o 403 reconfere | A-023, A-024 | — |
-| **341** | Média | frontend/casca | Encerrar a sessão (logout e 401) por um caminho só, que limpa memória e navegador | A-025, A-026, A-027 | — |
+| **340** | Média | frontend/casca | Sessão: os guards esperam a reconferência do usuário, e o 403 reconfere | A-023, A-024 | feita |
+| **341** | Média | frontend/casca | Encerrar a sessão (logout e 401) por um caminho só, que limpa memória e navegador | A-025, A-026, A-027 | feita |
 | **342** | Baixa | frontend/casca | "Desfazer" que falha continua disponível | A-028 | — |
 | **343** | Baixa | frontend/casca | Remover código sem uso na casca e no check-in | A-029 | — |
 
@@ -87,8 +82,8 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 
 | Task | Severidade | Área | Entrega | Achados | Decisão |
 |---|---|---|---|---|---|
-| **344** | Média | frontend/pad | Pad: encerrar zera o estado, para voltar a gravar e não mostrar o pad de outro usuário | A-030, A-031 | — |
-| **345** | Média | frontend/usuario | Usuários: busca e filtro voltam o paginador, aceitam o termo repetido e cancelam a carga anterior | A-032, A-033, A-034 | — |
+| **344** | Média | frontend/pad | Pad: encerrar zera o estado, para voltar a gravar e não mostrar o pad de outro usuário | A-030, A-031 | feita |
+| **345** | Média | frontend/usuario | Usuários: busca e filtro voltam o paginador, aceitam o termo repetido e cancelam a carga anterior | A-032, A-033, A-034 | feita |
 | **346** | Baixa | frontend/documentacao | Documentações: conflito de versão não mostra também "Erro interno" | A-035 | — |
 | **347** | Baixa | frontend/usuario | Usuários: editar usa a resposta do `PUT` em vez de recarregar a lista | A-036, A-037 | — |
 | **348** | Baixa | frontend/documentacao | Documentações: carregar o pad só quando ele está à vista | A-038 | — |
@@ -111,14 +106,14 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **360** | Média | backend/mensagem-direta e frontend/demanda | Canal de demanda e de projeto: definir e aplicar a regra do auxiliar | A-053 | decidida e feita |
 | **361** | Média | backend/mensagem-direta | Canal: o gestor não membro não lê texto de mensagem sem auditoria | A-054 | decidida e feita |
 | **362** | Média | backend/mensagem-direta | Grupo "privado": o que acontece quando o último gestor sai | A-055 | decidida e feita |
-| **363** | Média | backend/mensagem-direta e chat (plano) | IA chamada em conversa compartilhada: resposta com dado que nem todo leitor pode ver | A-056, A-057, A-058 | pendente |
+| **363** | Média | backend/mensagem-direta e chat (plano) | IA chamada em conversa compartilhada: resposta com dado que nem todo leitor pode ver | A-056, A-057, A-058 | decidida e feita |
 | **364** | Baixa | backend/mensagem-direta | Testes de permissão por tipo de usuário em grupos, canais e supervisão | A-059, A-060 | — |
 | **365** | Baixa | backend/mensagem-direta e proposta-ia | Proposta nascida do resumo do grupo: confirmar e desfazer por um caminho só | A-061 | — |
 | **366** | Informativo | backend/mensagem-direta | Grupo livre: escrever (ou mudar) quem adiciona, quem remove e quem lê o histórico | A-062 | pendente |
 | **367** | Alta | backend/atividade | IA: propor criar e mover atividade conferem o acesso à demanda antes de ler | A-063, A-064, A-065 | — |
-| **368** | Média | backend/proposta-ia | Proposta da IA: ajuste que falha não deixa os dados do cliente gravados | A-066 | — |
+| **368** | Média | backend/proposta-ia | Proposta da IA: ajuste que falha não deixa os dados do cliente gravados | A-066 | feita |
 | **369** | Baixa | backend/plano | Proposta de trecho do plano: recusar exige poder editar a aba | A-067 | — |
-| **370** | Média | backend/assistente | `POST /assistente/auxiliar-descricao`: identificar quem usa, limitar o tamanho e registrar o custo | A-068 | pendente |
+| **370** | Média | backend/assistente | `POST /assistente/auxiliar-descricao`: identificar quem usa, limitar o tamanho e registrar o custo | A-068 | decidida e feita |
 | **371** | Baixa | backend/demanda | Desfazer a criação de demanda pela proposta: exceção escrita ou mesma permissão da exclusão | A-069, A-070 | pendente |
 | **372** | Baixa | backend/demanda | IA: `consultar_demanda` e `consultar_grafo_do_projeto` para o desenvolvedor | A-071 | pendente |
 
@@ -129,13 +124,13 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **373** | Alta | backend/atividade | Atividade: desenvolvedor membro da demanda não altera a atividade nem as tags de um colega | A-072 | decidida e feita |
 | **374** | Alta | backend/execucao | `PUT /execucao/:id` não reabre nem move execução criando duas ativas ou sobreposição | A-073 | — |
 | **375** | Média | backend/execucao | Execução: conferir a permissão antes de responder regra de negócio | A-074 | — |
-| **376** | Média | backend/atividade | `POST /atividade`: recusar dono que o tipo não pode escolher e validar o dono informado | A-075 | — |
+| **376** | Média | backend/atividade | `POST /atividade`: recusar dono que o tipo não pode escolher e validar o dono informado | A-075 | feita |
 | **377** | Média | backend/atividade | Atividade: o dono que não é membro da demanda lê o que consegue alterar | A-076 | decidida e feita |
 | **378** | Média | backend/atividade | Excluir e restaurar atividade: a rota e a IA com a mesma regra | A-077 | decidida e feita |
 | **379** | Baixa | backend/execucao | Execução: registrar e excluir conferem a permissão na service, não só no decorador | A-078 | — |
 | **380** | Baixa | backend/atividade | Mover atividade de demanda: onde existe e entre quais projetos | A-079 | pendente |
 | **381** | Média | backend/demanda | Demanda: a API não aceita gestor, administrador nem usuário inativo como membro | A-080 | — |
-| **382** | Média | backend/demanda | `PUT /demanda/:id`: mover para pai não estrutural é recusado na service | A-081 | — |
+| **382** | Média | backend/demanda | `PUT /demanda/:id`: mover para pai não estrutural é recusado na service | A-081 | feita |
 | **383** | Baixa | backend/demanda | Demanda: o pai informado é lido com o acesso do usuário | A-082 | — |
 | **384** | Baixa | backend/demanda | `GET /demanda` para o desenvolvedor: demandas do projeto acessível ou só as dele? | A-083 | decidida e feita |
 | **385** | Baixa | backend/demanda | Demanda: a trava do "último membro" e a demanda que nasce sem membro | A-084 | pendente |
@@ -156,7 +151,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **395** | Baixa | backend/mensagem-direta | Proposta do `@IA` numa conversa: quem tem visão total não vê proposta de tipos pessoais | A-094 | — |
 | **396** | Média | backend/plano | Plano solo de projeto: o criador que perdeu o acesso ao projeto perde o plano | A-095 | decidida e feita |
 | **397** | Média | backend/plano | Plano: marcar "solo" não tira gestor e administrador de arquivar e excluir | A-096 | decidida e feita |
-| **398** | Média | backend/plano e chat | IA no plano: as ferramentas só agem no plano da conversa aberta | A-097 | — |
+| **398** | Média | backend/plano e chat | IA no plano: as ferramentas só agem no plano da conversa aberta | A-097 | feita |
 | **399** | Baixa | backend/plano | Publicar plano na demanda: conferir a permissão de editar antes das outras respostas | A-098 | — |
 | **400** | Baixa | docs e backend/plano | Plano: escrever as regras de permissão no `SYSTEM.SPEC.md` e tirar a sobra da regra antiga | A-099, A-100 | — |
 | **401** | Baixa | backend/plano | Plano: testes de permissão com auxiliar e casos de borda de acesso | A-101 | — |
@@ -167,14 +162,14 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 
 | Task | Severidade | Área | Entrega | Achados | Decisão |
 |---|---|---|---|---|---|
-| **404** | Média | frontend/demanda | Demandas: excluir não pede a demanda excluída e desfazer traz a demanda de volta à tela | A-104, A-105 | — |
+| **404** | Média | frontend/demanda | Demandas: excluir não pede a demanda excluída e desfazer traz a demanda de volta à tela | A-104, A-105 | feita |
 | **405** | Média | frontend/demanda e mensagem-direta | Demandas e Projetos: o botão do chat não pergunta ao servidor a cada seleção | A-106, A-107, A-108 | decidida e feita |
-| **406** | Média | frontend/demanda | Demandas: tirar `GET /demanda/:id/arvore` da seleção (a resposta não é usada) | A-109 | — |
-| **407** | Média | frontend/demanda | Demandas: estimativa e previsão editadas na linha só avisam a página depois do `PUT` | A-110 | — |
-| **408** | Média | frontend/demanda | Demandas: salvar a edição faz uma releitura só, e ela atualiza tags e membros | A-111, A-112 | — |
-| **409** | Média | frontend/demanda | Demandas: alteração que não muda a estrutura não recarrega o grafo do projeto | A-113 | — |
-| **410** | Média | frontend/demanda | Demandas: os destinos de "Conectar" vêm do grafo já carregado | A-114 | — |
-| **411** | Média | frontend/demanda | Demandas: trocar de demanda cancela a carga da anterior | A-115 | — |
+| **406** | Média | frontend/demanda | Demandas: tirar `GET /demanda/:id/arvore` da seleção (a resposta não é usada) | A-109 | feita |
+| **407** | Média | frontend/demanda | Demandas: estimativa e previsão editadas na linha só avisam a página depois do `PUT` | A-110 | feita |
+| **408** | Média | frontend/demanda | Demandas: salvar a edição faz uma releitura só, e ela atualiza tags e membros | A-111, A-112 | feita |
+| **409** | Média | frontend/demanda | Demandas: alteração que não muda a estrutura não recarrega o grafo do projeto | A-113 | feita |
+| **410** | Média | frontend/demanda | Demandas: os destinos de "Conectar" vêm do grafo já carregado | A-114 | feita |
+| **411** | Média | frontend/demanda | Demandas: trocar de demanda cancela a carga da anterior | A-115 | feita |
 | **412** | Baixa | frontend/demanda | Demandas: voltar a uma demanda vista e trocar de modo refazem a carga inteira | A-116 | pendente |
 | **413** | Baixa | frontend/demanda | Demandas: diálogos de edição e de tags com menos leituras | A-117 | — |
 | **414** | Baixa | backend/demanda e frontend/demanda | Demandas: gravar membros numa requisição só | A-118 | pendente |
@@ -215,8 +210,8 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 |---|---|---|---|---|---|
 | **435** | Média | backend/atividade e frontend/atividade | Atividades: ação em massa numa requisição só | A-144, A-145 | pendente |
 | **436** | Média | frontend/atividade, execucao e ponto | Seletores de usuário ativo: reaproveitar o catálogo em memória | A-146 | pendente |
-| **437** | Média | frontend (atividade, execucao, ponto, projeto, configuracao-ia, chat) | Listas e navegação de período: a consulta nova cancela a anterior | A-147, A-148, A-149 | — |
-| **438** | Média | frontend/execucao e ponto | Pausar pelo chip da topbar atualiza Execuções e Ponto | A-150 | — |
+| **437** | Média | frontend (atividade, execucao, ponto, projeto, configuracao-ia, chat) | Listas e navegação de período: a consulta nova cancela a anterior | A-147, A-148, A-149 | feita |
+| **438** | Média | frontend/execucao e ponto | Pausar pelo chip da topbar atualiza Execuções e Ponto | A-150 | feita |
 | **439** | Baixa | frontend/atividade | "Nova atividade": tags e usuários pelo catálogo em memória | A-151 | — |
 | **440** | Baixa | frontend/atividade, calendario e execucao | Atividades, Calendário e Execuções: aplicar a resposta da mutação em vez de recarregar a lista | A-152 | — |
 | **441** | Baixa | frontend/atividade | Atividades: o painel de texto da demanda não relê a demanda inteira depois de salvar | A-153 | — |
@@ -227,12 +222,12 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 
 | Task | Severidade | Área | Entrega | Achados | Decisão |
 |---|---|---|---|---|---|
-| **444** | Média | frontend/chat | Chat com a IA: o fim de cada mensagem não relê disponibilidade, conversas e planos | A-156 | — |
-| **445** | Média | frontend/chat (plano) | Plano: alterar não relê as conversas nem as listas que a resposta já atualiza | A-157, A-158 | — |
+| **444** | Média | frontend/chat | Chat com a IA: o fim de cada mensagem não relê disponibilidade, conversas e planos | A-156 | feita |
+| **445** | Média | frontend/chat (plano) | Plano: alterar não relê as conversas nem as listas que a resposta já atualiza | A-157, A-158 | feita |
 | **446** | Média | backend/chat e frontend/chat | Chat com a IA: as propostas de uma conversa numa leitura só | A-159 | pendente |
-| **447** | Média | frontend/casca | "Confirmar todas", "Desfazer todas" e "Ajustar" atualizam a execução ativa da topbar | A-160 | — |
-| **448** | Média | frontend/chat | Proposta: o "Desfazer" do toast usa a resposta e avisa a página | A-161 | — |
-| **449** | Média | frontend/chat | Chat: a demanda aberta ao lado carrega as atividades em paralelo e sem teto de 100 | A-162 | — |
+| **447** | Média | frontend/casca | "Confirmar todas", "Desfazer todas" e "Ajustar" atualizam a execução ativa da topbar | A-160 | feita |
+| **448** | Média | frontend/chat | Proposta: o "Desfazer" do toast usa a resposta e avisa a página | A-161 | feita |
+| **449** | Média | frontend/chat | Chat: a demanda aberta ao lado carrega as atividades em paralelo e sem teto de 100 | A-162 | feita |
 | **450** | Baixa | frontend/chat (plano) | Chat: a lista de planos é carregada uma vez, quando alguém precisa dela | A-163, A-164 | — |
 | **451** | Baixa | frontend/chat | Chat: "Minhas demandas" e a demanda aberta atualizam depois de uma proposta, não a cada volta à lista | A-165, A-166 | — |
 | **452** | Baixa | frontend/chat (plano) | Plano: "Ligar a uma demanda" não pede a lista no clique que fecha | A-167 | — |
@@ -265,11 +260,11 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 
 | Task | Severidade | Área | Entrega | Achados | Decisão |
 |---|---|---|---|---|---|
-| **467** | Média | frontend/relatorio | Relatório: a revisão da IA não aparece ao lado de um relatório de outro período | A-185 | — |
-| **468** | Média | frontend/configuracao-ia | Prompts: salvar, ativar, restaurar e descartar aplicam a resposta em vez de reler tudo | A-186 | — |
-| **469** | Média | frontend/configuracao-ia | Configurações da IA: salvar uma versão não relê o que o `POST` devolveu | A-187 | — |
+| **467** | Média | frontend/relatorio | Relatório: a revisão da IA não aparece ao lado de um relatório de outro período | A-185 | feita |
+| **468** | Média | frontend/configuracao-ia | Prompts: salvar, ativar, restaurar e descartar aplicam a resposta em vez de reler tudo | A-186 | feita |
+| **469** | Média | frontend/configuracao-ia | Configurações da IA: salvar uma versão não relê o que o `POST` devolveu | A-187 | feita |
 | **470** | Média | backend/projeto e frontend/projeto | Volume dentro do projeto: pedir só o volume daquele projeto | A-188 | pendente |
-| **471** | Média | frontend/modelagem | Modelagem: mover uma tabela de grupo não relê o diagrama inteiro | A-189 | — |
+| **471** | Média | frontend/modelagem | Modelagem: mover uma tabela de grupo não relê o diagrama inteiro | A-189 | não aplicada: a premissa não confere (ver HISTORY de 2026-11-19) |
 | **472** | Baixa | backend/tag e frontend/tag | Tags: excluir selecionadas e desfazer numa requisição só | A-190 | pendente |
 | **473** | Baixa | frontend/relatorio | Relatório aberto pelo projeto: pedir o projeto, não a lista inteira | A-191 | — |
 | **474** | Baixa | frontend/projeto | Projetos: a visão que está escondida não é carregada | A-192 | — |

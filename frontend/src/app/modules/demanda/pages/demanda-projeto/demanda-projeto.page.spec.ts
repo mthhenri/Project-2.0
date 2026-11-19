@@ -6,6 +6,7 @@ import { montarComponente, ComponenteMontado } from '../../../../../testes/monta
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { DemandaProjetoPage } from './demanda-projeto.page';
 import { FILTRO_VAZIO } from '../../utils/demanda-filtro.util';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 type Montado = ComponenteMontado<DemandaProjetoPage>;
 
@@ -353,6 +354,40 @@ describe('DemandaProjetoPage', () => {
             expect(montado.componente.pedidoAbrirDemanda()).toEqual({ id: 2, versao: 1 });
             montado.componente.abrirNaArvore(2);
             expect(montado.componente.pedidoAbrirDemanda()).toEqual({ id: 2, versao: 2 });
+        });
+
+        it('demanda excluída: recarrega o grafo sem pedir a excluída e oferece o Desfazer; desfazer restaura, recarrega o grafo e reabre a demanda (task 404)', async () => {
+            const { montado } = await comGrafo({ nos: [criarNo(1), criarNo(2), criarNo(3)], arestas: [] });
+            const desfazer = TestBed.inject(DesfazerService);
+
+            montado.componente.aoDemandaExcluida({ demandaId: 2, nome: 'Demanda 2' });
+            const grafoDaExclusao = esperarRequisicao(montado.http, 'GET', '/demanda/grafo');
+            montado.http.expectNone((registro) => /\/demanda\/2(\/|$)/.test(registro.url));
+            responderSucesso(grafoDaExclusao, { nos: [criarNo(1), criarNo(3)], arestas: [] });
+            await montado.atualizar();
+            expect(desfazer.oferta()?.mensagem).toBe('Demanda "Demanda 2" excluída');
+            expect(montado.componente.pedidoAbrirDemanda()).toBeNull();
+
+            desfazer.executar();
+            responderSucesso(esperarRequisicao(montado.http, 'PATCH', '/demanda/2/restaurar'), { id: 2, projetoId: 5, nome: 'Demanda 2' });
+            await montado.atualizar();
+            expect(montado.componente.pedidoAbrirDemanda(), 'só reabre quando o grafo novo chegou').toBeNull();
+            responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), { nos: [criarNo(1), criarNo(2), criarNo(3)], arestas: [] });
+            await montado.atualizar();
+            expect(montado.componente.grafo()?.nos.map((no) => no.id)).toEqual([1, 2, 3]);
+            expect(montado.componente.pedidoAbrirDemanda()).toEqual({ id: 2, versao: 1 });
+            expect(montado.componente.modoVisualizacao()).toBe('arvore');
+        });
+
+        it('renomear atualiza o nó sem pedir nada; a estrutura alterada recarrega só o grafo, sem reler a demanda aberta (task 409)', async () => {
+            const { montado } = await comGrafo({ nos: [criarNo(1), criarNo(2)], arestas: [] });
+            montado.componente.aoNomeAlterado({ demandaId: 2, nome: 'Nome novo' });
+            expect(montado.componente.grafo()?.nos.find((no) => no.id === 2)?.nome).toBe('Nome novo');
+            montado.http.expectNone(() => true);
+
+            montado.componente.aoEstruturaAlterada();
+            const pedidos = montado.http.match(() => true).map((pedido) => `${pedido.request.method} ${pedido.request.url.replace(/^.*\/api\/v1/, '').split('?')[0]}`);
+            expect(pedidos).toEqual(['GET /demanda/grafo']);
         });
 
         it('navegar para o projeto leva ao detalhe; sem projeto leva à lista de projetos', async () => {

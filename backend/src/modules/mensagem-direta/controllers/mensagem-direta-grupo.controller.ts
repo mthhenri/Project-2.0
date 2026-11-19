@@ -151,6 +151,11 @@ export class MensagemDiretaGrupoController {
         return this.resumoService.recuperarOpcoes({ grupoId }, usuarioAtivo);
     }
 
+    @Get('grupo/:grupoId/resumo/historico')
+    listarResumos(@Param('grupoId', ParseIntPipe) grupoId: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+        return this.resumoService.listar({ grupoId }, usuarioAtivo);
+    }
+
     @Post('grupo/:grupoId/resumo/estimativa')
     estimarResumo(@Param('grupoId', ParseIntPipe) grupoId: number, @Body() dto: GrupoResumoIaEstimarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
         return this.resumoService.estimar({ ...dto, grupoId }, usuarioAtivo);

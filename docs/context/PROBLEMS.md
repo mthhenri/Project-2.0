@@ -32,6 +32,30 @@
 > P-092 a P-102 (os que seguem abertos; os corrigidos saíram daqui) vêm da revisão de requisições e de permissões (2026-11-13 a 15): são os achados de severidade alta e os de média reproduzidos na aplicação rodando. A revisão tem 225 achados ao todo; os demais
 > estão em [`DOSSIE.md`](../specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md) (código `A-NNN`) e cada um aponta para a sua spec na guarda-chuva `docs/specs/backlog/requisicoes-e-permissoes-correcoes.spec.md` (tasks 330–487).
 
+### P-105 — Proposta da IA: se gravar o resultado falha depois de o executor rodar, confirmar de novo executa duas vezes · `ABERTO` · backend/proposta-ia
+
+- **Sintoma:** a ação rodou, mas o cartão mostra a proposta `PENDENTE` com os dados originais; confirmar outra vez executa a ação de novo.
+- **Causa:** em `PropostaIaService.resolver` o `try` cobre `executor.executar` e `registrarResultado`; uma falha ao gravar o resultado aciona a compensação como se o executor tivesse falhado (achado da revisão da task 368; já era assim e a restauração dos dados a deixou um pouco mais visível).
+- **Contorno:** nenhum além de conferir o efeito antes de confirmar de novo.
+- **Correção:** separar o `try` do executor do da gravação do resultado (não compensar depois de executar). Sem spec ainda.
+- **Desde:** task 368, 2026-11-19.
+
+### P-104 — A IA em conversa compartilhada lê com a permissão de quem chamou e a resposta vai a todos · `ACEITO` · backend/mensagem-direta e chat
+
+- **Sintoma:** um gestor chama a `@IA` num grupo ou canal com desenvolvedores, numa conversa um a um ou no plano de um projeto; a IA consulta com a visão do gestor e o texto da resposta fica gravado para todos os leitores, inclusive quem entrar depois e o próximo turno de outra pessoa.
+- **Causa:** as ferramentas do turno rodam com o `usuarioAtivo` de quem chamou; a única barreira é a instrução do prompt ("Não exponha no texto o que algum deles não acessa"). Não há filtro no servidor (achado A-056 do dossiê).
+- **Contorno:** quem chama a IA responde pelo que pede, como responderia por colar o texto à mão.
+- **Correção:** **aceito pelo autor em 2026-11-19** (spec 363, opção 1; regra escrita em `SYSTEM.SPEC.md` §14, "Acesso e Permissões"). Se deixar de ser aceitável: ferramentas de leitura com o menor perfil entre os leitores (no plano, limitadas ao projeto do plano) ou resposta que usou dado restrito só para quem chamou (opções 2 e 3 da spec 363, hoje em `done/`).
+- **Desde:** chat entre colaboradores (tasks 246 a 250 e 326); aceito em 2026-11-19.
+
+### P-103 — O logout não zera os demais services de memória nem as chaves de conteúdo do navegador · `ABERTO` · frontend/casca
+
+- **Sintoma:** depois de sair (ou de a sessão expirar) e entrar com outra pessoa na mesma aba, ficam: as narrativas de teste de prompt (`localStorage`, chave só por tipo de prompt), o modo convencional da IA (signal e `sessionStorage`) e uma oferta de "Desfazer" ainda dentro do prazo. O login, o nome e a cor do último usuário ficam de propósito na tela de login.
+- **Causa:** `encerrarSessao` (task 341) limpa token, usuário e execução ativa; os outros services `providedIn: root` e as chaves sem o id do usuário não entram nela (achado A-027 do dossiê).
+- **Contorno:** recarregar a página limpa a memória; as chaves do navegador seguem até serem apagadas à mão.
+- **Correção:** zerar os services com estado no `encerrarSessao` (ou recarregar a página) e passar as chaves de conteúdo a levar o id do usuário. Sem spec própria ainda.
+- **Desde:** revisão de requisições, 2026-11-13 (A-027); separado da task 341 em 2026-11-19.
+
 ### P-102 — Trocar a senha não derruba os tokens já emitidos · `ABERTO` · backend/autenticacao e usuario
 
 - **Sintoma:** quem tinha um token (inclusive alguém que não devia) segue com acesso até ele vencer (7 dias), mesmo depois de a senha da conta ser trocada. A `JwtStrategy` só confere que o usuário existe e está ativo.

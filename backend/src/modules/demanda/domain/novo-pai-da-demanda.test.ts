@@ -41,7 +41,7 @@ test('o novo pai precisa ser do mesmo projeto da demanda', () => {
 
 test('só demanda estrutural agrupa outras: pai não estrutural é recusado', () => {
     assert.throws(() => validarNovoPaiDaDemanda({ ...BASE, novoPai: { ...PAI, estrutural: false } }), (erro) => {
-        assert.match(mensagem(erro), /estrutural/);
+        assert.match(mensagem(erro), /estruturais/);
         return true;
     });
 });

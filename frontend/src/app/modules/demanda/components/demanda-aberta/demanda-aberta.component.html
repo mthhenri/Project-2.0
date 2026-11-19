@@ -116,6 +116,7 @@
                 [previsaoFimData]="dadosDemanda.previsaoFimData"
                 [editavel]="sessao.podeEditarDemanda()"
                 (alterada)="aoMetricaAlterada($event)"
+                (gravada)="aoMetricaGravada($event)"
             />
         </div>
 
@@ -142,7 +143,6 @@
                 [usuariosDisponiveis]="todosUsuarios()"
                 [comNome]="true"
                 [(membros)]="membros"
-                (membrosAlterados)="demandaAlterada.emit()"
             />
             <app-demanda-tags-cabecalho
                 [demandaId]="dadosDemanda.id"

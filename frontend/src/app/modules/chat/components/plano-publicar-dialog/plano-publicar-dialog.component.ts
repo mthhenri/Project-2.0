@@ -67,6 +67,8 @@ export class PlanoPublicarDialogComponent {
     readonly erro = signal<string | null>(null);
     private readonly demanda = signal<DemandaRecuperadaDto | null>(null);
     readonly pontosAbertos = signal(0);
+    /** Os pontos em aberto que o painel ao lado já conhece (`null` enquanto ele não leu a lista): com o número em mãos o diálogo não pede a lista de novo (task 445). */
+    readonly pontosAbertosConhecidos = input<number | null>(null);
     /** As abas marcadas para publicar; as que apagariam o texto da demanda só entram se a pessoa as marcar. */
     readonly marcadas = signal<ReadonlySet<PlanoAbaEnum>>(new Set());
 
@@ -126,6 +128,11 @@ export class PlanoPublicarDialogComponent {
                 this.carregando.set(false);
             },
         });
+        const conhecidos = this.pontosAbertosConhecidos();
+        if (conhecidos !== null) {
+            this.pontosAbertos.set(conhecidos);
+            return;
+        }
         this.planoService.listarPontos(this.plano().id).subscribe({
             next: (resposta) => this.pontosAbertos.set((resposta.dados ?? []).filter((ponto) => ponto.situacao === TipoPlanoPontoSituacaoEnum.ABERTO).length),
             error: () => this.pontosAbertos.set(0),

@@ -7,12 +7,13 @@ import {
     HostListener,
     ViewChild,
     effect,
+    untracked,
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { finalize } from 'rxjs';
+import { Subscription, finalize } from 'rxjs';
 import { DatePickerModule } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
@@ -29,6 +30,7 @@ import { ambiente } from '../../../../../environments/environment';
 import { PontoService } from '../../services/ponto.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
@@ -73,6 +75,7 @@ export class PontoPage implements OnInit {
     private readonly usuarioService = inject(UsuarioService);
     private readonly formBuilder = inject(FormBuilder);
     readonly sessao = inject(UsuarioSessaoService);
+    private readonly execucaoAtiva = inject(ExecucaoAtivaService);
     private readonly roteador = inject(Router);
 
     readonly hoje = hojeNoFuso(ambiente.fusoHorario);
@@ -138,7 +141,15 @@ export class PontoPage implements OnInit {
     });
 
     constructor() {
-    // Controles do mês não somem na visão equipe: só ficam desabilitados (cabeçalho estável).
+        // Pausar pelo chip da topbar muda o cartão de quem está trabalhando: a tela se atualiza (task 438).
+        let pausasVistas = this.execucaoAtiva.pausasDoChip();
+        effect(() => {
+            const pausas = this.execucaoAtiva.pausasDoChip();
+            if (pausas === pausasVistas) return;
+            pausasVistas = pausas;
+            untracked(() => this.carregar());
+        });
+        // Controles do mês não somem na visão equipe: só ficam desabilitados (cabeçalho estável).
         effect(() => {
             const controle = this.formularioFiltros.controls.mesAno;
             if (this.modo() === 'mensal') controle.enable({ emitEvent: false });
@@ -248,9 +259,13 @@ export class PontoPage implements OnInit {
         return meses[mes - 1] ?? '';
     }
 
+    /** A consulta em curso (todos ou mensal): uma nova (outro mês ou usuário) cancela a anterior (task 437). */
+    private consultaEmCurso: Subscription | null = null;
+
     private carregarTodos(): void {
+        this.consultaEmCurso?.unsubscribe();
         this.carregando.set(true);
-        this.pontoService
+        this.consultaEmCurso = this.pontoService
             .consultarTodos(this.formatarData(this.hoje))
             .pipe(finalize(() => this.carregando.set(false)))
             .subscribe({
@@ -273,8 +288,9 @@ export class PontoPage implements OnInit {
         const usuarioId = this.formularioFiltros.value.usuarioId ?? null;
         if (this.sessao.podeVerExecucaoEPontoDeOutro() && usuarioId) filtros.usuarioId = usuarioId;
 
+        this.consultaEmCurso?.unsubscribe();
         this.carregando.set(true);
-        this.pontoService
+        this.consultaEmCurso = this.pontoService
             .consultarMensal(filtros)
             .pipe(finalize(() => this.carregando.set(false)))
             .subscribe({

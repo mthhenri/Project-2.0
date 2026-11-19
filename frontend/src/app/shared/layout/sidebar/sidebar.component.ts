@@ -1,9 +1,10 @@
-import { Component, DestroyRef, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
 import { EstadoIaEnum } from '@project20/shared';
 import { IaDisponibilidadeService } from '../../../core/services/ia-disponibilidade.service';
+import { ProjectDesktopService } from '../../../core/services/project-desktop.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../core/utils/atalhos';
 import { ITENS_NAVEGACAO, ItemNavegacao, agruparItensNavegacao } from '../navegacao';
@@ -11,7 +12,7 @@ import { ITENS_NAVEGACAO, ItemNavegacao, agruparItensNavegacao } from '../navega
 const CHAVE_RECOLHIDA = 'sidebar.recolhida';
 /** Abaixo desta largura a barra entra recolhida, para sobrar espaço ao conteúdo. */
 const LARGURA_MINIMA_EXPANDIDA = 1280;
-/** De quanto em quanto tempo a barra confere se a IA continua no ar (para liberar as telas convencionais se ela cair). */
+/** De quanto em quanto tempo a barra confere se a IA continua no ar (para liberar as telas convencionais se ela cair), com a página à vista. */
 const INTERVALO_DISPONIBILIDADE_MS = 60_000;
 
 @Component({
@@ -25,6 +26,7 @@ export class SidebarComponent implements OnInit {
     private readonly sessao = inject(UsuarioSessaoService);
     private readonly roteador = inject(Router);
     private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
+    private readonly desktop = inject(ProjectDesktopService);
     private readonly destroyRef = inject(DestroyRef);
 
     readonly recolhida = signal<boolean>(this.lerEstadoInicial());
@@ -44,10 +46,29 @@ export class SidebarComponent implements OnInit {
     /** Os itens visíveis nos grupos da barra (grupo vazio some) e o que fica sozinho no fundo (task 223). */
     readonly navegacaoAgrupada = computed(() => agruparItensNavegacao(this.itensNavegacao()));
 
+    /** No Desktop a janela oculta continua com `visibilityState` visível: ao voltar à vista, uma conferência (a do navegador está em `aoVoltarParaAba`). */
+    private readonly aoReaparecerNoDesktop = (() => {
+        let estavaOculto = this.desktop.oculto();
+        return effect(() => {
+            const oculto = this.desktop.oculto();
+            if (estavaOculto && !oculto) untracked(() => this.iaDisponibilidade.carregar());
+            estavaOculto = oculto;
+        });
+    })();
+
     ngOnInit(): void {
         this.iaDisponibilidade.carregar();
-        const temporizador = setInterval(() => this.iaDisponibilidade.carregar({ forcar: true }), INTERVALO_DISPONIBILIDADE_MS);
+        // Com a aba (ou a janela do Desktop) fora da vista a resposta só mudaria o menu que ninguém vê: o tique é pulado.
+        const temporizador = setInterval(() => {
+            if (!this.desktop.paginaOculta()) this.iaDisponibilidade.carregar({ forcar: true });
+        }, INTERVALO_DISPONIBILIDADE_MS);
         this.destroyRef.onDestroy(() => clearInterval(temporizador));
+    }
+
+    /** Voltar à aba: reconfere uma vez, sem `forcar` (a janela de frescor do serviço evita duplicar com as outras leituras da volta). */
+    @HostListener('document:visibilitychange')
+    aoVoltarParaAba(): void {
+        if (document.visibilityState === 'visible' && !this.desktop.oculto()) this.iaDisponibilidade.carregar();
     }
 
     private estaDesabilitado(item: ItemNavegacao): boolean {

@@ -99,8 +99,9 @@ describe('ProjetoVolumeComponent — mensal', () => {
         await montado.atualizar();
         expect(montado.componente.visualizandoMesAtual()).toBe(false);
 
+        // O mês atual já foi visto: volta da memória, sem nova consulta (task 437).
         montado.componente.irParaMesAtual();
-        esperarRequisicao(montado.http, 'GET', '/projeto/volume');
+        montado.http.expectNone(() => true);
         expect(montado.componente.visualizandoMesAtual()).toBe(true);
     });
 
@@ -121,13 +122,13 @@ describe('ProjetoVolumeComponent — mensal', () => {
         montado.http.expectNone((requisicao) => requisicao.url.endsWith('/projeto/volume'));
     });
 
-    it('resposta atrasada de outro mês não sobrescreve o mês que está na tela', async () => {
+    it('trocar de mês cancela a consulta do anterior, e a resposta dela não sobrescreve o mês que está na tela (task 437)', async () => {
         const montado = await montar();
         const primeira = esperarRequisicao(montado.http, 'GET', '/projeto/volume');
         montado.componente.retornarMes();
         const segunda = esperarRequisicao(montado.http, 'GET', '/projeto/volume');
+        expect(primeira.cancelled).toBe(true);
         responderSucesso(segunda, [item(2, 60, null)]);
-        responderSucesso(primeira, [item(1, 60, null)]);
         await montado.atualizar();
         expect(texto(montado)).toContain('P2');
         expect(texto(montado)).not.toContain('P1');
@@ -206,7 +207,7 @@ describe('ProjetoVolumeComponent — anual', () => {
         expect(montado.componente.visualizandoAnoAtual()).toBe(false);
 
         montado.componente.irParaAnoAtual();
-        esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual');
+        montado.http.expectNone(() => true);
         expect(montado.componente.visualizandoAnoAtual()).toBe(true);
     });
 
@@ -223,13 +224,13 @@ describe('ProjetoVolumeComponent — anual', () => {
         responderSucesso(requisicao, []);
     });
 
-    it('voltar para Mensal pede o mês de novo, e resposta atrasada da outra visão não aparece', async () => {
+    it('trocar para Anual cancela a consulta mensal em curso, e a resposta dela não aparece (task 437)', async () => {
         const montado = await montar();
         const mensalAtrasada = esperarRequisicao(montado.http, 'GET', '/projeto/volume');
         montado.componente.periodoControl.setValue('ANUAL');
         const anual = esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual');
+        expect(mensalAtrasada.cancelled).toBe(true);
         responderSucesso(anual, [itemAnual(7, ANO_SEM_EXECUCAO, null)]);
-        responderSucesso(mensalAtrasada, [item(9, 60, null)]);
         await montado.atualizar();
         expect(texto(montado)).toContain('Projeto 7');
         expect(texto(montado)).not.toContain('P9');
@@ -269,5 +270,20 @@ describe('ProjetoVolumeComponent — dentro do projeto (task 290)', () => {
         expect(montado.componente.periodo()).toBe('MENSAL');
         await irParaAnual(montado, [itemAnual(1, ANO_SEM_EXECUCAO, 40)]);
         expect(montado.elemento.querySelector('a.projeto-volume__nome')).not.toBeNull();
+    });
+});
+
+describe('ProjetoVolumeComponent: o que já veio é reaproveitado (task 437)', () => {
+    it('voltar a um mês já visto não repete a consulta', async () => {
+        const montado = await montar();
+        await carregarMensal(montado, [item(1, 60, null)]);
+        montado.componente.retornarMes();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/volume'), [item(2, 60, null)]);
+        await montado.atualizar();
+        montado.componente.avancarMes();
+        await montado.atualizar();
+        montado.http.expectNone(() => true);
+        expect(texto(montado)).toContain('P1');
+        expect(texto(montado)).not.toContain('P2');
     });
 });

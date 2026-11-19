@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, input, signal } from '@angular/cor
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -143,8 +144,10 @@ export class ProjetoVolumeComponent implements OnInit {
         this.escolherAno(this.hoje.getFullYear());
     }
 
-    /** Busca de novo o período à vista (o volume esperado mudou no cadastro de vigências). */
+    /** Busca de novo o período à vista (o volume esperado mudou no cadastro de vigências): o que estava guardado deixa de valer (task 437). */
     recarregar(): void {
+        this.mensaisJaCarregados.clear();
+        this.anuaisJaCarregados.clear();
         this.carregar();
     }
 
@@ -153,31 +156,55 @@ export class ProjetoVolumeComponent implements OnInit {
         this.jaCarregou.set(true);
     }
 
+    /** A consulta em curso e o que já veio de cada período enquanto a tela está aberta (task 437): cliques seguidos cancelam a anterior, e voltar a um período já visto não repete a consulta. */
+    private consultaEmCurso: Subscription | null = null;
+    private readonly mensaisJaCarregados = new Map<string, ProjetoVolumeResumoDto[]>();
+    private readonly anuaisJaCarregados = new Map<number, ProjetoVolumeAnualResumoDto[]>();
+
     private carregar(): void {
-        this.carregando.set(true);
+        this.consultaEmCurso?.unsubscribe();
         const periodo = this.periodo();
 
         if (periodo === 'MENSAL') {
             const mes = this.mes();
-            this.projetoService
+            const chave = `${mes.getFullYear()}-${mes.getMonth() + 1}`;
+            const guardado = this.mensaisJaCarregados.get(chave);
+            if (guardado) {
+                this.itensMensais.set(guardado);
+                this.encerrarCarga();
+                return;
+            }
+            this.carregando.set(true);
+            this.consultaEmCurso = this.projetoService
                 .listarVolume({ ano: mes.getFullYear(), mes: mes.getMonth() + 1 })
                 .pipe(finalize(() => this.encerrarCarga()))
                 .subscribe({
                     next: (resposta) => {
                         // Uma resposta atrasada de outro mês (ou de outra visão) não pode sobrescrever o que está na tela.
-                        if (resposta.sucesso && resposta.dados && this.periodo() === 'MENSAL' && this.mes() === mes) this.itensMensais.set(resposta.dados);
+                        if (!resposta.sucesso || !resposta.dados) return;
+                        this.mensaisJaCarregados.set(chave, resposta.dados);
+                        if (this.periodo() === 'MENSAL' && this.mes() === mes) this.itensMensais.set(resposta.dados);
                     },
                 });
             return;
         }
 
         const ano = this.ano();
-        this.projetoService
+        const guardadoAnual = this.anuaisJaCarregados.get(ano);
+        if (guardadoAnual) {
+            this.itensAnuais.set(guardadoAnual);
+            this.encerrarCarga();
+            return;
+        }
+        this.carregando.set(true);
+        this.consultaEmCurso = this.projetoService
             .listarVolumeAnual({ ano })
             .pipe(finalize(() => this.encerrarCarga()))
             .subscribe({
                 next: (resposta) => {
-                    if (resposta.sucesso && resposta.dados && this.periodo() === 'ANUAL' && this.ano() === ano) this.itensAnuais.set(resposta.dados);
+                    if (!resposta.sucesso || !resposta.dados) return;
+                    this.anuaisJaCarregados.set(ano, resposta.dados);
+                    if (this.periodo() === 'ANUAL' && this.ano() === ano) this.itensAnuais.set(resposta.dados);
                 },
             });
     }

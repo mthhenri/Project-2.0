@@ -52,6 +52,9 @@ export interface OrigemDaProposta {
     noCheckin?: boolean;
 }
 
+/** Campos que dizem onde a proposta age; quem ajusta a proposta de outra pessoa não os troca. */
+const CHAVES_DO_ALVO_NO_AJUSTE_DE_TERCEIRO = ['planoId', 'aba'] as const;
+
 @Injectable()
 export class PropostaIaService {
     private readonly logger = new Logger(PropostaIaService.name);
@@ -112,6 +115,13 @@ export class PropostaIaService {
 
     async ajustar(id: number, dto: PropostaIaAjustarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<PropostaIaAjustadaDto>> {
         const proposta = await this.obterDoUsuario(id, usuarioAtivo);
+        // A proposta de outra pessoa (a alteração de trecho do plano, de quem edita o plano) aceita o texto ajustado, mas não muda o alvo:
+        // trocar o plano ou a aba faria o executor agir em outro lugar do que a IA propôs a quem a chamou.
+        if (proposta.usuarioId !== usuarioAtivo.sub) {
+            for (const chave of CHAVES_DO_ALVO_NO_AJUSTE_DE_TERCEIRO) {
+                if (dto.dados[chave] !== proposta.dados[chave]) throw new UnauthorizedAccessException('O ajuste da proposta de outra pessoa não troca o plano nem a aba');
+            }
+        }
         const resolvida = await this.resolver(proposta, dto.dados, StatusPropostaIaEnum.AJUSTADA, usuarioAtivo);
         return { sucesso: true, dados: resolvida, mensagem: 'Proposta ajustada e confirmada com sucesso' };
     }
@@ -275,6 +285,9 @@ export class PropostaIaService {
         destino: StatusPropostaIaEnum.CONFIRMADA | StatusPropostaIaEnum.AJUSTADA,
         usuarioAtivo: JwtPayload,
     ): Promise<PropostaIaResumoDto> {
+        // Os dados que a compensação restaura são os desta leitura: só valem se a proposta ainda estava pendente quando foi lida (uma em ajuste
+        // em andamento, ainda com os dados do ajuste, não pode virar o "original" de outro pedido).
+        if (proposta.status !== StatusPropostaIaEnum.PENDENTE) throw new ConflictException('A proposta já foi resolvida');
         const executor = this.executores.obter(proposta.tipo);
         executor.validar(dados);
 
@@ -297,6 +310,8 @@ export class PropostaIaService {
                 de: [destino],
                 // Proposta obsoleta (o estado em que se baseava mudou) expira: confirmar de novo nunca vai servir. Qualquer outra falha volta a pendente.
                 para: erro instanceof PropostaObsoletaException ? StatusPropostaIaEnum.EXPIRADA : StatusPropostaIaEnum.PENDENTE,
+                // O ajuste gravou os dados enviados ao reivindicar a proposta: o que o executor recusou não pode ficar no cartão como se fosse da IA.
+                dados: destino === StatusPropostaIaEnum.AJUSTADA ? proposta.dados : undefined,
             });
             throw erro;
         }

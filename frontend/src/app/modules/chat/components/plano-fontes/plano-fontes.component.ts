@@ -135,7 +135,8 @@ export class PlanoFontesComponent {
                 this.ocupado.set(false);
                 this.removendo.set(null);
                 if (this.vendo()?.id === fonte.id) this.vendo.set(null);
-                this.recarregar();
+                // Remover cabe em memória; adicionar continua relendo, porque o `POST` não devolve os campos do resumo (task 445).
+                this.fontes.update((lista) => lista.filter((item) => item.id !== fonte.id));
             },
             error: (falha: HttpErrorResponse) => this.falhar(falha, 'Não foi possível remover a fonte'),
         });

@@ -1,3 +1,4 @@
+import { Subscription } from 'rxjs';
 import { Component, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -92,7 +93,38 @@ export class SeletorComponent {
         this.recarregar();
     }
 
-    /** Relê as conversas e os planos (o servidor pode ter nomeado a conversa do dia, e o plano pode ter mudado de título ou de lugar). */
+    /**
+     * Relê só as conversas, e só se faz falta: a conversa de hoje ainda não está na lista (era a primeira mensagem do dia) ou ainda tem o nome padrão (o servidor a nomeia ao fim da
+     * primeira resposta). Nas demais mensagens a lista não muda (task 444).
+     */
+    recarregarConversasSeMudou(): void {
+        const doDia = this.conversas().find((conversa) => conversa.data === this.hoje());
+        if (doDia && (doDia.tituloEditado || !doDia.titulo.startsWith(PREFIXO_TITULO_PADRAO))) return;
+        this.recarregarConversas();
+    }
+
+    /** Relê só as conversas. */
+    recarregarConversas(): void {
+        this.chatService.listarConversas().subscribe({
+            next: (resposta) => this.conversas.set(resposta.dados?.conversas ?? []),
+            error: () => this.erro.set(true),
+        });
+    }
+
+    /** Relê só os planos (criar, excluir e atribuir projeto mudam a lista; título, solo e arquivo se corrigem em memória por `corrigirPlano`). */
+    recarregarPlanos(): void {
+        this.planoService.listar({ busca: this.buscaFeita() || undefined }).subscribe({
+            next: (resposta) => this.planos.set(resposta.dados ?? []),
+            error: () => this.erro.set(true),
+        });
+    }
+
+    /** Corrige a linha de um plano com o que a tela já sabe, sem pedir nada (task 445). */
+    corrigirPlano(planoId: number, campos: Partial<Pick<PlanoResumoDto, 'titulo' | 'solo' | 'arquivado'>>): void {
+        this.planos.update((lista) => lista.map((plano) => (plano.id === planoId ? { ...plano, ...campos } : plano)));
+    }
+
+    /** Relê as conversas e os planos (abertura e busca). */
     recarregar(): void {
         this.carregando.set(true);
         this.erro.set(false);
@@ -145,22 +177,32 @@ export class SeletorComponent {
         }
         this.buscaFeita.set(texto);
         this.buscando.set(true);
-        this.chatService.buscar(texto).subscribe({
+        // Uma busca nova cancela as anteriores: vale a resposta da última, não a que chegar por último (task 437).
+        this.buscasEmCurso.forEach((busca) => busca.unsubscribe());
+        this.buscasEmCurso = [];
+        const buscaDeMensagens = this.chatService.buscar(texto).subscribe({
             next: (resposta) => {
                 this.resultados.set(resposta.dados?.mensagens ?? []);
                 this.buscando.set(false);
             },
             error: () => this.buscando.set(false),
         });
-        this.planoService.listar({ busca: texto }).subscribe({ next: (resposta) => this.planos.set(resposta.dados ?? []) });
+        const buscaDePlanos = this.planoService.listar({ busca: texto }).subscribe({ next: (resposta) => this.planos.set(resposta.dados ?? []) });
+        this.buscasEmCurso = [buscaDeMensagens, buscaDePlanos];
     }
+
+    private buscasEmCurso: Subscription[] = [];
 
     limparBusca(): void {
         const tinhaBusca = this.buscaFeita() !== '';
         this.controleBusca.setValue('');
         this.buscaFeita.set('');
         this.resultados.set(null);
-        if (tinhaBusca) this.recarregar();
+        this.buscasEmCurso.forEach((busca) => busca.unsubscribe());
+        this.buscasEmCurso = [];
+        this.buscando.set(false);
+        // A busca só trocou `resultados` e `planos`: limpar relê só os planos, e as conversas não mudaram (task 437).
+        if (tinhaBusca) this.recarregarPlanos();
     }
 
     escolherDia(data: string): void {

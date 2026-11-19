@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DemandaRepository } from '../repositories/demanda.repository';
 import { TagRepository } from '../../tag/repositories/tag.repository';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
+import { validarNovoPaiDaDemanda } from '../domain/novo-pai-da-demanda';
 import { ObservadoresDeMembrosDaDemandaRegistro } from '../domain/observador-de-membros-da-demanda';
 import {
     DemandaCriarDto,
@@ -389,20 +390,14 @@ export class DemandaService {
                 throw new ResourceNotFoundException('Demanda pai');
             }
 
-            if (demandaPaiEncontrada.projetoId !== demandaEncontrada.projetoId) {
-                throw new BusinessException(
-                    'A demanda pai deve pertencer ao mesmo projeto',
-                );
-            }
-
-            // Mover para dentro de si mesma ou de uma descendente cortaria a demanda da árvore (ciclo de hierarquia).
-            if (dto.demandaPaiId === dto.id) {
-                throw new BusinessException('Uma demanda não pode ser filha de si mesma');
-            }
+            // Mover para dentro de si mesma ou de uma descendente cortaria a demanda da árvore (ciclo); o pai também precisa ser do mesmo projeto e estrutural.
             const descendentes = await this.demandaRepositorio.listarDescendentes({ demandaId: dto.id });
-            if (descendentes.some((descendente) => descendente.id === dto.demandaPaiId)) {
-                throw new BusinessException('Uma demanda não pode ser movida para dentro de uma descendente');
-            }
+            validarNovoPaiDaDemanda({
+                demandaId: dto.id,
+                demandaProjetoId: demandaEncontrada.projetoId,
+                novoPai: demandaPaiEncontrada,
+                idsDaSubarvore: descendentes.map((descendente) => descendente.id),
+            });
         }
 
         const demandaAlterada = await this.demandaRepositorio.alterar({

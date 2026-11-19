@@ -8,7 +8,9 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { CheckinSituacaoConsultadaDto, ChatEventoDto, EstadoIaEnum } from '@project20/shared';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
+import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { EditorMensagemComponent } from '../../../../shared/components/editor-mensagem/editor-mensagem.component';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { ToastDesfazerComponent } from '../../../../shared/components/toast-desfazer/toast-desfazer.component';
@@ -19,7 +21,11 @@ import { CheckinService } from '../../services/checkin.service';
 import { EstadoDoCheckin, decidirEstado } from '../../utils/checkin.util';
 
 /** De quanto em quanto tempo a janela confere a situação (para saber que a descrição foi confirmada ou que os check-ins foram suspensos). */
-const INTERVALO_DA_SITUACAO_MS = 3000;
+/**
+ * Rede de segurança da conferência: os desfechos que a página espera nascem nela (o fim de cada fluxo da conversa já confere) ou na troca da
+ * execução ativa, que também confere; o intervalo só cobre o que acontece por fora (outro dispositivo, reunião que suspende).
+ */
+const INTERVALO_DE_SEGURANCA_MS = 30_000;
 /** Quanto a janela espera, sem execução em andamento, antes de se fechar sozinha. */
 const ESPERA_PARA_FECHAR_MS = 5000;
 /** Dentro do Project, depois de registrar, quanto a janelinha espera antes de sumir sozinha. */
@@ -79,6 +85,8 @@ export class CheckinPage implements OnInit {
     private readonly checkinService = inject(CheckinService);
     private readonly chatService = inject(ChatService);
     private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
+    private readonly execucaoAtiva = inject(ExecucaoAtivaService);
+    private readonly desktop = inject(ProjectDesktopService);
     private readonly messageService = inject(MessageService);
     private readonly roteador = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
@@ -176,6 +184,17 @@ export class CheckinPage implements OnInit {
             if (!(this.embutido() || this.noDesktop) || this.estado() !== 'REGISTRADO') return;
             const temporizador = setTimeout(() => this.fechar(), ESPERA_PARA_SUMIR_REGISTRADO_MS);
             aoLimpar(() => clearTimeout(temporizador));
+        });
+        // Iniciar, encerrar ou trocar a execução (por qualquer tela ou pela IA) muda o desfecho: confere na hora, sem esperar a rede de segurança.
+        let execucaoAnterior: number | null | undefined;
+        effect(() => {
+            const execucaoAtual = this.execucaoAtiva.ativa()?.id ?? null;
+            if (execucaoAnterior !== undefined && execucaoAnterior !== execucaoAtual) {
+                untracked(() => {
+                    if (this.estadoDaSituacao() === 'EM_ANDAMENTO') this.conferirSituacao();
+                });
+            }
+            execucaoAnterior = execucaoAtual;
         });
         this.destroyRef.onDestroy(() => this.pararDeConferir());
     }
@@ -344,10 +363,10 @@ export class CheckinPage implements OnInit {
         this.messageService.add({ severity: 'warn', summary: 'Check-in', detail: texto });
     }
 
-    /** Confere a situação a cada poucos segundos: a descrição confirmada (a execução mudou) e a suspensão por reunião liberam a janela. */
+    /** Rede de segurança: a descrição confirmada (a execução mudou) e a suspensão por reunião liberam a janela, mesmo sem um evento que avise. */
     private comecarAConferir(): void {
         this.pararDeConferir();
-        this.temporizadorSituacao = setInterval(() => this.conferirSituacao(), INTERVALO_DA_SITUACAO_MS);
+        this.temporizadorSituacao = setInterval(() => this.conferirSituacao(), INTERVALO_DE_SEGURANCA_MS);
     }
 
     private pararDeConferir(): void {
@@ -357,8 +376,9 @@ export class CheckinPage implements OnInit {
 
     private conferirSituacao(): void {
         if (this.estadoDaSituacao() === 'CARREGANDO' || this.estadoDaSituacao() === 'ERRO') return;
-        // Aba oculta não precisa do desfecho agora: ao voltar, o próximo tique de 3 s confere (P-079).
-        if (document.visibilityState === 'hidden') return;
+        // Aba (ou janela do Desktop) oculta não precisa do desfecho agora: ao voltar, o próximo tique confere (P-079). No Electron a janela oculta
+        // continua com `visibilityState` visível, por isso a pergunta vai ao serviço do Desktop.
+        if (this.desktop.paginaOculta()) return;
         this.checkinService.consultarSituacao().subscribe({
             next: (resposta) => {
                 const dados = resposta.dados;

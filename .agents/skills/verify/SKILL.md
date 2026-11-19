@@ -114,4 +114,10 @@ await browser.newContext({ viewport: { width: 1366, height: 768 } });
   200 com HTML (o fallback da SPA) e o stream de eventos responder 404. A tela abre vazia e uma medição de tráfego parece "funcionar". Suba por `npm run frontend:dev` (o script já passa o proxy) ou acrescente o
   `--proxy-config`, e confira antes de medir: `curl -s -o /dev/null -w '%{content_type}' localhost:4200/api/v1/execucao/ativa` tem de responder `application/json`.
 
+- **Postgres do ambiente de nuvem cai entre sessões e o `.env` precisa da porta 5432** (verificação das tasks 330–340, 2026-11-19): o cluster `16/main` do sistema existe, mas vem parado (`pg_isready` sem resposta).
+  `pg_ctlcluster 16 main start`, `ALTER USER postgres PASSWORD 'postgres'` (uma vez), `createdb project20`, `DB_PORT=5432` no `.env` e `CHAT_ARMAZENAMENTO=postgres`. Para contar o SQL de uma rota:
+  `ALTER SYSTEM SET log_statement='all'` + `pg_reload_conf()` e leia `/var/log/postgresql/postgresql-16-main.log` (cada consulta vira um `LOG: execute <unnamed>:` com o texto na linha seguinte).
+- **Tempo no Playwright é `page.clock`** (mesma verificação): `page.clock.install()` antes do `goto` e `page.clock.runFor(ms)` para os intervalos de 3 s, 30 s e 60 s; `waitForTimeout` continua em tempo real e serve para a resposta do servidor.
+  `visibilityState` não muda sozinho: `Object.defineProperty(document, 'visibilityState', { get: () => window.__v || 'visible' })` e dispare `visibilitychange`. `history.pushState` + `popstate` **não** navega pelo roteador do Angular (a "contraprova" não deu toast): clique no link da barra lateral.
+
 Entra aqui na hora em que morder: sintoma → causa → como evitar.

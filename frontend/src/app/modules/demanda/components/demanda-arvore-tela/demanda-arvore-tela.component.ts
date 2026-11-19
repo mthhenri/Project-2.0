@@ -15,6 +15,7 @@ import {
     demandasDaPasta,
     listarPastasEmOrdem,
     pastaDaDemanda,
+    vizinhaDaDemandaExcluida,
 } from '../../utils/demanda-pasta.util';
 import { AbaDemandaAberta, DemandaAbertaComponent } from '../demanda-aberta/demanda-aberta.component';
 import { DemandaDescricaoEditorComponent } from '../demanda-descricao-editor/demanda-descricao-editor.component';
@@ -68,8 +69,13 @@ export class DemandaArvoreTelaComponent implements OnInit {
 
     readonly pastaChange = output<PastaId>();
     readonly alterado = output<void>();
+    /** A estrutura mudou por esta tela (conexão, edição pelo diálogo): a página recarrega o grafo, sem mandar a demanda aberta se reler (ela já se atualizou). */
+    readonly estruturaAlterada = output<void>();
+    readonly nomeAlterado = output<{ demandaId: number; nome: string }>();
+    readonly demandaExcluida = output<{ demandaId: number; nome: string }>();
     readonly statusAlterado = output<{ demandaId: number; status: TipoDemandaStatusEnum }>();
     readonly tagsAlteradas = output<{ demandaId: number; tags: TagResumoDto[] }>();
+    readonly horasEstimadasAlteradas = output<{ demandaId: number; horasEstimadas: number }>();
     readonly filtrosLimpos = output<void>();
     readonly demandaEditarSolicitada = output<number>();
     readonly demandaNovaFilhaSolicitada = output<number>();
@@ -93,13 +99,17 @@ export class DemandaArvoreTelaComponent implements OnInit {
 
     readonly pastas = computed(() => construirPastas(this.nos()));
     readonly semPastaQuantidade = computed(() => contarSemPasta(this.nos()));
+    /** Quantas demandas de trabalho o projeto tem (as pastas não contam): o número do "Projeto inteiro". */
+    readonly totalDeDemandas = computed(() => this.nos().filter((no) => !no.estrutural).length);
     readonly emBusca = computed(() => this.filtro().termo.trim() !== '');
     readonly filtroEstaAtivo = computed(() => filtroAtivo(this.filtro()));
 
-    /** As demandas da lista: as da pasta escolhida ou, com busca, as de todas as pastas; em qualquer caso, só as que passam no filtro. */
+    /** As demandas da lista: as da pasta escolhida ou, com busca, as de todas as pastas; em qualquer caso, só as que passam no filtro. O "Projeto inteiro" não lista as pastas (demandas de estrutura): elas aparecem como caminho acima do nome. */
     readonly itens = computed<DemandaGrafoNoDto[]>(() => {
         const todos = this.nos();
-        return this.emBusca() || this.projetoInteiro() ? nosCorrespondentes(todos, this.filtro()) : nosCorrespondentes(demandasDaPasta(todos, this.pastaId()), this.filtro());
+        if (this.emBusca()) return nosCorrespondentes(todos, this.filtro());
+        if (this.projetoInteiro()) return nosCorrespondentes(todos.filter((no) => !no.estrutural), this.filtro());
+        return nosCorrespondentes(demandasDaPasta(todos, this.pastaId()), this.filtro());
     });
 
     readonly nomesDasPastas = computed<ReadonlyMap<number, string> | null>(() =>
@@ -323,16 +333,20 @@ export class DemandaArvoreTelaComponent implements OnInit {
             next: (resposta) => {
                 if (resposta.sucesso) {
                     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' });
-                    if (alteracao.demandaId === this.demandaAbertaId()) this.recarregar();
+                    if (alteracao.demandaId === this.demandaAbertaId()) this.aberta()?.aplicarStatus(alteracao.para);
                 }
             },
             error: () => this.statusAlterado.emit({ demandaId: alteracao.demandaId, status: alteracao.de }),
         });
     }
 
-    aoExcluida(): void {
-        this.demandaAbertaId.set(null);
-        this.alterado.emit();
+    /**
+     * A demanda aberta foi excluída (task 404): abre a vizinha na hora (sem reler a excluída, que a coluna ainda tem montada) e avisa a página pela saída própria da exclusão, que
+     * recarrega o grafo e oferece o "Desfazer"; não passa por `alterado`, que mandaria a demanda aberta se reler.
+     */
+    aoExcluida(excluida: { demandaId: number; nome: string }): void {
+        this.demandaAbertaId.set(vizinhaDaDemandaExcluida(this.itens(), this.nos(), excluida.demandaId));
+        this.demandaExcluida.emit(excluida);
     }
 
     aoDemandaAquiCriada(): void {

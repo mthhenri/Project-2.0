@@ -71,3 +71,16 @@ describe('CustosAbaComponent', () => {
         esperarRequisicao(montado.http, 'GET', '/ia-custo');
     });
 });
+
+describe('CustosAbaComponent: período novo cancela a consulta anterior (task 437)', () => {
+    it('cliques seguidos na seta: a consulta anterior é cancelada e só a última aplica', async () => {
+        const montado = await montar();
+        const primeira = esperarRequisicao(montado.http, 'GET', '/ia-custo');
+        montado.componente.anterior();
+        const segunda = esperarRequisicao(montado.http, 'GET', '/ia-custo');
+        expect(primeira.cancelled).toBe(true);
+        responderSucesso(segunda, consulta);
+        await montado.atualizar();
+        expect(montado.componente.carregando()).toBe(false);
+    });
+});

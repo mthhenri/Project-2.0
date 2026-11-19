@@ -150,11 +150,24 @@ export class PadService implements OnDestroy {
         this.descarregar({ aoFechar: true });
     }
 
-    /** O lugar que mostrava o pad foi destruído: nada digitado ou limpo pode ficar para trás. */
+    /**
+   * O lugar que mostrava o pad foi destruído: nada digitado ou limpo pode ficar para trás (as gravações pendentes saem antes) e o serviço volta
+   * ao estado de partida. Sem isso, o próximo `abrir`/`garantirCarregado` do mesmo usuário via seções já em memória mas sem assinatura (a digitação
+   * deixava de gravar sozinha) e o pad de quem saiu ficava disponível ao seguinte (task 344).
+   */
     encerrar(): void {
         this.pararRelogio();
         this.descarregar({ dispensarLimpeza: true });
         this.secoes().forEach((secao) => secao.encerrar());
+        this.zerarEstado();
+    }
+
+    private zerarEstado(): void {
+        this.secoes.set([]);
+        this.usuarioId.set(0);
+        this.nomeCompleto.set('');
+        this.pendenciasEmAberto.set(0);
+        this.alteracaoData.set(null);
     }
 
     aoMudarSecoesAbertas(valor: unknown): void {
@@ -469,6 +482,12 @@ export class PadService implements OnDestroy {
                     this.alteracaoData.set(comTexto.length ? comTexto.reduce((primeira, segunda) => (new Date(primeira) > new Date(segunda) ? primeira : segunda)) : null);
                 },
                 error: () => {
+                    // As seções em memória são de outra pessoa (o `abrir`/`garantirCarregado` trocou o usuário e já gravou o que havia): não ficam à mostra.
+                    if (this.usuarioId() === usuarioId && this.secoes().some((secao) => secao.usuarioId !== usuarioId)) {
+                        this.secoes().forEach((secao) => secao.encerrar());
+                        this.secoes.set([]);
+                        this.pendenciasEmAberto.set(0);
+                    }
                     this.aoFalharAoCarregar?.();
                     this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar as anotações.' });
                 },

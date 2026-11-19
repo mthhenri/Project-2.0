@@ -44,7 +44,7 @@
             [pastaId]="emBusca() ? undefined : pastaId()"
             [expandidas]="expandidas()"
             [projetoInteiro]="projetoInteiro()"
-            [totalQuantidade]="nos().length"
+            [totalQuantidade]="totalDeDemandas()"
             (projetoInteiroEscolhido)="escolherProjetoInteiro()"
             (pastaEscolhida)="escolherPasta($event)"
             (expansaoAlternada)="alternarExpansao($event)"
@@ -60,11 +60,13 @@
                     [grafo]="grafoDoProjeto()"
                     [(aba)]="aba"
                     (navegou)="aoNavegar($event)"
-                    (demandaAlterada)="alterado.emit()"
+                    (demandaAlterada)="estruturaAlterada.emit()"
+                    (nomeAlterado)="nomeAlterado.emit($event)"
                     (editarDescricao)="editarDescricao(idAberto, $event)"
-                    (demandaExcluida)="aoExcluida()"
+                    (demandaExcluida)="aoExcluida($event)"
                     (statusAlterado)="statusAlterado.emit($event)"
                     (tagsAlteradas)="tagsAlteradas.emit($event)"
+                    (horasEstimadasAlteradas)="horasEstimadasAlteradas.emit($event)"
                 />
             } @else {
                 <div class="demanda-arvore-tela__vazio">

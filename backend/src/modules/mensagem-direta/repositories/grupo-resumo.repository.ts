@@ -4,13 +4,14 @@ import {
     GrupoResumoIaGravadoInternoMarcarDto,
     GrupoResumoIaInternoCriarDto,
     GrupoResumoIaInternoRecuperarDto,
+    GrupoResumoIaListarDto,
     GrupoResumoIaPropostaInternoMarcarDto,
     GrupoResumoIaUltimoRecuperarDto,
 } from '@project20/shared';
 import { BaseRepository } from '../../../core/base/base.repository';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 
-/** Um resumo guardado (`grupo_resumo`); o texto não é guardado, só o que serve ao "último resumo" e à gravação. */
+/** Um resumo guardado (`grupo_resumo`); `texto` é nulo nos resumos feitos antes da migration 0091. */
 export interface GrupoResumoIaRegistrado {
     resumoId: number;
     grupoId: number;
@@ -19,6 +20,7 @@ export interface GrupoResumoIaRegistrado {
     fimData: Date;
     enviouCodigo: boolean;
     quantidadeMensagens: number;
+    texto: string | null;
     modelo: string;
     tokensEntrada: number;
     tokensSaida: number;
@@ -26,6 +28,9 @@ export interface GrupoResumoIaRegistrado {
     demandaId: number | null;
     gravadaData: Date | null;
 }
+
+/** Quantos resumos o histórico do grupo devolve (os mais recentes). */
+export const LIMITE_DE_RESUMOS_NO_HISTORICO = 50;
 
 const COLUNAS = `
     grupo_resumo.id AS "resumoId",
@@ -35,6 +40,7 @@ const COLUNAS = `
     grupo_resumo.fim_data AS "fimData",
     grupo_resumo.enviou_codigo AS "enviouCodigo",
     grupo_resumo.quantidade_mensagens AS "quantidadeMensagens",
+    grupo_resumo.texto AS texto,
     grupo_resumo.modelo AS modelo,
     grupo_resumo.tokens_entrada AS "tokensEntrada",
     grupo_resumo.tokens_saida AS "tokensSaida",
@@ -64,6 +70,7 @@ export class GrupoResumoRepository extends BaseRepository<GrupoResumoIaRegistrad
                         fim_data,
                         enviou_codigo,
                         quantidade_mensagens,
+                        texto,
                         modelo,
                         tokens_entrada,
                         tokens_saida
@@ -78,6 +85,7 @@ export class GrupoResumoRepository extends BaseRepository<GrupoResumoIaRegistrad
                     CAST(:fimData AS timestamptz),
                     :enviouCodigo,
                     :quantidadeMensagens,
+                    :texto,
                     :modelo,
                     :tokensEntrada,
                     :tokensSaida
@@ -127,6 +135,31 @@ export class GrupoResumoRepository extends BaseRepository<GrupoResumoIaRegistrad
             { grupoId: dto.grupoId },
         );
         return encontrados[0] ?? null;
+    }
+
+    /** Os resumos do grupo, do mais recente para o mais antigo, com o nome de quem pediu (`null` se a pessoa foi excluída). */
+    async listarResumos(dto: GrupoResumoIaListarDto): Promise<(GrupoResumoIaRegistrado & { criadoData: Date; nomeDoUsuario: string | null })[]> {
+        return this.executarConsulta(
+            `
+                SELECT
+                    ${COLUNAS},
+                    grupo_resumo.created_date AS "criadoData",
+                    usuario.nome_completo AS "nomeDoUsuario"
+                FROM
+                    grupo_resumo
+                    LEFT JOIN usuario ON usuario.id = grupo_resumo.usuario_id
+                    AND usuario.is_deleted = false
+                WHERE
+                    grupo_resumo.grupo_id = :grupoId
+                    AND grupo_resumo.is_deleted = false
+                ORDER BY
+                    grupo_resumo.created_date DESC,
+                    grupo_resumo.id DESC
+                LIMIT
+                    :limite
+            `,
+            { grupoId: dto.grupoId, limite: LIMITE_DE_RESUMOS_NO_HISTORICO },
+        );
     }
 
     /** Guarda a proposta de gravar e a demanda de destino; `false` se o resumo não existe ou já foi gravado. */

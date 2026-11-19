@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, finalize, map, of, tap } from 'rxjs';
 import { EstadoIaEnum, IaEstadoRecuperadoDto, StandardResponse } from '@project20/shared';
 import { ambiente } from '../../../environments/environment';
-import { comFeedbackProprio } from '../interceptors/loading.interceptor';
+import { comLeituraDeFundo } from '../interceptors/loading.interceptor';
 import { estadoEfetivoDaIa, iaVoltou } from '../utils/retorno-da-ia';
 
 const CHAVE_MODO_CONVENCIONAL = 'ia_modo_convencional';
@@ -37,7 +37,7 @@ export class IaDisponibilidadeService {
 
     /** Consulta o estado agora (guardando no sinal) e o devolve, ou `null` se a consulta falhar: o login decide o destino por ele. */
     consultar(): Observable<EstadoIaEnum | null> {
-        return this.httpClient.get<StandardResponse<IaEstadoRecuperadoDto>>(`${ambiente.apiUrl}/ia/disponibilidade`, comFeedbackProprio()).pipe(
+        return this.httpClient.get<StandardResponse<IaEstadoRecuperadoDto>>(`${ambiente.apiUrl}/ia/disponibilidade`, comLeituraDeFundo()).pipe(
             tap((resposta) => {
                 this.ultimaRespostaEm = Date.now();
                 if (resposta.dados) this.aplicar(resposta.dados.estado);
@@ -56,7 +56,7 @@ export class IaDisponibilidadeService {
         if (!opcoes.forcar && Date.now() - this.ultimaRespostaEm < JANELA_DE_FRESCOR_MS) return;
         this.consultaEmCurso = true;
         this.httpClient
-            .get<StandardResponse<IaEstadoRecuperadoDto>>(`${ambiente.apiUrl}/ia/disponibilidade`, comFeedbackProprio())
+            .get<StandardResponse<IaEstadoRecuperadoDto>>(`${ambiente.apiUrl}/ia/disponibilidade`, comLeituraDeFundo())
             .pipe(
                 catchError(() => of(null)),
                 finalize(() => {

@@ -25,8 +25,11 @@ function montar(opcoes: { ativa?: boolean; redigida?: string; rigor?: boolean } 
         },
     };
     const execucaoService = {
-        recuperarAtiva: async () => ({ dados: opcoes.ativa === false ? null : { id: 5, atividadeId: 7, descricao: 'Revisão', inicioData: new Date('2026-10-19T11:20:00Z') } }),
-        listar: async () => ({ dados: { itens: [{ id: 5, nomeAtividade: 'Teste ABC', nomeDemanda: 'IA', nomeProjeto: 'Zênite' }] } }),
+        recuperarAtivaDetalhada: async () => ({
+            dados: opcoes.ativa === false
+                ? null
+                : { id: 5, atividadeId: 7, descricao: 'Revisão', inicioData: new Date('2026-10-19T11:20:00Z'), nomeAtividade: 'Teste ABC', nomeDemanda: 'IA', nomeProjeto: 'Zênite', nomeUsuario: 'Ana' },
+        }),
     };
     const atividadeService = { recuperar: async ({ id }: { id: number }) => ({ dados: { id, nome: id === 10 ? 'AAA' : 'Outra' } }) };
     const iaService = {

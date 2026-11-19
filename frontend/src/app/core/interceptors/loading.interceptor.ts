@@ -1,7 +1,7 @@
 import { HttpContext, HttpContextToken, HttpInterceptorFn } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { carregamento } from '../signals/carregamento.signal';
-import { ERRO_TRATADO_PELA_TELA } from './error-handler.interceptor';
+import { ERRO_TRATADO_PELA_TELA, LEITURA_DE_FUNDO } from './error-handler.interceptor';
 
 // Requisições rápidas não devem disparar o overlay: só mostramos o spinner se a
 // requisição passar deste limite. Isso elimina o "flicker" em chamadas curtas.
@@ -24,6 +24,14 @@ export const comFeedbackProprio = (): { context: HttpContext } => ({
  */
 export const comFeedbackProprioEErroTratado = (): { context: HttpContext } => ({
     context: new HttpContext().set(SEM_OVERLAY_GLOBAL, true).set(ERRO_TRATADO_PELA_TELA, true),
+});
+
+/**
+ * Leitura de fundo: sem overlay e sem toast de erro (o 401 ainda leva ao login). Para o que a casca pede sozinha, sem ação do usuário.
+ * Fica num contexto só pelo mesmo motivo do anterior: um `context` substitui o outro.
+ */
+export const comLeituraDeFundo = (): { context: HttpContext } => ({
+    context: new HttpContext().set(SEM_OVERLAY_GLOBAL, true).set(LEITURA_DE_FUNDO, true),
 });
 
 let requisicoesAtivas = 0;

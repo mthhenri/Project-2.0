@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { TipoUsuarioEnum, UsuarioResumoDto } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
-import { responderErro } from '../../../../../testes/http-teste';
+import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { criarUsuarioTeste } from '../../../../../testes/usuarios-teste';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { UsuarioListagemPage } from './usuario-listagem.page';
@@ -298,3 +298,106 @@ describe('UsuarioListagemPage — ajuda dos tipos (task 306)', () => {
     });
 });
 
+// Busca e filtro (task 345): o paginador volta à página 1 com uma requisição só, o mesmo termo volta a buscar depois de "Limpar" e a carga
+// nova cancela a anterior.
+
+afterEach(() => vi.useRealTimers());
+
+const itensDeUsuario = (quantidade: number, inicio = 1) => Array.from({ length: quantidade }, (_, indice) => resumo(inicio + indice));
+const pagina = (itens: UsuarioResumoDto[], totalItens: number, paginaAtual = 1) => ({ itens, totalItens, paginaAtual, itensPorPagina: 10, totalPaginas: Math.ceil(totalItens / 10) });
+const pedidosDeLista = (montado: Montado) => montado.http.match((seguinte) => seguinte.method === 'GET' && seguinte.url.endsWith('/usuario'));
+const paginaMarcada = (montado: Montado) => montado.elemento.querySelector('.p-paginator-page-selected')?.textContent?.trim();
+
+describe('UsuarioListagemPage — busca, filtro e carga (task 345)', () => {
+    it('buscar fora da página 1 mostra a página 1 de verdade, com uma requisição só', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+        await carregar(montado, itensDeUsuario(10));
+        // Vai à página 3 de 45 usuários (o p-table lazy emite o evento com o `first` da página).
+        montado.componente.aoCarregarTabela({ first: 20, rows: 10 });
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/usuario'), pagina(itensDeUsuario(10, 21), 45, 3));
+        await montado.atualizar();
+        expect(paginaMarcada(montado)).toBe('3');
+
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
+        montado.componente.formularioFiltros.controls.busca.setValue('ana');
+        vi.advanceTimersByTime(300);
+        const pedido = esperarRequisicao(montado.http, 'GET', '/usuario');
+        expect(pedido.request.params.get('pagina')).toBe('1');
+        expect(pedido.request.params.get('busca')).toBe('ana');
+        // 15 resultados: o total cai para um valor menor ou igual ao `first` antigo (20), que fazia o paginador recuar sozinho e pedir a página 2.
+        responderSucesso(pedido, pagina(itensDeUsuario(10), 15, 1));
+        vi.useRealTimers();
+        await montado.atualizar();
+
+        expect(pedidosDeLista(montado)).toHaveLength(0);
+        expect(paginaMarcada(montado)).toBe('1');
+        expect(montado.componente.primeiroRegistro()).toBe(0);
+    });
+
+    it('mudar um filtro fora da página 1 também volta ao primeiro registro', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+        await carregar(montado, itensDeUsuario(10));
+        montado.componente.aoCarregarTabela({ first: 20, rows: 10 });
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/usuario'), pagina(itensDeUsuario(10, 21), 45, 3));
+        await montado.atualizar();
+
+        montado.componente.aoMudarTipo(TipoUsuarioEnum.GESTOR);
+        const pedido = esperarRequisicao(montado.http, 'GET', '/usuario');
+        expect(pedido.request.params.get('pagina')).toBe('1');
+        responderSucesso(pedido, pagina(itensDeUsuario(10), 12, 1));
+        await montado.atualizar();
+
+        expect(pedidosDeLista(montado)).toHaveLength(0);
+        expect(paginaMarcada(montado)).toBe('1');
+    });
+
+    it('depois de "Limpar", redigitar o mesmo termo volta a buscar', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+        await carregar(montado, itensDeUsuario(3));
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
+        const campo = montado.componente.formularioFiltros.controls.busca;
+
+        campo.setValue('ana');
+        vi.advanceTimersByTime(300);
+        expect(esperarRequisicao(montado.http, 'GET', '/usuario').request.params.get('busca')).toBe('ana');
+
+        montado.componente.limparFiltros();
+        expect(esperarRequisicao(montado.http, 'GET', '/usuario').request.params.has('busca')).toBe(false);
+
+        campo.setValue('ana');
+        vi.advanceTimersByTime(300);
+        expect(esperarRequisicao(montado.http, 'GET', '/usuario').request.params.get('busca')).toBe('ana');
+    });
+
+    it('o mesmo termo digitado de novo, sem Limpar, não repete a requisição', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+        await carregar(montado, itensDeUsuario(3));
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
+        const campo = montado.componente.formularioFiltros.controls.busca;
+
+        campo.setValue('ana');
+        vi.advanceTimersByTime(300);
+        esperarRequisicao(montado.http, 'GET', '/usuario');
+        campo.setValue('an');
+        campo.setValue('ana');
+        vi.advanceTimersByTime(300);
+
+        expect(pedidosDeLista(montado)).toHaveLength(0);
+    });
+
+    it('uma carga nova cancela a anterior: a resposta velha não sobrescreve a nova', async () => {
+        const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+        await carregar(montado, itensDeUsuario(3));
+
+        montado.componente.buscarUsuarios();
+        const primeira = esperarRequisicao(montado.http, 'GET', '/usuario');
+        montado.componente.buscarUsuarios();
+        const segunda = esperarRequisicao(montado.http, 'GET', '/usuario');
+
+        expect(primeira.cancelled).toBe(true);
+        responderSucesso(segunda, pagina([resumo(90)], 1));
+        await montado.atualizar();
+        expect(montado.componente.usuarios().map((usuario) => usuario.id)).toEqual([90]);
+        expect(montado.componente.carregando()).toBe(false);
+    });
+});

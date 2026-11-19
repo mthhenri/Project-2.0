@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { TipoDemandaStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { responderSucesso, esperarRequisicao } from '../../../../../testes/http-teste';
+import { DemandaMetricasComponent } from '../demanda-metricas/demanda-metricas.component';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { DemandaAbertaComponent } from './demanda-aberta.component';
 
 // A demanda aberta da Árvore (task 239) faz o que o diálogo de detalhe fazia, com as abas Técnica, Cliente, Documentação, Atividades e Conexões.
@@ -25,7 +28,6 @@ function responderPendentes(montado: Montado, podeEditar: boolean): string[] {
         // Qualquer id: o teste de troca de página também carrega a demanda 12 e não pode receber o `[]` padrão abaixo.
         const detalhe = /^\/demanda\/(\d+)\/detalhe$/.exec(caminho);
         if (detalhe) dados = { demanda: { ...DEMANDA, id: Number(detalhe[1]), podeEditar }, ancestrais: [], tags: [], membros: [], conexoes: [], canalChatExiste: false, podeAbrirCanalChat: true };
-        else if (/^\/demanda\/\d+\/arvore$/.test(caminho)) dados = { id: Number(caminho.split('/')[2]), nome: 'Demanda de teste', filhos: [] };
         else if (/^\/plano\/demanda\/\d+$/.test(caminho)) dados = null;
         else if (['/usuario', '/demanda', '/atividade'].includes(caminho)) dados = PAGINA([]);
         responderSucesso(requisicao, dados);
@@ -52,6 +54,133 @@ const botao = (montado: Montado, rotulo: string) => Array.from(montado.elemento.
 /** O botão Editar do texto da descrição (o "Editar" do topo abre o formulário completo). */
 const editarDescricao = (montado: Montado) => montado.elemento.querySelector<HTMLButtonElement>('.demanda-aberta__acoes-texto button');
 
+describe('DemandaAbertaComponent — estimativa editada no cabeçalho (task 407)', () => {
+    it('nenhuma leitura sai antes do PUT; só depois da resposta a página recebe as horas novas, sem reler a demanda nem o grafo', async () => {
+        const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
+        const avisadas: unknown[] = [];
+        let alteradas = 0;
+        montado.componente.horasEstimadasAlteradas.subscribe((valor) => avisadas.push(valor));
+        montado.componente.demandaAlterada.subscribe(() => alteradas++);
+        const metricas = montado.fixture.debugElement.query(By.directive(DemandaMetricasComponent)).componentInstance as DemandaMetricasComponent;
+
+        metricas.editar('horasEstimadas');
+        metricas.valorHoras = 20;
+        metricas.salvarHoras();
+        await montado.atualizar();
+        // O valor novo já está na tela (otimista), e a única requisição pendente é o PUT: nenhuma leitura saiu antes dele.
+        expect(montado.componente.demanda()?.horasEstimadas).toBe(20);
+        const pendentes = montado.http.match(() => true);
+        expect(pendentes.map((pedido) => `${pedido.request.method} ${pedido.request.url.replace(/^.*\/api\/v1/, '')}`)).toEqual(['PUT /demanda/10']);
+        expect(avisadas).toEqual([]);
+
+        responderSucesso(pendentes[0], { id: 10 });
+        await montado.atualizar();
+        expect(avisadas).toEqual([{ demandaId: 10, horasEstimadas: 20 }]);
+        expect(alteradas, 'a demanda não é "alterada" para a página reler').toBe(0);
+        montado.http.expectNone(() => true);
+        expect(montado.componente.demanda()?.horasEstimadas).toBe(20);
+    });
+});
+
+describe('DemandaAbertaComponent — carga (tasks 410 e 411)', () => {
+    it('abrir a demanda não pede a lista de demandas do projeto: os destinos de "Conectar" vêm do grafo já carregado, inclusive o de uma demanda recém-criada', async () => {
+        const { montado, carga } = await abrir(TipoUsuarioEnum.GESTOR);
+        expect(carga.filter((chamada) => chamada.startsWith('GET /demanda?') || chamada === 'GET /demanda')).toEqual([]);
+        const no = (id: number, nome: string) => ({ id, nome, status: TipoDemandaStatusEnum.PLANEJADA, estrutural: false, horasEstimadas: 1, minutosExecutados: 0, demandaPaiId: null, tags: [] });
+        montado.fixture.componentRef.setInput('grafo', { nos: [no(10, 'Esta'), no(11, 'Outra')], arestas: [] });
+        await montado.atualizar();
+        expect(montado.componente.destinosConexao()).toEqual([{ demandaConectadaId: 11, nomeDemandaConectada: 'Outra' }]);
+        montado.fixture.componentRef.setInput('grafo', { nos: [no(10, 'Esta'), no(11, 'Outra'), no(12, 'Recém-criada')], arestas: [] });
+        await montado.atualizar();
+        expect(montado.componente.destinosConexao().map((destino) => destino.demandaConectadaId)).toEqual([11, 12]);
+    });
+
+    it('trocar de demanda cancela a carga da anterior, e a resposta dela que chegasse depois não sobrescreve a coluna', async () => {
+        const montado = await montarComponente(DemandaAbertaComponent, { usuario: TipoUsuarioEnum.GESTOR, entradas: { demandaId: 10, minutosExecutados: 0 } });
+        montado.componente.ngOnChanges({ demandaId: { currentValue: 10, previousValue: undefined, firstChange: true, isFirstChange: () => true } });
+        const primeiras = montado.http.match((pedido) => /\/demanda\/10\/detalhe$/.test(pedido.url));
+        expect(primeiras.length).toBe(1);
+
+        montado.fixture.componentRef.setInput('demandaId', 12);
+        montado.componente.ngOnChanges({ demandaId: { currentValue: 12, previousValue: 10, firstChange: false, isFirstChange: () => false } });
+        expect(primeiras[0].cancelled, 'a carga da demanda 10 foi cancelada').toBe(true);
+
+        responderPendentes(montado, true);
+        await montado.atualizar();
+        expect(montado.componente.demanda()?.id).toBe(12);
+    });
+});
+
+describe('DemandaAbertaComponent — alterações que não relêem a demanda (tasks 408 e 409)', () => {
+    it('salvar pelo diálogo de edição faz uma releitura só, pelo detalhe, e o cabeçalho mostra as tags e os membros novos', async () => {
+        const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
+        let avisos = 0;
+        montado.componente.demandaAlterada.subscribe(() => avisos++);
+
+        montado.componente.aoDemandaAlterada();
+        const pendentes = montado.http.match(() => true);
+        expect(pendentes.map((pedido) => `${pedido.request.method} ${pedido.request.url.replace(/^.*\/api\/v1/, '')}`)).toEqual(['GET /demanda/10/detalhe']);
+        responderSucesso(pendentes[0], {
+            demanda: { ...DEMANDA, nome: 'Nome novo' }, ancestrais: [], conexoes: [], canalChatExiste: false, podeAbrirCanalChat: true,
+            tags: [{ id: 3, nome: 'Backend', cor: '#112233' }],
+            membros: [{ usuarioId: 8, nomeCompleto: 'Ana Souza', login: 'ana', cor: null }],
+        });
+        await montado.atualizar();
+
+        expect(avisos).toBe(1);
+        expect(montado.componente.demanda()?.nome).toBe('Nome novo');
+        expect(montado.componente.tagsDaDemanda().map((tag) => tag.nome)).toEqual(['Backend']);
+        expect(montado.componente.membros().map((membro) => membro.usuarioId)).toEqual([8]);
+        montado.http.expectNone(() => true);
+    });
+
+    it('renomear pelo título só avisa o novo nome depois do PUT: o grafo é atualizado pela página, sem releitura', async () => {
+        const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
+        const nomes: unknown[] = [];
+        let avisos = 0;
+        montado.componente.nomeAlterado.subscribe((valor) => nomes.push(valor));
+        montado.componente.demandaAlterada.subscribe(() => avisos++);
+
+        montado.componente.iniciarEdicaoTitulo();
+        montado.componente.tituloEdicao.set('Outro nome');
+        montado.componente.salvarTitulo();
+        const requisicao = esperarRequisicao(montado.http, 'PUT', '/demanda/10');
+        expect(nomes).toEqual([]);
+        responderSucesso(requisicao, { id: 10 });
+        await montado.atualizar();
+
+        expect(nomes).toEqual([{ demandaId: 10, nome: 'Outro nome' }]);
+        expect(avisos, 'a estrutura não mudou').toBe(0);
+        montado.http.expectNone(() => true);
+    });
+
+    it('o status trocado pela bolinha da linha aparece na demanda aberta sem pedir nada', async () => {
+        const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
+        montado.componente.aplicarStatus(TipoDemandaStatusEnum.CONCLUIDA);
+        expect(montado.componente.demanda()?.status).toBe(TipoDemandaStatusEnum.CONCLUIDA);
+        montado.http.expectNone(() => true);
+    });
+});
+
+describe('DemandaAbertaComponent — excluir a demanda (task 404)', () => {
+    it('depois do DELETE avisa a página com a demanda excluída e não oferece o Desfazer (a oferta é da página, que sobrevive a esta coluna) nem se relê', async () => {
+        const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
+        const excluidas: unknown[] = [];
+        let alteradas = 0;
+        montado.componente.demandaExcluida.subscribe((valor) => excluidas.push(valor));
+        montado.componente.demandaAlterada.subscribe(() => alteradas++);
+
+        (montado.componente as unknown as { excluirDemanda(): void }).excluirDemanda();
+        responderSucesso(esperarRequisicao(montado.http, 'DELETE', '/demanda/10'), null);
+        await montado.atualizar();
+
+        expect(excluidas).toEqual([{ demandaId: 10, nome: 'Demanda de teste' }]);
+        expect(alteradas).toBe(0);
+        expect(TestBed.inject(DesfazerService).oferta()).toBeNull();
+        montado.http.expectNone(() => true);
+    });
+});
+
 describe('DemandaAbertaComponent — o que mostra', () => {
     it('o cabeçalho tem o botão do chat da demanda, escolhido pelo detalhe, sem perguntar pelo canal (405)', async () => {
         const { montado, carga } = await abrir(TipoUsuarioEnum.DESENVOLVEDOR);
@@ -69,7 +198,7 @@ describe('DemandaAbertaComponent — o que mostra', () => {
             const detalhe = /^\/demanda\/(\d+)\/detalhe$/.test(caminho);
             responderSucesso(requisicao, detalhe
                 ? { demanda: { ...DEMANDA, podeEditar: true }, ancestrais: [], tags: [], membros: [], conexoes: [], canalChatExiste: true, podeAbrirCanalChat: false }
-                : /^\/demanda\/\d+\/arvore$/.test(caminho) ? { id: 10, nome: 'Demanda de teste', filhos: [] } : ['/usuario', '/demanda', '/atividade'].includes(caminho) ? PAGINA([]) : []);
+                : ['/usuario', '/demanda', '/atividade'].includes(caminho) ? PAGINA([]) : []);
         }
         await montado.atualizar();
         expect(requisicoes.some((caminho) => caminho.includes('/mensagem-direta/canal/'))).toBe(false);
@@ -86,9 +215,11 @@ describe('DemandaAbertaComponent — o que mostra', () => {
         expect(montado.componente.abaAtiva()).toBe('tecnica');
         expect(texto(montado)).toContain('texto tecnico');
         expect(editarDescricao(montado)).not.toBeNull();
-        for (const rota of ['GET /demanda/10/detalhe', 'GET /demanda/10/arvore', 'GET /atividade']) {
+        for (const rota of ['GET /demanda/10/detalhe', 'GET /atividade']) {
             expect(carga.filter((chamada) => chamada.startsWith(rota)).length, rota).toBeGreaterThan(0);
         }
+        // A árvore de sub-demandas não é pedida: nenhum elemento da coluna a mostra (task 406).
+        expect(carga.filter((chamada) => chamada.includes('/arvore')), 'GET /demanda/:id/arvore').toEqual([]);
         // O detalhe agregado substitui as cinco leituras avulsas (P-080).
         for (const rota of ['GET /demanda/10', 'GET /demanda/10/ancestral', 'GET /demanda/10/tag', 'GET /demanda/10/membro', 'GET /demanda/10/conexao']) {
             expect(carga.filter((chamada) => chamada === rota).length, rota).toBe(0);

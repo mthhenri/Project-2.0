@@ -63,7 +63,7 @@ function criarRepositorio() {
     return { repositorio, propostas };
 }
 
-function criarExecutor(opcoes: { falharAoExecutar?: boolean | 'obsoleta'; falharAoDesfazer?: boolean; atraso?: boolean; obsoleta?: boolean | 'falha'; podeResolver?: boolean; podeVer?: boolean | 'falha'; tipo?: TipoPropostaIaEnum } = {}) {
+function criarExecutor(opcoes: { falharAoExecutar?: boolean | 'obsoleta' | 'acesso'; falharAoDesfazer?: boolean; atraso?: boolean; obsoleta?: boolean | 'falha'; podeResolver?: boolean; podeVer?: boolean | 'falha'; tipo?: TipoPropostaIaEnum } = {}) {
     const chamadas = { executar: [] as Record<string, unknown>[], desfazer: 0 };
     const executor: ExecutorPropostaIa = {
         tipo: opcoes.tipo ?? TIPO,
@@ -74,6 +74,7 @@ function criarExecutor(opcoes: { falharAoExecutar?: boolean | 'obsoleta'; falhar
             chamadas.executar.push(dados);
             if (opcoes.atraso) await new Promise((resolver) => setTimeout(resolver, 20));
             if (opcoes.falharAoExecutar === 'obsoleta') throw new PropostaObsoletaException('O trecho mudou');
+            if (opcoes.falharAoExecutar === 'acesso') throw new UnauthorizedAccessException('A descrição do cliente é só de gestor e administrador');
             if (opcoes.falharAoExecutar) throw new BusinessException('Já existe uma execução ativa');
             return { atividadeId: 99 };
         },
@@ -594,4 +595,83 @@ test('recuperarParaParticipante: 404 quando a proposta não é de quem chamou a 
     const proposta = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: { nome: 'Revisar' } });
     await assert.rejects(servico.recuperarParaParticipante({ id: proposta.id, chamadaPorUsuarioId: 2 }, OUTRO), ResourceNotFoundException);
     await assert.rejects(servico.recuperarParaParticipante({ id: 999, chamadaPorUsuarioId: 1 }, DONO), ResourceNotFoundException);
+});
+
+// Ajuste que falha (task 368): o que o usuário mandou não fica gravado na proposta, e quem resolve a de outra pessoa não troca o alvo.
+
+test('ajuste que o executor recusa devolve a proposta a PENDENTE com os dados originais, não os enviados', async () => {
+    const { servico, propostas } = criarServico({ falharAoExecutar: true });
+    const criada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+
+    await assert.rejects(servico.ajustar(criada.id, { dados: { nome: 'Texto que não passou' } }, DONO), BusinessException);
+
+    assert.equal(propostas[0].status, StatusPropostaIaEnum.PENDENTE);
+    assert.deepEqual(propostas[0].dados, DADOS);
+    assert.equal(propostas[0].resolucaoData, null);
+});
+
+test('ajuste de uma proposta obsoleta expira e também preserva os dados originais', async () => {
+    const { servico, propostas } = criarServico({ falharAoExecutar: 'obsoleta' });
+    const criada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+
+    await assert.rejects(servico.ajustar(criada.id, { dados: { nome: 'Outro texto' } }, DONO), PropostaObsoletaException);
+
+    assert.equal(propostas[0].status, StatusPropostaIaEnum.EXPIRADA);
+    assert.deepEqual(propostas[0].dados, DADOS);
+});
+
+test('confirmar que falha segue preservando os dados (não há ajuste a desfazer)', async () => {
+    const { servico, propostas } = criarServico({ falharAoExecutar: true });
+    const criada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+    await assert.rejects(servico.confirmar(criada.id, DONO), BusinessException);
+    assert.deepEqual(propostas[0].dados, DADOS);
+});
+
+test('em proposta de outra pessoa o ajuste não troca o plano nem a aba, e nada é gravado nem executado', async () => {
+    const { servico, propostas, chamadas } = criarServico({ podeResolver: true });
+    const dados = { nome: 'trecho do gestor', planoId: 5, aba: 'DESCRICAO_TECNICA' };
+    const criada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados });
+
+    await assert.rejects(servico.ajustar(criada.id, { dados: { ...dados, aba: 'DESCRICAO_CLIENTE' } }, OUTRO), UnauthorizedAccessException);
+    await assert.rejects(servico.ajustar(criada.id, { dados: { ...dados, planoId: 6 } }, OUTRO), UnauthorizedAccessException);
+
+    assert.equal(propostas[0].status, StatusPropostaIaEnum.PENDENTE);
+    assert.deepEqual(propostas[0].dados, dados);
+    assert.equal(chamadas.executar.length, 0);
+});
+
+test('em proposta de outra pessoa o ajuste que mantém o plano e a aba passa; o dono ajusta a própria sem essa regra', async () => {
+    const { servico, propostas } = criarServico({ podeResolver: true });
+    const dados = { nome: 'trecho do gestor', planoId: 5, aba: 'DESCRICAO_TECNICA' };
+    const deTerceiro = await servico.criar({ usuarioId: 1, tipo: TIPO, dados });
+    const resposta = await servico.ajustar(deTerceiro.id, { dados: { ...dados, nome: 'trecho corrigido' } }, OUTRO);
+    assert.equal(resposta.dados.status, StatusPropostaIaEnum.AJUSTADA);
+
+    const propria = await servico.criar({ usuarioId: 1, tipo: TIPO, dados });
+    await servico.ajustar(propria.id, { dados: { ...dados, aba: 'DESCRICAO_CLIENTE' } }, DONO);
+    assert.equal(propostas[1].dados['aba'], 'DESCRICAO_CLIENTE');
+});
+
+test('caso do dossiê: o terceiro mantém a aba, o executor recusa com 403 e a proposta do dono volta com os dados originais', async () => {
+    const { servico, propostas } = criarServico({ podeResolver: true, falharAoExecutar: 'acesso' });
+    const dados = { nome: 'trecho do gestor', planoId: 5, aba: 'DESCRICAO_CLIENTE' };
+    const criada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados });
+
+    await assert.rejects(servico.ajustar(criada.id, { dados: { ...dados, nome: 'texto do desenvolvedor' } }, OUTRO), UnauthorizedAccessException);
+
+    assert.equal(propostas[0].status, StatusPropostaIaEnum.PENDENTE);
+    assert.deepEqual(propostas[0].dados, dados);
+});
+
+test('uma proposta que já não está pendente (ajuste em andamento) não é reivindicada por outro pedido', async () => {
+    const { servico, propostas, chamadas } = criarServico({ atraso: true });
+    const criada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+    const emAndamento = servico.ajustar(criada.id, { dados: { nome: 'primeiro' } }, DONO);
+    await new Promise((resolver) => setTimeout(resolver, 5));
+
+    await assert.rejects(servico.ajustar(criada.id, { dados: { nome: 'segundo' } }, DONO), ConflictException);
+    await emAndamento;
+
+    assert.equal(chamadas.executar.length, 1);
+    assert.equal(propostas[0].status, StatusPropostaIaEnum.AJUSTADA);
 });

@@ -277,3 +277,23 @@ testarComBanco('o gestor que escreveu no canal resume e grava em qualquer demand
     const criado = (await service.resumir({ grupoId: canal.grupoId, ...periodoAberto, enviaCodigo: false }, como(gestor))).dados!;
     assert.equal((await service.criarProposta({ grupoId: canal.grupoId, resumoId: criado.resumoId, texto: criado.texto, demandaId: outra.id }, como(gestor))).dados!.demandaId, outra.id);
 });
+
+testarComBanco('listar: o histórico traz o texto guardado de cada resumo a qualquer membro, marca os que são dele e recusa quem não é do chat', async (conexao) => {
+    const { service, grupoService, armazenamento } = montar(conexao);
+    const { ana, bruno, davi, raiz } = await cenario(conexao);
+    const canal = (await grupoService.criarCanal(demanda(raiz.id), como(ana))).dados!.grupo;
+    await escrever(armazenamento, canal.grupoId, ana.id, 'Vamos usar a fila nova');
+    const criado = (await service.resumir({ grupoId: canal.grupoId, ...periodoAberto, enviaCodigo: false }, como(ana))).dados!;
+
+    const paraAna = (await service.listar({ grupoId: canal.grupoId }, como(ana))).dados!;
+    const paraBruno = (await service.listar({ grupoId: canal.grupoId }, como(bruno))).dados!;
+
+    assert.equal(paraAna.length, 1);
+    assert.equal(paraAna[0].resumoId, criado.resumoId);
+    assert.equal(paraAna[0].texto, criado.texto, 'o texto que a tela recebeu é o guardado');
+    assert.equal(paraAna[0].pedidoPorVoce, true);
+    assert.equal(paraAna[0].gravado, false);
+    assert.equal(paraBruno[0].texto, criado.texto, 'outro membro também vê');
+    assert.equal(paraBruno[0].pedidoPorVoce, false);
+    await assert.rejects(service.listar({ grupoId: canal.grupoId }, como(davi)));
+});

@@ -40,7 +40,7 @@ export class AtividadeService {
 
     /**
    * Cria nova atividade vinculada à demanda.
-   * O usuário autenticado torna-se o executor principal.
+   * O usuário autenticado torna-se o executor principal; só o gestor escolhe outro dono (quem não pode e pede outro leva 403) e o dono escolhido precisa existir e estar ativo.
    * Verifica existência da demanda; o acesso via demanda_usuario só é exigido do
    * desenvolvedor (gestor tem acesso total a qualquer demanda, sem atribuição).
    * O dono da atividade também precisa ter acesso à demanda (task 377): quem não tem visibilidade total
@@ -55,10 +55,11 @@ export class AtividadeService {
             throw new ResourceNotFoundException('Demanda');
         }
 
-        const executorId =
-            temPermissaoDeGestor(usuarioAtivo.tipo)
-                ? (dto.usuarioId ?? usuarioAtivo.sub)
-                : usuarioAtivo.sub;
+        // Só o gestor escolhe outro dono (como na ferramenta de IA): quem não pode e pede outra pessoa é recusado, em vez de ter a atividade criada no próprio nome em silêncio.
+        if (dto.usuarioId !== undefined && dto.usuarioId !== usuarioAtivo.sub && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+            throw new UnauthorizedAccessException('Só o gestor cria atividade para outra pessoa');
+        }
+        const executorId = dto.usuarioId ?? usuarioAtivo.sub;
 
         if (!temVisibilidadeTotal(usuarioAtivo.tipo)) {
             const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
@@ -74,6 +75,9 @@ export class AtividadeService {
             const executorEncontrado = await this.usuarioRepositorio.recuperar({ id: executorId });
             if (!executorEncontrado) {
                 throw new ResourceNotFoundException('Usuário');
+            }
+            if (!executorEncontrado.ativo) {
+                throw new BusinessException(`${executorEncontrado.nomeCompleto} está inativo e não recebe atividades`);
             }
             if (
                 !temVisibilidadeTotal(executorEncontrado.tipo) &&

@@ -4,12 +4,18 @@ import { HttpClient, HttpErrorResponse, provideHttpClient, withInterceptors } fr
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { comLeituraDeFundo } from './loading.interceptor';
+import { AutenticacaoService } from '../services/autenticacao.service';
+import { ExecucaoAtivaService } from '../services/execucao-ativa.service';
+import { UsuarioSessaoService } from '../services/usuario-sessao.service';
+import { criarUsuarioTeste } from '../../../testes/usuarios-teste';
 import { comErroTratadoPelaTela, errorHandlerInterceptor, parametrosRetorno } from './error-handler.interceptor';
 
 let http: HttpClient;
 let controlador: HttpTestingController;
 const navegar = vi.fn();
 const adicionar = vi.fn();
+let reconferir: ReturnType<typeof vi.spyOn>;
 const roteador = { navigate: navegar, url: '/demanda?pagina=2' };
 
 function configurar(): void {
@@ -23,6 +29,7 @@ function configurar(): void {
     });
     http = TestBed.inject(HttpClient);
     controlador = TestBed.inject(HttpTestingController);
+    reconferir = vi.spyOn(TestBed.inject(AutenticacaoService), 'reconferirAposAcessoNegado').mockImplementation(() => undefined);
 }
 
 /** Dispara um GET que falha e devolve o erro relançado pelo interceptor. */
@@ -42,6 +49,40 @@ beforeEach(() => {
 });
 
 describe('errorHandlerInterceptor', () => {
+    it('leitura de fundo: erro 500, 403 e de rede não chamam o serviço de mensagens', () => {
+        for (const status of [500, 403, 404, 400, 0]) {
+            const erro = falhar(status, null, comLeituraDeFundo());
+            expect(erro.status).toBe(status);
+        }
+        expect(adicionar).not.toHaveBeenCalled();
+        expect(navegar).not.toHaveBeenCalled();
+    });
+
+    it('leitura de fundo: o 401 continua limpando a sessão e levando ao login', () => {
+        localStorage.setItem('access_token', 'abc');
+        localStorage.setItem('usuario_sessao', '{}');
+
+        falhar(401, null, comLeituraDeFundo());
+
+        expect(localStorage.getItem('access_token')).toBeNull();
+        expect(navegar).toHaveBeenCalledWith(['/autenticacao'], { queryParams: { returnUrl: '/demanda?pagina=2' } });
+    });
+
+    it('403 pede a reconferência da sessão (o tipo pode ter mudado); outros status e leitura de fundo não pedem', () => {
+        falhar(403);
+        expect(reconferir).toHaveBeenCalledTimes(1);
+
+        reconferir.mockClear();
+        for (const status of [400, 404, 500]) falhar(status);
+        falhar(403, null, comLeituraDeFundo());
+        expect(reconferir).not.toHaveBeenCalled();
+    });
+
+    it('a mesma falha numa ação do usuário continua mostrando o erro', () => {
+        falhar(500);
+        expect(adicionar).toHaveBeenCalledWith(expect.objectContaining({ detail: 'Erro interno. Tente novamente.' }));
+    });
+
     it('401 limpa a sessão e leva ao login guardando a tela atual em returnUrl', () => {
         localStorage.setItem('access_token', 'abc');
         localStorage.setItem('usuario_sessao', '{}');
@@ -54,6 +95,20 @@ describe('errorHandlerInterceptor', () => {
         expect(localStorage.getItem('tema')).toBe('escuro');
         expect(navegar).toHaveBeenCalledWith(['/autenticacao'], { queryParams: { returnUrl: '/demanda?pagina=2' } });
         expect(adicionar).not.toHaveBeenCalled();
+    });
+
+    it('401 também limpa o que está em memória: usuário e execução ativa da sessão que expirou (task 341)', () => {
+        localStorage.setItem('access_token', 'abc');
+        const sessao = TestBed.inject(UsuarioSessaoService);
+        const execucaoAtiva = TestBed.inject(ExecucaoAtivaService);
+        sessao.definirUsuario(criarUsuarioTeste());
+        execucaoAtiva.definir({ id: 9, atividadeId: 4 } as never);
+
+        falhar(401);
+
+        expect(sessao.usuarioAtual()).toBeNull();
+        expect(execucaoAtiva.ativa()).toBeNull();
+        expect(execucaoAtiva.jaCarregou()).toBe(false);
     });
 
     it('401 vindo da própria tela de login não grava returnUrl', () => {

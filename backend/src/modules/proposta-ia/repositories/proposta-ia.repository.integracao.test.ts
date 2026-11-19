@@ -84,6 +84,18 @@ testarComBanco('transitar: o ajuste do usuário substitui os dados; sem ajuste o
     assert.deepEqual(semAjuste?.dados, { descricao: 'igual' });
 });
 
+testarComBanco('transitar: o ajuste que falha volta a pendente com os dados originais e sem data de resolução (task 368)', async (conexao) => {
+    const dono = await criarDesenvolvedor(conexao);
+    const proposta = await proporPara(conexao, dono.id, { descricao: 'original' });
+    await repositorioDe(conexao).transitar({ id: proposta.id, usuarioId: dono.id, de: [PENDENTE], para: AJUSTADA, dados: { descricao: 'enviada pelo cliente' } });
+
+    const devolvida = await repositorioDe(conexao).transitar({ id: proposta.id, usuarioId: dono.id, de: [AJUSTADA], para: PENDENTE, dados: { descricao: 'original' } });
+
+    assert.deepEqual(devolvida?.dados, { descricao: 'original' });
+    assert.equal(devolvida?.status, PENDENTE);
+    assert.equal(devolvida?.resolucaoData, null);
+});
+
 testarComBanco('transitar: situação de partida diferente das aceitas não troca nada (quem perde a corrida recebe undefined)', async (conexao) => {
     const dono = await criarDesenvolvedor(conexao);
     const proposta = await proporPara(conexao, dono.id);

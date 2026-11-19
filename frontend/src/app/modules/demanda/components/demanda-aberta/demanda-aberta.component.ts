@@ -58,6 +58,12 @@ export class DemandaAbertaComponent extends DemandaDetalheBase implements OnChan
     readonly minutosExecutados = input<number>(0);
     /** O grafo do projeto, de onde a aba Conexões tira o recorte (task 305). */
     readonly grafo = input<DemandaGrafoDto | null>(null);
+    /** Destinos possíveis de uma conexão: as demandas do projeto (as do grafo já carregado, sempre atuais), menos a atual (task 410). */
+    readonly destinosConexao = computed(() =>
+        (this.grafo()?.nos ?? [])
+            .filter((no) => no.id !== this.demandaIdAtual())
+            .map((no) => ({ demandaConectadaId: no.id, nomeDemandaConectada: no.nome })),
+    );
     /** A aba mostrada: a Técnica ao abrir; clicar num ícone de descrição da linha abre a aba dela. */
     readonly aba = model<AbaDemandaAberta>('tecnica');
     /** A demanda mostrada mudou por dentro (caminho, conexão, "Voltar"): a página acompanha a pasta e a seleção. */

@@ -6,6 +6,7 @@ import {
     FILTRO_VAZIO, alternarStatusVisivel, contarPorStatus, dividirDestaque, filtroAtivo, nosCorrespondentes, normalizarTexto, recortarArvore, statusVisiveis,
 } from './demanda-filtro.util';
 import { construirMenuDemanda, DemandaMenuAcoes } from './demanda-context-menu.factory';
+import { vizinhaDaDemandaExcluida } from './demanda-pasta.util';
 
 function no(id: number, nome: string, demandaPaiId: number | null = null, extra: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto {
     return {
@@ -181,5 +182,21 @@ describe('construirMenuDemanda', () => {
             }
         }
         expect(construirMenuDemanda(alvo(), acoesRegistradas().acoes, true)).not.toBe(itens);
+    });
+});
+
+describe('vizinhaDaDemandaExcluida (task 404)', () => {
+    const lista = [no(3, 'A', 2), no(4, 'B', 2), no(5, 'C', 2)];
+    it('é a próxima da lista; sendo a última, a anterior; sem outra, nenhuma', () => {
+        expect(vizinhaDaDemandaExcluida(lista, lista, 3)).toBe(4);
+        expect(vizinhaDaDemandaExcluida(lista, lista, 4)).toBe(5);
+        expect(vizinhaDaDemandaExcluida(lista, lista, 5)).toBe(4);
+        expect(vizinhaDaDemandaExcluida([lista[0]], [lista[0]], 3)).toBeNull();
+    });
+    it('quem sai junto com a excluída (sub-demanda de uma pasta) não serve de vizinha', () => {
+        const pasta = no(2, 'Pasta', null, { estrutural: true });
+        const nos = [pasta, no(3, 'Filha', 2), no(4, 'Neta', 3), no(9, 'De fora', null)];
+        expect(vizinhaDaDemandaExcluida(nos, nos, 2)).toBe(9);
+        expect(vizinhaDaDemandaExcluida([pasta, nos[1], nos[2]], nos, 2)).toBeNull();
     });
 });

@@ -8,16 +8,20 @@ import { AssistenteService } from './assistente.service';
 
 // SYSTEM.SPEC.md §12 (`assistente`): refina a descrição pela camada de IA, no nível padrão; falha da IA vira BusinessException.
 
+const USUARIO = { sub: 7, login: 'd', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+
 function criar(resposta: string | Error = 'Texto refinado') {
     const chamadas: Record<string, unknown>[] = [];
+    const usos: Record<string, unknown>[] = [];
     const iaService = {
         gerar: async (pedido: Record<string, unknown>) => {
             chamadas.push(pedido);
             if (resposta instanceof Error) throw resposta;
-            return { texto: resposta };
+            return { texto: resposta, modelo: 'modelo-padrao', tokens: { entrada: 120, saida: 40, cache: 5 } };
         },
     };
-    return { servico: new AssistenteService(iaService as never, {} as never, {} as never, {} as never), chamadas };
+    const iaUsoService = { registrar: async (dto: Record<string, unknown>) => { usos.push(dto); } };
+    return { servico: new AssistenteService(iaService as never, {} as never, {} as never, iaUsoService as never), chamadas, usos };
 }
 
 const promptDe = (chamada: Record<string, unknown>) => (chamada.mensagens as { papel: string; conteudo: string }[])[0].conteudo;
@@ -25,7 +29,7 @@ const mensagemDe = (erro: unknown) => ((erro as BusinessException).getResponse()
 
 test('chama a IA no nível padrão com o texto do usuário, o tipo e o nome da entidade no prompt', async () => {
     const { servico, chamadas } = criar();
-    await servico.auxiliarDescricao({ textoOriginal: 'arrumei o login', tipoEntidade: 'execucao', contextoEntidade: 'Tela de login' });
+    await servico.auxiliarDescricao({ textoOriginal: 'arrumei o login', tipoEntidade: 'execucao', contextoEntidade: 'Tela de login' }, USUARIO);
 
     assert.equal(chamadas.length, 1);
     assert.equal(chamadas[0].nivel, NivelIaEnum.PADRAO);
@@ -36,15 +40,31 @@ test('chama a IA no nível padrão com o texto do usuário, o tipo e o nome da e
     assert.ok(prompt.includes('"Tela de login"'));
 });
 
+test('registra o uso da IA em nome de quem pediu, com o modelo e os tokens (task 370)', async () => {
+    const { servico, usos } = criar();
+    await servico.auxiliarDescricao({ textoOriginal: 'arrumei o login', tipoEntidade: 'execucao', contextoEntidade: 'Tela de login' }, USUARIO);
+
+    assert.deepEqual(usos, [{
+        usuarioId: 7, descricao: 'Auxiliar de descrição (execução de trabalho)', nivel: NivelIaEnum.PADRAO,
+        modelo: 'modelo-padrao', tokensEntrada: 120, tokensSaida: 40, tokensCache: 5,
+    }]);
+});
+
+test('IA que falha não registra uso (nada foi gasto)', async () => {
+    const { servico, usos } = criar(new IaException('DESLIGADA', 'A IA está desligada'));
+    await assert.rejects(() => servico.auxiliarDescricao({ textoOriginal: 'arrumei o login', tipoEntidade: 'demanda', contextoEntidade: 'Y' }, USUARIO), BusinessException);
+    assert.equal(usos.length, 0);
+});
+
 test('para demanda, o prompt fala em demanda de projeto', async () => {
     const { servico, chamadas } = criar();
-    await servico.auxiliarDescricao({ textoOriginal: 'texto', tipoEntidade: 'demanda', contextoEntidade: 'Relatórios' });
+    await servico.auxiliarDescricao({ textoOriginal: 'texto', tipoEntidade: 'demanda', contextoEntidade: 'Relatórios' }, USUARIO);
     assert.ok(promptDe(chamadas[0]).includes('demanda de projeto'));
 });
 
 test('devolve o texto original junto do texto refinado pela IA', async () => {
     const { servico } = criar('Corrigiu a validação do formulário de login.');
-    const resposta = await servico.auxiliarDescricao({ textoOriginal: 'arrumei o login', tipoEntidade: 'execucao', contextoEntidade: 'Login' });
+    const resposta = await servico.auxiliarDescricao({ textoOriginal: 'arrumei o login', tipoEntidade: 'execucao', contextoEntidade: 'Login' }, USUARIO);
     assert.equal(resposta.sucesso, true);
     assert.deepEqual(resposta.dados, { textoOriginal: 'arrumei o login', textoAuxiliado: 'Corrigiu a validação do formulário de login.' });
 });
@@ -52,7 +72,7 @@ test('devolve o texto original junto do texto refinado pela IA', async () => {
 test('IA desligada ou fora do ar vira BusinessException com a mensagem do motivo', async () => {
     const { servico } = criar(new IaException('DESLIGADA', 'A IA está desligada'));
     await assert.rejects(
-        () => servico.auxiliarDescricao({ textoOriginal: 'x', tipoEntidade: 'execucao', contextoEntidade: 'Y' }),
+        () => servico.auxiliarDescricao({ textoOriginal: 'x', tipoEntidade: 'execucao', contextoEntidade: 'Y' }, USUARIO),
         (erro: unknown) => erro instanceof BusinessException && mensagemDe(erro) === 'A IA está desligada',
     );
 });
@@ -60,7 +80,7 @@ test('IA desligada ou fora do ar vira BusinessException com a mensagem do motivo
 test('erro desconhecido vira a mensagem genérica de indisponibilidade', async () => {
     const { servico } = criar(new Error('socket hang up'));
     await assert.rejects(
-        () => servico.auxiliarDescricao({ textoOriginal: 'x', tipoEntidade: 'demanda', contextoEntidade: 'Y' }),
+        () => servico.auxiliarDescricao({ textoOriginal: 'x', tipoEntidade: 'demanda', contextoEntidade: 'Y' }, USUARIO),
         (erro: unknown) => erro instanceof BusinessException && mensagemDe(erro) === 'Serviço de IA temporariamente indisponível',
     );
 });

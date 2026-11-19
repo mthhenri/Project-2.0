@@ -6,6 +6,7 @@ import { montarComponente, ComponenteMontado } from '../../../../../testes/monta
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { dataParaIso } from '../../../execucao/utils/execucao.util';
 import { PontoPage } from './ponto.page';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 import { hojeNoFuso } from '@project20/shared';
 import { ambiente } from '../../../../../environments/environment';
 
@@ -324,5 +325,34 @@ describe('PontoPage: desenvolvedor, só o próprio mês', () => {
         expect(botaoPorTexto(montado, 'Imprimir')!.disabled).toBe(true);
         await carregarMensal(montado);
         expect(botaoPorTexto(montado, 'Imprimir')!.disabled).toBe(false);
+    });
+});
+
+describe('PontoPage: pausa pelo chip da topbar (task 438)', () => {
+    it('pausar pelo chip recarrega o ponto, sem F5', async () => {
+        const montado = await montarPagina(TipoUsuarioEnum.GESTOR);
+        await carregarTodos(montado, [pontoDiario(3, 'Ana Dev', [execucao(1, true)])]);
+
+        TestBed.inject(ExecucaoAtivaService).registrarPausaDoChip();
+        await montado.atualizar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/ponto/todos'), [pontoDiario(3, 'Ana Dev', [execucao(1, false)])]);
+        responderApoio(montado);
+        await montado.atualizar();
+        expect(montado.elemento.textContent).toContain('Ana Dev');
+    });
+});
+
+describe('PontoPage: consulta nova cancela a anterior (task 437)', () => {
+    it('trocar de mês com a consulta anterior pendente cancela a requisição dela', async () => {
+        const montado = await montarPagina(TipoUsuarioEnum.DESENVOLVEDOR);
+        const primeira = esperarRequisicao(montado.http, 'GET', '/ponto/mensal');
+        montado.componente.carregar();
+        const segunda = esperarRequisicao(montado.http, 'GET', '/ponto/mensal');
+        expect(primeira.cancelled).toBe(true);
+        responderSucesso(segunda, mensalDoMesAtual());
+        responderApoio(montado);
+        await montado.atualizar();
+        expect(montado.componente.pontoMensal()).not.toBeNull();
+        expect(montado.componente.carregando()).toBe(false);
     });
 });

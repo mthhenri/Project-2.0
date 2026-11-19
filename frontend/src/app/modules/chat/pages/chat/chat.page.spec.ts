@@ -300,9 +300,35 @@ describe('ChatPage — enviar e receber a resposta', () => {
         expect(montado.elemento.querySelector('[aria-busy="true"].chat__ia-conteudo')).toBeNull();
         expect(montado.elemento.querySelectorAll('[data-mensagem-id="m-final"]')).toHaveLength(1);
         expect(campoDesabilitado(montado)).toBe(false);
-        // O fim relê o estado da IA e a lista do histórico (a conversa pode ter ganhado nome).
-        expect(montado.http.match((requisicao) => requisicao.url.endsWith('/ia/disponibilidade'))).toHaveLength(1);
+        // O fim não força a leitura do estado da IA (a janela de frescor do serviço decide) e relê a lista do histórico só porque a conversa de hoje ainda não está nela (task 444).
+        expect(montado.http.match((requisicao) => requisicao.url.endsWith('/ia/disponibilidade'))).toHaveLength(0);
         expect(montado.http.match((requisicao) => requisicao.url.endsWith('/chat/conversas'))).toHaveLength(1);
+        expect(montado.http.match((requisicao) => requisicao.url.endsWith('/plano') || requisicao.url.includes('/plano?'))).toHaveLength(0);
+    });
+
+    it('mudar o plano relê só a lista de planos e só quando ela muda de verdade; gravar o texto não pede nada, e as conversas nunca (task 445)', async () => {
+        const montado = await montarChat();
+        montado.http.match(() => true);
+        montado.componente.aoMudarPlano('texto');
+        montado.http.expectNone(() => true);
+
+        montado.componente.aoMudarPlano('projeto');
+        const pedidos = montado.http.match(() => true).map((pedido) => `${pedido.request.method} ${pedido.request.url.replace(/^.*\/api\/v1/, '').split('?')[0]}`);
+        expect(pedidos).toEqual(['GET /plano']);
+    });
+
+    it('a segunda mensagem do dia, com a conversa já nomeada na lista, não gera nenhuma das três leituras (task 444)', async () => {
+        const conversaNomeada = { conversaId: CONVERSA_DE_HOJE, data: HOJE, titulo: 'Plano da semana', tituloEditado: false, primeiraMensagem: 'oi', quantidadeDeMensagens: 2, ultimaMensagemDate: new Date().toISOString() };
+        const montado = await montarChat({ mensagens: [DA_IA('Olá!')], conversas: [conversaNomeada] });
+        const fluxo = controlarFluxo(enviarMensagemEspiao, 1);
+
+        await enviarPeloTeclado(montado, 'Outra pergunta');
+        fluxo.emitir({ tipo: 'fim', mensagem: DA_IA('Resposta.', { id: 'm-2' }) as never });
+        fluxo.terminar();
+        await montado.atualizar();
+
+        const leituras = montado.http.match((requisicao) => requisicao.method === 'GET').map((requisicao) => requisicao.request.url.replace(/^.*\/api\/v1/, ''));
+        expect(leituras.filter((url) => url.startsWith('/ia/disponibilidade') || url.startsWith('/chat/conversas') || url.startsWith('/plano'))).toEqual([]);
     });
 
     it('a IA anotar no pad faz o pad reler o servidor ao concluir a ferramenta (P-041); outra ferramenta não', async () => {

@@ -9,12 +9,14 @@ import {
     DestroyRef,
     Injector,
     afterNextRender,
+    effect,
+    untracked,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormControl, Validators } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { Subscription, finalize } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule, DatePicker } from 'primeng/datepicker';
@@ -44,6 +46,7 @@ import { ambiente } from '../../../../../environments/environment';
 import { ExecucaoService } from '../../services/execucao.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
@@ -90,6 +93,7 @@ export class ExecucaoHistoricoPage implements OnInit {
     private readonly destroyRef = inject(DestroyRef);
     private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
     readonly sessao = inject(UsuarioSessaoService);
+    private readonly execucaoAtiva = inject(ExecucaoAtivaService);
     /** Os rótulos e as larguras da tabela real (Usuário e Ações só para o gestor), para o esqueleto não parecer outra tela. */
     readonly esqueleto = computed(() =>
         montarEsqueletoDeTabela([
@@ -165,6 +169,17 @@ export class ExecucaoHistoricoPage implements OnInit {
     /** Seletor de data aberto na edição inline: o Esc e a confirmação precisam fechar o painel dele. */
     private seletorAtivo: DatePicker | null = null;
 
+    constructor() {
+        // Pausar pelo chip da topbar encerra a execução que o bloco "Em andamento agora" mostra: a tela se atualiza (task 438).
+        let pausasVistas = this.execucaoAtiva.pausasDoChip();
+        effect(() => {
+            const pausas = this.execucaoAtiva.pausasDoChip();
+            if (pausas === pausasVistas) return;
+            pausasVistas = pausas;
+            untracked(() => this.buscarExecucoes());
+        });
+    }
+
     /** Dia e usuário vêm da URL (`?data=&usuario=`), que é a fonte do estado; cada mudança de URL recarrega. */
     ngOnInit(): void {
         if (this.sessao.temVisaoTotal()) this.carregarUsuarios();
@@ -230,7 +245,11 @@ export class ExecucaoHistoricoPage implements OnInit {
         this.buscarExecucoes();
     }
 
+    /** A busca em curso: uma nova (outro dia, usuário ou página) cancela a anterior (task 437). */
+    private buscaEmCurso: Subscription | null = null;
+
     buscarExecucoes(): void {
+        this.buscaEmCurso?.unsubscribe();
         this.carregando.set(true);
 
         const filtros: ExecucaoListarDto = {
@@ -242,7 +261,7 @@ export class ExecucaoHistoricoPage implements OnInit {
         const usuarioId = this.usuarioFiltradoId();
         if (this.sessao.temVisaoTotal() && usuarioId) filtros.usuarioId = usuarioId;
 
-        this.execucaoService
+        this.buscaEmCurso = this.execucaoService
             .listar(filtros)
             .pipe(finalize(() => {
                 this.carregando.set(false);

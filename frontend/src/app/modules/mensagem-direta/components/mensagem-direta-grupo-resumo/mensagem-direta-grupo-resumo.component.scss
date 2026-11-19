@@ -46,6 +46,46 @@
         cursor: pointer;
     }
 
+    &__historico {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: 24rem;
+        margin: 0;
+        padding: 0;
+        overflow-y: auto;
+        list-style: none;
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        width: 100%;
+        padding: 0.625rem 0.75rem;
+        border: 1px solid var(--app-surface-300);
+        border-radius: 0.5rem;
+        background: var(--app-surface-100);
+        color: var(--p-text-color);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+
+        &:hover:not(:disabled) {
+            border-color: var(--p-primary-color);
+        }
+
+        &:disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+    }
+
+    &__item-periodo {
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
     &__opcao {
         display: flex;
         align-items: flex-start;

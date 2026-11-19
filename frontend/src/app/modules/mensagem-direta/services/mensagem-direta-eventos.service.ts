@@ -1,8 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { MensagemDiretaEventoDto } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
-import { parametrosRetorno } from '../../../core/interceptors/error-handler.interceptor';
+import { AutenticacaoService } from '../../../core/services/autenticacao.service';
 import { extrairEventos } from '../../chat/utils/chat.util';
 import { esperaDaReconexao, semSinalHaMuito } from '../utils/mensagem-direta.util';
 
@@ -24,7 +23,7 @@ const INTERVALO_DO_VIGIA_MS = 10_000;
  */
 @Injectable({ providedIn: 'root' })
 export class MensagemDiretaEventosService {
-    private readonly roteador = inject(Router);
+    private readonly autenticacao = inject(AutenticacaoService);
     private readonly _conectado = signal(false);
     /** O stream está aberto agora (a `ABERTURA` chegou). Falso antes da primeira conexão, durante as quedas e quando o servidor encerra. */
     readonly conectado = this._conectado.asReadonly();
@@ -70,9 +69,7 @@ export class MensagemDiretaEventosService {
    */
     private encerrarPorSessaoExpirada(): void {
         this.parar();
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('usuario_sessao');
-        void this.roteador.navigate(['/autenticacao'], { queryParams: parametrosRetorno(this.roteador.url) });
+        this.autenticacao.encerrarSessao({ expirada: true });
     }
 
     private esperar(milissegundos: number): Promise<void> {

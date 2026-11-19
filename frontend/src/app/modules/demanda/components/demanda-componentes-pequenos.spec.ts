@@ -206,8 +206,10 @@ describe('DemandaMetricasComponent', () => {
             usuario: TipoUsuarioEnum.GESTOR, entradas: { demandaId: 10, horasEstimadas: 8, previsaoFimData, editavel },
         });
         const alteracoes: unknown[] = [];
+        const gravadas: unknown[] = [];
         montado.componente.alterada.subscribe((valor) => alteracoes.push(valor));
-        return { montado, alteracoes };
+        montado.componente.gravada.subscribe((valor) => gravadas.push(valor));
+        return { montado, alteracoes, gravadas };
     }
 
     it('sem permissão de edição, clicar não abre a edição', async () => {
@@ -229,6 +231,23 @@ describe('DemandaMetricasComponent', () => {
         responderErro(requisicao, 400, 'recusado');
         await montado.atualizar();
         expect(alteracoes[1]).toEqual({ horasEstimadas: 8, reverter: true });
+    });
+
+    it('o aviso de gravada só sai depois da resposta do PUT, nunca antes nem com a gravação recusada (task 407)', async () => {
+        const { montado, gravadas } = await montar(true);
+        montado.componente.editar('horasEstimadas');
+        montado.componente.valorHoras = 12;
+        montado.componente.salvarHoras();
+        const requisicao = esperarRequisicao(montado.http, 'PUT', '/demanda/10');
+        expect(gravadas, 'antes da resposta nada é avisado').toEqual([]);
+        responderSucesso(requisicao, { id: 10 });
+        await montado.atualizar();
+        expect(gravadas).toEqual([{ horasEstimadas: 12 }]);
+
+        montado.componente.salvarData(new Date(2026, 6, 15));
+        responderErro(esperarRequisicao(montado.http, 'PUT', '/demanda/10'), 400, 'recusado');
+        await montado.atualizar();
+        expect(gravadas, 'a gravação recusada não é avisada').toEqual([{ horasEstimadas: 12 }]);
     });
 
     it('horas iguais ou negativas não gravam nada', async () => {

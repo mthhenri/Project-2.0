@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -57,7 +57,7 @@ describe('ExecucaoAtivaService (frontend)', () => {
     it('só a primeira carga é "primeiraCarga"; as seguintes são silenciosas', () => {
         servico.carregar();
         responderSucesso(esperarRequisicao(http, 'GET', '/execucao/ativa'), ativa);
-        servico.carregar();
+        servico.carregar({ forcar: true });
         expect(servico.primeiraCarga()).toBe(false);
         responderSucesso(esperarRequisicao(http, 'GET', '/execucao/ativa'), null);
     });
@@ -91,5 +91,62 @@ describe('ExecucaoAtivaService (frontend)', () => {
         servico.carregar();
         expect(servico.primeiraCarga()).toBe(true);
         http.match(() => true);
+    });
+
+    it('com uma consulta em curso, outro carregar não abre requisição nova (foco e volta à aba juntos)', () => {
+        servico.carregar();
+        servico.carregar();
+        servico.carregar();
+        responderSucesso(esperarRequisicao(http, 'GET', '/execucao/ativa'), ativa);
+        http.expectNone('/api/v1/execucao/ativa');
+    });
+
+    it('sem forcar, não repete uma consulta cuja resposta chegou há pouco; passada a janela, repete', () => {
+        const agora = Date.now();
+        const relogio = vi.spyOn(Date, 'now').mockReturnValue(agora);
+        servico.carregar();
+        responderSucesso(esperarRequisicao(http, 'GET', '/execucao/ativa'), ativa);
+
+        servico.carregar();
+        http.expectNone((requisicao) => requisicao.url.endsWith('/execucao/ativa'));
+
+        relogio.mockReturnValue(agora + 6_000);
+        servico.carregar();
+        responderSucesso(esperarRequisicao(http, 'GET', '/execucao/ativa'), null);
+        expect(servico.ativa()).toBeNull();
+        relogio.mockRestore();
+    });
+
+    it('forcar pula a janela de frescor', () => {
+        servico.carregar();
+        responderSucesso(esperarRequisicao(http, 'GET', '/execucao/ativa'), ativa);
+        servico.carregar({ forcar: true });
+        responderSucesso(esperarRequisicao(http, 'GET', '/execucao/ativa'), null);
+        expect(servico.ativa()).toBeNull();
+    });
+
+    it('forcar durante uma consulta em curso não duplica, mas relê ao fim (a resposta em voo pode ser anterior à mudança)', () => {
+        servico.carregar();
+        servico.carregar({ forcar: true });
+        responderSucesso(esperarRequisicao(http, 'GET', '/execucao/ativa'), null);
+        responderSucesso(esperarRequisicao(http, 'GET', '/execucao/ativa'), ativa);
+        expect(servico.ativa()).toEqual(ativa);
+    });
+
+    it('depois de uma falha a próxima tentativa não espera a janela de frescor', () => {
+        servico.carregar();
+        responderErro(esperarRequisicao(http, 'GET', '/execucao/ativa'), 500, 'falha');
+        servico.carregar();
+        responderSucesso(esperarRequisicao(http, 'GET', '/execucao/ativa'), ativa);
+        expect(servico.ativa()).toEqual(ativa);
+    });
+
+    it('jaCarregou fica falso até a primeira resposta e volta a falso no limpar', () => {
+        expect(servico.jaCarregou()).toBe(false);
+        servico.carregar();
+        responderSucesso(esperarRequisicao(http, 'GET', '/execucao/ativa'), null);
+        expect(servico.jaCarregou()).toBe(true);
+        servico.limpar();
+        expect(servico.jaCarregou()).toBe(false);
     });
 });

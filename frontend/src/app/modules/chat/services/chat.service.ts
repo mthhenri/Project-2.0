@@ -138,7 +138,7 @@ export class ChatService {
                 }
             }
         } finally {
-            if (propostaExecutada) this.execucaoAtiva.carregar();
+            if (propostaExecutada) this.execucaoAtiva.carregar({ forcar: true });
         }
     }
 }

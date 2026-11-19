@@ -89,6 +89,8 @@ export interface OpcoesDeConversa {
     nivel?: NivelIaEnum;
     maximoTokens?: number;
     escopoDeFerramentas?: EscopoDaFerramentaIa;
+    /** O plano da conversa (conversa do plano): as ferramentas do plano só agem nele (task 398). */
+    planoId?: number;
     /** O texto de uma mensagem do usuário como o modelo a lê (na conversa do plano, com o nome de quem falou). */
     rotularMensagemDoUsuario?: (mensagem: ChatMensagemLida) => string;
 }
@@ -370,6 +372,7 @@ export class ChatService {
             // A dúvida de código (ligada pelo administrador) pode precisar de documentação atual: o provedor pesquisa por conta própria quando o modelo achar útil.
             pesquisaWeb: doChat && configuracao.duvidasCodigo,
             origem: { contexto, escopo: opcoes.escopoDeFerramentas ?? 'CHAT' },
+            planoDaConversa: opcoes.planoId,
             propostasDoTurno,
             emitir,
         });

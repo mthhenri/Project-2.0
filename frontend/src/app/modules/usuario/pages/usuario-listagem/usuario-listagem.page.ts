@@ -3,7 +3,7 @@ import { Component, ElementRef, inject, signal, OnInit, HostListener, DestroyRef
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule, FormBuilder } from '@angular/forms';
-import { finalize, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subscription, filter, finalize, debounceTime } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -101,6 +101,10 @@ export class UsuarioListagemPage implements OnInit {
     readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
     readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
     readonly paginaAtual = signal<number>(1);
+    /** Primeiro registro da página mostrada, ligado à `p-table` lazy: ela guarda o próprio `first`, e sem isto o paginador não volta à página 1 sozinho. */
+    readonly primeiroRegistro = signal<number>(0);
+    /** A carga em voo: uma nova (busca, filtro, página, volta à aba) cancela a anterior, para a resposta velha não sobrescrever a nova. */
+    private cargaEmCurso: Subscription | null = null;
     readonly itensPorPagina = signal<number>(10);
 
     readonly tiposOpcoes = [
@@ -124,7 +128,8 @@ export class UsuarioListagemPage implements OnInit {
         this.ativoFiltro.set(filtrosSalvos.ativo);
 
         this.formularioFiltros.controls.busca.valueChanges
-            .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+            // Compara com o termo **aplicado** (não com o último valor do campo): depois de "Limpar", redigitar o mesmo termo volta a buscar.
+            .pipe(debounceTime(300), filter((busca) => (busca ?? '') !== this.termoBusca()), takeUntilDestroyed(this.destroyRef))
             .subscribe((busca) => {
                 this.termoBusca.set(busca ?? '');
                 this.aoMudarFiltro();
@@ -177,6 +182,7 @@ export class UsuarioListagemPage implements OnInit {
     }
 
     buscarUsuarios(): void {
+        this.cargaEmCurso?.unsubscribe();
         this.carregando.set(true);
         this.erroAoCarregar.set(false);
 
@@ -191,7 +197,7 @@ export class UsuarioListagemPage implements OnInit {
         if (ativo !== null) filtros.ativo = ativo;
         if (busca) filtros.busca = busca;
 
-        this.usuarioService
+        this.cargaEmCurso = this.usuarioService
             .listar(filtros)
             .pipe(finalize(() => {
                 this.carregando.set(false);
@@ -211,6 +217,7 @@ export class UsuarioListagemPage implements OnInit {
     aoCarregarTabela(evento: TableLazyLoadEvent): void {
         const primeira = evento.first ?? 0;
         const linhas = evento.rows ?? 10;
+        this.primeiroRegistro.set(primeira);
         this.paginaAtual.set(Math.floor(primeira / linhas) + 1);
         this.itensPorPagina.set(linhas);
         this.buscarUsuarios();
@@ -218,6 +225,7 @@ export class UsuarioListagemPage implements OnInit {
 
     aoMudarFiltro(): void {
         this.paginaAtual.set(1);
+        this.primeiroRegistro.set(0);
         this.buscarUsuarios();
     }
 

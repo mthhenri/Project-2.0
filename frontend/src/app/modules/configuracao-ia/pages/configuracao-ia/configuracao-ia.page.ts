@@ -177,7 +177,18 @@ export class ConfiguracaoIaPage implements OnInit {
             next: (resposta) => {
                 this.salvando.set(false);
                 this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: resposta.mensagem });
-                this.carregar();
+                const criada = resposta.dados;
+                if (!criada) return this.carregar();
+                // O POST devolve a versão criada (o mesmo formato da ativa e dos itens do histórico): a tela a aplica, sem reler nada (task 469); só o estado da IA pode ter mudado.
+                this.ativa.set(criada);
+                this.versoes.update((lista) => [criada, ...lista.filter((versao) => versao.id !== criada.id)].slice(0, 50));
+                preencherFormulario(this.formulario, this.formBuilder, valoresDaVersao(criada));
+                this.valorAtual.set(this.formulario.getRawValue());
+                this.tentouSalvar.set(false);
+                this.configuracaoIaService.recuperarEstado().pipe(catchError(() => of(null))).subscribe((estado) => {
+                    this.estado.set(estado?.dados?.estado ?? null);
+                    this.provedoresComChave.set(estado?.dados?.provedoresComChave ?? null);
+                });
             },
             error: () => this.salvando.set(false),
         });

@@ -339,6 +339,14 @@ test('recuperarAtiva: lê a do usuário do token; sem execução responde null c
     assert.equal(resposta.mensagem, 'Nenhuma execução ativa');
 });
 
+test('recuperarAtivaDetalhada: mesma regra de acesso — o desenvolvedor lê só a própria; gestor e administrador, a de qualquer um', async () => {
+    const detalhada = { ...EXECUCAO_ABERTA, nomeAtividade: 'A', nomeDemanda: 'D', nomeProjeto: 'P', nomeUsuario: 'U' };
+    const repo = { recuperarAtivaDetalhada: async () => detalhada };
+    await assert.rejects(() => criarServico(repo).recuperarAtivaDetalhada({ usuarioId: 99 }, DESENVOLVEDOR), UnauthorizedAccessException);
+    assert.equal((await criarServico(repo).recuperarAtivaDetalhada({ usuarioId: 3 }, DESENVOLVEDOR)).dados, detalhada);
+    assert.equal((await criarServico(repo).recuperarAtivaDetalhada({ usuarioId: 99 }, GESTOR)).dados, detalhada);
+});
+
 test('recuperarAtivaDoUsuario: o desenvolvedor lê só a própria; gestor e administrador leem a de qualquer um', async () => {
     const repo = repositorio({ recuperarAtiva: async () => EXECUCAO_ABERTA });
     await assert.rejects(() => criarServico(repo).recuperarAtivaDoUsuario({ usuarioId: 99 }, DESENVOLVEDOR), UnauthorizedAccessException);

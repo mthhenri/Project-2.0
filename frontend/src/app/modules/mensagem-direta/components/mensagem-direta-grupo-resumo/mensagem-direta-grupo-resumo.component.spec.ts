@@ -184,4 +184,52 @@ describe('MensagemDiretaGrupoResumoComponent', () => {
         expect(texto()).toContain('Escolha a demanda do projeto');
         tela.http.expectNone((pedido) => pedido.url.endsWith('/proposta'));
     });
+
+    describe('resumos anteriores', () => {
+        const ANTERIOR = { resumoId: 9, texto: '- decidiram migrar\n\n_Resumo gerado por IA._', quantidadeMensagens: 12, inicioData: '2026-11-01T10:00:00.000Z', fimData: '2026-11-04T10:00:00.000Z', criadoData: '2026-11-04T11:00:00.000Z', pedidoPorUsuarioId: 3, pedidoPorNome: 'Bruno Lima', pedidoPorVoce: false, gravado: false };
+        const ANTIGO = { ...ANTERIOR, resumoId: 4, texto: null, pedidoPorNome: null };
+
+        async function abrirHistorico(tela: Montado, itens: unknown[]): Promise<void> {
+            await clicar(tela, 'Resumos anteriores');
+            responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/grupo/21/resumo/historico'), itens);
+            await tela.atualizar();
+        }
+
+        it('lista os resumos feitos e abre o texto de um deles, que pode ser copiado', async () => {
+            const tela = await abrir();
+            await abrirHistorico(tela, [ANTERIOR]);
+            expect(texto()).toContain('12 mensagens');
+            expect(texto()).toContain('Bruno Lima');
+
+            await clicar(tela, '12 mensagens');
+            expect(texto()).toContain('decidiram migrar');
+            expect(botao('Copiar')).toBeDefined();
+            expect(botao('Voltar')).toBeDefined();
+        });
+
+        it('o resumo de outra pessoa não oferece gravar; o seu, ainda não gravado, oferece', async () => {
+            const tela = await abrir();
+            await abrirHistorico(tela, [ANTERIOR, { ...ANTERIOR, resumoId: 10, pedidoPorVoce: true }]);
+
+            await clicar(tela, 'Bruno Lima');
+            expect(botao('Gravar na documentação')).toBeUndefined();
+
+            await clicar(tela, 'Voltar');
+            await clicar(tela, 'você');
+            expect(botao('Gravar na documentação')).toBeDefined();
+        });
+
+        it('um resumo feito antes de o texto ser guardado aparece na lista, sem abrir', async () => {
+            const tela = await abrir();
+            await abrirHistorico(tela, [ANTIGO]);
+            expect(texto()).toContain('sem texto guardado');
+            expect(botao('12 mensagens')?.disabled).toBe(true);
+        });
+
+        it('sem resumos diz que o chat ainda não foi resumido', async () => {
+            const tela = await abrir();
+            await abrirHistorico(tela, []);
+            expect(texto()).toContain('Este chat ainda não foi resumido');
+        });
+    });
 });

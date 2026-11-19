@@ -1,9 +1,9 @@
 import { BusinessException } from '../../../core/exceptions/business.exception';
 
 /**
- * Confere se uma demanda pode passar a ficar dentro de outra. A `DemandaService.alterar` só confere o projeto; a tela só oferece como pai
- * as demandas **estruturais** e nunca a própria demanda, mas nada impede um ciclo (mover para dentro de uma filha). Aqui valem as três
- * regras, tanto na ferramenta que propõe quanto no executor que confirma. `idsDaSubarvore` inclui a própria demanda (nível 0).
+ * Confere se uma demanda pode passar a ficar dentro de outra: a própria demanda, a subárvore (ciclo), o mesmo projeto e o pai **estrutural**.
+ * A fonte única é a `DemandaService.alterar` (task 382), que vale para a tela, a API e a IA; a ferramenta que propõe e o executor que confirma
+ * a chamam também para recusar cedo, com a mesma mensagem. `idsDaSubarvore` inclui a própria demanda (nível 0).
  */
 export function validarNovoPaiDaDemanda(dados: {
     demandaId: number;
@@ -12,10 +12,10 @@ export function validarNovoPaiDaDemanda(dados: {
     idsDaSubarvore: readonly number[];
 }): void {
     const { demandaId, demandaProjetoId, novoPai, idsDaSubarvore } = dados;
-    if (novoPai.id === demandaId) throw new BusinessException('Uma demanda não pode ser pai de si mesma. Avise o usuário.');
+    if (novoPai.id === demandaId) throw new BusinessException('Uma demanda não pode ser pai de si mesma');
     if (idsDaSubarvore.includes(novoPai.id)) {
-        throw new BusinessException(`"${novoPai.nome}" está dentro desta demanda: movê-la para lá criaria um ciclo na árvore. Avise o usuário.`);
+        throw new BusinessException(`"${novoPai.nome}" está dentro desta demanda: movê-la para lá criaria um ciclo na árvore`);
     }
-    if (novoPai.projetoId !== demandaProjetoId) throw new BusinessException('A demanda pai precisa ser do mesmo projeto. Avise o usuário.');
-    if (!novoPai.estrutural) throw new BusinessException(`"${novoPai.nome}" não é uma demanda estrutural, e só estas agrupam outras demandas. Avise o usuário.`);
+    if (novoPai.projetoId !== demandaProjetoId) throw new BusinessException('A demanda pai deve pertencer ao mesmo projeto');
+    if (!novoPai.estrutural) throw new BusinessException('Apenas demandas estruturais podem ter sub-demandas');
 }

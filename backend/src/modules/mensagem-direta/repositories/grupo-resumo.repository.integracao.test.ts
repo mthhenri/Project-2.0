@@ -17,7 +17,7 @@ async function criarGrupo(conexao: ConexaoTeste) {
 }
 
 const novo = (grupoId: number, usuarioId: number, fim: string) => ({
-    grupoId, usuarioId, inicioData: new Date('2026-11-01T00:00:00.000Z'), fimData: new Date(fim), enviouCodigo: false, quantidadeMensagens: 7, modelo: 'modelo-x', tokensEntrada: 100, tokensSaida: 20,
+    grupoId, usuarioId, inicioData: new Date('2026-11-01T00:00:00.000Z'), fimData: new Date(fim), enviouCodigo: false, quantidadeMensagens: 7, texto: 'Resumo de teste', modelo: 'modelo-x', tokensEntrada: 100, tokensSaida: 20,
 });
 
 testarComBanco('criarResumo guarda o período, o modelo e os tokens, sem proposta nem gravação', async (conexao) => {
@@ -72,4 +72,19 @@ testarComBanco('marcarGravado acontece uma vez só e depois dele não se marca p
     assert.equal(await resumos(conexao).marcarGravado({ resumoId: criado.resumoId, gravadaData }), false, 'não grava duas vezes');
     assert.equal(await resumos(conexao).marcarProposta({ resumoId: criado.resumoId, propostaIaId: 1, demandaId: 1 }), false);
     assert.equal((await resumos(conexao).recuperarResumo({ resumoId: criado.resumoId, grupoId: grupo.grupoId }))?.gravadaData?.toISOString(), gravadaData.toISOString());
+});
+
+testarComBanco('criarResumo guarda o texto e listarResumos devolve os do grupo, do mais novo ao mais antigo, com o nome de quem pediu', async (conexao) => {
+    const { ana, grupo } = await criarGrupo(conexao);
+    const outro = await criarRepositorio(GrupoRepository, conexao).criarGrupo({ nome: 'Outro', tipo: TipoGrupoEnum.LIVRE, criadorUsuarioId: ana.id, corAvatar: null, emojiAvatar: null, projetoId: null, demandaId: null });
+    const primeiro = await resumos(conexao).criarResumo({ ...novo(grupo.grupoId, ana.id, '2026-11-05T00:00:00.000Z'), texto: 'primeiro' });
+    const segundo = await resumos(conexao).criarResumo({ ...novo(grupo.grupoId, ana.id, '2026-11-03T00:00:00.000Z'), texto: 'segundo' });
+    await resumos(conexao).criarResumo(novo(outro.grupoId, ana.id, '2026-11-09T00:00:00.000Z'));
+
+    const lista = await resumos(conexao).listarResumos({ grupoId: grupo.grupoId });
+
+    assert.deepEqual(lista.map((resumo) => resumo.resumoId), [segundo.resumoId, primeiro.resumoId], 'o mais recém-criado primeiro, só do grupo pedido');
+    assert.equal(lista[0].texto, 'segundo');
+    assert.equal(typeof lista[0].nomeDoUsuario, 'string', 'o nome de quem pediu vem do usuário');
+    assert.ok(lista[0].criadoData instanceof Date);
 });

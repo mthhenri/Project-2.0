@@ -124,6 +124,7 @@
             dataKey="id"
             [paginator]="true"
             [rows]="itensPorPagina()"
+            [first]="primeiroRegistro()"
             [totalRecords]="totalRegistros()"
             (onLazyLoad)="aoCarregarTabela($event)"
             [rowsPerPageOptions]="[10, 25, 50]"

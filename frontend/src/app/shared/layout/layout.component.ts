@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { MensagemDiretaAvisosComponent } from '../../modules/mensagem-direta/components/mensagem-direta-avisos/mensagem-direta-avisos.component';
@@ -8,7 +8,6 @@ import { ToastDesfazerComponent } from '../components/toast-desfazer/toast-desfa
 import { IaRetornoAvisoComponent } from './ia-retorno-aviso/ia-retorno-aviso.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { TopbarComponent } from './topbar/topbar.component';
-import { AutenticacaoService } from '../../core/services/autenticacao.service';
 import { LoadingSpinnerComponent } from '../components/loading-spinner/loading-spinner.component';
 
 @Component({
@@ -19,8 +18,5 @@ import { LoadingSpinnerComponent } from '../components/loading-spinner/loading-s
     styleUrl: './layout.component.scss',
 })
 export class LayoutComponent {
-    constructor() {
-    // A casca só abre autenticada: confere o tipo do usuário no servidor uma vez, a cada abertura do app (P-062).
-        inject(AutenticacaoService).atualizarSessao();
-    }
+    // A conferência do tipo no servidor (P-062) acontece no `sessaoConferidaGuard` da rota da casca, antes dos guards de tipo.
 }

@@ -9,7 +9,7 @@ import { Popover, PopoverModule } from 'primeng/popover';
 import { TextareaModule } from 'primeng/textarea';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TabsModule } from 'primeng/tabs';
-import { DemandaCriadaDto, PlanoAbaEnum, PlanoAlterarDto, PlanoRecuperadoDto, podeEditarAbaDoPlano, podeVerAbaDoPlano } from '@project20/shared';
+import { DemandaCriadaDto, PlanoAbaEnum, PlanoAlterarDto, PlanoPublicadoDto, PlanoRecuperadoDto, podeEditarAbaDoPlano, podeVerAbaDoPlano } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownEditorComponent, MenuContextoEditorEvento } from '../../../../shared/components/markdown-editor/markdown-editor.component';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
@@ -81,6 +81,8 @@ export class PlanoDocumentoComponent {
     readonly fontesAbertas = signal(false);
 
     readonly plano = signal<PlanoRecuperadoDto | null>(null);
+    /** Quantos pontos o painel lateral conhece em aberto (`null` até ele ler): o diálogo de publicar o usa (task 445). */
+    readonly pontosEmAberto = signal<number | null>(null);
     readonly carregando = signal(true);
     readonly erro = signal(false);
     readonly salvando = signal(false);
@@ -287,9 +289,9 @@ export class PlanoDocumentoComponent {
         this.mostrarPublicacao.set(true);
     }
 
-    /** Depois de publicar, o plano relê a data da publicação; o diff seguinte compara de novo com o texto atual da demanda. */
-    aoPublicar(): void {
-        this.carregar(this.planoId());
+    /** Depois de publicar, o plano guarda a data da publicação que a resposta já trouxe (sem reler o plano); o diff seguinte compara de novo com o texto atual da demanda (task 445). */
+    aoPublicar(publicado: PlanoPublicadoDto): void {
+        this.plano.update((atual) => atual && { ...atual, publicacaoData: publicado.publicacaoData });
     }
 
     abrirDemandaNova(): void {

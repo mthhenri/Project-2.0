@@ -5,7 +5,7 @@ import { montarComponente } from '../../../../../testes/montar-componente';
 import { AtividadeParaIniciar, ExecucaoIniciarDialogComponent } from './execucao-iniciar-dialog.component';
 
 // O diálogo "Iniciar execução" (extraído da listagem de atividades, task 304): descrição obrigatória ou opcional conforme o dono, últimas
-// execuções com "Usar", envio da descrição aparada e aviso ao hospedeiro.
+// execuções, envio da descrição aparada e aviso ao hospedeiro.
 
 const DO_DESENVOLVEDOR: AtividadeParaIniciar = { id: 1, nome: 'Tela de login', nomeProjeto: 'Portal', nomeUsuario: 'Ana Souza', usuarioTipo: TipoUsuarioEnum.DESENVOLVEDOR };
 const DO_GESTOR: AtividadeParaIniciar = { ...DO_DESENVOLVEDOR, id: 2, usuarioTipo: TipoUsuarioEnum.GESTOR };
@@ -54,15 +54,6 @@ describe('ExecucaoIniciarDialogComponent', () => {
         responderSucesso(requisicao, {});
         expect(montado.componente.visivel()).toBe(false);
         expect(avisos).toBe(1);
-    });
-
-    it('"Usar" copia a descrição de uma execução anterior para o campo', async () => {
-        const montado = await montar();
-        montado.componente.abrir(DO_DESENVOLVEDOR);
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/execucao'), pagina([]));
-        montado.componente.usarDescricao('Retomar migração');
-        expect(montado.componente.formulario.value.descricao).toBe('Retomar migração');
-        expect(montado.componente.formulario.controls.descricao.dirty).toBe(true);
     });
 
     it('lista as últimas execuções da atividade', async () => {

@@ -44,10 +44,12 @@ export class AssistenteService {
     ) {}
 
     /**
-   * Refina, clarifica e complementa a descrição fornecida pelo usuário pela camada de IA (nível padrão).
+   * Refina, clarifica e complementa a descrição fornecida pelo usuário pela camada de IA (nível padrão). Qualquer usuário autenticado usa; o
+   * gasto entra na aba Custos em nome de quem pediu (task 370), como o de `alterarTrecho`.
    */
     async auxiliarDescricao(
         dto: AssistenteDescricaoAuxiliarDto,
+        usuarioAtivo: JwtPayload,
     ): Promise<StandardResponse<AssistenteDescricaoAuxiliadaDto>> {
         const tipoEntidadeFormatado = {
             execucao: 'execução de trabalho',
@@ -63,22 +65,33 @@ ${dto.textoOriginal}
 
 Refine, clarifique e complemente esse texto mantendo a voz e intenção original do usuário. Corrija erros gramaticais, melhore a clareza técnica e adicione detalhes relevantes quando faltarem. Responda apenas com o texto refinado, sem explicações adicionais.`;
 
+        let resposta: Awaited<ReturnType<IaService['gerar']>>;
         try {
-            const resposta = await this.iaService.gerar({
+            resposta = await this.iaService.gerar({
                 nivel: NivelIaEnum.PADRAO,
                 mensagens: [{ papel: 'usuario', conteudo: prompt }],
                 maximoTokens: MAXIMO_TOKENS,
             });
-            const textoAuxiliado = resposta.texto;
-
-            return {
-                sucesso: true,
-                dados: { textoOriginal: dto.textoOriginal, textoAuxiliado },
-                mensagem: 'Descrição auxiliada com sucesso',
-            };
         } catch (erro) {
             throw traduzirFalhaDeIa(erro);
         }
+
+        // A IA respondeu e gastou tokens: a chamada entra na conta da aba Custos, em nome de quem pediu.
+        await this.iaUsoService.registrar({
+            usuarioId:     usuarioAtivo.sub,
+            descricao:     `Auxiliar de descrição (${tipoEntidadeFormatado})`,
+            nivel:         NivelIaEnum.PADRAO,
+            modelo:        resposta.modelo,
+            tokensEntrada: resposta.tokens.entrada,
+            tokensSaida:   resposta.tokens.saida,
+            tokensCache:   resposta.tokens.cache,
+        });
+
+        return {
+            sucesso: true,
+            dados: { textoOriginal: dto.textoOriginal, textoAuxiliado: resposta.texto },
+            mensagem: 'Descrição auxiliada com sucesso',
+        };
     }
 
     /**

@@ -1,15 +1,15 @@
 import { Directive, ElementRef, Input, Output, EventEmitter, ViewChild, viewChild, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
-import { forkJoin, of } from 'rxjs';
+import { Subscription, forkJoin, of } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
 import {
     DemandaRecuperadaDto,
     DemandaAncestralDto,
-    DemandaArvoreItemDto,
     TagResumoDto,
     DemandaMembroDto,
     DemandaConexaoResumoDto,
+    DemandaDetalheRecuperadoDto,
     REGEX_SEM_CARACTERES_PROIBIDOS,
     MENSAGEM_CARACTERES_PROIBIDOS,
     UsuarioResumoDto,
@@ -31,16 +31,20 @@ import {
 } from '../../../atividade/models/atividade.model';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
-import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
+
+/** A demanda que acabou de ser excluída pela demanda aberta. */
+export interface DemandaExcluidaEvento {
+    demandaId: number;
+    nome: string;
+}
 
 /** Tudo o que o detalhe mostra de uma demanda: guardado ao navegar para "← Voltar" restaurar sem nova chamada. */
 interface EstadoDetalhe {
     demandaId: number;
     demanda: DemandaRecuperadaDto;
     ancestrais: DemandaAncestralDto[];
-    subDemandas: DemandaArvoreItemDto[];
     tags: TagResumoDto[];
     membros: DemandaMembroDto[];
     conexoes: DemandaConexaoResumoDto[];
@@ -54,8 +58,14 @@ interface EstadoDetalhe {
 @Directive()
 export abstract class DemandaDetalheBase {
     @Input({ required: true }) demandaId!: number;
-    @Output() demandaExcluida = new EventEmitter<void>();
+    /** Excluída por aqui (task 404): a página recarrega o grafo e oferece o "Desfazer", que precisa sobreviver a esta demanda aberta, desmontada logo em seguida. */
+    @Output() demandaExcluida = new EventEmitter<DemandaExcluidaEvento>();
+    /** A estrutura mudou (edição pelo diálogo, conexões): a página recarrega o grafo; quem avisa já aplicou a mudança na própria tela e a demanda aberta não é relida por causa disto (task 408/409). */
     @Output() demandaAlterada = new EventEmitter<void>();
+    /** Renomeada pelo título: o nó do grafo recebe o nome novo sem recarregar (task 409). */
+    @Output() nomeAlterado = new EventEmitter<{ demandaId: number; nome: string }>();
+    /** A estimativa da demanda já foi gravada: o nó do grafo e a linha do planejamento recebem o valor sem recarregar (task 407). */
+    @Output() horasEstimadasAlteradas = new EventEmitter<{ demandaId: number; horasEstimadas: number }>();
     /** Status trocado pelo chip (já aplicado): o painel atualiza o nó sem recarregar o grafo. */
     @Output() statusAlterado = new EventEmitter<{ demandaId: number; status: TipoDemandaStatusEnum }>();
     @Output() tagsAlteradas = new EventEmitter<{ demandaId: number; tags: TagResumoDto[] }>();
@@ -68,17 +78,14 @@ export abstract class DemandaDetalheBase {
     private readonly atividadeService = inject(AtividadeService);
     private readonly router = inject(Router);
     private readonly confirmationService = inject(ConfirmationService);
-    private readonly desfazerService = inject(DesfazerService);
     readonly sessao = inject(UsuarioSessaoService);
 
     readonly demandaIdAtual = signal<number>(0);
     readonly demanda = signal<DemandaRecuperadaDto | null>(null);
     readonly ancestrais = signal<DemandaAncestralDto[]>([]);
-    readonly subDemandas = signal<DemandaArvoreItemDto[]>([]);
     readonly tagsDisponiveis = signal<TagResumoDto[]>([]);
     readonly tagsDaDemanda = signal<TagResumoDto[]>([]);
     readonly todosUsuarios = signal<UsuarioResumoDto[]>([]);
-    readonly todasDemandas = signal<Array<{ demandaConectadaId: number; nomeDemandaConectada: string }>>([]);
     readonly membros = signal<DemandaMembroDto[]>([]);
     /** O plano de que a demanda nasceu, só se a pessoa pode vê-lo (task 237). */
     readonly planoDeOrigem = signal<PlanoDemandaOrigemRecuperadoDto | null>(null);
@@ -88,14 +95,11 @@ export abstract class DemandaDetalheBase {
     readonly podeAbrirCanalChat = signal(false);
     /** Demandas visitadas antes da atual (pilha): "← Voltar" restaura a última sem refazer as chamadas. */
     readonly historico = signal<EstadoDetalhe[]>([]);
-    private projetoDasDemandas = 0;
+    /** A carga da demanda aberta em curso: trocar de demanda a cancela, para uma resposta atrasada não pôr na coluna os dados da anterior (task 411). */
+    private cargaEmCurso: Subscription | null = null;
+    private atividadesEmCurso: Subscription | null = null;
 
     readonly nomeAnterior = computed(() => this.historico().at(-1)?.demanda.nome ?? '');
-
-    /** Destinos possíveis de uma conexão: demandas do projeto, menos a atual. */
-    readonly destinosConexao = computed(() =>
-        this.todasDemandas().filter((demanda) => demanda.demandaConectadaId !== this.demandaIdAtual()),
-    );
 
     // --- Título editável ---
     /** O campo nasce dentro de um @if: o foco (e a seleção do texto) é dado assim que ele aparece. */
@@ -157,24 +161,37 @@ export abstract class DemandaDetalheBase {
     /** Gancho: uma demanda vai ser (re)carregada (o diálogo fecha os formulários de sub-demanda). */
     protected aoRecarregar(): void {}
 
+    /**
+     * O diálogo de edição salvou (nome, textos, tags, membros): uma releitura só, pelo detalhe agregado, que traz a demanda, as tags, os membros e as conexões que o diálogo
+     * acabou de gravar (task 408); o cabeçalho mostra os chips novos sem trocar de demanda. A página recarrega o grafo, mas não manda esta demanda se reler outra vez.
+     */
     aoDemandaAlterada(): void {
         const idAtual = this.demandaIdAtual();
-        if (idAtual) this.carregarDemanda(idAtual);
-        this.demandaAlterada.emit();
-    }
-
-    /** Recarrega as sub-demandas (uma filha foi criada ou editada). */
-    protected recarregarSubDemandas(): void {
-        const idAtual = this.demandaIdAtual();
         if (idAtual) {
-            this.demandaService.recuperarArvore(idAtual).subscribe({
+            this.demandaService.recuperarDetalhe(idAtual).subscribe({
                 next: (resposta) => {
-                    if (resposta.sucesso && resposta.dados) {
-                        this.subDemandas.set(resposta.dados.filhos ?? []);
-                    }
+                    if (resposta.sucesso && resposta.dados && this.demandaIdAtual() === idAtual) this.aplicarDetalhe(resposta.dados);
                 },
             });
         }
+        this.demandaAlterada.emit();
+    }
+
+    /** Aplica o que o detalhe agregado traz sobre a demanda aberta. */
+    private aplicarDetalhe(detalhe: DemandaDetalheRecuperadoDto): void {
+        const { demanda, ancestrais, tags, membros, conexoes, canalChatExiste, podeAbrirCanalChat } = detalhe;
+        this.demanda.set(demanda);
+        this.ancestrais.set(ancestrais);
+        this.tagsDaDemanda.set(tags);
+        this.membros.set(membros);
+        this.conexoes.set(conexoes);
+        this.canalChatExiste.set(canalChatExiste);
+        this.podeAbrirCanalChat.set(podeAbrirCanalChat);
+    }
+
+    /** O status mudou por fora (a bolinha da linha): a demanda aberta mostra o novo sem pedir nada (task 409). */
+    aplicarStatus(status: TipoDemandaStatusEnum): void {
+        this.demanda.update((atual) => (atual ? { ...atual, status } : atual));
     }
 
     /** Abre outra demanda dentro do próprio dialog, guardando a atual para o "← Voltar" (sem nova chamada). */
@@ -194,7 +211,6 @@ export abstract class DemandaDetalheBase {
                 demandaId: demandaAtual.id,
                 demanda: demandaAtual,
                 ancestrais: this.ancestrais(),
-                subDemandas: this.subDemandas(),
                 tags: this.tagsDaDemanda(),
                 membros: this.membros(),
                 conexoes: this.conexoes(),
@@ -212,7 +228,6 @@ export abstract class DemandaDetalheBase {
         this.demandaIdAtual.set(anterior.demandaId);
         this.demanda.set(anterior.demanda);
         this.ancestrais.set(anterior.ancestrais);
-        this.subDemandas.set(anterior.subDemandas);
         this.tagsDaDemanda.set(anterior.tags);
         this.membros.set(anterior.membros);
         this.conexoes.set(anterior.conexoes);
@@ -275,7 +290,7 @@ export abstract class DemandaDetalheBase {
         this.editandoTitulo.set(false);
         this.demanda.set({ ...demandaAtual, nome: novoNome });
         this.demandaService.alterar(demandaAtual.id, { nome: novoNome }).subscribe({
-            next: () => this.demandaAlterada.emit(),
+            next: () => this.nomeAlterado.emit({ demandaId: demandaAtual.id, nome: novoNome }),
             error: () => this.demanda.update((atual) => (atual ? { ...atual, nome: demandaAtual.nome } : atual)),
         });
     }
@@ -301,7 +316,15 @@ export abstract class DemandaDetalheBase {
         this.demanda.update((atual) =>
             atual ? { ...atual, ...campos, previsaoFimData: campos.previsaoFimData ?? (reverter && 'previsaoFimData' in campos ? null : atual.previsaoFimData) } : atual,
         );
-        if (!reverter) this.demandaAlterada.emit();
+    }
+
+    /**
+     * A estimativa ou a previsão já foi gravada (resposta do `PUT`): a tela já mostra o valor novo (`aoMetricaAlterada`), e a página só precisa das horas novas no nó do grafo
+     * e na linha do planejamento, sem reler nada (task 407): uma releitura que saísse antes do `PUT` devolveria o valor antigo por cima do novo. A previsão não aparece fora da demanda aberta.
+     */
+    aoMetricaGravada(gravada: { horasEstimadas?: number; previsaoFimData?: string }): void {
+        const demandaAtual = this.demanda();
+        if (demandaAtual && gravada.horasEstimadas !== undefined) this.horasEstimadasAlteradas.emit({ demandaId: demandaAtual.id, horasEstimadas: gravada.horasEstimadas });
     }
 
     aoTagsAlteradas(tags: TagResumoDto[]): void {
@@ -320,12 +343,13 @@ export abstract class DemandaDetalheBase {
             if (usuarioId !== undefined) filtros.usuarioId = usuarioId;
         }
 
-        this.atividadeService
+        this.atividadesEmCurso?.unsubscribe();
+        this.atividadesEmCurso = this.atividadeService
             .listar(filtros)
             .pipe(finalize(() => this.carregandoAtividades.set(false)))
             .subscribe({
                 next: (resposta) => {
-                    if (resposta.sucesso && resposta.dados) this.atividades.set(resposta.dados.itens);
+                    if (resposta.sucesso && resposta.dados && demandaId === this.demandaIdAtual()) this.atividades.set(resposta.dados.itens);
                 },
             });
     }
@@ -345,13 +369,8 @@ export abstract class DemandaDetalheBase {
 
         this.demandaService.excluir(demandaDados.id).subscribe({
             next: () => {
-                this.demandaExcluida.emit();
+                this.demandaExcluida.emit({ demandaId: demandaDados.id, nome: demandaDados.nome });
                 this.aoExcluida();
-                this.desfazerService.oferecer({
-                    mensagem: `Demanda "${demandaDados.nome}" excluída`,
-                    desfazer: () => this.demandaService.restaurar(demandaDados.id),
-                    aposDesfazer: () => this.demandaExcluida.emit(),
-                });
             },
         });
     }
@@ -378,6 +397,8 @@ export abstract class DemandaDetalheBase {
     }
 
     protected carregarTudo(identificador: number): void {
+        this.cargaEmCurso?.unsubscribe();
+        this.atividadesEmCurso?.unsubscribe();
         this.carregando.set(true);
         this.demanda.set(null);
         this.carregarPlanoDeOrigem(identificador);
@@ -388,9 +409,8 @@ export abstract class DemandaDetalheBase {
         // A lista completa de usuários (GET /usuario) é gestor-only e só alimenta o autocomplete de membros do
         // gestor; sem este guard o forkJoin falharia inteiro com 403 para o desenvolvedor. Tags e usuários do
         // catálogo só são buscados uma vez por abertura (a navegação interna reaproveita).
-        forkJoin({
+        this.cargaEmCurso = forkJoin({
             detalhe:    this.demandaService.recuperarDetalhe(identificador),
-            arvore:     this.demandaService.recuperarArvore(identificador),
             tags:       this.tagsDisponiveis().length ? of(null) : this.tagService.listarCatalogo(),
             usuarios:   this.sessao.podeEditarDemanda() && this.todosUsuarios().length === 0
                 ? this.usuarioService.listarCatalogo()
@@ -398,21 +418,12 @@ export abstract class DemandaDetalheBase {
         })
             .pipe(finalize(() => this.carregando.set(false)))
             .subscribe({
-                next: ({ detalhe, arvore, tags, usuarios }) => {
+                next: ({ detalhe, tags, usuarios }) => {
                     if (detalhe.sucesso && detalhe.dados) {
-                        const { demanda, ancestrais, tags: tagsDaDemanda, membros, conexoes, canalChatExiste, podeAbrirCanalChat } = detalhe.dados;
-                        this.demanda.set(demanda);
-                        this.ancestrais.set(ancestrais);
-                        this.tagsDaDemanda.set(tagsDaDemanda);
-                        this.membros.set(membros);
-                        this.conexoes.set(conexoes);
-                        this.canalChatExiste.set(canalChatExiste);
-                        this.podeAbrirCanalChat.set(podeAbrirCanalChat);
-                        this.carregarDemandasParaConexao(demanda.projetoId);
+                        this.aplicarDetalhe(detalhe.dados);
                         if (this.eMembro()) this.carregarAtividades(identificador);
                         else this.atividades.set([]);
                     }
-                    if (arvore.sucesso && arvore.dados) this.subDemandas.set(arvore.dados.filhos ?? []);
                     if (tags && tags.sucesso && tags.dados) this.tagsDisponiveis.set(tags.dados);
                     if (usuarios && usuarios.sucesso && usuarios.dados) {
                         // Gestores não entram no autocomplete de membros: têm acesso total por serem gestores (task 71).
@@ -425,26 +436,8 @@ export abstract class DemandaDetalheBase {
     protected carregarDemanda(identificador: number): void {
         this.demandaService.recuperar(identificador).subscribe({
             next: (resposta) => {
-                if (resposta.sucesso && resposta.dados) {
+                if (resposta.sucesso && resposta.dados && identificador === this.demandaIdAtual()) {
                     this.demanda.set(resposta.dados);
-                }
-            },
-        });
-    }
-
-    /** Demandas do projeto para o destino de uma conexão: só recarrega quando o projeto muda. */
-    private carregarDemandasParaConexao(projetoId: number): void {
-        if (projetoId === this.projetoDasDemandas) return;
-        this.demandaService.listar({ projetoId, allRows: true }).subscribe({
-            next: (resposta) => {
-                if (resposta.sucesso && resposta.dados) {
-                    this.projetoDasDemandas = projetoId;
-                    const demandasConexao = resposta.dados.itens
-                        .map((demanda) => ({
-                            demandaConectadaId:   demanda.id,
-                            nomeDemandaConectada: demanda.nome,
-                        }));
-                    this.todasDemandas.set(demandasConexao);
                 }
             },
         });

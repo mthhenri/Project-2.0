@@ -36,9 +36,9 @@ describe('execucaoAtivaInterceptor', () => {
         expect(carregar).toHaveBeenCalledTimes(1);
     });
 
-    it.each(['confirmar', 'desfazer'])('%s uma proposta da IA bem-sucedido ressincroniza a execução ativa (P-020)', (acao) => {
-        http.post(`/api/v1/proposta-ia/5/${acao}`, {}).subscribe();
-        controlador.expectOne(`/api/v1/proposta-ia/5/${acao}`).flush({});
+    it.each(['5/confirmar', '5/desfazer', '5/ajustar', 'grupo/confirmar', 'grupo/desfazer'])('POST /proposta-ia/%s bem-sucedido ressincroniza a execução ativa (P-020, task 447)', (caminho) => {
+        http.post(`/api/v1/proposta-ia/${caminho}`, {}).subscribe();
+        controlador.expectOne(`/api/v1/proposta-ia/${caminho}`).flush({});
         expect(carregar).toHaveBeenCalledTimes(1);
     });
 
@@ -60,7 +60,7 @@ describe('execucaoAtivaInterceptor', () => {
         ['PATCH', '/api/v1/atividade/12/encerrar'],
         ['POST', '/api/v1/atividade'],
         ['POST', '/api/v1/proposta-ia/5/recusar'],
-        ['POST', '/api/v1/proposta-ia/5/ajustar'],
+        ['POST', '/api/v1/proposta-ia/grupo/recusar'],
         ['GET', '/api/v1/proposta-ia/5'],
     ])('%s %s não ressincroniza', (metodo, url) => {
         http.request(metodo, url, { body: {} }).subscribe();

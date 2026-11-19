@@ -298,6 +298,15 @@ describe('DemandaArvoreTelaComponent', () => {
         expect(montado.componente.projetoInteiro()).toBe(false);
     });
 
+    it('o "Projeto inteiro" lista só as demandas de trabalho (as pastas ficam de fora) e a contagem é a mesma da lista', async () => {
+        const { montado } = await montar({ iniciarProjetoInteiro: true });
+        const itens = montado.componente.itens();
+        expect(itens.length).toBeGreaterThan(0);
+        expect(itens.every((item) => !item.estrutural)).toBe(true);
+        expect(montado.componente.totalDeDemandas()).toBe(itens.length);
+        expect(montado.componente.caminhoDaLista()).toContain(`${itens.length} demandas`);
+    });
+
     it('a lista mostra só as demandas direto na pasta e abre a primeira', async () => {
         const { montado } = await montar();
         expect(montado.componente.itens().map((item) => item.id)).toEqual([3, 4]);
@@ -368,15 +377,35 @@ describe('DemandaArvoreTelaComponent', () => {
         expect(eventos.status[1]).toEqual({ demandaId: 4, status: TipoDemandaStatusEnum.PENDENTE });
     });
 
-    it('a demanda aberta que sai do projeto (excluída) cai para a primeira da pasta; excluir pela coluna avisa a página', async () => {
-        const { montado, eventos } = await montar();
+    it('depois do PUT do status pela bolinha, a demanda aberta recebe o status sem reler (task 409)', async () => {
+        const { montado } = await montar();
+        montado.componente.escolherDemanda(4);
+        await montado.atualizar();
+        montado.http.match(() => true);
+        montado.componente.aoStatusEscolhido({ demandaId: 4, de: TipoDemandaStatusEnum.PENDENTE, para: TipoDemandaStatusEnum.CONCLUIDA });
+        responderSucesso(esperarRequisicao(montado.http, 'PUT', '/demanda/4'), { id: 4 });
+        await montado.atualizar();
+        montado.http.expectNone((pedido) => pedido.method === 'GET' && /\/demanda\/4(\/|$)/.test(pedido.url));
+    });
+
+    it('a demanda aberta que sai do projeto (excluída) cai para a primeira da pasta', async () => {
+        const { montado } = await montar();
         montado.componente.escolherDemanda(4);
         montado.fixture.componentRef.setInput('nos', NOS.filter((item) => item.id !== 4));
         await montado.atualizar();
         montado.http.match(() => true);
         expect(montado.componente.demandaAbertaId()).toBe(3);
-        montado.componente.aoExcluida();
-        expect(eventos.alterado).toBe(1);
+    });
+
+    it('excluir a demanda aberta abre a vizinha na hora e avisa a página pela saída da exclusão, sem passar por "alterado" (task 404)', async () => {
+        const { montado, eventos } = await montar();
+        const excluidas: unknown[] = [];
+        montado.componente.demandaExcluida.subscribe((valor) => excluidas.push(valor));
+        montado.componente.escolherDemanda(3);
+        montado.componente.aoExcluida({ demandaId: 3, nome: 'Tela de login' });
+        expect(montado.componente.demandaAbertaId(), 'a próxima da lista (3 e 4 estão na pasta)').toBe(4);
+        expect(excluidas).toEqual([{ demandaId: 3, nome: 'Tela de login' }]);
+        expect(eventos.alterado, 'a demanda aberta não é mandada reler').toBe(0);
     });
 });
 

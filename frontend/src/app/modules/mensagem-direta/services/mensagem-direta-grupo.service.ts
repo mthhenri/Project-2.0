@@ -13,6 +13,7 @@ import {
     GrupoResumoIaPropostaCriadaDto,
     GrupoResumoIaPropostaRecusadaDto,
     GrupoResumoIaRecuperadoDto,
+    GrupoResumoIaResumoDto,
     GrupoCanalCriadoDto,
     GrupoCanalRecuperadoDto,
     GrupoCriadoDto,
@@ -167,6 +168,11 @@ export class MensagemDiretaGrupoService {
     /** O que abre o diálogo de resumo: o fim do último resumo do grupo e onde o resumo pode ser gravado. */
     recuperarOpcoesDoResumo(grupoId: number): Observable<StandardResponse<GrupoResumoIaRecuperadoDto>> {
         return this.httpClient.get<StandardResponse<GrupoResumoIaRecuperadoDto>>(`${this.urlBase}/${grupoId}/resumo`, comFeedbackProprioEErroTratado());
+    }
+
+    /** Os resumos já feitos neste grupo ("Resumos anteriores"), do mais recente para o mais antigo. */
+    listarResumos(grupoId: number): Observable<StandardResponse<GrupoResumoIaResumoDto[]>> {
+        return this.httpClient.get<StandardResponse<GrupoResumoIaResumoDto[]>>(`${this.urlBase}/${grupoId}/resumo/historico`, comFeedbackProprioEErroTratado());
     }
 
     /** A estimativa do resumo; o servidor não chama o provedor de resumo. */

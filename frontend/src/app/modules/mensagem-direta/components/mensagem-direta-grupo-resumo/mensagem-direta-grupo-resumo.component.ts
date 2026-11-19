@@ -8,6 +8,7 @@ import {
     GrupoResumoIaEstimadoDto,
     GrupoResumoIaPropostaCriadaDto,
     GrupoResumoIaRecuperadoDto,
+    GrupoResumoIaResumoDto,
 } from '@project20/shared';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -19,8 +20,8 @@ import { TEMPO_DO_COPIADO_MS } from '../../../../shared/components/markdown-bloc
 import { DemandaService } from '../../../demanda/services/demanda.service';
 import { MensagemDiretaGrupoService, PedidoDeResumo } from '../../services/mensagem-direta-grupo.service';
 
-/** Onde o diálogo está: pedir, ver a estimativa, ler o resumo, revisar a proposta de gravar, ou gravado. */
-type Etapa = 'FORMULARIO' | 'ESTIMATIVA' | 'RESULTADO' | 'PROPOSTA' | 'GRAVADO';
+/** Onde o diálogo está: pedir, ver a estimativa, ler o resumo, revisar a proposta de gravar, gravado, ou a lista dos resumos anteriores. */
+type Etapa = 'FORMULARIO' | 'ESTIMATIVA' | 'RESULTADO' | 'PROPOSTA' | 'GRAVADO' | 'HISTORICO';
 
 const DIAS_DO_PERIODO_PADRAO = 7;
 const MOTIVO_DE_RESERVA = 'Não foi possível concluir. Tente de novo.';
@@ -69,9 +70,17 @@ export class MensagemDiretaGrupoResumoComponent {
     protected readonly copiado = signal(false);
     protected readonly demandasDoProjeto = signal<{ id: number; rotulo: string }[]>([]);
     protected readonly demandaEscolhida = signal<number | null>(null);
+    protected readonly historico = signal<GrupoResumoIaResumoDto[]>([]);
+    protected readonly carregandoHistorico = signal(false);
+    /** O resumo anterior que está aberto no resultado: só quem o pediu, e só se ainda não foi gravado, o grava. */
+    protected readonly resumoAberto = signal<GrupoResumoIaResumoDto | null>(null);
     private temporizadorDoCopiado: ReturnType<typeof setTimeout> | null = null;
 
-    protected readonly podeGravar = computed(() => (this.opcoes()?.destino ?? GrupoResumoIaDestinoEnum.NENHUM) !== GrupoResumoIaDestinoEnum.NENHUM);
+    protected readonly destinoPermiteGravar = computed(() => (this.opcoes()?.destino ?? GrupoResumoIaDestinoEnum.NENHUM) !== GrupoResumoIaDestinoEnum.NENHUM);
+    protected readonly podeGravar = computed(() => {
+        const aberto = this.resumoAberto();
+        return this.destinoPermiteGravar() && (aberto === null || (aberto.pedidoPorVoce && !aberto.gravado));
+    });
     protected readonly pedeDemanda = computed(() => this.opcoes()?.destino === GrupoResumoIaDestinoEnum.PROJETO);
     protected readonly titulo = computed(() => `Resumir com IA · ${this.nomeDoGrupo()}`);
     protected readonly tokensEstimados = computed(() => {
@@ -95,6 +104,8 @@ export class MensagemDiretaGrupoResumoComponent {
         this.proposta.set(null);
         this.copiado.set(false);
         this.demandaEscolhida.set(null);
+        this.resumoAberto.set(null);
+        this.historico.set([]);
         const agora = new Date();
         this.formulario.reset({ inicioData: new Date(agora.getTime() - DIAS_DO_PERIODO_PADRAO * 86_400_000), fimData: agora, enviaCodigo: false });
         this.carregandoOpcoes.set(true);
@@ -150,6 +161,47 @@ export class MensagemDiretaGrupoResumoComponent {
         } finally {
             this.ocupado.set(false);
         }
+    }
+
+    /** Abre a lista dos resumos já feitos neste chat. */
+    protected async abrirHistorico(): Promise<void> {
+        this.erro.set(null);
+        this.etapa.set('HISTORICO');
+        this.carregandoHistorico.set(true);
+        try {
+            this.historico.set((await firstValueFrom(this.api.listarResumos(this.grupoId()))).dados ?? []);
+        } catch (falha) {
+            this.erro.set(motivoDaFalha(falha));
+        } finally {
+            this.carregandoHistorico.set(false);
+        }
+    }
+
+    /** Lê um resumo anterior no mesmo resultado do resumo recém-feito (copiar e, se for seu, gravar). */
+    protected abrirResumoAnterior(resumo: GrupoResumoIaResumoDto): void {
+        if (resumo.texto === null) return;
+        this.erro.set(null);
+        this.copiado.set(false);
+        this.proposta.set(null);
+        this.demandaEscolhida.set(null);
+        this.resumoAberto.set(resumo);
+        this.resultado.set({
+            resumoId: resumo.resumoId,
+            texto: resumo.texto,
+            quantidadeMensagens: resumo.quantidadeMensagens,
+            inicioData: resumo.inicioData,
+            fimData: resumo.fimData,
+            tokensEntrada: 0,
+            tokensSaida: 0,
+        });
+        this.etapa.set('RESULTADO');
+    }
+
+    protected voltarAoHistorico(): void {
+        this.resumoAberto.set(null);
+        this.resultado.set(null);
+        this.erro.set(null);
+        this.etapa.set('HISTORICO');
     }
 
     protected voltarAoPeriodo(): void {
