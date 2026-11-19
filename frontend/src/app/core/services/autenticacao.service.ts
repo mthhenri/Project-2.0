@@ -7,6 +7,7 @@ import { AutenticacaoLoginDto, AutenticacaoTokenDto, StandardResponse, UsuarioRe
 import { UsuarioSessaoService } from './usuario-sessao.service';
 import { ExecucaoAtivaService } from './execucao-ativa.service';
 import { comErroTratadoPelaTela } from '../interceptors/error-handler.interceptor';
+import { comLeituraDeFundo } from '../interceptors/loading.interceptor';
 import { ambiente } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -47,7 +48,7 @@ export class AutenticacaoService {
         const usuario = this.sessao.usuarioAtual();
         if (!usuario || !this.estaAutenticado()) return;
 
-        this.http.get<StandardResponse<UsuarioRecuperadoDto>>(`${ambiente.apiUrl}/usuario/${usuario.id}`).subscribe({
+        this.http.get<StandardResponse<UsuarioRecuperadoDto>>(`${ambiente.apiUrl}/usuario/${usuario.id}`, comLeituraDeFundo()).subscribe({
             next: (resposta) => {
                 // O usuário pode ter saído (ou trocado de conta) enquanto a resposta voltava.
                 if (resposta.sucesso && resposta.dados && this.sessao.id() === resposta.dados.id) this.sessao.definirUsuario(resposta.dados);

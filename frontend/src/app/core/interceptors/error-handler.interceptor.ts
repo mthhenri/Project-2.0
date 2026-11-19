@@ -7,6 +7,12 @@ import { catchError, throwError } from 'rxjs';
 /** A tela trata o erro sozinha (ex.: o login mostra a mensagem num banner): sem toast nem redirect global. */
 export const ERRO_TRATADO_PELA_TELA = new HttpContextToken<boolean>(() => false);
 
+/**
+ * Leitura que o usuário não pediu (conferência periódica, foco da janela, reconferência da sessão): falha em silêncio.
+ * Só o 401 continua valendo, porque a sessão expirada precisa levar ao login.
+ */
+export const LEITURA_DE_FUNDO = new HttpContextToken<boolean>(() => false);
+
 export const comErroTratadoPelaTela = (): { context: HttpContext } => ({
     context: new HttpContext().set(ERRO_TRATADO_PELA_TELA, true),
 });
@@ -17,8 +23,12 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (requisicao, proximo) 
 
     if (requisicao.context.get(ERRO_TRATADO_PELA_TELA)) return proximo(requisicao);
 
+    const leituraDeFundo = requisicao.context.get(LEITURA_DE_FUNDO);
+
     return proximo(requisicao).pipe(
         catchError((erro: HttpErrorResponse) => {
+            if (leituraDeFundo && erro.status !== 401) return throwError(() => erro);
+
             switch (erro.status) {
                 case 401:
                     localStorage.removeItem('access_token');

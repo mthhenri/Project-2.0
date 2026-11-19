@@ -13,6 +13,15 @@
 ---
 
 
+## 2026-11-19 — Task 332: leituras de fundo da casca falham em silêncio
+
+Da revisão de requisições (achado A-009). As leituras que a casca faz sozinha usavam `comFeedbackProprio()`, que só desliga o overlay; o `errorHandlerInterceptor` seguia mostrando "Erro interno. Tente novamente." (um por minuto pela barra lateral, um por foco, um a cada 3 s com o check-in aberto) quando o backend caía.
+
+- **frontend:** novo contexto `LEITURA_DE_FUNDO` (em `error-handler.interceptor.ts`) e o ajudante `comLeituraDeFundo()` (em `loading.interceptor.ts`, ao lado de `comFeedbackProprio()`: sem overlay e sem toast; um `context` substitui o outro, então é um contexto só). O 401 continua limpando a sessão e levando ao login; os demais status passam calados. Aplicado em `IaDisponibilidadeService` (2 pontos), `CheckinService.consultarSituacao`, `ExecucaoAtivaService.carregar`, `AutenticacaoService.atualizarSessao` e `DesktopDownloadService.carregar` (que usava `comFeedbackProprioEErroTratado`, que também pulava o 401).
+- **Testes:** 3 novos no `error-handler.interceptor.spec.ts` (500, 403, 404, 400 e erro de rede sem toast; 401 em leitura de fundo ainda redireciona; a mesma falha numa ação do usuário ainda mostra o toast). Frontend 2899 passando (238 arquivos); `npm run lint:tudo` e build do frontend sem erro.
+- **Não verificado:** o critério ao vivo (backend parado por 3 minutos sem nenhum toast) não foi executado; a task fica com o gate visual/ao vivo em aberto.
+- Decisão do autor nesta rodada (2026-11-19): 330, 333 e 334 pela opção 1; 331 e 340 como sugerido; 332 sem decisão pendente.
+
 ## 2026-11-17 — Spec 488: o ChatIA pesquisa as conversas antigas da própria pessoa
 
 Pedido do autor: dar ao ChatIA, como ferramenta, a pesquisa nas conversas antigas. Decidido com ele: **duas ferramentas** (`buscar_nas_minhas_conversas` e `consultar_minha_conversa`), de leitura, para **todos os tipos de usuário**, sempre sobre as conversas do usuário do token. O gestor segue com as três ferramentas sobre conversas de desenvolvedores (task 201), que não serviam: outro dono e só gestor.

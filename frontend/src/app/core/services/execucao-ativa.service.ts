@@ -2,7 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ExecucaoAtivaDto, StandardResponse } from '@project20/shared';
 import { ambiente } from '../../../environments/environment';
-import { comFeedbackProprio } from '../interceptors/loading.interceptor';
+import { comLeituraDeFundo } from '../interceptors/loading.interceptor';
 
 /**
  * Execução ativa do usuário logado, compartilhada por todas as telas (chip da topbar — task 95).
@@ -27,7 +27,7 @@ export class ExecucaoAtivaService {
     carregar(): void {
         this._carregando.set(true);
         this.http
-            .get<StandardResponse<ExecucaoAtivaDto | null>>(`${ambiente.apiUrl}/execucao/ativa`, comFeedbackProprio())
+            .get<StandardResponse<ExecucaoAtivaDto | null>>(`${ambiente.apiUrl}/execucao/ativa`, comLeituraDeFundo())
             .subscribe({
                 next: (resposta) => this._ativa.set(resposta.sucesso ? resposta.dados ?? null : null),
                 error: () => this._carregando.set(false),

@@ -4,6 +4,7 @@ import { HttpClient, HttpErrorResponse, provideHttpClient, withInterceptors } fr
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { comLeituraDeFundo } from './loading.interceptor';
 import { comErroTratadoPelaTela, errorHandlerInterceptor, parametrosRetorno } from './error-handler.interceptor';
 
 let http: HttpClient;
@@ -42,6 +43,30 @@ beforeEach(() => {
 });
 
 describe('errorHandlerInterceptor', () => {
+    it('leitura de fundo: erro 500, 403 e de rede não chamam o serviço de mensagens', () => {
+        for (const status of [500, 403, 404, 400, 0]) {
+            const erro = falhar(status, null, comLeituraDeFundo());
+            expect(erro.status).toBe(status);
+        }
+        expect(adicionar).not.toHaveBeenCalled();
+        expect(navegar).not.toHaveBeenCalled();
+    });
+
+    it('leitura de fundo: o 401 continua limpando a sessão e levando ao login', () => {
+        localStorage.setItem('access_token', 'abc');
+        localStorage.setItem('usuario_sessao', '{}');
+
+        falhar(401, null, comLeituraDeFundo());
+
+        expect(localStorage.getItem('access_token')).toBeNull();
+        expect(navegar).toHaveBeenCalledWith(['/autenticacao'], { queryParams: { returnUrl: '/demanda?pagina=2' } });
+    });
+
+    it('a mesma falha numa ação do usuário continua mostrando o erro', () => {
+        falhar(500);
+        expect(adicionar).toHaveBeenCalledWith(expect.objectContaining({ detail: 'Erro interno. Tente novamente.' }));
+    });
+
     it('401 limpa a sessão e leva ao login guardando a tela atual em returnUrl', () => {
         localStorage.setItem('access_token', 'abc');
         localStorage.setItem('usuario_sessao', '{}');
