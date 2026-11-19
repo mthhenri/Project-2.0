@@ -69,14 +69,20 @@ test('criar atividade: desenvolvedor com usuarioId de outra pessoa e usuário in
     assert.equal(propostas.length, 0);
 });
 
-test('criar atividade: o executor passa o dono à service e recusa o desenvolvedor com usuarioId alheio', async () => {
-    const criadas: Record<string, unknown>[] = [];
-    const servico = { criar: async (dto: Record<string, unknown>) => { criadas.push(dto); return { dados: { id: 31 } }; } };
+test('criar atividade: o executor passa o dono à service, que é quem recusa o desenvolvedor com usuarioId alheio (task 376)', async () => {
+    const criadas: Array<{ dto: Record<string, unknown>; usuario: unknown }> = [];
+    const servico = {
+        criar: async (dto: Record<string, unknown>, usuario: { tipo: unknown }) => {
+            criadas.push({ dto, usuario });
+            if (dto['usuarioId'] !== undefined && dto['usuarioId'] !== 7 && usuario.tipo === TipoUsuarioEnum.DESENVOLVEDOR) throw new BusinessException('Só o gestor cria atividade para outra pessoa');
+            return { dados: { id: 31 } };
+        },
+    };
     const executor = new CriarAtividadeExecutor(servico as unknown as AtividadeService, {} as unknown as AtividadeRepository);
     await executor.executar({ demandaId: 3, nome: 'Montar o formulário', usuarioId: 8, usuarioNome: 'Matheus Henrique' }, GESTOR);
-    assert.equal(criadas[0]['usuarioId'], 8);
+    assert.equal(criadas[0].dto['usuarioId'], 8);
     await assert.rejects(executor.executar({ demandaId: 3, nome: 'Montar o formulário', usuarioId: 8 }, DESENVOLVEDOR), BusinessException);
-    assert.equal(criadas.length, 1);
+    assert.equal(criadas.length, 2, 'o executor repassa o pedido: a recusa é da service');
 });
 
 // ------------------------------------------------------------------ iniciar e pausar por outra pessoa
