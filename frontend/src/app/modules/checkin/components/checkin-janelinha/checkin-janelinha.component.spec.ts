@@ -226,10 +226,10 @@ describe('CheckinJanelinhaComponent — conferência periódica', () => {
         const montado = await montarJanelinha();
         await responderPaginaEmbutida(montado);
 
-        // Responde a cada passo de 3 s: a consulta em curso é compartilhada, então só assim cada conferência vira uma requisição.
+        // Responde a cada passo de 30 s (a rede de segurança da página): a consulta em curso é compartilhada, então só assim cada conferência vira uma requisição.
         let consultas = 0;
         for (let passo = 0; passo < 8; passo++) {
-            vi.advanceTimersByTime(3_000);
+            vi.advanceTimersByTime(30_000);
             for (const pedido of montado.http.match(URL_SITUACAO)) {
                 consultas++;
                 responderSucesso(pedido, situacao());
@@ -237,7 +237,7 @@ describe('CheckinJanelinhaComponent — conferência periódica', () => {
         }
         document.dispatchEvent(new Event('visibilitychange'));
 
-        // Só as 8 conferências de 3 s da própria página embutida; a de 20 s e a de visibilidade da janelinha não pedem nada.
+        // Só as 8 conferências de 30 s da própria página embutida; a de 20 s e a de visibilidade da janelinha não pedem nada.
         expect(dialogo(montado)).not.toBeNull();
         expect(consultas).toBe(8);
         expect(montado.http.match(URL_SITUACAO)).toHaveLength(0);

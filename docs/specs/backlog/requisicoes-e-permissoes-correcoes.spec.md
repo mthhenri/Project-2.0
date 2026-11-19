@@ -23,7 +23,6 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 
 | Task | Decisão |
 |---|---|
-| **333** | Check-in aberto: conferir a situação por evento, não a cada 3 s |
 | **334** | Backend: `GET /checkin/situacao` não lista todas as execuções da atividade |
 | **352** | Gravações do pad e dos textos da demanda: não devolver o texto inteiro |
 | **363** | IA chamada em conversa compartilhada: resposta com dado que nem todo leitor pode ver |
@@ -70,7 +69,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **330** | Média | frontend/casca | Disponibilidade da IA: não consultar a cada 60 s com a aba oculta | A-005, A-006 | decidida e feita |
 | **331** | Média | frontend/casca | Execução ativa: foco e volta à aba não disparam consultas repetidas | A-007, A-008 | feita |
 | **332** | Média | frontend/casca | Leituras automáticas da casca não mostram o toast global de erro | A-009 | feita |
-| **333** | Média | frontend/checkin | Check-in aberto: conferir a situação por evento, não a cada 3 s | A-010 | pendente |
+| **333** | Média | frontend/checkin | Check-in aberto: conferir a situação por evento, não a cada 3 s | A-010 | decidida e feita |
 | **334** | Média | backend/checkin | Backend: `GET /checkin/situacao` não lista todas as execuções da atividade | A-011 | pendente |
 | **335** | Alta | frontend/atividade | Execuções de uma atividade: detalhe e diálogo de encerrar mostram as últimas, não as mais antigas | A-012, A-013, A-014, A-015 | decidida e feita |
 | **336** | Baixa | frontend/checkin | Check-in: a situação mora num sinal só do serviço | A-016, A-017 | — |

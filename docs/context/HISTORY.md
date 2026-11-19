@@ -13,6 +13,14 @@
 ---
 
 
+## 2026-11-19 — Task 333: o diálogo do check-in confere por evento, com rede de segurança de 30 s
+
+Da revisão de requisições (achado A-010), com a decisão do autor de 2026-11-19 pela **opção 1**: o diálogo do check-in (sem botão de fechar) conferia `GET /checkin/situacao` a cada 3 s enquanto EM_ANDAMENTO, 1.200 por hora numa aba esquecida; na janela oculta do Electron a guarda de aba oculta não valia.
+
+- **frontend:** `CheckinPage` confere (a) ao fim de cada fluxo da conversa (já existia no `finally` do envio), (b) **na hora** quando a execução ativa muda (`effect` sobre `ExecucaoAtivaService.ativa()`, só em EM_ANDAMENTO) e (c) numa rede de segurança de **30 s** (`INTERVALO_DE_SEGURANCA_MS`, antes 3 s), que cobre o que acontece por fora (outro dispositivo, reunião que suspende). A guarda de oculto passou a `ProjectDesktopService.paginaOculta()`, que cobre aba em segundo plano e janela do Desktop oculta. A conferência segue parando quando o estado deixa de ser EM_ANDAMENTO.
+- **Testes:** 3 novos na página (nenhuma consulta dentro de 29 s; execução trocada confere na hora e vira "Check-in registrado"; Desktop oculto não confere); os testes de intervalo da página e da janelinha passaram de 3 s para 30 s. O teste "sem execução ao abrir" mantém 3 s de propósito: com 30 s o `fechar()` automático chama `window.close()` e fecha a janela do jsdom. Frontend completo e `npm run lint:tudo`/build no fecho.
+- **Não verificado:** o critério ao vivo (2 minutos com o diálogo aberto: de cerca de 40 para 4 `GET /checkin/situacao`) não foi executado.
+
 ## 2026-11-19 — Task 330: disponibilidade da IA pausa com a aba (ou o Desktop) oculta
 
 Da revisão de requisições (achados A-005 e A-006), com a decisão do autor de 2026-11-19 pela **opção 1** (revê a decisão da task 321 só para a aba oculta): a barra lateral pedia `GET /ia/disponibilidade` a cada 60 s, com `forcar`, em toda aba aberta; no Desktop, fechar e minimizar só ocultam a janela e `visibilityState` segue `visible`.

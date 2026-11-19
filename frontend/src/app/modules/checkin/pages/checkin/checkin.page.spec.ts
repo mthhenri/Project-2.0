@@ -6,6 +6,8 @@ import { montarComponente, ComponenteMontado } from '../../../../../testes/monta
 import { campoDeMensagem, digitarNaMensagem, esperarCampoDeMensagem, teclarNaMensagem, textoDaMensagem } from '../../../../../testes/campo-mensagem';
 import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-teste';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
+import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { ChatService, ErroDoChat } from '../../../chat/services/chat.service';
 import { CheckinPage } from './checkin.page';
 
@@ -508,19 +510,48 @@ describe('CheckinPage — sugestões', () => {
 });
 
 describe('CheckinPage — conferência da situação', () => {
-    it('a cada 3 s confere a situação; com a mesma execução, segue em conversa', async () => {
+    it('a cada 30 s (rede de segurança) confere a situação; com a mesma execução, segue em conversa', async () => {
         const montado = await montarCheckin({ temporizadoresSimulados: true });
         montado.http.expectNone((requisicao) => requisicao.url.endsWith('/checkin/situacao'));
 
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(30_000);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ minutos: 48 }));
         await montado.atualizar();
 
         expect(texto(montado)).toContain('48 min');
         expect(montado.elemento.querySelector('app-editor-mensagem')).not.toBeNull();
 
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(30_000);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ minutos: 51 }));
+    });
+
+    it('sem evento não há consulta dentro do intervalo antigo de 3 s', async () => {
+        const montado = await montarCheckin({ temporizadoresSimulados: true });
+
+        vi.advanceTimersByTime(29_000);
+
+        montado.http.expectNone((requisicao) => requisicao.url.endsWith('/checkin/situacao'));
+    });
+
+    it('a execução trocada ou encerrada por fora confere na hora, sem esperar a rede de segurança', async () => {
+        const montado = await montarCheckin({ temporizadoresSimulados: true });
+        const execucaoAtiva = TestBed.inject(ExecucaoAtivaService);
+
+        execucaoAtiva.definir({ id: 5, atividadeId: 4 } as never);
+        await montado.atualizar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ execucaoId: 6 }));
+        await montado.atualizar();
+
+        expect(texto(montado)).toContain('Check-in registrado');
+    });
+
+    it('com a janela do Desktop oculta não confere', async () => {
+        const montado = await montarCheckin({ temporizadoresSimulados: true });
+        TestBed.inject(ProjectDesktopService).oculto.set(true);
+
+        vi.advanceTimersByTime(90_000);
+
+        montado.http.expectNone((requisicao) => requisicao.url.endsWith('/checkin/situacao'));
     });
 
     it('com a aba oculta não confere; ao voltar, o tique seguinte confere (P-079)', async () => {
@@ -528,11 +559,11 @@ describe('CheckinPage — conferência da situação', () => {
         const visibilidade = vi.spyOn(document, 'visibilityState', 'get');
 
         visibilidade.mockReturnValue('hidden');
-        vi.advanceTimersByTime(9000);
+        vi.advanceTimersByTime(90_000);
         montado.http.expectNone((requisicao) => requisicao.url.endsWith('/checkin/situacao'));
 
         visibilidade.mockReturnValue('visible');
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(30_000);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ minutos: 60 }));
         visibilidade.mockRestore();
     });
@@ -540,21 +571,21 @@ describe('CheckinPage — conferência da situação', () => {
     it('execução trocada (descrição confirmada) vira "Check-in registrado" e a conferência para', async () => {
         const montado = await montarCheckin({ temporizadoresSimulados: true });
 
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(30_000);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ execucaoId: 6 }));
         await montado.atualizar();
 
         expect(texto(montado)).toContain('Check-in registrado');
         expect(texto(montado)).toContain('A descrição foi registrada.');
         expect(montado.elemento.querySelector('[aria-label="Resposta do check-in"]')).toBeNull();
-        vi.advanceTimersByTime(9000);
+        vi.advanceTimersByTime(90_000);
         montado.http.expectNone((requisicao) => requisicao.url.endsWith('/checkin/situacao'));
     });
 
     it('suspensão por reunião durante a conversa libera a janela', async () => {
         const montado = await montarCheckin({ temporizadoresSimulados: true });
 
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(30_000);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ suspenso: true, motivo: 'Reunião de equipe' }));
         await montado.atualizar();
 
@@ -565,7 +596,7 @@ describe('CheckinPage — conferência da situação', () => {
     it('execução pausada durante a conversa também é "registrada" (a janela é liberada)', async () => {
         const montado = await montarCheckin({ temporizadoresSimulados: true });
 
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(30_000);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ execucaoId: null }));
         await montado.atualizar();
 
@@ -576,13 +607,13 @@ describe('CheckinPage — conferência da situação', () => {
         const montado = await montarCheckin({ temporizadoresSimulados: true });
         const avisos = avisosDe(montado);
 
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(30_000);
         esperarRequisicao(montado.http, 'GET', '/checkin/situacao').flush({ mensagem: 'falhou' }, { status: 500, statusText: 'Erro' });
         await montado.atualizar();
 
         expect(montado.elemento.querySelector('app-editor-mensagem')).not.toBeNull();
         expect(avisos.some((aviso) => aviso.summary === 'Check-in')).toBe(false);
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(30_000);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao());
     });
 
@@ -597,7 +628,7 @@ describe('CheckinPage — conferência da situação', () => {
         const montado = await montarCheckin({ temporizadoresSimulados: true });
 
         montado.fixture.destroy();
-        vi.advanceTimersByTime(9000);
+        vi.advanceTimersByTime(90_000);
 
         montado.http.expectNone((requisicao) => requisicao.url.endsWith('/checkin/situacao'));
     });
@@ -624,7 +655,7 @@ describe('CheckinPage — fechar', () => {
         const encerrado = vi.fn();
         montado.componente.encerrado.subscribe(encerrado);
 
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(30_000);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ execucaoId: 6 }));
         await montado.atualizar();
         expect(texto(montado)).toContain('Check-in registrado');
@@ -639,7 +670,7 @@ describe('CheckinPage — fechar', () => {
         const montado = await montarCheckin({ temporizadoresSimulados: true });
         const fechar = vi.spyOn(montado.componente, 'fechar').mockImplementation(() => undefined);
 
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(30_000);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ execucaoId: 6 }));
         await montado.atualizar();
         vi.advanceTimersByTime(10_000);
@@ -655,7 +686,7 @@ describe('CheckinPage — fechar', () => {
         const montado = await montarCheckin({ temporizadoresSimulados: true });
         expect(montado.elemento.classList.contains('checkin-no-desktop')).toBe(true);
 
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(30_000);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ execucaoId: 6 }));
         await montado.atualizar();
         vi.advanceTimersByTime(2600);
