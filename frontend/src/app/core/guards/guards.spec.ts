@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Observable, firstValueFrom } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
 import { TipoUsuarioEnum, podeGerenciarTag } from '@project20/shared';
@@ -6,6 +7,9 @@ import { administradorGuard } from './administrador.guard';
 import { autenticacaoGuard, somentePublicoGuard } from './autenticacao.guard';
 import { gestorGuard } from './gestor.guard';
 import { permissaoGuard } from './permissao.guard';
+import { sessaoConferidaGuard } from './sessao-conferida.guard';
+import { AutenticacaoService } from '../services/autenticacao.service';
+import { of } from 'rxjs';
 import { UsuarioSessaoService } from '../services/usuario-sessao.service';
 import { criarUsuarioTeste } from '../../../testes/usuarios-teste';
 
@@ -100,5 +104,17 @@ describe('administradorGuard', () => {
             entrarComo(tipo);
             expect(serializar(executar(administradorGuard)), tipo).toBe('/');
         }
+    });
+});
+
+describe('sessaoConferidaGuard', () => {
+    it('espera a conferência do tipo no servidor e libera a navegação', async () => {
+        const garantir = vi.fn(() => of(undefined));
+        TestBed.overrideProvider(AutenticacaoService, { useValue: { garantirSessaoConferida: garantir } });
+
+        const resultado = TestBed.runInInjectionContext(() => sessaoConferidaGuard(rota, estado('/usuario')));
+
+        expect(garantir).toHaveBeenCalledTimes(1);
+        expect(await firstValueFrom(resultado as Observable<boolean>)).toBe(true);
     });
 });

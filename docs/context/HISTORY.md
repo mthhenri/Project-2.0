@@ -13,6 +13,17 @@
 ---
 
 
+## 2026-11-19 — Task 340: a sessão reconfere o tipo do usuário antes dos guards e ao receber 403
+
+Da revisão de requisições (achados A-023 e A-024). Menus, guards e botões decidiam pelo tipo gravado no `localStorage` no login; a única reconferência (`atualizarSessao`) rodava no construtor do layout, depois dos guards da primeira navegação, e um 403 só mostrava o toast "Acesso não permitido". Numa janela aberta por dias (o Desktop), o rebaixado seguia vendo telas de gestor e o promovido caía na raiz no deep link. O backend já recusava o que o tipo real não pode: o conserto é só da interface.
+
+- **frontend:** `AutenticacaoService.conferirSessao()` (um `GET /usuario/:id` como leitura de fundo, compartilhado se já está em curso, **nunca erra**: falha ou demora de mais de 3 s cedem e seguem com a sessão guardada) com `atualizarSessao()` como atalho sem espera. Novo `sessaoConferidaGuard` na rota da casca, depois do `autenticacaoGuard`: na primeira navegação de cada abertura do app espera a conferência (`garantirSessaoConferida`); as navegações seguintes passam direto. O `errorHandlerInterceptor`, no 403, pede `reconferirAposAcessoNegado()` (no máximo uma vez a cada 5 s; resolvido por `Injector` só no 403, porque `inject` não vale dentro do `catchError`). Se o **tipo mudou**, `reavaliarTelaAtual()` roda de novo os guards síncronos da rota ativa e, se algum nega, leva à raiz; menus já seguem os sinais da sessão. O construtor do `LayoutComponent` deixou de chamar `atualizarSessao()` (o guard o substitui).
+- **Decisão de desenho:** o intervalo mínimo do 403 fica no serviço (não no interceptor), onde se testa sem HTTP; o interceptor só chama.
+- **Achado na verificação:** a primeira versão chamava `inject()` dentro do `catchError` do interceptor, fora do contexto de injeção; a suíte mostrou o erro serializado (`code: -203`) mesmo com 238 arquivos verdes, e foi corrigida com o `Injector`. Vale olhar o fim da saída do `ng test`, não só a contagem.
+- **Testes:** 6 novos no serviço (conferência compartilhada, guard de uma vez só, falha e tempo esgotado, rebaixado vai à raiz, tipo igual não reavalia, rajada de 403), 1 no guard, 1 no interceptor (403 pede a reconferência; outros status e leitura de fundo não). Frontend 2920 passando; `npm run lint:tudo` e build do frontend sem erro.
+- **Não verificado:** o critério ao vivo (rebaixar um gestor com a sessão aberta: a primeira ação recusada atualiza o menu sem F5; e o deep link de um promovido) não foi executado. O `reavaliarTelaAtual` só foi testado com um snapshot de rota simulado, não com o roteador real. As janelas `checkin` e `chat-popup` não passam pela casca e não ganharam a conferência.
+- Fora de escopo, anotado: `restaurarSessao` ainda faz `JSON.parse` do `usuario_sessao` sem validar o formato (A-024).
+
 ## 2026-11-19 — Task 334: `GET /checkin/situacao` lê a execução ativa numa consulta só
 
 Da revisão de requisições (achado A-011), com a decisão do autor de 2026-11-19 pela **opção 1** (leitura nova no repository com DTO próprio). Com execução ativa, `recuperarExecucaoAtivaDetalhada` lia a ativa e depois listava com `allRows` todas as execuções da atividade (COUNT, SUM e SELECT com quatro JOIN) só para pegar três nomes. Rota conferida pelo front e pelo Desktop com frequência.

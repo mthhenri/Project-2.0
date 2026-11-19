@@ -1,8 +1,9 @@
 import { HttpContext, HttpContextToken, HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { Injector, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { catchError, throwError } from 'rxjs';
+import { AutenticacaoService } from '../services/autenticacao.service';
 
 /** A tela trata o erro sozinha (ex.: o login mostra a mensagem num banner): sem toast nem redirect global. */
 export const ERRO_TRATADO_PELA_TELA = new HttpContextToken<boolean>(() => false);
@@ -20,6 +21,8 @@ export const comErroTratadoPelaTela = (): { context: HttpContext } => ({
 export const errorHandlerInterceptor: HttpInterceptorFn = (requisicao, proximo) => {
     const roteador = inject(Router);
     const messageService = inject(MessageService);
+    // Resolvido só no 403 (o `inject` não vale dentro do `catchError`, e instanciar o serviço em toda requisição seria à toa).
+    const injetor = inject(Injector);
 
     if (requisicao.context.get(ERRO_TRATADO_PELA_TELA)) return proximo(requisicao);
 
@@ -38,6 +41,8 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (requisicao, proximo) 
                     break;
                 case 403:
                     messageService.add({ severity: 'error', summary: 'Erro', detail: 'Acesso não permitido' });
+                    // O tipo do usuário pode ter mudado: reconfere (com intervalo mínimo) para menus e telas acompanharem.
+                    injetor.get(AutenticacaoService).reconferirAposAcessoNegado();
                     break;
                 case 400: {
                     const corpo = erro.error;

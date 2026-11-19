@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { autenticacaoGuard, somentePublicoGuard } from './core/guards/autenticacao.guard';
 import { gestorGuard } from './core/guards/gestor.guard';
+import { sessaoConferidaGuard } from './core/guards/sessao-conferida.guard';
 import { LayoutComponent } from './shared/layout/layout.component';
 
 export const rotas: Routes = [
@@ -15,7 +16,7 @@ export const rotas: Routes = [
     {
         path: '',
         component: LayoutComponent,
-        canActivate: [autenticacaoGuard],
+        canActivate: [autenticacaoGuard, sessaoConferidaGuard],
         children: [
             { path: 'usuario',    loadChildren: () => import('./modules/usuario/usuario.routes').then((m) => m.usuarioRotas) },
             { path: 'projeto',    loadChildren: () => import('./modules/projeto/projeto.routes').then((m) => m.projetoRotas) },

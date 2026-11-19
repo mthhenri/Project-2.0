@@ -5,12 +5,14 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { comLeituraDeFundo } from './loading.interceptor';
+import { AutenticacaoService } from '../services/autenticacao.service';
 import { comErroTratadoPelaTela, errorHandlerInterceptor, parametrosRetorno } from './error-handler.interceptor';
 
 let http: HttpClient;
 let controlador: HttpTestingController;
 const navegar = vi.fn();
 const adicionar = vi.fn();
+const reconferir = vi.fn();
 const roteador = { navigate: navegar, url: '/demanda?pagina=2' };
 
 function configurar(): void {
@@ -20,6 +22,7 @@ function configurar(): void {
             provideHttpClientTesting(),
             { provide: Router, useValue: roteador },
             { provide: MessageService, useValue: { add: adicionar } },
+            { provide: AutenticacaoService, useValue: { reconferirAposAcessoNegado: reconferir } },
         ],
     });
     http = TestBed.inject(HttpClient);
@@ -37,6 +40,7 @@ function falhar(status: number, corpo: object | null = null, opcoes: object = {}
 beforeEach(() => {
     navegar.mockClear();
     adicionar.mockClear();
+    reconferir.mockClear();
     roteador.url = '/demanda?pagina=2';
     localStorage.clear();
     configurar();
@@ -60,6 +64,16 @@ describe('errorHandlerInterceptor', () => {
 
         expect(localStorage.getItem('access_token')).toBeNull();
         expect(navegar).toHaveBeenCalledWith(['/autenticacao'], { queryParams: { returnUrl: '/demanda?pagina=2' } });
+    });
+
+    it('403 pede a reconferência da sessão (o tipo pode ter mudado); outros status e leitura de fundo não pedem', () => {
+        falhar(403);
+        expect(reconferir).toHaveBeenCalledTimes(1);
+
+        reconferir.mockClear();
+        for (const status of [400, 404, 500]) falhar(status);
+        falhar(403, null, comLeituraDeFundo());
+        expect(reconferir).not.toHaveBeenCalled();
     });
 
     it('a mesma falha numa ação do usuário continua mostrando o erro', () => {
