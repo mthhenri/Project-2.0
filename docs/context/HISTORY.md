@@ -13,6 +13,12 @@
 ---
 
 
+## 2026-11-19 — Verificação ao vivo das tasks 330, 331, 332, 333, 334 e 340 e da prioridade da listagem
+
+A pedido do autor, antes de seguir: o stack real (backend, SPA com proxy, PostgreSQL 16 local com as 90 migrations) dirigido pelo Playwright com `page.clock` para o tempo. **Todos os critérios ao vivo passaram** e as contraprovas também (a 332 mostra o toast quando é uma tela pedida pelo usuário; a 340 sem o `sessaoConferidaGuard` joga o promovido em `/ponto`). Números: 3 focos = 1 `GET /execucao/ativa`; 3 min com a aba oculta = 0 `GET /ia/disponibilidade` e 1 na volta; 2 min de diálogo do check-in = 4 `GET /checkin/situacao` (antes ~40); `GET /checkin/situacao` = 1 `SELECT` de `execucao` no log do PostgreSQL; rebaixado vê o menu mudar e sair da tela sem F5. Relatório: `docs/specs/done/332-leituras-de-fundo-sem-toast-de-erro/verificacao-ao-vivo-330-340.md`. **Limites:** só `1920×1080` em tema claro e o Project Desktop (Electron) não foi exercitado.
+
+Isto fecha os "Não verificado" dos blocos das tasks 330, 331, 332, 333 e 340 (o Desktop real segue de fora). Não encontrou defeito novo.
+
 ## 2026-11-19 — Task 340: a sessão reconfere o tipo do usuário antes dos guards e ao receber 403
 
 Da revisão de requisições (achados A-023 e A-024). Menus, guards e botões decidiam pelo tipo gravado no `localStorage` no login; a única reconferência (`atualizarSessao`) rodava no construtor do layout, depois dos guards da primeira navegação, e um 403 só mostrava o toast "Acesso não permitido". Numa janela aberta por dias (o Desktop), o rebaixado seguia vendo telas de gestor e o promovido caía na raiz no deep link. O backend já recusava o que o tipo real não pode: o conserto é só da interface.
