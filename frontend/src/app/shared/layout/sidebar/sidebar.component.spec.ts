@@ -5,6 +5,7 @@ import { afterEach, describe, it, expect, vi } from 'vitest';
 import { EstadoIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../testes/montar-componente';
 import { esperarRequisicao, responderSucesso } from '../../../../testes/http-teste';
+import { ProjectDesktopService } from '../../../core/services/project-desktop.service';
 import { SidebarComponent } from './sidebar.component';
 
 // Barra lateral (SYSTEM.SPEC.md §8, navegação por tipo de usuário): o desenvolvedor vê os itens dele, o gestor os de gestão e só o
@@ -140,6 +141,36 @@ describe('SidebarComponent — IA e telas substituídas pelo chat', () => {
         const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR, EstadoIaEnum.NO_AR);
         vi.advanceTimersByTime(60_000);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
+    });
+
+    it('com a aba oculta o tique de 60 s não consulta; ao voltar à aba consulta uma vez', async () => {
+        const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR, EstadoIaEnum.NO_AR);
+        const visibilidade = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+        vi.advanceTimersByTime(180_000);
+        montado.http.expectNone((requisicao) => requisicao.url.endsWith('/ia/disponibilidade'));
+
+        visibilidade.mockReturnValue('visible');
+        vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 200_000);
+        document.dispatchEvent(new Event('visibilitychange'));
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
+        montado.http.expectNone((requisicao) => requisicao.url.endsWith('/ia/disponibilidade'));
+        vi.restoreAllMocks();
+    });
+
+    it('no Desktop com a janela oculta o tique não consulta; ao reaparecer consulta uma vez', async () => {
+        const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR, EstadoIaEnum.NO_AR);
+        const desktop = TestBed.inject(ProjectDesktopService);
+        desktop.oculto.set(true);
+        await montado.atualizar();
+        vi.advanceTimersByTime(180_000);
+        montado.http.expectNone((requisicao) => requisicao.url.endsWith('/ia/disponibilidade'));
+
+        vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 200_000);
+        desktop.oculto.set(false);
+        await montado.atualizar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
+        montado.http.expectNone((requisicao) => requisicao.url.endsWith('/ia/disponibilidade'));
+        vi.restoreAllMocks();
     });
 
     it('com a IA no ar "Atividades" segue com link e todos os itens ficam ativos', async () => {

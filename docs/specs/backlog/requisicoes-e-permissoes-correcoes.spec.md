@@ -23,7 +23,6 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 
 | Task | Decisão |
 |---|---|
-| **330** | Disponibilidade da IA: não consultar a cada 60 s com a aba oculta |
 | **333** | Check-in aberto: conferir a situação por evento, não a cada 3 s |
 | **334** | Backend: `GET /checkin/situacao` não lista todas as execuções da atividade |
 | **352** | Gravações do pad e dos textos da demanda: não devolver o texto inteiro |
@@ -68,7 +67,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | Task | Severidade | Área | Entrega | Achados | Decisão |
 |---|---|---|---|---|---|
 | **487** | Alta | desktop | Project Desktop: conferir o check-in pelo horário sorteado, não a cada 15 s | A-001, A-002, A-003, A-004 | — |
-| **330** | Média | frontend/casca | Disponibilidade da IA: não consultar a cada 60 s com a aba oculta | A-005, A-006 | pendente |
+| **330** | Média | frontend/casca | Disponibilidade da IA: não consultar a cada 60 s com a aba oculta | A-005, A-006 | decidida e feita |
 | **331** | Média | frontend/casca | Execução ativa: foco e volta à aba não disparam consultas repetidas | A-007, A-008 | feita |
 | **332** | Média | frontend/casca | Leituras automáticas da casca não mostram o toast global de erro | A-009 | feita |
 | **333** | Média | frontend/checkin | Check-in aberto: conferir a situação por evento, não a cada 3 s | A-010 | pendente |

@@ -13,6 +13,14 @@
 ---
 
 
+## 2026-11-19 — Task 330: disponibilidade da IA pausa com a aba (ou o Desktop) oculta
+
+Da revisão de requisições (achados A-005 e A-006), com a decisão do autor de 2026-11-19 pela **opção 1** (revê a decisão da task 321 só para a aba oculta): a barra lateral pedia `GET /ia/disponibilidade` a cada 60 s, com `forcar`, em toda aba aberta; no Desktop, fechar e minimizar só ocultam a janela e `visibilityState` segue `visible`.
+
+- **frontend:** o tique de 60 s da `SidebarComponent` só consulta com `!ProjectDesktopService.paginaOculta()` (aba em segundo plano ou janela do Desktop oculta). Ao voltar, uma consulta **sem** `forcar`: `visibilitychange` visível no navegador e, no Desktop, um `effect` sobre o sinal `oculto` (oculto → visível); a janela de 5 s do serviço evita duplicar com as outras leituras da volta. O intervalo de 60 s com a página à vista não mudou.
+- **Testes:** 2 novos na barra (aba oculta: nenhuma consulta em 180 s e uma ao voltar; Desktop oculto: idem pelo sinal). Frontend: `src/app/shared/layout` 83 passando; suíte completa e `npm run lint:tudo`/build no fecho da rodada.
+- **Não verificado:** o critério ao vivo (3 minutos com a aba oculta sem `GET /ia/disponibilidade`; ao voltar sai uma) e o Desktop real não foram exercitados.
+
 ## 2026-11-19 — Task 331: execução ativa lida com guarda (foco e volta à aba)
 
 Da revisão de requisições (achados A-007 e A-008). Cada foco da janela disparava `GET /execucao/ativa` sem guarda; voltar de uma aba oculta disparava duas iguais (topbar com `visibilitychange` e `window:focus`) mais um `GET /checkin/situacao` da janelinha; o detalhe da atividade pedia a sua própria cópia na carga e na volta à aba.
