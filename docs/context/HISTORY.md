@@ -13,6 +13,16 @@
 ---
 
 
+## 2026-11-19 — Tasks 444, 445 e 449: o chat com a IA e o plano deixam de reler listas à toa
+
+Da revisão de requisições e de permissões (achados A-156 a A-158 e A-162), todos em `modules/chat`.
+
+- **444 (A-156):** o fim de cada mensagem não dispara mais as três leituras. O `SeletorComponent` ganhou `recarregarConversasSeMudou` (só relê as conversas se a conversa de hoje ainda não está na lista ou ainda tem o nome padrão "Chat do dia…", que o servidor troca ao fim da primeira resposta do dia), `recarregarConversas` e `recarregarPlanos`; `ChatPage` usa a primeira no fim do envio e do bom-dia/retomada (em Planejamento a mensagem não mexe em conversas) e o evento `fim` consulta a disponibilidade da IA **sem** `forcar` (a janela de 5 s do serviço decide; `forcar` continua nos erros e no 409). A `GET /execucao/ativa` por ferramenta `propor_*` que o achado cita ficou como estava (não está nos entregáveis).
+- **445 (A-157, A-158):** `PlanoDocumentoComponent.mudou` passou a decidir a releitura pelo tipo: `aoMudarPlano(mudanca)` corrige título, solo e arquivo **em memória** (`SeletorComponent.corrigirPlano`, com o que o documento já tem), relê só os planos para projeto e demanda (nomes que só o servidor sabe), e gravar o texto não pede nada; criar e excluir plano relêem só a lista de planos; nenhuma delas relê as conversas. Dentro do plano: mudar a situação de um ponto aplica o que o `PATCH` devolve (`situacao`, `resolucaoTexto`), remover uma fonte tira da lista, publicar guarda a `publicacaoData` da resposta, e o diálogo de publicar usa a contagem de pontos em aberto que o painel lateral já tem (`quantidadeAbertos` → `pontosAbertosConhecidos`) em vez de pedir a lista. Anotar ponto e adicionar fonte continuam relendo, porque os `POST` não devolvem os campos do resumo.
+- **449 (A-162):** `DemandaLeituraComponent` pede a demanda e as atividades **em paralelo** (a segunda só depende do id) e as atividades com `allRows: true` (antes `itensPorPagina: 100`, que cortava em silêncio o checklist, o total de minutos e a contagem de desenvolvidas acima de 100); a constante do teto saiu.
+- **Testes:** chat (292 passando em 13 arquivos; ajustados os três que esperavam as releituras antigas e acrescentados: fim da mensagem sem disponibilidade forçada e com uma só leitura de conversas, segunda mensagem do dia sem nenhuma das três, `aoMudarPlano` por tipo, remover fonte e resolver ponto sem `GET`, demanda e atividades em paralelo com `allRows`); `npm run lint:tudo` e build sem erro.
+- **Não verificado ao vivo:** os fluxos dependem de resposta da IA e de planos; só os testes de componente e de página os cobrem.
+
 ## 2026-11-19 — Tasks 438, 447 e 448: a execução ativa e a proposta desfeita chegam às telas sem F5
 
 Da revisão de requisições e de permissões (achados A-150, A-160 e A-161), três correções pequenas da mesma família (um estado que mudou e a tela não soube).

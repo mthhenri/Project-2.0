@@ -92,7 +92,38 @@ export class SeletorComponent {
         this.recarregar();
     }
 
-    /** Relê as conversas e os planos (o servidor pode ter nomeado a conversa do dia, e o plano pode ter mudado de título ou de lugar). */
+    /**
+     * Relê só as conversas, e só se faz falta: a conversa de hoje ainda não está na lista (era a primeira mensagem do dia) ou ainda tem o nome padrão (o servidor a nomeia ao fim da
+     * primeira resposta). Nas demais mensagens a lista não muda (task 444).
+     */
+    recarregarConversasSeMudou(): void {
+        const doDia = this.conversas().find((conversa) => conversa.data === this.hoje());
+        if (doDia && (doDia.tituloEditado || !doDia.titulo.startsWith(PREFIXO_TITULO_PADRAO))) return;
+        this.recarregarConversas();
+    }
+
+    /** Relê só as conversas. */
+    recarregarConversas(): void {
+        this.chatService.listarConversas().subscribe({
+            next: (resposta) => this.conversas.set(resposta.dados?.conversas ?? []),
+            error: () => this.erro.set(true),
+        });
+    }
+
+    /** Relê só os planos (criar, excluir e atribuir projeto mudam a lista; título, solo e arquivo se corrigem em memória por `corrigirPlano`). */
+    recarregarPlanos(): void {
+        this.planoService.listar({ busca: this.buscaFeita() || undefined }).subscribe({
+            next: (resposta) => this.planos.set(resposta.dados ?? []),
+            error: () => this.erro.set(true),
+        });
+    }
+
+    /** Corrige a linha de um plano com o que a tela já sabe, sem pedir nada (task 445). */
+    corrigirPlano(planoId: number, campos: Partial<Pick<PlanoResumoDto, 'titulo' | 'solo' | 'arquivado'>>): void {
+        this.planos.update((lista) => lista.map((plano) => (plano.id === planoId ? { ...plano, ...campos } : plano)));
+    }
+
+    /** Relê as conversas e os planos (abertura e busca). */
     recarregar(): void {
         this.carregando.set(true);
         this.erro.set(false);

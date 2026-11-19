@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, model, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -57,6 +57,8 @@ export class PlanoPontosComponent {
     readonly ocupado = signal(false);
     /** O painel aberto ou recolhido num trilho lateral (aberto por padrão); o documento lê para dar o espaço ao texto. */
     readonly aberto = model(true);
+    /** Quantos pontos estão em aberto (e se a lista já foi lida): o diálogo de publicar usa, em vez de pedir a lista de novo (task 445). */
+    readonly quantidadeAbertos = output<number | null>();
     readonly fechadosVisiveis = signal(false);
     readonly anotando = signal(false);
     readonly tratando = signal<Tratamento | null>(null);
@@ -74,6 +76,7 @@ export class PlanoPontosComponent {
             const id = this.planoId();
             untracked(() => this.recarregar(id));
         });
+        effect(() => this.quantidadeAbertos.emit(this.carregando() || this.erro() ? null : this.abertos().length));
     }
 
     /** Relê os pontos (a IA pode ter anotado ou fechado algum). Sem esqueleto numa releitura: a lista já está na tela. */
@@ -145,10 +148,13 @@ export class PlanoPontosComponent {
     private alterarSituacao(pontoId: number, situacao: TipoPlanoPontoSituacaoEnum, texto?: string): void {
         this.ocupado.set(true);
         this.planoService.alterarSituacaoDoPonto(this.planoId(), pontoId, situacao, texto).subscribe({
-            next: () => {
+            next: (resposta) => {
                 this.ocupado.set(false);
                 this.tratando.set(null);
-                this.recarregar();
+                // A resposta traz a situação e a resolução do ponto: a lista se corrige em memória, sem reler (task 445).
+                const alterado = resposta.dados;
+                if (alterado) this.pontos.update((lista) => lista.map((ponto) => (ponto.id === alterado.id ? { ...ponto, situacao: alterado.situacao, resolucaoTexto: alterado.resolucaoTexto } : ponto)));
+                else this.recarregar();
             },
             error: (falha: HttpErrorResponse) => this.falhar(falha, 'Não foi possível alterar o ponto'),
         });

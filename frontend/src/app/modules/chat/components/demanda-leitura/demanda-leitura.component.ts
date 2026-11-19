@@ -21,9 +21,6 @@ import { AvisoPedidoDoClienteComponent } from '../aviso-pedido-do-cliente/aviso-
 /** As abas da demanda aberta no chat; a Cliente aparece para todos (o desenvolvedor só lê, com aviso). */
 export type AbaDemandaLeitura = 'checklist' | 'anotacoes' | 'tecnica' | 'cliente' | 'documentacao';
 
-/** Até quantas atividades o checklist pede à API. */
-const LIMITE_DE_ATIVIDADES = 100;
-
 /**
  * A demanda aberta ao lado da conversa (task 245), **só para leitura**: caminho, nome, status e barra de horas, e as abas Checklist (abre
  * primeiro: desenvolvidas riscadas, a que roda destacada e as que faltam), Técnica, Cliente (todos leem; só gestor e administrador alteram, e o aviso diz isso ao desenvolvedor) e Documentação, com
@@ -115,12 +112,13 @@ export class DemandaLeituraComponent {
         this.aba.set(this.abaInicial());
         this.demanda.set(null);
         this.atividades.set([]);
+        // As atividades só dependem do id, que já se tem: as duas leituras saem juntas (task 449).
+        this.carregarAtividades(id);
         this.demandaService.recuperar(id).subscribe({
             next: (resposta) => {
                 if (id !== this.demandaId()) return;
                 this.demanda.set(resposta.dados ?? null);
                 this.carregando.set(false);
-                this.carregarAtividades(id);
             },
             error: () => {
                 if (id !== this.demandaId()) return;
@@ -131,7 +129,8 @@ export class DemandaLeituraComponent {
     }
 
     private carregarAtividades(id: number): void {
-        this.atividadeService.listar({ demandaId: id, itensPorPagina: LIMITE_DE_ATIVIDADES }).subscribe({
+        // Todas as atividades: o checklist, o total de minutos e a contagem de desenvolvidas saem desta lista, e um teto cortaria os números em silêncio.
+        this.atividadeService.listar({ demandaId: id, allRows: true }).subscribe({
             next: (resposta) => {
                 if (id === this.demandaId()) this.atividades.set(resposta.dados?.itens ?? []);
             },

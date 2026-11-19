@@ -29,9 +29,14 @@ async function montar(usuario: TipoUsuarioEnum, atividades: unknown[] = [], text
     const montado = await montarComponente(DemandaLeituraComponent, { usuario, entradas: abaInicial ? { demandaId: 9, abaInicial } : { demandaId: 9 } });
     // O pad da própria pessoa carrega junto com a demanda; a requisição pendente seguraria o `whenStable`.
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/anotacao'), secoesDoPad(textosDoPad));
-    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/9'), DEMANDA);
+    // As duas leituras saem juntas (task 449), a das atividades pedindo todas, sem teto de 100.
+    const pedidoDaDemanda = esperarRequisicao(montado.http, 'GET', '/demanda/9');
+    const pedidoDasAtividades = esperarRequisicao(montado.http, 'GET', '/atividade');
+    expect(pedidoDasAtividades.request.params.get('allRows')).toBe('true');
+    expect(pedidoDasAtividades.request.params.get('itensPorPagina')).toBeNull();
+    responderSucesso(pedidoDaDemanda, DEMANDA);
     await montado.atualizar();
-    responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade'), { itens: atividades, totalItens: atividades.length, paginaAtual: 1, itensPorPagina: 100, totalPaginas: 1 });
+    responderSucesso(pedidoDasAtividades, { itens: atividades, totalItens: atividades.length, paginaAtual: 1, itensPorPagina: 100, totalPaginas: 1 });
     await montado.atualizar();
     return montado;
 }

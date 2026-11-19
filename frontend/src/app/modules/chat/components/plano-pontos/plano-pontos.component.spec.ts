@@ -127,9 +127,10 @@ describe('PlanoPontosComponent — fechar e reabrir', () => {
         const alteracao = esperarRequisicao(montado.http, 'PATCH', '/plano/7/ponto/1/situacao');
         expect(alteracao.request.body).toEqual({ situacao: Situacao.RESOLVIDO, resolucaoTexto: 'Só gestor e administrador' });
         responderSucesso(alteracao, { id: 1, situacao: Situacao.RESOLVIDO, resolucaoTexto: 'Só gestor e administrador' });
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano/7/ponto'), [ponto(1, Situacao.RESOLVIDO, { resolucaoTexto: 'Só gestor e administrador' })]);
         await montado.atualizar();
 
+        // A situação nova vem na resposta do PATCH: a lista se corrige em memória, sem reler (task 445).
+        montado.http.expectNone((pedido) => pedido.method === 'GET');
         expect(montado.elemento.querySelector('.plano-pontos__contagem')?.textContent?.trim()).toBe('0');
     });
 

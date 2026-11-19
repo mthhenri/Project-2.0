@@ -131,7 +131,7 @@ describe('PlanoFontesComponent — ver e remover', () => {
         expect(texto(montado)).not.toContain('Conteúdo da fonte');
     });
 
-    it('remover pede confirmação, apaga e relê; "Não" desiste', async () => {
+    it('remover pede confirmação, apaga sem reler; "Não" desiste', async () => {
         const montado = await montar([fonte(1)]);
         porTexto(montado, 'Remover')!.click();
         await montado.atualizar();
@@ -144,8 +144,8 @@ describe('PlanoFontesComponent — ver e remover', () => {
         await montado.atualizar();
         porTexto(montado, 'Remover')!.click();
         responderSucesso(esperarRequisicao(montado.http, 'DELETE', '/plano/7/fonte/1'), { id: 1 });
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano/7/fonte'), []);
         await montado.atualizar();
         expect(texto(montado)).toContain('Nenhuma fonte.');
+        montado.http.expectNone((pedido) => pedido.method === 'GET'); // remover cabe em memória (task 445)
     });
 });

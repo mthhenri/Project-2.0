@@ -222,12 +222,12 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 
 | Task | Severidade | Área | Entrega | Achados | Decisão |
 |---|---|---|---|---|---|
-| **444** | Média | frontend/chat | Chat com a IA: o fim de cada mensagem não relê disponibilidade, conversas e planos | A-156 | — |
-| **445** | Média | frontend/chat (plano) | Plano: alterar não relê as conversas nem as listas que a resposta já atualiza | A-157, A-158 | — |
+| **444** | Média | frontend/chat | Chat com a IA: o fim de cada mensagem não relê disponibilidade, conversas e planos | A-156 | feita |
+| **445** | Média | frontend/chat (plano) | Plano: alterar não relê as conversas nem as listas que a resposta já atualiza | A-157, A-158 | feita |
 | **446** | Média | backend/chat e frontend/chat | Chat com a IA: as propostas de uma conversa numa leitura só | A-159 | pendente |
 | **447** | Média | frontend/casca | "Confirmar todas", "Desfazer todas" e "Ajustar" atualizam a execução ativa da topbar | A-160 | feita |
 | **448** | Média | frontend/chat | Proposta: o "Desfazer" do toast usa a resposta e avisa a página | A-161 | feita |
-| **449** | Média | frontend/chat | Chat: a demanda aberta ao lado carrega as atividades em paralelo e sem teto de 100 | A-162 | — |
+| **449** | Média | frontend/chat | Chat: a demanda aberta ao lado carrega as atividades em paralelo e sem teto de 100 | A-162 | feita |
 | **450** | Baixa | frontend/chat (plano) | Chat: a lista de planos é carregada uma vez, quando alguém precisa dela | A-163, A-164 | — |
 | **451** | Baixa | frontend/chat | Chat: "Minhas demandas" e a demanda aberta atualizam depois de uma proposta, não a cada volta à lista | A-165, A-166 | — |
 | **452** | Baixa | frontend/chat (plano) | Plano: "Ligar a uma demanda" não pede a lista no clique que fecha | A-167 | — |

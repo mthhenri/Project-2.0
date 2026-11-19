@@ -52,7 +52,11 @@
                 [class.plano-documento__lateral--recolhida]="!pontosAbertos() && !fontesAbertas()"
                 aria-label="Pontos em aberto e fontes"
             >
-                <app-plano-pontos [planoId]="atual.id" [(aberto)]="pontosAbertos" />
+                <app-plano-pontos
+                    [planoId]="atual.id"
+                    [(aberto)]="pontosAbertos"
+                    (quantidadeAbertos)="pontosEmAberto.set($event)"
+                />
                 <app-plano-fontes [planoId]="atual.id" [(aberto)]="fontesAbertas" />
             </aside>
 
@@ -156,8 +160,9 @@
 
         <app-plano-publicar-dialog
             [plano]="atual"
+            [pontosAbertosConhecidos]="pontosEmAberto()"
             [(visivel)]="mostrarPublicacao"
-            (publicado)="aoPublicar()"
+            (publicado)="aoPublicar($event)"
             (desatualizado)="carregar()"
         />
         @if (atual.projetoId !== null) {

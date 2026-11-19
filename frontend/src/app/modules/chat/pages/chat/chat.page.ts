@@ -9,7 +9,7 @@ import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, Nive
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
-import { PedidoDeAlteracaoDoTrecho, PlanoDocumentoComponent } from '../../components/plano-documento/plano-documento.component';
+import { MudancaDoPlano, PedidoDeAlteracaoDoTrecho, PlanoDocumentoComponent } from '../../components/plano-documento/plano-documento.component';
 import { EnviarRespostaColaboradorComponent, RespostaDaIaParaEnviar } from '../../components/enviar-resposta-colaborador/enviar-resposta-colaborador.component';
 import { PropostaCartaoComponent } from '../../components/proposta-cartao/proposta-cartao.component';
 import { PropostaGrupoComponent } from '../../components/proposta-grupo/proposta-grupo.component';
@@ -388,8 +388,9 @@ export class ChatPage implements OnInit {
         } finally {
             this.aoVivo.set(null);
             this.enviando.set(false);
-            // A conversa pode ter ganhado nome (dado pela IA ao fim da primeira resposta do dia) e ela entra na lista se era a primeira.
-            this.seletor()?.recarregar();
+            // A conversa pode ter ganhado nome (dado pela IA ao fim da primeira resposta do dia) e ela entra na lista se era a primeira: só então a lista de conversas é relida. Em Planejamento
+            // a mensagem não mexe nas conversas; a lista de planos só muda por ação da pessoa sobre o plano (task 444).
+            if (this.destinoDaResposta !== 'PLANO') this.seletor()?.recarregarConversasSeMudou();
             // O campo volta a ser habilitado na próxima detecção de mudanças; só então recebe o foco.
             setTimeout(() => this.campoDeTexto()?.focar(), 50);
         }
@@ -444,7 +445,7 @@ export class ChatPage implements OnInit {
         } finally {
             this.aoVivo.set(null);
             this.enviando.set(false);
-            this.seletor()?.recarregar();
+            this.seletor()?.recarregarConversasSeMudou();
         }
     }
 
@@ -617,15 +618,24 @@ export class ChatPage implements OnInit {
         (this.destinoDaResposta === 'PLANO' ? this.mensagensDoPlano : this.mensagens).update(atualizar);
     }
 
-    /** Qualquer mudança no plano (título, projeto, demanda, solo, arquivo) muda a linha dele na lista. */
-    aoMudarPlano(): void {
-        this.seletor()?.recarregar();
+    /**
+     * Uma mudança no plano muda a linha dele na lista (task 445): título, solo e arquivo se corrigem em memória com o que o documento já tem; projeto e demanda trazem
+     * nomes que só o servidor sabe, então relêem os planos; gravar o texto não muda a linha. Nenhuma delas toca nas conversas, que não dependem de plano.
+     */
+    aoMudarPlano(mudanca: MudancaDoPlano): void {
+        const plano = this.documento()?.plano();
+        if (mudanca === 'texto') return;
+        if (mudanca === 'projeto' || mudanca === 'demanda' || !plano) {
+            this.seletor()?.recarregarPlanos();
+            return;
+        }
+        this.seletor()?.corrigirPlano(plano.id, { titulo: plano.titulo, solo: plano.solo, arquivado: plano.arquivado });
     }
 
     aoExcluirPlano(): void {
         this.planoAbertoId.set(null);
         this.planoAbertoTitulo.set(null);
-        this.seletor()?.recarregar();
+        this.seletor()?.recarregarPlanos();
     }
 
     /** "Novo plano" cria um plano pessoal (sem projeto); o projeto e a demanda vêm depois, no cabeçalho do plano. */
@@ -642,7 +652,7 @@ export class ChatPage implements OnInit {
                 this.planoAbertoTitulo.set(resposta.dados.titulo);
                 this.abrirPlano(resposta.dados.id);
                 this.abrindoPlano.set(false);
-                this.seletor()?.recarregar();
+                this.seletor()?.recarregarPlanos();
             },
             error: (falha) => {
                 this.abrindoPlano.set(false);
@@ -775,7 +785,7 @@ export class ChatPage implements OnInit {
                 if (resposta) mensagem.chave = resposta.chave;
                 this.atualizarMensagensDoDestino((lista) => [...lista, mensagem]);
                 this.aoVivo.set(null);
-                this.atualizarDisponibilidade();
+                this.atualizarDisponibilidade(false);
                 break;
             }
             case 'sugestoes':
@@ -801,8 +811,9 @@ export class ChatPage implements OnInit {
         return { chave: `ao-vivo-${++this.contadorLocal}`, texto: '', ferramenta: null, propostaIds: [] };
     }
 
-    private atualizarDisponibilidade(): void {
-        this.iaDisponibilidade.carregar({ forcar: true });
+    /** `forcar` só quando algo deu errado (409, erro): ao fim normal de uma resposta a janela de frescor do serviço decide (task 444). */
+    private atualizarDisponibilidade(forcar = true): void {
+        this.iaDisponibilidade.carregar({ forcar });
     }
 
     /** Respondeu um modelo diferente do planejado (um item de contingência da cadeia): a mensagem antiga, sem o planejado, nunca acusa. */
