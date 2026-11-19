@@ -25,7 +25,6 @@ function responderPendentes(montado: Montado, podeEditar: boolean): string[] {
         // Qualquer id: o teste de troca de página também carrega a demanda 12 e não pode receber o `[]` padrão abaixo.
         const detalhe = /^\/demanda\/(\d+)\/detalhe$/.exec(caminho);
         if (detalhe) dados = { demanda: { ...DEMANDA, id: Number(detalhe[1]), podeEditar }, ancestrais: [], tags: [], membros: [], conexoes: [], canalChatExiste: false, podeAbrirCanalChat: true };
-        else if (/^\/demanda\/\d+\/arvore$/.test(caminho)) dados = { id: Number(caminho.split('/')[2]), nome: 'Demanda de teste', filhos: [] };
         else if (/^\/plano\/demanda\/\d+$/.test(caminho)) dados = null;
         else if (['/usuario', '/demanda', '/atividade'].includes(caminho)) dados = PAGINA([]);
         responderSucesso(requisicao, dados);
@@ -69,7 +68,7 @@ describe('DemandaAbertaComponent — o que mostra', () => {
             const detalhe = /^\/demanda\/(\d+)\/detalhe$/.test(caminho);
             responderSucesso(requisicao, detalhe
                 ? { demanda: { ...DEMANDA, podeEditar: true }, ancestrais: [], tags: [], membros: [], conexoes: [], canalChatExiste: true, podeAbrirCanalChat: false }
-                : /^\/demanda\/\d+\/arvore$/.test(caminho) ? { id: 10, nome: 'Demanda de teste', filhos: [] } : ['/usuario', '/demanda', '/atividade'].includes(caminho) ? PAGINA([]) : []);
+                : ['/usuario', '/demanda', '/atividade'].includes(caminho) ? PAGINA([]) : []);
         }
         await montado.atualizar();
         expect(requisicoes.some((caminho) => caminho.includes('/mensagem-direta/canal/'))).toBe(false);
@@ -86,9 +85,11 @@ describe('DemandaAbertaComponent — o que mostra', () => {
         expect(montado.componente.abaAtiva()).toBe('tecnica');
         expect(texto(montado)).toContain('texto tecnico');
         expect(editarDescricao(montado)).not.toBeNull();
-        for (const rota of ['GET /demanda/10/detalhe', 'GET /demanda/10/arvore', 'GET /atividade']) {
+        for (const rota of ['GET /demanda/10/detalhe', 'GET /atividade']) {
             expect(carga.filter((chamada) => chamada.startsWith(rota)).length, rota).toBeGreaterThan(0);
         }
+        // A árvore de sub-demandas não é pedida: nenhum elemento da coluna a mostra (task 406).
+        expect(carga.filter((chamada) => chamada.includes('/arvore')), 'GET /demanda/:id/arvore').toEqual([]);
         // O detalhe agregado substitui as cinco leituras avulsas (P-080).
         for (const rota of ['GET /demanda/10', 'GET /demanda/10/ancestral', 'GET /demanda/10/tag', 'GET /demanda/10/membro', 'GET /demanda/10/conexao']) {
             expect(carga.filter((chamada) => chamada === rota).length, rota).toBe(0);

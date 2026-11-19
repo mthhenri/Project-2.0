@@ -6,7 +6,6 @@ import { ConfirmationService } from 'primeng/api';
 import {
     DemandaRecuperadaDto,
     DemandaAncestralDto,
-    DemandaArvoreItemDto,
     TagResumoDto,
     DemandaMembroDto,
     DemandaConexaoResumoDto,
@@ -40,7 +39,6 @@ interface EstadoDetalhe {
     demandaId: number;
     demanda: DemandaRecuperadaDto;
     ancestrais: DemandaAncestralDto[];
-    subDemandas: DemandaArvoreItemDto[];
     tags: TagResumoDto[];
     membros: DemandaMembroDto[];
     conexoes: DemandaConexaoResumoDto[];
@@ -74,7 +72,6 @@ export abstract class DemandaDetalheBase {
     readonly demandaIdAtual = signal<number>(0);
     readonly demanda = signal<DemandaRecuperadaDto | null>(null);
     readonly ancestrais = signal<DemandaAncestralDto[]>([]);
-    readonly subDemandas = signal<DemandaArvoreItemDto[]>([]);
     readonly tagsDisponiveis = signal<TagResumoDto[]>([]);
     readonly tagsDaDemanda = signal<TagResumoDto[]>([]);
     readonly todosUsuarios = signal<UsuarioResumoDto[]>([]);
@@ -163,20 +160,6 @@ export abstract class DemandaDetalheBase {
         this.demandaAlterada.emit();
     }
 
-    /** Recarrega as sub-demandas (uma filha foi criada ou editada). */
-    protected recarregarSubDemandas(): void {
-        const idAtual = this.demandaIdAtual();
-        if (idAtual) {
-            this.demandaService.recuperarArvore(idAtual).subscribe({
-                next: (resposta) => {
-                    if (resposta.sucesso && resposta.dados) {
-                        this.subDemandas.set(resposta.dados.filhos ?? []);
-                    }
-                },
-            });
-        }
-    }
-
     /** Abre outra demanda dentro do próprio dialog, guardando a atual para o "← Voltar" (sem nova chamada). */
     navegarParaSubDemanda(id: number): void {
         if (id === this.demandaIdAtual()) return;
@@ -194,7 +177,6 @@ export abstract class DemandaDetalheBase {
                 demandaId: demandaAtual.id,
                 demanda: demandaAtual,
                 ancestrais: this.ancestrais(),
-                subDemandas: this.subDemandas(),
                 tags: this.tagsDaDemanda(),
                 membros: this.membros(),
                 conexoes: this.conexoes(),
@@ -212,7 +194,6 @@ export abstract class DemandaDetalheBase {
         this.demandaIdAtual.set(anterior.demandaId);
         this.demanda.set(anterior.demanda);
         this.ancestrais.set(anterior.ancestrais);
-        this.subDemandas.set(anterior.subDemandas);
         this.tagsDaDemanda.set(anterior.tags);
         this.membros.set(anterior.membros);
         this.conexoes.set(anterior.conexoes);
@@ -390,7 +371,6 @@ export abstract class DemandaDetalheBase {
         // catálogo só são buscados uma vez por abertura (a navegação interna reaproveita).
         forkJoin({
             detalhe:    this.demandaService.recuperarDetalhe(identificador),
-            arvore:     this.demandaService.recuperarArvore(identificador),
             tags:       this.tagsDisponiveis().length ? of(null) : this.tagService.listarCatalogo(),
             usuarios:   this.sessao.podeEditarDemanda() && this.todosUsuarios().length === 0
                 ? this.usuarioService.listarCatalogo()
@@ -398,7 +378,7 @@ export abstract class DemandaDetalheBase {
         })
             .pipe(finalize(() => this.carregando.set(false)))
             .subscribe({
-                next: ({ detalhe, arvore, tags, usuarios }) => {
+                next: ({ detalhe, tags, usuarios }) => {
                     if (detalhe.sucesso && detalhe.dados) {
                         const { demanda, ancestrais, tags: tagsDaDemanda, membros, conexoes, canalChatExiste, podeAbrirCanalChat } = detalhe.dados;
                         this.demanda.set(demanda);
@@ -412,7 +392,6 @@ export abstract class DemandaDetalheBase {
                         if (this.eMembro()) this.carregarAtividades(identificador);
                         else this.atividades.set([]);
                     }
-                    if (arvore.sucesso && arvore.dados) this.subDemandas.set(arvore.dados.filhos ?? []);
                     if (tags && tags.sucesso && tags.dados) this.tagsDisponiveis.set(tags.dados);
                     if (usuarios && usuarios.sucesso && usuarios.dados) {
                         // Gestores não entram no autocomplete de membros: têm acesso total por serem gestores (task 71).

@@ -164,7 +164,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 |---|---|---|---|---|---|
 | **404** | Média | frontend/demanda | Demandas: excluir não pede a demanda excluída e desfazer traz a demanda de volta à tela | A-104, A-105 | — |
 | **405** | Média | frontend/demanda e mensagem-direta | Demandas e Projetos: o botão do chat não pergunta ao servidor a cada seleção | A-106, A-107, A-108 | decidida e feita |
-| **406** | Média | frontend/demanda | Demandas: tirar `GET /demanda/:id/arvore` da seleção (a resposta não é usada) | A-109 | — |
+| **406** | Média | frontend/demanda | Demandas: tirar `GET /demanda/:id/arvore` da seleção (a resposta não é usada) | A-109 | feita |
 | **407** | Média | frontend/demanda | Demandas: estimativa e previsão editadas na linha só avisam a página depois do `PUT` | A-110 | — |
 | **408** | Média | frontend/demanda | Demandas: salvar a edição faz uma releitura só, e ela atualiza tags e membros | A-111, A-112 | — |
 | **409** | Média | frontend/demanda | Demandas: alteração que não muda a estrutura não recarrega o grafo do projeto | A-113 | — |

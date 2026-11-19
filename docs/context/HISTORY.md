@@ -13,6 +13,14 @@
 ---
 
 
+## 2026-11-19 — Task 406: selecionar uma demanda não pede mais `GET /demanda/:id/arvore`
+
+Da revisão de requisições e de permissões (achado A-109), decisão do autor de 2026-11-19 (seguir a spec). `carregarTudo` incluía `recuperarArvore` no `forkJoin` só para preencher o sinal `subDemandas`, que nenhum template nem outro código lia (sobra do diálogo de detalhe antigo): 1 das 5 requisições de cada seleção, com consulta recursiva no servidor, e derrubava a carga inteira se falhasse.
+
+- **frontend:** `demanda-detalhe.base.ts` perde a chamada no `forkJoin`, o sinal `subDemandas`, o campo do `EstadoDetalhe` (a pilha do "← Voltar") e o método `recarregarSubDemandas` (sem chamador). Se a tela voltar a precisar das filhas, elas saem do grafo já carregado (`demandaPaiId` em cada nó). A rota do backend não mudou (a IA e outras telas podem usá-la).
+- **Teste:** `demanda-aberta.component.spec.ts`: a carga não faz nenhum `/arvore` (asserção nova no teste do gestor) e os dublês das respostas deixaram de responder essa rota; módulo demanda do frontend: 263 passando em 16 arquivos; `npm run lint:tudo` sem erro.
+- **Ao vivo (frontend real):** abrir `/demanda?projetoId=…` e selecionar outra demanda gera `GET /plano/demanda/4`, `GET /demanda/4/detalhe` e `GET /atividade`, nenhuma `/arvore` (o canal de chat já não era pedido pelo detalhe agregado, task 405).
+
 ## 2026-11-19 — Task 398: as ferramentas do plano só agem no plano da conversa
 
 Da revisão de requisições e de permissões (achado A-097), decisão do autor de 2026-11-19 (seguir a spec; manter `planoId` no DTO das ferramentas e só recusar o diferente). `consultar_plano`, `escrever_no_plano`, as de pontos e a de alterar trecho recebem `planoId` do modelo, e nada o amarrava ao plano da conversa aberta: uma fonte colada ou a mensagem de um colega podia induzi-lo a ler o plano privado de quem enviou ou a escrever (rascunho, sem confirmação) em outro plano dele.
