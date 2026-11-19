@@ -116,6 +116,7 @@
                 [previsaoFimData]="dadosDemanda.previsaoFimData"
                 [editavel]="sessao.podeEditarDemanda()"
                 (alterada)="aoMetricaAlterada($event)"
+                (gravada)="aoMetricaGravada($event)"
             />
         </div>
 

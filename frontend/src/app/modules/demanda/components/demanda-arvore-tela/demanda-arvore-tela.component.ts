@@ -70,6 +70,7 @@ export class DemandaArvoreTelaComponent implements OnInit {
     readonly alterado = output<void>();
     readonly statusAlterado = output<{ demandaId: number; status: TipoDemandaStatusEnum }>();
     readonly tagsAlteradas = output<{ demandaId: number; tags: TagResumoDto[] }>();
+    readonly horasEstimadasAlteradas = output<{ demandaId: number; horasEstimadas: number }>();
     readonly filtrosLimpos = output<void>();
     readonly demandaEditarSolicitada = output<number>();
     readonly demandaNovaFilhaSolicitada = output<number>();

@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { TipoDemandaStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { responderSucesso, esperarRequisicao } from '../../../../../testes/http-teste';
+import { DemandaMetricasComponent } from '../demanda-metricas/demanda-metricas.component';
 import { DemandaAbertaComponent } from './demanda-aberta.component';
 
 // A demanda aberta da Árvore (task 239) faz o que o diálogo de detalhe fazia, com as abas Técnica, Cliente, Documentação, Atividades e Conexões.
@@ -50,6 +52,34 @@ const abas = (montado: Montado) => Array.from(montado.elemento.querySelectorAll(
 const botao = (montado: Montado, rotulo: string) => Array.from(montado.elemento.querySelectorAll('button')).find((item) => item.textContent?.includes(rotulo));
 /** O botão Editar do texto da descrição (o "Editar" do topo abre o formulário completo). */
 const editarDescricao = (montado: Montado) => montado.elemento.querySelector<HTMLButtonElement>('.demanda-aberta__acoes-texto button');
+
+describe('DemandaAbertaComponent — estimativa editada no cabeçalho (task 407)', () => {
+    it('nenhuma leitura sai antes do PUT; só depois da resposta a página recebe as horas novas, sem reler a demanda nem o grafo', async () => {
+        const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
+        const avisadas: unknown[] = [];
+        let alteradas = 0;
+        montado.componente.horasEstimadasAlteradas.subscribe((valor) => avisadas.push(valor));
+        montado.componente.demandaAlterada.subscribe(() => alteradas++);
+        const metricas = montado.fixture.debugElement.query(By.directive(DemandaMetricasComponent)).componentInstance as DemandaMetricasComponent;
+
+        metricas.editar('horasEstimadas');
+        metricas.valorHoras = 20;
+        metricas.salvarHoras();
+        await montado.atualizar();
+        // O valor novo já está na tela (otimista), e a única requisição pendente é o PUT: nenhuma leitura saiu antes dele.
+        expect(montado.componente.demanda()?.horasEstimadas).toBe(20);
+        const pendentes = montado.http.match(() => true);
+        expect(pendentes.map((pedido) => `${pedido.request.method} ${pedido.request.url.replace(/^.*\/api\/v1/, '')}`)).toEqual(['PUT /demanda/10']);
+        expect(avisadas).toEqual([]);
+
+        responderSucesso(pendentes[0], { id: 10 });
+        await montado.atualizar();
+        expect(avisadas).toEqual([{ demandaId: 10, horasEstimadas: 20 }]);
+        expect(alteradas, 'a demanda não é "alterada" para a página reler').toBe(0);
+        montado.http.expectNone(() => true);
+        expect(montado.componente.demanda()?.horasEstimadas).toBe(20);
+    });
+});
 
 describe('DemandaAbertaComponent — o que mostra', () => {
     it('o cabeçalho tem o botão do chat da demanda, escolhido pelo detalhe, sem perguntar pelo canal (405)', async () => {

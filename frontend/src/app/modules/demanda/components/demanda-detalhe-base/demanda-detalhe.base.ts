@@ -54,6 +54,8 @@ export abstract class DemandaDetalheBase {
     @Input({ required: true }) demandaId!: number;
     @Output() demandaExcluida = new EventEmitter<void>();
     @Output() demandaAlterada = new EventEmitter<void>();
+    /** A estimativa da demanda já foi gravada: o nó do grafo e a linha do planejamento recebem o valor sem recarregar (task 407). */
+    @Output() horasEstimadasAlteradas = new EventEmitter<{ demandaId: number; horasEstimadas: number }>();
     /** Status trocado pelo chip (já aplicado): o painel atualiza o nó sem recarregar o grafo. */
     @Output() statusAlterado = new EventEmitter<{ demandaId: number; status: TipoDemandaStatusEnum }>();
     @Output() tagsAlteradas = new EventEmitter<{ demandaId: number; tags: TagResumoDto[] }>();
@@ -282,7 +284,15 @@ export abstract class DemandaDetalheBase {
         this.demanda.update((atual) =>
             atual ? { ...atual, ...campos, previsaoFimData: campos.previsaoFimData ?? (reverter && 'previsaoFimData' in campos ? null : atual.previsaoFimData) } : atual,
         );
-        if (!reverter) this.demandaAlterada.emit();
+    }
+
+    /**
+     * A estimativa ou a previsão já foi gravada (resposta do `PUT`): a tela já mostra o valor novo (`aoMetricaAlterada`), e a página só precisa das horas novas no nó do grafo
+     * e na linha do planejamento, sem reler nada (task 407): uma releitura que saísse antes do `PUT` devolveria o valor antigo por cima do novo. A previsão não aparece fora da demanda aberta.
+     */
+    aoMetricaGravada(gravada: { horasEstimadas?: number; previsaoFimData?: string }): void {
+        const demandaAtual = this.demanda();
+        if (demandaAtual && gravada.horasEstimadas !== undefined) this.horasEstimadasAlteradas.emit({ demandaId: demandaAtual.id, horasEstimadas: gravada.horasEstimadas });
     }
 
     aoTagsAlteradas(tags: TagResumoDto[]): void {

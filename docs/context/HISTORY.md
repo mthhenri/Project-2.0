@@ -13,6 +13,14 @@
 ---
 
 
+## 2026-11-19 — Task 407: estimativa e previsão editadas na linha só avisam a página depois do `PUT`
+
+Da revisão de requisições e de permissões (achado A-110), decisão do autor de 2026-11-19 pela **opção melhor da spec**: a página recebe `{ demandaId, horasEstimadas }` e aplica sem reler. `app-demanda-metricas` emitia `alterada` antes de enviar o `PUT`; o evento subia até `aoAlteradoPlanejamento()`, que disparava `GET /demanda/grafo` e `GET /demanda/:id` antes de a gravação sair, e uma leitura atendida primeiro devolvia o valor antigo por cima do novo.
+
+- **frontend:** `app-demanda-metricas` mantém `alterada` (valor na tela na hora, e a reversão se a API recusar) e ganha `gravada`, emitida só no sucesso do `PUT`. `DemandaDetalheBase.aoMetricaAlterada` deixou de emitir `demandaAlterada` (era o que mandava a página reler); o novo `aoMetricaGravada` emite `horasEstimadasAlteradas({ demandaId, horasEstimadas })` (novo `@Output` do base), que `app-demanda-arvore-tela` repassa e a página liga ao `aoHorasEstimadasAlteradas` que já existia (nó do grafo e linha do planejamento, sem recarregar). A previsão não aparece fora da demanda aberta (conferido: nenhum outro componente da tela a mostra), então não há o que avisar à página.
+- **Testes:** `demanda-componentes-pequenos.spec.ts` (`gravada` só depois da resposta do `PUT` e nunca com a gravação recusada) e `demanda-aberta.component.spec.ts` (editar a estimativa: a única requisição pendente é o `PUT`, nenhuma leitura antes; depois da resposta a página recebe `{ demandaId: 10, horasEstimadas: 20 }`, `demandaAlterada` não é emitida e nada é relido). Módulo demanda do frontend: 265 passando; `npm run lint:tudo` e build sem erro.
+- **Ao vivo (frontend e API reais, `PUT` atrasado 2,5 s no navegador para simular rede lenta):** editar "Estimado" para 37: enquanto o `PUT` está pendente, a única requisição que saiu é o `PUT /demanda/4`, e a tela já mostra 37h; depois da resposta o valor continua 37h, a linha da lista passa a "0h 0min de 37h" e nenhum `GET /demanda/grafo` nem `GET /demanda/:id` foi feito.
+
 ## 2026-11-19 — Task 406: selecionar uma demanda não pede mais `GET /demanda/:id/arvore`
 
 Da revisão de requisições e de permissões (achado A-109), decisão do autor de 2026-11-19 (seguir a spec). `carregarTudo` incluía `recuperarArvore` no `forkJoin` só para preencher o sinal `subDemandas`, que nenhum template nem outro código lia (sobra do diálogo de detalhe antigo): 1 das 5 requisições de cada seleção, com consulta recursiva no servidor, e derrubava a carga inteira se falhasse.
