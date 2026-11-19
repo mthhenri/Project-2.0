@@ -576,6 +576,19 @@ describe('AtividadeListagemPage: menu ⋮ e permissões da linha', () => {
         responderErro(requisicao, 400, 'recusado');
         expect(montado.componente.atividades()[0].prioridade.codigo).toBe('MEDIA');
     });
+
+    it('trocar a prioridade com sucesso recarrega a listagem', async () => {
+        const { montado } = await montarPagina();
+        const itens = [criarAtividade(1)];
+        await carregar(montado, itens);
+        const popover = { hide: vi.fn(), toggle: vi.fn() } as never;
+        montado.componente.abrirSeletorPrioridade(new Event('click'), itens[0], popover);
+        const alta = { ...PRIORIDADE, codigo: TipoAtividadePrioridadeEnum.ALTA, descricao: 'Alta', ordem: 2 };
+        montado.componente.alterarPrioridade(alta, popover);
+        responderSucesso(esperarRequisicao(montado.http, 'PUT', '/atividade/1'), {});
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade'), { itens: [], totalItens: 0 });
+        expect(montado.componente.atividades()).toEqual([]);
+    });
 });
 
 describe('AtividadeListagemPage: play e pausa pela linha', () => {

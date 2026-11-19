@@ -430,7 +430,10 @@ export class AtividadeListagemPage implements OnInit {
         const anterior = atividade.prioridade;
         this.definirPrioridadeDaAtividade(atividade.id, nova);
         this.atividadeService.alterar(atividade.id, { prioridade: nova.codigo }).subscribe({
-            next: () => this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Prioridade alterada' }),
+            next: () => {
+                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Prioridade alterada' });
+                this.buscarAtividades();
+            },
             error: () => this.definirPrioridadeDaAtividade(atividade.id, anterior),
         });
     }
