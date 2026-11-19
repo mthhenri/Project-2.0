@@ -17,14 +17,15 @@ function ativa(instante: string, servico: Record<string, unknown>) {
 }
 
 test('sem execução em andamento, diz que não há', async () => {
-    const ferramenta = ativa('2026-10-18T15:00:00Z', { recuperarAtiva: async () => ({ dados: null }) });
+    const ferramenta = ativa('2026-10-18T15:00:00Z', { recuperarAtivaDetalhada: async () => ({ dados: null }) });
     assert.deepEqual(await ferramenta.executar({}, USUARIO), { ativa: false });
 });
 
 test('com execução em andamento, devolve atividade, demanda, descrição provisória e minutos até agora', async () => {
     const ferramenta = ativa('2026-10-18T15:00:00Z', {
-        recuperarAtiva: async () => ({ dados: { id: 5, atividadeId: 9, descricao: 'Validando e-mail', inicioData: new Date('2026-10-18T13:20:00Z') } }),
-        listar: async () => ({ dados: { itens: [{ id: 4, nomeAtividade: 'Outra' }, { id: 5, nomeAtividade: 'Ajustar login', nomeDemanda: 'Autenticação', nomeProjeto: 'Loja' }] } }),
+        recuperarAtivaDetalhada: async () => ({
+            dados: { id: 5, atividadeId: 9, descricao: 'Validando e-mail', inicioData: new Date('2026-10-18T13:20:00Z'), nomeAtividade: 'Ajustar login', nomeDemanda: 'Autenticação', nomeProjeto: 'Loja', nomeUsuario: 'Ana' },
+        }),
     });
     const resultado = await ferramenta.executar({}, USUARIO);
     assert.equal(resultado.ativa, true);

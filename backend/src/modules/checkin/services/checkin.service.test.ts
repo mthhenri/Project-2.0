@@ -19,8 +19,11 @@ const CONFIGURACAO = { checkinMinimoMinutos: 30, checkinMaximoMinutos: 80, durac
 function montar(opcoes: { inicioDaExecucao?: string | null; rigor?: boolean } = {}) {
     const inicio = opcoes.inicioDaExecucao === undefined ? '2026-10-19T11:20:00Z' : opcoes.inicioDaExecucao;
     const execucaoService = {
-        recuperarAtiva: async () => ({ dados: inicio ? { id: 5, atividadeId: 9, descricao: 'Validar e-mail', inicioData: new Date(inicio) } : null }),
-        listar: async () => ({ dados: { itens: [{ id: 5, nomeAtividade: 'Ajustar login', nomeDemanda: 'Autenticação', nomeProjeto: 'Loja' }] } }),
+        recuperarAtivaDetalhada: async () => ({
+            dados: inicio
+                ? { id: 5, atividadeId: 9, descricao: 'Validar e-mail', inicioData: new Date(inicio), nomeAtividade: 'Ajustar login', nomeDemanda: 'Autenticação', nomeProjeto: 'Loja', nomeUsuario: 'Ana' }
+                : null,
+        }),
     };
     const configuracaoIaService = { obterAtiva: async () => ({ ...CONFIGURACAO, rigorProporcional: opcoes.rigor ?? true }) };
     const suspensao = new CheckinSuspensaoService(configService);

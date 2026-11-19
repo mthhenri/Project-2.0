@@ -18,6 +18,7 @@ import {
     ExecucaoUltimaPorAtividadeListarDto,
     ExecucaoUsuarioRecuperarDto,
     ExecucaoAtivaDto,
+    ExecucaoAtivaDetalhadaRecuperadaDto,
     ExecucaoDiaAgruparDto,
     ExecucaoDiaResumoDto,
     ExecucaoRegistradaDto,
@@ -454,6 +455,44 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
                     execucao
                     INNER JOIN atividade ON atividade.id = execucao.atividade_id
                     AND atividade.is_deleted = false
+                WHERE
+                    execucao.fim_data IS NULL
+                    AND execucao.is_deleted = false
+                    AND atividade.usuario_id = :usuarioId
+                LIMIT
+                    1
+            `,
+            { usuarioId: dto.usuarioId },
+        );
+        return resultado[0] ?? null;
+    }
+
+    /**
+   * A execução ativa do dono da atividade com os nomes da atividade, da demanda, do projeto e do dono, numa consulta só. A execução e a atividade
+   * excluídas não contam (como em `recuperarAtiva`); demanda, projeto e usuário excluídos deixam só o nome de fora, a execução segue ativa.
+   */
+    async recuperarAtivaDetalhada(dto: ExecucaoAtivaRecuperarDto): Promise<ExecucaoAtivaDetalhadaRecuperadaDto | null> {
+        const resultado = await this.executarConsulta<ExecucaoAtivaDetalhadaRecuperadaDto>(
+            `
+                SELECT
+                    execucao.id,
+                    execucao.atividade_id AS "atividadeId",
+                    execucao.descricao,
+                    execucao.inicio_data AS "inicioData",
+                    atividade.nome AS "nomeAtividade",
+                    demanda.nome AS "nomeDemanda",
+                    projeto.nome AS "nomeProjeto",
+                    usuario.nome_completo AS "nomeUsuario"
+                FROM
+                    execucao
+                    INNER JOIN atividade ON atividade.id = execucao.atividade_id
+                    AND atividade.is_deleted = false
+                    LEFT JOIN usuario ON usuario.id = atividade.usuario_id
+                    AND usuario.is_deleted = false
+                    LEFT JOIN demanda ON demanda.id = atividade.demanda_id
+                    AND demanda.is_deleted = false
+                    LEFT JOIN projeto ON projeto.id = demanda.projeto_id
+                    AND projeto.is_deleted = false
                 WHERE
                     execucao.fim_data IS NULL
                     AND execucao.is_deleted = false

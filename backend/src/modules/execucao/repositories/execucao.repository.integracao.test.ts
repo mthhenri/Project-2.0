@@ -64,6 +64,59 @@ testarComBanco('recuperarAtiva: execução encerrada, excluída ou de atividade 
     assert.equal(await repositorioDe(conexao).recuperarAtiva({ usuarioId: usuario.id }), null);
 });
 
+testarComBanco('recuperarAtivaDetalhada: traz a execução ativa do dono com os nomes da atividade, da demanda, do projeto e do dono', async (conexao) => {
+    const { usuario, atividade } = await cenario(conexao);
+    await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: haMinutos(90), fimData: haMinutos(60) });
+    const ativa = await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: haMinutos(30), fimData: null, descricao: 'Em andamento' });
+
+    const detalhada = await repositorioDe(conexao).recuperarAtivaDetalhada({ usuarioId: usuario.id });
+
+    assert.equal(detalhada?.id, ativa.id);
+    assert.equal(detalhada?.atividadeId, atividade.id);
+    assert.equal(detalhada?.descricao, 'Em andamento');
+    assert.equal(detalhada?.nomeAtividade, 'Atividade Gama');
+    assert.equal(detalhada?.nomeDemanda, 'Demanda Beta');
+    assert.equal(detalhada?.nomeProjeto, 'Projeto Alfa');
+    assert.equal(detalhada?.nomeUsuario, 'Ana Teste');
+    // Mesmo conjunto de campos da leitura simples, para o mesmo cenário.
+    const simples = await repositorioDe(conexao).recuperarAtiva({ usuarioId: usuario.id });
+    assert.equal(detalhada?.id, simples?.id);
+    assert.equal(String(detalhada?.inicioData), String(simples?.inicioData));
+});
+
+testarComBanco('recuperarAtivaDetalhada: sem ativa, de outro dono, encerrada, excluída ou de atividade excluída devolve null', async (conexao) => {
+    const { demanda, usuario, atividade } = await cenario(conexao);
+    const outro = await criarDesenvolvedor(conexao);
+    assert.equal(await repositorioDe(conexao).recuperarAtivaDetalhada({ usuarioId: usuario.id }), null);
+    const atividadeExcluida = await criarAtividade(conexao, { demandaId: demanda.id, usuarioId: usuario.id });
+    await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: haMinutos(90), fimData: haMinutos(60) });
+    const excluida = await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: haMinutos(30), fimData: null });
+    await excluirLinha(conexao, 'execucao', excluida.id);
+    await criarExecucao(conexao, { atividadeId: atividadeExcluida.id, inicioData: haMinutos(20), fimData: null });
+    await excluirLinha(conexao, 'atividade', atividadeExcluida.id);
+    assert.equal(await repositorioDe(conexao).recuperarAtivaDetalhada({ usuarioId: usuario.id }), null);
+
+    await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: haMinutos(10), fimData: null });
+    assert.equal(await repositorioDe(conexao).recuperarAtivaDetalhada({ usuarioId: outro.id }), null);
+    assert.ok(await repositorioDe(conexao).recuperarAtivaDetalhada({ usuarioId: usuario.id }));
+});
+
+testarComBanco('recuperarAtivaDetalhada: demanda ou projeto excluídos deixam só o nome de fora, a execução segue ativa', async (conexao) => {
+    const { projeto, demanda, usuario, atividade } = await cenario(conexao);
+    const ativa = await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: haMinutos(30), fimData: null });
+    await excluirLinha(conexao, 'projeto', projeto.id);
+
+    const semProjeto = await repositorioDe(conexao).recuperarAtivaDetalhada({ usuarioId: usuario.id });
+    assert.equal(semProjeto?.id, ativa.id);
+    assert.equal(semProjeto?.nomeDemanda, 'Demanda Beta');
+    assert.equal(semProjeto?.nomeProjeto, null);
+
+    await excluirLinha(conexao, 'demanda', demanda.id);
+    const semDemanda = await repositorioDe(conexao).recuperarAtivaDetalhada({ usuarioId: usuario.id });
+    assert.equal(semDemanda?.id, ativa.id);
+    assert.equal(semDemanda?.nomeDemanda, null);
+});
+
 testarComBanco('recuperarUsuario e recuperarTipoUsuarioDaAtividade: o dono vem de atividade.usuario_id', async (conexao) => {
     const { atividade, usuario } = await cenario(conexao);
     const gestor = await criarGestor(conexao);

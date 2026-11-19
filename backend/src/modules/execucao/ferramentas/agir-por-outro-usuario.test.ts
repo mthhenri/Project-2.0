@@ -191,10 +191,16 @@ test('pausar a de outra pessoa: sem execução dela em andamento não há propos
 });
 
 test('consultar a execução ativa: o gestor lê a de outra pessoa; o desenvolvedor, nunca', async () => {
-    const servicoDeListar = { listar: async () => ({ dados: { itens: [{ id: 2, nomeAtividade: 'Layout do carrinho', nomeDemanda: 'Carrinho', nomeProjeto: 'Loja', nomeUsuario: 'Matheus Henrique' }] } }) };
+    // A leitura detalhada tem a mesma regra de acesso da simples: o desenvolvedor só lê a própria.
+    const servicoDetalhado = {
+        recuperarAtivaDetalhada: async ({ usuarioId }: { usuarioId: number }, usuarioAtivo: { sub: number; tipo: TipoUsuarioEnum }) => {
+            if (usuarioId !== usuarioAtivo.sub && usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) throw new UnauthorizedAccessException();
+            return { dados: { ...ATIVA_DO_MATHEUS, nomeAtividade: 'Layout do carrinho', nomeDemanda: 'Carrinho', nomeProjeto: 'Loja', nomeUsuario: 'Matheus Henrique' } };
+        },
+    };
     const base = montarCenario({ 8: ATIVA_DO_MATHEUS }).consultarTool;
     const servico = (base as unknown as { execucaoService: Record<string, unknown> }).execucaoService;
-    Object.assign(servico, servicoDeListar);
+    Object.assign(servico, servicoDetalhado);
     const resultado = await base.executar({ usuarioId: 8 }, GESTOR);
     assert.equal(resultado.ativa, true);
     assert.equal(resultado.usuario, 'Matheus Henrique');

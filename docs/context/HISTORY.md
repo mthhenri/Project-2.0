@@ -13,6 +13,16 @@
 ---
 
 
+## 2026-11-19 — Task 334: `GET /checkin/situacao` lê a execução ativa numa consulta só
+
+Da revisão de requisições (achado A-011), com a decisão do autor de 2026-11-19 pela **opção 1** (leitura nova no repository com DTO próprio). Com execução ativa, `recuperarExecucaoAtivaDetalhada` lia a ativa e depois listava com `allRows` todas as execuções da atividade (COUNT, SUM e SELECT com quatro JOIN) só para pegar três nomes. Rota conferida pelo front e pelo Desktop com frequência.
+
+- **shared:** `ExecucaoAtivaDetalhadaRecuperadaDto` (id, atividadeId, descricao, inicioData, `nomeAtividade`, `nomeDemanda`, `nomeProjeto`, `nomeUsuario`; os três últimos nulos quando demanda, projeto ou dono foram excluídos). A entrada reaproveita `ExecucaoAtivaRecuperarDto`. Nome pela fórmula Entidade + Complemento (`AtivaDetalhada`) + Verbo no particípio.
+- **backend:** `ExecucaoRepository.recuperarAtivaDetalhada` (um SELECT com `LIMIT 1`; `INNER JOIN atividade` e `LEFT JOIN` em usuário, demanda e projeto, todos com `is_deleted = false` no `ON`: a execução ativa continua existindo se a demanda ou o projeto foram excluídos, só o nome fica de fora, como na listagem antiga, que devolvia `undefined`). `ExecucaoService.recuperarAtivaDetalhada` com a mesma regra de acesso de `recuperarAtivaDoUsuario` (gestor lê a de qualquer um; desenvolvedor, só a própria). `recuperarExecucaoAtivaDetalhada` (domain) passou a usar a leitura nova; a resposta de `GET /checkin/situacao` e as ferramentas de IA que usam o helper não mudam de formato.
+- **Testes:** 3 de integração novos do repository (nomes, exclusões e dono; **PostgreSQL 16 real**, suíte de integração 547/547), 1 da service (acesso) e o do helper reescrito; testes da service do check-in e das ferramentas de execução ajustados ao método novo. Backend 1869 e shared 363 passando; `npm run lint:tudo` e build do backend sem erro.
+- **Ambiente:** o PostgreSQL local subiu por `pg_ctlcluster 16 main start` (sem Docker no ambiente) com `DB_PORT=5432` num `.env` local (ignorado pelo Git).
+- **Não verificado:** o SQL por requisição (log de SQL do backend com a rota real) não foi observado; a equivalência da resposta foi comparada nos testes da service do check-in (mesmo cenário, mesmo resultado).
+
 ## 2026-11-19 — Task 333: o diálogo do check-in confere por evento, com rede de segurança de 30 s
 
 Da revisão de requisições (achado A-010), com a decisão do autor de 2026-11-19 pela **opção 1**: o diálogo do check-in (sem botão de fechar) conferia `GET /checkin/situacao` a cada 3 s enquanto EM_ANDAMENTO, 1.200 por hora numa aba esquecida; na janela oculta do Electron a guarda de aba oculta não valia.
