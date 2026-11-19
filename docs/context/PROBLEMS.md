@@ -32,6 +32,14 @@
 > P-092 a P-102 (os que seguem abertos; os corrigidos saíram daqui) vêm da revisão de requisições e de permissões (2026-11-13 a 15): são os achados de severidade alta e os de média reproduzidos na aplicação rodando. A revisão tem 225 achados ao todo; os demais
 > estão em [`DOSSIE.md`](../specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md) (código `A-NNN`) e cada um aponta para a sua spec na guarda-chuva `docs/specs/backlog/requisicoes-e-permissoes-correcoes.spec.md` (tasks 330–487).
 
+### P-105 — Proposta da IA: se gravar o resultado falha depois de o executor rodar, confirmar de novo executa duas vezes · `ABERTO` · backend/proposta-ia
+
+- **Sintoma:** a ação rodou, mas o cartão mostra a proposta `PENDENTE` com os dados originais; confirmar outra vez executa a ação de novo.
+- **Causa:** em `PropostaIaService.resolver` o `try` cobre `executor.executar` e `registrarResultado`; uma falha ao gravar o resultado aciona a compensação como se o executor tivesse falhado (achado da revisão da task 368; já era assim e a restauração dos dados a deixou um pouco mais visível).
+- **Contorno:** nenhum além de conferir o efeito antes de confirmar de novo.
+- **Correção:** separar o `try` do executor do da gravação do resultado (não compensar depois de executar). Sem spec ainda.
+- **Desde:** task 368, 2026-11-19.
+
 ### P-104 — A IA em conversa compartilhada lê com a permissão de quem chamou e a resposta vai a todos · `ACEITO` · backend/mensagem-direta e chat
 
 - **Sintoma:** um gestor chama a `@IA` num grupo ou canal com desenvolvedores, numa conversa um a um ou no plano de um projeto; a IA consulta com a visão do gestor e o texto da resposta fica gravado para todos os leitores, inclusive quem entrar depois e o próximo turno de outra pessoa.

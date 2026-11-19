@@ -112,7 +112,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **365** | Baixa | backend/mensagem-direta e proposta-ia | Proposta nascida do resumo do grupo: confirmar e desfazer por um caminho só | A-061 | — |
 | **366** | Informativo | backend/mensagem-direta | Grupo livre: escrever (ou mudar) quem adiciona, quem remove e quem lê o histórico | A-062 | pendente |
 | **367** | Alta | backend/atividade | IA: propor criar e mover atividade conferem o acesso à demanda antes de ler | A-063, A-064, A-065 | — |
-| **368** | Média | backend/proposta-ia | Proposta da IA: ajuste que falha não deixa os dados do cliente gravados | A-066 | — |
+| **368** | Média | backend/proposta-ia | Proposta da IA: ajuste que falha não deixa os dados do cliente gravados | A-066 | feita |
 | **369** | Baixa | backend/plano | Proposta de trecho do plano: recusar exige poder editar a aba | A-067 | — |
 | **370** | Média | backend/assistente | `POST /assistente/auxiliar-descricao`: identificar quem usa, limitar o tamanho e registrar o custo | A-068 | pendente |
 | **371** | Baixa | backend/demanda | Desfazer a criação de demanda pela proposta: exceção escrita ou mesma permissão da exclusão | A-069, A-070 | pendente |
