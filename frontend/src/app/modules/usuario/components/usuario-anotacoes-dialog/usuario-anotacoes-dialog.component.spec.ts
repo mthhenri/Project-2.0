@@ -501,3 +501,42 @@ describe('UsuarioAnotacoesDialogComponent — largura e tela cheia (task 256)', 
         expect(montado.componente.visivel()).toBe(false);
     });
 });
+
+describe('PadService — encerrar e voltar (task 344)', () => {
+    it('depois de encerrar, garantirCarregado do mesmo usuário relê as seções e a digitação volta a gravar sozinha', async () => {
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO);
+        pad().encerrar();
+        expect(pad().secoes()).toHaveLength(0);
+
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        pad().garantirCarregado(ID_LOGADO, 'Usuário Teste');
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/anotacao'), secoesDe(ID_LOGADO));
+        await montado.atualizar();
+        expect(pad().secoes()).toHaveLength(5);
+
+        secao(montado, TipoAnotacaoEnum.PESSOAL).controle.setValue('voltou a gravar');
+        vi.advanceTimersByTime(2000);
+        expect(esperarRequisicao(montado.http, 'PUT', `/anotacao/${ID_LOGADO}/PESSOAL`).request.body.texto).toBe('voltou a gravar');
+    });
+
+    it('encerrar grava o que estava pendente antes de zerar o estado', async () => {
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO);
+        secao(montado, TipoAnotacaoEnum.PESSOAL).controle.setValue('não pode se perder');
+
+        pad().encerrar();
+
+        expect(esperarRequisicao(montado.http, 'PUT', `/anotacao/${ID_LOGADO}/PESSOAL`).request.body.texto).toBe('não pode se perder');
+        expect(pad().secoes()).toHaveLength(0);
+    });
+
+    it('falha ao carregar o pad de outra pessoa não deixa à mostra o pad do usuário anterior', async () => {
+        const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO, { PESSOAL: 'texto do usuário anterior' });
+        expect(pad().secoes()).toHaveLength(5);
+
+        pad().garantirCarregado(ID_DE_OUTRA_PESSOA, 'Outra Pessoa');
+        responderErro(esperarRequisicao(montado.http, 'GET', '/anotacao'), 500, 'falhou');
+        await montado.atualizar();
+
+        expect(pad().secoes()).toHaveLength(0);
+    });
+});

@@ -13,6 +13,14 @@
 ---
 
 
+## 2026-11-19 — Task 344: o pad volta ao estado de partida ao ser encerrado
+
+Da revisão de requisições (achados A-030 e A-031). `PadService.encerrar()` (chamado ao destruir o diálogo de anotações, inclusive o da tela Usuários, a cada saída de `/usuario`) cancelava a assinatura de cada seção mas deixava `secoes()` e `usuarioId()`; `garantirCarregado` do mesmo usuário então não relia, e o painel de Documentações e a aba Anotações do chat mostravam seções sem assinatura (digitar não agendava o PUT, o rodapé não virava "Editando…"). Além disso, se a carga do pad do usuário seguinte falhasse, ficava à mostra o pad do anterior.
+
+- **frontend:** `encerrar()` agora dispara as gravações pendentes (já fazia) e **zera** `secoes`, `usuarioId`, `nomeCompleto`, `pendenciasEmAberto` e `alteracaoData`; o próximo `abrir`/`garantirCarregado` relê. No erro de `carregar()`, se as seções em memória são de outra pessoa, são encerradas e limpas (o painel não mostra o pad do anterior). Os retornos de gravação em voo usam o `usuarioId` da própria seção, então terminam normalmente depois de zerado.
+- **Reproduzido primeiro, como a spec manda:** 3 testes de serviço (regravar depois de encerrar; encerrar grava o pendente antes de zerar; falha de carga não mostra o pad anterior) falharam antes da correção e passam depois. Frontend: usuário, chat e documentação 553 passando; suíte completa e `npm run lint:tudo`/build no fecho.
+- **Ao vivo (Playwright, `1920×1080`, gestor):** `n` (abre o pad), Esc, Usuários, Documentações, digitar no pad e esperar 3,5 s: **1 `PUT /anotacao/...`** e "Salvo às 11:53". **Contraprova** (`pad.service.ts` do `HEAD`, restaurado depois): **0 PUTs** e o botão "Salvar" cinza. A auditoria não tinha conseguido reproduzir o efeito na tela; agora está reproduzido.
+
 ## 2026-11-19 — Task 341: o 401 encerra a sessão pelo mesmo caminho do logout
 
 Da revisão de requisições (achados A-025 e A-026). O 401 (interceptor de erros e stream de eventos do chat) removia só as chaves do `localStorage` e navegava; o logout limpava também `UsuarioSessaoService` e `ExecucaoAtivaService`. Quem entrasse em seguida na mesma aba herdava o usuário e a execução ativa de quem saiu (o chip nascia com a descrição da execução anterior, sem esqueleto, até o `GET /execucao/ativa` responder).
