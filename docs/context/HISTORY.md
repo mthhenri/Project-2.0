@@ -13,6 +13,15 @@
 ---
 
 
+## 2026-11-19 — Task 382: `PUT /demanda/:id` recusa o novo pai que não é estrutural
+
+Da revisão de requisições e de permissões (achado A-081), decisão do autor de 2026-11-19 (seguir a spec). A regra "só demanda estrutural tem sub-demandas" valia na criação e na IA, mas não ao trocar o pai de uma demanda existente: um desenvolvedor membro (ou um gestor) colocava uma demanda dentro de uma demanda de trabalho pela API.
+
+- **backend:** `DemandaService.alterar` passa a chamar `validarNovoPaiDaDemanda` (a própria demanda, a subárvore/ciclo, o mesmo projeto e o pai estrutural) no lugar das três checagens soltas que tinha: a regra fica numa fonte só, para a tela, a API e a IA. As mensagens do domínio perderam o sufixo "Avise o usuário." (era para o modelo; a API devolve a mesma frase para todos) e a do pai não estrutural passou a ser a da criação ("Apenas demandas estruturais podem ter sub-demandas"); a do mesmo projeto também é a da criação ("A demanda pai deve pertencer ao mesmo projeto").
+- **Decisão minha, fora do texto da spec:** a ferramenta (`propor_alterar_demanda`) **e** o executor continuam chamando a função: a ferramenta para recusar já na proposta, com a mensagem ao modelo, e o executor porque o teste dele cobre o ciclo na hora de confirmar com a service dublê; a duplicação é só uma chamada à mesma função pura, sem regra repetida.
+- **Testes:** `demanda.service.regras.test.ts` ganhou o teste do pai não estrutural (gestor e desenvolvedor membro recusados com a mensagem da criação; pai estrutural aceito) e o dublê ganhou `listarDescendentes`; os testes do domínio e da ferramenta passaram a procurar "estruturais". Módulo demanda: 231 passando; `npm run lint:tudo` sem erro.
+- **Ao vivo (API real):** desenvolvedor membro movendo a demanda para uma demanda de trabalho: 400 "Apenas demandas estruturais podem ter sub-demandas"; para uma estrutural: 200.
+
 ## 2026-11-19 — Task 376: `POST /atividade` recusa o dono que o tipo não pode escolher e valida o dono informado
 
 Da revisão de requisições e de permissões (achado A-075), decisão do autor de 2026-11-19 (seguir a regra da spec). Auxiliar e desenvolvedor que mandavam `usuarioId` de outra pessoa levavam 201 com a atividade no próprio nome, sem aviso; o dono escolhido por gestor ou administrador só era conferido quanto à existência e ao vínculo com a demanda, não quanto a estar ativo.

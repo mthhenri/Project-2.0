@@ -130,7 +130,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **379** | Baixa | backend/execucao | Execução: registrar e excluir conferem a permissão na service, não só no decorador | A-078 | — |
 | **380** | Baixa | backend/atividade | Mover atividade de demanda: onde existe e entre quais projetos | A-079 | pendente |
 | **381** | Média | backend/demanda | Demanda: a API não aceita gestor, administrador nem usuário inativo como membro | A-080 | — |
-| **382** | Média | backend/demanda | `PUT /demanda/:id`: mover para pai não estrutural é recusado na service | A-081 | — |
+| **382** | Média | backend/demanda | `PUT /demanda/:id`: mover para pai não estrutural é recusado na service | A-081 | feita |
 | **383** | Baixa | backend/demanda | Demanda: o pai informado é lido com o acesso do usuário | A-082 | — |
 | **384** | Baixa | backend/demanda | `GET /demanda` para o desenvolvedor: demandas do projeto acessível ou só as dele? | A-083 | decidida e feita |
 | **385** | Baixa | backend/demanda | Demanda: a trava do "último membro" e a demanda que nasce sem membro | A-084 | pendente |

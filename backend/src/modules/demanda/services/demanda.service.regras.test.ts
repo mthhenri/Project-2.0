@@ -40,6 +40,7 @@ function repositorio(sobrescrita: Dublê = {}) {
         recuperar: async () => DEMANDA,
         validarAcessoProjeto: async () => true,
         validarMembro: async () => true,
+        listarDescendentes: async () => [],
         contarMembrosDemanda: async () => 2,
         inserirComAtribuicao: async (dados: unknown, atribuicao: unknown) => { gravacoes.push({ metodo: 'inserirComAtribuicao', argumento: { dados, atribuicao } }); return { ...DEMANDA, id: 99 }; },
         alterar: escrever('alterar', DEMANDA),
@@ -354,6 +355,20 @@ test('alterar: o novo pai precisa existir e ser do mesmo projeto da demanda', as
     const outroProjeto = repositorio({ recuperar: async ({ id }: { id: number }) => (id === 10 ? DEMANDA : { ...PAI_ESTRUTURAL, projetoId: 999 }) });
     await assert.rejects(() => criarServico(outroProjeto).alterar({ id: 10, demandaPaiId: 5 }, GESTOR), BusinessException);
     assert.equal(gravou(semPai) || gravou(outroProjeto), false);
+});
+
+test('alterar: o novo pai precisa ser estrutural, com a mesma mensagem da criação (task 382)', async () => {
+    const repo = repositorio({ recuperar: async ({ id }: { id: number }) => (id === 10 ? DEMANDA : { ...PAI_ESTRUTURAL, estrutural: false }) });
+    await assert.rejects(
+        () => criarServico(repo).alterar({ id: 10, demandaPaiId: 5 }, GESTOR),
+        (erro) => erro instanceof BusinessException && JSON.stringify((erro as BusinessException).getResponse()).includes('Apenas demandas estruturais podem ter sub-demandas'),
+    );
+    assert.equal(gravou(repo), false);
+    // O mesmo vale para o desenvolvedor membro (o caminho que a auditoria reproduziu), e um pai estrutural continua aceito.
+    await assert.rejects(() => criarServico(repo).alterar({ id: 10, demandaPaiId: 5 }, DESENVOLVEDOR), BusinessException);
+    const aceito = repositorio({ recuperar: async ({ id }: { id: number }) => (id === 10 ? DEMANDA : PAI_ESTRUTURAL) });
+    await criarServico(aceito).alterar({ id: 10, demandaPaiId: 5 }, GESTOR);
+    assert.equal(gravou(aceito), true);
 });
 
 test('alterar: uma demanda não pode virar filha de si mesma', async () => {

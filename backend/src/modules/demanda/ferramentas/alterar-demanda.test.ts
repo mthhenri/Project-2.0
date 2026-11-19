@@ -154,7 +154,7 @@ test('propor mover: confere pai estrutural, do mesmo projeto e fora da subárvor
     await assert.rejects(ferramenta.executar({ demandaId: 4, demandaPaiId: 4 }, GESTOR), contem('pai de si mesma'));
     await assert.rejects(ferramenta.executar({ demandaId: 4, demandaPaiId: 30 }, GESTOR), contem('ciclo'));
     await assert.rejects(ferramenta.executar({ demandaId: 4, demandaPaiId: 22 }, GESTOR), contem('mesmo projeto'));
-    await assert.rejects(ferramenta.executar({ demandaId: 4, demandaPaiId: 21 }, GESTOR), contem('estrutural'));
+    await assert.rejects(ferramenta.executar({ demandaId: 4, demandaPaiId: 21 }, GESTOR), contem('estruturais'));
     assert.equal(propostas.length, 0);
     const livre = criarFerramenta(0, INICIAL);
     await livre.ferramenta.executar({ demandaId: 4, demandaPaiId: 20 }, GESTOR);
