@@ -73,6 +73,17 @@
                         >
                     </div>
 
+                    <p class="resumo-grupo__dica">
+                        <button
+                            type="button"
+                            class="resumo-grupo__link"
+                            [disabled]="carregandoOpcoes()"
+                            (click)="abrirHistorico()"
+                        >
+                            Resumos anteriores
+                        </button>
+                    </p>
+
                     <p class="resumo-grupo__aviso" role="note">
                         <i class="pi pi-info-circle" aria-hidden="true"></i>
                         <span
@@ -180,6 +191,46 @@
                     </div>
                 }
             }
+            @case ("HISTORICO") {
+                @if (carregandoHistorico()) {
+                    <p class="resumo-grupo__dica" aria-busy="true">Carregando…</p>
+                } @else if (historico().length === 0) {
+                    <p class="resumo-grupo__vazio">Este chat ainda não foi resumido.</p>
+                } @else {
+                    <ul class="resumo-grupo__historico">
+                        @for (item of historico(); track item.resumoId) {
+                            <li>
+                                <button
+                                    type="button"
+                                    class="resumo-grupo__item"
+                                    [disabled]="item.texto === null"
+                                    (click)="abrirResumoAnterior(item)"
+                                >
+                                    <span class="resumo-grupo__item-periodo"
+                                        >{{ item.inicioData | date: "dd/MM/yyyy HH:mm" }} a
+                                        {{ item.fimData | date: "dd/MM/yyyy HH:mm" }}</span
+                                    >
+                                    <span class="resumo-grupo__dica"
+                                        >{{ item.quantidadeMensagens }} mensagens · feito em
+                                        {{ item.criadoData | date: "dd/MM/yyyy HH:mm" }} por
+                                        {{
+                                            item.pedidoPorVoce
+                                                ? "você"
+                                                : (item.pedidoPorNome ?? "alguém que saiu")
+                                        }}
+                                        @if (item.gravado) {
+                                            · gravado na documentação
+                                        }
+                                        @if (item.texto === null) {
+                                            · sem texto guardado (feito antes do histórico)
+                                        }
+                                    </span>
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                }
+            }
             @case ("GRAVADO") {
                 <p class="resumo-grupo__ok" role="status">
                     <i class="pi pi-check-circle" aria-hidden="true"></i>
@@ -223,7 +274,13 @@
                     (onClick)="gerar()"
                 />
             }
+            @case ("HISTORICO") {
+                <p-button label="Voltar" [text]="true" (onClick)="voltarAoPeriodo()" />
+            }
             @case ("RESULTADO") {
+                @if (resumoAberto()) {
+                    <p-button label="Voltar" [text]="true" (onClick)="voltarAoHistorico()" />
+                }
                 <p-button label="Fechar" [text]="true" (onClick)="fechar()" />
                 <p-button
                     [label]="copiado() ? 'Copiado' : 'Copiar'"

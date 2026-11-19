@@ -13,6 +13,19 @@
 ---
 
 
+## 2026-11-19 — Chat em grupo: histórico dos resumos da IA ("Resumos anteriores")
+
+Pedido do autor: no chat em grupo, depois de pedir um resumo à IA e fechar o diálogo, o resumo se perdia e não havia onde ver os resumos já feitos. A causa era uma decisão da task 249: o texto não era guardado (só a linha de `grupo_resumo`). Decisão do autor (2026-11-19), entre três opções: **guardar o texto em coluna de `grupo_resumo`**.
+
+- **Banco:** migration `0091` acrescenta `grupo_resumo.texto TEXT` anulável (os resumos antigos ficam sem texto; sem DEFAULT). `SCHEMA.md` atualizado.
+- **shared:** `GrupoResumoIaResumoDto` (item do histórico), `GrupoResumoIaListarDto` (interno); `GrupoResumoIaInternoCriarDto` ganha `texto`.
+- **backend:** `resumir` guarda o texto final (o mesmo que volta à tela); `GrupoResumoRepository.listarResumos` (do mais recente, 50, nome de quem pediu por LEFT JOIN com `is_deleted = false`); `GET /mensagem-direta/grupo/:grupoId/resumo/historico` com `GrupoResumoIaService.listar` (qualquer membro do chat; não membro é recusado como nas outras rotas de resumo).
+- **frontend:** o diálogo ganha a etapa `HISTORICO` ("Resumos anteriores" no formulário): lista período, mensagens, quem pediu e se foi gravado; clicar abre o texto no resultado (Copiar; Gravar só se for do próprio usuário e ainda não gravado, regra que o servidor já cobrava); resumo sem texto (anterior à `0091`) fica desabilitado com o aviso.
+- **Testes:** repository (texto guardado, lista ordenada e só do grupo) e service (membro vê o texto, `pedidoPorVoce`, não membro recusado) em integração: 18 passando; componente: 4 novos (16 no arquivo). Shared 367 e backend 1878 unitários passando (o teste das rotas do controller ganhou a nova, "trinta rotas"); `npm run lint:tudo` e os builds sem erro.
+- **Ao vivo (stack real, IA de mentira):** gestor e dev em um grupo; histórico vazio antes de resumir; depois de `POST .../resumo` o dev (outro membro) vê o resumo com o texto e `pedidoPorVoce = false`, o gestor vê `true`, e um não membro leva 403. Na tela (`/chat-popup?grupoId=…`, `/resumir` → "Resumos anteriores"): a lista mostra período, mensagens, quem pediu; clicar abre o texto com Copiar e sem Gravar (é de outra pessoa); fechar e reabrir o diálogo mantém o resumo na lista. Capturas em `.artifacts/`.
+- **Não verificado:** Gravar na documentação a partir do histórico (cenário de quem pediu o resumo) só tem teste de componente; os resumos antigos (sem texto) só foram vistos em teste.
+- **Ponto de atenção:** os resumos ficam visíveis a **todos** os membros do chat, inclusive quem entrou depois do período resumido (o texto não cita autores, mas resume mensagens que a pessoa não leu). Aceito como parte da decisão; se virar problema, o corte natural é por `grupo_membro.entrada_data`.
+
 ## 2026-11-19 — Ajuste da Árvore de demandas: o "Projeto inteiro" não lista as pastas
 
 Pedido do autor (com um print): ao ver todas as demandas do projeto, as demandas de estrutura (pastas, como "Suporte") apareciam na lista como se fossem demandas de trabalho. As pastas já têm a coluna própria e aparecem como caminho acima do nome de cada demanda.
