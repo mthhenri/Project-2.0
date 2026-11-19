@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, NgZone, output, signal, untracked } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -218,8 +218,8 @@ export class PropostaCartaoComponent {
         this.executar(this.propostaIaService.confirmar(id), () =>
             this.desfazerService.oferecer({
                 mensagem: 'Proposta confirmada',
-                desfazer: () => this.propostaIaService.desfazer(id),
-                aposDesfazer: () => this.carregar(id),
+                // O toast aplica a resposta do próprio desfazer e avisa a página (`resolvida`), como o botão do cartão: nada de `GET` a mais, e o documento do plano e as anotações se relêem (task 448).
+                desfazer: () => this.propostaIaService.desfazer(id).pipe(tap((resposta) => this.aplicarDesfeita(resposta))),
             }),
         );
     }
@@ -360,8 +360,8 @@ export class PropostaCartaoComponent {
             this.ajustando.set(false);
             this.desfazerService.oferecer({
                 mensagem: 'Proposta ajustada e confirmada',
-                desfazer: () => this.propostaIaService.desfazer(id),
-                aposDesfazer: () => this.carregar(id),
+                // O toast aplica a resposta do próprio desfazer e avisa a página (`resolvida`), como o botão do cartão: nada de `GET` a mais, e o documento do plano e as anotações se relêem (task 448).
+                desfazer: () => this.propostaIaService.desfazer(id).pipe(tap((resposta) => this.aplicarDesfeita(resposta))),
             });
         });
     }
@@ -372,6 +372,11 @@ export class PropostaCartaoComponent {
 
     desfazer(): void {
         this.executar(this.propostaIaService.desfazer(this.propostaId()));
+    }
+
+    private aplicarDesfeita(resposta: StandardResponse<PropostaIaResumoDto>): void {
+        this.proposta.set(resposta.dados ?? null);
+        if (resposta.dados) this.resolvida.emit(resposta.dados);
     }
 
     private executar(chamada: Observable<StandardResponse<PropostaIaResumoDto>>, aoSucesso?: () => void): void {

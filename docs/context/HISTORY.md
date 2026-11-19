@@ -13,6 +13,17 @@
 ---
 
 
+## 2026-11-19 — Tasks 438, 447 e 448: a execução ativa e a proposta desfeita chegam às telas sem F5
+
+Da revisão de requisições e de permissões (achados A-150, A-160 e A-161), três correções pequenas da mesma família (um estado que mudou e a tela não soube).
+
+- **438 (A-150):** Execuções (`ExecucaoHistoricoPage`) e Ponto (`PontoPage`) passam a reagir a `ExecucaoAtivaService.pausasDoChip()`, o mesmo sinal que a listagem de atividades já usava (task 95): pausar pelo chip busca de novo as execuções e o ponto, e o bloco "Em andamento agora" e o cartão de quem trabalha deixam de mostrar a execução como aberta.
+- **447 (A-160):** o `execucaoAtivaInterceptor` ressincroniza a execução ativa também em `POST /proposta-ia/:id/ajustar` (o ajuste confirma com os campos alterados) e em `POST /proposta-ia/grupo/confirmar|desfazer`, além de `confirmar|desfazer` individuais; `grupo/recusar` e `recusar` continuam sem ressincronizar.
+- **448 (A-161):** o "Desfazer" do toast do `PropostaCartaoComponent` aplica a resposta do próprio `POST /proposta-ia/:id/desfazer` (`tap`) e emite `resolvida`, como o botão do cartão e o grupo; deixou de fazer o `GET /proposta-ia/:id` e passou a avisar a página, que relê o documento do plano (ALTERAR_TRECHO_PLANO) e as anotações (ANOTAR_PAD).
+- **Testes:** interceptor (cinco rotas de proposta e a recusa em grupo que não ressincroniza), `execucao-historico.page.spec.ts` e `ponto.page.spec.ts` (pausar pelo chip busca de novo), `proposta-cartao.component.spec.ts` (o desfazer do toast aplica a resposta, emite `resolvida` e não faz `GET`): 145 testes nos quatro arquivos passando; `npm run lint:tudo` e build sem erro.
+- **Ao vivo (438, frontend e API reais, com o diálogo de check-in da própria aplicação por cima):** com Execuções aberta e uma execução em andamento, pausar pelo chip (diálogo de encerrar, descrição, Encerrar) troca o bloco para "Nenhuma execução em andamento" sem F5.
+- **Não verificado ao vivo:** 447 e 448 dependem de propostas da IA e só têm teste automatizado.
+
 ## 2026-11-19 — Tasks 408, 409, 410 e 411: a demanda aberta deixa de se reler à toa (edição, grafo, destinos de "Conectar" e troca rápida)
 
 Da revisão de requisições e de permissões (achados A-111 a A-115), todos no mesmo caminho do código (`DemandaDetalheBase` → `DemandaArvoreTelaComponent` → `DemandaProjetoPage`), por isso numa passagem só.

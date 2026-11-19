@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
 import { EstadoIaEnum, ExecucaoItemDto, TipoUsuarioEnum } from '@project20/shared';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
@@ -60,6 +61,21 @@ const botaoPorRotulo = (montado: Montado, rotulo: string) =>
 const botaoPorTexto = (montado: Montado, conteudo: string) =>
     Array.from(montado.elemento.querySelectorAll('button')).find((botao) => botao.textContent?.includes(conteudo));
 const cabecalhos = (montado: Montado) => Array.from(montado.elemento.querySelectorAll('th')).map((celula) => celula.textContent?.trim());
+
+describe('ExecucaoHistoricoPage: pausa pelo chip da topbar (task 438)', () => {
+    it('pausar pelo chip busca as execuções de novo, sem F5, e a execução que estava em andamento sai do bloco "agora"', async () => {
+        const { montado } = await montarPagina();
+        await carregar(montado, [criarExecucao(9, { fimData: null, duracaoMinutos: null })]);
+        expect(montado.elemento.querySelector('app-execucao-agora')?.textContent).toContain('Em andamento agora');
+
+        TestBed.inject(ExecucaoAtivaService).registrarPausaDoChip();
+        await montado.atualizar();
+        const nova = esperarRequisicao(montado.http, 'GET', '/execucao');
+        responderSucesso(nova, pagina([criarExecucao(9, { duracaoMinutos: 30 })], 30));
+        await montado.atualizar();
+        expect(montado.elemento.querySelector('app-execucao-agora')?.textContent).not.toContain('Em andamento agora · 1');
+    });
+});
 
 describe('ExecucaoHistoricoPage: carregamento e estados', () => {
     it('abre no dia de hoje, na primeira página, e mostra o esqueleto até a resposta', async () => {

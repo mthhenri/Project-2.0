@@ -5,13 +5,16 @@ import { ExecucaoAtivaService } from '../services/execucao-ativa.service';
 
 const PADRAO_ENCERRAR = /\/execucao\/\d+\/encerrar$/;
 const PADRAO_INICIAR = /\/execucao$/;
-/** Confirmar ou desfazer uma proposta da IA pode iniciar, pausar ou reabrir uma execução (P-020), sem passar pelas rotas acima. */
-const PADRAO_PROPOSTA = /\/proposta-ia\/\d+\/(confirmar|desfazer)$/;
+/**
+ * Confirmar, desfazer ou ajustar (que confirma com os campos alterados) uma proposta da IA, sozinha ou em grupo, pode iniciar, pausar ou reabrir uma execução
+ * (P-020, task 447), sem passar pelas rotas acima.
+ */
+const PADRAO_PROPOSTA = /\/proposta-ia\/(\d+\/(confirmar|desfazer|ajustar)|grupo\/(confirmar|desfazer))$/;
 
 /**
  * Qualquer tela que inicia (`POST /execucao`) ou encerra (`PATCH /execucao/:id/encerrar`) uma
  * execução bem-sucedida faz o chip da topbar se ressincronizar — sem cada tela precisar avisar.
- * O mesmo vale para confirmar/desfazer uma proposta da IA (`POST /proposta-ia/:id/confirmar|desfazer`):
+ * O mesmo vale para confirmar/desfazer/ajustar uma proposta da IA (`POST /proposta-ia/:id/confirmar|desfazer|ajustar` e `/proposta-ia/grupo/confirmar|desfazer`):
  * não dá para saber pela URL se a proposta mexeu em execução, então qualquer uma ressincroniza (uma leitura barata).
  */
 export const execucaoAtivaInterceptor: HttpInterceptorFn = (requisicao, proximo) => {

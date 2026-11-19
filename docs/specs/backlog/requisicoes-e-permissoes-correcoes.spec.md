@@ -211,7 +211,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **435** | Média | backend/atividade e frontend/atividade | Atividades: ação em massa numa requisição só | A-144, A-145 | pendente |
 | **436** | Média | frontend/atividade, execucao e ponto | Seletores de usuário ativo: reaproveitar o catálogo em memória | A-146 | pendente |
 | **437** | Média | frontend (atividade, execucao, ponto, projeto, configuracao-ia, chat) | Listas e navegação de período: a consulta nova cancela a anterior | A-147, A-148, A-149 | — |
-| **438** | Média | frontend/execucao e ponto | Pausar pelo chip da topbar atualiza Execuções e Ponto | A-150 | — |
+| **438** | Média | frontend/execucao e ponto | Pausar pelo chip da topbar atualiza Execuções e Ponto | A-150 | feita |
 | **439** | Baixa | frontend/atividade | "Nova atividade": tags e usuários pelo catálogo em memória | A-151 | — |
 | **440** | Baixa | frontend/atividade, calendario e execucao | Atividades, Calendário e Execuções: aplicar a resposta da mutação em vez de recarregar a lista | A-152 | — |
 | **441** | Baixa | frontend/atividade | Atividades: o painel de texto da demanda não relê a demanda inteira depois de salvar | A-153 | — |
@@ -225,8 +225,8 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **444** | Média | frontend/chat | Chat com a IA: o fim de cada mensagem não relê disponibilidade, conversas e planos | A-156 | — |
 | **445** | Média | frontend/chat (plano) | Plano: alterar não relê as conversas nem as listas que a resposta já atualiza | A-157, A-158 | — |
 | **446** | Média | backend/chat e frontend/chat | Chat com a IA: as propostas de uma conversa numa leitura só | A-159 | pendente |
-| **447** | Média | frontend/casca | "Confirmar todas", "Desfazer todas" e "Ajustar" atualizam a execução ativa da topbar | A-160 | — |
-| **448** | Média | frontend/chat | Proposta: o "Desfazer" do toast usa a resposta e avisa a página | A-161 | — |
+| **447** | Média | frontend/casca | "Confirmar todas", "Desfazer todas" e "Ajustar" atualizam a execução ativa da topbar | A-160 | feita |
+| **448** | Média | frontend/chat | Proposta: o "Desfazer" do toast usa a resposta e avisa a página | A-161 | feita |
 | **449** | Média | frontend/chat | Chat: a demanda aberta ao lado carrega as atividades em paralelo e sem teto de 100 | A-162 | — |
 | **450** | Baixa | frontend/chat (plano) | Chat: a lista de planos é carregada uma vez, quando alguém precisa dela | A-163, A-164 | — |
 | **451** | Baixa | frontend/chat | Chat: "Minhas demandas" e a demanda aberta atualizam depois de uma proposta, não a cada volta à lista | A-165, A-166 | — |

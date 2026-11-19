@@ -7,6 +7,7 @@ import {
     HostListener,
     ViewChild,
     effect,
+    untracked,
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormsModule } from '@angular/forms';
@@ -29,6 +30,7 @@ import { ambiente } from '../../../../../environments/environment';
 import { PontoService } from '../../services/ponto.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
@@ -73,6 +75,7 @@ export class PontoPage implements OnInit {
     private readonly usuarioService = inject(UsuarioService);
     private readonly formBuilder = inject(FormBuilder);
     readonly sessao = inject(UsuarioSessaoService);
+    private readonly execucaoAtiva = inject(ExecucaoAtivaService);
     private readonly roteador = inject(Router);
 
     readonly hoje = hojeNoFuso(ambiente.fusoHorario);
@@ -138,7 +141,15 @@ export class PontoPage implements OnInit {
     });
 
     constructor() {
-    // Controles do mês não somem na visão equipe: só ficam desabilitados (cabeçalho estável).
+        // Pausar pelo chip da topbar muda o cartão de quem está trabalhando: a tela se atualiza (task 438).
+        let pausasVistas = this.execucaoAtiva.pausasDoChip();
+        effect(() => {
+            const pausas = this.execucaoAtiva.pausasDoChip();
+            if (pausas === pausasVistas) return;
+            pausasVistas = pausas;
+            untracked(() => this.carregar());
+        });
+        // Controles do mês não somem na visão equipe: só ficam desabilitados (cabeçalho estável).
         effect(() => {
             const controle = this.formularioFiltros.controls.mesAno;
             if (this.modo() === 'mensal') controle.enable({ emitEvent: false });

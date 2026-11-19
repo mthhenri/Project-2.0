@@ -134,8 +134,10 @@ describe('PropostaCartaoComponent — Confirmar', () => {
         expect(TestBed.inject(DesfazerService).oferta()?.mensagem).toBe('Proposta confirmada');
     });
 
-    it('o "Desfazer" do toast desfaz no servidor e recarrega o cartão com a situação nova', async () => {
+    it('o "Desfazer" do toast aplica a resposta do próprio desfazer e avisa a tela, sem GET a mais (task 448)', async () => {
         const montado = await montarCartao();
+        const resolvidas: StatusPropostaIaEnum[] = [];
+        montado.componente.resolvida.subscribe((resolvida) => resolvidas.push(resolvida.status));
         botao(montado, 'Confirmar')!.click();
         responderSucesso(
             esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/confirmar`),
@@ -147,14 +149,12 @@ describe('PropostaCartaoComponent — Confirmar', () => {
             esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/desfazer`),
             proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.DESFEITA, CRIAR_ATIVIDADE.dados),
         );
-        responderSucesso(
-            esperarRequisicao(montado.http, 'GET', `/proposta-ia/${ID}`),
-            proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.DESFEITA, CRIAR_ATIVIDADE.dados),
-        );
         detectar(montado);
 
         expect(texto(montado)).toContain('Desfeita');
         expect(botao(montado, 'Desfazer')).toBeUndefined();
+        expect(resolvidas, 'a página é avisada para reler o documento e as anotações').toEqual([StatusPropostaIaEnum.CONFIRMADA, StatusPropostaIaEnum.DESFEITA]);
+        montado.http.expectNone((pedido) => pedido.method === 'GET');
     });
 
     it('um segundo clique enquanto a chamada está em andamento não repete o POST', async () => {
