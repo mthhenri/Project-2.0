@@ -341,3 +341,18 @@ describe('PontoPage: pausa pelo chip da topbar (task 438)', () => {
         expect(montado.elemento.textContent).toContain('Ana Dev');
     });
 });
+
+describe('PontoPage: consulta nova cancela a anterior (task 437)', () => {
+    it('trocar de mês com a consulta anterior pendente cancela a requisição dela', async () => {
+        const montado = await montarPagina(TipoUsuarioEnum.DESENVOLVEDOR);
+        const primeira = esperarRequisicao(montado.http, 'GET', '/ponto/mensal');
+        montado.componente.carregar();
+        const segunda = esperarRequisicao(montado.http, 'GET', '/ponto/mensal');
+        expect(primeira.cancelled).toBe(true);
+        responderSucesso(segunda, mensalDoMesAtual());
+        responderApoio(montado);
+        await montado.atualizar();
+        expect(montado.componente.pontoMensal()).not.toBeNull();
+        expect(montado.componente.carregando()).toBe(false);
+    });
+});

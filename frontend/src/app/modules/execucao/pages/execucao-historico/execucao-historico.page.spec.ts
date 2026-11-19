@@ -579,3 +579,19 @@ describe('ExecucaoHistoricoPage: exclusão (gestor)', () => {
         expect(botaoPorRotulo(montado, 'Excluir execução').length).toBe(0);
     });
 });
+
+describe('ExecucaoHistoricoPage: busca nova cancela a anterior (task 437)', () => {
+    it('trocar de dia com a busca anterior pendente cancela a requisição dela', async () => {
+        const { montado } = await montarPagina();
+        await carregar(montado);
+        montado.componente.buscarExecucoes();
+        const primeira = esperarRequisicao(montado.http, 'GET', '/execucao');
+        montado.componente.buscarExecucoes();
+        const segunda = esperarRequisicao(montado.http, 'GET', '/execucao');
+        expect(primeira.cancelled).toBe(true);
+        responderSucesso(segunda, pagina([criarExecucao(5)], 90));
+        await montado.atualizar();
+        expect(montado.componente.execucoes().map((item) => item.id)).toEqual([5]);
+        expect(montado.componente.carregando()).toBe(false);
+    });
+});

@@ -210,7 +210,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 |---|---|---|---|---|---|
 | **435** | Média | backend/atividade e frontend/atividade | Atividades: ação em massa numa requisição só | A-144, A-145 | pendente |
 | **436** | Média | frontend/atividade, execucao e ponto | Seletores de usuário ativo: reaproveitar o catálogo em memória | A-146 | pendente |
-| **437** | Média | frontend (atividade, execucao, ponto, projeto, configuracao-ia, chat) | Listas e navegação de período: a consulta nova cancela a anterior | A-147, A-148, A-149 | — |
+| **437** | Média | frontend (atividade, execucao, ponto, projeto, configuracao-ia, chat) | Listas e navegação de período: a consulta nova cancela a anterior | A-147, A-148, A-149 | feita |
 | **438** | Média | frontend/execucao e ponto | Pausar pelo chip da topbar atualiza Execuções e Ponto | A-150 | feita |
 | **439** | Baixa | frontend/atividade | "Nova atividade": tags e usuários pelo catálogo em memória | A-151 | — |
 | **440** | Baixa | frontend/atividade, calendario e execucao | Atividades, Calendário e Execuções: aplicar a resposta da mutação em vez de recarregar a lista | A-152 | — |

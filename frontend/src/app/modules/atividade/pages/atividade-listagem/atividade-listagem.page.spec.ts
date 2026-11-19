@@ -792,3 +792,19 @@ describe('AtividadeListagemPage: alterar prioridades (task 204)', () => {
         }
     });
 });
+
+describe('AtividadeListagemPage: busca nova cancela a anterior (task 437)', () => {
+    it('duas buscas seguidas: a primeira é cancelada e só a segunda aparece', async () => {
+        const { montado } = await montarPagina();
+        await carregar(montado);
+        montado.componente.buscarAtividades();
+        const primeira = esperarRequisicao(montado.http, 'GET', '/atividade');
+        montado.componente.buscarAtividades();
+        const segunda = esperarRequisicao(montado.http, 'GET', '/atividade');
+        expect(primeira.cancelled).toBe(true);
+        responderSucesso(segunda, pagina([criarAtividade(7)], 1));
+        await montado.atualizar();
+        expect(montado.componente.atividades().map((item) => item.id)).toEqual([7]);
+        expect(montado.componente.carregando()).toBe(false);
+    });
+});

@@ -6,7 +6,7 @@ import { ExecucaoEncerrarDialogComponent } from '../../../../shared/components/e
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, FormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize, debounceTime, distinctUntilChanged, forkJoin, of, catchError, map, Observable } from 'rxjs';
+import { Subscription, finalize, debounceTime, distinctUntilChanged, forkJoin, of, catchError, map, Observable } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { Select } from 'primeng/select';
@@ -270,7 +270,11 @@ export class AtividadeListagemPage implements OnInit {
         this.buscarAtividades();
     }
 
+    /** A busca em curso: uma nova cancela a anterior, para a resposta que chegar por último ser sempre a do filtro mostrado (task 437). */
+    private buscaEmCurso: Subscription | null = null;
+
     buscarAtividades(): void {
+        this.buscaEmCurso?.unsubscribe();
         this.carregando.set(true);
         this.erroAoCarregar.set(false);
 
@@ -287,7 +291,7 @@ export class AtividadeListagemPage implements OnInit {
         if (aplicados.periodo?.[0]) filtros.dataInicio = aplicados.periodo[0];
         if (aplicados.periodo?.[1]) filtros.dataFim = aplicados.periodo[1];
 
-        this.atividadeService
+        this.buscaEmCurso = this.atividadeService
             .listar(filtros)
             .pipe(finalize(() => {
                 this.carregando.set(false);

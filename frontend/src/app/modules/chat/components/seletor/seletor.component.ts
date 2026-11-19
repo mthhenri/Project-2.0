@@ -1,3 +1,4 @@
+import { Subscription } from 'rxjs';
 import { Component, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -176,22 +177,32 @@ export class SeletorComponent {
         }
         this.buscaFeita.set(texto);
         this.buscando.set(true);
-        this.chatService.buscar(texto).subscribe({
+        // Uma busca nova cancela as anteriores: vale a resposta da última, não a que chegar por último (task 437).
+        this.buscasEmCurso.forEach((busca) => busca.unsubscribe());
+        this.buscasEmCurso = [];
+        const buscaDeMensagens = this.chatService.buscar(texto).subscribe({
             next: (resposta) => {
                 this.resultados.set(resposta.dados?.mensagens ?? []);
                 this.buscando.set(false);
             },
             error: () => this.buscando.set(false),
         });
-        this.planoService.listar({ busca: texto }).subscribe({ next: (resposta) => this.planos.set(resposta.dados ?? []) });
+        const buscaDePlanos = this.planoService.listar({ busca: texto }).subscribe({ next: (resposta) => this.planos.set(resposta.dados ?? []) });
+        this.buscasEmCurso = [buscaDeMensagens, buscaDePlanos];
     }
+
+    private buscasEmCurso: Subscription[] = [];
 
     limparBusca(): void {
         const tinhaBusca = this.buscaFeita() !== '';
         this.controleBusca.setValue('');
         this.buscaFeita.set('');
         this.resultados.set(null);
-        if (tinhaBusca) this.recarregar();
+        this.buscasEmCurso.forEach((busca) => busca.unsubscribe());
+        this.buscasEmCurso = [];
+        this.buscando.set(false);
+        // A busca só trocou `resultados` e `planos`: limpar relê só os planos, e as conversas não mudaram (task 437).
+        if (tinhaBusca) this.recarregarPlanos();
     }
 
     escolherDia(data: string): void {

@@ -13,7 +13,7 @@ import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { finalize } from 'rxjs';
+import { Subscription, finalize } from 'rxjs';
 import { DatePickerModule } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
@@ -259,9 +259,13 @@ export class PontoPage implements OnInit {
         return meses[mes - 1] ?? '';
     }
 
+    /** A consulta em curso (todos ou mensal): uma nova (outro mês ou usuário) cancela a anterior (task 437). */
+    private consultaEmCurso: Subscription | null = null;
+
     private carregarTodos(): void {
+        this.consultaEmCurso?.unsubscribe();
         this.carregando.set(true);
-        this.pontoService
+        this.consultaEmCurso = this.pontoService
             .consultarTodos(this.formatarData(this.hoje))
             .pipe(finalize(() => this.carregando.set(false)))
             .subscribe({
@@ -284,8 +288,9 @@ export class PontoPage implements OnInit {
         const usuarioId = this.formularioFiltros.value.usuarioId ?? null;
         if (this.sessao.podeVerExecucaoEPontoDeOutro() && usuarioId) filtros.usuarioId = usuarioId;
 
+        this.consultaEmCurso?.unsubscribe();
         this.carregando.set(true);
-        this.pontoService
+        this.consultaEmCurso = this.pontoService
             .consultarMensal(filtros)
             .pipe(finalize(() => this.carregando.set(false)))
             .subscribe({

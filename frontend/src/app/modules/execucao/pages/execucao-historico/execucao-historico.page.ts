@@ -16,7 +16,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormControl, Validators } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { Subscription, finalize } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule, DatePicker } from 'primeng/datepicker';
@@ -245,7 +245,11 @@ export class ExecucaoHistoricoPage implements OnInit {
         this.buscarExecucoes();
     }
 
+    /** A busca em curso: uma nova (outro dia, usuário ou página) cancela a anterior (task 437). */
+    private buscaEmCurso: Subscription | null = null;
+
     buscarExecucoes(): void {
+        this.buscaEmCurso?.unsubscribe();
         this.carregando.set(true);
 
         const filtros: ExecucaoListarDto = {
@@ -257,7 +261,7 @@ export class ExecucaoHistoricoPage implements OnInit {
         const usuarioId = this.usuarioFiltradoId();
         if (this.sessao.temVisaoTotal() && usuarioId) filtros.usuarioId = usuarioId;
 
-        this.execucaoService
+        this.buscaEmCurso = this.execucaoService
             .listar(filtros)
             .pipe(finalize(() => {
                 this.carregando.set(false);

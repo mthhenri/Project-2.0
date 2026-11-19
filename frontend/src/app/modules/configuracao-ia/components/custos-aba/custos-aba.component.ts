@@ -1,5 +1,6 @@
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -133,13 +134,17 @@ export class CustosAbaComponent implements OnInit {
         this.carregar();
     }
 
+    private consultaEmCurso: Subscription | null = null;
+
     carregar(): void {
         const recorte = this.recorte();
         const ano = this.ano();
         const mes = this.mes();
+        // Cliques seguidos nas setas cancelam a consulta anterior (task 437). O que já veio não é reaproveitado aqui: o custo muda a cada chamada da IA e a cada preço editado.
+        this.consultaEmCurso?.unsubscribe();
         this.carregando.set(true);
         this.erro.set(false);
-        this.iaCustoService
+        this.consultaEmCurso = this.iaCustoService
             .consultar({ ano, mes: recorte === 'MENSAL' ? mes : undefined })
             .pipe(finalize(() => this.carregando.set(false)))
             .subscribe({

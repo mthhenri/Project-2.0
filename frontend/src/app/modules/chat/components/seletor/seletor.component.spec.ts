@@ -211,7 +211,8 @@ describe('SeletorComponent — busca', () => {
         expect(painel.textContent).toContain('Nenhum plano encontrado.');
 
         botaoPorRotulo(painel, 'Limpar busca')!.click();
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/conversas'), { conversas: CONVERSAS });
+        // A busca só trocou os resultados e os planos: limpar relê só os planos, nunca as conversas (task 437).
+        montado.http.expectNone((requisicao) => requisicao.url.endsWith('/chat/conversas'));
         responderSucesso(montado.http.expectOne((requisicao) => requisicao.url.endsWith('/plano') && !requisicao.params.has('busca')), PLANOS);
         await montado.atualizar();
 
@@ -252,5 +253,20 @@ describe('SeletorComponent — renomear a conversa', () => {
 
         montado.http.expectNone((requisicao) => requisicao.method === 'PUT');
         expect(painel.querySelector('[aria-label="Nome da conversa"]')).toBeNull();
+    });
+});
+
+describe('SeletorComponent — busca nova cancela a anterior (task 437)', () => {
+    it('duas buscas seguidas: as requisições da primeira são canceladas', async () => {
+        const montado = await montar();
+        montado.http.match(() => true);
+        montado.componente.controleBusca.setValue('primeira');
+        montado.componente.buscar();
+        const antigas = montado.http.match(() => true);
+        montado.componente.controleBusca.setValue('segunda');
+        montado.componente.buscar();
+        expect(antigas.length).toBe(2);
+        expect(antigas.every((pedido) => pedido.cancelled)).toBe(true);
+        montado.http.match(() => true);
     });
 });

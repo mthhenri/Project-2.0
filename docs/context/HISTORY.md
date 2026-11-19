@@ -13,6 +13,15 @@
 ---
 
 
+## 2026-11-19 — Task 437: as listas cancelam a consulta anterior quando o filtro muda
+
+Da revisão de requisições e de permissões (achados A-147, A-148 e A-149): trocar de dia, de mês, de página, de período ou buscar de novo deixava as consultas anteriores em voo, e a resposta que chegasse por último, não a do filtro mostrado, ficava na tela; o `finalize` da primeira ainda desligava o "carregando" com a segunda pendente.
+
+- **frontend:** cada carga guarda a `Subscription` e a cancela antes de começar a nova, antes de ligar o "carregando" (o `finalize` do cancelamento não apaga o estado da carga nova): `AtividadeListagemPage.buscarAtividades`, `ExecucaoHistoricoPage.buscarExecucoes`, `PontoPage` (todos e mensal), `ProjetoVolumeComponent`, `CustosAbaComponent` e a busca do `SeletorComponent` (mensagens e planos; limpar a busca cancela o que estiver em voo e relê **só os planos**, que a busca mexeu; as conversas, não).
+- **Reaproveitar o que já veio (entregável 2):** feito em **Volume** (`ProjetoVolumeComponent` guarda a lista de cada mês e de cada ano enquanto a tela está aberta: voltar a um período visto não consulta de novo). **Custos não reaproveita**, por decisão minha: o custo muda a cada chamada da IA e a cada preço editado na mesma tela, e um período guardado mostraria número velho; ficou só o cancelamento. O achado também citava a visão Projetos/Volume recriando o componente a cada troca; isso não foi mexido (o cache vive no componente e some nessa troca), e fica como residual.
+- **Testes:** um por componente com duas cargas em sequência (a primeira `cancelled`, só a segunda aplica e o "carregando" termina), mais o do cache do Volume (voltar a um mês visto não pede) e a busca do seletor; os testes do Volume que esperavam a consulta ao voltar ao período atual passaram a esperar a memória. 177 testes nos seis arquivos passando; `npm run lint:tudo` e build sem erro.
+- **Não verificado ao vivo:** só os testes de componente cobrem o cancelamento (a rede lenta foi simulada pelo `HttpTestingController`).
+
 ## 2026-11-19 — Tasks 467, 468 e 469 (e a 471, que não se aplica): relatório, prompts e configurações da IA aplicam a resposta em vez de reler
 
 Da revisão de requisições e de permissões (achados A-185, A-186, A-187 e A-189).
