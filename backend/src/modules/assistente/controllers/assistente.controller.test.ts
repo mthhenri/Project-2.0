@@ -1,7 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
-import { JwtAuthGuard } from '../../autenticacao/guards/jwt-auth.guard';
 import { rotasPorNome } from '../../../testes/rotas-do-controller';
 import { AssistenteController } from './assistente.controller';
 
@@ -17,16 +16,18 @@ test('duas rotas, POST auxiliar-descricao e POST alterar-trecho, abertas a qualq
     }
 });
 
-test('o controller exige login (JwtAuthGuard)', () => {
-    assert.ok((Reflect.getMetadata(GUARDS_METADATA, AssistenteController) as unknown[]).includes(JwtAuthGuard));
+test('o login vem do guard global (nenhum @UseGuards repetido no controller) e nenhuma rota é pública', () => {
+    assert.equal(Reflect.getMetadata(GUARDS_METADATA, AssistenteController), undefined);
+    for (const rota of Object.values(rotasPorNome(AssistenteController))) assert.equal(rota.publica, false);
 });
 
-test('repassa o DTO à service', async () => {
-    const recebidos: unknown[] = [];
-    const controller = new AssistenteController({ auxiliarDescricao: async (dto: unknown) => { recebidos.push(dto); return null; } } as never);
+test('auxiliar-descricao repassa o DTO e o usuário ativo à service (o uso entra em Custos em nome dele)', async () => {
+    const recebidos: unknown[][] = [];
+    const controller = new AssistenteController({ auxiliarDescricao: async (...argumentos: unknown[]) => { recebidos.push(argumentos); return null; } } as never);
     const dto = { textoOriginal: 'a', tipoEntidade: 'execucao', contextoEntidade: 'b' } as const;
-    await controller.auxiliarDescricao(dto);
-    assert.deepEqual(recebidos, [dto]);
+    const usuario = { sub: 7, login: 'd', tipo: 'DESENVOLVEDOR' } as never;
+    await controller.auxiliarDescricao(dto, usuario);
+    assert.deepEqual(recebidos, [[dto, usuario]]);
 });
 
 test('alterar-trecho repassa o DTO e o usuário ativo à service', async () => {

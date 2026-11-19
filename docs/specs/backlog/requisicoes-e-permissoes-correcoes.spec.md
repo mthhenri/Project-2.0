@@ -25,7 +25,6 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 |---|---|
 | **352** | Gravações do pad e dos textos da demanda: não devolver o texto inteiro |
 | **366** | Grupo livre: escrever (ou mudar) quem adiciona, quem remove e quem lê o histórico |
-| **370** | `POST /assistente/auxiliar-descricao`: identificar quem usa, limitar o tamanho e registrar o custo |
 | **371** | Desfazer a criação de demanda pela proposta: exceção escrita ou mesma permissão da exclusão |
 | **372** | IA: `consultar_demanda` e `consultar_grafo_do_projeto` para o desenvolvedor |
 | **380** | Mover atividade de demanda: onde existe e entre quais projetos |
@@ -114,7 +113,7 @@ Corrigir, um a um, os pontos que a revisão confirmou: requisições inúteis ou
 | **367** | Alta | backend/atividade | IA: propor criar e mover atividade conferem o acesso à demanda antes de ler | A-063, A-064, A-065 | — |
 | **368** | Média | backend/proposta-ia | Proposta da IA: ajuste que falha não deixa os dados do cliente gravados | A-066 | feita |
 | **369** | Baixa | backend/plano | Proposta de trecho do plano: recusar exige poder editar a aba | A-067 | — |
-| **370** | Média | backend/assistente | `POST /assistente/auxiliar-descricao`: identificar quem usa, limitar o tamanho e registrar o custo | A-068 | pendente |
+| **370** | Média | backend/assistente | `POST /assistente/auxiliar-descricao`: identificar quem usa, limitar o tamanho e registrar o custo | A-068 | decidida e feita |
 | **371** | Baixa | backend/demanda | Desfazer a criação de demanda pela proposta: exceção escrita ou mesma permissão da exclusão | A-069, A-070 | pendente |
 | **372** | Baixa | backend/demanda | IA: `consultar_demanda` e `consultar_grafo_do_projeto` para o desenvolvedor | A-071 | pendente |
 

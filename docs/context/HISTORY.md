@@ -13,6 +13,16 @@
 ---
 
 
+## 2026-11-19 — Task 370: `POST /assistente/auxiliar-descricao` com usuário, limite de tamanho e custo registrado
+
+Da revisão de requisições e de permissões (achado A-068), com a decisão do autor de 2026-11-19 pela **opção 1** (limites iguais aos de `alterar-trecho`). A rota chamava a IA sem saber quem pedia, sem limite de tamanho e sem registrar o uso: qualquer tipo de usuário a usava como proxy de texto livre e o gasto não aparecia em Custos.
+
+- **shared:** `AssistenteDescricaoAuxiliarDto`: `textoOriginal` ganhou `@MaxLength(8000)` (como o `bloco` da rota irmã) e `contextoEntidade` `@MaxLength(2000)` (como o `pedido`; é o nome da atividade ou da demanda, que o prompt cita). O mapeamento campo a campo é interpretação minha da opção 1; os valores estão na constante do DTO se o autor quiser outros.
+- **backend:** o controller passa `@ActiveUser()` à service; `auxiliarDescricao` registra o uso (`iaUsoService.registrar`, `usuarioId` de quem pediu, descrição "Auxiliar de descrição (execução de trabalho | demanda de projeto)", nível padrão, modelo e tokens da resposta) depois que a IA responde; IA que falha não registra. Removido o `@UseGuards(JwtAuthGuard)` repetido do controller (o guard é global, `APP_GUARD`); o teste que exigia o guard no controller passou a conferir que não há `@UseGuards` e que nenhuma rota é pública.
+- **Testes:** 4 no DTO (limites nas bordas 8000/2000, regras antigas mantidas), 2 na service (uso registrado com modelo e tokens; falha da IA não registra), controller repassa o usuário. Shared 367 e backend 1878 passando; `npm run lint:tudo` e build sem erro.
+- **Ao vivo (API real com uma IA de mentira em `ANTHROPIC_BASE_URL`, desenvolvedor):** pedido normal 201 com o texto refinado; texto de 9000 caracteres 400 ("textoOriginal must be shorter than or equal to 8000 characters"); contexto de 2001 caracteres 400; `GET /ia-custo?ano=2026&mes=11` (administrador) mostra 1 mensagem, 111 tokens de entrada, 22 de saída e 3 de cache no modelo do nível padrão. Contraprova não feita: o código antigo simplesmente não chamava `registrar` nem tinha `MaxLength`.
+- **Não verificado:** a tela do assistente de descrição no frontend não foi exercitada (nenhum arquivo do frontend mudou); um texto acima de 8000 caracteres agora volta 400 para quem usa o botão em descrições longas.
+
 ## 2026-11-19 — Task 368: ajuste de proposta que falha restaura os dados originais
 
 Da revisão de requisições e de permissões (achado A-066). `PropostaIaService.resolver` gravava os `dados` do ajuste ao reivindicar a proposta (PENDENTE → AJUSTADA); se o executor falhava, a compensação a devolvia a PENDENTE com os dados de quem ajustou, inclusive em proposta de outra pessoa: um desenvolvedor mandava `aba: DESCRICAO_CLIENTE` com texto seu, levava 403 e a proposta do gestor ficava pendente com esse texto, pronta para ele confirmar como se fosse da IA.
