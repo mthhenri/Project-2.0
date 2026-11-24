@@ -409,3 +409,24 @@
         }
     }
 }
+
+// Botão "Revisar com Piá" (task 489): o contornado do PrimeNG na cor da Piá (Araucária), no lugar do roxo ("help"). O
+// ::ng-deep alcança o <button> que o p-button desenha; as variáveis valem só para este botão.
+:host ::ng-deep .relatorio-execucao__botao-pia {
+    --p-button-outlined-primary-color: var(--app-pia-icone);
+    --p-button-outlined-primary-border-color: color-mix(
+        in srgb,
+        var(--app-pia-icone) 55%,
+        transparent
+    );
+    --p-button-outlined-primary-hover-background: color-mix(
+        in srgb,
+        var(--app-pia-icone) 8%,
+        transparent
+    );
+    --p-button-outlined-primary-active-background: color-mix(
+        in srgb,
+        var(--app-pia-icone) 16%,
+        transparent
+    );
+}

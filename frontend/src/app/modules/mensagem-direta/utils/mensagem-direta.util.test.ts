@@ -341,13 +341,13 @@ describe('@IA no chat entre colaboradores (task 315)', () => {
     });
 
     it('previaDaMensagem: a resposta da IA começa com "IA:", mesmo que eu tenha chamado', () => {
-        expect(previaDaMensagem('Criei a **atividade**', false, false, true)).toBe('IA: Criei a atividade');
-        expect(previaDaMensagem('Criei', false, true, true)).toBe('IA: Criei');
+        expect(previaDaMensagem('Criei a **atividade**', false, false, true)).toBe('Piá: Criei a atividade');
+        expect(previaDaMensagem('Criei', false, true, true)).toBe('Piá: Criei');
         expect(previaDaMensagem('oi', false, true)).toBe('Você: oi');
     });
 
     it('rotuloDaRespostaDaIa: para quem a IA respondeu', () => {
-        expect(rotuloDaRespostaDaIa('você')).toBe('IA · para você');
-        expect(rotuloDaRespostaDaIa('Camila Duarte')).toBe('IA · para Camila Duarte');
+        expect(rotuloDaRespostaDaIa('você')).toBe('Piá · para você');
+        expect(rotuloDaRespostaDaIa('Camila Duarte')).toBe('Piá · para Camila Duarte');
     });
 });

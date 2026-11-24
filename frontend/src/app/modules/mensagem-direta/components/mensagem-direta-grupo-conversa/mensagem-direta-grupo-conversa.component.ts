@@ -16,7 +16,7 @@ import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-
 import { EnvioDoCompositor } from '../../services/mensagem-direta-estado.service';
 import { EdicaoEmPreparo } from '../../utils/compositor.util';
 import { coresDosMembros, nomeDoAutorNoGrupo, rotuloDosMembros } from '../../utils/grupo.util';
-import { DESTAQUES_DA_IA, ICONES_DOS_DESTAQUES_DA_IA, agruparPorDia, formatarHora, marcarEmendas, MensagemNaConversa } from '../../utils/mensagem-direta.util';
+import { DESTAQUES_DA_IA, CORES_DOS_DESTAQUES_DA_IA, ICONES_DOS_DESTAQUES_DA_IA, agruparPorDia, formatarHora, marcarEmendas, MensagemNaConversa } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaGrupoBuscaComponent } from '../mensagem-direta-grupo-busca/mensagem-direta-grupo-busca.component';
 import { MensagemDiretaGrupoFixadasComponent } from '../mensagem-direta-grupo-fixadas/mensagem-direta-grupo-fixadas.component';
 import { MensagemDiretaGrupoResumoComponent } from '../mensagem-direta-grupo-resumo/mensagem-direta-grupo-resumo.component';
@@ -180,7 +180,7 @@ export class MensagemDiretaGrupoConversaComponent {
     /** O menu do cabeçalho do grupo: membros, silêncio e sair. O chat da demanda ou do projeto não tem saída (e quem só o lê por tipo não silencia). */
     protected readonly itensDoGrupo = computed<MenuItem[]>(() => [
         { label: this.ehCanal() ? 'Membros' : 'Membros e detalhes', icon: 'pi pi-users', command: () => this.estado.abrirDetalhesDoGrupo() },
-        ...(this.lendoPorTipo() ? [] : [{ label: 'Resumir com IA', icon: 'pi pi-sparkles', command: () => this.resumoAberto.set(true) }]),
+        ...(this.lendoPorTipo() ? [] : [{ label: 'Resumir com Piá', icon: 'pi pi-sparkles app-icone-pia', command: () => this.resumoAberto.set(true) }]),
         ...(this.lendoPorTipo()
             ? []
             : [
@@ -247,7 +247,7 @@ export class MensagemDiretaGrupoConversaComponent {
 
     /** A cor da bolinha de cada pessoa marcada, por `@Nome` (quem não escolheu cor fica de fora e usa a cor de acento). */
     protected coresDosDestaquesDe(mensagem: { mencoes: number[] }): Record<string, string> {
-        const cores: Record<string, string> = {};
+        const cores: Record<string, string> = { ...CORES_DOS_DESTAQUES_DA_IA };
         for (const usuarioId of mensagem.mencoes) {
             const eu = usuarioId === this.meuId();
             const membro = this.membros().find((item) => item.usuarioId === usuarioId);

@@ -7,6 +7,7 @@ import { IaDisponibilidadeService } from '../../../core/services/ia-disponibilid
 import { ProjectDesktopService } from '../../../core/services/project-desktop.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../core/utils/atalhos';
+import { LogoProjectComponent } from '../../components/logo-project/logo-project.component';
 import { ITENS_NAVEGACAO, ItemNavegacao, agruparItensNavegacao } from '../navegacao';
 
 const CHAVE_RECOLHIDA = 'sidebar.recolhida';
@@ -18,7 +19,7 @@ const INTERVALO_DISPONIBILIDADE_MS = 60_000;
 @Component({
     selector: 'app-sidebar',
     standalone: true,
-    imports: [RouterModule, TooltipModule, NgTemplateOutlet],
+    imports: [RouterModule, TooltipModule, NgTemplateOutlet, LogoProjectComponent],
     templateUrl: './sidebar.component.html',
     styleUrl: './sidebar.component.scss',
 })

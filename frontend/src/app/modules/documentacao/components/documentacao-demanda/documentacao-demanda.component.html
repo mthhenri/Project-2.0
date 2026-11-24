@@ -163,7 +163,7 @@
 
 <p-popover #popoverPedido>
     <form class="documentacao-demanda__pedido" (submit)="$event.preventDefault(); enviarPedido()">
-        <strong>Alterar trecho com IA</strong>
+        <strong>Alterar trecho com Piá</strong>
         @if (trechoSelecionado(); as selecionado) {
             <blockquote class="documentacao-demanda__trecho">{{ selecionado.selecao }}</blockquote>
             @if (selecionado.selecao !== selecionado.bloco) {
@@ -188,7 +188,7 @@
         <p-button
             type="submit"
             label="Pedir à IA"
-            icon="pi pi-sparkles"
+            icon="pi pi-sparkles app-icone-pia"
             size="small"
             [disabled]="controlePedido.value.trim() === ''"
         />

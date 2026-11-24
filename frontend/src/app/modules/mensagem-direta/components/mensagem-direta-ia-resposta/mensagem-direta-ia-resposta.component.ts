@@ -7,6 +7,7 @@ import { PropostaGrupoComponent } from '../../../chat/components/proposta-grupo/
 import { MensagemDiretaGrupoService } from '../../services/mensagem-direta-grupo.service';
 import { MensagemDiretaService } from '../../services/mensagem-direta.service';
 import { MensagemNaConversa, rotuloDaRespostaDaIa } from '../../utils/mensagem-direta.util';
+import { LogoPiaComponent } from '../../../../shared/components/logo-pia/logo-pia.component';
 
 /** Uma proposta como a outra pessoa da conversa a vê: carregando, oculta (sem acesso ao alvo), visível (só leitura) ou com erro ao carregar. */
 type PropostaVista =
@@ -26,7 +27,7 @@ type AlvoDasPropostas = { usuarioId: number } | { grupoId: number };
 @Component({
     selector: 'app-mensagem-direta-ia-resposta',
     standalone: true,
-    imports: [MarkdownVisualizadorComponent, PropostaCartaoComponent, PropostaGrupoComponent],
+    imports: [LogoPiaComponent, MarkdownVisualizadorComponent, PropostaCartaoComponent, PropostaGrupoComponent],
     templateUrl: './mensagem-direta-ia-resposta.component.html',
     styleUrl: './mensagem-direta-ia-resposta.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,

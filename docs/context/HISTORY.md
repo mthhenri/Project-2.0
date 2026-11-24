@@ -13,6 +13,35 @@
 ---
 
 
+## 2026-11-24 — Task 489: identidade visual — a marca do Project 2.0 e a Piá, a IA do sistema
+
+O autor pediu "uma identidade visual mais clara". A exploração foi feita por páginas de proposta e por capturas do app
+real numa cópia isolada, sem tocar o código até a decisão final (etapas e decisões em
+`docs/specs/done/489-identidade-visual-logo-project-e-pia/proposta.md`).
+
+- **Project 2.0:** a marca é o P cuja órbita termina na bolinha verde de "em execução" (o mesmo sinal do chip da
+  topbar), em cor sólida e fixa (não segue a cor primária escolhida pelo usuário). `app-logo-project`
+  (`shared/components/logo-project/`, SVG inline, `ladrilho` para o quadrado azul) na barra lateral, no login e no
+  cabeçalho do check-in (no lugar do selo "P2"); `favicon.ico` e `desktop/assets/icone.png` regenerados do ladrilho
+  com o P reduzido (decisão do autor, mesmo com a órbita pequena em 16 px).
+- **Piá:** a IA ganhou nome ("P-IA"; piá é o menino em Curitiba) e cor, Araucária. Ícone de ação ou de menu da IA = o
+  brilho do PrimeIcons em Araucária (`pi pi-sparkles app-icone-pia`, 17 pontos de template, barra lateral, menu do
+  grupo, compositor e destaque da menção); quem fala = a logo "piá" escrita com o acento âmbar (`app-logo-pia`, máscara
+  CSS, nos avatares do chat, do check-in e da resposta no grupo, no lugar do selo "IA"). A menção da IA no texto ganhou
+  a cor Araucária (`CORES_DOS_DESTAQUES_DA_IA`). O botão "Revisar com Piá" do relatório saiu do roxo (`help`) para o
+  contornado na cor da Piá. O nome "Piá" entrou só onde ela fala ou age e sempre sem artigo ("o/a Piá" ficou em aberto).
+  A grafia `@PIA` ficou para a task 490 (backlog).
+- **Regra documentada** em `SYSTEM.SPEC.md` §8.5 (tokens `--app-logo-*` e `--app-pia-*`, quem usa o brilho e quem usa a
+  logo, nome sem artigo).
+- **Testes:** specs novas de `app-logo-project` (4) e `app-logo-pia` (4); 12 specs ajustadas aos textos novos e à classe
+  do ícone. Frontend 240 arquivos / 2972 testes, build sem erro (avisos de orçamento já existentes), `lint:tudo` limpo,
+  Desktop 49 testes, `repo:verificar` aprovado.
+- **Ao vivo:** 8 telas × 5 formatos × 2 temas (80 capturas), relatório em
+  `docs/specs/done/489-identidade-visual-logo-project-e-pia/verificacao.md`.
+- **Achados da exploração que só apareceram no app real:** o "piá" inteiro como ícone ficava ilegível no tamanho de
+  ícone (por isso o brilho nos lugares pequenos); o ponto âmbar dentro do p sumia em 16 px; e um selo de marca "P2" no
+  check-in que o levantamento inicial não tinha pegado.
+
 ## 2026-11-19 — Task 437: as listas cancelam a consulta anterior quando o filtro muda
 
 Da revisão de requisições e de permissões (achados A-147, A-148 e A-149): trocar de dia, de mês, de página, de período ou buscar de novo deixava as consultas anteriores em voo, e a resposta que chegasse por último, não a do filtro mostrado, ficava na tela; o `finalize` da primeira ainda desligava o "carregando" com a segunda pendente.

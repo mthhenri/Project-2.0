@@ -26,9 +26,9 @@
         </div>
         <div class="relatorio-execucao__cabecalho-acoes">
             <p-button
-                label="Revisar com IA"
+                label="Revisar com Piá"
                 icon="pi pi-sparkles"
-                severity="help"
+                styleClass="relatorio-execucao__botao-pia"
                 [outlined]="true"
                 [disabled]="!podeExportar()"
                 [loading]="carregandoRevisao()"
@@ -242,21 +242,21 @@
                     (dblclick)="restaurarDivisao()"
                     (keydown)="aoTeclarNoDivisor($event)"
                 ></div>
-                <aside class="relatorio-execucao__painel" aria-label="Revisão por IA">
+                <aside class="relatorio-execucao__painel" aria-label="Revisão por Piá">
                     <p-button
                         class="relatorio-execucao__recolher"
                         icon="pi pi-angle-right"
                         [text]="true"
                         severity="secondary"
                         size="small"
-                        ariaLabel="Recolher a revisão por IA"
+                        ariaLabel="Recolher a revisão por Piá"
                         [disabled]="carregandoRevisao()"
                         (onClick)="painelAberto.set(false)"
                     />
                     @if (carregandoRevisao()) {
                         <div class="relatorio-execucao__revisao">
                             <h3 class="relatorio-execucao__revisao-titulo">
-                                <i class="pi pi-sparkles"></i> Revisão por IA
+                                <i class="pi pi-sparkles app-icone-pia"></i> Revisão por Piá
                             </h3>
                             <p class="text-muted-color">
                                 <i class="pi pi-spin pi-spinner"></i> Analisando as execuções…
@@ -265,7 +265,7 @@
                     } @else if (revisao(); as dadosRevisao) {
                         <div class="relatorio-execucao__revisao">
                             <h3 class="relatorio-execucao__revisao-titulo">
-                                <i class="pi pi-sparkles"></i> Revisão por IA
+                                <i class="pi pi-sparkles app-icone-pia"></i> Revisão por Piá
                             </h3>
                             <p class="relatorio-execucao__revisao-resumo">
                                 {{ dadosRevisao.resumo }}
@@ -326,13 +326,13 @@
                     }
                 </aside>
             } @else {
-                <aside class="relatorio-execucao__barra-ia" aria-label="Revisão por IA recolhida">
+                <aside class="relatorio-execucao__barra-ia" aria-label="Revisão por Piá recolhida">
                     <p-button
                         icon="pi pi-angle-left"
                         [text]="true"
                         severity="secondary"
                         size="small"
-                        ariaLabel="Abrir a revisão por IA"
+                        ariaLabel="Abrir a revisão por Piá"
                         (onClick)="painelAberto.set(true)"
                     />
                     @for (item of achados(); track $index) {
@@ -346,7 +346,7 @@
                             [attr.aria-label]="item.tipo + ', severidade ' + item.severidade"
                             (click)="painelAberto.set(true)"
                         >
-                            <i class="pi pi-sparkles"></i>
+                            <i class="pi pi-sparkles app-icone-pia"></i>
                         </button>
                     }
                 </aside>

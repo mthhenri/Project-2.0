@@ -47,6 +47,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Próximo check-in no menu do perfil da barra superior (task 303) | `frontend/src/app/modules/checkin/components/checkin-proximo/`; regra `textoDoProximoCheckin` em `modules/checkin/utils/checkin.util.ts`; entra no popover de `shared/layout/topbar/` |
 | Download do Project Desktop (versão publicada, arquivo, botão da topbar) (task 198) | `backend/src/modules/desktop/` (`DESKTOP_PASTA_EXECUTAVEIS`), `frontend/src/app/core/services/desktop-download.service.ts`, `shared/src/utils/versao.ts` |
 | Prazo para desfazer uma proposta da IA (task 194) | `shared/src/utils/prazo-para-desfazer-proposta.ts`; `PropostaIaService.desfazer`; `proposta-cartao.component` |
+| Logo do Project e da Piá; tokens `--app-logo-*` e `--app-pia-*`; fonte do ladrilho do favicon e do Desktop (task 489) | `frontend/src/app/shared/components/logo-project/`, `shared/components/logo-pia/`, `.app-icone-pia` e tokens em `frontend/src/styles.scss`; `docs/specs/done/489-identidade-visual-logo-project-e-pia/logo-project-ladrilho.svg` |
 | Interceptors, guards e estado global | `frontend/src/app/core/` |
 | Componentes, diretivas, pipes e layout reutilizáveis | `frontend/src/app/shared/` |
 | Contrato de dialogs de formulário: autofocus, Enter, Ctrl+Enter, dica de atalhos (task 97) | `shared/directives/dialog-formulario.directive.ts` (`p-dialog[dialogFormulario]`) e `shared/components/dialog-dica-atalhos/` |

@@ -32,10 +32,10 @@ async function montar(mensagem: MensagemNaConversa) {
 }
 
 describe('MensagemDiretaIaRespostaComponent', () => {
-    it('mostra o selo da IA, para quem ela respondeu, o texto em Markdown e o horário', async () => {
+    it('mostra o selo da IA (a logo da Piá), para quem ela respondeu, o texto em Markdown e o horário', async () => {
         const tela = await montar(resposta());
-        expect(tela.elemento.querySelector('.ia-resposta__avatar')?.textContent?.trim()).toBe('IA');
-        expect(tela.elemento.textContent).toContain('IA · para você');
+        expect(tela.elemento.querySelector('.ia-resposta__avatar app-logo-pia')).not.toBeNull();
+        expect(tela.elemento.textContent).toContain('Piá · para você');
         expect(tela.elemento.querySelector('strong')?.textContent).toBe('atividade');
         expect(tela.elemento.textContent).toContain('12:00');
         tela.http.verify();
@@ -60,7 +60,7 @@ describe('MensagemDiretaIaRespostaComponent', () => {
 
     it('a resposta a outra pessoa diz o nome dela', async () => {
         const tela = await montar(resposta({ chamadaPorUsuarioId: BRUNO_ID }));
-        expect(tela.elemento.textContent).toContain('IA · para Bruno Reis');
+        expect(tela.elemento.textContent).toContain('Piá · para Bruno Reis');
     });
 
     it('quem chamou vê o cartão da proposta, lido pela proposta (com as ações)', async () => {

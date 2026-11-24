@@ -1,0 +1,41 @@
+// Símbolo do Project 2.0 (task 489). Tamanho pela variável do host; cores pelos tokens --app-logo-* (styles.scss).
+:host {
+    display: inline-block;
+    flex-shrink: 0;
+    width: var(--logo-tamanho);
+    height: var(--logo-tamanho);
+    line-height: 0;
+}
+
+.logo-project {
+    &__desenho {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    &__ladrilho {
+        fill: var(--app-logo-ladrilho);
+    }
+
+    &__traco {
+        fill: none;
+        stroke: var(--app-logo-tinta);
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    &__vivo {
+        fill: var(--app-logo-vivo);
+    }
+
+    &__simbolo--ladrilho {
+        .logo-project__traco {
+            stroke: var(--app-logo-ladrilho-tinta);
+        }
+
+        .logo-project__vivo {
+            fill: var(--app-logo-ladrilho-vivo);
+        }
+    }
+}

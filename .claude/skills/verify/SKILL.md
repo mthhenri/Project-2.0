@@ -120,4 +120,9 @@ await browser.newContext({ viewport: { width: 1366, height: 768 } });
 - **Tempo no Playwright é `page.clock`** (mesma verificação): `page.clock.install()` antes do `goto` e `page.clock.runFor(ms)` para os intervalos de 3 s, 30 s e 60 s; `waitForTimeout` continua em tempo real e serve para a resposta do servidor.
   `visibilityState` não muda sozinho: `Object.defineProperty(document, 'visibilityState', { get: () => window.__v || 'visible' })` e dispare `visibilitychange`. `history.pushState` + `popstate` **não** navega pelo roteador do Angular (a "contraprova" não deu toast): clique no link da barra lateral.
 
+- **`addInitScript` roda antes de existir o `<html>`** (exploração da task 489, 2026-11-24): `document.documentElement.setAttribute(...)` no script de início lança
+  `Cannot read properties of null` (o erro aparece como `pageerror`) e a captura sai sem o atributo, sem falhar. Marque de novo no `DOMContentLoaded`
+  (`const marcar = () => document.documentElement?.setAttribute(...); marcar(); document.addEventListener('DOMContentLoaded', marcar);`) e confira o
+  atributo com `page.evaluate` antes de valer a captura. `localStorage` no mesmo script funciona.
+
 Entra aqui na hora em que morder: sintoma → causa → como evitar.

@@ -1,6 +1,6 @@
 <div class="checkin">
     <header class="checkin__cabecalho">
-        <span class="checkin__logo" aria-hidden="true">P2</span>
+        <app-logo-project tamanho="2.125rem" [ladrilho]="true" />
         <div class="checkin__titulos">
             <h1 class="checkin__titulo">Hora do check-in</h1>
             @if (situacao()?.execucao; as execucao) {
@@ -115,7 +115,9 @@
                 >
                     <div #fluxo class="checkin__fluxo">
                         <div class="checkin__linha checkin__linha--ia">
-                            <span class="checkin__avatar" aria-hidden="true">IA</span>
+                            <span class="checkin__avatar" aria-hidden="true"
+                                ><app-logo-pia tamanho="56%"
+                            /></span>
                             <div class="checkin__ia-conteudo">
                                 <app-markdown-visualizador [texto]="textoDeAbertura()" />
                             </div>
@@ -134,7 +136,9 @@
                                 </div>
                             } @else {
                                 <div class="checkin__linha checkin__linha--ia">
-                                    <span class="checkin__avatar" aria-hidden="true">IA</span>
+                                    <span class="checkin__avatar" aria-hidden="true"
+                                        ><app-logo-pia tamanho="56%"
+                                    /></span>
                                     <div
                                         class="checkin__ia-conteudo"
                                         [attr.aria-busy]="mensagem.aoVivo ? true : null"

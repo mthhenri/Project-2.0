@@ -244,20 +244,22 @@ export function normalizarConversa(conversa: ConversaDiretaResumoDto): ConversaN
 /** A prévia da última mensagem na lista: sem marcação, o bloco de código vira `[código]`, a minha começa com `Você:` e a resposta do `@IA` com `IA:` (task 315). */
 export function previaDaMensagem(texto: string, contemCodigo: boolean, souEuQuemEscreveu: boolean, daIa = false): string {
     const corpo = textoSimplesDaMensagemDireta(texto, contemCodigo);
-    if (daIa) return `IA: ${corpo}`;
+    if (daIa) return `Piá: ${corpo}`;
     return souEuQuemEscreveu ? `Você: ${corpo}` : corpo;
 }
 
 /** O ícone da IA (o mesmo da opção do `@` no compositor), antes do `@IA` destacado no texto da mensagem (task 315). */
-export const ICONE_DA_IA = 'pi pi-sparkles';
+export const ICONE_DA_IA = 'pi pi-sparkles app-icone-pia';
 /** As grafias de `@IA` que o servidor reconhece (sem diferenciar maiúsculas): o destaque do texto casa a grafia exata que a pessoa escreveu. */
 export const DESTAQUES_DA_IA: readonly string[] = ['@IA', '@ia', '@Ia', '@iA'];
 /** O ícone de cada grafia do `@IA`, para o visualizador de Markdown pôr antes do destaque. */
 export const ICONES_DOS_DESTAQUES_DA_IA: Readonly<Record<string, string>> = Object.fromEntries(DESTAQUES_DA_IA.map((destaque) => [destaque, ICONE_DA_IA]));
+/** A cor de cada grafia do `@IA` (task 489): a da Piá, Araucária, em vez do azul do sistema; as pessoas mencionadas seguem com a cor delas. */
+export const CORES_DOS_DESTAQUES_DA_IA: Readonly<Record<string, string>> = Object.fromEntries(DESTAQUES_DA_IA.map((destaque) => [destaque, 'var(--app-pia-icone)']));
 
 /** Para quem a IA respondeu, no rótulo da resposta do `@IA` (task 315): `IA · para você` ou `IA · para <nome>`. */
 export function rotuloDaRespostaDaIa(nomeDeQuemChamou: string): string {
-    return `IA · para ${nomeDeQuemChamou}`;
+    return `Piá · para ${nomeDeQuemChamou}`;
 }
 
 export function totalNaoLidas(conversas: ConversaNaLista[]): number {

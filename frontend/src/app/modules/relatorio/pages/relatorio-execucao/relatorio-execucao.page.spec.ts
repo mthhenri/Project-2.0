@@ -101,7 +101,7 @@ describe('RelatorioExecucaoPage — abrir e mostrar', () => {
         montado.http.expectNone((requisicao) => requisicao.url.endsWith('/relatorio/execucao'));
         expect(textoDaTela()).toContain('Escolha um projeto para ver o relatório.');
         expect(botao('Baixar CSV').disabled).toBe(true);
-        expect(botao('Revisar com IA').disabled).toBe(true);
+        expect(botao('Revisar com Piá').disabled).toBe(true);
     });
 
     it('lembra o último projeto escolhido nesta máquina e já abre carregado com ele', async () => {
@@ -118,7 +118,7 @@ describe('RelatorioExecucaoPage — abrir e mostrar', () => {
         expect(textoDaTela()).toContain('Nenhuma execução encontrada no período.');
         expect(montado.componente.podeExportar()).toBe(false);
         expect(botao('Baixar CSV').disabled).toBe(true);
-        expect(botao('Revisar com IA').disabled).toBe(true);
+        expect(botao('Revisar com Piá').disabled).toBe(true);
     });
 
     it('falha ao carregar mostra o erro e "Tentar de novo" refaz o pedido', async () => {
@@ -239,7 +239,7 @@ describe('RelatorioExecucaoPage — baixar CSV', () => {
 describe('RelatorioExecucaoPage — revisão por IA', () => {
     it('mostra o resumo e os achados ordenados da mais grave para a mais leve, com a contagem por severidade', async () => {
         const montado = await abrirComRelatorio([linha()]);
-        botao('Revisar com IA').click();
+        botao('Revisar com Piá').click();
         await montado.atualizar();
         const pedido = esperarRequisicao(montado.http, 'POST', '/relatorio/execucao/revisar');
         expect(pedido.request.params.get('projetoId')).toBe('3');
@@ -265,7 +265,7 @@ describe('RelatorioExecucaoPage — revisão por IA', () => {
 
     it('sem inconsistências diz que nenhuma foi apontada', async () => {
         const montado = await abrirComRelatorio([linha()]);
-        botao('Revisar com IA').click();
+        botao('Revisar com Piá').click();
         await montado.atualizar();
         responderSucesso(esperarRequisicao(montado.http, 'POST', '/relatorio/execucao/revisar'), { resumo: 'Tudo certo', inconsistencias: [] });
         await montado.atualizar();
@@ -277,7 +277,7 @@ describe('RelatorioExecucaoPage — revisão por IA', () => {
         const avisos: { severity?: string }[] = [];
         montado.mensagens.messageObserver.subscribe((mensagem) => avisos.push(...[mensagem].flat()));
 
-        botao('Revisar com IA').click();
+        botao('Revisar com Piá').click();
         await montado.atualizar();
         responderErro(esperarRequisicao(montado.http, 'POST', '/relatorio/execucao/revisar'), 400, 'Serviço de IA temporariamente indisponível');
         await montado.atualizar();
@@ -285,14 +285,14 @@ describe('RelatorioExecucaoPage — revisão por IA', () => {
         expect(avisos.some((aviso) => aviso.severity === 'warn')).toBe(true);
         expect(montado.componente.revisao()).toBeNull();
         expect(montado.componente.carregandoRevisao()).toBe(false);
-        expect(textoDaTela()).not.toContain('Revisão por IA');
+        expect(textoDaTela()).not.toContain('Revisão por Piá');
         expect(montado.componente.podeExportar()).toBe(true);
         expect(botao('Baixar CSV').disabled).toBe(false);
     });
 
     it('mudar um filtro descarta a revisão antiga', async () => {
         const montado = await abrirComRelatorio([linha()]);
-        botao('Revisar com IA').click();
+        botao('Revisar com Piá').click();
         await montado.atualizar();
         responderSucesso(esperarRequisicao(montado.http, 'POST', '/relatorio/execucao/revisar'), { resumo: 'Antiga', inconsistencias: [] });
         await montado.atualizar();
@@ -309,7 +309,7 @@ describe('RelatorioExecucaoPage — revisão por IA', () => {
 describe('RelatorioExecucaoPage — revisão em andamento e filtro novo (task 467)', () => {
     it('mudar o filtro com a revisão pendente cancela a chamada, e a resposta do período antigo não aparece ao lado do relatório novo', async () => {
         const montado = await abrirComRelatorio([linha()]);
-        botao('Revisar com IA').click();
+        botao('Revisar com Piá').click();
         await montado.atualizar();
         const pendente = esperarRequisicao(montado.http, 'POST', '/relatorio/execucao/revisar');
 
@@ -326,7 +326,7 @@ describe('RelatorioExecucaoPage — revisão em andamento e filtro novo (task 46
 describe('RelatorioExecucaoPage — painel da revisão (task 272)', () => {
     async function comRevisao(): Promise<Montado> {
         const montado = await abrirComRelatorio([linha()]);
-        botao('Revisar com IA').click();
+        botao('Revisar com Piá').click();
         await montado.atualizar();
         responderSucesso(esperarRequisicao(montado.http, 'POST', '/relatorio/execucao/revisar'), {
             resumo: 'Duas falhas',
@@ -352,7 +352,7 @@ describe('RelatorioExecucaoPage — painel da revisão (task 272)', () => {
 
     it('recolher deixa só uma caixinha por ponto, na cor da prioridade e com o nome do ponto', async () => {
         const montado = await comRevisao();
-        (montado.elemento.querySelector('[aria-label="Recolher a revisão por IA"]') as HTMLElement).click();
+        (montado.elemento.querySelector('[aria-label="Recolher a revisão por Piá"]') as HTMLElement).click();
         await montado.atualizar();
 
         expect(montado.elemento.querySelector('.relatorio-execucao__painel')).toBeNull();

@@ -14,6 +14,7 @@ import { destinoPosLogin } from '../../../../core/utils/destino-pos-login';
 import { urlRetornoSegura } from '../../../../core/utils/url-retorno';
 import { AutenticacaoLoginDto } from '@project20/shared';
 import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
+import { LogoProjectComponent } from '../../../../shared/components/logo-project/logo-project.component';
 
 /** Só o login e o nome ficam no navegador — a senha nunca é persistida (task 94). */
 interface UsuarioLembrado {
@@ -28,7 +29,7 @@ const CHAVE_ULTIMO_LOGIN = 'ultimo_login';
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [AvatarUsuarioComponent, ReactiveFormsModule, CardModule, InputTextModule, ButtonModule],
+    imports: [AvatarUsuarioComponent, LogoProjectComponent, ReactiveFormsModule, CardModule, InputTextModule, ButtonModule],
     templateUrl: './login.page.html',
     styleUrl: './login.page.scss',
 })

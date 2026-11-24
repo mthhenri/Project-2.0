@@ -158,7 +158,7 @@ export class MensagemDiretaCompositorComponent {
         if (!gatilho) return [];
         if (gatilho.tipo === 'MENCAO') {
             const daIa: ItemDaSugestao[] = this.iaDisponivel() && ROTULO_DA_IA_NO_COMPOSITOR.toLowerCase().startsWith(gatilho.termo.toLowerCase())
-                ? [{ rotulo: ROTULO_DA_IA_NO_COMPOSITOR, titulo: ROTULO_DA_IA_NO_COMPOSITOR, detalhe: 'Pedir à IA', icone: 'pi-sparkles', nomeDoAvatar: null, corDoAvatar: null, pessoa: null, referencia: null }]
+                ? [{ rotulo: ROTULO_DA_IA_NO_COMPOSITOR, titulo: ROTULO_DA_IA_NO_COMPOSITOR, detalhe: 'Pedir à IA', icone: 'pi-sparkles app-icone-pia', nomeDoAvatar: null, corDoAvatar: null, pessoa: null, referencia: null }]
                 : [];
             const deTodos: ItemDaSugestao[] = this.permitirTodos() && ROTULO_DE_TODOS_NO_COMPOSITOR.startsWith(gatilho.termo.toLowerCase())
                 ? [{ rotulo: ROTULO_DE_TODOS_NO_COMPOSITOR, titulo: ROTULO_DE_TODOS_NO_COMPOSITOR, detalhe: 'Avisar todos do grupo', icone: 'pi-users', nomeDoAvatar: null, corDoAvatar: null, pessoa: null, referencia: null }]

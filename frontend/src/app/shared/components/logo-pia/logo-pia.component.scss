@@ -1,0 +1,30 @@
+// Logo da Piá (task 489): o nome "piá" escrito em traço, com o acento do á em âmbar fazendo o papel do brilho. Grade de
+// 96 × 78 (proporção 1,23): o p ocupa a altura toda (descendente), o i e o á ficam na altura-x. Duas camadas: o nome
+// recorta o degradê Araucária (::before) e o acento recorta o âmbar (::after). Cores pelos tokens --app-pia-* (styles.scss).
+:host {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: calc(var(--logo-tamanho) * 1.23);
+    height: var(--logo-tamanho);
+
+    &::before,
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        mask-position: center;
+        mask-size: 100% 100%;
+        mask-repeat: no-repeat;
+    }
+
+    &::before {
+        background: linear-gradient(135deg, var(--app-pia-inicio) 10%, var(--app-pia-fim) 95%);
+        mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-6 -2 96 78'%3E%3Cpath d='M0 26V70' fill='none' stroke='%23000' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='14' cy='40' r='14' fill='none' stroke='%23000' stroke-width='7'/%3E%3Cpath d='M42 26V54' fill='none' stroke='%23000' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='42' cy='12.5' r='4.34'/%3E%3Ccircle cx='70' cy='40' r='14' fill='none' stroke='%23000' stroke-width='7'/%3E%3Cpath d='M84 26V54' fill='none' stroke='%23000' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+
+    &::after {
+        background: var(--app-pia-ponto);
+        mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-6 -2 96 78'%3E%3Cpath d='M66 12L76 2' fill='none' stroke='%23000' stroke-width='5.95' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+}

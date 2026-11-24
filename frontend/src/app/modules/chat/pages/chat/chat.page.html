@@ -105,8 +105,8 @@
                                     <span
                                         class="chat__avatar chat__avatar--grande"
                                         aria-hidden="true"
-                                        >IA</span
-                                    >
+                                        ><app-logo-pia tamanho="56%"
+                                    /></span>
                                     @if (modo() === Modo.PLANEJAMENTO) {
                                         <p>
                                             {{
@@ -205,8 +205,8 @@
                                                 [attr.data-mensagem-id]="mensagem.id"
                                             >
                                                 <span class="chat__avatar" aria-hidden="true"
-                                                    >IA</span
-                                                >
+                                                    ><app-logo-pia tamanho="56%"
+                                                /></span>
                                                 <div
                                                     class="chat__ia-conteudo"
                                                     [attr.aria-busy]="mensagem.aoVivo ? true : null"

@@ -37,7 +37,7 @@ describe('MensagemDiretaConversaComponent — @IA', () => {
         });
         await redesenhar();
     };
-    const iaDigitando = () => tela.elemento.querySelector('[aria-label="IA digitando"]');
+    const iaDigitando = () => tela.elemento.querySelector('[aria-label="Piá digitando"]');
 
     beforeEach(async () => {
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
@@ -59,7 +59,7 @@ describe('MensagemDiretaConversaComponent — @IA', () => {
         ]);
         const resposta = tela.elemento.querySelector('app-mensagem-direta-ia-resposta');
         expect(resposta).not.toBeNull();
-        expect(resposta!.textContent).toContain('IA · para você');
+        expect(resposta!.textContent).toContain('Piá · para você');
         expect(resposta!.textContent).toContain('3 atividades');
         expect(resposta!.querySelector('[aria-label="Ações da mensagem"]')).toBeNull();
         expect(tela.elemento.querySelectorAll('.conversa-direta__balao').length).toBe(1);
@@ -72,12 +72,12 @@ describe('MensagemDiretaConversaComponent — @IA', () => {
         ]);
         const chips = Array.from(tela.elemento.querySelectorAll('.markdown__destaque'));
         expect(chips.map((chip) => chip.textContent)).toEqual(['@ia']);
-        expect(chips[0].querySelector('i.pi-sparkles')).not.toBeNull();
+        expect(chips[0].querySelector('i.app-icone-pia')).not.toBeNull();
     });
 
     it('a resposta à outra pessoa mostra o nome dela', async () => {
         await abrir([mensagem({ mensagemId: 'ia-1', autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, texto: 'Pronto.', chamadaPorUsuarioId: 9 })]);
-        expect(tela.elemento.querySelector('app-mensagem-direta-ia-resposta')!.textContent).toContain('IA · para Camila Duarte');
+        expect(tela.elemento.querySelector('app-mensagem-direta-ia-resposta')!.textContent).toContain('Piá · para Camila Duarte');
     });
 
     it('IA_DIGITANDO mostra "IA digitando" no fim da conversa até a resposta chegar', async () => {
@@ -85,7 +85,7 @@ describe('MensagemDiretaConversaComponent — @IA', () => {
         expect(iaDigitando()).toBeNull();
         estado.aplicarEvento({ tipo: 'IA_DIGITANDO', conversaId: '1-9' });
         await redesenhar();
-        expect(iaDigitando()?.textContent).toContain('IA digitando');
+        expect(iaDigitando()?.textContent).toContain('Piá digitando');
 
         estado.aplicarEvento({
             tipo: 'MENSAGEM',

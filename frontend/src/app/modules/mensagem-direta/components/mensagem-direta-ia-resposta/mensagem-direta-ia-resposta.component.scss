@@ -20,10 +20,8 @@
         height: 1.75rem;
         margin-top: 1.125rem;
         border-radius: 8px;
-        background: var(--p-text-color);
-        color: var(--p-content-background);
-        font-size: 0.6875rem;
-        font-weight: 700;
+        // Selo da Piá (task 489): tinta leve do início do degradê dela, nos dois temas.
+        background: color-mix(in srgb, var(--app-pia-inicio) 14%, transparent);
     }
 
     &__corpo {

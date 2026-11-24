@@ -32,7 +32,7 @@ export interface ExecucaoEncerrarAbertura {
 }
 
 /**
- * Diálogo "Encerrar execução", o mesmo da tela de Atividades: descrição com "Auxiliar com IA" e as últimas execuções da
+ * Diálogo "Encerrar execução", o mesmo da tela de Atividades: descrição com "Auxiliar com Piá" e as últimas execuções da
  * atividade. Usado pela tela de Atividades, pelo chip da barra superior e pela tela de Execuções, para que pausar seja sempre
  * a mesma caixa. Quem abre chama `abrir()`; ao encerrar com sucesso emite `encerrada` com os dados da execução fechada.
  */

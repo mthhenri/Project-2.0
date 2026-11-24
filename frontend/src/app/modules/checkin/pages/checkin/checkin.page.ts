@@ -19,6 +19,8 @@ import { ChatService, ErroDoChat } from '../../../chat/services/chat.service';
 import { COMECO_DO_AVISO_DE_LIMITE, formatarDuracao, LIMITE_MENSAGEM_CHAT } from '../../../chat/utils/chat.util';
 import { CheckinService } from '../../services/checkin.service';
 import { EstadoDoCheckin, decidirEstado } from '../../utils/checkin.util';
+import { LogoProjectComponent } from '../../../../shared/components/logo-project/logo-project.component';
+import { LogoPiaComponent } from '../../../../shared/components/logo-pia/logo-pia.component';
 
 /** De quanto em quanto tempo a janela confere a situação (para saber que a descrição foi confirmada ou que os check-ins foram suspensos). */
 /**
@@ -76,7 +78,7 @@ interface RespostaAoVivo {
 @Component({
     selector: 'app-checkin-page',
     standalone: true,
-    imports: [ButtonModule, SkeletonModule, EditorMensagemComponent, ToastModule, TooltipModule, MarkdownVisualizadorComponent, PropostaCartaoComponent, ToastDesfazerComponent],
+    imports: [LogoPiaComponent, LogoProjectComponent, ButtonModule, SkeletonModule, EditorMensagemComponent, ToastModule, TooltipModule, MarkdownVisualizadorComponent, PropostaCartaoComponent, ToastDesfazerComponent],
     templateUrl: './checkin.page.html',
     styleUrl: './checkin.page.scss',
     host: { '[class.checkin-embutido]': 'embutido()', '[class.checkin-no-desktop]': 'noDesktop' },

@@ -1,0 +1,23 @@
+<svg class="logo-project__desenho" viewBox="0 0 64 64" focusable="false">
+    @if (ladrilho()) {
+        <rect class="logo-project__ladrilho" width="64" height="64" rx="14" />
+    }
+    <g
+        [class.logo-project__simbolo--ladrilho]="ladrilho()"
+        [attr.transform]="ladrilho() ? 'translate(32 32) scale(0.66) translate(-32 -32)' : null"
+    >
+        <g transform="translate(-1 1.5)">
+            <path
+                class="logo-project__traco"
+                d="M18 12V54M18 12H30a12 12 0 0 1 0 24H18"
+                stroke-width="7"
+            />
+            <path
+                class="logo-project__traco"
+                d="M40.5 5.81A21 21 0 0 1 46.77 36.64"
+                stroke-width="4"
+            />
+            <circle class="logo-project__vivo" cx="40.5" cy="42.19" r="4.8" />
+        </g>
+    </g>
+</svg>

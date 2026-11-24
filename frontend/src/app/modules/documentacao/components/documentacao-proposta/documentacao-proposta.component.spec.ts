@@ -15,7 +15,7 @@ const botao = (montado: Awaited<ReturnType<typeof montar>>, rotulo: string) =>
 describe('DocumentacaoPropostaComponent', () => {
     it('pronta: mostra o diff por palavra do bloco e oferece Aceitar, Descartar e Pedir de novo', async () => {
         const montado = await montar({ estado: 'PRONTA', bloco: 'O sistema deve exportar o relatório.', blocoNovo: 'O sistema deve gerar o relatório.' });
-        expect(montado.elemento.textContent).toContain('Proposta da IA');
+        expect(montado.elemento.textContent).toContain('Proposta de Piá');
         expect(montado.elemento.textContent).toContain('só o trecho marcado');
         expect(montado.elemento.querySelector('del')?.textContent).toContain('exportar');
         expect(montado.elemento.querySelector('ins')?.textContent).toContain('gerar');

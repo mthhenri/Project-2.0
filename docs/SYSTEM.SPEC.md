@@ -975,6 +975,18 @@ No Aura/PrimeNG 21 a escala bruta `--p-surface-0..950` é **fixa** nos dois tema
 
 A cor `primary` aparece **apenas em pontos de destaque**: estado ativo na navegação, botões de ação principal, títulos que representam a identidade do produto. Fundos estruturais usam sempre os aliases `--app-surface-*`. Aliases adicionais: `--app-avatar-fundo`/`--app-avatar-cor` (avatares) e `--app-fundo` (fundo de página). **Exceção:** a página do grafo (`demanda-projeto`/`demanda-grafo`) é canvas escuro proposital com hex fixos.
 
+**Identidade visual (task 489).** As logos têm cores **fixas**, que não acompanham a cor primária escolhida pelo usuário:
+
+| Peça | Onde | Componente / classe | Tokens |
+|---|---|---|---|
+| Marca do **Project 2.0**: o P com a órbita que termina na bolinha verde de "em execução" | barra lateral, login, cabeçalho do check-in; no ladrilho, favicon e ícone do Project Desktop | `app-logo-project` (`ladrilho` para o quadrado azul) | `--app-logo-*` |
+| Ícone da **Piá** (a IA): o brilho `pi pi-sparkles` em Araucária | todo ícone de ação ou de menu da IA, e a menção da IA no texto | classe `app-icone-pia` junto de `pi pi-sparkles` | `--app-pia-icone` |
+| Logo da **Piá**: o nome "piá" escrito, com o acento do á em âmbar | onde a Piá é quem fala: avatar da mensagem da IA (chat, check-in, resposta no grupo) | `app-logo-pia` | `--app-pia-inicio`, `--app-pia-fim`, `--app-pia-ponto` |
+
+O nome da IA é **Piá** ("P-IA"), escrito sem artigo enquanto "o/a Piá" estiver em aberto ("Revisar com Piá", "Piá ·
+para Ana"); frases que pedem artigo continuam dizendo "IA". O botão de ação da Piá que precisa de cor própria usa o
+contornado do PrimeNG com `--app-pia-icone`, nunca o roxo (`severity="help"`).
+
 ---
 
 ## 9. Banco de Dados

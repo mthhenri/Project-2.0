@@ -82,7 +82,7 @@ export class MensagemDiretaGrupoResumoComponent {
         return this.destinoPermiteGravar() && (aberto === null || (aberto.pedidoPorVoce && !aberto.gravado));
     });
     protected readonly pedeDemanda = computed(() => this.opcoes()?.destino === GrupoResumoIaDestinoEnum.PROJETO);
-    protected readonly titulo = computed(() => `Resumir com IA · ${this.nomeDoGrupo()}`);
+    protected readonly titulo = computed(() => `Resumir com Piá · ${this.nomeDoGrupo()}`);
     protected readonly tokensEstimados = computed(() => {
         const estimado = this.estimativa();
         return estimado ? estimado.tokensEntradaEstimados + estimado.tokensSaidaEstimados : 0;

@@ -47,7 +47,7 @@ async function ateOResultado(tela: Montado): Promise<void> {
 describe('MensagemDiretaGrupoResumoComponent', () => {
     it('abre com o título, o aviso de consentimento e o código desligado, e diz que o chat ainda não foi resumido', async () => {
         await abrir();
-        expect(texto()).toContain('Resumir com IA · Cadastro de clientes');
+        expect(texto()).toContain('Resumir com Piá · Cadastro de clientes');
         expect(texto()).toContain('As mensagens do período vão ao provedor de IA configurado');
         expect(texto()).toContain('Este chat ainda não foi resumido');
         const caixa = doDialog().querySelector<HTMLInputElement>('input[type="checkbox"]');

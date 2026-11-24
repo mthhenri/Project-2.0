@@ -12,7 +12,7 @@ import { MarkdownVisualizadorComponent } from '../../../../shared/components/mar
 import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-referencia.service';
 import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { EdicaoEmPreparo } from '../../utils/compositor.util';
-import { AVISO_DE_LEITURA_DAS_CONVERSAS, DESTAQUES_DA_IA, ICONES_DOS_DESTAQUES_DA_IA, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa, marcarEmendas } from '../../utils/mensagem-direta.util';
+import { AVISO_DE_LEITURA_DAS_CONVERSAS, DESTAQUES_DA_IA, CORES_DOS_DESTAQUES_DA_IA, ICONES_DOS_DESTAQUES_DA_IA, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa, marcarEmendas } from '../../utils/mensagem-direta.util';
 import { AvatarUsuarioComponent } from '../../../../shared/components/avatar-usuario/avatar-usuario.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
 import { MensagemDiretaEmojiSeletorComponent } from '../mensagem-direta-emoji-seletor/mensagem-direta-emoji-seletor.component';
@@ -222,7 +222,7 @@ export class MensagemDiretaConversaComponent {
     /** A cor da bolinha de cada pessoa marcada, por `@Nome` (quem não escolheu cor fica de fora e usa a cor de acento). */
     protected coresDosDestaquesDe(mensagem: { mencoes: number[] }): Record<string, string> {
         const aberta = this.aberta();
-        const cores: Record<string, string> = {};
+        const cores: Record<string, string> = { ...CORES_DOS_DESTAQUES_DA_IA };
         for (const usuarioId of mensagem.mencoes) {
             const eu = usuarioId === this.sessao.id();
             const nome = eu ? this.sessao.nomeCompleto() : aberta?.usuarioId === usuarioId ? aberta.usuarioNome : null;

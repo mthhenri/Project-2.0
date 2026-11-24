@@ -33,19 +33,6 @@
         background: var(--app-surface-0);
     }
 
-    &__logo {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.125rem;
-        height: 2.125rem;
-        border-radius: 9px;
-        background: var(--p-primary-600);
-        color: var(--p-primary-contrast-color);
-        font-size: 0.8125rem;
-        font-weight: 700;
-    }
-
     &__titulos {
         flex: 1;
         min-width: 0;
@@ -196,10 +183,8 @@
         width: 1.875rem;
         height: 1.875rem;
         border-radius: 8px;
-        background: var(--p-surface-900);
-        color: #fff;
-        font-size: 0.6875rem;
-        font-weight: 700;
+        // Selo da Piá (task 489): tinta leve do início do degradê dela, nos dois temas.
+        background: color-mix(in srgb, var(--app-pia-inicio) 14%, transparent);
     }
 
     &__ia-conteudo {

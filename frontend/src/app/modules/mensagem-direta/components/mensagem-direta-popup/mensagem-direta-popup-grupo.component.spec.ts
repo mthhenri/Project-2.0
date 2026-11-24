@@ -211,7 +211,7 @@ describe('MensagemDiretaPopupComponent — grupos', () => {
         await montar();
         await abrirOGrupo();
         responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/grupo/7/leitura'), { grupoId: 7, conversaId: 'G7', lidaAteData: '2026-10-21T14:07:00.000Z' });
-        expect(texto()).toContain('Este chat pode ser resumido por IA');
+        expect(texto()).toContain('Este chat pode ser resumido por Piá');
 
         digitarNaMensagem(tela.fixture, '/resumir');
         teclarNaMensagem(tela.fixture, 'Enter');
@@ -220,7 +220,7 @@ describe('MensagemDiretaPopupComponent — grupos', () => {
         tela.http.expectNone((pedido) => pedido.method === 'POST' && pedido.url.endsWith('/mensagem'));
         responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/grupo/7/resumo'), { ultimoResumoData: null, destino: 'NENHUM', demandaId: null, projetoId: null });
         await tela.atualizar();
-        expect(document.body.textContent).toContain('Resumir com IA · Time do backend');
+        expect(document.body.textContent).toContain('Resumir com Piá · Time do backend');
     });
 
     it('o menu do grupo também abre o resumo', async () => {
@@ -229,7 +229,7 @@ describe('MensagemDiretaPopupComponent — grupos', () => {
         responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/grupo/7/leitura'), { grupoId: 7, conversaId: 'G7', lidaAteData: '2026-10-21T14:07:00.000Z' });
         tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Menu do grupo"]')!.click();
         await tela.atualizar();
-        const item = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"] a, [role="menuitem"] .p-menu-item-link')).find((candidato) => candidato.textContent?.includes('Resumir com IA'));
+        const item = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"] a, [role="menuitem"] .p-menu-item-link')).find((candidato) => candidato.textContent?.includes('Resumir com Piá'));
         expect(item).toBeDefined();
     });
 

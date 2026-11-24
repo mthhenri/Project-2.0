@@ -21,7 +21,7 @@ async function montar(textoAtual: string, entradas: Record<string, unknown> = {}
 }
 
 async function pedirSugestao(montado: Montado, sugestao = SUGESTAO): Promise<void> {
-    botao(montado, 'Auxiliar com IA').click();
+    botao(montado, 'Auxiliar com Piá').click();
     responderSucesso(esperarRequisicao(montado.http, 'POST', '/assistente/auxiliar-descricao'), { textoAuxiliado: sugestao });
     await montado.atualizar();
 }
@@ -31,8 +31,8 @@ afterEach(() => vi.useRealTimers());
 describe('AssistenteDescricaoComponent — pedir a sugestão', () => {
     it(`texto com menos de ${MINIMO_CARACTERES_ASSISTENTE} caracteres mantém "Auxiliar com IA" desabilitado e não faz requisição`, async () => {
         const montado = await montar('curto');
-        expect(botao(montado, 'Auxiliar com IA').disabled).toBe(true);
-        botao(montado, 'Auxiliar com IA').click();
+        expect(botao(montado, 'Auxiliar com Piá').disabled).toBe(true);
+        botao(montado, 'Auxiliar com Piá').click();
         await montado.atualizar();
         montado.http.expectNone((requisicao) => requisicao.url.endsWith('/assistente/auxiliar-descricao'));
     });
@@ -44,9 +44,9 @@ describe('AssistenteDescricaoComponent — pedir a sugestão', () => {
 
     it('com texto suficiente envia texto, tipo da entidade e contexto e mostra original e sugestão editável', async () => {
         const montado = await montar(TEXTO, { tipoEntidade: 'demanda', contextoEntidade: 'Demanda Login' });
-        expect(botao(montado, 'Auxiliar com IA').disabled).toBe(false);
+        expect(botao(montado, 'Auxiliar com Piá').disabled).toBe(false);
 
-        botao(montado, 'Auxiliar com IA').click();
+        botao(montado, 'Auxiliar com Piá').click();
         const requisicao = esperarRequisicao(montado.http, 'POST', '/assistente/auxiliar-descricao');
         expect(requisicao.request.body).toEqual({ textoOriginal: TEXTO, tipoEntidade: 'demanda', contextoEntidade: 'Demanda Login' });
         responderSucesso(requisicao, { textoAuxiliado: SUGESTAO });
@@ -59,7 +59,7 @@ describe('AssistenteDescricaoComponent — pedir a sugestão', () => {
 
     it('o tipo de entidade padrão é "execucao"', async () => {
         const montado = await montar(TEXTO);
-        botao(montado, 'Auxiliar com IA').click();
+        botao(montado, 'Auxiliar com Piá').click();
         const requisicao = esperarRequisicao(montado.http, 'POST', '/assistente/auxiliar-descricao');
         expect(requisicao.request.body.tipoEntidade).toBe('execucao');
         responderSucesso(requisicao, { textoAuxiliado: SUGESTAO });
@@ -67,14 +67,14 @@ describe('AssistenteDescricaoComponent — pedir a sugestão', () => {
 
     it('IA fora do ar (erro do backend): não abre a comparação e libera o botão para tentar de novo', async () => {
         const montado = await montar(TEXTO);
-        botao(montado, 'Auxiliar com IA').click();
+        botao(montado, 'Auxiliar com Piá').click();
         responderErro(esperarRequisicao(montado.http, 'POST', '/assistente/auxiliar-descricao'), 503, 'A IA está fora do ar');
         await montado.atualizar();
 
         expect(montado.componente.mostrarComparacao()).toBe(false);
         expect(montado.elemento.textContent).not.toContain('Sugestão (editável)');
         expect(montado.componente.carregandoAuxilio()).toBe(false);
-        expect(botao(montado, 'Auxiliar com IA').disabled).toBe(false);
+        expect(botao(montado, 'Auxiliar com Piá').disabled).toBe(false);
         // O interceptor já avisou o usuário (toast); o rxjs reporta a falha relançada um tick depois.
         await new Promise((resolver) => setTimeout(resolver, 0));
         expect(montado.errosHttpNaoTratados).toHaveLength(1);
@@ -82,7 +82,7 @@ describe('AssistenteDescricaoComponent — pedir a sugestão', () => {
 
     it('enquanto a IA responde o botão fica ocupado e um segundo clique não duplica o pedido', async () => {
         const montado = await montar(TEXTO);
-        botao(montado, 'Auxiliar com IA').click();
+        botao(montado, 'Auxiliar com Piá').click();
         await montado.atualizar();
         expect(montado.componente.carregandoAuxilio()).toBe(true);
         montado.componente.auxiliar();

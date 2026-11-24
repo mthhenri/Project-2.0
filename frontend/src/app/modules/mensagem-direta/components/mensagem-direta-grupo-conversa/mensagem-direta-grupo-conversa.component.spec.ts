@@ -255,11 +255,11 @@ describe('MensagemDiretaGrupoConversaComponent — editar, reagir e @IA', () => 
     it('"IA digitando…" aparece enquanto a IA responde a um @IA do grupo e some quando a resposta chega', async () => {
         estado.aplicarEvento({ tipo: 'IA_DIGITANDO', conversaId: 'G7' });
         await redesenhar();
-        expect(tela.elemento.querySelector('[aria-label="IA digitando"]')).not.toBeNull();
+        expect(tela.elemento.querySelector('[aria-label="Piá digitando"]')).not.toBeNull();
 
         estado.aplicarEvento({ tipo: 'MENSAGEM', mensagem: resumo(mensagem(DA_IA_ID, null, 'Feito.', { autor: AutorMensagemDiretaEnum.IA, chamadaPorUsuarioId: 1 })) });
         await redesenhar();
-        expect(tela.elemento.querySelector('[aria-label="IA digitando"]')).toBeNull();
+        expect(tela.elemento.querySelector('[aria-label="Piá digitando"]')).toBeNull();
         expect(estado.grupoEstado.grupos()[0].naoLidas, 'a resposta da IA não conta como não lida').toBe(0);
     });
 

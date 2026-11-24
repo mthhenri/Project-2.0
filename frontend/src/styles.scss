@@ -81,6 +81,19 @@ $raio-borda-padrao: 0.5rem;
     --app-marca-recesso-cor: var(--p-primary-700);
     --app-marca-facultativo-fundo: color-mix(in srgb, var(--p-primary-100) 40%, var(--p-cyan-200));
     --app-marca-facultativo-cor: color-mix(in srgb, var(--p-primary-700) 45%, var(--p-cyan-700));
+
+    // Logos (task 489): fixas na paleta, não acompanham a cor primária escolhida pelo usuário. A do Project é azul com a
+    // bolinha verde de "em execução". A Piá (a IA) é Araucária: o brilho dos ícones e das menções usa --app-pia-icone; a
+    // logo "piá" dos avatares vai do verde-pinheiro ao verde-azulado, com o acento âmbar.
+    --app-logo-tinta: var(--p-blue-600);
+    --app-logo-vivo: var(--p-green-500);
+    --app-logo-ladrilho: var(--p-blue-600);
+    --app-logo-ladrilho-tinta: var(--p-surface-0);
+    --app-logo-ladrilho-vivo: var(--p-green-400);
+    --app-pia-icone: var(--p-green-700);
+    --app-pia-inicio: var(--p-green-700);
+    --app-pia-fim: var(--p-teal-700);
+    --app-pia-ponto: var(--p-amber-500);
 }
 
 .app-escuro {
@@ -138,6 +151,14 @@ $raio-borda-padrao: 0.5rem;
         transparent
     );
     --app-marca-facultativo-cor: color-mix(in srgb, var(--p-primary-300) 50%, var(--p-cyan-300));
+
+    // Logos no escuro: tons 400 (o ladrilho continua no 600, com o símbolo branco).
+    --app-logo-tinta: var(--p-blue-400);
+    --app-logo-vivo: var(--p-green-400);
+    --app-pia-icone: var(--p-green-400);
+    --app-pia-inicio: var(--p-green-400);
+    --app-pia-fim: var(--p-teal-400);
+    --app-pia-ponto: var(--p-amber-300);
 }
 
 // Fundo e cor de texto base. `--p-text-color` já troca sozinho no tema escuro.
@@ -300,4 +321,11 @@ body:has(.anotacoes-drawer) .toast-desfazer {
 .minhas-demandas-menu--para-cima .p-contextmenu-submenu {
     top: auto !important; // PrimeNG posiciona o submenu em top: 0 por estilo inline.
     bottom: 0;
+}
+
+// Ícone da Piá, a IA do sistema (task 489): o brilho do PrimeIcons na cor Araucária. Vale em todo ícone de ação ou de
+// menu da IA e na menção; vai junto da classe do ícone (`pi pi-sparkles app-icone-pia`), também onde o app só recebe uma
+// classe (item da barra lateral, menu, destaque da menção). Quem fala (o autor da mensagem) usa a logo `app-logo-pia`.
+.app-icone-pia {
+    color: var(--app-pia-icone);
 }

@@ -249,8 +249,8 @@ describe('PropostaCartaoComponent — feita pela IA (task 228)', () => {
         const montado = await montarCartao(confirmada(true));
         const linha = montado.elemento.querySelector('.proposta-linha--ia');
         expect(linha).not.toBeNull();
-        expect(linha?.querySelector('.pi-sparkles')).not.toBeNull();
-        expect(texto(montado)).toContain('Feito pela IA');
+        expect(linha?.querySelector('.app-icone-pia')).not.toBeNull();
+        expect(texto(montado)).toContain('Feito por Piá');
         expect(texto(montado)).toContain('Montar o formulário');
         expect(botao(montado, 'Desfazer')).toBeDefined();
     });
@@ -259,8 +259,8 @@ describe('PropostaCartaoComponent — feita pela IA (task 228)', () => {
         const montado = await montarCartao(confirmada(false));
         expect(montado.elemento.querySelector('.proposta-linha--feita')).not.toBeNull();
         expect(montado.elemento.querySelector('.proposta-linha--ia')).toBeNull();
-        expect(montado.elemento.querySelector('.pi-sparkles')).toBeNull();
-        expect(texto(montado)).not.toContain('Feito pela IA');
+        expect(montado.elemento.querySelector('.app-icone-pia')).toBeNull();
+        expect(texto(montado)).not.toContain('Feito por Piá');
     });
 
     it('Desfazer do aviso da IA desfaz no servidor como o de qualquer proposta feita', async () => {

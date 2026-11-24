@@ -274,7 +274,7 @@ describe('PropostaGrupoComponent', () => {
             expect(botao(montado, 'Confirmar todas')).toBeUndefined();
             expect(linhas(montado)).toHaveLength(3);
             expect(montado.elemento.querySelectorAll('.proposta-linha--ia')).toHaveLength(1);
-            expect(texto(montado)).toContain('Feito pela IA');
+            expect(texto(montado)).toContain('Feito por Piá');
         });
 
         it('Confirmar, no grupo misto, leva só as pendentes: o que a IA fez não entra de novo', async () => {
