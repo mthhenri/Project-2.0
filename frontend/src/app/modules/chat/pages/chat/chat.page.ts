@@ -24,6 +24,7 @@ import { COMECO_DO_AVISO_DE_LIMITE, dataDaConversa, LIMITE_MENSAGEM_CHAT, mensag
 import { montarPedidoDeAlteracaoDoTrecho } from '../../utils/plano.util';
 import { LARGURA_DO_DOCUMENTO, larguraDoDocumentoPeloPonteiro, limitarLarguraDoDocumento, ModoDoChatEnum } from '../../utils/plano.util';
 import { LogoPiaComponent } from '../../../../shared/components/logo-pia/logo-pia.component';
+import { AvatarDaPiaDirective } from '../../directives/avatar-da-pia.directive';
 
 /** Uma mensagem como a tela a mostra: as da conversa do dia mais as locais (otimistas), com os cartões de proposta ligados a ela. */
 interface MensagemNaTela {
@@ -78,7 +79,7 @@ const JANELA_DA_INTERACAO_MS = 400;
 @Component({
     selector: 'app-chat-page',
     standalone: true,
-    imports: [LogoPiaComponent, 
+    imports: [LogoPiaComponent, AvatarDaPiaDirective, 
         DatePipe,
         ButtonModule,
         SkeletonModule,

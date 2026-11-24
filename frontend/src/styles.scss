@@ -329,3 +329,31 @@ body:has(.anotacoes-drawer) .toast-desfazer {
 .app-icone-pia {
     color: var(--app-pia-icone);
 }
+
+// Detalhe do avatar da Piá no chat (task 491, AvatarDaPiaDirective): um balanço curto enquanto o som dura.
+.app-pia-cantando {
+    animation: app-pia-balanco 0.8s ease-in-out;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+}
+
+@keyframes app-pia-balanco {
+    0%,
+    100% {
+        transform: rotate(0);
+    }
+
+    20% {
+        transform: rotate(-12deg);
+    }
+
+    45% {
+        transform: rotate(10deg);
+    }
+
+    70% {
+        transform: rotate(-6deg);
+    }
+}

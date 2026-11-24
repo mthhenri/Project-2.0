@@ -13,6 +13,12 @@
 ---
 
 
+## 2026-11-24 — Task 491: detalhe de interação no avatar da Piá no chat da IA
+
+Pedido do autor, com discrição: os detalhes ficam na spec (`docs/specs/done/491-detalhe-no-avatar-da-pia.spec.md`).
+`AvatarDaPiaDirective` no avatar da Piá do chat da IA, regra pura `registrarToque` e `PiaSomService`. Frontend 2984
+testes (12 novos), build e `lint:tudo` limpos; verificação ao vivo nos 5 formatos e 2 temas, relatório junto da spec.
+
 ## 2026-11-24 — Task 489: identidade visual — a marca do Project 2.0 e a Piá, a IA do sistema
 
 O autor pediu "uma identidade visual mais clara". A exploração foi feita por páginas de proposta e por capturas do app

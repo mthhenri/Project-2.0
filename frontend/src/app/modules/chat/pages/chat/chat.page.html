@@ -105,6 +105,7 @@
                                     <span
                                         class="chat__avatar chat__avatar--grande"
                                         aria-hidden="true"
+                                        appAvatarDaPia
                                         ><app-logo-pia tamanho="56%"
                                     /></span>
                                     @if (modo() === Modo.PLANEJAMENTO) {
@@ -204,7 +205,10 @@
                                                 class="chat__linha chat__linha--ia"
                                                 [attr.data-mensagem-id]="mensagem.id"
                                             >
-                                                <span class="chat__avatar" aria-hidden="true"
+                                                <span
+                                                    class="chat__avatar"
+                                                    aria-hidden="true"
+                                                    appAvatarDaPia
                                                     ><app-logo-pia tamanho="56%"
                                                 /></span>
                                                 <div
