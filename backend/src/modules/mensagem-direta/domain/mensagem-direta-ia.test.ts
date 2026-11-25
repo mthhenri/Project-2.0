@@ -8,7 +8,11 @@ import {
     descreverTipoDaPessoa,
     montarContextoDoChatDireto,
     montarOrientacaoDoChatDireto,
+    CHANCE_DO_JEITO_CURITIBANO,
+    SAUDACOES_DA_PIA,
+    escolherSaudacao,
     montarOrientacaoDaSaudacao,
+    montarOrientacaoDoJeito,
     montarOrientacaoDoGrupo,
     montarPedidoDaSaudacao,
     textoDaRespostaDaIa,
@@ -109,11 +113,25 @@ test('a orientação do grupo sem outros membros diz que ninguém mais lê agora
 });
 
 test('a orientação da saudação manda cumprimentar, oferecer e não fazer nada ainda', () => {
-    const orientacao = montarOrientacaoDaSaudacao();
-    assert.match(orientacao, /Opa, chamou\?/);
+    const orientacao = montarOrientacaoDaSaudacao('Diga lá, o que tu precisa?');
+    assert.match(orientacao, /Comece com este cumprimento, exatamente: "Diga lá, o que tu precisa\?"/);
     assert.match(orientacao, /Sobre <assunto>, quer que eu faça isso\?/);
     assert.match(orientacao, /não use ferramentas, não proponha ações/);
     assert.match(orientacao, /não marque ninguém/);
+});
+
+test('a saudação é sorteada da lista, do primeiro ao último cumprimento (task 494)', () => {
+    assert.equal(escolherSaudacao(0), 'Opa, chamou?');
+    assert.equal(escolherSaudacao(0.9999), SAUDACOES_DA_PIA[SAUDACOES_DA_PIA.length - 1]);
+    assert.equal(new Set(SAUDACOES_DA_PIA.map((_, indice) => escolherSaudacao(indice / SAUDACOES_DA_PIA.length))).size, SAUDACOES_DA_PIA.length);
+});
+
+test('o jeito curitibano só entra nos 5% e vale só para a fala (task 494)', () => {
+    assert.equal(CHANCE_DO_JEITO_CURITIBANO, 0.05);
+    assert.match(montarOrientacaoDoJeito(0) ?? '', /curitibano/);
+    assert.match(montarOrientacaoDoJeito(0.0499) ?? '', /vai nas ferramentas .* fica em português normal/);
+    assert.equal(montarOrientacaoDoJeito(0.05), null);
+    assert.equal(montarOrientacaoDoJeito(0.9), null);
 });
 
 test('o pedido da saudação traz a mensagem anterior com o autor, cortada quando longa, ou diz que não há', () => {

@@ -47,7 +47,7 @@ export function montarOrientacaoDeMencoes(quemChamou: PessoaDaConversaComIa, out
  */
 export function montarOrientacaoDoChatDireto(quemChamou: PessoaDaConversaComIa, outraPessoa: PessoaDaConversaComIa): string {
     return [
-        'Você foi chamado com @IA numa conversa entre duas pessoas do chat entre colaboradores.',
+        'Você foi chamado com @PIA numa conversa entre duas pessoas do chat entre colaboradores.',
         `Quem chamou: ${quemChamou.nome} (${descreverTipoDaPessoa(quemChamou.tipo)}). Você atende só esta pessoa e só o pedido dela, com as permissões dela.`,
         `Quem mais lê a sua resposta: ${outraPessoa.nome} (${descreverTipoDaPessoa(outraPessoa.tipo)}). A resposta aparece para as duas pessoas.`,
         `Não exponha no texto o que ${outraPessoa.nome} não acessa: dados de projetos, demandas, atividades, pontos e pessoas a que um ${descreverTipoDaPessoa(outraPessoa.tipo)} não tem acesso. Se o pedido exigir isso, faça o que foi pedido pelas ferramentas e diga no texto só o necessário, sem os dados restritos.`,
@@ -83,8 +83,8 @@ export function montarOrientacaoDoGrupo(quemChamou: PessoaDaConversaComIa, outro
     const tiposDosLeitores = [...new Set(outrosLeitores.map((leitor) => descreverTipoDaPessoa(leitor.tipo)))];
     return [
         ehCanal
-            ? `Você foi chamado com @IA no chat ${grupo.tipo === TipoGrupoEnum.DEMANDA ? 'da demanda' : 'do projeto'} "${grupo.nome}", do chat entre colaboradores. O assunto do chat é esse item: você pode consultá-lo pelas ferramentas.`
-            : `Você foi chamado com @IA no grupo "${grupo.nome}" do chat entre colaboradores.`,
+            ? `Você foi chamado com @PIA no chat ${grupo.tipo === TipoGrupoEnum.DEMANDA ? 'da demanda' : 'do projeto'} "${grupo.nome}", do chat entre colaboradores. O assunto do chat é esse item: você pode consultá-lo pelas ferramentas.`
+            : `Você foi chamado com @PIA no grupo "${grupo.nome}" do chat entre colaboradores.`,
         `Quem chamou: ${quemChamou.nome} (${descreverTipoDaPessoa(quemChamou.tipo)}). Você atende só esta pessoa e só o pedido dela, com as permissões dela.`,
         outrosLeitores.length === 0
             ? 'Quem mais lê a sua resposta: ninguém por enquanto (quem chamou é o único membro de agora), mas quem entrar depois a verá no histórico.'
@@ -120,6 +120,45 @@ export function montarContextoDoChatDireto(
     return `${conversa}\n\nPedido de ${quemChamou.nome}:\n${pedido.texto}${citacao}`;
 }
 
+/** Os cumprimentos do `@PIA` sozinho (task 494); um é sorteado a cada chamada. */
+export const SAUDACOES_DA_PIA: readonly string[] = [
+    'Opa, chamou?',
+    'Fala, gurizada, o que manda?',
+    'E aí, piá, o que que pega?',
+    'Diga lá, o que tu precisa?',
+    'Opa, tô na área. Manda!',
+    'Fala, que que foi daí?',
+    'Chegou quem faltava. O que vai ser?',
+    'Tô por aqui. Qual é a bronca?',
+    'Bah, piá! Chamou? Em que posso ajudar?',
+    'Fala, gurizada, chamou? Em que posso ajudar?',
+    'Bah, chamou? Me pegou, mas tô aqui. Pois não?',
+    'Capaz de eu não responder, né? Opa, em que posso ajudar?',
+    'Finalmente deu sinal de vida, guri. Em que posso ajudar?',
+    'Bah, mas eu achei que era o frio chegando. Em que posso ajudar?',
+    'Fale ligeirinho que eu preciso pegar minha cuia. Fala aí, o que precisa?',
+    'Mas bah, do nada um chamado… achei que era o frio chegando. Mas era tu! Tudo certo?',
+    'Mais inesperado que sol em dia de chuva em Curitiba. Que que tu precisa?',
+];
+
+/** `sorteio` é um número em [0, 1), como o de `Math.random`: entra por parâmetro para a regra ficar testável. */
+export function escolherSaudacao(sorteio: number): string {
+    return SAUDACOES_DA_PIA[Math.floor(sorteio * SAUDACOES_DA_PIA.length) % SAUDACOES_DA_PIA.length];
+}
+
+/** A chance de uma chamada da Piá sair no jeito curitibano (task 494). */
+export const CHANCE_DO_JEITO_CURITIBANO = 0.05;
+
+/** A instrução do jeito curitibano quando o sorteio cai nela; `null` na maioria das vezes. Muda só a fala, nunca o que as ferramentas gravam. */
+export function montarOrientacaoDoJeito(sorteio: number): string | null {
+    if (sorteio >= CHANCE_DO_JEITO_CURITIBANO) return null;
+    return [
+        'Nesta resposta, encarne o jeitão de Curitiba: escreva do jeito mais curitibano possível, com o vocabulário e as expressões de lá (piá, guri, gurizada, "daí" no fim da frase, "capaz", "loco de bom", jacu, panguão, vina, penal, japona), podendo zoar de leve quem chamou, sem ofender.',
+        'Se há um cumprimento pronto para usar, mantenha-o como está e acrescente depois dele uma frase curta nesse jeito, mesmo que a orientação peça para responder só com o cumprimento.',
+        'Isso vale só para o texto que as pessoas leem na conversa. Tudo o que vai nas ferramentas (descrições, nomes, títulos, anotações e propostas) fica em português normal, sem gíria, e as informações continuam corretas e completas.',
+    ].join(' ');
+}
+
 /** Quanto da mensagem anterior vai ao modelo na saudação do `@IA` sozinho: o bastante para entender o assunto. */
 export const LIMITE_DA_MENSAGEM_ANTERIOR_NA_SAUDACAO = 600;
 
@@ -127,11 +166,11 @@ export const LIMITE_DA_MENSAGEM_ANTERIOR_NA_SAUDACAO = 600;
  * A orientação do `@IA` sozinho (task 327), no lugar da de pedido: a IA responde na hora, como quem foi chamado, em vez de esperar. Vem depois da
  * orientação do chat direto ou do grupo e **sem** ferramentas, então ela só cumprimenta e oferece; quem confirma é a pessoa na mensagem seguinte.
  */
-export function montarOrientacaoDaSaudacao(): string {
+export function montarOrientacaoDaSaudacao(saudacao: string): string {
     return [
-        'Chamaram você só com @IA, sem dizer o que querem. Responda em uma ou duas frases curtas, no tom da conversa, em português.',
-        'Comece com um cumprimento curto, como "Opa, chamou?".',
-        'Se a mensagem anterior à chamada pede ou sugere algo que você poderia fazer (criar, alterar, consultar, explicar, resumir), diga sobre o que ela trata e pergunte se a pessoa quer que você faça isso, no formato "Sobre <assunto>, quer que eu faça isso?". Se não houver mensagem anterior, ou ela não for algo que você possa fazer, só pergunte em que pode ajudar.',
+        'Chamaram você só com @PIA, sem dizer o que querem. Responda em uma ou duas frases curtas, no tom da conversa, em português.',
+        `Comece com este cumprimento, exatamente: "${saudacao}"`,
+        'Se a mensagem anterior à chamada pede ou sugere algo que você poderia fazer (criar, alterar, consultar, explicar, resumir), escreva depois do cumprimento sobre o que ela trata e pergunte se a pessoa quer que você faça isso, tirando do cumprimento a pergunta genérica do fim (como "Em que posso ajudar?" ou "o que precisa?") para não ficarem duas perguntas seguidas, no formato "Sobre <assunto>, quer que eu faça isso?". Se não houver mensagem anterior, ou ela não for algo que você possa fazer, responda só com o cumprimento, sem repetir a pergunta que ele já faz; se ele não perguntar o que a pessoa quer, pergunte em que pode ajudar.',
         'Ainda não faça nada: não use ferramentas, não proponha ações, não responda ao conteúdo da mensagem anterior e não marque ninguém com @. A pessoa confirma na mensagem seguinte.',
     ].join('\n');
 }
@@ -141,7 +180,7 @@ export function montarOrientacaoDaSaudacao(): string {
  * pessoa, de quem for), com o nome de quem a escreveu. Contexto, não instrução.
  */
 export function montarPedidoDaSaudacao(mensagemAnterior: { autorNome: string; texto: string } | null): string {
-    const base = '(Só chamou a IA com @IA, sem escrever o que quer.)';
+    const base = '(Só chamou a IA com @PIA, sem escrever o que quer.)';
     if (!mensagemAnterior) return `${base} Não há mensagem anterior de pessoa nesta conversa.`;
     const texto = mensagemAnterior.texto.length <= LIMITE_DA_MENSAGEM_ANTERIOR_NA_SAUDACAO ? mensagemAnterior.texto : `${mensagemAnterior.texto.slice(0, LIMITE_DA_MENSAGEM_ANTERIOR_NA_SAUDACAO - 1).trimEnd()}…`;
     return `${base} A mensagem anterior à chamada, de ${mensagemAnterior.autorNome}, é:\n${texto}`;

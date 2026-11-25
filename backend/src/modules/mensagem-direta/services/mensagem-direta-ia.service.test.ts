@@ -200,7 +200,19 @@ test('@IA dentro de código não chama a IA', async () => {
     assert.equal(solicitacoes.length, 0);
 });
 
-test('@IA sozinho responde na hora, sem ferramentas, dizendo sobre o que é a mensagem anterior (task 327)', async () => {
+test('o jeito curitibano entra na orientação do pedido só quando o sorteio cai nele (task 494)', async (contextoDoTeste) => {
+    for (const [sorteio, esperado] of [[0.01, true], [0.5, false]] as const) {
+        contextoDoTeste.mock.method(Math, 'random', () => sorteio);
+        const { enviar, solicitacoes } = montar({ respostas: [resposta({ texto: 'Feito.' })] });
+        await enviar('@PIA resume');
+        assert.equal(/jeito mais curitibano possível/.test(solicitacoes[0].instrucoes ?? ''), esperado, String(sorteio));
+        assert.doesNotMatch(solicitacoes[0].instrucoes ?? '', /Comece com este cumprimento/);
+        contextoDoTeste.mock.restoreAll();
+    }
+});
+
+test('@IA sozinho responde na hora, sem ferramentas, dizendo sobre o que é a mensagem anterior (task 327)', async (contextoDoTeste) => {
+    contextoDoTeste.mock.method(Math, 'random', () => 0);
     const anterior = mensagem({ texto: 'Dá para criar a atividade de revisão do cadastro?', autorUsuarioId: BRUNO_ID });
     const { enviar, solicitacoes, gravadas, publicados, listasDeFerramentas, usos } = montar({
         anteriores: [anterior],
@@ -212,9 +224,9 @@ test('@IA sozinho responde na hora, sem ferramentas, dizendo sobre o que é a me
     assert.deepEqual(solicitacoes[0].ferramentas, [], 'a saudação não usa ferramentas');
     assert.deepEqual(listasDeFerramentas, [], 'nem pede as ferramentas de quem chamou');
     assert.equal(solicitacoes[0].maximoTokens, 300);
-    assert.match(solicitacoes[0].instrucoes ?? '', /Chamaram você só com @IA/);
+    assert.match(solicitacoes[0].instrucoes ?? '', /Chamaram você só com @PIA/);
     assert.match(solicitacoes[0].instrucoes ?? '', /Opa, chamou\?/);
-    assert.match(String(solicitacoes[0].mensagens[0].conteudo), /Só chamou a IA com @IA, sem escrever o que quer\.\) A mensagem anterior à chamada, de Bruno Reis, é:\nDá para criar a atividade de revisão do cadastro\?$/);
+    assert.match(String(solicitacoes[0].mensagens[0].conteudo), /Só chamou a IA com @PIA, sem escrever o que quer\.\) A mensagem anterior à chamada, de Bruno Reis, é:\nDá para criar a atividade de revisão do cadastro\?$/);
     assert.equal(gravadas.length, 1);
     assert.equal(gravadas[0].autor, AutorMensagemDiretaEnum.IA);
     assert.equal(gravadas[0].chamadaPorUsuarioId, 4);

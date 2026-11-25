@@ -30,7 +30,9 @@ import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.servic
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import {
     montarContextoDoChatDireto,
+    escolherSaudacao,
     montarOrientacaoDaSaudacao,
+    montarOrientacaoDoJeito,
     montarOrientacaoDoChatDireto,
     montarOrientacaoDoGrupo,
     montarPedidoDaSaudacao,
@@ -193,13 +195,17 @@ export class MensagemDiretaIaService {
                 : pedido.texto;
             const contexto = montarContextoDoChatDireto(anteriores, { texto: textoDoPedido, citacao: ehSaudacao ? null : citada }, quemChamou, nomes, destino.janela);
             const prompt = await this.promptService.obterAtivo(TipoPromptEnum.CONVERSA);
-            const orientacao = destino.orientar(quemChamou, outrosLeitores);
+            const orientacao = [
+                destino.orientar(quemChamou, outrosLeitores),
+                ehSaudacao ? montarOrientacaoDaSaudacao(escolherSaudacao(Math.random())) : null,
+                montarOrientacaoDoJeito(Math.random()),
+            ].filter(Boolean).join('\n\n');
 
             const { texto } = await executarNoTurno(turno, () =>
                 this.lacoDeFerramentas.conduzirTurno({
                     usuarioAtivo,
                     nivel: NivelIaEnum.RAPIDO,
-                    instrucoes: `${prompt.conteudo}\n\n${orientacao}${ehSaudacao ? `\n\n${montarOrientacaoDaSaudacao()}` : ''}`,
+                    instrucoes: `${prompt.conteudo}\n\n${orientacao}`,
                     mensagens: [{ papel: 'usuario', conteudo: contexto }],
                     trocasIniciais: [],
                     // A saudação só cumprimenta e oferece: sem ferramentas, nada é proposto antes de a pessoa confirmar.
