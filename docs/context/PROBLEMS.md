@@ -32,6 +32,14 @@
 > P-092 a P-102 (os que seguem abertos; os corrigidos saíram daqui) vêm da revisão de requisições e de permissões (2026-11-13 a 15): são os achados de severidade alta e os de média reproduzidos na aplicação rodando. A revisão tem 225 achados ao todo; os demais
 > estão em [`DOSSIE.md`](../specs/active/revisao-requisicoes-e-permissoes/DOSSIE.md) (código `A-NNN`) e cada um aponta para a sua spec na guarda-chuva `docs/specs/backlog/requisicoes-e-permissoes-correcoes.spec.md` (tasks 330–487).
 
+### P-106 — Seletor do ChatIA fica "Carregando…" quando a conversa falha ao carregar · `ABERTO` · frontend/chat
+
+- **Sintoma:** com `GET /chat/hoje` falhando, a página mostra "Não foi possível carregar a conversa" e o título do seletor (na barra superior) fica "Carregando…" para sempre.
+- **Causa:** `SeletorComponent.rotuloDoBotao` mostra "Carregando…" enquanto `diaAtual`/`hoje` são vazios, e o dia só é conhecido depois da carga bem-sucedida.
+- **Contorno:** "Tentar de novo" na página.
+- **Correção:** dar ao seletor um rótulo para o erro (ou o dia de hoje do relógio). Sem spec ainda.
+- **Desde:** visto na verificação da task 496, 2026-11-25; já era assim antes.
+
 ### P-105 — Proposta da IA: se gravar o resultado falha depois de o executor rodar, confirmar de novo executa duas vezes · `ABERTO` · backend/proposta-ia
 
 - **Sintoma:** a ação rodou, mas o cartão mostra a proposta `PENDENTE` com os dados originais; confirmar outra vez executa a ação de novo.

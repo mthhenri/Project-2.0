@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { ApplicationRef } from '@angular/core';
+import { TopbarConteudoService } from '../../../../core/services/topbar-conteudo.service';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { AutorChatEnum, ChatEventoDto, ContextoChatEnum, EstadoIaEnum, NivelIaEnum, StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
@@ -44,12 +46,15 @@ interface OpcoesMontagem {
     demandas?: Record<string, unknown>[];
     /** Parâmetros da URL (ex.: `mensagem` do "Iniciar atividade" da tela Execuções). */
     consulta?: Record<string, string>;
+    /** Chaves do localStorage já preenchidas (ex.: a lateral recolhida). */
+    armazenamento?: Record<string, string>;
 }
 
 /** Monta a página e responde o que ela pede ao abrir: estado da IA, conversa de hoje e lista do histórico. */
 async function montarChat(opcoes: OpcoesMontagem = {}): Promise<Montado> {
     const provedores = opcoes.consulta ? [{ provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(opcoes.consulta) } } }] : [];
-    const montado = await montarComponente(ChatPage, { usuario: opcoes.usuario ?? TipoUsuarioEnum.DESENVOLVEDOR, provedores });
+    const montado = await montarComponente(ChatPage, { usuario: opcoes.usuario ?? TipoUsuarioEnum.DESENVOLVEDOR, provedores, armazenamento: opcoes.armazenamento });
+    desenharSeletorDaBarra(montado);
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/hoje'), { conversaId: CONVERSA_DE_HOJE, mensagens: opcoes.mensagens ?? [] });
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/conversas'), { conversas: opcoes.conversas ?? [] });
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano'), []);
@@ -57,6 +62,24 @@ async function montarChat(opcoes: OpcoesMontagem = {}): Promise<Montado> {
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/disponibilidade'), { estado: opcoes.estado ?? EstadoIaEnum.NO_AR });
     await montado.atualizar();
     return montado;
+}
+
+/**
+ * O seletor mora na barra superior do app (task 496), que o teste da página não monta: desenha o template registrado no
+ * começo da página, como a barra faria, e o mantém em dia a cada `atualizar()`.
+ */
+function desenharSeletorDaBarra(montado: Montado): void {
+    const modelo = TestBed.inject(TopbarConteudoService).modelo();
+    if (!modelo) throw new Error('A página não registrou o seletor na barra superior.');
+    const vista = modelo.createEmbeddedView({});
+    TestBed.inject(ApplicationRef).attachView(vista);
+    montado.elemento.prepend(...(vista.rootNodes as Node[]));
+    vista.detectChanges();
+    const atualizarDaPagina = montado.atualizar.bind(montado);
+    montado.atualizar = async () => {
+        await atualizarDaPagina();
+        vista.detectChanges();
+    };
 }
 
 /** O seletor do topo abre num painel (overlay no `body`): clica no botão e devolve o painel. */
@@ -148,6 +171,7 @@ afterEach(() => {
 describe('ChatPage — abrir a conversa de hoje', () => {
     it('mostra o esqueleto enquanto carrega e a conversa quando chega, cada autor no seu lugar, com o nível usado pela IA', async () => {
         const montado = await montarComponente(ChatPage, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+        desenharSeletorDaBarra(montado);
         expect(montado.elemento.querySelector('[aria-busy="true"]')).not.toBeNull();
 
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/hoje'), {
@@ -209,6 +233,7 @@ describe('ChatPage — abrir a conversa de hoje', () => {
 
     it('falha ao carregar mostra o erro e "Tentar de novo" recarrega a conversa', async () => {
         const montado = await montarComponente(ChatPage, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+        desenharSeletorDaBarra(montado);
         esperarRequisicao(montado.http, 'GET', '/chat/hoje').flush({ mensagem: 'falhou' }, { status: 500, statusText: 'Erro' });
         await montado.atualizar();
 
@@ -835,6 +860,7 @@ describe('ChatPage — retomada após queda da IA', () => {
     it('abrir o chat à mão depois de "Agora não" é voltar para a IA: retoma a conversa', async () => {
         sessionStorage.setItem('ia_modo_convencional', '1');
         const montado = await montarComponente(ChatPage, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+        desenharSeletorDaBarra(montado);
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/hoje'), { conversaId: CONVERSA_DE_HOJE, mensagens: [DELA('Oi'), DA_IA('Olá!')] });
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/conversas'), { conversas: [] });
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano'), []);
@@ -1003,7 +1029,7 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
     const RESUMO = { id: 7, titulo: 'Plano da semana', projetoId: 10, projetoNome: 'Projeto Demo', demandaId: null, demandaNome: null, criadorId: 1, criadorNome: 'Eu', solo: false, arquivado: false, updatedDate: '2026-10-21T12:00:00.000Z' };
 
     const chave = (montado: Montado, rotulo: string) =>
-        Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.chat__modo-opcao')).find((item) => item.textContent?.includes(rotulo))!;
+        montado.elemento.querySelector<HTMLButtonElement>(`.chat__modo-opcao[aria-label="${rotulo}"]`)!;
     const divisor = (montado: Montado) => montado.elemento.querySelector<HTMLElement>('[role="separator"]');
 
     /** O plano em si (`/plano/<id>`), sem confundir com a conversa dele (`/chat/plano/<id>`). */
@@ -1112,12 +1138,7 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
     });
 
     it('a largura guardada é a de partida', async () => {
-        const montado = await montarComponente(ChatPage, { usuario: TipoUsuarioEnum.DESENVOLVEDOR, armazenamento: { 'chat.documento.largura': '40' } });
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/hoje'), { conversaId: CONVERSA_DE_HOJE, mensagens: [] });
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/conversas'), { conversas: [] });
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano'), []);
-        responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
-        await montado.atualizar();
+        const montado = await montarChat({ armazenamento: { 'chat.documento.largura': '40' } });
 
         expect(montado.componente.larguraDocumento()).toBe(40);
     });
@@ -1316,6 +1337,94 @@ describe('ChatPage: minhas demandas', () => {
         expect(montado.componente.modo()).toBe(ModoDoChatEnum.PLANEJAMENTO);
         expect(montado.elemento.querySelector('app-chat-demanda-leitura')).toBeNull();
         expect(montado.elemento.querySelector('app-chat-minhas-demandas')).toBeNull();
+    });
+
+    // Task 496: a lateral recolhe num trilho, que mostra quantas demandas há e reabre o que estava; a escolha fica lembrada.
+    const botaoPorRotulo = (montado: Montado, rotulo: string) => montado.elemento.querySelector<HTMLButtonElement>(`button[aria-label^="${rotulo}"]`);
+    const trilho = (montado: Montado) => montado.elemento.querySelector<HTMLButtonElement>('button[aria-label^="Mostrar minhas demandas"]');
+
+    it('começa aberta; "Recolher" vira o trilho com o número de demandas e o trilho reabre a lista', async () => {
+        const montado = await montarChat({ demandas: [RESUMO_DA_DEMANDA, { ...RESUMO_DA_DEMANDA, demandaId: 10, nome: 'Outra' }] });
+        expect(trilho(montado)).toBeNull();
+
+        botaoPorRotulo(montado, 'Recolher minhas demandas')!.click();
+        await montado.atualizar();
+
+        expect(trilho(montado)!.getAttribute('aria-label')).toBe('Mostrar minhas demandas (2 em aberto)');
+        expect(trilho(montado)!.textContent).toContain('2');
+        expect(localStorage.getItem('chat.lateral.recolhida')).toBe('true');
+
+        trilho(montado)!.click();
+        await montado.atualizar();
+
+        expect(trilho(montado)).toBeNull();
+        expect(montado.elemento.querySelector('.chat__lateral--oculta')).toBeNull();
+        expect(montado.elemento.textContent).toContain('Cadastro de usuário');
+        expect(localStorage.getItem('chat.lateral.recolhida')).toBe('false');
+    });
+
+    it('lembrada recolhida, já abre no trilho; sem demandas o trilho não mostra número', async () => {
+        const montado = await montarChat({ armazenamento: { 'chat.lateral.recolhida': 'true' } });
+
+        expect(trilho(montado)!.getAttribute('aria-label')).toBe('Mostrar minhas demandas');
+        expect(montado.elemento.querySelector('.chat-lateral-trilho__contagem')).toBeNull();
+    });
+
+    it('a demanda aberta também recolhe: a tela deixa de ser dividida e o trilho a reabre', async () => {
+        const montado = await montarChat({ demandas: [RESUMO_DA_DEMANDA] });
+        await abrirDemandaNaLateral(montado);
+
+        botaoPorRotulo(montado, 'Recolher a demanda')!.click();
+        await montado.atualizar();
+
+        expect(montado.elemento.querySelector('app-chat-demanda-leitura')).toBeNull();
+        expect(montado.elemento.querySelector('.chat__divisor')).toBeNull();
+        expect(trilho(montado)!.getAttribute('aria-label')).toBe('Mostrar minhas demandas (1 em aberto)');
+
+        trilho(montado)!.click();
+        await montado.atualizar();
+        responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/9'), DEMANDA_ABERTA);
+        await montado.atualizar();
+        for (const pedido of montado.http.match((requisicao) => requisicao.url.endsWith('/atividade'))) {
+            responderSucesso(pedido, { itens: [], totalItens: 0, paginaAtual: 1, itensPorPagina: 100, totalPaginas: 1 });
+        }
+        await montado.atualizar();
+
+        expect(montado.elemento.querySelector('app-chat-demanda-leitura')).not.toBeNull();
+        expect(montado.elemento.querySelector('.chat__divisor')).not.toBeNull();
+    });
+
+    it('recolhida com execução rodando: a demanda da execução abre recolhida e o trilho mantém o número', async () => {
+        const montado = await montarChat({ demandas: [{ ...RESUMO_DA_DEMANDA, executando: true }], armazenamento: { 'chat.lateral.recolhida': 'true' } });
+
+        expect(montado.elemento.querySelector('app-chat-demanda-leitura')).toBeNull();
+        expect(trilho(montado)!.getAttribute('aria-label')).toBe('Mostrar minhas demandas (1 em aberto)');
+    });
+
+    it('no modo Planejamento não há trilho, mesmo recolhida', async () => {
+        const montado = await montarChat({ armazenamento: { 'chat.lateral.recolhida': 'true' } });
+
+        montado.elemento.querySelector<HTMLButtonElement>('.chat__modo-opcao[aria-label="Planejamento"]')!.click();
+        await montado.atualizar();
+        for (const pedido of montado.http.match((requisicao) => requisicao.method === 'GET' && requisicao.url.endsWith('/plano'))) responderSucesso(pedido, []);
+        await montado.atualizar();
+
+        expect(trilho(montado)).toBeNull();
+    });
+});
+
+// Task 496: o seletor de conversas e planos é registrado na barra superior do app enquanto a página está aberta.
+describe('ChatPage: seletor na barra superior', () => {
+    it('registra o seletor ao abrir e o retira ao sair', async () => {
+        const montado = await montarChat();
+        const barra = TestBed.inject(TopbarConteudoService);
+
+        expect(barra.modelo()).not.toBeNull();
+        expect(montado.elemento.querySelector('[aria-label="Abrir conversas e planos"]')).not.toBeNull();
+
+        montado.fixture.destroy();
+
+        expect(barra.modelo()).toBeNull();
     });
 });
 

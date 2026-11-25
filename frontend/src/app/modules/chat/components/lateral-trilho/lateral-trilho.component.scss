@@ -1,0 +1,68 @@
+:host {
+    display: flex;
+    flex: 0 0 2.75rem;
+    min-height: 0;
+}
+
+.chat-lateral-trilho {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border: none;
+    border-left: 1px solid var(--app-surface-200);
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font: inherit;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        background: var(--app-surface-100);
+        color: var(--p-text-color);
+    }
+
+    &__contagem {
+        min-width: 1.25rem;
+        padding: 0 0.375rem;
+        border-radius: 999px;
+        background: var(--p-primary-color);
+        color: var(--p-primary-contrast-color);
+        font-size: 0.75rem;
+        font-weight: 700;
+        line-height: 1.25rem;
+        text-align: center;
+    }
+
+    &__rotulo {
+        writing-mode: vertical-rl;
+        font-size: 0.8125rem;
+        font-weight: 600;
+    }
+}
+
+// Com a lateral embaixo da conversa (o container do chat até 64rem), o trilho vira uma faixa fina sob ela.
+@container (max-width: 64rem) {
+    :host {
+        flex: 0 0 auto;
+        margin: 0 0.5rem 0 1.5rem;
+    }
+
+    .chat-lateral-trilho {
+        flex-direction: row;
+        justify-content: center;
+        padding: 0.375rem 0;
+        border-left: none;
+        border-top: 1px solid var(--app-surface-200);
+    }
+
+    .chat-lateral-trilho__seta {
+        transform: rotate(90deg);
+    }
+
+    .chat-lateral-trilho__rotulo {
+        writing-mode: horizontal-tb;
+    }
+}

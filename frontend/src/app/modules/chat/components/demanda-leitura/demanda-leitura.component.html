@@ -57,6 +57,16 @@
                     tooltipPosition="bottom"
                     (onClick)="planejar.emit()"
                 />
+                <p-button
+                    icon="pi pi-angle-double-right"
+                    severity="secondary"
+                    [text]="true"
+                    size="small"
+                    ariaLabel="Recolher a demanda"
+                    pTooltip="Recolher"
+                    tooltipPosition="left"
+                    (onClick)="recolher.emit()"
+                />
             </div>
 
             <div class="demanda-leitura__titulo-area">

@@ -1,6 +1,6 @@
-<div class="chat">
+<!-- O seletor é desenhado na barra superior do app (task 496), mas continua sendo desta página: ligações e eventos são dela. -->
+<ng-template #seletorDaBarra>
     <app-chat-seletor
-        class="chat__topo"
         [diaAtual]="diaExibido()"
         [hoje]="hoje()"
         [modo]="modo()"
@@ -11,12 +11,15 @@
         (planoEscolhido)="abrirPlano($event)"
         (novoPlano)="criarPlano()"
     />
+</ng-template>
 
+<div class="chat">
     <div
         #area
         class="chat__area"
         [class.chat__area--planejamento]="dividida()"
         [class.chat__area--lista]="listaVisivel()"
+        [class.chat__area--recolhida]="trilhoVisivel()"
         [style.--largura-documento]="larguraDocumento() + '%'"
     >
         <div class="chat__principal">
@@ -136,21 +139,11 @@
                                             que faz sozinha.</small
                                         >
                                         @if (podeSugerir()) {
-                                            <div
-                                                class="chat__sugestoes chat__sugestoes--centro"
-                                                role="group"
-                                                aria-label="Sugestões de mensagem"
-                                            >
-                                                @for (sugestao of sugestoes(); track sugestao) {
-                                                    <button
-                                                        type="button"
-                                                        class="chat__sugestao"
-                                                        (click)="enviar(sugestao)"
-                                                    >
-                                                        {{ sugestao }}
-                                                    </button>
-                                                }
-                                            </div>
+                                            <app-chat-sugestoes
+                                                [sugestoes]="sugestoes()"
+                                                [centro]="true"
+                                                (escolhida)="enviar($event)"
+                                            />
                                         }
                                     }
                                 </div>
@@ -379,6 +372,7 @@
                 @if (modo() === Modo.PLANEJAMENTO) {
                     <div class="chat__rodape">
                         <form class="chat__entrada" (submit)="$event.preventDefault(); enviar()">
+                            <ng-container [ngTemplateOutlet]="chaveDeModo" />
                             <app-editor-mensagem
                                 class="chat__campo"
                                 [embutido]="true"
@@ -409,7 +403,6 @@
                             </button>
                         </form>
                         <div class="chat__base">
-                            <ng-container [ngTemplateOutlet]="chaveDeModo" />
                             <span class="chat__legenda"
                                 >A IA pode cometer erros. Enter envia, Shift+Enter quebra a linha.
                                 Quem tem acesso ao plano vê esta conversa.</span
@@ -432,24 +425,14 @@
                 } @else if (!somenteLeitura()) {
                     <div class="chat__rodape">
                         @if (podeSugerir() && mensagens().length > 0) {
-                            <div
-                                class="chat__sugestoes"
-                                role="group"
-                                aria-label="Sugestões de mensagem"
-                            >
-                                @for (sugestao of sugestoes(); track sugestao) {
-                                    <button
-                                        type="button"
-                                        class="chat__sugestao"
-                                        (click)="enviar(sugestao)"
-                                    >
-                                        {{ sugestao }}
-                                    </button>
-                                }
-                            </div>
+                            <app-chat-sugestoes
+                                [sugestoes]="sugestoes()"
+                                (escolhida)="enviar($event)"
+                            />
                         }
 
                         <form class="chat__entrada" (submit)="$event.preventDefault(); enviar()">
+                            <ng-container [ngTemplateOutlet]="chaveDeModo" />
                             <app-editor-mensagem
                                 class="chat__campo"
                                 [embutido]="true"
@@ -478,7 +461,6 @@
                             </button>
                         </form>
                         <div class="chat__base">
-                            <ng-container [ngTemplateOutlet]="chaveDeModo" />
                             <span class="chat__legenda"
                                 >A IA pode cometer erros. Enter envia, Shift+Enter quebra a
                                 linha.</span
@@ -522,11 +504,25 @@
             }
         </div>
 
+        @if (trilhoVisivel()) {
+            <app-chat-lateral-trilho
+                [quantidade]="quantidadeDeDemandas()"
+                (abrir)="abrirLateral()"
+            />
+        }
+
+        <!-- Recolhida, a lista continua montada e escondida: conta as demandas do trilho e acha a execução rodando. -->
         @if (listaVisivel()) {
-            <aside class="chat__lateral" aria-label="Minhas demandas">
+            <aside
+                class="chat__lateral"
+                [class.chat__lateral--oculta]="lateralRecolhida()"
+                aria-label="Minhas demandas"
+            >
                 <app-chat-minhas-demandas
                     (escolhida)="abrirDemanda($event)"
                     (emExecucaoEncontrada)="abrirDemandaEmExecucao($event)"
+                    (quantidade)="quantidadeDeDemandas.set($event)"
+                    (recolher)="recolherLateral()"
                 />
             </aside>
         }
@@ -558,6 +554,7 @@
                             "
                             (voltar)="voltarParaALista()"
                             (planejar)="planejarComAIa()"
+                            (recolher)="recolherLateral()"
                         />
                     }
                 } @else if (planoAbertoId(); as idDoPlano) {
@@ -587,25 +584,32 @@
     </div>
 </div>
 
+<!-- A chave de modo fica no começo do campo (task 496): só os ícones, com o nome na dica e no aria-label. -->
 <ng-template #chaveDeModo>
     <div class="chat__modo" role="group" aria-label="Modo do chat">
         <button
             type="button"
             class="chat__modo-opcao"
+            aria-label="Perguntas"
+            pTooltip="Perguntas"
+            tooltipPosition="top"
             [class.chat__modo-opcao--ativo]="modo() === Modo.PERGUNTAS"
             [attr.aria-pressed]="modo() === Modo.PERGUNTAS"
             (click)="trocarModo(Modo.PERGUNTAS)"
         >
-            <i class="pi pi-comments" aria-hidden="true"></i>Perguntas
+            <i class="pi pi-comments" aria-hidden="true"></i>
         </button>
         <button
             type="button"
             class="chat__modo-opcao"
+            aria-label="Planejamento"
+            pTooltip="Planejamento"
+            tooltipPosition="top"
             [class.chat__modo-opcao--ativo]="modo() === Modo.PLANEJAMENTO"
             [attr.aria-pressed]="modo() === Modo.PLANEJAMENTO"
             (click)="trocarModo(Modo.PLANEJAMENTO)"
         >
-            <i class="pi pi-file-edit" aria-hidden="true"></i>Planejamento
+            <i class="pi pi-file-edit" aria-hidden="true"></i>
         </button>
     </div>
 </ng-template>

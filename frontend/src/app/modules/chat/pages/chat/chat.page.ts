@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, computed, effect, inject, signal, untracked, viewChild, viewChildren } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, TemplateRef, computed, effect, inject, signal, untracked, viewChild, viewChildren } from '@angular/core';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -7,6 +7,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, NivelIaEnum, PropostaIaResumoDto, StatusPropostaIaEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
+import { TopbarConteudoService } from '../../../../core/services/topbar-conteudo.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MudancaDoPlano, PedidoDeAlteracaoDoTrecho, PlanoDocumentoComponent } from '../../components/plano-documento/plano-documento.component';
@@ -15,6 +16,8 @@ import { PropostaCartaoComponent } from '../../components/proposta-cartao/propos
 import { PropostaGrupoComponent } from '../../components/proposta-grupo/proposta-grupo.component';
 import { DemandaLeituraComponent } from '../../components/demanda-leitura/demanda-leitura.component';
 import { MinhasDemandasComponent } from '../../components/minhas-demandas/minhas-demandas.component';
+import { SugestoesComponent } from '../../components/sugestoes/sugestoes.component';
+import { LateralTrilhoComponent } from '../../components/lateral-trilho/lateral-trilho.component';
 import { MensagemDoSeletor, SeletorComponent } from '../../components/seletor/seletor.component';
 import { PadService } from '../../../usuario/services/pad.service';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
@@ -92,6 +95,8 @@ const JANELA_DA_INTERACAO_MS = 400;
         PropostaCartaoComponent,
         PropostaGrupoComponent,
         SeletorComponent,
+        SugestoesComponent,
+        LateralTrilhoComponent,
         PlanoDocumentoComponent,
         MinhasDemandasComponent,
         DemandaLeituraComponent,
@@ -117,6 +122,9 @@ export class ChatPage implements OnInit {
     private readonly areaDoChat = viewChild<ElementRef<HTMLElement>>('area');
     private readonly planoService = inject(PlanoService);
     private readonly pad = inject(PadService);
+    private readonly topbarConteudo = inject(TopbarConteudoService);
+    /** O seletor de conversas e planos mora na barra superior do app enquanto o chat está aberto (task 496). */
+    private readonly modeloDoSeletor = viewChild.required<TemplateRef<unknown>>('seletorDaBarra');
 
     readonly Autor = AutorChatEnum;
     readonly Estado = EstadoIaEnum;
@@ -139,7 +147,13 @@ export class ChatPage implements OnInit {
     /** A lateral é a lista de demandas (Perguntas, nenhuma demanda aberta). */
     readonly listaVisivel = computed(() => this.modo() === ModoDoChatEnum.PERGUNTAS && this.demandaAbertaId() === null);
     /** A tela está dividida com o divisor arrastável: o documento do plano ou a demanda aberta. */
-    readonly dividida = computed(() => this.modo() === ModoDoChatEnum.PLANEJAMENTO || this.demandaVisivel());
+    readonly dividida = computed(() => this.modo() === ModoDoChatEnum.PLANEJAMENTO || (this.demandaVisivel() && !this.lateralRecolhida()));
+    /** A lateral de Perguntas (lista ou demanda aberta) recolhida num trilho; a escolha fica lembrada (task 496). */
+    readonly lateralRecolhida = signal(this.lerLateralRecolhida());
+    /** O trilho da lateral recolhida está à vista (o documento do plano não recolhe). */
+    readonly trilhoVisivel = computed(() => this.modo() === ModoDoChatEnum.PERGUNTAS && this.lateralRecolhida());
+    /** Quantas demandas a lista tem em aberto: o número do trilho. Guarda o último valor enquanto uma demanda está aberta. */
+    readonly quantidadeDeDemandas = signal(0);
     /** Parte do espaço (%) que o documento ocupa; a pessoa a escolhe arrastando o divisor e o valor fica lembrado. */
     readonly larguraDocumento = signal(this.lerLarguraDoDocumento());
     readonly arrastandoDivisor = signal(false);
@@ -245,6 +259,8 @@ export class ChatPage implements OnInit {
     private ultimaInteracaoDoUsuario = 0;
 
     constructor() {
+        effect(() => this.topbarConteudo.exibir(this.modeloDoSeletor()));
+        inject(DestroyRef).onDestroy(() => this.topbarConteudo.retirar(this.modeloDoSeletor()));
         // Task 492: na primeira abertura do dia do aniversário, depois de a conversa estar na tela.
         effect(() => {
             if (this.jaCarregou()) untracked(() => setTimeout(() => this.cantarNoAniversario()));
@@ -585,6 +601,17 @@ export class ChatPage implements OnInit {
         this.demandaAbertaId.set(id);
     }
 
+    recolherLateral(): void {
+        this.lateralRecolhida.set(true);
+        this.guardarLateralRecolhida();
+    }
+
+    /** O trilho reabre o que estava na lateral: a lista ou a demanda aberta. */
+    abrirLateral(): void {
+        this.lateralRecolhida.set(false);
+        this.guardarLateralRecolhida();
+    }
+
     /** Volta para a lista "Minhas demandas" (a demanda aberta fecha). */
     voltarParaALista(): void {
         this.demandaAbertaId.set(null);
@@ -744,6 +771,22 @@ export class ChatPage implements OnInit {
             return guardada === null ? LARGURA_DO_DOCUMENTO.padrao : limitarLarguraDoDocumento(Number(guardada));
         } catch {
             return LARGURA_DO_DOCUMENTO.padrao;
+        }
+    }
+
+    private lerLateralRecolhida(): boolean {
+        try {
+            return localStorage.getItem('chat.lateral.recolhida') === 'true';
+        } catch {
+            return false;
+        }
+    }
+
+    private guardarLateralRecolhida(): void {
+        try {
+            localStorage.setItem('chat.lateral.recolhida', String(this.lateralRecolhida()));
+        } catch {
+            // Sem armazenamento: o recolher funciona, só não lembra.
         }
     }
 

@@ -8,6 +8,15 @@
     background: var(--app-surface-0);
     border-color: var(--app-surface-200);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    // O conteúdo da página (task 496) se adapta à largura da barra, não à da janela: a barra lateral aberta ou recolhida muda o espaço.
+    container: topbar / inline-size;
+
+    // À esquerda, empurrando as ações para a direita; é ele que encolhe primeiro (o título vira reticências).
+    &__pagina {
+        flex: 0 1 auto;
+        min-width: 0;
+        margin-right: auto;
+    }
 
     // O bloco da direita encolhe em vez de transbordar para a esquerda (sobre a barra lateral): o chip da execução cede
     // primeiro (o texto vira reticências) e, em janela estreita, a data do relógio e o nome do perfil saem.

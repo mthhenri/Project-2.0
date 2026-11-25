@@ -125,4 +125,8 @@ await browser.newContext({ viewport: { width: 1366, height: 768 } });
   (`const marcar = () => document.documentElement?.setAttribute(...); marcar(); document.addEventListener('DOMContentLoaded', marcar);`) e confira o
   atributo com `page.evaluate` antes de valer a captura. `localStorage` no mesmo script funciona.
 
+- **Barra superior "sem" chat com colegas, pad e perfil** (task 496, 2026-11-25): parece regressão, mas é o cenário. Esses botões dependem de
+  `sessao.usuarioAtual()`, que vem da chave `usuario_sessao` do `localStorage`; um script que planta só `access_token` mostra só o chip, o relógio e o
+  tema. Plante as duas (`dados.accessToken` e `JSON.stringify(dados.usuario)` da resposta do login) e confira `.topbar__perfil` antes de valer a captura.
+
 Entra aqui na hora em que morder: sintoma → causa → como evitar.

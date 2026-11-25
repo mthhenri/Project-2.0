@@ -1,13 +1,22 @@
 :host {
     display: block;
-    flex-shrink: 0;
+    min-width: 0;
 }
 
+// Fica na barra superior do app (task 496): uma linha só; quem encolhe é o título, com reticências.
 .chat-seletor {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
+    min-width: 0;
+
+    &__novo {
+        flex-shrink: 0;
+    }
+
+    &__novo--compacto {
+        display: none;
+    }
 
     &__gatilho {
         display: inline-flex;
@@ -217,5 +226,18 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow-wrap: anywhere;
+    }
+}
+
+// Barra superior estreita (tela dividida, HD vertical, monitor em pé com o menu aberto): sem a etiqueta e com o "Novo
+// plano" só no ícone, para o chip da execução e o relógio caberem ao lado.
+@container topbar (max-width: 60rem) {
+    .chat-seletor__gatilho-etiqueta,
+    .chat-seletor__novo--completo {
+        display: none;
+    }
+
+    .chat-seletor__novo--compacto {
+        display: inline-flex;
     }
 }

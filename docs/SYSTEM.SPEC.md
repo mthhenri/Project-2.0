@@ -887,7 +887,7 @@ frontend/src/app/
       sidebar/
         sidebar.component.ts        ← navegação vertical recolhível, atalho g + letra
       topbar/
-        topbar.component.ts         ← execução ativa, relógio, tema, anotações, perfil, logout
+        topbar.component.ts         ← execução ativa, relógio, tema, anotações, perfil, logout; à esquerda, o conteúdo que a página registra no TopbarConteudoService (o seletor do ChatIA, task 496)
         topbar.component.html
         topbar.component.scss
     components/
