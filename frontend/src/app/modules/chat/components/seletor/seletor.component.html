@@ -9,15 +9,27 @@
     >
         <i class="pi pi-list chat-seletor__gatilho-icone" aria-hidden="true"></i>
         <span class="chat-seletor__gatilho-texto">{{ rotuloDoBotao() }}</span>
-        @if (modo() === Modo.PERGUNTAS && diaAtual() === hoje()) {
+        @if (modo() === Modo.PERGUNTAS && hoje() && diaAtual() === hoje()) {
             <span class="chat-seletor__gatilho-etiqueta">conversa do dia</span>
         }
         <i class="pi pi-chevron-down chat-seletor__gatilho-seta" aria-hidden="true"></i>
     </button>
+    <!-- Na barra superior estreita (task 496) só o ícone fica à vista, com a dica; o CSS escolhe qual dos dois aparece. -->
     <p-button
+        class="chat-seletor__novo chat-seletor__novo--completo"
         label="Novo plano"
         icon="pi pi-plus"
         size="small"
+        [outlined]="true"
+        (onClick)="criarPlano()"
+    />
+    <p-button
+        class="chat-seletor__novo chat-seletor__novo--compacto"
+        icon="pi pi-plus"
+        size="small"
+        ariaLabel="Novo plano"
+        pTooltip="Novo plano"
+        tooltipPosition="bottom"
         [outlined]="true"
         (onClick)="criarPlano()"
     />

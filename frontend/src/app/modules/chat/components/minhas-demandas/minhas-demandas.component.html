@@ -22,6 +22,7 @@
 
     <header class="minhas-demandas__topo">
         <h2 class="minhas-demandas__titulo">Minhas demandas</h2>
+        <span class="minhas-demandas__espaco"></span>
         <p-button
             icon="pi pi-refresh"
             severity="secondary"
@@ -32,6 +33,16 @@
             tooltipPosition="left"
             [disabled]="carregando()"
             (onClick)="carregar()"
+        />
+        <p-button
+            icon="pi pi-angle-double-right"
+            severity="secondary"
+            [text]="true"
+            size="small"
+            ariaLabel="Recolher minhas demandas"
+            pTooltip="Recolher"
+            tooltipPosition="left"
+            (onClick)="recolher.emit()"
         />
     </header>
 

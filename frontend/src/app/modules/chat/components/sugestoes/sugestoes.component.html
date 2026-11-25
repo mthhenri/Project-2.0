@@ -1,0 +1,13 @@
+<div
+    class="chat-sugestoes"
+    [class.chat-sugestoes--centro]="centro()"
+    role="group"
+    aria-label="Sugestões de mensagem"
+>
+    @for (sugestao of sugestoes(); track sugestao) {
+        <button type="button" class="chat-sugestoes__item" (click)="escolhida.emit(sugestao)">
+            {{ sugestao }}
+            <i class="pi pi-send chat-sugestoes__icone" aria-hidden="true"></i>
+        </button>
+    }
+</div>

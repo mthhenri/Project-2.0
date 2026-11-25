@@ -43,6 +43,11 @@ export class MinhasDemandasComponent implements OnInit {
 
     readonly itens = signal<DemandaExecutadaResumoDto[]>([]);
     readonly carregando = signal(true);
+
+    /** O botão "»" do cabeçalho: a página recolhe a lateral num trilho (task 496). */
+    readonly recolher = output<void>();
+    /** Quantas demandas estão em aberto na lista, a cada carga ou mudança: o número do trilho da lateral recolhida (task 496). */
+    readonly quantidade = output<number>();
     readonly erro = signal(false);
 
     private avisouExecucao = false;
@@ -58,13 +63,19 @@ export class MinhasDemandasComponent implements OnInit {
         this.carregar();
     }
 
+    /** Troca a lista e já avisa a contagem: a demanda da execução pode abrir em seguida e desmontar a lista (task 496). */
+    private definirItens(itens: DemandaExecutadaResumoDto[]): void {
+        this.itens.set(itens);
+        this.quantidade.emit(itens.length);
+    }
+
     carregar(): void {
         this.carregando.set(true);
         this.erro.set(false);
         this.demandaService.listarExecutadas(QUANTIDADE_DE_DEMANDAS).subscribe({
             next: (resposta) => {
                 const itens = resposta.dados ?? [];
-                this.itens.set(itens);
+                this.definirItens(itens);
                 this.carregando.set(false);
                 const rodando = itens.find((item) => item.executando);
                 if (rodando && !this.avisouExecucao) {
@@ -106,10 +117,10 @@ export class MinhasDemandasComponent implements OnInit {
     alterarStatus(demanda: DemandaExecutadaResumoDto, status: TipoDemandaStatusEnum): void {
         const anteriores = this.itens();
         const encerrada = status === TipoDemandaStatusEnum.CONCLUIDA || status === TipoDemandaStatusEnum.CANCELADA;
-        this.itens.set(encerrada ? anteriores.filter((item) => item.demandaId !== demanda.demandaId) : anteriores.map((item) => (item.demandaId === demanda.demandaId ? { ...item, status } : item)));
+        this.definirItens(encerrada ? anteriores.filter((item) => item.demandaId !== demanda.demandaId) : anteriores.map((item) => (item.demandaId === demanda.demandaId ? { ...item, status } : item)));
         this.demandaService.alterar(demanda.demandaId, { status }).subscribe({
             next: () => this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' }),
-            error: () => this.itens.set(anteriores),
+            error: () => this.definirItens(anteriores),
         });
     }
 
@@ -118,7 +129,7 @@ export class MinhasDemandasComponent implements OnInit {
         const usuarioId = this.sessao.id();
         if (usuarioId === undefined) return;
         const anteriores = this.itens();
-        this.itens.set(anteriores.filter((item) => item.demandaId !== demanda.demandaId));
+        this.definirItens(anteriores.filter((item) => item.demandaId !== demanda.demandaId));
         this.demandaService.removerMembro(demanda.demandaId, usuarioId).subscribe({
             next: () =>
                 this.desfazerService.oferecer({
@@ -126,7 +137,7 @@ export class MinhasDemandasComponent implements OnInit {
                     desfazer: () => this.demandaService.atribuirMembro(demanda.demandaId, { usuarioId }),
                     aposDesfazer: () => this.carregar(),
                 }),
-            error: () => this.itens.set(anteriores),
+            error: () => this.definirItens(anteriores),
         });
     }
 }

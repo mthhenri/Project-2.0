@@ -61,6 +61,8 @@ export class DemandaLeituraComponent {
     readonly voltar = output<void>();
     /** "Planejar com a IA": a página do chat troca para o modo planejamento. */
     readonly planejar = output<void>();
+    /** O botão "»" do cabeçalho: a página recolhe a lateral num trilho (task 496). */
+    readonly recolher = output<void>();
 
     readonly TipoStatus = TipoAtividadeStatusEnum;
     readonly rotuloStatus = ROTULO_STATUS_DEMANDA;

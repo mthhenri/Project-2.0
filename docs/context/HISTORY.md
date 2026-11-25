@@ -13,6 +13,46 @@
 ---
 
 
+## 2026-11-25 — Task 497: o seletor do ChatIA nomeia a conversa que não carregou (P-106)
+
+Com `GET /chat/hoje` falhando, o seletor (na barra superior desde a task 496) ficava "Carregando…" para sempre, porque
+o rótulo depende do dia de hoje, que só chega com a conversa. O `SeletorComponent` ganhou a entrada `indisponivel`, que
+a página liga ao seu `erro()`: com o dia desconhecido, o rótulo é "Conversa de hoje" na falha e "Carregando…" durante a
+carga. A etiqueta "conversa do dia" passou a exigir o dia conhecido (antes aparecia ao lado de "Carregando…", porque os
+dois dias vazios contavam como iguais). O dia continua sendo o do servidor; nada é calculado no navegador.
+
+Testado: testes novos no seletor (etiqueta ausente na carga; rótulo e etiqueta na falha) e na página (rótulo na falha e
+o nome da conversa depois do "Tentar de novo"); suíte do frontend, build e `lint:tudo` (números em
+`docs/specs/done/497-seletor-do-chat-com-a-conversa-indisponivel.spec.md`). Ao vivo, com a API respondendo 500 pelo
+Playwright, em 1366×768 e 720×1280, claro e escuro: "Conversa de hoje" sem etiqueta, a lista do seletor abrindo as outras
+conversas, e "Tentar de novo" voltando a "Login do portal".
+
+## 2026-11-25 — Task 496: o ChatIA ganha área de conversa (seletor na barra, lateral recolhível, 60rem)
+
+O autor se sentia "sem visão" no ChatIA. A medição no app real mostrou o porquê: em 1366×768 a conversa tinha 400px (52%
+da tela), com a coluna presa em 48rem, 154px de faixas até a primeira mensagem e as sugestões em duas linhas; em
+960×1080 e 720×1280 havia um **defeito**: com "Minhas demandas" embaixo, a página inteira rolava e o campo de digitar
+ficava fora da tela (faltava `min-height: 0` na coluna da conversa). As decisões saíram de rodadas de maquete com CSS
+injetado, sem código (`done/496-chatia-mais-visao/EXPLORACAO.md`): a opção de levar o seletor para o rodapé foi testada
+e descartada (375px, pior que antes), e o modo compacto das mensagens foi recusado.
+
+O que mudou: a coluna passou a 60rem e as faixas fixas encolheram; o seletor de conversas e planos (com "Novo plano")
+saiu do topo da página e é desenhado na **barra superior do app** por um ponto de extensão genérico
+(`TopbarConteudoService`: a página registra um `TemplateRef`, a `app-topbar` o desenha com `ngTemplateOutlet` e a
+página o retira ao sair). Com a barra abaixo de 60rem, o seletor fica compacto, para o chip da execução e o relógio
+caberem. A lateral de Perguntas (lista **e** demanda aberta, inclusive a da execução) recolhe num trilho com o número
+de demandas em aberto, lembrado em `chat.lateral.recolhida` (padrão aberta). Pedidos do autor durante a implementação:
+a chave Perguntas/Planejamento virou um quadradinho de ícones no começo do campo, com a legenda centralizada embaixo;
+as sugestões ganharam o aviãozinho e um fade só do lado que ainda rola. O build reprovou o `chat.page.scss` (9,15 kB,
+limite de 8 kB): a faixa de sugestões e o trilho viraram `app-chat-sugestoes` e `app-chat-lateral-trilho`.
+
+Testado: frontend 3001 testes (244 arquivos), build, `lint:tudo` limpo, `repo:test` (50 e 1 pulado). Ao vivo, 20
+capturas (5 formatos × 2 temas × lateral aberta/recolhida) com o campo à vista e a barra sem sobreposição, mais os
+estados Planejamento, vazio, erro, lista vazia e `/ponto` (barra igual à de antes). Em 1366×768 a conversa foi de 400px
+para 517px. Achado **na** verificação: a primeira matriz mostrava a barra sem chat com colegas, pad e perfil, porque o
+script plantava só o token, sem `usuario_sessao` (armadilha anotada na skill `verify`). O "Carregando…" no seletor
+quando a conversa falha é anterior a esta task (P-106). Ver `docs/specs/done/496-chatia-mais-visao.spec.md`.
+
 ## 2026-11-25 — Task 495: os testes do frontend passam no Node 26 sem variável de ambiente (P-087)
 
 O Node 25+ traz um `localStorage` global próprio que, sem arquivo de armazenamento, vale `undefined`, e o Vitest não

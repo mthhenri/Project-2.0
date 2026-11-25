@@ -1,0 +1,14 @@
+<button
+    type="button"
+    class="chat-lateral-trilho"
+    [attr.aria-label]="rotulo()"
+    pTooltip="Mostrar"
+    tooltipPosition="left"
+    (click)="abrir.emit()"
+>
+    <i class="pi pi-angle-double-left chat-lateral-trilho__seta" aria-hidden="true"></i>
+    @if (quantidade() > 0) {
+        <span class="chat-lateral-trilho__contagem" aria-hidden="true">{{ quantidade() }}</span>
+    }
+    <span class="chat-lateral-trilho__rotulo" aria-hidden="true">Minhas demandas</span>
+</button>

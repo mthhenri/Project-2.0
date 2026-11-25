@@ -1,5 +1,6 @@
 import { Component, DestroyRef, HostListener, ViewChild, inject, signal, computed } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
@@ -23,6 +24,7 @@ import { VisualizacaoTempoService } from '../../../core/services/visualizacao-te
 import { CORES_SUGERIDAS, COR_PRIMARIA_PADRAO_HEX } from '../../../core/models/tema-personalizado.model';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../core/utils/atalhos';
 import { ExecucaoAtivaService } from '../../../core/services/execucao-ativa.service';
+import { TopbarConteudoService } from '../../../core/services/topbar-conteudo.service';
 import { IaDisponibilidadeService } from '../../../core/services/ia-disponibilidade.service';
 import { MensagemDiretaEstadoService } from '../../../modules/mensagem-direta/services/mensagem-direta-estado.service';
 import { ChipExecucaoAtivaComponent } from './chip-execucao-ativa/chip-execucao-ativa.component';
@@ -35,6 +37,7 @@ import { CheckinProximoComponent } from '../../../modules/checkin/components/che
     selector: 'app-topbar',
     standalone: true,
     imports: [
+        NgTemplateOutlet,
         UsuarioCorDialogComponent,
         AvatarUsuarioComponent,
         ReactiveFormsModule,
@@ -64,6 +67,8 @@ export class TopbarComponent {
     private readonly roteador = inject(Router);
     private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
     readonly desktopDownload = inject(DesktopDownloadService);
+    /** O que a página aberta pôs no lado esquerdo da barra (task 496). */
+    readonly conteudo = inject(TopbarConteudoService);
     readonly formatarTamanho = formatarTamanhoDoArquivo;
     /** Depois do "Agora não" com a IA no ar: o botão para voltar para ela fica à vista. */
     readonly podeVoltarParaAIa = computed(() => this.iaDisponibilidade.modoConvencional() && this.iaDisponibilidade.estadoReal() === EstadoIaEnum.NO_AR);

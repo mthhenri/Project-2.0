@@ -1,4 +1,10 @@
 <header class="topbar flex items-center justify-end px-6 py-3 border-b-2 gap-6 min-w-0">
+    <!-- Conteúdo da página aberta (task 496: o seletor do ChatIA); sem registro, nada é desenhado. -->
+    @if (conteudo.modelo(); as modelo) {
+        <div class="topbar__pagina">
+            <ng-container [ngTemplateOutlet]="modelo" />
+        </div>
+    }
     <!-- Actions -->
     <div class="topbar__acoes flex items-center gap-2 min-w-0">
         <app-chip-execucao-ativa />

@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { Component, TemplateRef, viewChild } from '@angular/core';
+import { TopbarConteudoService } from '../../../core/services/topbar-conteudo.service';
 import { Router } from '@angular/router';
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import { EstadoIaEnum, ExecucaoAtivaDto, TipoUsuarioEnum } from '@project20/shared';
@@ -238,5 +240,33 @@ describe('TopbarComponent — "Voltar para a IA"', () => {
         expect(TestBed.inject(Router).url).toBe('/chat');
         expect(ia.retomadaPendente()).toBe(true);
         expect(texto(montado)).not.toContain('Voltar para a IA');
+    });
+});
+
+/** Uma página qualquer que tem algo a pôr na barra (task 496). */
+@Component({ standalone: true, templateUrl: './topbar.component.spec.html', styleUrl: './topbar.component.spec.scss' })
+class PaginaComConteudo {
+    readonly modelo = viewChild.required<TemplateRef<unknown>>('modelo');
+}
+
+describe('TopbarComponent — conteúdo da página', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('desenha à esquerda o que a página registrou e o tira quando ela retira', async () => {
+        const montado = await montarBarra();
+        expect(montado.elemento.querySelector('.topbar__pagina')).toBeNull();
+
+        const pagina = TestBed.createComponent(PaginaComConteudo);
+        pagina.detectChanges();
+        const conteudo = TestBed.inject(TopbarConteudoService);
+        conteudo.exibir(pagina.componentInstance.modelo());
+        await montado.atualizar();
+
+        expect(montado.elemento.querySelector('.topbar__pagina')?.textContent).toContain('Seletor da página');
+
+        conteudo.retirar(pagina.componentInstance.modelo());
+        await montado.atualizar();
+
+        expect(montado.elemento.querySelector('.topbar__pagina')).toBeNull();
     });
 });
