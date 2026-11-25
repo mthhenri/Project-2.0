@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, comp
 import { firstValueFrom } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { LIMITE_TEXTO_MENSAGEM_DIRETA, MENCAO_DA_IA, MensagemDiretaReferenciaResumoDto, ReferenciaMensagemDiretaEnum, trechoDaMensagemDireta } from '@project20/shared';
+import { GRAFIAS_DA_MENCAO_DA_IA, LIMITE_TEXTO_MENSAGEM_DIRETA, MENCAO_DA_IA, MensagemDiretaReferenciaResumoDto, ReferenciaMensagemDiretaEnum, trechoDaMensagemDireta } from '@project20/shared';
 import { EnvioDoCompositor } from '../../services/mensagem-direta-estado.service';
 import { MensagemDiretaService } from '../../services/mensagem-direta.service';
 import {
@@ -33,7 +33,7 @@ const COMECO_DO_AVISO_DE_LIMITE = 8_000;
 /** Folga para a cerca e a linguagem de um bloco de código, ao decidir se uma colagem ainda cabe. */
 const FOLGA_DA_CERCA_DO_CODIGO = 16;
 
-/** O texto que a opção da IA põe depois do `@` (task 315): o servidor reconhece `@IA`. */
+/** O texto que a opção da IA põe depois do `@` (task 315): o servidor reconhece `@PIA`. */
 const ROTULO_DA_IA_NO_COMPOSITOR = MENCAO_DA_IA.slice(1);
 /** O texto que a opção de todos põe depois do `@` (task 247): o servidor reconhece `@todos` no grupo. */
 const ROTULO_DE_TODOS_NO_COMPOSITOR = 'todos';
@@ -106,7 +106,7 @@ export class MensagemDiretaCompositorComponent {
     /** Código a pôr no campo como bloco (o que o usuário copiou antes do atalho do Desktop, task 213); `textoAplicado` avisa que já foi usado. */
     readonly codigoInicial = input<string | null>(null);
     readonly textoAplicado = output<void>();
-    /** A IA está no ar (task 315): o `@` oferece **IA** como primeira opção, que entra como texto `@IA` e nunca como menção de pessoa. */
+    /** A IA está no ar (task 315): o `@` oferece **IA** como primeira opção, que entra como texto `@PIA` e nunca como menção de pessoa. */
     readonly iaDisponivel = input(false);
     /** No grupo (task 247) o `@` oferece **todos** depois da IA: entra como texto `@todos` e nunca como menção de pessoa; o servidor o expande nos membros. */
     readonly permitirTodos = input(false);
@@ -157,7 +157,7 @@ export class MensagemDiretaCompositorComponent {
         const gatilho = this.gatilho();
         if (!gatilho) return [];
         if (gatilho.tipo === 'MENCAO') {
-            const daIa: ItemDaSugestao[] = this.iaDisponivel() && ROTULO_DA_IA_NO_COMPOSITOR.toLowerCase().startsWith(gatilho.termo.toLowerCase())
+            const daIa: ItemDaSugestao[] = this.iaDisponivel() && GRAFIAS_DA_MENCAO_DA_IA.some((grafia) => grafia.startsWith(gatilho.termo.toLowerCase()))
                 ? [{ rotulo: ROTULO_DA_IA_NO_COMPOSITOR, titulo: ROTULO_DA_IA_NO_COMPOSITOR, detalhe: 'Pedir à IA', icone: 'pi-sparkles app-icone-pia', nomeDoAvatar: null, corDoAvatar: null, pessoa: null, referencia: null }]
                 : [];
             const deTodos: ItemDaSugestao[] = this.permitirTodos() && ROTULO_DE_TODOS_NO_COMPOSITOR.startsWith(gatilho.termo.toLowerCase())

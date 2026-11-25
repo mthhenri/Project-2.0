@@ -75,6 +75,13 @@ describe('MensagemDiretaConversaComponent — @IA', () => {
         expect(chips[0].querySelector('i.app-icone-pia')).not.toBeNull();
     });
 
+    it('as grafias novas (@PIA, @Piá, @Pia) ganham o mesmo destaque; @Piauí não (task 490)', async () => {
+        await abrir([mensagem({ mensagemId: 'p-3', texto: '@PIA e @Piá e @Pia, nunca @Piauí' })]);
+        const chips = Array.from(tela.elemento.querySelectorAll('.markdown__destaque'));
+        expect(chips.map((chip) => chip.textContent)).toEqual(['@PIA', '@Piá', '@Pia']);
+        expect(chips.every((chip) => chip.querySelector('i.app-icone-pia') !== null)).toBe(true);
+    });
+
     it('a resposta à outra pessoa mostra o nome dela', async () => {
         await abrir([mensagem({ mensagemId: 'ia-1', autor: AutorMensagemDiretaEnum.IA, autorUsuarioId: null, texto: 'Pronto.', chamadaPorUsuarioId: 9 })]);
         expect(tela.elemento.querySelector('app-mensagem-direta-ia-resposta')!.textContent).toContain('Piá · para Camila Duarte');

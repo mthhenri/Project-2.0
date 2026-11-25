@@ -1,6 +1,7 @@
 import {
     AutorMensagemDiretaEnum,
     ConversaDiretaResumoDto,
+    GRAFIAS_DA_MENCAO_DA_IA,
     MensagemDiretaResumoDto,
     outroParticipanteDaConversaDireta,
     textoSimplesDaMensagemDireta,
@@ -250,8 +251,12 @@ export function previaDaMensagem(texto: string, contemCodigo: boolean, souEuQuem
 
 /** O ícone da IA (o mesmo da opção do `@` no compositor), antes do `@IA` destacado no texto da mensagem (task 315). */
 export const ICONE_DA_IA = 'pi pi-sparkles app-icone-pia';
-/** As grafias de `@IA` que o servidor reconhece (sem diferenciar maiúsculas): o destaque do texto casa a grafia exata que a pessoa escreveu. */
-export const DESTAQUES_DA_IA: readonly string[] = ['@IA', '@ia', '@Ia', '@iA'];
+/** Todas as combinações de maiúsculas e minúsculas de uma palavra. */
+function variacoesDeCaixa(palavra: string): string[] {
+    return [...palavra].reduce<string[]>((prefixos, letra) => prefixos.flatMap((prefixo) => [prefixo + letra.toLowerCase(), prefixo + letra.toUpperCase()]), ['']);
+}
+/** As grafias da menção que o servidor reconhece (sem diferenciar maiúsculas): o destaque do texto casa a grafia exata que a pessoa escreveu. */
+export const DESTAQUES_DA_IA: readonly string[] = GRAFIAS_DA_MENCAO_DA_IA.flatMap((grafia) => variacoesDeCaixa(grafia).map((variacao) => `@${variacao}`));
 /** O ícone de cada grafia do `@IA`, para o visualizador de Markdown pôr antes do destaque. */
 export const ICONES_DOS_DESTAQUES_DA_IA: Readonly<Record<string, string>> = Object.fromEntries(DESTAQUES_DA_IA.map((destaque) => [destaque, ICONE_DA_IA]));
 /** A cor de cada grafia do `@IA` (task 489): a da Piá, Araucária, em vez do azul do sistema; as pessoas mencionadas seguem com a cor delas. */

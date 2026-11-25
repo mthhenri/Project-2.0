@@ -12,11 +12,13 @@ export const JANELA_DE_CONTEXTO_DA_IA_NO_CHAT_DIRETO = 20;
 export const JANELA_DE_CONTEXTO_DA_IA_NO_GRUPO = 30;
 /** Por quanto tempo a tela mostra "IA digitando…" sem receber a resposta. */
 export const VALIDADE_DO_IA_DIGITANDO_MS = 120_000;
-/** O texto que chama a IA. */
-export const MENCAO_DA_IA = '@IA';
+/** A forma que o app mostra e sugere para chamar a IA (task 490). As outras grafias de `GRAFIAS_DA_MENCAO_DA_IA` também chamam. */
+export const MENCAO_DA_IA = '@PIA';
+/** As grafias aceitas, em minúsculas e sem o `@`; a comparação ignora maiúsculas. */
+export const GRAFIAS_DA_MENCAO_DA_IA: readonly string[] = ['pia', 'piá', 'ia'];
 
 export interface ChamadaDaIa {
-    /** O texto sem o `@IA`, aparado; vazio quando a pessoa escreveu só `@IA`. */
+    /** O texto sem a menção, aparado; vazio quando a pessoa escreveu só a menção (`@PIA`). */
     pedido: string;
 }
 
@@ -26,11 +28,14 @@ function mascararCodigo(texto: string): string {
     return texto.replace(/```[\s\S]*?(?:```|$)/g, apagar).replace(/`[^`\n]*`/g, apagar);
 }
 
-/** `@IA` como token próprio: nem colado a uma letra, número, ponto ou `@` antes (`email@IA`), nem a uma letra ou número depois (`@IAgo`). */
-const REGEX_MENCAO_DA_IA = /(?<![\p{L}\p{N}_.@])@ia(?![\p{L}\p{N}_])/giu;
+/**
+ * A menção como token próprio: nem colada a uma letra, número, ponto ou `@` antes (`email@PIA`), nem a uma letra, número ou acento depois (`@Piauí`,
+ * `@IAgo`).
+ */
+const REGEX_MENCAO_DA_IA = new RegExp(String.raw`(?<![\p{L}\p{N}_.@])@(?:${GRAFIAS_DA_MENCAO_DA_IA.join('|')})(?![\p{L}\p{N}_\p{M}])`, 'giu');
 
 /**
- * Se o texto chama a IA e qual é o pedido. `@IA` vale sem diferenciar maiúsculas e em qualquer lugar do texto, menos dentro de código (cercado ou
+ * Se o texto chama a IA e qual é o pedido. `@PIA`, `@Piá`, `@Pia` e `@IA` valem sem diferenciar maiúsculas e em qualquer lugar do texto, menos dentro de código (cercado ou
  * em linha). O pedido é o texto sem as menções à IA, aparado; `null` quando não há chamada.
  */
 export function chamadaDaIa(texto: string): ChamadaDaIa | null {

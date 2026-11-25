@@ -63,6 +63,20 @@
         cursor: help;
     }
 
+    // Fechada, a aba da Piá é cinza como as vizinhas, inclusive o brilho (task 493).
+    &__aba-pia:not(.p-tab-active) i {
+        color: inherit;
+    }
+
+    // Aba da Piá aberta (task 493): texto, brilho e traço de seleção em Araucária, não no azul do sistema.
+    &__aba-pia.p-tab-active {
+        color: var(--app-pia-icone);
+    }
+
+    ::ng-deep .p-tablist:has(.configuracao-ia__aba-pia.p-tab-active) .p-tablist-active-bar {
+        background: var(--app-pia-icone);
+    }
+
     &__aba-erro {
         margin-left: 0.5rem;
         color: var(--p-red-500);

@@ -28,6 +28,20 @@ test('chamadaDaIa: colado a outra palavra não chama', () => {
     assert.equal(chamadaDaIa('@@IA'), null);
 });
 
+test('chamadaDaIa: @PIA, @Piá, @Pia e @IA chamam, no meio da frase e com pontuação depois (task 490)', () => {
+    for (const mencao of ['@PIA', '@pia', '@Piá', '@PIÁ', '@Pia', '@IA', '@Piá'.normalize('NFC')]) {
+        assert.deepEqual(chamadaDaIa(`${mencao}, resume isso`), { pedido: 'resume isso' }, mencao);
+        assert.deepEqual(chamadaDaIa(`pode ${mencao}? valeu`), { pedido: 'pode ? valeu' }, mencao);
+        assert.deepEqual(chamadaDaIa(`${mencao}.`), { pedido: '' }, mencao);
+    }
+});
+
+test('chamadaDaIa: @Piaui, @Piauí e e-mail não chamam (task 490)', () => {
+    for (const texto of ['@Piaui', '@Piauí', 'vou para @piauí', 'joao@pia.com', '@@PIA', '@Piada', 'olha `@PIA` aqui']) {
+        assert.equal(chamadaDaIa(texto), null, texto);
+    }
+});
+
 test('chamadaDaIa: dentro de código não chama', () => {
     assert.equal(chamadaDaIa('olha `@IA` no código'), null);
     assert.equal(chamadaDaIa('```ts\nconst x = "@IA";\n```'), null);

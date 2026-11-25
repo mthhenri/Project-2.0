@@ -98,6 +98,16 @@
                 color: var(--app-realce-primario);
             }
         }
+
+        // Tela da Piá aberta (task 493): a seleção inteira (fundo, texto e brilho) fica em Araucária, não no azul do sistema.
+        &--ativo:has(.app-icone-pia) {
+            background-color: color-mix(in srgb, var(--app-pia-icone) 12%, transparent);
+            color: var(--app-pia-icone);
+
+            i {
+                color: var(--app-pia-icone);
+            }
+        }
     }
 
     &--recolhida &__item,
