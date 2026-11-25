@@ -13,6 +13,20 @@
 ---
 
 
+## 2026-11-25 — Task 495: os testes do frontend passam no Node 26 sem variável de ambiente (P-087)
+
+O Node 25+ traz um `localStorage` global próprio que, sem arquivo de armazenamento, vale `undefined`, e o Vitest não
+sobrescreve com o do jsdom um global que já existe. Cerca de 2150 testes falhavam e `npm test` parava no frontend,
+sem chegar ao desktop nem aos scripts do repositório. `frontend/vitest.config.ts` agora passa
+`--no-experimental-webstorage` em `execArgv` aos processos de teste, só quando o Node em uso conhece a opção
+(`process.allowedNodeEnvironmentFlags`). Preferido a `NODE_OPTIONS` no script npm, que no Node 20 impediria o início e
+pediria dependência para valer no Windows. Quem usava a variável como contorno não precisa mais dela.
+
+Verificado no Node 26.13.0 (Windows), sem `NODE_OPTIONS`: `npm test` com código 0 (shared 369, backend 1891,
+frontend 2994, desktop 49, scripts 50 e 1 pulado); `lint:tudo` limpo. No Node 22.23.3 (imagem Docker local, sem rede)
+a opção é conhecida e aceita por processo filho e por worker thread; **a suíte do frontend não foi rodada no 22** (as
+dependências instaladas são as de Windows). O Node 20 não foi testado. Ver `docs/specs/done/495-testes-do-frontend-no-node-26.spec.md`.
+
 ## 2026-11-25 — Tasks 492 e 494: ajustes no detalhe e no jeito da Piá
 
 Pedido do autor, com discrição: ver `docs/specs/done/492-detalhes-da-pia.spec.md` e `docs/specs/done/494-jeito-da-pia.spec.md`.
