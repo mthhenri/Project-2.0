@@ -13,6 +13,22 @@
 ---
 
 
+## 2026-11-25 — Tasks 492 e 494: ajustes no detalhe e no jeito da Piá
+
+Pedido do autor, com discrição: ver `docs/specs/done/492-detalhes-da-pia.spec.md` e `docs/specs/done/494-jeito-da-pia.spec.md`.
+
+## 2026-11-25 — Tasks 490 e 493: a Piá é chamada por `@PIA` e a seleção dela fica em Araucária
+
+Dois ajustes do autor ao olhar a branch da identidade (tasks 489 e 491) antes do merge. **490:** o chat entre colaboradores
+sugere `@PIA`; `@Piá`, `@Pia` e `@IA` continuam chamando (`GRAFIAS_DA_MENCAO_DA_IA`, no `shared`). **493:** com "IA Config."
+aberta, o item da barra lateral (fundo, texto, ícone) e a aba "Autonomia" (texto, ícone, traço) ficam em Araucária; isso
+revê o limite da 489 em que o item ativo ficava azul.
+
+Testes: shared 369, backend 1888, frontend 2985, 0 falha; build de backend e frontend e `lint:tudo` limpos. O frontend
+precisa de `NODE_OPTIONS=--no-experimental-webstorage` no Node 26 desta máquina (sem isso 2147 testes falham em
+`localStorage`). Ao vivo, num stack isolado: as quatro grafias acionaram uma IA de mentira num grupo e `@Piauí` não;
+cores conferidas por estilo computado nos 5 formatos e 2 temas.
+
 ## 2026-11-24 — Task 491: detalhe de interação no avatar da Piá no chat da IA
 
 Pedido do autor, com discrição: os detalhes ficam na spec (`docs/specs/done/491-detalhe-no-avatar-da-pia.spec.md`).
