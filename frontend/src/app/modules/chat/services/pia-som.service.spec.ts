@@ -67,6 +67,27 @@ describe('PiaSomService', () => {
         expect(ContextoFalso.osciladores).toBe(8);
     });
 
+    it('com o áudio bloqueado, espera o primeiro gesto e toca uma vez só (task 492)', () => {
+        class ContextoBloqueado extends ContextoFalso {
+            override state = 'suspended';
+        }
+        (window as unknown as { AudioContext: unknown }).AudioContext = ContextoBloqueado;
+        const aoTocar = vi.fn();
+        new PiaSomService().tocarQuandoPuder(aoTocar);
+        expect(ContextoFalso.osciladores).toBe(0);
+        document.dispatchEvent(new Event('pointerdown'));
+        vi.advanceTimersByTime(5000);
+        document.dispatchEvent(new Event('keydown'));
+        expect(ContextoFalso.osciladores).toBe(4);
+        expect(aoTocar).toHaveBeenCalledTimes(1);
+    });
+
+    it('com o áudio liberado, tocarQuandoPuder toca na hora (task 492)', () => {
+        (window as unknown as { AudioContext: unknown }).AudioContext = ContextoFalso;
+        new PiaSomService().tocarQuandoPuder();
+        expect(ContextoFalso.osciladores).toBe(4);
+    });
+
     it('sem áudio no navegador não faz nada', () => {
         (window as unknown as { AudioContext: unknown }).AudioContext = undefined;
         expect(new PiaSomService().tocar()).toBe(0);

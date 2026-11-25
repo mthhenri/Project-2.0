@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
-/** O volume de pico (0 a 1), o mesmo do aviso de mensagem do chat entre colaboradores. */
-const PICO_DO_VOLUME = 0.3;
+/** O volume de pico (0 a 1): um terço do aviso de mensagem do chat entre colaboradores (task 492). */
+const PICO_DO_VOLUME = 0.1;
 /** Entrada e saída de cada parte (s): curtas, para o contorno aparecer inteiro sem estalo. */
 const ATAQUE = 0.008;
 const SOLTURA = 0.03;
@@ -43,15 +43,52 @@ export const DURACAO_DO_SOM_DA_PIA = Math.max(...PARTES.map((parte) => parte.pon
 export class PiaSomService {
     private contexto: AudioContext | null = null;
     private tocandoAte = 0;
+    private aguardandoGesto = false;
+
+    /**
+     * Como `tocar`, para pedidos que não partem de um clique (task 492): com o áudio ainda não liberado pelo navegador, espera o primeiro
+     * `pointerdown` ou `keydown` da página. `aoTocar` recebe a duração quando o som de fato começa.
+     */
+    tocarQuandoPuder(aoTocar?: (duracaoMs: number) => void): void {
+        const tocarAgora = (): void => {
+            const duracaoMs = this.tocar();
+            if (duracaoMs > 0) aoTocar?.(duracaoMs);
+        };
+        const contexto = this.obterContexto();
+        if (!contexto) return;
+        if (contexto.state !== 'suspended') {
+            tocarAgora();
+            return;
+        }
+        if (this.aguardandoGesto) return;
+        this.aguardandoGesto = true;
+        const aoLiberar = (): void => {
+            if (!this.aguardandoGesto) return;
+            this.aguardandoGesto = false;
+            document.removeEventListener('pointerdown', aoLiberar, true);
+            document.removeEventListener('keydown', aoLiberar, true);
+            tocarAgora();
+        };
+        document.addEventListener('pointerdown', aoLiberar, true);
+        document.addEventListener('keydown', aoLiberar, true);
+    }
+
+    private obterContexto(): AudioContext | null {
+        try {
+            const Contexto = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+            return Contexto ? (this.contexto ??= new Contexto()) : null;
+        } catch {
+            return null;
+        }
+    }
 
     /** Toca e devolve a duração (ms); devolve 0 se já estava tocando ou se não há áudio. */
     tocar(): number {
         const agora = Date.now();
         if (agora < this.tocandoAte) return 0;
         try {
-            const Contexto = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-            if (!Contexto) return 0;
-            const contexto = (this.contexto ??= new Contexto());
+            const contexto = this.obterContexto();
+            if (!contexto) return 0;
             if (contexto.state === 'suspended') void contexto.resume().catch(() => undefined);
             const inicio = contexto.currentTime + 0.02;
             for (const parte of PARTES) this.tocarParte(contexto, parte, inicio);

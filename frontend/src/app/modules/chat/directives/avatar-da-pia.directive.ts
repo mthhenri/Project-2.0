@@ -30,7 +30,11 @@ export class AvatarDaPiaDirective {
         this.toques = resultado.toques;
         if (!resultado.completou) return;
         const duracaoMs = this.som.tocar();
-        if (duracaoMs === 0) return;
+        if (duracaoMs > 0) this.balancar(duracaoMs);
+    }
+
+    /** O balanço enquanto o som dura; também chamado pela página quando o som parte de outro lugar (task 492). */
+    balancar(duracaoMs: number): void {
         this.cantando.set(true);
         if (this.espera) clearTimeout(this.espera);
         this.espera = setTimeout(() => this.cantando.set(false), duracaoMs);

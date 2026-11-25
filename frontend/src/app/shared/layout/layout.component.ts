@@ -1,4 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { ambiente } from '../../../environments/environment';
+import { PiaSomService } from '../../modules/chat/services/pia-som.service';
+import { CHAVE_DO_CEDO, ehCedo, reservarVezDoDia } from '../../modules/chat/utils/detalhes-da-pia.util';
 import { RouterOutlet } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { MensagemDiretaAvisosComponent } from '../../modules/mensagem-direta/components/mensagem-direta-avisos/mensagem-direta-avisos.component';
@@ -19,4 +22,11 @@ import { LoadingSpinnerComponent } from '../components/loading-spinner/loading-s
 })
 export class LayoutComponent {
     // A conferência do tipo no servidor (P-062) acontece no `sessaoConferidaGuard` da rota da casca, antes dos guards de tipo.
+
+    constructor() {
+        // Task 492: abrindo o Project cedo, uma vez no dia.
+        const som = inject(PiaSomService);
+        const agora = new Date();
+        if (ehCedo(agora, ambiente.fusoHorario) && reservarVezDoDia(CHAVE_DO_CEDO, agora, ambiente.fusoHorario)) som.tocarQuandoPuder();
+    }
 }

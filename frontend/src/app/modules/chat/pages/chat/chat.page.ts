@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, effect, inject, signal, untracked, viewChild, viewChildren } from '@angular/core';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -25,6 +25,9 @@ import { montarPedidoDeAlteracaoDoTrecho } from '../../utils/plano.util';
 import { LARGURA_DO_DOCUMENTO, larguraDoDocumentoPeloPonteiro, limitarLarguraDoDocumento, ModoDoChatEnum } from '../../utils/plano.util';
 import { LogoPiaComponent } from '../../../../shared/components/logo-pia/logo-pia.component';
 import { AvatarDaPiaDirective } from '../../directives/avatar-da-pia.directive';
+import { PiaSomService } from '../../services/pia-som.service';
+import { CHAVE_DO_ANIVERSARIO, ehDiaDoAniversario, ehMensagemDoCanto, reservarVezDoDia } from '../../utils/detalhes-da-pia.util';
+import { ambiente } from '../../../../../environments/environment';
 
 /** Uma mensagem como a tela a mostra: as da conversa do dia mais as locais (otimistas), com os cartões de proposta ligados a ela. */
 interface MensagemNaTela {
@@ -107,6 +110,8 @@ export class ChatPage implements OnInit {
     private readonly areaDeRolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
     private readonly fluxo = viewChild<ElementRef<HTMLElement>>('fluxo');
     private readonly campoDeTexto = viewChild(EditorMensagemComponent);
+    private readonly somDaPia = inject(PiaSomService);
+    private readonly avataresDaPia = viewChildren(AvatarDaPiaDirective);
     private readonly seletor = viewChild(SeletorComponent);
     private readonly documento = viewChild(PlanoDocumentoComponent);
     private readonly areaDoChat = viewChild<ElementRef<HTMLElement>>('area');
@@ -240,6 +245,10 @@ export class ChatPage implements OnInit {
     private ultimaInteracaoDoUsuario = 0;
 
     constructor() {
+        // Task 492: na primeira abertura do dia do aniversário, depois de a conversa estar na tela.
+        effect(() => {
+            if (this.jaCarregou()) untracked(() => setTimeout(() => this.cantarNoAniversario()));
+        });
         effect(() => {
             // Acompanha a resposta que chega e as mensagens novas, a menos que o usuário tenha subido para ler.
             this.mensagens();
@@ -301,6 +310,16 @@ export class ChatPage implements OnInit {
         });
     }
 
+    private cantarNoAniversario(): void {
+        const agora = new Date();
+        if (!ehDiaDoAniversario(agora, ambiente.fusoHorario) || !reservarVezDoDia(CHAVE_DO_ANIVERSARIO, agora, ambiente.fusoHorario)) return;
+        this.somDaPia.tocarQuandoPuder((duracaoMs) => this.balancarAvatarMaisRecente(duracaoMs));
+    }
+
+    private balancarAvatarMaisRecente(duracaoMs: number): void {
+        if (duracaoMs > 0) this.avataresDaPia().at(-1)?.balancar(duracaoMs);
+    }
+
     ngOnInit(): void {
     // Quem abre o chat à mão depois do "Agora não" está voltando para a IA.
         if (this.iaDisponibilidade.modoConvencional()) this.iaDisponibilidade.voltarParaAIa();
@@ -351,6 +370,12 @@ export class ChatPage implements OnInit {
     async enviar(textoReenvio?: string): Promise<void> {
         const texto = (textoReenvio ?? this.textoDigitado()).trim();
         if (!texto || this.enviando() || this.iaDesligada()) return;
+        // Task 492: este texto não vai à IA nem ao servidor.
+        if (textoReenvio === undefined && ehMensagemDoCanto(texto)) {
+            this.campoDeTexto()?.limpar();
+            this.balancarAvatarMaisRecente(this.somDaPia.tocar());
+            return;
+        }
         // O Enter e o Ctrl+Enter também passam por aqui: o limite vale para o que foi digitado, não para o "Tentar de novo".
         if (textoReenvio === undefined && this.excedeuOLimite()) return;
 

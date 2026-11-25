@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { AutorChatEnum, ChatEventoDto, ContextoChatEnum, EstadoIaEnum, NivelIaEnum, StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
+import { PiaSomService } from '../../services/pia-som.service';
 import { campoDeMensagem, digitarNaMensagem, esperarCampoDeMensagem, teclarNaMensagem, textoDaMensagem } from '../../../../../testes/campo-mensagem';
 import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-teste';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
@@ -223,6 +224,16 @@ describe('ChatPage — abrir a conversa de hoje', () => {
 });
 
 describe('ChatPage — enviar e receber a resposta', () => {
+    it('o texto do detalhe da Piá (task 492) toca o som, limpa o campo e não vai ao servidor', async () => {
+        const tocar = vi.spyOn(PiaSomService.prototype, 'tocar').mockReturnValue(800);
+        const montado = await montarChat();
+        await enviarPeloTeclado(montado, 'Bem-te-vi!');
+        expect(tocar).toHaveBeenCalledTimes(1);
+        expect(enviarMensagemEspiao).not.toHaveBeenCalled();
+        expect(montado.elemento.textContent).not.toContain('Bem-te-vi');
+        tocar.mockRestore();
+    });
+
     it('o clique no botão Enviar envia a mensagem (P-018) sem recarregar a página', async () => {
         const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
         controlarFluxo(enviarMensagemEspiao, 1);
