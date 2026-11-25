@@ -79,6 +79,17 @@ describe('SeletorComponent — botão', () => {
         expect(rotulo).not.toContain('undefined');
     });
 
+    it('carregando, não mostra a etiqueta "conversa do dia" (task 497)', async () => {
+        const montado = await montar({ diaAtual: '', hoje: '' }, []);
+        expect(montado.elemento.querySelector('.chat-seletor__gatilho-etiqueta')).toBeNull();
+    });
+
+    it('com a conversa de hoje indisponível mostra "Conversa de hoje", sem a etiqueta (P-106)', async () => {
+        const montado = await montar({ diaAtual: '', hoje: '', indisponivel: true }, []);
+        expect(montado.elemento.querySelector('.chat-seletor__gatilho-texto')?.textContent).toBe('Conversa de hoje');
+        expect(montado.elemento.querySelector('.chat-seletor__gatilho-etiqueta')).toBeNull();
+    });
+
     it('a etiqueta "conversa do dia" some ao abrir um dia antigo', async () => {
         const montado = await montar({ diaAtual: '2026-10-18' });
         expect(montado.elemento.querySelector('.chat-seletor__gatilho-etiqueta')).toBeNull();

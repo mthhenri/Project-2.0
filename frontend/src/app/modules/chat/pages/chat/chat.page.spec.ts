@@ -238,6 +238,8 @@ describe('ChatPage — abrir a conversa de hoje', () => {
         await montado.atualizar();
 
         expect(texto(montado)).toContain('Não foi possível carregar a conversa.');
+        const rotuloDoSeletor = () => montado.elemento.querySelector('.chat-seletor__gatilho-texto')?.textContent;
+        expect(rotuloDoSeletor()).toBe('Conversa de hoje');
         botao(montado, 'Tentar de novo')!.click();
         await montado.atualizar();
         responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/hoje'), { conversaId: CONVERSA_DE_HOJE, mensagens: [DELA('Oi')] });
@@ -245,6 +247,7 @@ describe('ChatPage — abrir a conversa de hoje', () => {
 
         expect(texto(montado)).not.toContain('Não foi possível carregar a conversa.');
         expect(conversaDa(montado)).toContain('Oi');
+        expect(rotuloDoSeletor()).toMatch(/^Hoje, /);
     });
 });
 

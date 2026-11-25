@@ -41,6 +41,8 @@ export class SeletorComponent {
     readonly diaAtual = input.required<string>();
     /** O dia de hoje no servidor, para rotular "Hoje" e "Ontem". */
     readonly hoje = input.required<string>();
+    /** A conversa de hoje não carregou (a página mostra o erro e o "Tentar de novo"): o dia segue desconhecido (task 497). */
+    readonly indisponivel = input(false);
     readonly modo = input<ModoDoChatEnum>(ModoDoChatEnum.PERGUNTAS);
     /** O plano aberto no modo Planejamento (marcado na lista). */
     readonly planoAbertoId = input<number | null>(null);
@@ -73,7 +75,7 @@ export class SeletorComponent {
     readonly rotuloDoBotao = computed(() => {
         if (this.modo() === ModoDoChatEnum.PLANEJAMENTO) return this.planoAbertoTitulo() ?? 'Escolher um plano';
         // Antes da primeira carga o dia ainda é vazio: sem este guarda o rótulo saía "undefined/undefined".
-        if (!this.diaAtual() || !this.hoje()) return 'Carregando…';
+        if (!this.diaAtual() || !this.hoje()) return this.indisponivel() ? 'Conversa de hoje' : 'Carregando…';
         const doDia = this.conversas().find((conversa) => conversa.data === this.diaAtual());
         if (doDia && !doDia.titulo.startsWith(PREFIXO_TITULO_PADRAO)) return doDia.titulo;
         const rotulo = rotuloDoDia(this.diaAtual(), this.hoje());

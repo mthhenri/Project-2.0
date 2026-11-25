@@ -9,7 +9,7 @@
     >
         <i class="pi pi-list chat-seletor__gatilho-icone" aria-hidden="true"></i>
         <span class="chat-seletor__gatilho-texto">{{ rotuloDoBotao() }}</span>
-        @if (modo() === Modo.PERGUNTAS && diaAtual() === hoje()) {
+        @if (modo() === Modo.PERGUNTAS && hoje() && diaAtual() === hoje()) {
             <span class="chat-seletor__gatilho-etiqueta">conversa do dia</span>
         }
         <i class="pi pi-chevron-down chat-seletor__gatilho-seta" aria-hidden="true"></i>
