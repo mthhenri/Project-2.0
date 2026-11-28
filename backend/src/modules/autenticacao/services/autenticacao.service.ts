@@ -8,6 +8,8 @@ import { StandardResponse } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../domain/interfaces/jwt-payload.interface';
 import { LimiteDeTentativasDeLogin } from '../domain/limite-de-tentativas-de-login';
+import { segundosAteOCorte } from '../domain/validade-do-token';
+import { ConfigService } from '../../../config/config.service';
 
 @Injectable()
 export class AutenticacaoService {
@@ -17,6 +19,7 @@ export class AutenticacaoService {
     constructor(
         private readonly usuarioRepositorio: UsuarioRepository,
         private readonly jwtService: JwtService,
+        private readonly configService: ConfigService,
     ) {}
 
     /** Valida login e senha. Retorna o usuário se válido, null se inválido. Lança exceção se inativo. */
@@ -48,7 +51,11 @@ export class AutenticacaoService {
             tipo:  usuario.tipo,
         };
 
-        const accessToken = await this.jwtService.signAsync(payload);
+        // Com corte semanal o token vence nele; sem corte vale a duração do módulo (`JWT_EXPIRACAO`).
+        const { jwt, aplicacao } = this.configService.obter();
+        const accessToken = jwt.corteSemanal
+            ? await this.jwtService.signAsync(payload, { expiresIn: segundosAteOCorte(new Date(), jwt.corteSemanal, aplicacao.fusoHorario) })
+            : await this.jwtService.signAsync(payload);
 
         return {
             accessToken,

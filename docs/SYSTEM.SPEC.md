@@ -1082,6 +1082,7 @@ DB_SENHA=postgres
 # JWT
 JWT_SECRETO=troque-em-producao
 JWT_EXPIRACAO=7d
+JWT_CORTE_SEMANAL=SEGUNDA 06:00
 
 # Regras de negócio
 INTERVALO_MINIMO_MINUTOS=15
@@ -1235,7 +1236,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 
 ## 11. Autenticação e Autorização
 
-- **JWT** com Passport.js — token gerado no login, válido por `JWT_EXPIRACAO` (7 dias). A cada requisição a `JwtStrategy` confere que o usuário ainda existe e está ativo e usa o login e o tipo atuais do banco, não os do token (P-031); o stream de eventos do chat entre colaboradores, que fica aberto, é reconferido a cada batimento e fechado para quem foi desativado ou excluído (P-061)
+- **JWT** com Passport.js — token gerado no login. Com `JWT_CORTE_SEMANAL` (`<DIA> <HH:MM>`, fuso de `APP_TIMEZONE`), todo token vence na próxima ocorrência do corte (task 498: "semana nova, login novo"); sem ela, vale `JWT_EXPIRACAO` (7 dias) a partir do login. O stream de eventos do chat é fechado no vencimento do token que o abriu. A cada requisição a `JwtStrategy` confere que o usuário ainda existe e está ativo e usa o login e o tipo atuais do banco, não os do token (P-031); o stream de eventos do chat entre colaboradores, que fica aberto, é reconferido a cada batimento e fechado para quem foi desativado ou excluído (P-061)
 - **Guard global** `JwtAuthGuard` aplicado em toda a aplicação via `APP_GUARD`
 - **`@Public()`** — decorator para rotas sem autenticação (somente login)
 - **`@GestorOnly()`** — decorator que restringe a rota a quem tem permissão de gestor (`temPermissaoDeGestor`, em `@project20/shared`; hoje, o tipo GESTOR)

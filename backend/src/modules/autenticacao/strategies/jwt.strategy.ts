@@ -32,6 +32,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             throw new UnauthorizedException();
         }
 
-        return { sub: usuarioEncontrado.id, login: usuarioEncontrado.login, tipo: usuarioEncontrado.tipo };
+        // O vencimento segue adiante para o stream do chat, que fica aberto depois da requisição (task 498).
+        return { sub: usuarioEncontrado.id, login: usuarioEncontrado.login, tipo: usuarioEncontrado.tipo, ...(payload.exp ? { exp: payload.exp } : {}) };
     }
 }

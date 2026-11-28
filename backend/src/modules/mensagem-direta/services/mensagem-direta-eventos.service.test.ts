@@ -249,3 +249,18 @@ test('P-061: o mesmo usuário com duas abas tem as duas fechadas', async () => {
     assert.equal(aba2.encerrado, true);
     await instancia.onModuleDestroy();
 });
+
+test('o stream é fechado quando o token que o abriu vence, e a pessoa deixa de contar como online (task 498)', async (contexto) => {
+    contexto.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1_000_000 });
+    const { primeira, parar } = duasInstancias();
+    const ana = cliente();
+    primeira.abrir({ sub: 4, login: 'u4', tipo: 'DESENVOLVEDOR', exp: 1_060 } as never, ana);
+
+    contexto.mock.timers.tick(59_999);
+    assert.equal(ana.encerrado, false);
+    contexto.mock.timers.tick(1);
+
+    assert.equal(ana.encerrado, true);
+    assert.equal(primeira.listarUsuariosOnline().has(4), false);
+    await parar();
+});

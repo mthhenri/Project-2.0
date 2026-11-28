@@ -1,4 +1,14 @@
-# DEPLOY.md — Subindo o Project 2.0 para produção
+# DEPLOY.md — Ambientes do Project 2.0 e a publicação da homologação
+
+## Ambientes
+
+| Ambiente | Onde roda | Para quê |
+|---|---|---|
+| **Dev** | máquina local (`npm run dev`, bancos em Docker, `localhost`) | desenvolver |
+| **Homologação** | Cloudflare Pages, Render e Supabase | testar o sistema publicado antes de levá-lo para a empresa |
+| **Produção** | containers (Nginx, API, PostgreSQL, Elasticsearch) na rede interna da empresa | uso real; **ainda não montada** |
+
+O restante deste guia trata da **homologação**. Onde ele diz `APP_AMBIENTE=production`, é o valor lógico que a aplicação publicada usa.
 
 Guia de deploy com **frontend no Cloudflare Pages**, **backend no Render** e
 **banco no Supabase**. Os três no plano gratuito.
@@ -18,7 +28,7 @@ Cloudflare Pages          Render (Web Service)         Supabase
 
 ---
 
-## Como o backend roda em produção (entenda antes)
+## Como o backend roda publicado (entenda antes)
 
 O pacote `shared` é consumido como **TypeScript-fonte** (`main: src/index.ts`, sem
 build próprio) e o backend o importa via `@project20/shared`. Por isso **não** se roda
@@ -92,14 +102,15 @@ com `--include=dev`** (ver abaixo). Não use `tsx`/esbuild: ele não emite
    |---------------------------|----------------------------------------------------|
    | `DB_HOST` … `DB_SSL`      | do passo 1 (`DB_SSL=true`)                         |
    | `JWT_SECRETO`             | **gere um valor forte e único** (ex.: `openssl rand -hex 32`) |
-   | `JWT_EXPIRACAO`           | `7d` *(sessão de 7 dias; no Render, troque o valor antigo `8h` por este)* |
+   | `JWT_EXPIRACAO`           | `7d` *(duração do token quando não há corte semanal)* |
+   | `JWT_CORTE_SEMANAL`       | `SEGUNDA 06:00` *(todo token vence nesse dia e hora, no fuso de `APP_TIMEZONE`; sem a variável vale `JWT_EXPIRACAO`)* |
    | `INTERVALO_MINIMO_MINUTOS`| `15`                                               |
    | `APP_PORTA`               | `10000` *(fallback; o Render injeta `PORT` automaticamente e o app prioriza `PORT`)* |
    | `APP_AMBIENTE`            | `production`                                        |
    | `APP_TIMEZONE`            | `America/Sao_Paulo` — fixa o fuso da **sessão do banco** |
    | `TZ`                      | `America/Sao_Paulo` — recomendado (logs/exibição local) |
    | `APP_CORS_ORIGEM`         | a URL do Cloudflare Pages — **preencha no passo 3** |
-   | `CHAT_ARMAZENAMENTO`      | `postgres` — onde ficam as mensagens do chat (tabelas provisórias no Supabase). **Obrigatória na prática:** sem ela o padrão é `opensearch` e o backend não sobe sem `OPENSEARCH_URL`. Na produção de verdade: `elasticsearch` com `ELASTICSEARCH_URL` e `ELASTICSEARCH_API_KEY` |
+   | `CHAT_ARMAZENAMENTO`      | `postgres` — onde ficam as mensagens do chat (tabelas provisórias no Supabase). **Obrigatória na prática:** sem ela o padrão é `opensearch` e o backend não sobe sem `OPENSEARCH_URL`. Na produção: `elasticsearch` com `ELASTICSEARCH_URL` e `ELASTICSEARCH_API_KEY` |
    | `ANTHROPIC_API_KEY`       | *(opcional — deixe vazio por enquanto; sem ela o auxílio de descrições por IA fica indisponível, o resto funciona)* |
    | `GOOGLE_API_KEY` / `OPENAI_API_KEY` | *(opcionais — só para o fallback entre provedores de IA escolhido em Configurações da IA; sem a chave o provedor é pulado)* |
 
@@ -110,7 +121,7 @@ com `--include=dev`** (ver abaixo). Não use `tsx`/esbuild: ele não emite
    > no banco). A correção de fuso **não depende mais do `TZ` do processo** — quem garante
    > `NOW()` e o bucketing por dia corretos é `APP_TIMEZONE`, que fixa a sessão do banco
    > (via `afterCreate` do pool e do `knexfile.ts`). Tem default `America/Sao_Paulo`, mas
-   > defina explicitamente em produção. O `TZ` do processo passou a ser apenas cosmético
+   > defina explicitamente no ambiente publicado. O `TZ` do processo passou a ser apenas cosmético
    > (logs e `Date.toString()` do Node) — recomendado, não obrigatório para a correção.
    > A exibição no front já é fixada em BRT (`DATE_PIPE_DEFAULT_OPTIONS: { timezone: '-0300' }`).
 

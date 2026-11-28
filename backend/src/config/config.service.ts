@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { lerCorteSemanal } from './corte-semanal';
 import { lerArmazenamentoDoChat } from './armazenamento-do-chat';
 import { lerEventosDoChat } from './eventos-do-chat';
 import { Configuracao } from './config.interface';
@@ -19,8 +20,9 @@ export class ConfigService {
                 ssl:     this.opcional('DB_SSL') === 'true',
             },
             jwt: {
-                secreto:   this.obrigatoria('JWT_SECRETO'),
-                expiracao: this.obrigatoria('JWT_EXPIRACAO'),
+                secreto:      this.obrigatoria('JWT_SECRETO'),
+                expiracao:    this.obrigatoria('JWT_EXPIRACAO'),
+                corteSemanal: lerCorteSemanal(this.opcional('JWT_CORTE_SEMANAL')),
             },
             anthropic: {
                 apiKey: this.opcional('ANTHROPIC_API_KEY'),

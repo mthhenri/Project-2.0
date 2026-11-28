@@ -13,6 +13,14 @@
 ---
 
 
+## 2026-11-28 — Task 498: sessão com corte semanal configurável
+
+- **Decisão do autor:** "semana nova, login novo". `JWT_CORTE_SEMANAL=SEGUNDA 06:00` faz todo token vencer no próximo corte; sem a variável vale `JWT_EXPIRACAO` (segue `7d`), como no bloco de 2026-10-30. A ideia anterior, de 6 dias, não resolvia o login no meio da semana e foi abandonada antes de commit.
+- **Ambientes (esclarecidos pelo autor):** o que está no Render/Cloudflare/Supabase é **homologação**; produção serão containers na rede da empresa, ainda a montar.
+- **Mudança:** leitura da variável (`config/corte-semanal.ts`), cálculo no fuso (`autenticacao/domain/validade-do-token.ts`), assinatura no login, vencimento no `JwtPayload` e fechamento do stream do chat; aviso do login "por até 7 dias"; documentos.
+- **Verificado:** backend 1.902 testes e build; `login.page.spec` 18/18; `lint:tudo` limpo. Ao vivo, em banco descartável: login num sábado gerou token até segunda 30/11 06:00; com um corte de teste dois minutos à frente, o stream do chat foi fechado no horário e a reconexão deu 401. Tela de login em claro (cinco formatos) e escuro (cinco formatos). **Não verificado:** o redirecionamento para o login numa aba aberta (o front já tratava o 401).
+- **Pendente (autor):** criar `JWT_CORTE_SEMANAL` no Render. Tokens já emitidos mantêm o vencimento original.
+
 ## 2026-11-25 — Task 497: o seletor do ChatIA nomeia a conversa que não carregou (P-106)
 
 Com `GET /chat/hoje` falhando, o seletor (na barra superior desde a task 496) ficava "Carregando…" para sempre, porque

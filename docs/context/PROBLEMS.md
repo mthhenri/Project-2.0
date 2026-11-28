@@ -58,7 +58,7 @@
 
 ### P-102 — Trocar a senha não derruba os tokens já emitidos · `ABERTO` · backend/autenticacao e usuario
 
-- **Sintoma:** quem tinha um token (inclusive alguém que não devia) segue com acesso até ele vencer (7 dias), mesmo depois de a senha da conta ser trocada. A `JwtStrategy` só confere que o usuário existe e está ativo.
+- **Sintoma:** quem tinha um token (inclusive alguém que não devia) segue com acesso até ele vencer (até 7 dias), mesmo depois de a senha da conta ser trocada. A `JwtStrategy` só confere que o usuário existe e está ativo.
 - **Causa:** o token não carrega nada que a troca de senha invalide, e o usuário não guarda o instante da última troca.
 - **Contorno:** inativar e reativar o usuário não ajuda (o token volta a valer); só esperar vencer ou trocar o segredo do JWT (derruba todos).
 - **Correção:** `423-senha-trocada-derruba-os-tokens-antigos` (decisão do autor, que mandou apenas anotar: precisa de dado novo no usuário, coluna com o instante da última troca ou versão de credencial).

@@ -1,3 +1,4 @@
+import { CorteSemanal } from './corte-semanal';
 import { ArmazenamentoDoChat } from './armazenamento-do-chat';
 import { EventosDoChat } from './eventos-do-chat';
 export interface ConfiguracaoBancoDados {
@@ -12,6 +13,8 @@ export interface ConfiguracaoBancoDados {
 export interface ConfiguracaoJwt {
     secreto: string;
     expiracao: string;
+    /** Com ele, todo token vence no próximo corte e `expiracao` não é usada no login (task 498). */
+    corteSemanal: CorteSemanal | undefined;
 }
 
 export interface ConfiguracaoAnthropic {

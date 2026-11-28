@@ -179,7 +179,7 @@ export class LoginPage implements OnInit {
         }
     }
 
-    /** O usuário é sempre lembrado (a sessão dura 7 dias e a tela só some do caminho); "Entrar com outro usuário" troca. */
+    /** O usuário é sempre lembrado (a sessão dura até 7 dias e a tela só some do caminho); "Entrar com outro usuário" troca. */
     private guardarUsuarioLembrado(): void {
         const nomeCompleto = this.sessao.nomeCompleto();
         const login = this.sessao.login();

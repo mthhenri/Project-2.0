@@ -13,6 +13,8 @@ export const INTERVALO_DO_BATIMENTO_EM_MILISSEGUNDOS = 25_000;
 /** Três batimentos: uma instância que caiu e parou de publicar deixa de contar para a presença depois disto. */
 export const VALIDADE_DA_PRESENCA_EM_MILISSEGUNDOS = 3 * INTERVALO_DO_BATIMENTO_EM_MILISSEGUNDOS;
 export const INTERVALO_DA_EXPIRACAO_EM_MILISSEGUNDOS = 5_000;
+/** O maior atraso que o `setTimeout` aceita; acima disso ele dispararia na hora. */
+const ATRASO_MAXIMO_DO_TEMPORIZADOR = 2_147_483_647;
 
 /**
  * O tempo real do chat entre colaboradores (task 209) nesta instância da API: guarda os streams abertos, entrega a eles o que o barramento
@@ -82,10 +84,22 @@ export class MensagemDiretaEventosService implements OnModuleInit, OnModuleDestr
         conexao.enviar({ tipo: 'ABERTURA', onlineUsuarioIds });
         const remover = this.conexoes.adicionar(usuarioId, conexao);
         this.atualizarPresencaLocal();
-        return () => {
+        let vencimento: NodeJS.Timeout | null = null;
+        const fechar = () => {
+            if (vencimento) clearTimeout(vencimento);
             remover();
             this.atualizarPresencaLocal();
         };
+        // O stream não passa do vencimento do token que o abriu (task 498): a reconexão recebe 401 e o front leva ao login.
+        if (usuarioAtivo.exp) {
+            const restante = Math.min(Math.max(usuarioAtivo.exp * 1000 - Date.now(), 0), ATRASO_MAXIMO_DO_TEMPORIZADOR);
+            vencimento = setTimeout(() => {
+                conexao.encerrar();
+                fechar();
+            }, restante);
+            vencimento.unref();
+        }
+        return fechar;
     }
 
     /** Quem está online em qualquer instância (para a lista de conversas). */

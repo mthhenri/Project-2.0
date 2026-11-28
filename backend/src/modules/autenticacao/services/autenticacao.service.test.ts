@@ -6,10 +6,11 @@ import { TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { TooManyRequestsException } from '../../../core/exceptions/too-many-requests.exception';
 import { AutenticacaoService } from './autenticacao.service';
+import { CorteSemanal } from '../../../config/corte-semanal';
 
 const SEGREDO = 'segredo-de-teste';
 
-async function criarServico(usuarios: Array<Record<string, unknown>>) {
+async function criarServico(usuarios: Array<Record<string, unknown>>, corteSemanal?: CorteSemanal) {
     const todos: Array<Record<string, unknown>> = usuarios;
     const hash = await bcrypt.hash('SenhaCerta#1', 4);
     const repositorio = {
@@ -18,7 +19,8 @@ async function criarServico(usuarios: Array<Record<string, unknown>>) {
             todos.map((usuario): Record<string, unknown> => ({ senhaEncriptada: hash, ...usuario })).find((usuario) => usuario.login === dto.login) ?? null,
     };
     const jwt = new JwtService({ secret: SEGREDO, signOptions: { expiresIn: '8h' } });
-    return { servico: new AutenticacaoService(repositorio as never, jwt), jwt };
+    const configuracao = { obter: () => ({ jwt: { corteSemanal }, aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) };
+    return { servico: new AutenticacaoService(repositorio as never, jwt, configuracao as never), jwt };
 }
 
 const ATIVO = { id: 7, login: 'maria', nomeCompleto: 'Maria', tipo: TipoUsuarioEnum.GESTOR, ativo: true, corAvatar: '#1E3A8A' };
@@ -37,6 +39,22 @@ test('credencial válida gera token com o JwtPayload esperado (sub, login, tipo)
     assert.equal(payload.tipo, TipoUsuarioEnum.GESTOR);
     assert.ok(payload.exp > payload.iat, 'o token expira');
     assert.equal(JSON.stringify(resposta).includes('senha'), false);
+});
+
+test('sem corte semanal o token dura o tempo do módulo; com corte, vence na próxima segunda às 6h', async () => {
+    const entrar = async (corteSemanal?: CorteSemanal) => {
+        const { servico, jwt } = await criarServico([ATIVO], corteSemanal);
+        const resposta = await servico.login({ login: 'maria', senha: 'SenhaCerta#1', ip: '10.0.0.1' });
+        return jwt.verifyAsync(resposta.dados!.accessToken);
+    };
+
+    const comum = await entrar();
+    assert.equal(comum.exp - comum.iat, 8 * 60 * 60);
+
+    const cortado = await entrar({ diaDaSemana: 1, hora: 6, minuto: 0 });
+    const vencimento = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(cortado.exp * 1000);
+    assert.match(vencimento, /^segunda-feira.*06:00:00$/);
+    assert.ok(cortado.exp - cortado.iat <= 7 * 24 * 60 * 60);
 });
 
 test('o token de administrador carrega o tipo ADMINISTRADOR', async () => {

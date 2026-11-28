@@ -184,10 +184,10 @@ describe('LoginPage', () => {
         expect(JSON.parse(localStorage.getItem('ultimo_login')!)).toEqual({ login: 'maria', nomeCompleto: 'Maria Souza', corAvatar: '#1E3A8A' });
     });
 
-    it('não tem mais o checkbox de lembrar e avisa que a sessão dura 7 dias', async () => {
+    it('não tem mais o checkbox de lembrar e avisa que a sessão dura até 7 dias', async () => {
         const { montado } = await montarLogin();
         expect(montado.elemento.querySelector('p-checkbox')).toBeNull();
-        expect(texto(montado)).toContain('conectado por 7 dias');
+        expect(texto(montado)).toContain('por até 7 dias');
         expect(montado.elemento.querySelector('main')).not.toBeNull();
     });
 

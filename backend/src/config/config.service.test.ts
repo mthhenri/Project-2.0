@@ -100,6 +100,13 @@ test('DESKTOP_PASTA_EXECUTAVEIS é opcional: ausente, não há download do Proje
     assert.equal(new ConfigService().obter().desktop.pastaExecutaveis, '/srv/desktop');
 });
 
+test('JWT_CORTE_SEMANAL é opcional: ausente, o token dura JWT_EXPIRACAO', () => {
+    definirAmbiente({ JWT_CORTE_SEMANAL: undefined });
+    assert.equal(new ConfigService().obter().jwt.corteSemanal, undefined);
+    definirAmbiente({ JWT_CORTE_SEMANAL: 'SEGUNDA 06:00' });
+    assert.deepEqual(new ConfigService().obter().jwt.corteSemanal, { diaDaSemana: 1, hora: 6, minuto: 0 });
+});
+
 test('ANTHROPIC_API_KEY é opcional', () => {
     definirAmbiente({ ANTHROPIC_API_KEY: undefined });
     assert.equal(new ConfigService().obter().anthropic.apiKey, undefined);
