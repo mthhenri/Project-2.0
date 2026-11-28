@@ -13,6 +13,17 @@
 ---
 
 
+## 2026-11-28 — Task 499, ajuste: segredos da produção separados dos do dev
+
+- A produção lê só o `infra/producao/.env` (fora do Git), criado por `scripts/preparar-env-producao.mjs` com senha do banco e `JWT_SECRETO` novos; chaves de IA começam vazias. Fecha a pendência "ainda herdado do `.env`" do bloco abaixo.
+- A segurança do Elasticsearch segue desligada (sem porta publicada).
+
+## 2026-11-28 — Task 499, ajuste: a produção só usa banco próprio
+
+- **Decisão do autor,** depois de testar: "não quero uma produção fake". A opção de usar o banco de dev saiu (muda o escopo da spec 499); `npm run prod:up` sobe PostgreSQL e Elasticsearch próprios, começando vazios.
+- O volume antigo do chat (`project20-producao_elasticsearch_dados`, com mensagem de teste) não foi apagado; o novo é `chat_dados`.
+- **Ainda herdado do `.env` do desenvolvimento:** `JWT_SECRETO`, senha do banco e chaves de IA.
+
 ## 2026-11-28 — Task 499: produção em containers, emulada na máquina local
 
 - **Mudança:** `infra/producao/` (Nginx com HTTPS, API, migrations, Elasticsearch; PostgreSQL do dev ou próprio), configuração `container` do front (API na mesma origem), `APP_PROXIES_CONFIAVEIS` e os scripts `npm run prod:*`. A autoridade local só vale para `cek.project` e `localhost`, e a chave dela é apagada depois de assinar.

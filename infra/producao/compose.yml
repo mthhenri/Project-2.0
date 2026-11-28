@@ -1,9 +1,11 @@
-# Produção do Project 2.0 em containers (task 499). Sempre combinado com um dos arquivos de banco:
-# compose.banco-dev.yml (o PostgreSQL do desenvolvimento) ou compose.banco-proprio.yml. Use os scripts `npm run prod:*` e veja o README.md.
+# Produção do Project 2.0 em containers (task 499), com banco próprio: começa vazio e nunca usa o do desenvolvimento.
+# Use os scripts `npm run prod:*` e veja o README.md.
 name: project20-producao
 
-# O que muda em relação ao .env da raiz quando a API roda como produção.
+# O que é fixo da produção; segredos e chaves vêm do infra/producao/.env (nunca do .env do desenvolvimento).
 x-ambiente-da-api: &ambiente-da-api
+  DB_HOST: postgres
+  DB_PORT: "5432"
   DB_SSL: "false"
   APP_PORTA: "3000"
   APP_AMBIENTE: production
@@ -25,18 +27,37 @@ services:
       - ./gerar-certificado.sh:/scripts/gerar-certificado.sh:ro
       - ./certificados:/certificados
 
+  # Sem porta publicada: só a API e as migrations alcançam.
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NOME}
+      POSTGRES_USER: ${DB_USUARIO}
+      POSTGRES_PASSWORD: ${DB_SENHA}
+    volumes:
+      - postgres_dados:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USUARIO} -d ${DB_NOME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   migracoes:
     image: project20-producao-api
     build:
       context: ../..
       dockerfile: infra/producao/Dockerfile.api
     command: ["npm", "run", "db:migrate"]
-    env_file: ../../.env
+    env_file: .env
     environment: *ambiente-da-api
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   api:
     image: project20-producao-api
-    env_file: ../../.env
+    env_file: .env
     environment: *ambiente-da-api
     volumes:
       - ./publicacoes/desktop:/srv/desktop:ro
@@ -78,7 +99,7 @@ services:
       xpack.security.enabled: "false"
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     volumes:
-      - elasticsearch_dados:/usr/share/elasticsearch/data
+      - chat_dados:/usr/share/elasticsearch/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health || exit 1"]
@@ -87,4 +108,5 @@ services:
       retries: 18
 
 volumes:
-  elasticsearch_dados:
+  postgres_dados:
+  chat_dados:
