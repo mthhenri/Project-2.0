@@ -229,6 +229,7 @@ O projeto é um monorepo com quatro workspaces conectados via npm workspaces:
 | `INTERVALO_MINIMO_MINUTOS` | Gap mínimo entre execuções para ser considerado intervalo | `15` |
 | `ANTHROPIC_API_KEY` | Chave da API Anthropic (opcional: sem ela a IA fica "fora do ar"). O modelo de cada nível e o resto da configuração da IA ficam na tela Configurações da IA, não no `.env` | `sk-ant-...` |
 | `GOOGLE_API_KEY` / `OPENAI_API_KEY` | Chaves do Gemini e da OpenAI (opcionais): só servem para o fallback entre provedores, escolhido em Configurações da IA. Sem a chave, o provedor é pulado na cadeia | `sk-...` |
+| `APP_PROXIES_CONFIAVEIS` | Opcional: quantos proxies à frente da API têm o `X-Forwarded-For` aceito (a produção em containers usa `1`) | `1` |
 | `CHAT_ARMAZENAMENTO` | Onde ficam as mensagens do chat: `opensearch` (desenvolvimento, padrão) ou `postgres` (tabelas **provisórias** para a homologação, sem serviço de busca) ou `elasticsearch` (produção de verdade) | `opensearch` |
 | `CHAT_EVENTOS` | Por onde os eventos do chat entre colaboradores (mensagem nova, "Lida", online) chegam a todas as instâncias da API: `memoria` (desenvolvimento, padrão; só uma instância) ou `postgres` (`LISTEN`/`NOTIFY`; obrigatório com mais de uma instância). |
 | `OPENSEARCH_URL` | Endereço do OpenSearch (sobe com `npm run db:up`); obrigatório só com `CHAT_ARMAZENAMENTO=opensearch` | `http://localhost:9200` |

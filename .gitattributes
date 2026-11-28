@@ -1,0 +1,2 @@
+# Scripts que rodam dentro de container precisam de fim de linha Unix.
+*.sh text eol=lf

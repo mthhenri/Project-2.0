@@ -21,6 +21,9 @@ async function inicializar(): Promise<void> {
     const configService = aplicacao.get(ConfigService);
     const corsOrigem = configService.obter().aplicacao.corsOrigem;
 
+    // Atrás de um proxy, o IP do cliente (limite de tentativas de login) vem do X-Forwarded-For, não da conexão.
+    aplicacao.getHttpAdapter().getInstance().set('trust proxy', configService.obter().aplicacao.proxiesConfiaveis);
+
     aplicacao.enableCors({
         origin:      corsOrigem ?? true,
         credentials: true,

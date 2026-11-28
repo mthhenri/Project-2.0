@@ -6,7 +6,7 @@
 |---|---|---|
 | **Dev** | máquina local (`npm run dev`, bancos em Docker, `localhost`) | desenvolver |
 | **Homologação** | Cloudflare Pages, Render e Supabase | testar o sistema publicado antes de levá-lo para a empresa |
-| **Produção** | containers (Nginx, API, PostgreSQL, Elasticsearch) na rede interna da empresa | uso real; **ainda não montada** |
+| **Produção** | containers (Nginx, API, PostgreSQL, Elasticsearch) na rede interna da empresa | uso real; hoje **emulada na máquina local** em `https://cek.project` ([`infra/producao/README.md`](../infra/producao/README.md)) |
 
 O restante deste guia trata da **homologação**. Onde ele diz `APP_AMBIENTE=production`, é o valor lógico que a aplicação publicada usa.
 

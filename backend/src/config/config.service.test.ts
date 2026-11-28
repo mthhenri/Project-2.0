@@ -107,6 +107,13 @@ test('JWT_CORTE_SEMANAL é opcional: ausente, o token dura JWT_EXPIRACAO', () =>
     assert.deepEqual(new ConfigService().obter().jwt.corteSemanal, { diaDaSemana: 1, hora: 6, minuto: 0 });
 });
 
+test('APP_PROXIES_CONFIAVEIS ausente não confia em proxy; informado, vale a quantidade', () => {
+    definirAmbiente({ APP_PROXIES_CONFIAVEIS: undefined });
+    assert.equal(new ConfigService().obter().aplicacao.proxiesConfiaveis, 0);
+    definirAmbiente({ APP_PROXIES_CONFIAVEIS: '1' });
+    assert.equal(new ConfigService().obter().aplicacao.proxiesConfiaveis, 1);
+});
+
 test('ANTHROPIC_API_KEY é opcional', () => {
     definirAmbiente({ ANTHROPIC_API_KEY: undefined });
     assert.equal(new ConfigService().obter().anthropic.apiKey, undefined);

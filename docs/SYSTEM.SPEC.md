@@ -86,6 +86,7 @@ project-2.0/
       done/               ← tasks concluídas (histórico)
       discarded/          ← tasks descartadas por decisão do autor (registro; não implementar)
   desktop/                      ← Project Desktop (Electron): abre o front numa janela própria (task 152)
+  infra/producao/               ← produção em containers: Nginx, API, bancos (task 499)
   scripts/                      ← repo:verificar, impacto e hooks de agente
   .claude/                      ← skills, subagentes e settings do Claude Code
   .agents/skills/               ← cópia idêntica de .claude/skills (agentes compatíveis com AGENTS.md)

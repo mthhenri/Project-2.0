@@ -1,0 +1,10 @@
+.git
+**/node_modules
+**/dist
+**/.angular
+**/.env
+.artifacts
+desktop
+docs
+infra/producao/certificados
+infra/producao/publicacoes

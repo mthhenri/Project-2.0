@@ -14,3 +14,7 @@ desktop/release/
 
 # Configuração local do preview do app (cada máquina tem a sua)
 .claude/launch.json
+
+# Produção local (task 499): certificado e executáveis publicados
+infra/producao/certificados/
+infra/producao/publicacoes/

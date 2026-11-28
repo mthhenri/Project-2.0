@@ -40,6 +40,11 @@
 - **Correção:** separar o `try` do executor do da gravação do resultado (não compensar depois de executar). Sem spec ainda.
 - **Desde:** task 368, 2026-11-19.
 
+### P-107 — Na homologação o limite de login por IP pode somar todos os usuários · `ABERTO` · backend/autenticacao
+- **Sintoma:** (deduzido do código, não reproduzido no Render) 20 falhas de login de qualquer pessoa bloqueariam por um tempo o login de todas.
+- **Causa:** atrás de um proxy, sem `APP_PROXIES_CONFIAVEIS`, o IP visto é o do proxy. **Contorno:** esperar o bloqueio (30 s a 15 min).
+- **Correção:** definir `APP_PROXIES_CONFIAVEIS` no Render depois de confirmar quantos proxies há na frente. **Desde:** task 421.
+
 ### P-104 — A IA em conversa compartilhada lê com a permissão de quem chamou e a resposta vai a todos · `ACEITO` · backend/mensagem-direta e chat
 
 - **Sintoma:** um gestor chama a `@IA` num grupo ou canal com desenvolvedores, numa conversa um a um ou no plano de um projeto; a IA consulta com a visão do gestor e o texto da resposta fica gravado para todos os leitores, inclusive quem entrar depois e o próximo turno de outra pessoa.

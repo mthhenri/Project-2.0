@@ -57,6 +57,8 @@ export interface ConfiguracaoAplicacao {
     ambiente: string;
     corsOrigem: string | undefined;
     fusoHorario: string;
+    /** Quantos proxies à frente da API têm o `X-Forwarded-For` aceito; 0 usa o IP da conexão (task 499). */
+    proxiesConfiaveis: number;
 }
 
 export interface ConfiguracaoNegocio {

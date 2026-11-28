@@ -13,6 +13,13 @@
 ---
 
 
+## 2026-11-28 — Task 499: produção em containers, emulada na máquina local
+
+- **Mudança:** `infra/producao/` (Nginx com HTTPS, API, migrations, Elasticsearch; PostgreSQL do dev ou próprio), configuração `container` do front (API na mesma origem), `APP_PROXIES_CONFIAVEIS` e os scripts `npm run prod:*`. A autoridade local só vale para `cek.project` e `localhost`, e a chave dela é apagada depois de assinar.
+- **Achados na verificação:** a expressão de cache do Nginx precisa de aspas (o container reiniciava em laço); sem o proxy confiável, o limite de login contaria todos no IP do Nginx.
+- **Verificado:** com banco próprio, em Chromium resolvendo `cek.project`: login pela tela, recarga de rota interna, usuário criado, mensagem entregue pelo stream em 358 ms e lida do Elasticsearch, sem erro de console; HTTP redireciona; cadeia do certificado confere; dois clientes com IPs diferentes têm limites separados. Com o banco de dev: front 200, API respondendo 401 sem token.
+- **Não verificado:** navegador do autor (falta `hosts` e confiar no certificado), login com o banco de dev, download real do `.exe`, IA, e o uso na rede da empresa.
+
 ## 2026-11-28 — Task 498: sessão com corte semanal configurável
 
 - **Decisão do autor:** "semana nova, login novo". `JWT_CORTE_SEMANAL=SEGUNDA 06:00` faz todo token vencer no próximo corte; sem a variável vale `JWT_EXPIRACAO` (segue `7d`), como no bloco de 2026-10-30. A ideia anterior, de 6 dias, não resolvia o login no meio da semana e foi abandonada antes de commit.

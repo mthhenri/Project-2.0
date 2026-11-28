@@ -50,6 +50,7 @@ export class ConfigService {
                 ambiente:    this.obrigatoria('APP_AMBIENTE'),
                 corsOrigem:  this.opcional('APP_CORS_ORIGEM'),
                 fusoHorario: this.opcional('APP_TIMEZONE') ?? 'America/Sao_Paulo',
+                proxiesConfiaveis: Number(this.opcional('APP_PROXIES_CONFIAVEIS') ?? 0),
             },
             negocio: {
                 intervaloMinimoMinutos: Number(this.obrigatoria('INTERVALO_MINIMO_MINUTOS')),

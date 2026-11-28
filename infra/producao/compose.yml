@@ -1,0 +1,90 @@
+# Produção do Project 2.0 em containers (task 499). Sempre combinado com um dos arquivos de banco:
+# compose.banco-dev.yml (o PostgreSQL do desenvolvimento) ou compose.banco-proprio.yml. Use os scripts `npm run prod:*` e veja o README.md.
+name: project20-producao
+
+# O que muda em relação ao .env da raiz quando a API roda como produção.
+x-ambiente-da-api: &ambiente-da-api
+  DB_SSL: "false"
+  APP_PORTA: "3000"
+  APP_AMBIENTE: production
+  APP_CORS_ORIGEM: https://cek.project
+  APP_PROXIES_CONFIAVEIS: "1"
+  CHAT_ARMAZENAMENTO: elasticsearch
+  CHAT_EVENTOS: memoria
+  ELASTICSEARCH_URL: http://elasticsearch:9200
+  ELASTICSEARCH_API_KEY: ""
+  ELASTICSEARCH_USUARIO: ""
+  ELASTICSEARCH_SENHA: ""
+  DESKTOP_PASTA_EXECUTAVEIS: /srv/desktop
+
+services:
+  certificado:
+    image: alpine:3.22
+    entrypoint: ["sh", "/scripts/gerar-certificado.sh"]
+    volumes:
+      - ./gerar-certificado.sh:/scripts/gerar-certificado.sh:ro
+      - ./certificados:/certificados
+
+  migracoes:
+    image: project20-producao-api
+    build:
+      context: ../..
+      dockerfile: infra/producao/Dockerfile.api
+    command: ["npm", "run", "db:migrate"]
+    env_file: ../../.env
+    environment: *ambiente-da-api
+
+  api:
+    image: project20-producao-api
+    env_file: ../../.env
+    environment: *ambiente-da-api
+    volumes:
+      - ./publicacoes/desktop:/srv/desktop:ro
+    depends_on:
+      migracoes:
+        condition: service_completed_successfully
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').connect(3000,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  nginx:
+    image: project20-producao-nginx
+    build:
+      context: ../..
+      dockerfile: infra/producao/Dockerfile.nginx
+    ports:
+      # Local: só esta máquina. No servidor da empresa, PRODUCAO_ESCUTA=0.0.0.0.
+      - "${PRODUCAO_ESCUTA:-127.0.0.1}:80:80"
+      - "${PRODUCAO_ESCUTA:-127.0.0.1}:443:443"
+    volumes:
+      - ./certificados:/etc/nginx/certificados:ro
+    depends_on:
+      certificado:
+        condition: service_completed_successfully
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Sem porta publicada: só a API alcança. A segurança do Elasticsearch está desligada; ligue antes de usar na empresa.
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.1.0
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_dados:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+
+volumes:
+  elasticsearch_dados:
